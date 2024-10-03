@@ -1,0 +1,7 @@
+encrypt:
+  key: Y7k@B9s!V1l#X3w
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://comanda:C0m4ndaEurek4@comanda-eureka:8761/eureka

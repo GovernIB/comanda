@@ -1,0 +1,22 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: comanda-cloud-config
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/GovernIB/comanda.git
+          clone-on-start: true
+          search-paths: config/{application}
+          default-label: comanda-config
+  security:
+    user:
+      name: comanda
+      password: comanda
+
+logging:
+  level:
+    org.springframework.cloud: debug
+    org.springframework.web: debug
