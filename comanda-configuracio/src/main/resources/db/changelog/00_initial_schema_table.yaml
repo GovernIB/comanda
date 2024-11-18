@@ -1,0 +1,60 @@
+databaseChangeLog:
+- changeSet:
+    id: init-table-1
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}app
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}app_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(10)
+        - column:
+            constraints:
+                nullable: false
+            name: nom
+            type: VARCHAR(100)
+        - column:
+            constraints:
+                nullable: false
+            name: descripcio
+            type: VARCHAR(1000)
+        - column:
+            constraints:
+              nullable: false
+            name: info_url
+            type: VARCHAR(200)
+        - column:
+            constraints:
+                nullable: false
+            name: salut_url
+            type: VARCHAR(200)
+        - column:
+            constraints:
+                nullable: false
+            name: created_by
+            type: VARCHAR(64)
+        - column:
+            constraints:
+                nullable: false
+            name: created_date
+            type: TIMESTAMP
+        - column:
+            name: lastmod_by
+            type: VARCHAR(64)
+        - column:
+            name: lastmod_date
+            type: TIMESTAMP
+        - column:
+            name: v
+            type: BIGINT

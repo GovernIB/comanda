@@ -3,22 +3,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.18</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<groupId>es.caib.comanda</groupId>
+		<artifactId>comanda</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<groupId>es.caib.comanda</groupId>
 	<artifactId>comanda-cloud-config</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<name>comanda-cloud-config</name>
 	<description>Config Server per Comanda</description>
-
-
 	<properties>
-		<java.version>11</java.version>
-		<spring-cloud.version>2021.0.9</spring-cloud.version>
 		<logstash.logback.version>7.0</logstash.logback.version>
 		<docker.image.prefix>mscomanda</docker.image.prefix>
 		<docker.image.name>${project.artifactId}</docker.image.name>
@@ -49,14 +42,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -68,7 +59,6 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -108,5 +98,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
