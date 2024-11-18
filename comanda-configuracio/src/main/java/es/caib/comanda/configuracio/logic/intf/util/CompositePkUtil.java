@@ -48,10 +48,9 @@ public class CompositePkUtil {
 	}
 
 	public static boolean isCompositePkClass(Class<?> clazz) {
-		return String.class.isAssignableFrom(clazz) ||
+		return !(String.class.isAssignableFrom(clazz) ||
 				Number.class.isAssignableFrom(clazz) ||
-				UUID.class.isAssignableFrom(clazz);
-		//return CompositePk.class.isAssignableFrom(inputType);
+				UUID.class.isAssignableFrom(clazz));
 	}
 
 }
