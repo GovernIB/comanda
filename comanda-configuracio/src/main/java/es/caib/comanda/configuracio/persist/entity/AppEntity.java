@@ -18,10 +18,6 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class AppEntity extends BaseEntity<Long> {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private @Nullable Long id;
-
 	@Column(name = "codi", length = 10, unique = true, nullable = false)
 	private String codi;
 	@Column(name = "nom", length = 100, nullable = false)

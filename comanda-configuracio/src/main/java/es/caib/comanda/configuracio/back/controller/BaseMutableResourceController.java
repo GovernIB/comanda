@@ -15,7 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.hateoas.*;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mediatype.Affordances;
 import org.springframework.hateoas.mediatype.ConfigurableAffordance;
 import org.springframework.http.HttpMethod;
@@ -34,7 +35,9 @@ import javax.validation.groups.Default;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Classe base pels controladors de l'API REST que conté els mètodes
