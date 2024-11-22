@@ -24,7 +24,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *            la llista de perspectives a aplicar.
 	 * @return la informació del recurs.
 	 */
-	public ResponseEntity<EntityModel<R>> getOne(
+	ResponseEntity<EntityModel<R>> getOne(
 			final ID resourceId,
 			final String[] perspectives);
 
@@ -43,7 +43,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *            informació sobre la pagina de resultats que es vol obtenir.
 	 * @return la llista de camps.
 	 */
-	public ResponseEntity<PagedModel<EntityModel<R>>> find(
+	ResponseEntity<PagedModel<EntityModel<R>>> find(
 			final String quickFilter,
 			final String filter,
 			final String[] namedQueries,

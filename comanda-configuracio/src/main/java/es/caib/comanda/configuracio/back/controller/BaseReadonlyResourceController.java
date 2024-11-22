@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.TemplateVariable.VariableType;
+import org.springframework.hateoas.mediatype.Affordances;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ReflectionUtils;
@@ -241,8 +243,12 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					null,
 					null,
 					null);
-			ls.add(selfLink);
 			if (resourcePermissions.isReadGranted()) {
+				ls.add(Affordances.of(selfLink).
+						afford(HttpMethod.GET).
+						withOutput(getResourceClass()).
+						withName(selfLink.getRel().value()).
+						toLink());
 				// Els enllaços de les accions find, getOne i create només es
 				// retornen si a la petició s'ha especificat informació de
 				// paginació.
@@ -250,6 +256,8 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				Link getOneLink = linkTo(methodOn(getClass()).getOne(null, null)).withRel("getOne");
 				String getOneLinkHref = getOneLink.getHref().replace("perspective", "perspective*");
 				ls.add(Link.of(UriTemplate.of(getOneLinkHref), "getOne"));
+			} else {
+				ls.add(selfLink);
 			}
 		} else {
 			// Enllaços que es retornen amb els resultats de la consulta
@@ -260,68 +268,76 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					namedQuery,
 					perspective,
 					pageable);
-			ls.add(selfLink);
-			if (pageable != null && pageable.isPaged()) {
-				if (pageable.getPageNumber() < page.getTotalPages()) {
-					if (!page.isFirst()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("first"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										pageable.first()));
-					}
-					if (page.hasPrevious()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("previous"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										pageable.previousOrFirst()));
-					}
-					if (page.hasNext()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("next"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										pageable.next()));
-					}
-					if (!page.isLast()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("last"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
-					}
-					if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
-						Link findLink = buildFindLinkWithParams(
-								linkTo(getClass()).withRel("toPageNumber"),
-								quickFilter,
-								filter,
-								namedQuery,
-								perspective,
-								PageRequest.of(0, pageable.getPageSize()));
-						// Al link generat li eliminam la variable page amb el valor 0
-						String findLinkHref = findLink.getHref().replace("page=0&", "").replace("page=0", "");
-						TemplateVariables findTemplateVariables = new TemplateVariables(
-								new TemplateVariable("page", VariableType.REQUEST_PARAM));
-						// I a més hi afegim la variable page
-						ls.add(
-								Link.of(
-										UriTemplate.of(findLinkHref).with(findTemplateVariables),
-										"toPageNumber"));
+			if (resourcePermissions.isReadGranted()) {
+				ls.add(Affordances.of(selfLink).
+						afford(HttpMethod.GET).
+						withOutput(getResourceClass()).
+						withName(selfLink.getRel().value()).
+						toLink());
+				if (pageable.isPaged()) {
+					if (pageable.getPageNumber() < page.getTotalPages()) {
+						if (!page.isFirst()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("first"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.first()));
+						}
+						if (page.hasPrevious()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("previous"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.previousOrFirst()));
+						}
+						if (page.hasNext()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("next"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.next()));
+						}
+						if (!page.isLast()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("last"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
+						}
+						if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
+							Link findLink = buildFindLinkWithParams(
+									linkTo(getClass()).withRel("toPageNumber"),
+									quickFilter,
+									filter,
+									namedQuery,
+									perspective,
+									PageRequest.of(0, pageable.getPageSize()));
+							// Al link generat li eliminam la variable page amb el valor 0
+							String findLinkHref = findLink.getHref().replace("page=0&", "").replace("page=0", "");
+							TemplateVariables findTemplateVariables = new TemplateVariables(
+									new TemplateVariable("page", VariableType.REQUEST_PARAM));
+							// I a més hi afegim la variable page
+							ls.add(
+									Link.of(
+											UriTemplate.of(findLinkHref).with(findTemplateVariables),
+											"toPageNumber"));
+						}
 					}
 				}
+			} else {
+				ls.add(selfLink);
 			}
 		}
 		return ls;

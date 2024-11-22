@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceField;
 import es.caib.comanda.configuracio.logic.intf.exception.*;
 import es.caib.comanda.configuracio.logic.intf.model.Reorderable;
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
@@ -20,7 +21,9 @@ import org.springframework.util.ReflectionUtils;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -83,6 +86,26 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 		afterDelete(entity);
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public Map<String, Object> onChange(
+			R previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws AnswerRequiredException {
+		log.debug("Processant event onChange (previous={}, fieldName={}, fieldValue={}, answers={})",
+				previous,
+				fieldName,
+				fieldValue,
+				answers);
+		return processChangesRecursive(
+				previous,
+				fieldName,
+				fieldName,
+				answers,
+				0);
+	}
+
 	protected void updateEntityWithResource(E entity, R resource) {
 		objectMappingHelper.map(
 				resource,
@@ -117,6 +140,14 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 
 	protected boolean throwResourceAlreadyExistsExceptionOnCreate() {
 		return true;
+	}
+
+	protected Map<String, Object> processResourceChanges(
+			R previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers) {
+		return null;
 	}
 
 	protected E buildNewEntity(
@@ -401,6 +432,75 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 				}
 			}
 		}
+	}
+
+	private Map<String, Object> processChangesRecursive(
+			R previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			int level) {
+		Map<String, Object> changes = processResourceChanges(
+				previous,
+				fieldName,
+				fieldValue,
+				answers);
+		if (changes != null) {
+			Map<String, Object> changesToReturn = new HashMap<>(changes);
+			for (String changedFieldName: changes.keySet()) {
+				Field changedField = ReflectionUtils.findField(getResourceClass(), changedFieldName);
+				if (changedField != null) {
+					ResourceField fieldAnnotation = changedField.getAnnotation(ResourceField.class);
+					if (fieldAnnotation != null && fieldAnnotation.onChangeActive()) {
+						R previousPerField = cloneResourceWithFieldsMap(
+								previous,
+								fieldName,
+								fieldValue,
+								changes,
+								changedFieldName);
+						Map<String, Object> changesPerField = processChangesRecursive(
+								previousPerField,
+								changedFieldName,
+								changes.get(changedFieldName),
+								answers,
+								level + 1);
+						changesToReturn.putAll(changesPerField);
+					}
+				}
+			}
+			return changesToReturn;
+		} else {
+			return null;
+		}
+	}
+
+	private R cloneResourceWithFieldsMap(
+			R resource,
+			String fieldName,
+			Object fieldValue,
+			Map<String, Object> fields,
+			String excludeField) {
+		R clonedResource = objectMappingHelper.cloneResource(resource, getResourceClass());
+		try {
+			Field field = resource.getClass().getField(fieldName);
+			ReflectionUtils.makeAccessible(field);
+			ReflectionUtils.setField(field, clonedResource, fieldValue);
+		} catch (Exception ex) {
+			log.error("Processing onChange request: couldn't find field {} on resource {}",
+					fieldName,
+					resource.getClass().getName(),
+					ex);
+		}
+		fields.forEach((k, v) -> {
+			if (!k.equals(excludeField)) {
+				Field field = ReflectionUtils.findField(resource.getClass(), k);
+				if (field != null) {
+					ReflectionUtils.makeAccessible(field);
+					ReflectionUtils.setField(field, clonedResource, v);
+				}
+			}
+		});
+		return clonedResource;
 	}
 
 	private E saveFlushAndRefresh(E entity) {

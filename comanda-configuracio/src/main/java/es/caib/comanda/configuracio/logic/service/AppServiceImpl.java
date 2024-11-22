@@ -1,9 +1,12 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.configuracio.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.service.AppService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
  * Implementació del servei de gestió d'aplicacions.

@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.configuracio.logic.helper.ObjectMappingHelper;
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.configuracio.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
 import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
@@ -255,15 +256,14 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 	}
 
 	protected List<SortedField> getResourceDefaultSortFields(Class<?> resourceClass) {
-		/*ResourceConfig resourceAnnotation = getResourceClass().getAnnotation(ResourceConfig.class);
+		ResourceConfig resourceAnnotation = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceAnnotation != null && resourceAnnotation.defaultSortFields().length > 0) {
 			return Arrays.stream(resourceAnnotation.defaultSortFields()).
 					map(s -> new SortedField(s.field(), s.direction())).
 					collect(Collectors.toList());
 		} else {
 			return Collections.emptyList();
-		}*/
-		return Collections.emptyList();
+		}
 	}
 
 	protected String additionalSpringFilter(

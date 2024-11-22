@@ -2,6 +2,7 @@ package es.caib.comanda.configuracio.back.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import es.caib.comanda.configuracio.logic.intf.model.OnChangeEvent;
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            informació del recurs.
 	 * @return el recurs creat.
 	 */
-	public ResponseEntity<EntityModel<R>> create(
+	ResponseEntity<EntityModel<R>> create(
 			final R resource);
 
 	/**
@@ -41,7 +42,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @throws MethodArgumentNotValidException
 	 *            si s'envia una modificació errònia o no permesa.
 	 */
-	public ResponseEntity<EntityModel<R>> update(
+	ResponseEntity<EntityModel<R>> update(
 			final ID resourceId,
 			final R resource,
 			BindingResult bindingResult) throws MethodArgumentNotValidException;
@@ -61,7 +62,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @throws MethodArgumentNotValidException
 	 *            si s'envia una modificació errònia o no permesa.
 	 */
-	public ResponseEntity<EntityModel<R>> patch(
+	ResponseEntity<EntityModel<R>> patch(
 			final ID resourceId,
 			final JsonNode jsonNode,
 			final BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException;
@@ -73,7 +74,25 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            id de l'element que es vol esborrar.
 	 * @return HTTP 200 si tot ha anat be.
 	 */
-	public ResponseEntity<?> delete(
+	ResponseEntity<?> delete(
 			final ID resourceId);
+
+
+	/**
+	 * Processament en el backend dels canvis en els camps dels recursos que
+	 * es generen al front.
+	 * En aquest mètode no es faran modificacions al recurs sinó que
+	 * únicament es processaran els canvis fets en el front. Aquests
+	 * canvis es poden propagar com a canvis en altres camps, del
+	 * recurs, que es retornaran com a resposta.
+	 *
+	 * @param onChangeEvent
+	 *            informació de l'event onChange.
+	 * @return el recurs resultat de processar els canvis.
+	 * @throws JsonProcessingException
+	 *            si es produeixen errors al parsejar els camps.
+	 */
+	ResponseEntity<String> onChange(
+			final OnChangeEvent onChangeEvent) throws JsonProcessingException;
 
 }
