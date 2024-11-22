@@ -12,7 +12,11 @@ const Apps: React.FC = () => {
     return <GridPage>
         <MuiGrid
             resourceName="app"
-            columns={columns} 
+            columns={columns}
+            toolbarType="upper"
+            paginationActive
+            //readOnly
+            rowDetailLink="/dd"
             />
     </GridPage>;
 }

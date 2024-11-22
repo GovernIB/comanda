@@ -43,10 +43,10 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
             <Typography
                 variant="h6"
                 component="div"
-                title={title}
+                title={title + (version ? ' v' + version : '')}
                 sx={{ flexGrow: 1 }}>
                 {title}
-                {version && <Typography variant="caption">&nbsp;v{version}</Typography>}
+                {/*version && <Typography variant="caption">&nbsp;v{version}</Typography>*/}
             </Typography>
             {additionalComponents}
             {authButton}

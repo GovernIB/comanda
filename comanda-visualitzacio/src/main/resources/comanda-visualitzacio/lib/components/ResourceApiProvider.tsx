@@ -29,27 +29,19 @@ type ResourceApiMethods = {
     patch: (id: any, args: ResourceApiRequestArgs) => Promise<any>;
     delette: (id: any, args?: ResourceApiRequestArgs) => Promise<void>;
     onChange: (id: any, args: ResourceApiOnChangeArgs) => Promise<void>;
-    export: (id: any, args?: ResourceApiExportArgs) => Promise<ResourceApiBlobResponse>;
-    execAction: (id: any, args: ResourceApiActionArgs) => Promise<any>;
-    generateReport: (id: any, args: ResourceApiReportArgs) => Promise<ResourceApiBlobResponse>;
-    validate: (args: ResourceApiValidateArgs) => Promise<void>;
-    audit: (id: any, args?: ResourceApiRequestArgs) => Promise<any>;
-    prevnext: (id: any, args?: ResourceApiFindCommonArgs) => Promise<any>;
-    multiple: (args: ResourceApiMultipleArgs) => Promise<ResourceApiMultipleResponse>;
-    fields: (args?: ResourceApiFieldsArgs) => Promise<any>;
-    field: (args: ResourceApiFieldArgs) => Promise<any>;
-    fieldDownload: (id: any, args: ResourceApiFieldArgs) => Promise<ResourceApiBlobResponse>;
 }
 
 export type ResourceApiService = {
     isLoading: boolean;
     isReady: boolean;
     currentState?: State;
+    currentFields?: any[];
     currentError?: Error;
     currentRefresh: (args?: ResourceApiRequestArgs) => void;
     request: ResourceApiGenericRequest;
     getLink: (link?: string, state?: State) => Promise<Link | undefined>;
     currentLinks?: any;
+    currentActions?: any;
 } & ResourceApiMethods;
 
 export type ResourceApiCallbacks = {
@@ -182,23 +174,8 @@ export type ResourceApiError = Problem & {
 export const processStateLinks = (links?: Links) => {
     return links?.getAll().reduce((acc: any, curr: Link) => (acc[curr.rel] = curr, acc), {});
 }
-
-const stateToBlobResponse = (state: State) => {
-    const contentDispositionHeader = state.headers.get('content-disposition');
-    const fileNameIndex = contentDispositionHeader?.indexOf('filename=') ?? -1;
-    const fileName = fileNameIndex !== -1 ? contentDispositionHeader?.substring(fileNameIndex + 'filename='.length) : undefined;
-    if (typeof state.data === 'string') {
-        const contentType = state.headers.get('content-type') ?? 'text/plain';
-        return {
-            blob: new Blob([state.data], { type: contentType }),
-            fileName: fileName ?? 'unknown',
-        };
-    } else {
-        return {
-            blob: state.data,
-            fileName: fileName ?? 'unknown',
-        };
-    }
+export const processStateActions = (actions?: Action[]) => {
+    return actions?.reduce((acc: any, curr: Action) => (acc[curr.name ?? ''] = curr, acc), {});
 }
 
 // Clone of Ketting's Action.submit() function (https://github.com/badgateway/ketting/blob/version-7.x/src/action.ts#L109)
@@ -396,6 +373,7 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
                             return {
                                 ...e.data,
                                 '_links': processStateLinks(e.links),
+                                '_actions': processStateActions(e.actions()),
                             };
                         } else {
                             return e.data;
@@ -544,179 +522,6 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
                 });
         });
     }, [request]);
-    const exportRequest = React.useCallback((id: any, args?: ResourceApiExportArgs): Promise<ResourceApiBlobResponse> => {
-        const pageArgs = args?.unpaged ? { page: 'UNPAGED' } : { page: args?.page, size: args?.size };
-        const requestArgs = {
-            ...args,
-            data: {
-                ...pageArgs,
-                sort: args?.sorts,
-                filter: args?.filter,
-                quickFilter: args?.quickFilter,
-                namedQuery: args?.namedQueries,
-                perspective: args?.perspectives,
-                field: args?.field,
-                type: args?.type,
-            },
-            refresh: args?.refresh ?? true,
-        };
-        return new Promise((resolve, reject) => {
-            request('export', id, requestArgs).
-                then((state: State) => {
-                    resolve(stateToBlobResponse(state));
-                }).
-                catch(reject);
-        });
-    }, [request]);
-    const execAction = React.useCallback((id: any, args: ResourceApiActionArgs): Promise<any> => {
-        const requestArgs = {
-            ...args,
-            data: args?.data,
-        };
-        return new Promise((resolve, reject) => {
-            request('exec_' + args.code, id, requestArgs).
-                then((state: State) => {
-                    resolve(state.data);
-                }).catch((error: ResourceApiError) => {
-                    processAnswerRequiredError(
-                        error,
-                        id,
-                        args,
-                        execAction,
-                        getOpenAnswerRequiredDialog()).
-                        then(resolve).
-                        catch(reject);
-                });
-        });
-    }, [request]);
-    const generateReport = React.useCallback((id: any, args: ResourceApiReportArgs): Promise<ResourceApiBlobResponse> => {
-        const requestArgs = {
-            ...args,
-            data: args?.data,
-        };
-        return new Promise((resolve, reject) => {
-            request('generate_' + args.code, id, requestArgs).
-                then((state: State) => {
-                    resolve(stateToBlobResponse(state));
-                }).
-                catch(reject);
-        });
-    }, [request]);
-    const validate = React.useCallback((args: ResourceApiValidateArgs): Promise<void> => {
-        const requestArgs = {
-            ...args,
-            data: args?.data,
-        };
-        return new Promise((resolve, reject) => {
-            request('validate', null, requestArgs).
-                then(resolve).
-                catch(reject);
-        });
-    }, [request]);
-    const audit = React.useCallback((id: any, args?: ResourceApiRequestArgs): Promise<any> => {
-        const requestArgs = {
-            ...args,
-            data: args?.data,
-        };
-        return new Promise((resolve, reject) => {
-            request('audit', id, requestArgs).
-                then((state: State) => {
-                    resolve(state.data);
-                }).
-                catch(reject);
-        });
-    }, [request]);
-    const prevnext = React.useCallback((id: any, args?: ResourceApiFindCommonArgs): Promise<any> => {
-        const pageArgs = args?.unpaged ? { page: 'UNPAGED' } : { page: args?.page, size: args?.size };
-        const requestArgs = {
-            ...args,
-            data: {
-                ...pageArgs,
-                sort: args?.sorts,
-                filter: args?.filter,
-                quickFilter: args?.quickFilter,
-                namedFilter: args?.namedQueries,
-            },
-            refresh: args?.refresh ?? true,
-        };
-        return new Promise((resolve, reject) => {
-            request('prevnext', id, requestArgs).
-                then((state: State) => {
-                    resolve(state.data);
-                }).
-                catch(reject);
-        });
-    }, [request]);
-    const multiple = React.useCallback((args: ResourceApiMultipleArgs): Promise<ResourceApiMultipleResponse> => {
-        const multipleData = {
-            ids: args.ids,
-            method: args.method, // PATCH, ACTION, DELETE
-            action: args.actionCode,
-            payload: args?.data,
-        }
-        const requestArgs = {
-            ...args,
-            data: multipleData,
-        };
-        return new Promise((resolve, reject) => {
-            request('multiple', null, requestArgs).
-                then((state: State) => {
-                    resolve(state.data);
-                }).
-                catch(reject);
-        });
-    }, [request]);
-    const fields = React.useCallback((args?: ResourceApiFieldsArgs): Promise<any> => {
-        const requestArgs = {
-            ...args,
-            refresh: args?.refresh ?? true,
-        };
-        return new Promise((resolve, reject) => {
-            request('fields', null, requestArgs).
-                then((state: State) => {
-                    const embeddedData = state.getEmbedded().map((e: any) => {
-                        if (args?.includeLinks) {
-                            return {
-                                ...e.data,
-                                '_links': processStateLinks(e.links),
-                            };
-                        } else {
-                            return e.data;
-                        }
-                    });
-                    resolve(embeddedData);
-                }).
-                catch(reject);
-        });
-    }, [request]);
-    const field = React.useCallback((args: ResourceApiFieldArgs): Promise<any> => {
-        const requestArgs = {
-            ...args,
-            data: { fieldName: args.name },
-            refresh: args?.refresh ?? true,
-        };
-        return new Promise((resolve, reject) => {
-            request('field', null, requestArgs).
-                then((state: State) => {
-                    resolve(state.data);
-                }).
-                catch(reject);
-        });
-    }, [request]);
-    const fieldDownload = React.useCallback((id: any, args: ResourceApiFieldArgs): Promise<ResourceApiBlobResponse> => {
-        const requestArgs = {
-            ...args,
-            data: { fieldName: args.name },
-            refresh: args?.refresh ?? true,
-        };
-        return new Promise((resolve, reject) => {
-            request('fieldDownload', id, requestArgs).
-                then((state: State) => {
-                    resolve(stateToBlobResponse(state));
-                }).
-                catch(reject);
-        });
-    }, [request]);
     return {
         find,
         getOne,
@@ -724,17 +529,7 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
         update,
         patch,
         delette,
-        export: exportRequest,
-        execAction,
-        generateReport,
         onChange,
-        validate,
-        audit,
-        prevnext,
-        multiple,
-        fields,
-        field,
-        fieldDownload,
     };
 }
 
@@ -749,10 +544,12 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
     const [isCurrentLoading, setIsCurrentLoading] = React.useState<boolean>(true);
     const [isCurrentLoaded, setIsCurrentLoaded] = React.useState<boolean>(false);
     const [currentState, setCurrentState] = React.useState<State | undefined>();
+    const [currentFields, setCurrentFields] = React.useState<any[] | undefined>();
     const [currentError, setCurrentError] = React.useState<Error | undefined>();
     const isReady = indexIsReady && !isCurrentLoading && currentState != null && !currentError;
     const debugRequests = isDebugRequests();
     const currentLinks = processStateLinks(currentState?.links);
+    const currentActions = processStateActions(currentState?.actions());
     const getLink = (link?: string, id?: any): Promise<Link | undefined> => new Promise((resolve, reject) => {
         if (link != null) {
             if (id != null) {
@@ -776,6 +573,7 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
         indexState != null && resourceName != null && getPromiseFromStateLink(indexState, resourceName, args, true).
             then((response: State) => {
                 setCurrentState(response);
+                setCurrentFields(response.action().fields);
                 setIsCurrentLoading(false);
                 !isCurrentLoaded && setIsCurrentLoaded(true);
             }).catch((error: Error) => {
@@ -791,6 +589,7 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
             setIsCurrentLoading(true);
             setIsCurrentLoaded(false)
             setCurrentState(undefined);
+            setCurrentFields(undefined);
             setCurrentError(undefined);
         }
     }, [indexIsReady]);
@@ -854,12 +653,14 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
         isLoading: isCurrentLoading,
         isReady,
         currentState,
+        currentFields,
         currentError,
         currentRefresh,
         request,
         ...resourceApiMethods,
         getLink,
         currentLinks,
+        currentActions,
     };
 }
 

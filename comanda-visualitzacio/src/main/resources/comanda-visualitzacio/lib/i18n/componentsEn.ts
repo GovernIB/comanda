@@ -14,6 +14,22 @@ const componentsEn = {
             message: 'Server connection lost',
         }
     },
+    grid: {
+        refresh: {
+            title: 'Refresh',
+        },
+        create: {
+            title: 'Create',
+        },
+        update: {
+            title: 'Update',
+        },
+        delete: {
+            single: {
+                title: 'Delete',
+            }
+        },
+    },
     buttons: {
         answerRequired: {
             accept: 'Accept',

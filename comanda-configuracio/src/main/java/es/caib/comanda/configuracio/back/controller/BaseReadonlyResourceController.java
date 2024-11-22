@@ -243,12 +243,8 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					null,
 					null,
 					null);
+			ls.add(selfLinkWithDefaultProperties(selfLink, true));
 			if (resourcePermissions.isReadGranted()) {
-				ls.add(Affordances.of(selfLink).
-						afford(HttpMethod.GET).
-						withOutput(getResourceClass()).
-						withName(selfLink.getRel().value()).
-						toLink());
 				// Els enllaços de les accions find, getOne i create només es
 				// retornen si a la petició s'ha especificat informació de
 				// paginació.
@@ -256,8 +252,6 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				Link getOneLink = linkTo(methodOn(getClass()).getOne(null, null)).withRel("getOne");
 				String getOneLinkHref = getOneLink.getHref().replace("perspective", "perspective*");
 				ls.add(Link.of(UriTemplate.of(getOneLinkHref), "getOne"));
-			} else {
-				ls.add(selfLink);
 			}
 		} else {
 			// Enllaços que es retornen amb els resultats de la consulta
@@ -268,79 +262,94 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					namedQuery,
 					perspective,
 					pageable);
-			if (resourcePermissions.isReadGranted()) {
-				ls.add(Affordances.of(selfLink).
-						afford(HttpMethod.GET).
-						withOutput(getResourceClass()).
-						withName(selfLink.getRel().value()).
-						toLink());
-				if (pageable.isPaged()) {
-					if (pageable.getPageNumber() < page.getTotalPages()) {
-						if (!page.isFirst()) {
-							ls.add(
-									buildFindLinkWithParams(
-											linkTo(getClass()).withRel("first"),
-											quickFilter,
-											filter,
-											namedQuery,
-											perspective,
-											pageable.first()));
-						}
-						if (page.hasPrevious()) {
-							ls.add(
-									buildFindLinkWithParams(
-											linkTo(getClass()).withRel("previous"),
-											quickFilter,
-											filter,
-											namedQuery,
-											perspective,
-											pageable.previousOrFirst()));
-						}
-						if (page.hasNext()) {
-							ls.add(
-									buildFindLinkWithParams(
-											linkTo(getClass()).withRel("next"),
-											quickFilter,
-											filter,
-											namedQuery,
-											perspective,
-											pageable.next()));
-						}
-						if (!page.isLast()) {
-							ls.add(
-									buildFindLinkWithParams(
-											linkTo(getClass()).withRel("last"),
-											quickFilter,
-											filter,
-											namedQuery,
-											perspective,
-											PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
-						}
-						if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
-							Link findLink = buildFindLinkWithParams(
-									linkTo(getClass()).withRel("toPageNumber"),
-									quickFilter,
-									filter,
-									namedQuery,
-									perspective,
-									PageRequest.of(0, pageable.getPageSize()));
-							// Al link generat li eliminam la variable page amb el valor 0
-							String findLinkHref = findLink.getHref().replace("page=0&", "").replace("page=0", "");
-							TemplateVariables findTemplateVariables = new TemplateVariables(
-									new TemplateVariable("page", VariableType.REQUEST_PARAM));
-							// I a més hi afegim la variable page
-							ls.add(
-									Link.of(
-											UriTemplate.of(findLinkHref).with(findTemplateVariables),
-											"toPageNumber"));
-						}
+			ls.add(selfLinkWithDefaultProperties(selfLink, false));
+			if (resourcePermissions.isReadGranted() && pageable.isPaged()) {
+				if (pageable.getPageNumber() < page.getTotalPages()) {
+					if (!page.isFirst()) {
+						ls.add(
+								buildFindLinkWithParams(
+										linkTo(getClass()).withRel("first"),
+										quickFilter,
+										filter,
+										namedQuery,
+										perspective,
+										pageable.first()));
+					}
+					if (page.hasPrevious()) {
+						ls.add(
+								buildFindLinkWithParams(
+										linkTo(getClass()).withRel("previous"),
+										quickFilter,
+										filter,
+										namedQuery,
+										perspective,
+										pageable.previousOrFirst()));
+					}
+					if (page.hasNext()) {
+						ls.add(
+								buildFindLinkWithParams(
+										linkTo(getClass()).withRel("next"),
+										quickFilter,
+										filter,
+										namedQuery,
+										perspective,
+										pageable.next()));
+					}
+					if (!page.isLast()) {
+						ls.add(
+								buildFindLinkWithParams(
+										linkTo(getClass()).withRel("last"),
+										quickFilter,
+										filter,
+										namedQuery,
+										perspective,
+										PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
+					}
+					if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
+						Link findLink = buildFindLinkWithParams(
+								linkTo(getClass()).withRel("toPageNumber"),
+								quickFilter,
+								filter,
+								namedQuery,
+								perspective,
+								PageRequest.of(0, pageable.getPageSize()));
+						// Al link generat li eliminam la variable page amb el valor 0
+						String findLinkHref = findLink.getHref().replace("page=0&", "").replace("page=0", "");
+						TemplateVariables findTemplateVariables = new TemplateVariables(
+								new TemplateVariable("page", VariableType.REQUEST_PARAM));
+						// I a més hi afegim la variable page
+						ls.add(
+								Link.of(
+										UriTemplate.of(findLinkHref).with(findTemplateVariables),
+										"toPageNumber"));
 					}
 				}
-			} else {
-				ls.add(selfLink);
 			}
 		}
 		return ls;
+	}
+
+	protected Link selfLinkWithDefaultProperties(Link selfLink, boolean showProperties) {
+		// Aquest mètode proporciona modifica el Link self afegint una Affordance que
+		// es mostrarà a dins els _templates de HAL FORMS amb el nom "default".
+
+		// La idea és que si es fa la petició al servei sense cap paràmetre es retorni
+		// una llista dels camps del recurs (i que es pugui utilitzar per mostrar, per
+		// exemple, les columnes del grid). Si la petició es fa amb paràmetres només
+		// s'afegirà aquest Affordance per a que aparegui com a "default" i així les
+		// demés Affordances (create, update, patch, ...) apareguin amb el nom que toca.
+
+		// La idea seria poder utilitzar el mètode HTTP GET per a retornar la informació
+		// dels camps del recurs, p erò la class HalFormsTemplateBuilder filtra el mètode
+		// GET evitant que surti als _templates. Per això hem utilitzat el mètode PUT
+		// (per posar-ne algun) per quan volem que surtin els properties i el mètode
+		// OPTIONS per quan volem ocultar-los.
+		// https://github.com/spring-projects/spring-hateoas/issues/1683
+		return Affordances.of(selfLink).
+				afford(showProperties ? HttpMethod.PUT : HttpMethod.OPTIONS).
+				withInputAndOutput(getResourceClass()).
+				withName(selfLink.getRel().value()).
+				toLink();
 	}
 
 	protected Link buildFindLink(String rel) {

@@ -17,7 +17,7 @@ import {
 } from '@mui/x-data-grid-pro';
 import Box from '@mui/material/Box';
 import { capitalize } from '../../../util/text';
-import useLogConsole, { LogConsoleType } from '../../../util/useLogConsole';
+import useLogConsole from '../../../util/useLogConsole';
 import { formattedFieldValue, isFieldNumericType } from '../../../util/fields';
 import { ReactElementWithPosition } from '../../../util/reactNodePosition';
 import { useResourceApiContext } from '../../ResourceApiContext';
@@ -25,13 +25,9 @@ import {
     useResourceApiService,
     ResourceApiFindCommonArgs,
     ResourceApiFindArgs,
-    ResourceApiExportArgs,
-    ResourceApiFieldArgs,
-    ResourceApiGenericRequest,
-    ResourceApiFindResponse,
-    processStateLinks
 } from '../../ResourceApiProvider';
 import { useBaseAppContext } from '../../BaseAppContext';
+import { toToolbarIcon } from '../ToolbarIcon';
 import { toGridActionItem } from './GridActionItem';
 import { useGridQuickFilter } from './GridQuickFilter';
 import { useToolbar, GridToolbarType } from './GridToolbar';
@@ -59,6 +55,7 @@ export type MuiGridProps = {
     resourceName: string;
     resourceFieldName?: string;
     columns: NewGridColDef[];
+    readOnly?: boolean;
     paginationActive?: boolean;
     selectionActive?: boolean;
     sortModel?: GridSortModel;
@@ -71,11 +68,12 @@ export type MuiGridProps = {
     perspectives?: string[];
     rowLink?: string;
     rowDetailLink?: string;
+    rowUpdateLink?: string;
     rowAdditionalActions?: ResourceApiGridAdditionalAction[];
     toolbarType?: GridToolbarType;
-    toolbarHideExport?: true;
     toolbarHideRefresh?: true;
     toolbarHideQuickFilter?: true;
+    toolbarCreateLink?: string;
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     toolbarAdditionalRow?: React.ReactElement;
     treeData?: true;
@@ -109,10 +107,12 @@ type ResourceApiGridAdditionalAction = {
     showInMenu?: boolean;
 };
 
-type ResourceFieldApiFields = (findArgs: ResourceApiFindArgs) => Promise<any[]>;
-type ResourceFieldApiFind = (findArgs: ResourceApiFindArgs) => Promise<ResourceApiFindResponse>;
+/*type ResourceFieldApiFields = (findArgs: ResourceApiFindArgs) => Promise<any[]>;
+type ResourceFieldApiFind = (findArgs: ResourceApiFindArgs) => Promise<ResourceApiFindResponse>;*/
 
-export const rowActionLink = (action: ResourceApiGridAdditionalAction, rowLinks: any): any => {
+export const rowActionLink = (
+    action: ResourceApiGridAdditionalAction,
+    rowLinks: any): any => {
     const linkName = action.apiLink ? action.apiLink : (
         action.apiAction ? 'EXEC_' + action.apiAction : (
             action.apiReport ? 'GENERATE_' + action.apiReport : null));
@@ -129,7 +129,7 @@ const rowActionsToGridActionsCellItems = (
     params: GridRowParams,
     rowActions: ResourceApiGridAdditionalAction[],
     forceDisabled?: boolean): React.ReactElement[] => {
-    const rowLinks = params.row['_links'];
+    const rowLinks = params.row['_actions'];
     const actions: React.ReactElement[] = [];
     rowActions.forEach((action: ResourceApiGridAdditionalAction) => {
         const isLinkAction = action.apiLink || action.apiAction || action.apiReport;
@@ -148,19 +148,9 @@ const rowActionsToGridActionsCellItems = (
     return actions;
 }
 
-const useEditableGridProps = (anyOtherProps: any, apiCurrentLinks: any): ResourceApiGridAdditionalAction[] => {
-    const rowEditActions = anyOtherProps?.['rowEditActions'] ?? [];
-    const onApiCurrentLinksChange: (apiCurrentLinks: any) => void = anyOtherProps?.['onApiCurrentLinksChange'];
-    React.useEffect(() => {
-        onApiCurrentLinksChange?.(apiCurrentLinks);
-    }, [apiCurrentLinks]);
-    return rowEditActions;
-}
-
-const useResourceFieldApiRequest = (
+/*const useResourceFieldApiRequest = (
     resourceFieldName: string | undefined,
     apiIsReady: boolean,
-    apiField: (args: ResourceApiFieldArgs) => Promise<any>,
     apiRequest: ResourceApiGenericRequest): [boolean, ResourceFieldApiFields, ResourceFieldApiFind] => {
     const [resourceFieldState, setResourceFieldState] = React.useState<any>();
     React.useEffect(() => {
@@ -197,29 +187,76 @@ const useResourceFieldApiRequest = (
         }
     });
     return [resourceFieldState != null, resourceFieldApiFields, resourceFieldApiFind];
+}*/
+
+/*const useEditableGridProps = (anyOtherProps: any, apiCurrentLinks: any): ResourceApiGridAdditionalAction[] => {
+    const rowEditActions = anyOtherProps?.['rowEditActions'] ?? [];
+    const onApiCurrentLinksChange: (apiCurrentLinks: any) => void = anyOtherProps?.['onApiCurrentLinksChange'];
+    React.useEffect(() => {
+        onApiCurrentLinksChange?.(apiCurrentLinks);
+    }, [apiCurrentLinks]);
+    return rowEditActions;
+}*/
+
+const useGridEditable = (
+    readOnly: boolean,
+    toolbarCreateLink: string | undefined,
+    rowUpdateLink: string | undefined,
+    rowDetailLink: string | undefined,
+    apiCurrentActions: any) => {
+    const { t } = useBaseAppContext();
+    const doCreate = () => {
+        console.log('>>> doCreate')
+    }
+    const doUpdate = () => {
+        console.log('>>> doUpdate')
+    }
+    const doDelete = () => {
+        console.log('>>> doDelete')
+    }
+    const toolbarEditActions = [];
+    const isCreateLinkPresent = apiCurrentActions?.['create'] != null;
+    isCreateLinkPresent && !readOnly && toolbarEditActions.push({
+        position: 2,
+        element: toToolbarIcon('add', {
+            title: t('grid.create.title'),
+            linkTo: toolbarCreateLink,
+            onClick: !toolbarCreateLink ? doCreate : undefined,
+        }),
+    });
+    const rowEditActions = [];
+    !readOnly && rowEditActions.push({
+        title: t('grid.update.title'),
+        apiLink: 'update',
+        icon: 'edit',
+        linkTo: rowUpdateLink,
+        onClick: !rowUpdateLink ? doUpdate : undefined,
+    }, {
+        title: t('grid.delete.single.title'),
+        apiLink: 'delete',
+        icon: 'delete',
+        onClick: doDelete,
+        showInMenu: true,
+    });
+    rowDetailLink && rowEditActions.push({
+        title: t('grid.details.title'),
+        apiLink: readOnly ? undefined : '!update',
+        icon: 'info',
+        linkTo: rowDetailLink,
+    });
+    return {
+        toolbarEditActions,
+        rowEditActions
+    };
 }
 
 const useGridColumns = (
     columns: NewGridColDef[],
     rowActions: ResourceApiGridAdditionalAction[],
     rowEditActions: ResourceApiGridAdditionalAction[],
-    apiIsReady: boolean,
-    apiFields: (args?: any | undefined) => Promise<any>,
-    logConsole: LogConsoleType,
-    debug: boolean,
+    fields: any[] | undefined,
     rowModesModel?: GridRowModesModel) => {
     const { currentLanguage } = useResourceApiContext();
-    const [fields, setFields] = React.useState<any[]>();
-    React.useEffect(() => {
-        if (apiIsReady) {
-            setFields(undefined);
-            debug && logConsole.debug('Loading fields');
-            apiFields().then((fields: any) => {
-                debug && logConsole.debug('Fields loaded', '(' + fields?.length + ')');
-                setFields(fields);
-            });
-        }
-    }, [apiIsReady]);
     const processedColumns = React.useMemo(() => {
         const processedColumns: NewGridColDef[] = columns.map(c => {
             const field = fields?.find(f => f.name === c.field);
@@ -250,7 +287,7 @@ const useGridColumns = (
                     });
                     return formattedValue;
                 },
-                headerName: field ? field?.prompt : '',
+                headerName: field ? field?.label : '',
                 headerAlign: isNumericType ? 'right' : undefined,
                 align: isNumericType ? 'right' : undefined,
                 display: 'flex',
@@ -294,6 +331,7 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         resourceName,
         resourceFieldName,
         columns,
+        readOnly,
         paginationActive,
         selectionActive,
         sortModel,
@@ -306,11 +344,12 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         perspectives,
         rowLink,
         rowDetailLink,
+        rowUpdateLink,
         rowAdditionalActions = [],
         toolbarType = 'default',
-        toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
+        toolbarCreateLink,
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
         treeData,
@@ -334,7 +373,6 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         debug = false,
         ...otherProps
     } = props;
-    const { t, saveAs } = useBaseAppContext();
     const logConsole = useLogConsole(LOG_PREFIX);
     const apiRef = React.useRef<GridApi>();
     const datagridApiRef = useMuiDatagridApiRef();
@@ -347,36 +385,22 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
     const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel>();
     const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>();
     const {
-        isReady: resourceApiIsReady,
-        currentLinks: apiCurrentLinks,
+        isReady: apiIsReady,
+        currentFields: apiCurrentFields,
+        currentActions: apiCurrentActions,
         currentError: apiCurrentError,
         find: apiFind,
-        export: apiExport,
-        field: apiField,
-        fields: resourceApiFields,
-        request: apiRequest,
     } = useResourceApiService(resourceName);
-    const [
+    /*const [
         resourceFieldApiRequestIsReady,
         resourceFieldApiFields,
         resourceFieldApiFind
     ] = useResourceFieldApiRequest(
         resourceFieldName,
         resourceApiIsReady,
-        apiField,
-        apiRequest);
-    const apiIsReady = resourceFieldName ? resourceFieldApiRequestIsReady : resourceApiIsReady;
-    const apiFields = resourceFieldName ? resourceFieldApiFields : resourceApiFields;
-    const treeDataRowReorderingProps: any[] = [
-        (otherProps as any)['treeDataRowReordering'],
-        (otherProps as any)['treeDataRowReorderingField'],
-        (otherProps as any)['treeDataRowReorderingSameParentOnly'],
-        (otherProps as any)['treeDataRowReorderingGetDragType'],
-        (otherProps as any)['treeDataRowReorderingGetDropType'],
-        (otherProps as any)['treeDataRowReorderingGetPatchData'],
-        (otherProps as any)['treeDataRowReorderingOnStructureOrderChange'],
-        onRowOrderChange
-    ];
+        apiRequest);*/
+    //const apiIsReady = resourceFieldName ? resourceFieldApiRequestIsReady : resourceApiIsReady;
+    //const apiFields = resourceFieldName ? resourceFieldApiFields : resourceApiFields;
     if (datagridApiRefProp) {
         datagridApiRefProp.current = datagridApiRef.current;
     }
@@ -416,7 +440,7 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
             includeLinksInRows: true,
         };
         if (resourceFieldName) {
-            if (resourceFieldApiRequestIsReady) {
+            /*if (resourceFieldApiRequestIsReady) {
                 debug && logConsole.debug('Obtaining rows from API resourceFieldName', resourceName, resourceFieldName, findArgs);
                 setLoading(true);
                 resourceFieldApiFind(findArgs).then((response) => {
@@ -424,9 +448,9 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
                     setRows(response.rows);
                     setLoading(false);
                 });
-            }
+            }*/
         } else {
-            if (resourceApiIsReady) {
+            if (apiIsReady) {
                 debug && logConsole.debug('Obtaining rows from API resource', resourceName, findArgs);
                 setLoading(true);
                 apiFind(findArgs).then((response) => {
@@ -439,34 +463,14 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
     }, [
         resourceName,
         resourceFieldName,
-        resourceFieldApiRequestIsReady,
-        resourceFieldApiFind,
-        resourceApiIsReady,
+        getFindCommonArgs,
+        //resourceFieldApiRequestIsReady,
+        //resourceFieldApiFind,
+        apiIsReady,
         apiFind
     ]);
-    const exportt = (type?: string, forceUnpaged?: boolean) => {
-        const fields = datagridApiRef.current.getVisibleColumns().
-            filter(c => c.type !== 'custom' && c.type !== 'actions' && (c as any)['exportable']).
-            map(c => c.field);
-        const unpagedProps = forceUnpaged ? { forceUnpaged, page: undefined, size: undefined } : {};
-        const exportArgs: ResourceApiExportArgs = {
-            ...getFindCommonArgs(),
-            ...unpagedProps,
-            field: fields,
-            type: type ?? 'CSV',
-        };
-        apiExport(null, exportArgs).then((blobWithFilename) => {
-            saveAs?.(blobWithFilename.blob, blobWithFilename.fileName);
-        });
-    }
     const isUpperToolbarType = toolbarType === 'upper';
     const gridMargins = isUpperToolbarType ? { m: 2 } : null;
-    const fixedRowActions: ResourceApiGridAdditionalAction[] = [];
-    rowDetailLink && fixedRowActions.push({
-        title: t('grid.details.title'),
-        icon: 'info',
-        linkTo: rowDetailLink,
-    });
     React.useEffect(() => {
         if (apiIsReady) {
             refresh();
@@ -486,9 +490,18 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
     React.useEffect(() => {
         setInternalFilter(filter);
     }, [filter]);
-    const rowEditActions = useEditableGridProps(
+    /*const rowEditActions = useEditableGridProps(
         otherProps,
-        apiCurrentLinks);
+        apiCurrentLinks);*/
+    const {
+        toolbarEditActions,
+        rowEditActions
+    } = useGridEditable(
+        readOnly ?? false,
+        toolbarCreateLink,
+        rowUpdateLink,
+        rowDetailLink,
+        apiCurrentActions);
     const toolbar = useToolbar(
         title ?? capitalize(resourceName) ?? '<unknown>',
         titleDisabled ?? false,
@@ -496,19 +509,16 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         apiCurrentError,
         quickFilterComponent,
         refresh,
-        exportt,
-        toolbarHideExport,
+        undefined,
+        true,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
-        toolbarElementsWithPositions);
+        [...toolbarEditActions, ...(toolbarElementsWithPositions ?? [])]);
     const processedColumns = useGridColumns(
         columns,
-        [...rowAdditionalActions, ...fixedRowActions],
+        [...rowAdditionalActions, ...rowEditActions],
         rowEditActions,
-        apiIsReady,
-        apiFields,
-        logConsole,
-        debug,
+        apiCurrentFields,
         otherProps.rowModesModel);
     apiRef.current = {
         refresh,

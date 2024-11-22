@@ -21,7 +21,7 @@ export const useToolbar = (
     apiCurrentError: any,
     quickFilterComponent: React.ReactElement,
     doRefresh: () => void,
-    doExport: (type?: string, forceUnpaged?: boolean) => void,
+    doExport?: (type?: string, forceUnpaged?: boolean) => void,
     toolbarHideExport?: boolean,
     toolbarHideRefresh?: boolean,
     toolbarHideQuickFilter?: boolean,
@@ -36,7 +36,7 @@ export const useToolbar = (
         position: toolbarNodesPosition,
         element: toToolbarIcon('file_download', {
             title: t('grid.export.title'),
-            onClick: () => doExport(undefined, true),
+            onClick: () => doExport?.(undefined, true),
         }),
     });
     !toolbarHideRefresh && toolbarNodes.push({

@@ -14,6 +14,22 @@ const componentsCa = {
             message: 'Sense connexió amb el servidor',
         }
     },
+    grid: {
+        refresh: {
+            title: 'Refrescar',
+        },
+        create: {
+            title: 'Crear',
+        },
+        update: {
+            title: 'Modificar',
+        },
+        delete: {
+            single: {
+                title: 'Esborrar',
+            }
+        },
+    },
     buttons: {
         answerRequired: {
             accept: 'Acceptar',

@@ -14,6 +14,22 @@ const componentsEs = {
             message: 'Sin conexión con el servidor',
         }
     },
+    grid: {
+        refresh: {
+            title: 'Refrescar',
+        },
+        create: {
+            title: 'Crear',
+        },
+        update: {
+            title: 'Modificar',
+        },
+        delete: {
+            single: {
+                title: 'Borrar',
+            }
+        },
+    },
     buttons: {
         answerRequired: {
             accept: 'Aceptar',
