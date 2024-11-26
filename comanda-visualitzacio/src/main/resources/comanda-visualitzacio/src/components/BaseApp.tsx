@@ -11,7 +11,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
-import LanguageSelector from './LanguageSelector';
+import AuthLanguageSelector from './AuthLanguageSelector';
 import {
     MuiBaseApp,
     MenuEntry,
@@ -34,7 +34,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     logoStyle?: any;
     title: string;
     version: string;
-    availableLanguages?: any;
+    availableLanguages?: string[];
     menuEntries?: MenuEntryWithResource[];
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
@@ -136,8 +136,14 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
         menuEntries={baseAppMenuEntries}
-        additionalHeaderComponents={availableLanguages?.length ? [
-            <LanguageSelector
+        /*additionalHeaderComponents={availableLanguages?.length ? [
+            <HeaderLanguageSelector
+                key="sel_lang"
+                languages={availableLanguages}
+                sx={{ mr: 2 }} />
+        ] : undefined}*/
+        additionalAuthComponents={availableLanguages?.length ? [
+            <AuthLanguageSelector
                 key="sel_lang"
                 languages={availableLanguages}
                 sx={{ mr: 2 }} />

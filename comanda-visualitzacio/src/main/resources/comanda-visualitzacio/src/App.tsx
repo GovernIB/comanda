@@ -1,31 +1,25 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BaseApp } from './components/BaseApp';
 import logo from './assets/goib_logo.png';
 import headerBackground from './assets/background.jpg';
 import AppRoutes from './AppRoutes';
 
-const availableLanguages = [{
-    locale: 'ca',
-    name: 'Català'
-}, {
-    locale: 'es',
-    name: 'Castellà'
-}];
-
-const menuEntries = [{
-    id: 'home',
-    title: 'Inici',
-    to: '/',
-    icon: 'home',
-}, {
-    id: 'app',
-    title: 'Aplicacions',
-    to: '/app',
-    icon: 'widgets',
-    resourceName: 'app',
-}];
 
 export const App: React.FC = () => {
+    const { t } = useTranslation();
+    const menuEntries = [{
+        id: 'home',
+        title: t('menu.home'),
+        to: '/',
+        icon: 'home',
+    }, {
+        id: 'app',
+        title: t('menu.app'),
+        to: '/app',
+        icon: 'widgets',
+        resourceName: 'app',
+    }];
     return <BaseApp
         code="cmd"
         logo={logo}
@@ -38,7 +32,7 @@ export const App: React.FC = () => {
         }}
         title="Comanda"
         version="0.1"
-        availableLanguages={availableLanguages}
+        availableLanguages={['ca', 'es']}
         menuEntries={menuEntries}
         appbarBackgroundColor="#083c6b"
         appbarBackgroundImg={headerBackground}>

@@ -218,27 +218,10 @@ const kettingActionSubmit = async (action: Action, args?: ResourceApiActionSubmi
     return (action as any).client.getStateForResponse(uri.toString(), response);
 }
 
-const linksWithforcedGet = ['find'];
-const getStateLinkAction = (state: State, link: string) => {
-    // Si l'acció està a dins l'array linksWithforcedGet aleshores foçam que no es retorni
-    // cap action. Això ho hem de forçar perquè si no ens retornarà l'acció per defecte
-    // perquè aquesta és l'action de onChange que te la mateixa url que la de 'find'.
-    const stateLink = state.links.get(link);
-    if (stateLink && !linksWithforcedGet.includes(link)) {
-        try {
-            return state.action(link);
-        } catch (error) {
-            try {
-                const defaultAction = state.action('default');
-                const processedDefaultActionUri = defaultAction.uri.split('{')[0];
-                const processedLinkFromStateHref = stateLink.href.split('{')[0];
-                if (processedDefaultActionUri === processedLinkFromStateHref) {
-                    return defaultAction;
-                }
-            } catch (error) {
-            }
-        }
-    }
+const getStateAction = (state: State, action: string) => {
+    try {
+        return state.actions().length > 0 ? state.action(action) : undefined;
+    } catch (error) { }
 }
 const getPromiseFromResourceLink = async (resource: Resource, link?: string, refresh?: boolean): Promise<State> => {
     if (link) {
@@ -250,9 +233,9 @@ const getPromiseFromResourceLink = async (resource: Resource, link?: string, ref
 }
 const getPromiseFromStateLink = (state: State, link: string, args?: ResourceApiActionSubmitArgs | undefined, refresh?: boolean): Promise<State> => {
     try {
-        const stateAction = getStateLinkAction(state, link);
+        const stateAction = getStateAction(state, link);
         if (stateAction) {
-            return kettingActionSubmit(stateAction, args);
+            return kettingActionSubmit(stateAction as Action, args);
         } else {
             const { data } = args ?? {};
             const stateFollow = state.follow(link, data);
@@ -276,7 +259,7 @@ const callRequestExecFn = (
     debugRequests: boolean | undefined,
     logConsole: LogConsoleType) => {
     if (debugRequests) {
-        const stateAction = getStateLinkAction(state, link);
+        const stateAction = getStateAction(state, link);
         const isUpdateAction = stateAction && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(stateAction.method);
         const messagePrefix = isUpdateAction ? 'Executing action' : 'Sending request';
         const messageSuffix = id != null ? 'with id ' + id : '';
@@ -404,6 +387,7 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
                         resolve({
                             ...state.data,
                             '_links': processStateLinks(state.links),
+                            '_actions': processStateActions(state.actions()),
                         });
                     } else {
                         resolve(state.data);
@@ -639,7 +623,7 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
             } else {
                 const error = {
                     name: 'ApiStillLoadingError',
-                    message: 'Couldn\'t exec request to link \'' + link + '\' on resource \'' + resourceName + '\': API is still loading',
+                    message: 'Couldn\'t exec request to link/action \'' + link + '\' on resource \'' + resourceName + '\': API is still loading',
                 }
                 args?.callbacks?.error?.(error);
                 reject(error);

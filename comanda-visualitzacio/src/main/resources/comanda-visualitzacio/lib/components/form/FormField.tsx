@@ -1,6 +1,6 @@
 import React from 'react';
 //import { useWhatChanged } from '@simbathesailor/use-what-changed';
-import { useAppContext } from '../AppContext';
+import { useBaseAppContext } from '../BaseAppContext';
 import useLogConsole from '../../util/useLogConsole';
 import {
     useFormContext,
@@ -46,6 +46,7 @@ type FormFieldRendererProps = FormFieldCommonProps & {
 export type FormFieldCustomProps = FormFieldCommonProps & {
     value: any;
     field: any;
+    type?: string;
     fieldError?: FormFieldError;
     onChange: (value: any) => void;
 };
@@ -84,9 +85,9 @@ const FormFieldRenderer: React.FC<FormFieldRendererProps> = (props) => {
         type,
         debug,
         otherProps]);*/
-    const { getFormFieldComponent } = useAppContext();
+    const { getFormFieldComponent } = useBaseAppContext();
     const logConsole = useLogConsole(LOG_PREFIX);
-    const label = labelProp ?? field?.prompt ?? name;
+    const label = labelProp ?? field?.label ?? name;
     debug && logConsole.debug('Field', name, 'rendered', (value ? 'with value: ' + value : 'empty'));
     const fieldType = type ?? field?.type;
     const mappedFieldType = fieldTypeMap?.get(fieldType) ?? fieldType;
@@ -95,6 +96,7 @@ const FormFieldRenderer: React.FC<FormFieldRendererProps> = (props) => {
         name={name}
         label={label}
         value={value}
+        type={fieldType}
         field={field}
         fieldError={fieldError}
         inline={inline}
@@ -124,7 +126,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
     const [fieldError, setFieldError] = React.useState<FormFieldError | undefined>();
     const {
         isReady: isFormReady,
-        isSaveLinkPresent,
+        isSaveActionPresent,
         fields,
         fieldErrors,
         fieldTypeMap,
@@ -158,7 +160,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         onChange?.(value);
     }, [dataDispatchAction, name, field, onChange]);
     const inline = inlineProp ?? inlineCtx;
-    const forceDisabledAndReadonly = filterContext == null && !isSaveLinkPresent;
+    const forceDisabledAndReadonly = filterContext == null && !isSaveActionPresent;
     const joinedComponentProps = React.useMemo(() => ({
         ...commonFieldComponentProps,
         ...componentProps,

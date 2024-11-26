@@ -1,7 +1,6 @@
 package es.caib.comanda.configuracio.logic.helper;
 
 import es.caib.comanda.configuracio.logic.intf.exception.ObjectMappingException;
-import liquibase.pro.packaged.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
@@ -83,7 +82,7 @@ public class ObjectMappingHelper {
 	}
 
 	/**
-	 * Crea un clon dl recurs per a la lògica onChange.
+	 * Crea un clon del recurs per a la lògica onChange.
 	 *
 	 * @param resource
 	 *            el recurs d'orígen.

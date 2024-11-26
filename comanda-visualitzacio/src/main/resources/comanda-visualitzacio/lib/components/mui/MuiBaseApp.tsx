@@ -9,6 +9,7 @@ import AppBar from './AppBar';
 import Menu, { MenuEntry } from './Menu';
 import OfflineMessage from './OfflineMessage';
 import { useToolbarMenuIcon } from './ToolbarMenuIcon';
+import { FormFieldText } from './form/FormFieldText';
 
 export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     title: string;
@@ -21,10 +22,19 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     menuShrinkDisabled?: boolean;
     menuWidth?: number,
     additionalHeaderComponents?: React.ReactElement | React.ReactElement[];
+    additionalAuthComponents?: React.ReactElement | React.ReactElement[];
     appbarStyle?: any;
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
 };
+
+const baseFormFieldComponents = [{
+    type: 'text',
+    component: FormFieldText,
+}, {
+    type: 'textarea',
+    component: FormFieldText,
+}];
 
 const MuiComponentsConfigurer: React.FC = () => {
     const [messageDialogShow, messageDialogComponent] = useMessageDialog();
@@ -58,6 +68,28 @@ const MuiComponentsConfigurer: React.FC = () => {
     </>;
 }
 
+const useMenu = (
+    menuTitle: string | undefined,
+    menuEntries: MenuEntry[] | undefined,
+    menuOnTitleClose: (() => void) | undefined,
+    menuWidth: number | undefined) => {
+    const {
+        shrink,
+        iconClicked,
+        buttonComponent: menuButton } = useToolbarMenuIcon();
+    const menuComponent = menuEntries != null ? <Menu
+        title={menuTitle}
+        entries={menuEntries}
+        onTitleClose={menuOnTitleClose}
+        drawerWidth={menuWidth}
+        shrink={shrink}
+        iconClicked={iconClicked} /> : undefined;
+    return {
+        menuButton,
+        menuComponent
+    }
+}
+
 export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
     const {
         title,
@@ -72,29 +104,35 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         appbarStyle,
         appbarBackgroundColor,
         appbarBackgroundImg,
+        formFieldComponents,
         additionalHeaderComponents,
+        additionalAuthComponents,
         children,
         ...otherProps
     } = props;
-    const { shrink, buttonComponent: menuButton } = useToolbarMenuIcon();
+    const mergedFormFieldComponents = [...baseFormFieldComponents, ...(formFieldComponents ?? [])];
+    const {
+        menuButton,
+        menuComponent
+    } = useMenu(
+        menuTitle,
+        menuEntries,
+        menuOnTitleClose,
+        menuWidth);
     const appbarComponent = <AppBar
         title={title}
         version={version}
         logo={logo}
         logoStyle={logoStyle}
         menuButton={!menuShrinkDisabled && menuEntries != null ? menuButton : undefined}
-        additionalComponents={additionalHeaderComponents}
+        additionalToolbarComponents={additionalHeaderComponents}
+        additionalAuthComponents={additionalAuthComponents}
         style={appbarStyle}
         backgroundColor={appbarBackgroundColor}
         backgroundImg={appbarBackgroundImg} />;
-    const menuComponent = menuEntries != null ? <Menu
-        title={menuTitle}
-        entries={menuEntries}
-        onTitleClose={menuOnTitleClose}
-        drawerWidth={menuWidth}
-        shrink={shrink} /> : undefined;
     const offlineComponent = <OfflineMessage />;
     return <BaseApp
+        formFieldComponents={mergedFormFieldComponents}
         {...otherProps}
         contentComponentSlots={{
             appbar: appbarComponent,

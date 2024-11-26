@@ -26,8 +26,37 @@ const componentsEn = {
         },
         delete: {
             single: {
-                title: 'Delete',
-            }
+                title: 'Delete item',
+                confirm: 'Are you sure you want to delete this item (this action can not be undone)?',
+                success: 'Deleted items',
+                error: 'Error deleting items',
+            },
+        },
+    },
+    form: {
+        goBack: {
+            title: 'Go back',
+        },
+        revert: {
+            title: 'Undo changes',
+            confirm: 'Are you sure you want to revert the changes in the form?',
+        },
+        create: {
+            title: 'Create',
+            success: 'Element created',
+            error: 'Error creating element',
+        },
+        update: {
+            title: 'Update',
+            success: 'Element updated',
+            error: 'Error updating element',
+            wrong_resource_type: 'Couldn\'t save forms with resource type "{{resourceType}}"',
+        },
+        delete: {
+            title: 'Delete',
+            confirm: 'Are you sure you want to delete this item (this action can not be undone)?',
+            success: 'Element deleted',
+            error: 'Error deleting element',
         },
     },
     buttons: {

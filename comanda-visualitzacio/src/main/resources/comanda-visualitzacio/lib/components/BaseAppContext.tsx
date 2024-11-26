@@ -1,5 +1,6 @@
 import React from 'react';
 import { PersistentStateReturned } from '../util/usePersistentState';
+import { FormFieldCustomProps } from './form/FormField';
 import { ResourceApiUserSessionValuePair } from './ResourceApiContext';
 
 export interface RouterNavigateFunction {
@@ -25,6 +26,7 @@ export type DialogButton = {
 };
 
 export type BaseAppContextType = {
+    getFormFieldComponent: (type?: string) => React.FC<FormFieldCustomProps> | undefined;
     setMarginsDisabled: (marginsDisabled: boolean) => void;
     contentExpandsToAvailableHeight: boolean;
     setContentExpandsToAvailableHeight: (expand: boolean) => void;

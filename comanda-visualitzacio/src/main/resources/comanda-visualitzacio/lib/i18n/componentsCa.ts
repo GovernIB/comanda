@@ -26,8 +26,41 @@ const componentsCa = {
         },
         delete: {
             single: {
-                title: 'Esborrar',
-            }
+                title: 'Esborrar element',
+                confirm: 'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
+                success: 'Element esborrat',
+                error: 'Error esborrant element',
+            },
+        },
+        error: {
+            toolbar: 'S\'ha produit un error',
+        },
+        noRows: 'Sense dades',
+    },
+    form: {
+        goBack: {
+            title: 'Tornar enrere',
+        },
+        revert: {
+            title: 'Desfer canvis',
+            confirm: 'Estau segur que voleu desfer els canvis fets al formulari?',
+        },
+        create: {
+            title: 'Crear',
+            success: 'Element creat',
+            error: 'Error creant element'
+        },
+        update: {
+            title: 'Modificar',
+            success: 'Element modificat',
+            error: 'Error modificant element',
+            wrong_resource_type: 'No es possible desar els formularis amb tipus de recurs "{{resourceType}}"',
+        },
+        delete: {
+            title: 'Esborrar',
+            confirm: 'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
+            success: 'Element esborrat',
+            error: 'Error esborrant element',
         },
     },
     buttons: {

@@ -5,18 +5,26 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import { useBaseAppContext } from 'reactlib';
 
+/*const allLanguages = [{
+    locale: 'ca',
+    name: 'Català'
+}, {
+    locale: 'es',
+    name: 'Castellà'
+}];*/
+
 export type LanguageItem = {
     locale: string;
     name: string;
     flag?: string;
 };
 
-type LanguageSelectorProps = {
-    languages?: LanguageItem[];
+type HeaderLanguageSelectorProps = {
+    languages?: string[];
     onLanguageChange?: (language?: string) => void;
 } & any;
 
-const LanguageSelector: React.FC<LanguageSelectorProps> = (props) => {
+const HeaderLanguageSelector: React.FC<HeaderLanguageSelectorProps> = (props) => {
     const {
         languages,
         onLanguageChange,
@@ -54,4 +62,4 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = (props) => {
     </Select> : null;
 }
 
-export default LanguageSelector;
+export default HeaderLanguageSelector;

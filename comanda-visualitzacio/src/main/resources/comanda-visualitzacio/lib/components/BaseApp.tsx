@@ -3,6 +3,8 @@ import componentsCa from '../i18n/componentsCa';
 import componentsEn from '../i18n/componentsEn';
 import componentsEs from '../i18n/componentsEs';
 import { usePersistentState } from '../util/usePersistentState';
+import { FormFieldComponent } from './form/FormField';
+import { ResourceApiFormFieldDefault } from './form/FormFieldDefault';
 import {
     BaseAppContext,
     MessageDialogShowFn,
@@ -41,6 +43,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     routerUseLocationPath: () => string;
     linkComponent: React.ElementType;
     saveAs?: (data: Blob | string, filename?: string) => void;
+    formFieldComponents?: FormFieldComponent[];
     contentComponentSlots: ContentComponentSlots;
 };
 
@@ -94,6 +97,23 @@ const useTemporalMessage = () => {
         setTemporalMessageShow,
         temporalMessageShow,
     };
+}
+
+const useFormFieldComponents = (formFieldComponents?: FormFieldComponent[]) => {
+    const formFieldComponentsMap: any = {};
+    formFieldComponents?.forEach(ffc => {
+        formFieldComponentsMap[ffc.type] = ffc.component;
+    });
+    const formFieldComponentsRef = React.useRef<any>(formFieldComponentsMap);
+    const getFormFieldComponent = (type?: string) => {
+        if (type && formFieldComponentsRef.current && formFieldComponentsRef.current[type]) {
+            return formFieldComponentsRef.current[type];
+        } else {
+            console.warn('Form field type ' + type + ' not found, using default')
+            return ResourceApiFormFieldDefault;
+        }
+    }
+    return getFormFieldComponent;
 }
 
 const useI18n = (
@@ -240,6 +260,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist,
         linkComponent,
         saveAs,
+        formFieldComponents,
         contentComponentSlots,
         children,
     } = props;
@@ -255,6 +276,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         setTemporalMessageShow,
         temporalMessageShow
     } = useTemporalMessage();
+    const getFormFieldComponent = useFormFieldComponents(formFieldComponents);
     const {
         currentLanguage,
         setCurrentLanguage,
@@ -276,6 +298,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         persistentStateRemove
     } = useUserSession(code, persistentSession ?? false);
     const context = {
+        getFormFieldComponent,
         setMarginsDisabled,
         contentExpandsToAvailableHeight,
         setContentExpandsToAvailableHeight,

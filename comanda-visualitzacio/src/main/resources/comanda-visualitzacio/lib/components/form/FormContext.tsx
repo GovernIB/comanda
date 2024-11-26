@@ -1,5 +1,4 @@
 import React from 'react';
-import { ResourceApiBlobResponse } from '../ResourceApiProvider';
 
 export type FormApi = {
     getData: () => any;
@@ -7,9 +6,6 @@ export type FormApi = {
     reset: (data?: any, id?: any) => void;
     revert: (unconfirmed?: boolean) => void;
     save: () => Promise<any>;
-    execAction: (code: string) => Promise<any>;
-    generateReport: (code: string) => Promise<ResourceApiBlobResponse>;
-    validate: () => Promise<void>;
     delete: () => void;
     setFieldValue: (name: string, value: any) => void;
 };
@@ -43,8 +39,8 @@ export type FormContextType = {
     isLoading: boolean;
     isReady: boolean;
     apiLinks?: any;
-    isSaveLinkPresent: boolean;
-    isDeleteLinkPresent: boolean;
+    isSaveActionPresent: boolean;
+    isDeleteActionPresent: boolean;
     fields?: any[];
     fieldErrors?: FormFieldError[];
     fieldTypeMap?: Map<string, string>;

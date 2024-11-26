@@ -2,7 +2,6 @@ import React from 'react';
 import { useBaseAppContext } from '../BaseAppContext';
 import {
     ResourceApiError,
-    ResourceApiBlobResponse,
     useResourceApiService,
 } from '../ResourceApiProvider';
 import { useConfirmDialogButtons } from '../AppButtons';
@@ -133,17 +132,14 @@ export const Form: React.FC<FormProps> = (props) => {
     const locationPath = useLocationPath();
     const {
         isReady: apiIsReady,
+        currentFields: apiCurrentFields,
         currentError: apiCurrentError,
         getOne: apiGetOne,
-        fields: apiFields,
         onChange: apiOnChange,
         create: apiCreate,
         update: apiUpdate,
         delette: apiDelete,
-        execAction: apiExecAction,
-        generateReport: apiGenerateReport,
-        validate: apiValidate,
-        currentLinks: apiCurrentLinks
+        currentActions: apiCurrentActions
     } = useResourceApiService(resourceName);
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
@@ -152,11 +148,11 @@ export const Form: React.FC<FormProps> = (props) => {
     const [fields, setFields] = React.useState<any[]>();
     const [fieldErrors, setFieldErrors] = React.useState<FormFieldError[] | undefined>();
     const [revertData, setRevertData] = React.useState<any>();
-    const [apiLinks, setApiLinks] = React.useState<any>();
+    const [apiActions, setApiActions] = React.useState<any>();
     const apiRef = React.useRef<FormApi>();
     const idFromExternalResetRef = React.useRef<any>();
-    const isSaveLinkPresent = apiLinks?.[id != null ? 'update' : 'create'] != null;
-    const isDeleteLinkPresent = id && apiLinks?.['delete'] != null;
+    const isSaveActionPresent = apiActions?.[id != null ? 'update' : 'create'] != null;
+    const isDeleteActionPresent = id && apiActions?.['delete'] != null;
     const calculatedId = (id?: any) => idFromExternalResetRef.current ?? id;
     const onChangeActionMiddleware = React.useCallback((state: any, action: FormFieldDataAction) => {
         if (action.type === FormFieldDataActionType.FIELD_CHANGE) {
@@ -216,8 +212,8 @@ export const Form: React.FC<FormProps> = (props) => {
             getInitialData(id, fields, additionalData, initOnChangeRequest).
                 then((initialData: any) => {
                     debug && logConsole.debug('Initial data loaded', initialData);
-                    const { _links: initialDataLinks, ...initialDataWithoutLinks } = initialData;
-                    id != null && setApiLinks(initialDataLinks);
+                    const { _actions: initialDataActions, ...initialDataWithoutLinks } = initialData;
+                    id != null && setApiActions(initialDataActions);
                     reset(initialDataWithoutLinks);
                 });
         }
@@ -312,29 +308,6 @@ export const Form: React.FC<FormProps> = (props) => {
             reject(t('form.update.wrong_resource_type', { resourceType }));
         }
     });
-    const execAction = (code: string) => new Promise<any>((resolve, reject) => {
-        const calcId = calculatedId(id);
-        apiExecAction(calcId, { code, data }).
-            then(resolve).
-            catch((error: ResourceApiError) => {
-                processSubmitError(error, t('form.exec.error'), reject)
-            });
-    });
-    const generateReport = (code: string) => new Promise<ResourceApiBlobResponse>((resolve, reject) => {
-        const calcId = calculatedId(id);
-        apiGenerateReport(calcId, { code, data }).
-            then(resolve).
-            catch((error: ResourceApiError) => {
-                processSubmitError(error, t('form.generate.error'), reject)
-            });
-    });
-    const validate = () => new Promise<void>((resolve, reject) => {
-        apiValidate({ data }).
-            then(resolve).
-            catch((error: ResourceApiError) => {
-                processSubmitError(error, t('form.validate.error'), reject)
-            });
-    });
     const delette = () => {
         messageDialogShow(
             t('form.delete.title'),
@@ -371,12 +344,8 @@ export const Form: React.FC<FormProps> = (props) => {
         // Obté els camps pel formulari fent una petició al servidor
         if (apiIsReady) {
             debug && logConsole.debug('Loading fields' + (resourceType ? ' of type' : ''), resourceType, resourceTypeCode);
-            const args = resourceType ? { data: { [resourceType]: resourceTypeCode } } : undefined;
-            apiFields(args).then((fields: any) => {
-                debug && logConsole.debug('Fields loaded', '(' + fields?.length + ')');
-                setFields(fields);
-            });
-            setApiLinks(apiCurrentLinks);
+            setFields(apiCurrentFields);
+            setApiActions(apiCurrentActions);
         }
     }, [apiIsReady]);
     React.useEffect(() => {
@@ -394,9 +363,6 @@ export const Form: React.FC<FormProps> = (props) => {
         reset: externalReset,
         revert,
         save,
-        execAction,
-        generateReport,
-        validate,
         delete: delette,
         setFieldValue,
     };
@@ -407,9 +373,6 @@ export const Form: React.FC<FormProps> = (props) => {
             apiRefProp.current.reset = externalReset;
             apiRefProp.current.revert = revert;
             apiRefProp.current.save = save;
-            apiRefProp.current.execAction = execAction;
-            apiRefProp.current.generateReport = generateReport;
-            apiRefProp.current.validate = validate;
             apiRefProp.current.delete = delette;
             apiRefProp.current.setFieldValue = setFieldValue;
         } else {
@@ -423,9 +386,9 @@ export const Form: React.FC<FormProps> = (props) => {
         resourceTypeCode,
         isLoading,
         isReady: !isLoading,
-        apiLinks,
-        isSaveLinkPresent,
-        isDeleteLinkPresent,
+        apiActions,
+        isSaveActionPresent,
+        isDeleteActionPresent,
         fields,
         fieldErrors,
         fieldTypeMap,
@@ -436,7 +399,7 @@ export const Form: React.FC<FormProps> = (props) => {
         dataGetFieldValue: (fieldName: string) => dataGetValue((state) => state?.[fieldName]),
         dataDispatchAction,
         commonFieldComponentProps,
-    }), [isLoading, apiLinks, fields, fieldErrors, data, dataDispatchAction, commonFieldComponentProps]);
+    }), [isLoading, apiActions, fields, fieldErrors, data, dataDispatchAction, commonFieldComponentProps]);
     return <ResourceApiFormContext.Provider value={context}>
         {!isLoading ? children : null}
     </ResourceApiFormContext.Provider>;

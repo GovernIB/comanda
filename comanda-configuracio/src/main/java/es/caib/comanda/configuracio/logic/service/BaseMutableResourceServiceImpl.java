@@ -7,6 +7,7 @@ import es.caib.comanda.configuracio.logic.intf.model.Resource;
 import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
 import es.caib.comanda.configuracio.logic.intf.service.MutableResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.CompositePkUtil;
+import es.caib.comanda.configuracio.logic.intf.util.StringUtil;
 import es.caib.comanda.configuracio.persist.entity.BaseEntity;
 import es.caib.comanda.configuracio.persist.entity.EmbeddableEntity;
 import es.caib.comanda.configuracio.persist.repository.JpaRepositoryLocator;
@@ -21,10 +22,8 @@ import org.springframework.util.ReflectionUtils;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.lang.reflect.Proxy;
+import java.util.*;
 
 @Slf4j
 public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID extends Serializable, E extends BaseEntity<ID>>
@@ -98,7 +97,7 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 				fieldName,
 				fieldValue,
 				answers);
-		return processChangesRecursive(
+		return onChangeLogicProcessRecursive(
 				previous,
 				fieldName,
 				fieldName,
@@ -142,12 +141,12 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 		return true;
 	}
 
-	protected Map<String, Object> processResourceChanges(
+	protected void processOnChangeLogic(
 			R previous,
 			String fieldName,
 			Object fieldValue,
-			Map<String, AnswerRequiredException.AnswerValue> answers) {
-		return null;
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			R target) {
 	}
 
 	protected E buildNewEntity(
@@ -434,18 +433,45 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 		}
 	}
 
-	private Map<String, Object> processChangesRecursive(
+	private final Map<String, OnChangeLogicProcessor<R>> onChangeLogicProcessorMap = new HashMap<>();
+	protected void register(OnChangeLogicProcessor<R> logicProcessor) {
+		Arrays.stream(logicProcessor.supportedFieldNames()).
+				forEach(f -> onChangeLogicProcessorMap.put(f, logicProcessor));
+	}
+	private Map<String, Object> onChangeLogicProcessRecursive(
 			R previous,
 			String fieldName,
 			Object fieldValue,
 			Map<String, AnswerRequiredException.AnswerValue> answers,
 			int level) {
-		Map<String, Object> changes = processResourceChanges(
-				previous,
-				fieldName,
-				fieldValue,
-				answers);
-		if (changes != null) {
+		Map<String, Object> changes = new HashMap<>();
+		R target = (R)Proxy.newProxyInstance(
+				getClass().getClassLoader(),
+				new Class[] { getResourceClass() },
+				(o, method, objects) -> {
+					if (method.getName().startsWith("set")) {
+						String fieldName1 = StringUtil.decapitalize(
+								method.getName().substring("set".length()));
+						changes.put(fieldName1, objects[0]);
+					}
+					return null;
+				});
+		if (onChangeLogicProcessorMap.get(fieldName) != null) {
+			onChangeLogicProcessorMap.get(fieldName).processOnChangeLogic(
+					previous,
+					fieldName,
+					fieldValue,
+					answers,
+					target);
+		} else {
+			processOnChangeLogic(
+					previous,
+					fieldName,
+					fieldValue,
+					answers,
+					target);
+		}
+		if (!changes.isEmpty()) {
 			Map<String, Object> changesToReturn = new HashMap<>(changes);
 			for (String changedFieldName: changes.keySet()) {
 				Field changedField = ReflectionUtils.findField(getResourceClass(), changedFieldName);
@@ -458,13 +484,15 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 								fieldValue,
 								changes,
 								changedFieldName);
-						Map<String, Object> changesPerField = processChangesRecursive(
+						Map<String, Object> changesPerField = onChangeLogicProcessRecursive(
 								previousPerField,
 								changedFieldName,
 								changes.get(changedFieldName),
 								answers,
 								level + 1);
-						changesToReturn.putAll(changesPerField);
+						if (changesPerField != null) {
+							changesToReturn.putAll(changesPerField);
+						}
 					}
 				}
 			}
@@ -507,6 +535,16 @@ public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID 
 		E saved = resourceRepository.saveAndFlush(entity);
 		resourceRepository.refresh(saved);
 		return saved;
+	}
+
+	public interface OnChangeLogicProcessor <R extends Resource<?>> {
+		String[] supportedFieldNames();
+		void processOnChangeLogic(
+				R previous,
+				String fieldName,
+				Object fieldValue,
+				Map<String, AnswerRequiredException.AnswerValue> answers,
+				R target);
 	}
 
 }

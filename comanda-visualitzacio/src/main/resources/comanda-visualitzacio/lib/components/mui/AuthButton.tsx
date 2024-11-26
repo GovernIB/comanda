@@ -13,6 +13,10 @@ import { TextAvatar } from './Avatars';
 import { useBaseAppContext } from '../BaseAppContext';
 import { useAuthContext } from '../AuthContext';
 
+type AuthButtonProps = {
+    additionalComponents?: React.ReactElement | React.ReactElement[];
+};
+
 const UserAvatar: React.FC = (props: any) => {
     const { getTokenParsed } = useAuthContext();
     const [tokenParsed, setTokenParsed] = React.useState<any>();
@@ -35,7 +39,8 @@ const LoginButton: React.FC = () => {
     </Button>;
 }
 
-const LoggedInUserButton: React.FC = () => {
+const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
+    const { additionalComponents } = props;
     const { t } = useBaseAppContext();
     const { getTokenParsed, signOut } = useAuthContext();
     const [tokenParsed, setTokenParsed] = React.useState<any>();
@@ -85,6 +90,8 @@ const LoggedInUserButton: React.FC = () => {
                     secondary={tokenParsed?.preferred_username} />
             </MenuItem>
             <Divider />
+            {additionalComponents}
+            {additionalComponents && <Divider />}
             <MenuItem onClick={() => signOut?.()}>
                 <ListItemIcon>
                     <Icon fontSize="small">logout</Icon>
@@ -95,9 +102,10 @@ const LoggedInUserButton: React.FC = () => {
     </>;
 }
 
-const AuthButton: React.FC = () => {
+const AuthButton: React.FC<AuthButtonProps> = (props) => {
+    const { additionalComponents } = props;
     const { isReady, isAuthenticated } = useAuthContext();
-    return isReady ? (!isAuthenticated ? <LoginButton /> : <LoggedInUserButton />) : null;
+    return isReady ? (!isAuthenticated ? <LoginButton /> : <LoggedInUserButton additionalComponents={additionalComponents} />) : null;
 }
 
 export default AuthButton;

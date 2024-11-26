@@ -13,7 +13,8 @@ type AppBarProps = {
     logo?: string;
     logoStyle?: any;
     menuButton: React.ReactNode,
-    additionalComponents?: React.ReactElement | React.ReactElement[];
+    additionalToolbarComponents?: React.ReactElement | React.ReactElement[];
+    additionalAuthComponents?: React.ReactElement | React.ReactElement[];
     style?: any;
     backgroundColor?: string;
     backgroundImg?: string;
@@ -26,13 +27,14 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
         logo,
         logoStyle,
         menuButton,
-        additionalComponents,
+        additionalToolbarComponents,
+        additionalAuthComponents,
         style,
         backgroundColor,
         backgroundImg,
     } = props;
     const authContext = useOptionalAuthContext();
-    const authButton = authContext != null ? <AuthButton /> : null;
+    const authButton = authContext != null ? <AuthButton additionalComponents={additionalAuthComponents} /> : null;
     const backgroundStyle = backgroundColor ? toolbarBackgroundStyle(backgroundColor, backgroundImg) : {};
     return <MuiAppBar position="sticky" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar style={{ ...style, ...backgroundStyle }}>
@@ -48,7 +50,7 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
                 {title}
                 {/*version && <Typography variant="caption">&nbsp;v{version}</Typography>*/}
             </Typography>
-            {additionalComponents}
+            {additionalToolbarComponents}
             {authButton}
         </Toolbar>
     </MuiAppBar>;

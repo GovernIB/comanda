@@ -5,11 +5,17 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 import Icon from '@mui/material/Icon';
+import IconButton from '@mui/material/IconButton';
 import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
-import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
+import {
+    styled,
+    useTheme,
+    Theme,
+    CSSObject
+} from '@mui/material/styles';
 import { useBaseAppContext } from '../BaseAppContext';
-import { IconButton } from '@mui/material';
+import useSmallScreen from '../../util/useSmallScreen';
 
 export type MenuEntry = {
     id: string;
@@ -26,10 +32,13 @@ export type MenuProps = {
     level?: number;
     onTitleClose?: () => void;
     shrink?: boolean;
+    iconClicked?: boolean;
     drawerWidth?: number;
 };
 
-type ListMenuContentProps = MenuProps & {};
+type ListMenuContentProps = MenuProps & {
+    onMenuItemClick?: () => void;
+};
 
 type MenuItemProps = React.PropsWithChildren & {
     primary: string;
@@ -38,6 +47,7 @@ type MenuItemProps = React.PropsWithChildren & {
     level?: number;
     selected?: boolean;
     shrink?: boolean;
+    onMenuItemClick?: () => void;
 }
 
 type MenuTitleProps = {
@@ -66,13 +76,10 @@ const closedMixin = (theme: Theme): CSSObject => ({
     },
 });
 
-const StyledDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'width' })(
+const ShrinkableDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'width' })(
     ({ theme, open, ...otherProps }) => {
         const width = (otherProps as any)?.['width'];
-        return {
-            width,
-            flexShrink: 0,
-            boxSizing: 'border-box',
+        const shrinkableStyles = {
             ...(open && {
                 ...openedMixin(theme, width),
                 '& .MuiDrawer-paper': openedMixin(theme, width),
@@ -82,7 +89,12 @@ const StyledDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'ope
                 whiteSpace: 'nowrap',
                 '& .MuiDrawer-paper': closedMixin(theme),
             }),
-        }
+        };
+        return {
+            flexShrink: 0,
+            boxSizing: 'border-box',
+            ...shrinkableStyles
+        };
     });
 
 const StyledList = styled(List)<{ component?: React.ElementType }>({
@@ -110,6 +122,7 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
         level = 0,
         selected,
         shrink,
+        onMenuItemClick,
         children
     } = props;
     const { getLinkComponent } = useBaseAppContext();
@@ -142,8 +155,12 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
         opacity: !shrink ? 1 : 0,
         '& span': { fontSize: '14px', fontWeight: level === 0 ? 'bold' : undefined }
     };
-    const handleExpandIconClick = () => {
-        setExpanded(expanded => !expanded);
+    const handleMenuItemClick = () => {
+        if (children != null) {
+            setExpanded(expanded => !expanded);
+        } else {
+            onMenuItemClick?.();
+        }
     }
     const processedIcon = shrink ? icon : (children != null ? (expanded ? 'expand_more' : 'chevron_right') : icon);
     const iconComponent = processedIcon ? <ListItemIcon sx={itemIconSx}>
@@ -155,9 +172,9 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
             selected={selected}
             to={children == null ? to : undefined}
             component={children == null ? (to != null ? getLinkComponent() : undefined) : undefined}
-            onClick={children != null ? handleExpandIconClick : undefined}
+            onClick={handleMenuItemClick}
             sx={itemButtonSx}
-            style={{ paddingLeft: level > 0 ? ((3 + 2 * level) * 8) + 'px' : '40px'}}>
+            style={{ paddingLeft: level > 0 ? ((3 + 2 * level) * 8) + 'px' : '40px' }}>
             {iconComponent}
             <ListItemText primary={primary} sx={itemTextSx} />
         </ListItemButton>}
@@ -170,6 +187,7 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
         entries,
         level,
         shrink,
+        onMenuItemClick,
     } = props;
     const { useLocationPath } = useBaseAppContext();
     const locationPath = useLocationPath();
@@ -179,15 +197,20 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
             const entryComponent = item.divider ?
                 <Divider key={index} /> :
                 <MenuItem
+                    key={index}
                     primary={item.title ?? ''}
                     to={item.to}
                     icon={item.icon}
                     level={level}
                     selected={selected}
                     shrink={shrink}
-                    key={index}>
+                    onMenuItemClick={onMenuItemClick}>
                     {item.children?.length ? <Box>
-                        <ListMenuContent entries={item.children} level={(level ?? 0) + 1} shrink={shrink} />
+                        <ListMenuContent
+                            entries={item.children}
+                            level={(level ?? 0) + 1}
+                            shrink={shrink}
+                            onMenuItemClick={onMenuItemClick} />
                     </Box> : null}
                 </MenuItem>;
             return entryComponent;
@@ -217,14 +240,43 @@ export const Menu: React.FC<MenuProps> = (props) => {
         title,
         entries,
         onTitleClose,
-        drawerWidth = 240,
         shrink,
+        iconClicked,
+        drawerWidth = 240,
     } = props;
-    return <StyledDrawer variant="permanent" open={!shrink} {...{ width: drawerWidth }}>
-        <Box sx={{ mt: 8 }} />
+    const smallScreen = useSmallScreen();
+    const [open, setOpen] = React.useState<boolean>(false);
+    React.useEffect(() => {
+        setOpen(o => !o);
+    }, [iconClicked]);
+    React.useEffect(() => {
+        setOpen(false);
+    }, [smallScreen]);
+    const handleMenuItemClick = () => {
+        setOpen(false);
+    }
+    const drawerContent = <>
+        <Box sx={{ mt: smallScreen ? 7 : 8 }} />
         {title && <MenuTitle title={title} onClose={onTitleClose} />}
-        <ListMenuContent entries={entries} shrink={shrink} />
-    </StyledDrawer>;
+        <ListMenuContent
+            entries={entries}
+            shrink={!smallScreen ? shrink : false}
+            onMenuItemClick={handleMenuItemClick} />
+    </>;
+    return !smallScreen ? <ShrinkableDrawer
+        variant={'permanent'}
+        open={!shrink}
+        {...{ width: drawerWidth }}>
+        {drawerContent}
+    </ShrinkableDrawer> : <Drawer
+        open={open}
+        onClose={() => setOpen(false)}
+        sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+        }}>
+        {drawerContent}
+    </Drawer>;
 }
 
 export default Menu;

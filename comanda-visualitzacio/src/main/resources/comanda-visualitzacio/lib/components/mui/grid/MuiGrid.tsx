@@ -25,9 +25,12 @@ import {
     useResourceApiService,
     ResourceApiFindCommonArgs,
     ResourceApiFindArgs,
+    ResourceApiError
 } from '../../ResourceApiProvider';
 import { useBaseAppContext } from '../../BaseAppContext';
+import { useConfirmDialogButtons } from '../../AppButtons';
 import { toToolbarIcon } from '../ToolbarIcon';
+import FormDialogPopup, { FormDialogPopupApi } from '../form/FormDialogPopup';
 import { toGridActionItem } from './GridActionItem';
 import { useGridQuickFilter } from './GridQuickFilter';
 import { useToolbar, GridToolbarType } from './GridToolbar';
@@ -66,25 +69,25 @@ export type MuiGridProps = {
     staticFilter?: string;
     namedQueries?: string[];
     perspectives?: string[];
-    rowLink?: string;
-    rowDetailLink?: string;
-    rowUpdateLink?: string;
-    rowAdditionalActions?: ResourceApiGridAdditionalAction[];
     toolbarType?: GridToolbarType;
     toolbarHideRefresh?: true;
     toolbarHideQuickFilter?: true;
     toolbarCreateLink?: string;
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     toolbarAdditionalRow?: React.ReactElement;
-    treeData?: true;
-    treeDataPathAttribute?: string;
-    treeDataProcessPath?: (pathValue: any, row: any) => string | string[];
-    treeDataStructureFromPath?: (pathValue: any, row: any) => [[any, any]]; // [id, rowData]
-    treeDataStructureHandleRefresh?: () => Promise<any>;
-    treeDataGroupRowDataFromPath?: (pathValue: any, row: any) => void;
-    treeDataGroupColumnProps?: any;
-    treeDataGroupStructureIcon?: string | ((row: any) => void);
-    treeDataGroupHideNoStructureContent?: true;
+    rowLink?: string;
+    rowDetailLink?: string;
+    rowUpdateLink?: string;
+    rowAdditionalActions?: ResourceApiGridAdditionalAction[];
+    popupEditActive?: boolean;
+    popupEditCreateActive?: boolean;
+    popupEditUpdateActive?: boolean;
+    popupEditFormContent?: React.ReactElement;
+    popupEditFormAdditionalData?: any;
+    popupEditFormDialogTitle?: string;
+    popupEditFormDialogResourceTitle?: string;
+    popupEditFormDialogComponentProps?: any;
+    popupEditFormPerspectives?: string[];
     onRowsChange?: (rows: GridRowsProp) => void;
     onRowOrderChange?: GridEventListener<"rowOrderChange">;
     apiRef?: GridApiRef;
@@ -199,20 +202,71 @@ const rowActionsToGridActionsCellItems = (
 }*/
 
 const useGridEditable = (
+    resourceName: string,
     readOnly: boolean,
     toolbarCreateLink: string | undefined,
     rowUpdateLink: string | undefined,
     rowDetailLink: string | undefined,
-    apiCurrentActions: any) => {
-    const { t } = useBaseAppContext();
+    popupEditActive: boolean | undefined,
+    popupEditCreateActive: boolean | undefined,
+    popupEditUpdateActive: boolean | undefined,
+    popupEditFormContent: React.ReactElement | undefined,
+    popupEditFormAdditionalData: any,
+    popupEditFormDialogTitle: string | undefined,
+    popupEditFormDialogResourceTitle: string | undefined,
+    popupEditFormDialogComponentProps: any,
+    apiCurrentActions: any,
+    apiDelete: (id: any) => Promise<any>,
+    apiRef: GridApiRef) => {
+    const {
+        t,
+        temporalMessageShow,
+        messageDialogShow,
+    } = useBaseAppContext();
+    const formDialogPopupApiRef = React.useRef<FormDialogPopupApi>();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const isPopupEditCreate = popupEditActive || popupEditCreateActive;
+    const isPopupEditUpdate = popupEditActive || popupEditUpdateActive;
     const doCreate = () => {
-        console.log('>>> doCreate')
+        formDialogPopupApiRef.current?.show().
+            then(() => {
+                apiRef.current?.refresh();
+            }).
+            catch(() => {
+                // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
+            });
     }
-    const doUpdate = () => {
-        console.log('>>> doUpdate')
+    const doUpdate = (id: any) => {
+        formDialogPopupApiRef.current?.show(id).
+            then(() => {
+                apiRef.current?.refresh();
+            }).
+            catch(() => {
+                // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
+            });
     }
-    const doDelete = () => {
-        console.log('>>> doDelete')
+    const doDelete = (id: any) => {
+        messageDialogShow(
+            t('grid.delete.single.title'),
+            t('grid.delete.single.confirm'),
+            confirmDialogButtons,
+            confirmDialogComponentProps).
+            then((value: any) => {
+                if (value) {
+                    apiDelete(id)
+                        .then(() => {
+                            apiRef.current?.refresh();
+                            temporalMessageShow(null, t('grid.delete.single.success'), 'success');
+                        })
+                        .catch((error: ResourceApiError) => {
+                            temporalMessageShow(t('grid.delete.single.error'), error.message, 'error');
+                        });
+                }
+            }).
+            catch(() => {
+                // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
+            });
     }
     const toolbarEditActions = [];
     const isCreateLinkPresent = apiCurrentActions?.['create'] != null;
@@ -244,9 +298,19 @@ const useGridEditable = (
         icon: 'info',
         linkTo: rowDetailLink,
     });
+    const formDialogPopup = !readOnly && (isPopupEditCreate || isPopupEditUpdate) ? <FormDialogPopup
+        resourceName={resourceName}
+        title={popupEditFormDialogTitle}
+        resourceTitle={popupEditFormDialogResourceTitle}
+        formComponentProps={{ additionalData: popupEditFormAdditionalData }}
+        dialogComponentProps={popupEditFormDialogComponentProps}
+        apiRef={formDialogPopupApiRef}>
+        {popupEditFormContent}
+    </FormDialogPopup> : null;
     return {
         toolbarEditActions,
-        rowEditActions
+        rowEditActions,
+        formDialogPopup
     };
 }
 
@@ -342,25 +406,25 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         staticFilter,
         namedQueries,
         perspectives,
-        rowLink,
-        rowDetailLink,
-        rowUpdateLink,
-        rowAdditionalActions = [],
         toolbarType = 'default',
         toolbarHideRefresh,
         toolbarHideQuickFilter,
         toolbarCreateLink,
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
-        treeData,
-        treeDataPathAttribute,
-        treeDataProcessPath,
-        treeDataStructureFromPath,
-        treeDataStructureHandleRefresh,
-        treeDataGroupRowDataFromPath,
-        treeDataGroupColumnProps,
-        treeDataGroupStructureIcon,
-        treeDataGroupHideNoStructureContent,
+        rowLink,
+        rowDetailLink,
+        rowUpdateLink,
+        rowAdditionalActions = [],
+        popupEditActive,
+        popupEditCreateActive,
+        popupEditUpdateActive,
+        popupEditFormContent,
+        popupEditFormAdditionalData,
+        popupEditFormDialogTitle,
+        popupEditFormDialogResourceTitle,
+        popupEditFormDialogComponentProps,
+        popupEditFormPerspectives,
         onRowClick,
         onRowsChange,
         onRowOrderChange,
@@ -390,6 +454,7 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         currentActions: apiCurrentActions,
         currentError: apiCurrentError,
         find: apiFind,
+        delette: apiDelete,
     } = useResourceApiService(resourceName);
     /*const [
         resourceFieldApiRequestIsReady,
@@ -495,13 +560,25 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         apiCurrentLinks);*/
     const {
         toolbarEditActions,
-        rowEditActions
+        rowEditActions,
+        formDialogPopup
     } = useGridEditable(
+        resourceName,
         readOnly ?? false,
         toolbarCreateLink,
         rowUpdateLink,
         rowDetailLink,
-        apiCurrentActions);
+        popupEditActive,
+        popupEditCreateActive,
+        popupEditUpdateActive,
+        popupEditFormContent,
+        popupEditFormAdditionalData,
+        popupEditFormDialogTitle,
+        popupEditFormDialogResourceTitle,
+        popupEditFormDialogComponentProps,
+        apiCurrentActions,
+        apiDelete,
+        apiRef);
     const toolbar = useToolbar(
         title ?? capitalize(resourceName) ?? '<unknown>',
         titleDisabled ?? false,
@@ -561,6 +638,7 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
     const content = <>
         {toolbar}
         {toolbarAdditionalRow ? <Box sx={{ ...gridMargins, mb: 0 }}>{toolbarAdditionalRow}</Box> : null}
+        {formDialogPopup}
         <DataGrid
             {...otherProps}
             loading={loading}
