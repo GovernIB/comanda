@@ -15,7 +15,7 @@ import {
     CSSObject
 } from '@mui/material/styles';
 import { useBaseAppContext } from '../BaseAppContext';
-import useSmallScreen from '../../util/useSmallScreen';
+import { useSmallScreen, useSmallHeader } from '../../util/useSmallScreen';
 
 export type MenuEntry = {
     id: string;
@@ -245,6 +245,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
         drawerWidth = 240,
     } = props;
     const smallScreen = useSmallScreen();
+    const smallHeader = useSmallHeader();
     const [open, setOpen] = React.useState<boolean>(false);
     React.useEffect(() => {
         setOpen(o => !o);
@@ -256,7 +257,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
         setOpen(false);
     }
     const drawerContent = <>
-        <Box sx={{ mt: smallScreen ? 7 : 8 }} />
+        <Box sx={{ mt: smallHeader ? 7 : 8 }} />
         {title && <MenuTitle title={title} onClose={onTitleClose} />}
         <ListMenuContent
             entries={entries}
@@ -272,7 +273,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
         open={open}
         onClose={() => setOpen(false)}
         sx={{
-            display: { xs: 'block', sm: 'none' },
+            display: { sm: 'block', md: 'none' },
             '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
         }}>
         {drawerContent}
