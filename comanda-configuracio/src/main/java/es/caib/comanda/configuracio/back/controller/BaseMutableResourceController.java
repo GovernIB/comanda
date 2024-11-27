@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.ReflectUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -80,6 +81,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	protected ObjectMapper objectMapper;
 	@Autowired
 	protected SmartValidator validator;
+	@Autowired
+	private ApplicationContext applicationContext;
 
 	@Override
 	@PostMapping
