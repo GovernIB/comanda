@@ -1,21 +1,21 @@
 package es.caib.comanda.salut.model;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
 
-@Builder
 @Getter
+@NoArgsConstructor
 public class SalutInfo {
-    private final String codi;
-    private final Date data;
-    private final EstatSalut estat;
-    private final EstatSalut bd;
-    private final List<IntegracioSalut> integracions;
-    private final List<DetallSalut> altres;
-    private final List<MissatgeSalut> missatges;
-    private final String versio;
-    private final List<SalutInfo> subsistemes;
+    private String codi;
+    private Date data;
+    private EstatSalut estat;
+    private EstatSalut bd;
+    private List<IntegracioSalut> integracions;
+    private List<DetallSalut> altres;
+    private List<MissatgeSalut> missatges;
+    private String versio;
+    private List<SubsistemaSalutInfo> subsistemes;
 }

@@ -19,6 +19,7 @@ public class HalFormsConfig {
 
 	@Bean
 	HalFormsConfiguration halFormsConfiguration() {
+		HalFormsConfiguration config = new HalFormsConfiguration();
 		return new HalFormsConfiguration();
 	}
 

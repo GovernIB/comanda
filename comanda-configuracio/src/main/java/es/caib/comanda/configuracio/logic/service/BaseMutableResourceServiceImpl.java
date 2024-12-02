@@ -8,7 +8,7 @@ import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
 import es.caib.comanda.configuracio.logic.intf.service.MutableResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.CompositePkUtil;
 import es.caib.comanda.configuracio.logic.intf.util.StringUtil;
-import es.caib.comanda.configuracio.persist.entity.BaseEntity;
+import es.caib.comanda.configuracio.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.configuracio.persist.entity.EmbeddableEntity;
 import es.caib.comanda.configuracio.persist.repository.JpaRepositoryLocator;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import java.lang.reflect.Proxy;
 import java.util.*;
 
 @Slf4j
-public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID extends Serializable, E extends BaseEntity<ID>>
+public abstract class BaseMutableResourceServiceImpl<R extends Resource<ID>, ID extends Serializable, E extends BaseAuditableEntity<ID>>
 		extends BaseReadonlyResourceServiceImpl<R, ID, E>
 		implements MutableResourceService<R, ID> {
 

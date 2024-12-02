@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Servei REST de gestió d'aplicacions'.
+ * Servei REST de gestió d'aplicacions.
  *
  * @author Límit Tecnologies
  */

@@ -2,3 +2,74 @@ databaseChangeLog:
 - changeSet:
     id: init-constraint-1
     author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}integracio
+        baseColumnNames: app_id
+        referencedTableName: ${db_prefix}app
+        referencedColumnNames: id
+        constraintName: ${db_prefix}integracio_app_fk
+- changeSet:
+    id: init-constraint-2
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}subsistema
+        baseColumnNames: app_id
+        referencedTableName: ${db_prefix}app
+        referencedColumnNames: id
+        constraintName: ${db_prefix}subsistema_app_fk
+- changeSet:
+    id: init-constraint-3
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_integracio
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutint_salut_fk
+- changeSet:
+    id: init-constraint-4
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_subsistema
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutsub_salut_fk
+- changeSet:
+    id: init-constraint-5
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_missatge
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutmsg_salut_fk
+- changeSet:
+    id: init-constraint-6
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}app
+        columnNames: codi
+        constraintName: ${db_prefix}app_codi_uk
+- changeSet:
+    id: init-constraint-7
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}integracio
+        columnNames: app_id,codi
+        constraintName: ${db_prefix}integracio_appcodi_uk
+- changeSet:
+    id: init-constraint-8
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}subsistema
+        columnNames: app_id,codi
+        constraintName: ${db_prefix}subsistema_appcodi_uk

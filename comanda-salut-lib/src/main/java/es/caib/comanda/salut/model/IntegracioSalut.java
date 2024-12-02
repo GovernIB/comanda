@@ -1,11 +1,12 @@
 package es.caib.comanda.salut.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-@SuperBuilder
 @Getter
+@NoArgsConstructor
 public class IntegracioSalut extends EstatSalut {
-    private final String codi;
-    private final IntegracioPeticions peticions;
+    private String codi;
+    private IntegracioPeticions peticions;
 }

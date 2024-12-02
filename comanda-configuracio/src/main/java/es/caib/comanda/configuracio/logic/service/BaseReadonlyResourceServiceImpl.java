@@ -7,7 +7,7 @@ import es.caib.comanda.configuracio.logic.intf.model.Resource;
 import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
 import es.caib.comanda.configuracio.logic.springfilter.FilterSpecification;
-import es.caib.comanda.configuracio.persist.entity.BaseEntity;
+import es.caib.comanda.configuracio.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.configuracio.persist.repository.BaseRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * @author Limit Tecnologies
  */
 @Slf4j
-public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID extends Serializable, E extends BaseEntity<ID>>
+public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID extends Serializable, E extends BaseAuditableEntity<ID>>
 		implements ReadonlyResourceService<R, ID> {
 
 	@Autowired
@@ -410,7 +410,7 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 			log.debug("\t\tProcessant path d'ordenació" + Arrays.toString(path) + " per l'entitat " + entityClass);
 			Field entityField = ReflectionUtils.findField(entityClass, path[0]);
 			if (entityField != null) {
-				if (BaseEntity.class.isAssignableFrom(entityField.getType())) {
+				if (BaseAuditableEntity.class.isAssignableFrom(entityField.getType())) {
 					// Si el camp és una referència a una altra entitat
 					if (path.length > 1) {
 						// Si no s'ha arribat al final del path es torna a fer el
@@ -434,7 +434,7 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 						log.debug("\t\t\tDetectat camp d'entitat de tipus referencia final " + path[0] + ", s'afegeix ordenació de l'anotació del recurs");
 						Class<?> resourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
 								entityField.getType(),
-								BaseEntity.class,
+								BaseAuditableEntity.class,
 								0);
 						List<String> sortPaths = new ArrayList<String>();
 						for (SortedField sortedField: getResourceDefaultSortFields(resourceClass)) {
@@ -464,7 +464,7 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 			} else {
 				Class<?> resourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
 						entityClass,
-						BaseEntity.class,
+						BaseAuditableEntity.class,
 						0);
 				log.debug("\t\t\tDetectat camp que no pertany a l'entitat " + path[0] + ", el cercam al recurs " + resourceClass);
 				Field resourceField = ReflectionUtils.findField(resourceClass, path[0]);

@@ -10,7 +10,7 @@ public class BaseConfig {
 	public static final String APP_NAME = "comanda.configuracio";
 	public static final String DB_PREFIX = "cmd_conf_";
 	public static final String BASE_PACKAGE = "es.caib." + APP_NAME;
-	public static final String PROPERTY_PREFIX = BASE_PACKAGE;
+	public static final String PROPERTY_PREFIX = BASE_PACKAGE + ".";
 
 	public static final String APP_URL = PROPERTY_PREFIX + ".app.url";
 
@@ -25,6 +25,7 @@ public class BaseConfig {
 	public static final String PROP_HTTP_HEADER_ANSWERS = PROPERTY_PREFIX + "http.header.answers";
 	public static final String PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED = PROPERTY_PREFIX + "persist.container-transactions-disabled";
 	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
-
+	public static final String PROP_SCHEDULER_APP_INFO_CRON = PROPERTY_PREFIX + "scheduler.app.info.cron";
+	public static final String PROP_SCHEDULER_SALUT_INFO_CRON = PROPERTY_PREFIX + "scheduler.salut.info.cron";
 
 }

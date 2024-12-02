@@ -1,18 +1,18 @@
 package es.caib.comanda.salut.model;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
 
-@Builder
 @Getter
+@NoArgsConstructor
 public class AppInfo {
-    private final String codi;
-    private final String nom;
-    private final String versio;
-    private final Date data;
-    private final List<IntegracioInfo> integracions;
-    private final List<AppInfo> subsistemes;
+    private String codi;
+    private String nom;
+    private String versio;
+    private Date data;
+    private List<IntegracioInfo> integracions;
+    private List<AppInfo> subsistemes;
 }

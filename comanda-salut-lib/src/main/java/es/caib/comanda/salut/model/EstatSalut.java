@@ -1,11 +1,11 @@
 package es.caib.comanda.salut.model;
 
 import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+import lombok.NoArgsConstructor;
 
-@SuperBuilder
 @Getter
+@NoArgsConstructor
 public class EstatSalut {
-    private final EstatSalutEnum estat;
-    private final Long latencia;
+    private EstatSalutEnum estat;
+    private Integer latencia;
 }

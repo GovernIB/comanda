@@ -1,13 +1,13 @@
 package es.caib.comanda.salut.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Synchronized;
-import lombok.experimental.SuperBuilder;
 
 import java.util.Map;
 
-@SuperBuilder
 @Getter
+@NoArgsConstructor
 public class IntegracioPeticions {
     private long totalOk;
     private long totalError;

@@ -1,24 +1,29 @@
 package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
-import lombok.*;
-import org.springframework.lang.Nullable;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /**
- * Entitat de base de dades que representa una aplicació.
+ * Entitat de base de dades que representa una aplicació a monitoritzar.
  *
  * @author Límit Tecnologies
  */
 @Entity
-@Table(name = BaseConfig.DB_PREFIX + "app")
+@Table(name = BaseConfig.DB_PREFIX + "app",
+		uniqueConstraints = {
+				@UniqueConstraint(name = BaseConfig.DB_PREFIX + "app_codi_uk", columnNames = { "codi" })
+		})
 @Getter
 @Setter
 @NoArgsConstructor
-public class AppEntity extends BaseEntity<Long> {
+public class AppEntity extends BaseAuditableEntity<Long> {
 
-	@Column(name = "codi", length = 10, unique = true, nullable = false)
+	@Column(name = "codi", length = 16, nullable = false)
 	private String codi;
 	@Column(name = "nom", length = 100, nullable = false)
 	private String nom;
@@ -26,7 +31,17 @@ public class AppEntity extends BaseEntity<Long> {
 	private String descripcio;
 	@Column(name = "info_url", length = 200, nullable = false)
 	private String infoUrl;
+	@Column(name = "info_interval", nullable = false)
+	private Integer infoInterval;
+	@Column(name = "info_data")
+	private LocalDateTime infoData;
 	@Column(name = "salut_url", length = 200, nullable = false)
 	private String salutUrl;
+	@Column(name = "salut_interval", nullable = false)
+	private Integer salutInterval;
+	@Column(name = "versio", length = 10)
+	private String versio;
+	@Column(name = "activa", nullable = false)
+	private boolean activa;
 
 }

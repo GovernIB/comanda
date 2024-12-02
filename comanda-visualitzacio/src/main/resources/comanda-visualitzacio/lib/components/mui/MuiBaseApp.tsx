@@ -9,6 +9,8 @@ import AppBar from './AppBar';
 import Menu, { MenuEntry } from './Menu';
 import OfflineMessage from './OfflineMessage';
 import { useToolbarMenuIcon } from './ToolbarMenuIcon';
+import { FormFieldCheckbox } from './form/FormFieldCheckbox';
+import { FormFieldNumber } from './form/FormFieldNumber';
 import { FormFieldText } from './form/FormFieldText';
 
 export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
@@ -29,6 +31,12 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
 };
 
 const baseFormFieldComponents = [{
+    type: 'checkbox',
+    component: FormFieldCheckbox,
+}, {
+    type: 'number',
+    component: FormFieldNumber,
+}, {
     type: 'text',
     component: FormFieldText,
 }, {
