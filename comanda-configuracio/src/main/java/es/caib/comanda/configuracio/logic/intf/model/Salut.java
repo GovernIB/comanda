@@ -3,6 +3,7 @@ package es.caib.comanda.configuracio.logic.intf.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Formula;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -21,8 +22,6 @@ public class Salut extends BaseResource<Long> {
 	@Size(max = 16)
 	private String codi;
 	@NotNull
-	//@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 	private LocalDateTime data;
 	@NotNull
 	@Size(max = 16)
@@ -33,5 +32,10 @@ public class Salut extends BaseResource<Long> {
 	@NotNull
 	private SalutEstat bdEstat;
 	private Integer bdLatencia;
+
+	private String year;
+	private String yearMonth;
+	private String yearMonthDay;
+	private String yearMonthDayHour;
 
 }

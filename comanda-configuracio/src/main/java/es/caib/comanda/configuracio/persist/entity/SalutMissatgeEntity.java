@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
+import es.caib.comanda.configuracio.logic.intf.model.SalutMissatge;
 import es.caib.comanda.configuracio.logic.intf.model.SalutNivell;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SalutMissatgeEntity extends BaseEntity<Long> {
+public class SalutMissatgeEntity extends BaseEntity<SalutMissatge> {
 
 	@Column(name = "data", nullable = false)
 	private LocalDateTime data;
@@ -36,13 +37,5 @@ public class SalutMissatgeEntity extends BaseEntity<Long> {
 			referencedColumnName = "id",
 			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "salutmsg_salut_fk"))
 	private SalutEntity salut;
-
-	/*@Builder
-	public SalutMissatgeEntity(
-			SalutEntity salut,
-			IntegracioEntity integracio) {
-		this.salut = salut;
-		this.integracio = integracio;
-	}*/
 
 }

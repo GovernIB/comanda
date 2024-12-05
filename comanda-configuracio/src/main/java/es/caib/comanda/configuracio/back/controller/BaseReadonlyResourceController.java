@@ -1,18 +1,25 @@
 package es.caib.comanda.configuracio.back.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import es.caib.comanda.configuracio.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.configuracio.logic.intf.service.PermissionEvaluatorService;
 import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.configuracio.logic.intf.service.ResourceApiService;
 import es.caib.comanda.configuracio.logic.intf.util.HttpRequestUtil;
+import es.caib.comanda.configuracio.logic.intf.util.JsonUtil;
 import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.MethodParameter;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.*;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.TemplateVariable.VariableType;
@@ -22,10 +29,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.ReflectionUtils.FieldCallback;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.SmartValidator;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.groups.Default;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -57,6 +69,8 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	protected ReadonlyResourceService<R, ID> readonlyResourceService;
 	@Autowired
 	protected ResourceApiService resourceApiService;
+	@Autowired
+	protected SmartValidator validator;
 
 	private Class<R> resourceClass;
 
@@ -165,6 +179,43 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 									null,
 									resourcePermissions)));
 		}
+	}
+
+	@Override
+	@GetMapping("/artifacts")
+	@Operation(summary = "Llista d'artefactes relacionats amb aquest servei")
+	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('ARTIFACT'))")
+	public ResponseEntity<CollectionModel<ResourceArtifact>> artifacts() {
+		List<ResourceArtifact> artifacts = getReadonlyResourceService().artifactGetAllowed(null);
+		return ResponseEntity.ok(
+				CollectionModel.of(
+						artifacts,
+						buildArtifactsLinks(artifacts)));
+	}
+
+	@Override
+	@PostMapping("/artifacts/report/{code}")
+	@Operation(summary = "Generació d'un informe associat a un únic recurs")
+	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
+	public ResponseEntity<InputStreamResource> artifactReportGenerate(
+			@PathVariable
+			@Parameter(description = "Codi de l'informe")
+			final String code,
+			@RequestBody(required = false)
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, MethodArgumentNotValidException, JsonProcessingException {
+		Optional<Class<?>> parameterClass = getReadonlyResourceService().artifactGetFormClass(
+				ResourceArtifactType.REPORT,
+				code);
+		Object paramsObject = null;
+		if (parameterClass.isPresent()) {
+			paramsObject = JsonUtil.getInstance().fromJsonToObjectWithType(
+					params,
+					parameterClass.get());
+			validateResource(paramsObject, 1, bindingResult);
+		}
+		getReadonlyResourceService().reportGenerate(code, paramsObject);
+		return null;
 	}
 
 	public Class<R> getResourceClass() {
@@ -420,6 +471,30 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				expand(expandMap);
 	}
 
+	protected Link[] buildArtifactsLinks(List<ResourceArtifact> artifacts) {
+		List<Link> ls = new ArrayList<>();
+		Link selfLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
+		ls.add(selfLinkWithDefaultProperties(selfLink, false));
+		artifacts.forEach(a -> {
+			if (ResourceArtifactType.REPORT == a.getType()) {
+				ls.add(buildReportLink(a));
+			}
+		});
+		return ls.toArray(new Link[0]);
+	}
+
+	@SneakyThrows
+	private Link buildReportLink(ResourceArtifact artifact) {
+		String rel = "generate_" + artifact.getCode();
+		Link reportLink = linkTo(methodOn(getClass()).artifactReportGenerate(artifact.getCode(), null, null)).
+				withRel(rel);
+		return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
+				afford(HttpMethod.POST).
+				withInputAndOutput(artifact.getFormClass()).
+				withName(rel).
+				toLink();
+	}
+
 	private String filterWithFieldParameters(String filter, Class<?> resourceClass) {
 		Optional<HttpServletRequest> request = HttpRequestUtil.getCurrentHttpRequest();
 		Set<String> paramNames = request.get().getParameterMap().keySet();
@@ -488,6 +563,32 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			} else {
 				return null;
 			}
+		}
+	}
+
+	protected <T> void validateResource(
+			T resource,
+			int paramIndex,
+			BindingResult bindingResult,
+			Object... validationHints) throws MethodArgumentNotValidException {
+		BindingResult resourceBindingResult = new BeanPropertyBindingResult(resource, bindingResult.getObjectName());
+		Object[] finalValidationHints;
+		if (validationHints == null || validationHints.length == 0) {
+			finalValidationHints = new Object[] { Default.class };
+		} else {
+			finalValidationHints = validationHints;
+		}
+		validator.validate(
+				resource,
+				resourceBindingResult,
+				finalValidationHints);
+		if (resourceBindingResult.hasErrors()) {
+			bindingResult.addAllErrors(resourceBindingResult);
+			throw new MethodArgumentNotValidException(
+					new MethodParameter(
+							new Object() {}.getClass().getEnclosingMethod(),
+							paramIndex),
+					bindingResult);
 		}
 	}
 

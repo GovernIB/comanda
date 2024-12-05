@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
+import es.caib.comanda.configuracio.logic.intf.model.Integracio;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,7 +21,7 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
-public class IntegracioEntity extends BaseAuditableEntity<Long> {
+public class IntegracioEntity extends BaseAuditableEntity<Integracio> {
 
 	@Column(name = "codi", length = 16, unique = true, nullable = false)
 	private String codi;
@@ -35,10 +36,5 @@ public class IntegracioEntity extends BaseAuditableEntity<Long> {
 			referencedColumnName = "id",
 			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "integracio_app_fk"))
 	private AppEntity app;
-
-	/*@Builder
-	public IntegracioEntity(AppEntity app) {
-		this.app = app;
-	}*/
 
 }

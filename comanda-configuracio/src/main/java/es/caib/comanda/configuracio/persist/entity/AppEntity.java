@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
+import es.caib.comanda.configuracio.logic.intf.model.App;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AppEntity extends BaseAuditableEntity<Long> {
+public class AppEntity extends BaseAuditableEntity<App> {
 
 	@Column(name = "codi", length = 16, nullable = false)
 	private String codi;

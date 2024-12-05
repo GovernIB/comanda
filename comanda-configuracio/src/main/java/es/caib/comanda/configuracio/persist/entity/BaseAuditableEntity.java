@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.persist.entity;
 
+import liquibase.pro.packaged.E;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,11 +27,11 @@ import java.time.LocalDateTime;
 @Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseAuditableEntity<PK extends Serializable> implements AuditableEntity, Persistable<PK> {
+public abstract class BaseAuditableEntity<E> implements AuditableEntity, ResourceEntity<E, Long> {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private @Nullable PK id;
+	private @Nullable Long id;
 
 	@CreatedBy
 	@Column(name = "created_by", length = 64, nullable = false)
@@ -50,7 +51,7 @@ public abstract class BaseAuditableEntity<PK extends Serializable> implements Au
 	private long v;
 
 	@Override
-	public PK getId() {
+	public Long getId() {
 		return id;
 	}
 

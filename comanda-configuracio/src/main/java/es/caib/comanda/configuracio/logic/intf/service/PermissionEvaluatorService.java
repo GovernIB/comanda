@@ -15,7 +15,9 @@ public interface PermissionEvaluatorService extends PermissionEvaluator {
 		PATCH,
 		DELETE,
 		GET_ONE,
-		FIND
+		FIND,
+		ARTIFACT,
+		REPORT
 	}
 
 }

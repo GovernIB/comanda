@@ -11,6 +11,6 @@ import org.springframework.stereotype.Service;
  * @author Limit Tecnologies
  */
 @Service
-public class IntegracioServiceImpl extends BaseMutableResourceServiceImpl<Integracio, Long, IntegracioEntity> implements IntegracioService {
+public class IntegracioServiceImpl extends BaseMutableResourceService<Integracio, Long, IntegracioEntity> implements IntegracioService {
 
 }

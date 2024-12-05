@@ -2,8 +2,12 @@ package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.configuracio.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.configuracio.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.configuracio.logic.intf.exception.ArtifactNotFoundException;
+import es.caib.comanda.configuracio.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.configuracio.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifact;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
 import es.caib.comanda.configuracio.logic.springfilter.FilterSpecification;
@@ -36,13 +40,17 @@ import java.util.stream.Collectors;
  * @author Limit Tecnologies
  */
 @Slf4j
-public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID extends Serializable, E extends BaseAuditableEntity<ID>>
+public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID extends Serializable, E extends Persistable<ID>>
 		implements ReadonlyResourceService<R, ID> {
 
 	@Autowired
 	protected BaseRepository<E, ID> resourceRepository;
 	@Autowired
 	protected ObjectMappingHelper objectMappingHelper;
+
+	private Class<R> resourceClass;
+	private Class<E> entityClass;
+	private final Map<String, ReportDataGenerator<?, ?>> reportGeneratorMap = new HashMap<>();
 
 	@Override
 	@Transactional(readOnly = true)
@@ -94,7 +102,7 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 		beforeConversion(resultat.getContent());
 		Page<R> response = new PageImpl<>(
 				entitiesToResources(resultat.getContent()),
-				toProcessedPageable(pageable, perspectives),
+				toProcessedPageableSort(pageable, perspectives),
 				resultat.getTotalElements());
 		afterConversion(resultat.getContent(), response.getContent());
 		if (perspectives != null) {
@@ -115,6 +123,55 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 				elapsedDatabase,
 				elapsedConversion);
 		return response;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<ResourceArtifact> artifactGetAllowed(ResourceArtifactType type) {
+		log.debug(
+				"Consultant els artefactes permesos (type={})",
+				type);
+		List<ResourceArtifact> artifacts = new ArrayList<>();
+		if (type == null || type == ResourceArtifactType.REPORT) {
+			return reportGeneratorMap.entrySet().stream().
+					map(r -> new ResourceArtifact(
+							ResourceArtifactType.REPORT,
+							r.getKey(),
+							r.getValue().getParameterClass())).
+					collect(Collectors.toList());
+		}
+		return artifacts;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<Class<?>> artifactGetFormClass(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
+		log.debug(
+				"Consultant la classe de formulari per l'artefacte (type={}, code={})",
+				type,
+				code);
+		if (type == ResourceArtifactType.REPORT) {
+			ReportDataGenerator<?, ?> generator = reportGeneratorMap.get(code);
+			if (generator != null) {
+				return Optional.of(generator.getParameterClass());
+			}
+		}
+		throw new ArtifactNotFoundException(getResourceClass(), type, code);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public <P> List<?> reportGenerate(String code, P params) throws ArtifactNotFoundException, ReportGenerationException {
+		log.debug(
+				"Generant l'informe(code={}, params={})",
+				code,
+				params);
+		ReportDataGenerator<P, ?> generator = (ReportDataGenerator<P, ?>)reportGeneratorMap.get(code);
+		if (generator != null) {
+			return generator.generate(code, params);
+		} else {
+			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.REPORT, code);
+		}
 	}
 
 	protected E getEntity(ID id, String[] perspectives) throws ResourceNotFoundException {
@@ -159,7 +216,7 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 						processedSort);
 				resultat = new PageImpl<E>(resultList, pageable, resultList.size());
 			} else {
-				Pageable processedPageable = toProcessedPageable(pageable, perspectives);
+				Pageable processedPageable = toProcessedPageableSort(pageable, perspectives);
 				resultat = resourceRepository.findAll(
 						processedSpecification,
 						processedPageable);
@@ -173,7 +230,7 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 				List<E> resultList = resourceRepository.findAll(processedSort);
 				resultat = new PageImpl<>(resultList, pageable, resultList.size());
 			} else {
-				Pageable processedPageable = toProcessedPageable(pageable, perspectives);
+				Pageable processedPageable = toProcessedPageableSort(pageable, perspectives);
 				resultat = resourceRepository.findAll(processedPageable);
 			}
 		}
@@ -319,39 +376,38 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 		}
 	}
 
-	private Class<R> resourceClass;
 	protected Class<R> getResourceClass() {
 		if (resourceClass == null) {
 			resourceClass = (Class<R>)TypeUtil.getArgumentTypeFromGenericSuperclass(
 					getClass(),
-					BaseReadonlyResourceServiceImpl.class,
+					BaseReadonlyResourceService.class,
 					0);
 		}
 		return resourceClass;
 	}
 
-	private Class<E> entityClass;
 	protected Class<E> getEntityClass() {
 		if (entityClass == null) {
 			entityClass = (Class<E>)TypeUtil.getArgumentTypeFromGenericSuperclass(
 					getClass(),
-					BaseReadonlyResourceServiceImpl.class,
+					BaseReadonlyResourceService.class,
 					2);
 		}
 		return entityClass;
 	}
 
-	private Pageable toProcessedPageable(Pageable pageable, String[] perspectives) {
-		if (pageable.isPaged()) {
-			return PageRequest.of(
-					pageable.getPageNumber(),
-					pageable.getPageSize(),
-					toProcessedSort(
-							addDefaultSort(pageable.getSort()),
-							perspectives));
-		} else {
-			return pageable;
-		}
+	protected void register(ReportDataGenerator<?, ?> reportGenerator) {
+		Arrays.stream(reportGenerator.getSupportedReportCodes()).
+				forEach(c -> reportGeneratorMap.put(c, reportGenerator));
+	}
+
+	private Pageable toProcessedPageableSort(Pageable pageable, String[] perspectives) {
+		return PageRequest.of(
+				pageable.getPageNumber(),
+				pageable.getPageSize(),
+				toProcessedSort(
+						addDefaultSort(pageable.getSort()),
+						perspectives));
 	}
 
 	private org.springframework.data.domain.Sort toProcessedSort(
@@ -514,6 +570,14 @@ public abstract class BaseReadonlyResourceServiceImpl<R extends Resource<ID>, ID
 				CriteriaBuilder criteriaBuilder) {
 			return criteriaBuilder.equal(root.get("id"), id);
 		}
+	}
+
+	public interface ReportDataGenerator <P, D> {
+		String[] getSupportedReportCodes();
+		Class<P> getParameterClass();
+		List<D> generate(
+				String code,
+				P params) throws ReportGenerationException;
 	}
 
 }

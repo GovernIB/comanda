@@ -63,6 +63,8 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 			switch (restapiOperation) {
 				case GET_ONE:
 				case FIND:
+				case ARTIFACT:
+				case REPORT:
 					return (BasePermission)BasePermission.READ;
 				case UPDATE:
 				case PATCH:

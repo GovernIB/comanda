@@ -2,6 +2,7 @@ package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.SalutEstat;
+import es.caib.comanda.configuracio.logic.intf.model.SalutIntegracio;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,7 +20,7 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SalutIntegracioEntity extends BaseEntity<Long> {
+public class SalutIntegracioEntity extends BaseEntity<SalutIntegracio> {
 
 	@Column(name = "codi", length = 16, nullable = false)
 	private String codi;
@@ -39,13 +40,5 @@ public class SalutIntegracioEntity extends BaseEntity<Long> {
 			referencedColumnName = "id",
 			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "salutint_salut_fk"))
 	private SalutEntity salut;
-
-	/*@Builder
-	public SalutIntegracioEntity(
-			SalutEntity salut,
-			IntegracioEntity integracio) {
-		this.salut = salut;
-		this.integracio = integracio;
-	}*/
 
 }

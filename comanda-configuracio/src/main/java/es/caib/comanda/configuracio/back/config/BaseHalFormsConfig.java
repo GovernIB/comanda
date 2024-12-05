@@ -18,7 +18,7 @@ import java.util.Set;
 /**
  * Configuració de HAL-FORMS.
  * 
- * @author Josep Gayà
+ * @author Limit Tecnologies
  */
 @Slf4j
 public abstract class BaseHalFormsConfig {

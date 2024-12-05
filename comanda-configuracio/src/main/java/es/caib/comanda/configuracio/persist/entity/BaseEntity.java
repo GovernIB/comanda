@@ -1,5 +1,7 @@
 package es.caib.comanda.configuracio.persist.entity;
 
+import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import liquibase.pro.packaged.E;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +20,7 @@ import java.time.LocalDateTime;
 /**
  * Base per a definir les demés entitats de l'aplicació.
  *
- * @param <PK> classe de la clau primària de l'entitat.
+ * @param <E> classe del recurs associat.
  *
  * @author Límit Tecnologies
  */
@@ -26,14 +28,14 @@ import java.time.LocalDateTime;
 @Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity<PK extends Serializable> implements Persistable<PK> {
+public abstract class BaseEntity<E> implements ResourceEntity<E, Long> {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private @Nullable PK id;
+	private @Nullable Long id;
 
 	@Override
-	public PK getId() {
+	public Long getId() {
 		return id;
 	}
 

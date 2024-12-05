@@ -11,6 +11,6 @@ import org.springframework.stereotype.Service;
  * @author Limit Tecnologies
  */
 @Service
-public class SubsistemaServiceImpl extends BaseMutableResourceServiceImpl<Subsistema, Long, SubsistemaEntity> implements SubsistemaService {
+public class SubsistemaServiceImpl extends BaseMutableResourceService<Subsistema, Long, SubsistemaEntity> implements SubsistemaService {
 
 }

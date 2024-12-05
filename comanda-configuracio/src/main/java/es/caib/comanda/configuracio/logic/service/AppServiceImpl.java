@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class AppServiceImpl extends BaseMutableResourceServiceImpl<App, Long, AppEntity> implements AppService {
+public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEntity> implements AppService {
 
 	@Autowired
 	private AppInfoHelper appInfoHelper;
