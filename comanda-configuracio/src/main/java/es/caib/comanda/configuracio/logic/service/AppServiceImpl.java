@@ -38,7 +38,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 			try {
 				appInfoHelper.refreshAppInfo(a);
 			} catch (Exception ex) {
-				log.error("No s'ha pogut refrescar la informació de l'aplicació " + a.getCodi(), ex);
+				log.error("No s'ha pogut refrescar la informació de l'aplicació {}", a.getCodi(), ex);
 			}
 		});
 	}
@@ -46,13 +46,13 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	@Override
 	@Transactional
 	public void getSalutInfo() {
-		log.debug("Iniciant consulta periòdica de la informació de salut");
+		log.debug("Iniciant consulta periòdica de salut");
 		List<AppEntity> apps = appRepository.findByActivaTrue();
 		apps.forEach(a -> {
 			try {
 				salutInfoHelper.getSalutInfo(a);
 			} catch (Exception ex) {
-				log.error("No s'ha pogut refrescar la informació de l'aplicació " + a.getCodi(), ex);
+				log.error("No s'ha pogut consultar la salut de l'aplicació {}", a.getCodi(), ex);
 			}
 		});
 	}

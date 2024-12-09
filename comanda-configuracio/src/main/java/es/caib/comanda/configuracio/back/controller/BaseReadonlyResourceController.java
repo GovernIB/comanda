@@ -197,7 +197,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@PostMapping("/artifacts/report/{code}")
 	@Operation(summary = "Generació d'un informe associat a un únic recurs")
 	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
-	public ResponseEntity<InputStreamResource> artifactReportGenerate(
+	public ResponseEntity<CollectionModel<?>> artifactReportGenerate(
 			@PathVariable
 			@Parameter(description = "Codi de l'informe")
 			final String code,
@@ -214,8 +214,12 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					parameterClass.get());
 			validateResource(paramsObject, 1, bindingResult);
 		}
-		getReadonlyResourceService().reportGenerate(code, paramsObject);
-		return null;
+		List<?> items = getReadonlyResourceService().reportGenerate(code, paramsObject);
+		Link reportLink = linkTo(methodOn(getClass()).artifactReportGenerate(code, null, null)).withSelfRel();
+		return ResponseEntity.ok(
+				CollectionModel.of(
+						items,
+						Link.of(reportLink.toUri().toString()).withSelfRel()));
 	}
 
 	public Class<R> getResourceClass() {

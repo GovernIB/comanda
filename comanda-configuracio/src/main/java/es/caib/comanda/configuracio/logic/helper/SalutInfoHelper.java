@@ -16,6 +16,7 @@ import es.caib.comanda.salut.model.SalutInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -42,8 +43,19 @@ public class SalutInfoHelper {
 	public void getSalutInfo(AppEntity app) {
 		log.debug("Consultant informació de salut de l'app {}", app.getCodi());
 		RestTemplate restTemplate = new RestTemplate();
-		SalutInfo salutInfo = restTemplate.getForObject(app.getSalutUrl(), SalutInfo.class);
-		crearSalut(salutInfo);
+		try {
+			SalutInfo salutInfo = restTemplate.getForObject(app.getSalutUrl(), SalutInfo.class);
+			crearSalut(salutInfo);
+		} catch (RestClientException ex) {
+			SalutEntity salut = new SalutEntity();
+			salut.setCodi(app.getCodi());
+			salut.setData(LocalDateTime.now());
+			salut.setAppEstat(SalutEstat.UNKNOWN);
+			salutRepository.save(salut);
+			log.warn("No s'ha pogut obtenir informació de salut de l'app {}: {}",
+					app.getCodi(),
+					ex.getLocalizedMessage());
+		}
 	}
 
 	private void crearSalut(SalutInfo info) {

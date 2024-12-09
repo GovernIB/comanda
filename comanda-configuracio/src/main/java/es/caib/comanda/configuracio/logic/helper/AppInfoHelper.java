@@ -11,8 +11,10 @@ import es.caib.comanda.salut.model.IntegracioInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,10 +37,16 @@ public class AppInfoHelper {
 	public void refreshAppInfo(AppEntity app) {
 		log.debug("Refrescant informació de l'app {}", app.getCodi());
 		RestTemplate restTemplate = new RestTemplate();
-		AppInfo appInfo = restTemplate.getForObject(app.getInfoUrl(), AppInfo.class);
-		if (appInfo != null) {
-			refreshIntegracions(app, appInfo.getIntegracions());
-			refreshSubsistemes(app, appInfo.getSubsistemes());
+		try {
+			AppInfo appInfo = restTemplate.getForObject(app.getInfoUrl(), AppInfo.class);
+			if (appInfo != null) {
+				refreshIntegracions(app, appInfo.getIntegracions());
+				refreshSubsistemes(app, appInfo.getSubsistemes());
+			}
+		} catch (RestClientException ex) {
+			log.warn("No s'ha pogut obtenir informació de salut de l'app {}: {}",
+					app.getCodi(),
+					ex.getLocalizedMessage());
 		}
 	}
 

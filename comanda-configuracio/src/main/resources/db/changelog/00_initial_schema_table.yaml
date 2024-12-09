@@ -207,19 +207,12 @@ databaseChangeLog:
         - column:
             constraints:
                 nullable: false
-            name: versio
-            type: VARCHAR(16)
-        - column:
-            constraints:
-                nullable: false
             name: app_estat
             type: VARCHAR(20)
         - column:
             name: app_latencia
             type: INTEGER
         - column:
-            constraints:
-                nullable: false
             name: bd_estat
             type: VARCHAR(20)
         - column:
@@ -257,12 +250,12 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: total_ok
-            type: LONG
+            type: INTEGER
         - column:
             constraints:
                 nullable: false
             name: total_error
-            type: LONG
+            type: INTEGER
         - column:
             constraints:
                 nullable: false
@@ -300,12 +293,12 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: total_ok
-            type: LONG
+            type: INTEGER
         - column:
             constraints:
                 nullable: false
             name: total_error
-            type: LONG
+            type: INTEGER
         - column:
             constraints:
                 nullable: false

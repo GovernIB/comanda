@@ -34,18 +34,20 @@ public class SalutEntity extends BaseEntity<Salut> {
 	@Column(name = "app_latencia")
 	private Integer appLatencia;
 	@Enumerated(EnumType.STRING)
-	@Column(name = "bd_estat", nullable = false)
+	@Column(name = "bd_estat")
 	private SalutEstat bdEstat;
 	@Column(name = "bd_latencia")
 	private Integer bdLatencia;
 
-	@Formula("TO_CHAR(EXTRACT(YEAR FROM data))")
+	@Formula("TO_CHAR(data, 'YYYY')")
 	private String year;
-	@Formula("CONCAT(TO_CHAR(EXTRACT(YEAR FROM data)), LPAD(TO_CHAR(EXTRACT(MONTH FROM data)), 2, '0'))")
+	@Formula("TO_CHAR(data, 'YYYYMM')")
 	private String yearMonth;
-	@Formula("CONCAT(TO_CHAR(EXTRACT(YEAR FROM data)), LPAD(TO_CHAR(EXTRACT(MONTH FROM data)), 2, '0'), LPAD(TO_CHAR(EXTRACT(DAY_OF_MONTH FROM data)), 2, '0'))")
+	@Formula("TO_CHAR(data, 'YYYYMMDD')")
 	private String yearMonthDay;
-	@Formula("CONCAT(TO_CHAR(EXTRACT(YEAR FROM data)), LPAD(TO_CHAR(EXTRACT(MONTH FROM data)), 2, '0'), LPAD(TO_CHAR(EXTRACT(DAY_OF_MONTH FROM data)), 2, '0'), LPAD(TO_CHAR(EXTRACT(HOUR FROM data)), 2, '0'))")
+	@Formula("TO_CHAR(data, 'YYYYMMDDHH24')")
 	private String yearMonthDayHour;
+	@Formula("TO_CHAR(data, 'YYYYMMDDHH24MI')")
+	private String yearMonthDayHourMinute;
 
 }

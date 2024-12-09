@@ -153,7 +153,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		if (type == ResourceArtifactType.REPORT) {
 			ReportDataGenerator<?, ?> generator = reportGeneratorMap.get(code);
 			if (generator != null) {
-				return Optional.of(generator.getParameterClass());
+				return generator.getParameterClass() != null ? Optional.of(generator.getParameterClass()) : Optional.empty();
 			}
 		}
 		throw new ArtifactNotFoundException(getResourceClass(), type, code);

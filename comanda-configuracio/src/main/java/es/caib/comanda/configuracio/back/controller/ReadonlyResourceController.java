@@ -82,7 +82,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @throws MethodArgumentNotValidException
 	 *             si es troben errors de validació en els paràmetres.
 	 */
-	ResponseEntity<InputStreamResource> artifactReportGenerate(
+	ResponseEntity<CollectionModel<?>> artifactReportGenerate(
 			final String code,
 			final JsonNode params,
 			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
