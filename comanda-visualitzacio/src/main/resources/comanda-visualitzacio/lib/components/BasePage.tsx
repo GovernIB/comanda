@@ -1,9 +1,16 @@
 import React from 'react';
 
-export const BasePage: React.FC<React.PropsWithChildren> = (props) => {
-    const { children } = props;
+export type BasePageProps = React.PropsWithChildren & {
+    toolbar?: React.ReactElement;
+};
+
+export const BasePage: React.FC<BasePageProps> = (props) => {
+    const { toolbar, children } = props;
     return <div>
-        {children}
+        {toolbar}
+        <div style={{ margin: '16px', marginTop: '24px' }}>
+            {children}
+        </div>
     </div>;
 }
 

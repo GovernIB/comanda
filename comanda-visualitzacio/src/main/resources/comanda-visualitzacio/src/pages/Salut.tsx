@@ -11,6 +11,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import Chip from '@mui/material/Chip';
@@ -18,7 +19,12 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { BasePage, useResourceApiService, Toolbar } from 'reactlib';
+import {
+    BasePage,
+    Toolbar,
+    useResourceApiService,
+    useBaseAppContext,
+} from 'reactlib';
 
 const agrupacioFromMinutes = (intervalMinutes: number) => {
     if (intervalMinutes <= 60) {
@@ -362,6 +368,7 @@ const ItemStateChip: React.FC<any> = (props: { up: boolean, date: string }) => {
 
 const AppDataTable: React.FC<any> = (props: { apps: any[], salutLastItems: any[] }) => {
     const { apps, salutLastItems } = props;
+    const { getLinkComponent } = useBaseAppContext();
     return <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
             <TableRow>
@@ -374,12 +381,12 @@ const AppDataTable: React.FC<any> = (props: { apps: any[], salutLastItems: any[]
                 <TableCell>Integracions</TableCell>
                 <TableCell>Subsistemes</TableCell>
                 <TableCell>Missatges</TableCell>
+                <TableCell></TableCell>
             </TableRow>
         </TableHead>
         <TableBody>
             {apps?.map(app => {
                 const appUpdownItem = salutLastItems?.find(i => i.codi === app.codi);
-                console.log('>>> appUpdownItem', app.codi, appUpdownItem)
                 return <TableRow
                     key={app.id}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
@@ -392,17 +399,36 @@ const AppDataTable: React.FC<any> = (props: { apps: any[], salutLastItems: any[]
                     <TableCell component="th" scope="row">
                         <ItemStateChip up={appUpdownItem?.bdUp} date={appUpdownItem.data} />
                     </TableCell>
-                    <TableCell component="th" scope="row">{appUpdownItem.appLatencia != null ? appUpdownItem.appLatencia + ' ms' : 'N/D'}</TableCell>
-                    <TableCell component="th" scope="row">{appUpdownItem.integracioUpCount} / {appUpdownItem.integracioDownCount}</TableCell>
-                    <TableCell component="th" scope="row">{appUpdownItem.subsistemaUpCount} / {appUpdownItem.subsistemaDownCount}</TableCell>
-                    <TableCell component="th" scope="row">{appUpdownItem.missatgeErrorCount} / {appUpdownItem.missatgeWarnCount} / {appUpdownItem.missatgeInfoCount}</TableCell>
+                    <TableCell component="th" scope="row">
+                        {appUpdownItem.appLatencia != null ? appUpdownItem.appLatencia + ' ms' : 'N/D'}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        <Chip label={appUpdownItem.integracioUpCount} size="small" color="success" />&nbsp;/&nbsp;
+                        <Chip label={appUpdownItem.integracioDownCount} size="small" color="error" />
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        <Chip label={appUpdownItem.subsistemaUpCount} size="small" color="success" />&nbsp;/&nbsp;
+                        <Chip label={appUpdownItem.subsistemaDownCount} size="small" color="error" />
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        <Chip label={appUpdownItem.missatgeErrorCount} size="small" color="error" />&nbsp;/&nbsp;
+                        <Chip label={appUpdownItem.missatgeWarnCount} size="small" color="warning" />&nbsp;/&nbsp;
+                        <Chip label={appUpdownItem.missatgeInfoCount} size="small" color="info" />
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        <Button
+                            variant="contained"
+                            size="small"
+                            component={getLinkComponent()}
+                            to={'appinfo/' + app.codi}>Detalls</Button>
+                    </TableCell>
                 </TableRow>;
             })}
         </TableBody>
     </Table>;
 }
 
-const Home: React.FC = () => {
+const Salut: React.FC = () => {
     const [refreshTimeoutMinutes, setRefreshTimeoutMinutes] = React.useState<number>();
     const [appDataRangeMinutes, setAppDataRangeMinutes] = React.useState<number>();
     const {
@@ -456,8 +482,11 @@ const Home: React.FC = () => {
             <Icon>refresh</Icon>
         </IconButton>
     }];
-    return <BasePage>
-        <Toolbar title="Salut" upperToolbar elementsWithPositions={toolbarElementsWithPositions} />
+    const toolbar = <Toolbar
+        title="Salut"
+        elementsWithPositions={toolbarElementsWithPositions}
+        upperToolbar />;
+    return <BasePage toolbar={toolbar}>
         {loading ?
             <Box
                 sx={{
@@ -489,4 +518,4 @@ const Home: React.FC = () => {
     </BasePage>;
 }
 
-export default Home;
+export default Salut;
