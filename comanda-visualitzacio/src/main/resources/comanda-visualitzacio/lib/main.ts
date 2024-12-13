@@ -15,6 +15,8 @@ export { useFormApiRef, useFormApiContext } from './components/form/Form';
 export { MuiForm } from './components/mui/form/MuiForm';
 export { FormField } from './components/form/FormField';
 
+export { Toolbar } from './components/mui/Toolbar';
+
 export { envVar } from './util/envVars';
 export { numberFormat, numberFormatCurrency } from './util/numberFormat';
 

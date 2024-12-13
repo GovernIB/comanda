@@ -29,6 +29,8 @@ type ResourceApiMethods = {
     patch: (id: any, args: ResourceApiRequestArgs) => Promise<any>;
     delette: (id: any, args?: ResourceApiRequestArgs) => Promise<void>;
     onChange: (id: any, args: ResourceApiOnChangeArgs) => Promise<void>;
+    artifacts: (args: ResourceApiRequestArgs) => Promise<State>;
+    report: (args: ResourceApiReportArgs) => Promise<any[]>;
 }
 
 export type ResourceApiService = {
@@ -108,48 +110,9 @@ export type ResourceApiOnChangeArgs = ResourceApiRequestArgs & {
     filter?: string;
 };
 
-export type ResourceApiExportArgs = ResourceApiFindCommonArgs & {
-    field?: string[];
-    type?: string;
-};
-
-export type ResourceApiActionArgs = ResourceApiRequestArgs & {
-    code: string;
-};
-
 export type ResourceApiReportArgs = ResourceApiRequestArgs & {
     code: string;
-    outputFormat?: 'PDF' | 'XLS' | 'CSV' | 'ODS' | 'XLSX' | 'ODT' | 'RTF' | 'DOCX' | 'PPTX';
-};
-
-export type ResourceApiValidateArgs = ResourceApiRequestArgs & {
-    action?: string;
-    report?: string;
-    filter?: string;
-    optionsField?: string;
-};
-
-export type ResourceApiMultipleArgs = ResourceApiRequestArgs & {
-    method: string;
-    ids: any[];
-    actionCode: string;
-};
-
-export type ResourceApiMultipleResponse = {
-    id: any;
-    response: any;
-    error: boolean;
-    errorStatus: number;
-    errorMessage: string;
-    errorTrace: string;
-};
-
-export type ResourceApiFieldsArgs = ResourceApiRequestArgs & {
-    includeLinks?: boolean;
-};
-
-export type ResourceApiFieldArgs = ResourceApiRequestArgs & {
-    name: string;
+    //outputFormat?: 'PDF' | 'XLS' | 'CSV' | 'ODS' | 'XLSX' | 'ODT' | 'RTF' | 'DOCX' | 'PPTX';
 };
 
 export type ResourceApiProviderProps = React.PropsWithChildren & {
@@ -364,7 +327,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
                     });
                     const page = state.data.page;
                     resolve({ rows, page });
-                }).catch((error: ResourceApiError) => {
+                }).
+                catch((error: ResourceApiError) => {
                     reject(error);
                 });
         });
@@ -392,7 +356,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
                     } else {
                         resolve(state.data);
                     }
-                }).catch((error: ResourceApiError) => {
+                }).
+                catch((error: ResourceApiError) => {
                     reject(error);
                 });
         });
@@ -406,7 +371,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
             request('create', null, requestArgs).
                 then((state: State) => {
                     resolve(state.data);
-                }).catch((error: ResourceApiError) => {
+                }).
+                catch((error: ResourceApiError) => {
                     processAnswerRequiredError(
                         error,
                         null,
@@ -427,7 +393,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
             request('update', id, requestArgs).
                 then((state: State) => {
                     resolve(state.data);
-                }).catch((error: ResourceApiError) => {
+                }).
+                catch((error: ResourceApiError) => {
                     processAnswerRequiredError(
                         error,
                         id,
@@ -448,7 +415,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
             request('patch', id, requestArgs).
                 then((state: State) => {
                     resolve(state.data);
-                }).catch((error: ResourceApiError) => {
+                }).
+                catch((error: ResourceApiError) => {
                     processAnswerRequiredError(
                         error,
                         id,
@@ -465,7 +433,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
             request('delete', id, { ...args }).
                 then(() => {
                     resolve();
-                }).catch((error: ResourceApiError) => {
+                }).
+                catch((error: ResourceApiError) => {
                     processAnswerRequiredError(
                         error,
                         id,
@@ -494,7 +463,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
             request('onChange', null, requestArgs).
                 then((state: State) => {
                     resolve(state.data);
-                }).catch((error: ResourceApiError) => {
+                }).
+                catch((error: ResourceApiError) => {
                     processAnswerRequiredError(
                         error,
                         id,
@@ -506,6 +476,44 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
                 });
         });
     }, [request]);
+    const artifacts = React.useCallback((args?: ResourceApiRequestArgs): Promise<State> => {
+        return new Promise((resolve, reject) => {
+            request('artifacts', null, { ...args }).then(resolve).catch(reject);
+        });
+    }, [request]);
+    const report = React.useCallback((args?: ResourceApiReportArgs): Promise<any[]> => {
+        return new Promise((resolve, reject) => {
+            request('artifacts').
+                then((state: State) => {
+                    if (args?.code != null) {
+                        const reportRel = 'generate_' + args.code;
+                        const reportLink = state.links.get(reportRel);
+                        if (reportLink != null) {
+                            request(reportRel, null, { ...args }, state).
+                                then((state: State) => {
+                                    const items = state.getEmbedded().map(e => e.data);
+                                    resolve(items);
+                                }).
+                                catch((error: ResourceApiError) => {
+                                    processAnswerRequiredError(
+                                        error,
+                                        null,
+                                        args,
+                                        onChange,
+                                        getOpenAnswerRequiredDialog()).
+                                        then(resolve).
+                                        catch(reject);
+                                });
+                        } else {
+                            reject('Report ' + args.code + ' not found in artifacts');
+                        }
+                    } else {
+                        reject('Report code not specified')
+                    }
+                }).
+                catch(reject);
+        });
+    }, [request]);
     return {
         find,
         getOne,
@@ -514,6 +522,8 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
         patch,
         delette,
         onChange,
+        artifacts,
+        report,
     };
 }
 

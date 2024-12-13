@@ -102,7 +102,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		beforeConversion(resultat.getContent());
 		Page<R> response = new PageImpl<>(
 				entitiesToResources(resultat.getContent()),
-				toProcessedPageableSort(pageable, perspectives),
+				pageable,
 				resultat.getTotalElements());
 		afterConversion(resultat.getContent(), response.getContent());
 		if (perspectives != null) {

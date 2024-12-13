@@ -5,6 +5,7 @@ import es.caib.comanda.configuracio.logic.intf.model.App;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -44,5 +45,10 @@ public class AppEntity extends BaseAuditableEntity<App> {
 	private String versio;
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
+
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "integracio int where int.app_id = id)")
+	private Integer integracioCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "subsistema sub where sub.app_id = id)")
+	private Integer subsistemaCount;
 
 }

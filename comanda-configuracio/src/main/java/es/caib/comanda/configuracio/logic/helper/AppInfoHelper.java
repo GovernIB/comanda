@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +40,11 @@ public class AppInfoHelper {
 		try {
 			AppInfo appInfo = restTemplate.getForObject(app.getInfoUrl(), AppInfo.class);
 			if (appInfo != null) {
+				app.setInfoData(
+						appInfo.getData().toInstant().
+								atZone(ZoneId.systemDefault()).
+								toLocalDateTime());
+				app.setVersio(appInfo.getVersio());
 				refreshIntegracions(app, appInfo.getIntegracions());
 				refreshSubsistemes(app, appInfo.getSubsistemes());
 			}

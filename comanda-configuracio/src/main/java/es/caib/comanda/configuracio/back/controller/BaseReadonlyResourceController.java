@@ -19,7 +19,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.*;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.TemplateVariable.VariableType;
@@ -185,19 +184,26 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@GetMapping("/artifacts")
 	@Operation(summary = "Llista d'artefactes relacionats amb aquest servei")
 	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('ARTIFACT'))")
-	public ResponseEntity<CollectionModel<ResourceArtifact>> artifacts() {
+	public ResponseEntity<CollectionModel<EntityModel<ResourceArtifact>>> artifacts() {
 		List<ResourceArtifact> artifacts = getReadonlyResourceService().artifactGetAllowed(null);
+		List<EntityModel<ResourceArtifact>> artifactsAsEntities = artifacts.stream().
+				map(a -> EntityModel.of(a, buildReportLink(a))).
+				collect(Collectors.toList());
 		return ResponseEntity.ok(
 				CollectionModel.of(
-						artifacts,
+						artifactsAsEntities,
 						buildArtifactsLinks(artifacts)));
+		/*return ResponseEntity.ok(
+				CollectionModel.of(
+						artifacts,
+						buildArtifactsLinks(artifacts)));*/
 	}
 
 	@Override
 	@PostMapping("/artifacts/report/{code}")
 	@Operation(summary = "Generació d'un informe associat a un únic recurs")
 	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
-	public ResponseEntity<CollectionModel<?>> artifactReportGenerate(
+	public ResponseEntity<CollectionModel<EntityModel<?>>> artifactReportGenerate(
 			@PathVariable
 			@Parameter(description = "Codi de l'informe")
 			final String code,
@@ -215,10 +221,13 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			validateResource(paramsObject, 1, bindingResult);
 		}
 		List<?> items = getReadonlyResourceService().reportGenerate(code, paramsObject);
+		List<EntityModel<?>> itemsAsEntities = items.stream().
+				map(i -> EntityModel.of(i, buildReportItemLink(code, items.indexOf(i)))).
+				collect(Collectors.toList());
 		Link reportLink = linkTo(methodOn(getClass()).artifactReportGenerate(code, null, null)).withSelfRel();
 		return ResponseEntity.ok(
 				CollectionModel.of(
-						items,
+						itemsAsEntities,
 						Link.of(reportLink.toUri().toString()).withSelfRel()));
 	}
 
@@ -307,6 +316,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				Link getOneLink = linkTo(methodOn(getClass()).getOne(null, null)).withRel("getOne");
 				String getOneLinkHref = getOneLink.getHref().replace("perspective", "perspective*");
 				ls.add(Link.of(UriTemplate.of(getOneLinkHref), "getOne"));
+				ls.add(linkTo(methodOn(getClass()).artifacts()).withRel("artifacts"));
 			}
 		} else {
 			// Enllaços que es retornen amb els resultats de la consulta
@@ -481,7 +491,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		ls.add(selfLinkWithDefaultProperties(selfLink, false));
 		artifacts.forEach(a -> {
 			if (ResourceArtifactType.REPORT == a.getType()) {
-				ls.add(buildReportLink(a));
+				ls.add(buildReportLinkWithAffordances(a));
 			}
 		});
 		return ls.toArray(new Link[0]);
@@ -489,14 +499,31 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 
 	@SneakyThrows
 	private Link buildReportLink(ResourceArtifact artifact) {
+		Link reportLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
+		return Link.of(reportLink.toUri().toString() + "/report/" + artifact.getCode()).withSelfRel();
+	}
+
+	private Link buildReportLinkWithAffordances(ResourceArtifact artifact) {
 		String rel = "generate_" + artifact.getCode();
-		Link reportLink = linkTo(methodOn(getClass()).artifactReportGenerate(artifact.getCode(), null, null)).
-				withRel(rel);
-		return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
-				afford(HttpMethod.POST).
-				withInputAndOutput(artifact.getFormClass()).
-				withName(rel).
-				toLink();
+		Link reportLink = buildReportLink(artifact);
+		if (artifact.getFormClass() != null) {
+			return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
+					afford(HttpMethod.POST).
+					withInputAndOutput(artifact.getFormClass()).
+					withName(rel).
+					toLink();
+		} else {
+			return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
+					afford(HttpMethod.POST).
+					withName(rel).
+					toLink();
+		}
+	}
+
+	@SneakyThrows
+	private Link buildReportItemLink(String code, int index) {
+		Link reportLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
+		return Link.of(reportLink.toUri().toString() + "/report/" + code + "/item/" + index).withSelfRel();
 	}
 
 	private String filterWithFieldParameters(String filter, Class<?> resourceClass) {

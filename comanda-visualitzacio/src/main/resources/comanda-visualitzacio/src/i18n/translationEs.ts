@@ -1,6 +1,6 @@
 const translationEs = {
     menu: {
-        home: "Inicio",
+        salut: "Salud",
         app: "Aplicaciones",
     },
     page: {

@@ -46,4 +46,7 @@ public class App extends BaseResource<Long> {
 	@InputType("checkbox")
 	private boolean activa;
 
+	private Integer integracioCount;
+	private Integer subsistemaCount;
+
 }

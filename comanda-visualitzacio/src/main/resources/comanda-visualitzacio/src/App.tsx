@@ -9,10 +9,10 @@ import AppRoutes from './AppRoutes';
 export const App: React.FC = () => {
     const { t } = useTranslation();
     const menuEntries = [{
-        id: 'home',
-        title: t('menu.home'),
+        id: 'salut',
+        title: t('menu.salut'),
         to: '/',
-        icon: 'home',
+        icon: 'monitor_heart',
     }, {
         id: 'app',
         title: t('menu.app'),

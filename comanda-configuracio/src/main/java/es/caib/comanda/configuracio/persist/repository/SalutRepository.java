@@ -2,7 +2,6 @@ package es.caib.comanda.configuracio.persist.repository;
 
 import es.caib.comanda.configuracio.logic.intf.model.SalutInformeEstatItem;
 import es.caib.comanda.configuracio.logic.intf.model.SalutInformeLatenciaItem;
-import es.caib.comanda.configuracio.logic.intf.model.SalutInformeUpdownItem;
 import es.caib.comanda.configuracio.persist.entity.SalutEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,19 +16,14 @@ import java.util.List;
  */
 public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
-	@Query("SELECT " +
-			"new es.caib.comanda.configuracio.logic.intf.model.SalutInformeUpdownItem(" +
-			"    s1.codi, " +
-			"    s1.data," +
-			"    s1.appEstat) " +
-			"FROM " +
+	@Query("FROM " +
 			"    SalutEntity s1 " +
 			"WHERE " +
 			"    s1.data in (SELECT MAX(data) from SalutEntity s2 where s1.codi = s2.codi AND s2.data < :data) " +
 			"AND (:codi IS NULL or s1.codi = :codi) " +
 			"ORDER BY " +
 			"    s1.codi ASC")
-	List<SalutInformeUpdownItem> informeUpDown(
+	List<SalutEntity> informeSalutLast(
 			@Param("codi") String codi,
 			@Param("data") LocalDateTime data);
 

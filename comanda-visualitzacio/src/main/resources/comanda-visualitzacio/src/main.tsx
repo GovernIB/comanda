@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
@@ -11,6 +13,8 @@ import {
     KeycloakAuthProvider as AuthProvider,
     ResourceApiProvider
 } from 'reactlib';
+
+dayjs.extend(duration);
 
 LicenseInfo.setLicenseKey('89030bade1b4837f62ee60358d25fa78Tz04MjczMyxFPTE3Mzc2MzAzMDcwMDAsUz1wcm8sTE09c3Vic2NyaXB0aW9uLEtWPTI=');
 

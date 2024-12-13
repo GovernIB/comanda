@@ -1,6 +1,6 @@
 const translationCa = {
     menu: {
-        home: "Inici",
+        salut: "Salut",
         app: "Aplicacions",
     },
     page: {

@@ -21,31 +21,42 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 
 	@PostConstruct
 	public void init() {
-		register(new InformeUpdown());
+		register(new InformeSalutLast());
 		register(new InformeEstat());
 		register(new InformeLatencia());
 	}
 
-	public class InformeUpdown implements ReportDataGenerator<Object, SalutInformeUpdownItem> {
+	/**
+	 * Darrera informació de salut de cada aplicació.
+	 */
+	public class InformeSalutLast implements ReportDataGenerator<Object, Salut> {
 		@Override
 		public String[] getSupportedReportCodes() {
-			return new String[] { "updown" };
+			return new String[] { "salut_last" };
 		}
 		@Override
 		public Class<Object> getParameterClass() {
 			return null;
 		}
 		@Override
-		public List<SalutInformeUpdownItem> generate(
+		public List<Salut> generate(
 				String code,
 				Object params) throws ReportGenerationException {
-			List<SalutInformeUpdownItem> data = ((SalutRepository)resourceRepository).informeUpDown(
+			List<SalutEntity> saluts = ((SalutRepository)resourceRepository).informeSalutLast(
 					null,
 					LocalDateTime.now());
-			return data;
+			return entitiesToResources(saluts);
 		}
 	}
 
+	/**
+	 * Històric d'estats d'una aplicació entre dues dates.
+	 * Paràmetres (tots obligatoris):
+	 *   - appCodi: codi de l'aplicació.
+	 *   - dataInici: data d'inici.
+	 *   - dataFi: data de fi.
+	 *   - agrupacio: agrupació temporal dels resultats.
+	 */
 	public class InformeEstat implements ReportDataGenerator<SalutInformeParams, SalutInformeEstatItem> {
 		@Override
 		public String[] getSupportedReportCodes() {
@@ -96,6 +107,14 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 	}
 
+	/**
+	 * Mitja de la latencia agrupada d'una aplicació entre dues dates.
+	 * Paràmetres (tots obligatoris):
+	 *   - appCodi: codi de l'aplicació.
+	 *   - dataInici: data d'inici.
+	 *   - dataFi: data de fi.
+	 *   - agrupacio: agrupació temporal dels resultats.
+	 */
 	public class InformeLatencia implements ReportDataGenerator<SalutInformeParams, SalutInformeLatenciaItem> {
 		@Override
 		public String[] getSupportedReportCodes() {

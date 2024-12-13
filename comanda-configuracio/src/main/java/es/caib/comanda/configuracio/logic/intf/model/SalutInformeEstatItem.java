@@ -47,8 +47,16 @@ public class SalutInformeEstatItem {
 		return downCount + outOfServiceCount + unknownCount;
 	}
 
-	public boolean isUp() {
-		return upCount > getNotUpCount();
+	public long getTotalCount() {
+		return upCount + downCount + outOfServiceCount + unknownCount;
+	}
+
+	public boolean isAlwaysUp() {
+		return getNotUpCount() == 0;
+	}
+
+	public boolean isAlwaysDown() {
+		return upCount == 0;
 	}
 
 }

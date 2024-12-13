@@ -63,7 +63,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *
 	 * @return els artefactes relacionats amb aquest servei.
 	 */
-	ResponseEntity<CollectionModel<ResourceArtifact>> artifacts();
+	ResponseEntity<CollectionModel<EntityModel<ResourceArtifact>>> artifacts();
 
 	/**
 	 * Generació d'un informe associat al recurs.
@@ -82,7 +82,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @throws MethodArgumentNotValidException
 	 *             si es troben errors de validació en els paràmetres.
 	 */
-	ResponseEntity<CollectionModel<?>> artifactReportGenerate(
+	ResponseEntity<CollectionModel<EntityModel<?>>> artifactReportGenerate(
 			final String code,
 			final JsonNode params,
 			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
