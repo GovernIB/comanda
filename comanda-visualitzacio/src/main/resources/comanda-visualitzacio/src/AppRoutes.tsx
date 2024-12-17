@@ -7,7 +7,7 @@ import Apps, { AppForm } from './pages/Apps';
 const AppRoutes: React.FC = () => {
     return <Routes>
         <Route index element={<Salut />} />
-        <Route path="/appinfo/:code" element={<SalutAppInfo />} />
+        <Route path="/appinfo/:id" element={<SalutAppInfo />} />
         <Route path="app">
             <Route index element={<Apps />} />
             <Route path="form">

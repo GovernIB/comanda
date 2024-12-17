@@ -27,23 +27,15 @@ export const createReactElementWithPosition = (elements?: React.ReactElement[] |
     return elements?.map((element: React.ReactElement, i: number) => ({ position: i, element }));
 }
 
-export const joinReactElementsWithReactElementsWithPositions = (
+export const joinReactElementsAndReactElementsWithPositions = (
     elements: React.ReactElement[],
     elementsWithPosition: ReactElementWithPosition[] | undefined,
     addKeys?: boolean): React.ReactElement[] => {
+    //console.log('>>> joinReactElementsAndReactElementsWithPositions', elements, elements.length, elementsWithPosition)
     for (let i = elements.length; i >= 0; i--) {
         const elementsToInsert = getReactElementsWithPosition(i, elementsWithPosition);
+        //console.log('\t inserting', elementsToInsert?.length, 'elements at position', i)
         elementsToInsert && elementsToInsert.length && elements.splice(i, 0, ...elementsToInsert);
     }
-    return addKeys ? elements.map((e, i) => React.cloneElement(e, { key: '' + i })) : elements.map(e => e);
-}
-
-export const joinReactElementsWithPositionWithReactElementsWithPositions = (
-    elements: ReactElementWithPosition[],
-    elementsWithPosition: ReactElementWithPosition[] | undefined): ReactElementWithPosition[] => {
-    for (let i = elements.length; i >= 0; i--) {
-        const elementsToInsert = getPositionedReactElementsWithPosition(i, elementsWithPosition);
-        elementsToInsert && elementsToInsert.length && elements.splice(i, 0, ...elementsToInsert);
-    }
-    return elements.map(e => e);
+    return addKeys ? elements.map((e, i) => React.cloneElement(e, { key: '' + i })) : elements;
 }
