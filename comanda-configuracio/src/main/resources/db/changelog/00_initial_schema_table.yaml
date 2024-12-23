@@ -337,3 +337,36 @@ databaseChangeLog:
                 nullable: false
             name: salut_id
             type: BIGINT
+- changeSet:
+    id: init-table-8
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}salut_detall
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}salut_detall_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(10)
+        - column:
+            constraints:
+                nullable: false
+            name: nom
+            type: VARCHAR(100)
+        - column:
+            name: valor
+            type: VARCHAR(1024)
+        - column:
+            constraints:
+                nullable: false
+            name: salut_id
+            type: BIGINT

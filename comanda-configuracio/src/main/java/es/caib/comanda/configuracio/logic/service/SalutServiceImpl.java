@@ -4,12 +4,18 @@ import es.caib.comanda.configuracio.logic.intf.exception.ReportGenerationExcepti
 import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.service.SalutService;
 import es.caib.comanda.configuracio.persist.entity.SalutEntity;
-import es.caib.comanda.configuracio.persist.repository.SalutRepository;
+import es.caib.comanda.configuracio.persist.entity.SalutIntegracioEntity;
+import es.caib.comanda.configuracio.persist.entity.SalutSubsistemaEntity;
+import es.caib.comanda.configuracio.persist.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Implementació del servei de consulta d'informació de salut.
@@ -19,11 +25,61 @@ import java.util.List;
 @Service
 public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, SalutEntity> implements SalutService {
 
+	@Autowired
+	private IntegracioRepository integracioRepository;
+	@Autowired
+	private SalutIntegracioRepository salutIntegracioRepository;
+	@Autowired
+	private SubsistemaRepository subsistemaRepository;
+	@Autowired
+	private SalutSubsistemaRepository salutSubsistemaRepository;
+
 	@PostConstruct
 	public void init() {
 		register(new InformeSalutLast());
 		register(new InformeEstat());
 		register(new InformeLatencia());
+	}
+
+	protected Salut applyPerspectives(
+			SalutEntity entity,
+			Salut resource,
+			String[] perspectives) {
+		boolean integracionsActive = Arrays.asList(perspectives).contains(Salut.PERSP_INTEGRACIONS);
+		if (integracionsActive) {
+			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalut(entity);
+			resource.setIntegracions(
+					salutIntegracions.stream().
+							map(i -> objectMappingHelper.newInstanceMap(
+									i,
+									SalutIntegracio.class,
+									"salut")).
+							collect(Collectors.toList()));
+			integracioRepository.findByAppCodi(entity.getCodi()).forEach(i -> {
+				Optional<SalutIntegracio> salutIntegracio = resource.getIntegracions().stream().
+						filter(si -> si.getCodi().equals(i.getCodi())).
+						findFirst();
+				salutIntegracio.ifPresent(integracio -> integracio.setNom(i.getNom()));
+			});
+		}
+		boolean subsistemesActive = Arrays.asList(perspectives).contains(Salut.PERSP_SUBSISTEMES);
+		if (subsistemesActive) {
+			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalut(entity);
+			resource.setSubsistemes(
+					salutSubsistemes.stream().
+							map(s -> objectMappingHelper.newInstanceMap(
+									s,
+									SalutSubsistema.class,
+									"salut")).
+							collect(Collectors.toList()));
+			subsistemaRepository.findByAppCodi(entity.getCodi()).forEach(s -> {
+				Optional<SalutSubsistema> salutSubsistema = resource.getSubsistemes().stream().
+						filter(ss -> ss.getCodi().equals(s.getCodi())).
+						findFirst();
+				salutSubsistema.ifPresent(subsistema -> subsistema.setNom(s.getNom()));
+			});
+		}
+		return null;
 	}
 
 	/**

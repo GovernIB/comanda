@@ -17,6 +17,7 @@ import { Typography } from '@mui/material';
 export type SalutToolbarProps = {
     title: string;
     subtitle?: string;
+    state?: React.ReactElement;
     ready: boolean;
     onRefresh: (dataInici: string, dataFi: string, agrupacio: string) => void;
     goBackActive?: boolean;
@@ -133,6 +134,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const {
         title,
         subtitle,
+        state,
         ready,
         onRefresh,
         goBackActive,
@@ -180,6 +182,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             <Icon>refresh</Icon>
         </IconButton>
     }];
+    state != null && toolbarElementsWithPositions.unshift({
+        position: 1,
+        element: state
+    });
     subtitle != null && toolbarElementsWithPositions.unshift({
         position: 1,
         element: <Typography

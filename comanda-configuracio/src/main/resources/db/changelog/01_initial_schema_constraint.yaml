@@ -53,12 +53,22 @@ databaseChangeLog:
     id: init-constraint-6
     author: limit
     changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_detall
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutdet_salut_fk
+- changeSet:
+    id: init-constraint-7
+    author: limit
+    changes:
     - addUniqueConstraint:
         tableName: ${db_prefix}app
         columnNames: codi
         constraintName: ${db_prefix}app_codi_uk
 - changeSet:
-    id: init-constraint-7
+    id: init-constraint-8
     author: limit
     changes:
     - addUniqueConstraint:
@@ -66,7 +76,7 @@ databaseChangeLog:
         columnNames: app_id,codi
         constraintName: ${db_prefix}integracio_appcodi_uk
 - changeSet:
-    id: init-constraint-8
+    id: init-constraint-9
     author: limit
     changes:
     - addUniqueConstraint:

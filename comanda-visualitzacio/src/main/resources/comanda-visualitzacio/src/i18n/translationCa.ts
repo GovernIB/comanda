@@ -7,6 +7,8 @@ const translationCa = {
         salut: {
             title: "Salut",
             refrescar: "Refrescar",
+            nd: "N/D",
+            noDetailsIfDown: "No es poden mostrar els detalls si l'aplicació està caiguda",
             apps: {
                 column: {
                     estat: "Estat",
@@ -33,6 +35,35 @@ const translationCa = {
                 P1D: "Darrer dia",
                 P7D: "Darrera setmana",
                 P1M: "Darrer mes",
+            },
+            info: {
+                title: "Informació",
+                data: "Darrera actualització",
+                bdEstat: "Base de dades",
+                appLatencia: "Latència",
+                missatges: "Missatges",
+            },
+            latencia: {
+                title: "Latència",
+            },
+            integracions: {
+                title: "Integracions",
+                column: {
+                    codi: "Codi",
+                    nom: "Nom",
+                    estat: "Estat",
+                    latencia: "Latència",
+                    peticions: "Peticions",
+                },
+            },
+            subsistemes: {
+                title: "Subsistemes",
+                column: {
+                    codi: "Codi",
+                    nom: "Nom",
+                    estat: "Estat",
+                    latencia: "Latència",
+                },
             },
         },
         apps: {

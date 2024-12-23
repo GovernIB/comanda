@@ -1,23 +1,27 @@
 package es.caib.comanda.configuracio.logic.helper;
 
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.configuracio.logic.intf.exception.ObjectMappingException;
+import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
+import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
+import es.caib.comanda.configuracio.persist.entity.EmbeddableEntity;
+import es.caib.comanda.configuracio.persist.entity.ResourceEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
  * Mètodes per al mapeig d'objectes.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Slf4j
 @Component
@@ -36,13 +40,27 @@ public class ObjectMappingHelper {
 	 * @throws ObjectMappingException
 	 *            quan es dona algun error en el mapeig.
 	 */
-	public <T> T newInstanceMap(Object source, Class<T> targetClass) throws ObjectMappingException {
-		try {
-			T target = getNewInstance(targetClass);
-			map(source, target);
-			return target;
-		} catch (Exception ex) {
-			throw new ObjectMappingException(source.getClass(), targetClass, ex);
+	public <T> T newInstanceMap(
+			Object source,
+			Class<T> targetClass,
+			String... ignoredFields) throws ObjectMappingException {
+		if (source != null) {
+			try {
+				T target = getNewInstance(targetClass);
+				if (target != null) {
+					map(source, target, ignoredFields);
+					return target;
+				} else {
+					throw new ObjectMappingException(
+							source.getClass(),
+							targetClass,
+							"Couldn't find no args constructor or builder");
+				}
+			} catch (Exception ex) {
+				throw new ObjectMappingException(source.getClass(), targetClass, ex);
+			}
+		} else {
+			return null;
 		}
 	}
 
@@ -56,68 +74,179 @@ public class ObjectMappingHelper {
 	 * @throws ObjectMappingException
 	 *            quan es dona algun error en el mapeig.
 	 */
-	public void map(Object source, Object target) throws ObjectMappingException {
-		ReflectionUtils.doWithFields(source.getClass(), sourceField -> {
-			ReflectionUtils.makeAccessible(sourceField);
-			Object value;
-			if (isSimpleType(sourceField.getType())) {
-				value = sourceField.get(source);
-			} else {
-				value = newInstanceMap(sourceField.get(source), sourceField.getType());
-			}
-			Field targetField = ReflectionUtils.findField(target.getClass(), sourceField.getName());
-			if (targetField != null) {
-				ReflectionUtils.makeAccessible(targetField);
-				ReflectionUtils.setField(
-						targetField,
-						target,
-						value);
-			}/* else {
-				log.warn(
-						"Couldn't map {} to target class {}: target field with same name not found",
-						sourceField,
-						target.getClass().getName());
-			}*/
-		});
+	public void map(
+			Object source,
+			Object target,
+			String... ignoredFields) throws ObjectMappingException {
+		ReflectionUtils.doWithFields(
+				source.getClass(),
+				sourceField -> {
+					ReflectionUtils.makeAccessible(sourceField);
+					Field targetField = ReflectionUtils.findField(target.getClass(), sourceField.getName());
+					if (targetField != null) {
+						if (isSimpleType(sourceField.getType())) {
+							ReflectionUtils.makeAccessible(targetField);
+							ReflectionUtils.setField(
+									targetField,
+									target,
+									sourceField.get(source));
+						} else if (ResourceEntity.class.isAssignableFrom(sourceField.getType()) && ResourceReference.class.isAssignableFrom(targetField.getType())) {
+							ResourceEntity<?, ?> entity = (ResourceEntity<?, ?>)sourceField.get(source);
+							ResourceReference<?, ?> resourceReference = null;
+							if (entity != null) {
+								resourceReference = toResourceReference(entity);
+							}
+							ReflectionUtils.makeAccessible(targetField);
+							ReflectionUtils.setField(
+									targetField,
+									target,
+									resourceReference);
+						} else {
+							ReflectionUtils.makeAccessible(targetField);
+							ReflectionUtils.setField(
+									targetField,
+									target,
+									null);
+						}
+					}
+				},
+				field -> ignoredFields == null || !Arrays.asList(ignoredFields).contains(field.getName()));
 	}
 
 	/**
-	 * Crea un clon del recurs per a la lògica onChange.
+	 * Crea un clon de l'objecte per a la lògica onChange.
 	 *
-	 * @param resource
-	 *            el recurs d'orígen.
-	 * @param resourceClass
-	 *            la classe del recurs.
+	 * @param object
+	 *            l'objecte d'orígen.
 	 * @return el recurs clonat.
 	 */
-	public <RR> RR cloneResource(
-			RR resource,
-			Class<RR> resourceClass) {
-		if (resource != null) {
+	public <O> O clone(O object) throws ObjectMappingException {
+		if (object != null) {
 			try {
-				RR clonedResource = resourceClass.getConstructor().newInstance();
-				ReflectionUtils.doWithFields(resourceClass, field -> {
-					if (!isStaticFinal(field)) {
-						ReflectionUtils.makeAccessible(field);
-						Object value = getFieldValue(resource, field);
-						ReflectionUtils.setField(
-								field,
-								clonedResource,
-								value);
-					}
-				});
-				return clonedResource;
+				O cln = (O)getNewInstance(object.getClass());
+				if (cln != null) {
+					ReflectionUtils.doWithFields(object.getClass(), field -> {
+						if (!isStaticFinal(field)) {
+							ReflectionUtils.makeAccessible(field);
+							Object value = getFieldValue(object, field);
+							ReflectionUtils.setField(
+									field,
+									cln,
+									value);
+						}
+					});
+					return cln;
+				} else {
+					throw new ObjectMappingException(
+							object.getClass(),
+							object.getClass(),
+							"Couldn't find no args constructor or builder");
+				}
 			} catch (Exception ex) {
-				log.error("No s'ha pogut crear la instància del recurs {}", resourceClass.getName(), ex);
-				throw new RuntimeException("No s'ha pogut crear la instància del recurs " + resourceClass.getName(), ex);
+				throw new ObjectMappingException(
+						object.getClass(),
+						object.getClass(),
+						ex);
 			}
 		} else {
 			return null;
 		}
 	}
 
-	private <T> T getNewInstance(Class<T> targetClass) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-		return targetClass.getConstructor().newInstance();
+	/**
+	 * Retorna una nova instància de la classe especificada. Intenta crear la instància
+	 * amb el constructor sense arguments o amb el mètode build() del builder.
+	 *
+	 * @param targetClass
+	 *            la classe de la qual es vol crear la instància.
+	 * @return la nova instància de la classe especificada o null si no s'ha pogut crear.
+	 * @param <T> el tipus de la classe que es vol instanciar
+	 */
+	private <T> T getNewInstance(
+			Class<T> targetClass) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		Constructor<T> noArgsConstructor = Arrays.stream((Constructor<T>[])targetClass.getConstructors()).
+				filter(c -> c.getParameterCount() == 0).
+				findFirst().
+				orElse(null);
+		if (noArgsConstructor != null) {
+			return noArgsConstructor.newInstance();
+		} else {
+			Method builderMethod = ReflectionUtils.findMethod(targetClass, "builder");
+			if (builderMethod != null) {
+				Class<?> builderReturnType = builderMethod.getReturnType();
+				Object builderInstance = ReflectionUtils.invokeMethod(builderMethod, null);
+				return (T)ReflectionUtils.invokeMethod(
+						ReflectionUtils.findMethod(builderReturnType, "build"),
+						builderInstance);
+			}
+		}
+		return null;
+	}
+
+	private ResourceReference<?, ?> toResourceReference(
+			ResourceEntity<?, ?> entity) {
+		return ResourceReference.toResourceReference(
+				(Serializable)entity.getId(),
+				//entity.getEntityDescription());
+				getResourceEntityDescription(entity));
+	}
+
+	private String getResourceEntityDescription(ResourceEntity<?, ?> persistable) {
+		Class<? extends Resource<?>> resourceClass = (Class)TypeUtil.getArgumentTypeFromGenericSuperclass(
+				persistable.getClass(),
+				ResourceEntity.class,
+				0);
+		String descriptionFieldName = getResourceDescriptionFieldName(resourceClass);
+		if (descriptionFieldName != null) {
+			if (persistable instanceof EmbeddableEntity) {
+				EmbeddableEntity<?, ?> embeddableEntity = (EmbeddableEntity<?, ?>)persistable;
+				Object embedded = embeddableEntity.getEmbedded();
+				try {
+					return (String) getFieldValue(
+							embedded,
+							embedded.getClass().getDeclaredField(descriptionFieldName));
+				} catch (Exception ex) {
+					log.warn(
+							"Couldn't find description field {} in embedded class {}",
+							descriptionFieldName,
+							embedded.getClass().getName(),
+							ex);
+				}
+			} else {
+				try {
+					return (String) getFieldValue(
+							persistable,
+							persistable.getClass().getDeclaredField(descriptionFieldName));
+				} catch (Exception ex) {
+					log.warn(
+							"Couldn't find description field {} in entity class {}",
+							descriptionFieldName,
+							persistable.getClass().getName(),
+							ex);
+				}
+			}
+		}
+		return resourceClass.getSimpleName() + " (id=" + persistable.getId() + ")";
+	}
+
+	private String getResourceDescriptionFieldName(Class<? extends Resource<?>> resourceClass) {
+		ResourceConfig resourceConfig = resourceClass.getAnnotation(ResourceConfig.class);
+		if (resourceConfig != null) {
+			String descriptionField = resourceConfig.descriptionField();
+			if (!descriptionField.isEmpty()) {
+				return descriptionField;
+			} else {
+				log.warn(
+						"Couldn't find description field for resource class {}: ResourceConfig.descriptionField not configured",
+						resourceClass.getName());
+				return null;
+			}
+		} else {
+			log.warn(
+					"Couldn't find description field for resource class {}: ResourceConfig annotation not found",
+					resourceClass.getName());
+			return null;
+		}
 	}
 
 	private boolean isSimpleType(Class<?> type) {
@@ -134,18 +263,19 @@ public class ObjectMappingHelper {
 	}
 
 	private Object getFieldValue(
-			Object entity,
-			java.lang.reflect.Field entityField) {
-		String getMethodName = methodNameFromField(entityField.getName(), "get");
-		Method method = ReflectionUtils.findMethod(entity.getClass(), getMethodName);
+			Object object,
+			Field field) {
+		String getMethodName = methodNameFromField(field.getName(), "get");
+		Method method = ReflectionUtils.findMethod(object.getClass(), getMethodName);
 		if (method != null) {
-			return ReflectionUtils.invokeMethod(method, entity);
+			return ReflectionUtils.invokeMethod(method, object);
 		} else {
-			return ReflectionUtils.getField(entityField, entity);
+			ReflectionUtils.makeAccessible(field);
+			return ReflectionUtils.getField(field, object);
 		}
 	}
 
-	private boolean isStaticFinal(java.lang.reflect.Field field) {
+	private boolean isStaticFinal(Field field) {
 		int modifiers = field.getModifiers();
 		return Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers);
 	}

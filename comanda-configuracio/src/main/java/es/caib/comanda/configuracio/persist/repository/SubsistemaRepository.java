@@ -13,5 +13,6 @@ import java.util.List;
 public interface SubsistemaRepository extends BaseRepository<SubsistemaEntity, Long> {
 
 	List<SubsistemaEntity> findByApp(AppEntity app);
+	List<SubsistemaEntity> findByAppCodi(String codi);
 
 }

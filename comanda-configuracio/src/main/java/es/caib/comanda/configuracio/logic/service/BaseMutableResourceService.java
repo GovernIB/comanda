@@ -507,7 +507,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			Object fieldValue,
 			Map<String, Object> fields,
 			String excludeField) {
-		R clonedResource = objectMappingHelper.cloneResource(resource, getResourceClass());
+		R clonedResource = objectMappingHelper.clone(resource);
 		try {
 			Field field = resource.getClass().getField(fieldName);
 			ReflectionUtils.makeAccessible(field);

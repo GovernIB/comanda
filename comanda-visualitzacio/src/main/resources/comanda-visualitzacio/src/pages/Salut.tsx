@@ -18,6 +18,7 @@ import {
     BasePage,
     useResourceApiService,
     useBaseAppContext,
+    dateFormatLocale,
 } from 'reactlib';
 import {
     generateDataGroups,
@@ -204,16 +205,16 @@ const AppDataTable: React.FC<any> = (props: { apps: any[], salutLastItems: any[]
                     key={app.id}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     <TableCell component="th" scope="row">
-                        <ItemStateChip up={appUpdownItem?.appUp} date={appUpdownItem.data} />
+                        <ItemStateChip up={appUpdownItem?.appUp} date={dateFormatLocale(appUpdownItem.data, true)} />
                     </TableCell>
                     <TableCell component="th" scope="row">{app.codi}</TableCell>
                     <TableCell component="th" scope="row">{app.nom}</TableCell>
                     <TableCell component="th" scope="row">{app.versio}</TableCell>
                     <TableCell component="th" scope="row">
-                        <ItemStateChip up={appUpdownItem?.bdUp} date={appUpdownItem.data} />
+                        <ItemStateChip up={appUpdownItem?.bdUp} date={dateFormatLocale(appUpdownItem.data, true)} />
                     </TableCell>
                     <TableCell component="th" scope="row">
-                        {appUpdownItem.appLatencia != null ? appUpdownItem.appLatencia + ' ms' : 'N/D'}
+                        {appUpdownItem.appLatencia != null ? appUpdownItem.appLatencia + ' ms' : t('page.salut.nd')}
                     </TableCell>
                     <TableCell component="th" scope="row">
                         <Chip label={appUpdownItem.integracioUpCount} size="small" color="success" />&nbsp;/&nbsp;

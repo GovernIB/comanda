@@ -2,10 +2,12 @@ package es.caib.comanda.configuracio.logic.intf.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Informació de salut retornada per una app.
@@ -13,8 +15,12 @@ import java.time.LocalDateTime;
  * @author Limit Tecnologies
  */
 @Getter
+@Setter
 @NoArgsConstructor
 public class Salut extends BaseResource<Long> {
+
+	public static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
+	public static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
 
 	@NotNull
 	@Size(max = 16)
@@ -47,5 +53,8 @@ public class Salut extends BaseResource<Long> {
 	private String yearMonth;
 	private String yearMonthDay;
 	private String yearMonthDayHour;
+
+	private List<SalutIntegracio> integracions;
+	private List<SalutSubsistema> subsistemes;
 
 }

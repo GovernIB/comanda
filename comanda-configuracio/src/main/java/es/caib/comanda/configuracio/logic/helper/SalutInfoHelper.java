@@ -2,17 +2,9 @@ package es.caib.comanda.configuracio.logic.helper;
 
 import es.caib.comanda.configuracio.logic.intf.model.SalutEstat;
 import es.caib.comanda.configuracio.logic.intf.model.SalutNivell;
-import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.SalutEntity;
-import es.caib.comanda.configuracio.persist.entity.SalutIntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.SalutMissatgeEntity;
-import es.caib.comanda.configuracio.persist.repository.SalutIntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.SalutMissatgeRepository;
-import es.caib.comanda.configuracio.persist.repository.SalutRepository;
-import es.caib.comanda.salut.model.EstatSalutEnum;
-import es.caib.comanda.salut.model.IntegracioSalut;
-import es.caib.comanda.salut.model.MissatgeSalut;
-import es.caib.comanda.salut.model.SalutInfo;
+import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.configuracio.persist.repository.*;
+import es.caib.comanda.salut.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,7 +30,11 @@ public class SalutInfoHelper {
 	@Autowired
 	private SalutIntegracioRepository salutIntegracioRepository;
 	@Autowired
+	private SalutSubsistemaRepository salutSubsistemaRepository;
+	@Autowired
 	private SalutMissatgeRepository salutMissatgeRepository;
+	@Autowired
+	private SalutDetallRepository salutDetallRepository;
 
 	public void getSalutInfo(AppEntity app) {
 		log.debug("Consultant informació de salut de l'app {}", app.getCodi());
@@ -69,7 +65,9 @@ public class SalutInfoHelper {
 			salut.setBdLatencia(info.getBd().getLatencia());
 			SalutEntity saved = salutRepository.save(salut);
 			crearSalutIntegracions(saved, info.getIntegracions());
+			crearSalutSubsistemes(saved, info.getSubsistemes());
 			crearSalutMissatges(saved, info.getMissatges());
+			crearSalutDetalls(saved, info.getAltres());
 		}
 	}
 
@@ -88,6 +86,19 @@ public class SalutInfoHelper {
 		}
 	}
 
+	private void crearSalutSubsistemes(SalutEntity salut, List<SubsistemaSalut> subsistemes) {
+		if (subsistemes != null) {
+			subsistemes.forEach(s -> {
+				SalutSubsistemaEntity salutSubsistema = new SalutSubsistemaEntity();
+				salutSubsistema.setCodi(s.getCodi());
+				salutSubsistema.setEstat(toSalutEstat(s.getEstat()));
+				salutSubsistema.setLatencia(s.getLatencia());
+				salutSubsistema.setSalut(salut);
+				salutSubsistemaRepository.save(salutSubsistema);
+			});
+		}
+	}
+
 	private void crearSalutMissatges(SalutEntity salut, List<MissatgeSalut> missatges) {
 		if (missatges != null) {
 			missatges.forEach(m -> {
@@ -97,6 +108,19 @@ public class SalutInfoHelper {
 				salutMissatge.setMissatge(m.getMissatge());
 				salutMissatge.setSalut(salut);
 				salutMissatgeRepository.save(salutMissatge);
+			});
+		}
+	}
+
+	private void crearSalutDetalls(SalutEntity salut, List<DetallSalut> missatges) {
+		if (missatges != null) {
+			missatges.forEach(d -> {
+				SalutDetallEntity salutDetall = new SalutDetallEntity();
+				salutDetall.setCodi(d.getCodi());
+				salutDetall.setNom(d.getNom());
+				salutDetall.setValor(d.getValor());
+				salutDetall.setSalut(salut);
+				salutDetallRepository.save(salutDetall);
 			});
 		}
 	}

@@ -7,6 +7,8 @@ const translationEs = {
         salut: {
             title: "Salut",
             refrescar: "Refrescar",
+            nd: "N/D",
+            noDetailsIfDown: "No se pueden mostrar los detalles si la aplicación está caida",
             apps: {
                 column: {
                     estat: "Estado",
@@ -33,6 +35,35 @@ const translationEs = {
                 P1D: "Último dia",
                 P7D: "Última semana",
                 P1M: "Último mes",
+            },
+            info: {
+                title: "Información",
+                data: "Última actualización",
+                bdEstat: "Base de datos",
+                appLatencia: "Latencia",
+                missatges: "Mensajes",
+            },
+            latencia: {
+                title: "Latencia",
+            },
+            integracions: {
+                title: "Integraciones",
+                column: {
+                    codi: "Código",
+                    nom: "Nombre",
+                    estat: "Estado",
+                    latencia: "Latencia",
+                    peticions: "Peticiones",
+                },
+            },
+            subsistemes: {
+                title: "Subsistemas",
+                column: {
+                    codi: "Código",
+                    nom: "Nombre",
+                    estat: "Estado",
+                    latencia: "Latencia",
+                },
             },
         },
         apps: {

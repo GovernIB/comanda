@@ -12,6 +12,7 @@ import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
 import es.caib.comanda.configuracio.logic.springfilter.FilterSpecification;
 import es.caib.comanda.configuracio.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.configuracio.persist.entity.EmbeddableEntity;
 import es.caib.comanda.configuracio.persist.repository.BaseRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -518,19 +519,24 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 					return new String[] { path[0] };
 				}
 			} else {
-				Class<?> resourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
-						entityClass,
-						BaseAuditableEntity.class,
-						0);
-				log.debug("\t\t\tDetectat camp que no pertany a l'entitat " + path[0] + ", el cercam al recurs " + resourceClass);
-				Field resourceField = ReflectionUtils.findField(resourceClass, path[0]);
-				if (resourceField != null) {
-					// Si el camp pertany al recurs aleshores hi afegeix .embedded just abans
-					log.debug("\t\t\t\t Camp " + path[0] + " trobat al recurs, l'afegim posant '.embedded'");
-					return new String[] { String.join(".", "embedded", path[0]) };
+				if (EmbeddableEntity.class.isAssignableFrom(entityClass)) {
+					Class<?> resourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
+							entityClass,
+							EmbeddableEntity.class,
+							0);
+					log.debug("\t\t\tDetectat camp que no pertany a l'entitat " + path[0] + ", el cercam al recurs " + resourceClass);
+					Field resourceField = ReflectionUtils.findField(resourceClass, path[0]);
+					if (resourceField != null) {
+						// Si el camp pertany al recurs aleshores hi afegeix .embedded just abans
+						log.debug("\t\t\t\t Camp " + path[0] + " trobat al recurs, l'afegim posant '.embedded'");
+						return new String[]{String.join(".", "embedded", path[0])};
+					} else {
+						// Si el camp tampoc pertany al recurs aleshores retorna null
+						log.warn("Ordenació no aplicable pel recurs {}, camp no trobat: {}", resourceClass, path[0]);
+						return null;
+					}
 				} else {
-					// Si el camp tampoc pertany al recurs aleshores retorna null
-					log.debug("\t\t\t\t Camp " + path[0] + " no trobat al recurs");
+					log.warn("Ordenació no aplicable pel recurs {}, camp no trobat: {}", resourceClass, path[0]);
 					return null;
 				}
 			}

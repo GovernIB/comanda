@@ -1,7 +1,9 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -13,6 +15,7 @@ import javax.validation.constraints.NotNull;
  * @author Limit Tecnologies
  */
 @Getter
+@Setter
 @NoArgsConstructor
 public class SalutIntegracio extends BaseResource<Long> {
 
@@ -22,11 +25,13 @@ public class SalutIntegracio extends BaseResource<Long> {
 	private SalutEstat estat;
 	private Integer latencia;
 	@NotNull
-	private Integer totalOk;
+	private Long totalOk;
 	@NotNull
-	private Integer totalError;
+	private Long totalError;
 
-	@Transient
 	private ResourceReference<Salut, Long> salut;
+
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private String nom;
 
 }

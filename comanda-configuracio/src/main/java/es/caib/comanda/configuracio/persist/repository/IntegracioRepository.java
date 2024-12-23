@@ -13,5 +13,6 @@ import java.util.List;
 public interface IntegracioRepository extends BaseRepository<IntegracioEntity, Long> {
 
 	List<IntegracioEntity> findByApp(AppEntity app);
+	List<IntegracioEntity> findByAppCodi(String codi);
 
 }

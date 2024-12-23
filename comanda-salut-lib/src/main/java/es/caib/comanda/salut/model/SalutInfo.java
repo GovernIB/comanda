@@ -17,5 +17,5 @@ public class SalutInfo {
     private List<DetallSalut> altres;
     private List<MissatgeSalut> missatges;
     private String versio;
-    private List<SubsistemaSalutInfo> subsistemes;
+    private List<SubsistemaSalut> subsistemes;
 }

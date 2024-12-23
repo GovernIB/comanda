@@ -1,7 +1,9 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -13,6 +15,7 @@ import javax.validation.constraints.NotNull;
  * @author Limit Tecnologies
  */
 @Getter
+@Setter
 @NoArgsConstructor
 public class SalutSubsistema extends BaseResource<Long> {
 
@@ -23,5 +26,8 @@ public class SalutSubsistema extends BaseResource<Long> {
 	private Integer latencia;
 
 	private ResourceReference<Salut, Long> salut;
+
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private String nom;
 
 }

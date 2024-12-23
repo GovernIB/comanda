@@ -6,24 +6,25 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 
 /**
- * Missatge que forma part d'una informació de salut.
+ * Detall que forma part d'una informació de salut.
  *
  * @author Limit Tecnologies
  */
 @Getter
 @NoArgsConstructor
-public class SalutMissatge extends BaseResource<Long> {
+public class SalutDetall extends BaseResource<Long> {
 
 	@NotNull
-	private LocalDateTime data;
+	@Size(max = 10)
+	private String codi;
 	@NotNull
-	private SalutNivell nivell;
+	@Size(max = 100)
+	private String nom;
 	@NotNull
 	@Size(max = 2048)
-	private String missatge;
+	private String valor;
 
 	@Transient
 	private ResourceReference<Salut, Long> salut;
