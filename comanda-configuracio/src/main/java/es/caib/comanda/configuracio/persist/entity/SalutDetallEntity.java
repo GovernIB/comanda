@@ -2,7 +2,6 @@ package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.SalutDetall;
-import es.caib.comanda.configuracio.logic.intf.model.SalutMissatge;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
