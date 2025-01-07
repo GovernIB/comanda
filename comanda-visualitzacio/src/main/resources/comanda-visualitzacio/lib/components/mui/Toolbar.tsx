@@ -5,7 +5,7 @@ import { red } from '@mui/material/colors';
 import { useTheme } from '@mui/material/styles';
 import {
     ReactElementWithPosition,
-    joinReactElementsAndReactElementsWithPositions
+    joinReactElementsWithReactElementsWithPositions
 } from '../../util/reactNodePosition';
 
 export type ToolbarProps = React.PropsWithChildren & {
@@ -43,7 +43,12 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             {subtitle}
         </Typography>
     </div> : <Typography variant="h6">{title}</Typography>;
-    const toolbarElements = [titleElement, <div style={{ flexGrow: 1 }} />];
+    const toolbarElements: React.ReactElement[] = title != null ? [
+        titleElement,
+        <div style={{flexGrow: 1}}/>
+    ] : [
+        <div style={{flexGrow: 1}}/>
+    ];
     return <>
         <MuiToolbar
             disableGutters
@@ -57,7 +62,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                 backgroundColor: error ? red[100] : (upperToolbar ? theme.palette.grey[200] : undefined),
                 ...sxProp
             }}>
-            {joinReactElementsAndReactElementsWithPositions(toolbarElements, elementsWithPositions, true)}
+            {joinReactElementsWithReactElementsWithPositions(toolbarElements, elementsWithPositions, true)}
         </MuiToolbar>
         {children}
     </>;

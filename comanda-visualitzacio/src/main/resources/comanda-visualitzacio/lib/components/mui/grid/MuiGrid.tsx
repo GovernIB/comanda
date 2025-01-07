@@ -19,7 +19,10 @@ import Box from '@mui/material/Box';
 import { capitalize } from '../../../util/text';
 import useLogConsole from '../../../util/useLogConsole';
 import { formattedFieldValue, isFieldNumericType } from '../../../util/fields';
-import { ReactElementWithPosition } from '../../../util/reactNodePosition';
+import {
+    ReactElementWithPosition,
+    joinReactElementsWithPositionWithReactElementsWithPositions
+} from '../../../util/reactNodePosition';
 import { useResourceApiContext } from '../../ResourceApiContext';
 import {
     useResourceApiService,
@@ -43,6 +46,7 @@ import GridContext, { GridApi, GridApiRef, useGridContext } from './GridContext'
 export const LOG_PREFIX = 'GRID';
 
 export type NewGridColDef = GridColDef & {
+    fieldType?: string;
     currencyType?: boolean;
     currencyCode?: string | ((row: any) => string);
     currencyDecimalPlaces?: number | ((row: any) => number);
@@ -141,7 +145,7 @@ const rowActionsToGridActionsCellItems = (
         showAction && actions.push(
             toGridActionItem(
                 params.id,
-                isLinkAction ? link?.title ?? action.title : action.title,
+                action.title ?? (isLinkAction ? link?.title : action.apiLink || action.apiAction || action.apiReport),
                 action.icon,
                 action.linkTo?.replace('{{id}}', '' + params.id),
                 action.onClick,
@@ -268,17 +272,13 @@ const useGridEditable = (
                 // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
             });
     }
-    const toolbarEditActions = [];
     const isCreateLinkPresent = apiCurrentActions?.['create'] != null;
-    isCreateLinkPresent && !readOnly && toolbarEditActions.push({
-        position: 2,
-        element: toToolbarIcon('add', {
-            title: t('grid.create.title'),
-            linkTo: toolbarCreateLink,
-            onClick: !toolbarCreateLink ? doCreate : undefined,
-        }),
-    });
-    const rowEditActions = [];
+    const toolbarAddElement = isCreateLinkPresent && !readOnly ? toToolbarIcon('add', {
+        title: t('grid.create.title'),
+        linkTo: toolbarCreateLink,
+        onClick: !toolbarCreateLink ? doCreate : undefined,
+    }) : undefined;
+    const rowEditActions: ResourceApiGridAdditionalAction[] = [];
     !readOnly && rowEditActions.push({
         title: t('grid.update.title'),
         apiLink: 'update',
@@ -286,7 +286,7 @@ const useGridEditable = (
         linkTo: rowUpdateLink,
         onClick: !rowUpdateLink ? doUpdate : undefined,
     }, {
-        title: t('grid.delete.single.title'),
+        title: t('grid.delete.title'),
         apiLink: 'delete',
         icon: 'delete',
         onClick: doDelete,
@@ -308,7 +308,7 @@ const useGridEditable = (
         {popupEditFormContent}
     </FormDialogPopup> : null;
     return {
-        toolbarEditActions,
+        toolbarAddElement,
         rowEditActions,
         formDialogPopup
     };
@@ -324,7 +324,7 @@ const useGridColumns = (
     const processedColumns = React.useMemo(() => {
         const processedColumns: NewGridColDef[] = columns.map(c => {
             const field = fields?.find(f => f.name === c.field);
-            const isNumericType = isFieldNumericType(field);
+            const isNumericType = isFieldNumericType(field, c.fieldType);
             const isCurrencyType = c.currencyType;
             return {
                 valueGetter: (value: any, row: any, column: GridColDef) => {
@@ -340,7 +340,7 @@ const useGridColumns = (
                     const formattedValue = formattedFieldValue(
                         value,
                         field, {
-                        type: isCurrencyType ? 'currency' : c.type,
+                        type: isCurrencyType ? 'currency' : c.fieldType,
                         currentLanguage,
                         currencyCode: cany['currencyCode'],
                         currencyDecimalPlaces: cany['currencyDecimalPlaces'],
@@ -546,6 +546,7 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         paginationModel,
         staticSortModel,
         internalSortModel,
+        staticFilter,
         internalFilter,
         quickFilterValue
     ]);
@@ -559,7 +560,7 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         otherProps,
         apiCurrentLinks);*/
     const {
-        toolbarEditActions,
+        toolbarAddElement,
         rowEditActions,
         formDialogPopup
     } = useGridEditable(
@@ -579,6 +580,17 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         apiCurrentActions,
         apiDelete,
         apiRef);
+    const toolbarGridElementsWithPositions: ReactElementWithPosition[] = [];
+    toolbarAddElement != null && toolbarGridElementsWithPositions.push({
+        position: 2,
+        element: toolbarAddElement
+    });
+    const toolbarHideExport = true;
+    const toolbarNumElements = 2 + (toolbarHideExport ? 0 : 1) + (toolbarHideRefresh ? 0 : 1) + (toolbarHideQuickFilter ? 0 : 1);
+    const joinedToolbarElementsWithPositions = joinReactElementsWithPositionWithReactElementsWithPositions(
+        toolbarNumElements,
+        toolbarGridElementsWithPositions,
+        toolbarElementsWithPositions);
     const toolbar = useToolbar(
         title ?? capitalize(resourceName) ?? '<unknown>',
         titleDisabled ?? false,
@@ -587,10 +599,11 @@ export const MuiGrid: React.FC<MuiGridProps> = (props) => {
         quickFilterComponent,
         refresh,
         undefined,
-        true,
+        toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
-        [...toolbarEditActions, ...(toolbarElementsWithPositions ?? [])]);
+        joinedToolbarElementsWithPositions);
+    //[...toolbarEditActions, ...(toolbarElementsWithPositions ?? [])]);
     const processedColumns = useGridColumns(
         columns,
         [...rowAdditionalActions, ...rowEditActions],

@@ -55,7 +55,7 @@ public class RestApiController {
 	private boolean isApiResourceControllerForResource(
 			ReadonlyResourceController<?, ?> apiResourceController,
 			Class<? extends Resource<?>> resourceClass) {
-		Class<?> controllerResourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
+		Class<?> controllerResourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
 				apiResourceController.getClass(),
 				ReadonlyResourceController.class,
 				0);

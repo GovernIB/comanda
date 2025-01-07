@@ -4,6 +4,7 @@ import es.caib.comanda.configuracio.logic.intf.annotation.ResourceField;
 import es.caib.comanda.configuracio.logic.intf.exception.*;
 import es.caib.comanda.configuracio.logic.intf.model.Reorderable;
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
 import es.caib.comanda.configuracio.logic.intf.service.MutableResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.CompositePkUtil;
@@ -29,9 +30,25 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		extends BaseReadonlyResourceService<R, ID, E>
 		implements MutableResourceService<R, ID> {
 
+	private final Map<String, OnChangeLogicProcessor<R>> onChangeLogicProcessorMap = new HashMap<>();
+	private final Map<String, ActionExecutor<?, ?>> actionExecutorMap = new HashMap<>();
+
+	@Override
+	public R newResourceInstance() {
+		R resourceInstance = null;
+		try {
+			resourceInstance = getResourceClass().getDeclaredConstructor().newInstance();
+		} catch (Exception ex) {
+			log.error("Couldn't create new resource instance (resourceClass={})", getResourceClass(), ex);
+		}
+		return resourceInstance;
+	}
+
 	@Override
 	@Transactional
-	public R create(R resource) {
+	public R create(
+			R resource,
+			Map<String, AnswerRequiredException.AnswerValue> answers) {
 		log.debug("Creant recurs (resource={})", resource);
 		completeResource(resource);
 		E entity = buildNewEntity(resource, false);
@@ -51,7 +68,8 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	@Transactional
 	public R update(
 			ID id,
-			R resource) throws ResourceNotFoundException {
+			R resource,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
 		log.debug("Modificant recurs amb id (id={}, resource={})", id, resource);
 		completeResource(resource);
 		E entity = getEntity(id, null);
@@ -74,7 +92,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 
 	@Override
 	@Transactional
-	public void delete(ID id) throws ResourceNotFoundException {
+	public void delete(
+			ID id,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
 		log.debug("Esborrant recurs amb id (id={})", id);
 		E entity = getEntity(id, null);
 		reorderIfReorderable(entity, null, null);
@@ -104,6 +124,21 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 				0);
 	}
 
+	@Override
+	@Transactional
+	public <P> Object actionExec(String code, P params) throws ArtifactNotFoundException, ActionExecutionException {
+		log.debug(
+				"Executing action (code={}, params={})",
+				code,
+				params);
+		ActionExecutor<P, ?> executor = (ActionExecutor<P, ?>)actionExecutorMap.get(code);
+		if (executor != null) {
+			return executor.exec(code, params);
+		} else {
+			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.ACTION, code);
+		}
+	}
+
 	protected void updateEntityWithResource(E entity, R resource) {
 		objectMappingHelper.map(
 				resource,
@@ -116,9 +151,6 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return (ID)resource.getId();
 	}
 
-	protected R newResourceInstance() {
-		return null;
-	}
 	protected Object newResourceInstance(String action, String report, String filter) {
 		return null;
 	}
@@ -432,9 +464,13 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		}
 	}
 
-	private final Map<String, OnChangeLogicProcessor<R>> onChangeLogicProcessorMap = new HashMap<>();
+	protected void register(ActionExecutor<?, ?> actionExecutor) {
+		Arrays.stream(actionExecutor.getSupportedActionCodes()).
+				forEach(c -> actionExecutorMap.put(c, actionExecutor));
+	}
+
 	protected void register(OnChangeLogicProcessor<R> logicProcessor) {
-		Arrays.stream(logicProcessor.supportedFieldNames()).
+		Arrays.stream(logicProcessor.getSupportedFieldNames()).
 				forEach(f -> onChangeLogicProcessorMap.put(f, logicProcessor));
 	}
 	private Map<String, Object> onChangeLogicProcessRecursive(
@@ -536,14 +572,75 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return saved;
 	}
 
+	/**
+	 * Interfície a implementar pels processadors de lògica onChange.
+	 *
+	 * @param <R> classe del recurs.
+	 */
 	public interface OnChangeLogicProcessor <R extends Resource<?>> {
-		String[] supportedFieldNames();
+		/**
+		 * Retorna la llista de camps que gestiona aquest processdor.
+		 *
+		 * @return els camps suportats.
+		 */
+		String[] getSupportedFieldNames();
+		/**
+		 * Processa la lògica onChange d'un camp.
+		 *
+		 * @param previous
+		 *            el recurs amb els valors previs a la modificació.
+		 * @param fieldName
+		 *            el nom del camp modificat.
+		 * @param fieldValue
+		 *            el valor del camp modificat.
+		 * @param answers
+		 *            les respostes associades a la petició actual.
+		 * @param target
+		 *            el recurs emmagatzemat a base de dades.
+		 */
 		void processOnChangeLogic(
 				R previous,
 				String fieldName,
 				Object fieldValue,
 				Map<String, AnswerRequiredException.AnswerValue> answers,
 				R target);
+	}
+
+	/**
+	 * Interfície a implementar pels artefactes encarregats d'executar accions.
+	 *
+	 * @param <P> classe dels paràmetres necessaris per a executar l'acció.
+	 * @param <R> classe de la resposta retornada com a resultat.
+	 */
+	public interface ActionExecutor<P, R> {
+		/**
+		 * Retorna els codis suportats en aquest executor.
+		 *
+		 * @return els codis suportats.
+		 */
+		String[] getSupportedActionCodes();
+		/**
+		 * Retorna la classe pels paràmetres.
+		 *
+		 * @return la classe pels paràmetres o null si no en te
+		 */
+		default Class<P> getParameterClass() {
+			return null;
+		}
+		/**
+		 * Executa l'acció.
+		 *
+		 * @param code
+		 *            el codi de l'acció.
+		 * @param params
+		 *            els paràmetres per a l'execució.
+		 * @return el resultat de l'execució (pot ser null).
+		 * @throws ActionExecutionException
+		 *             si es produeix algun error generant les dades.
+		 */
+		List<R> exec(
+				String code,
+				P params) throws ActionExecutionException;
 	}
 
 }

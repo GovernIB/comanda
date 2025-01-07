@@ -28,6 +28,18 @@ import {
 
 import SalutToolbar from '../components/SalutToolbar';
 
+const getEstatsMaxData = (estats: any) => {
+    let estatsMaxData = estats?.[estats.length - 1]?.data;
+    const estatApps = Object.keys(estats);
+    estatApps?.forEach((a: any) => {
+        const maxData = estats[a][estats[a].length - 1]?.data;
+        if (estatsMaxData == null || maxData > estatsMaxData) {
+            estatsMaxData = maxData;
+        }
+    });
+    return estatsMaxData;
+}
+
 const useAppData = () => {
     const {
         isReady: appApiIsReady,
@@ -115,12 +127,12 @@ const UpdownGaugeChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
 const UpdownBarChart: React.FC<any> = (props) => {
     const {
         dataInici,
-        dataFi,
         agrupacio,
         estats
     } = props;
     const theme = useTheme();
-    const baseDataGroups = generateDataGroups(dataInici, dataFi, agrupacio);
+    const estatsMaxData = getEstatsMaxData(estats);
+    const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
     const seriesUp = baseDataGroups.map(g => {
         let up = 0;
         const estatApps = Object.keys(estats);
@@ -277,7 +289,6 @@ const Salut: React.FC = () => {
                 <Grid size={9} style={{ height: '200px' }}>
                     {dataLoaded && <UpdownBarChart
                         dataInici={reportParams?.dataInici}
-                        dataFi={reportParams?.dataFi}
                         agrupacio={reportParams?.agrupacio}
                         estats={estats} />}
                 </Grid>

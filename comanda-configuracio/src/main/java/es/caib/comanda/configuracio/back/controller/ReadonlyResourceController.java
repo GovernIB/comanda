@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import es.caib.comanda.configuracio.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
 import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifact;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -19,21 +18,21 @@ import java.io.Serializable;
 /**
  * Mètodes dels controladors de l'API REST per a consultar un recurs de l'aplicació.
  * 
- * @author Limit Tecnologies
+ * @author Josep Gayà
  */
 public interface ReadonlyResourceController<R extends Resource<? extends Serializable>, ID extends Serializable> {
 
 	/**
 	 * Retorna un recurs donat el seu id.
 	 * 
-	 * @param resourceId
+	 * @param id
 	 *            id de l'element que es vol consultar.
 	 * @param perspectives
 	 *            la llista de perspectives a aplicar.
 	 * @return la informació del recurs.
 	 */
 	ResponseEntity<EntityModel<R>> getOne(
-			final ID resourceId,
+			final ID id,
 			final String[] perspectives);
 
 	/**

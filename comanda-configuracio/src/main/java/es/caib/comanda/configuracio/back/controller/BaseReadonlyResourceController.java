@@ -3,7 +3,10 @@ package es.caib.comanda.configuracio.back.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import es.caib.comanda.configuracio.logic.intf.exception.ArtifactNotFoundException;
-import es.caib.comanda.configuracio.logic.intf.model.*;
+import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifact;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
 import es.caib.comanda.configuracio.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.configuracio.logic.intf.service.PermissionEvaluatorService;
 import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
@@ -19,7 +22,9 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.TemplateVariable.VariableType;
 import org.springframework.hateoas.mediatype.Affordances;
@@ -27,7 +32,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.ReflectionUtils.FieldCallback;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.SmartValidator;
@@ -37,9 +41,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.groups.Default;
-import java.io.*;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,7 +64,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  *            el tipus de la clau primària del recurs. Aquest tipus ha
  *            d'implementar la interfície Serializable.
  * 
- * @author Limit Tecnologies
+ * @author Josep Gayà
  */
 @Slf4j
 public abstract class BaseReadonlyResourceController<R extends Resource<? extends Serializable>, ID extends Serializable>
@@ -79,24 +85,25 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	@Override
-	@GetMapping(value = "/{resourceId}")
+	@GetMapping(value = "/{id}")
 	@Operation(summary = "Consulta la informació d'un recurs")
 	@PreAuthorize("hasPermission(#resourceId, this.getResourceClass().getName(), this.getOperation('GET_ONE'))")
 	public ResponseEntity<EntityModel<R>> getOne(
 			@PathVariable
 			@Parameter(description = "Identificador del recurs")
-			final ID resourceId,
+			final ID id,
 			@RequestParam(value = "perspective", required = false)
 			final String[] perspectives) {
-		log.debug("Obtenint entitat (resourceId={})", resourceId);
+		log.debug("Obtenint entitat (id={})", id);
 		R resource = getReadonlyResourceService().getOne(
-				resourceId,
+				id,
 				perspectives);
 		EntityModel<R> entityModel = toEntityModel(
 				resource,
 				buildSingleResourceLinks(
 						resource.getId(),
 						perspectives,
+						null,
 						resourceApiService.permissionsCurrentUser(
 								getResourceClass(),
 								null)).toArray(new Link[0]));
@@ -120,7 +127,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			@RequestParam(value = "perspective", required = false)
 			@Parameter(description = "Perspectives de la consulta")
 			final String[] perspectives,
-			@Parameter(description = "Paràmetres per a la paginació dels resultats", required = false)
+			@Parameter(description = "Paginació dels resultats", required = false)
 			final Pageable pageable) {
 		log.debug("Consultant entitats amb filtre i paginació (quickFilter={},filter={},namedQueries={},perspectives={},pageable={})",
 				quickFilter,
@@ -132,12 +139,12 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				getResourceClass(),
 				null);
 		if (pageable != null) {
-			// Només es fa la consulta de recursos si la petició conté
-			// informació depaginació.
+			// Només es fa la consulta de recursos si la petició conté informació de paginació.
 			long t0 = System.currentTimeMillis();
 			long initialTime = t0;
 			String filterWithFieldParams = filterWithFieldParameters(filter, getResourceClass());
 			Page<R> page = getReadonlyResourceService().findPage(
+					quickFilter,
 					filterWithFieldParams,
 					namedQueries,
 					perspectives,
@@ -148,6 +155,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			PagedModel<EntityModel<R>> pagedModel = toPagedModel(
 					page,
 					perspectives,
+					null,
 					resourcePermissions,
 					buildResourceCollectionLinks(
 							quickFilter,
@@ -156,6 +164,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 							perspectives,
 							pageable,
 							page,
+							null,
 							resourcePermissions).toArray(new Link[0]));
 			long conversionTime = System.currentTimeMillis() - t0;
 			log.trace("\ttemps de conversió dels resultats: {}ms", conversionTime);
@@ -176,6 +185,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 									perspectives,
 									null,
 									null,
+									null,
 									resourcePermissions)));
 		}
 	}
@@ -193,15 +203,11 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				CollectionModel.of(
 						artifactsAsEntities,
 						buildArtifactsLinks(artifacts)));
-		/*return ResponseEntity.ok(
-				CollectionModel.of(
-						artifacts,
-						buildArtifactsLinks(artifacts)));*/
 	}
 
 	@Override
 	@PostMapping("/artifacts/report/{code}")
-	@Operation(summary = "Generació d'un informe associat a un únic recurs")
+	@Operation(summary = "Generació d'un informe associat a un recurs")
 	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
 	public ResponseEntity<CollectionModel<EntityModel<?>>> artifactReportGenerate(
 			@PathVariable
@@ -209,17 +215,12 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			final String code,
 			@RequestBody(required = false)
 			final JsonNode params,
-			BindingResult bindingResult) throws ArtifactNotFoundException, MethodArgumentNotValidException, JsonProcessingException {
-		Optional<Class<?>> parameterClass = getReadonlyResourceService().artifactGetFormClass(
+			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException {
+		Object paramsObject = getArtifactFormClass(
 				ResourceArtifactType.REPORT,
-				code);
-		Object paramsObject = null;
-		if (parameterClass.isPresent()) {
-			paramsObject = JsonUtil.getInstance().fromJsonToObjectWithType(
-					params,
-					parameterClass.get());
-			validateResource(paramsObject, 1, bindingResult);
-		}
+				code,
+				params,
+				bindingResult);
 		List<?> items = getReadonlyResourceService().reportGenerate(code, paramsObject);
 		List<EntityModel<?>> itemsAsEntities = items.stream().
 				map(i -> EntityModel.of(i, buildReportItemLink(code, items.indexOf(i)))).
@@ -233,7 +234,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 
 	public Class<R> getResourceClass() {
 		if (resourceClass == null) {
-			resourceClass = (Class<R>)TypeUtil.getArgumentTypeFromGenericSuperclass(
+			resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
 					getClass(),
 					BaseReadonlyResourceController.class,
 					0);
@@ -249,16 +250,35 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		return readonlyResourceService;
 	}
 
-	protected EntityModel<R> toEntityModel(
-			R resource,
+	protected Object getArtifactFormClass(
+			ResourceArtifactType artifactType,
+			String code,
+			JsonNode params,
+			BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException {
+		Optional<Class<?>> parameterClass = getReadonlyResourceService().artifactGetFormClass(
+				artifactType,
+				code);
+		Object paramsObject = null;
+		if (parameterClass.isPresent()) {
+			paramsObject = JsonUtil.getInstance().fromJsonToObjectWithType(
+					params,
+					parameterClass.get());
+			validateResource(paramsObject, 1, bindingResult);
+		}
+		return paramsObject;
+	}
+
+	protected <RR extends Resource<?>> EntityModel<RR> toEntityModel(
+			RR resource,
 			Link... links) {
 		return EntityModel.of(
 				resource,
 				links);
 	}
-	protected PagedModel<EntityModel<R>> toPagedModel(
-			Page<R> page,
+	protected <RR extends Resource<?>> PagedModel<EntityModel<RR>> toPagedModel(
+			Page<RR> page,
 			String[] perspectives,
+			Link singleResourceSelfLink,
 			ResourcePermissions resourcePermissions,
 			Link... links) {
 		return PagedModel.of(
@@ -266,6 +286,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					Link[] resourceLinks = resource != null ? buildSingleResourceLinks(
 							resource.getId(),
 							perspectives,
+							singleResourceSelfLink,
 							resourcePermissions).toArray(new Link[0]) : new Link[0];
 					return toEntityModel(resource, resourceLinks);
 				}).collect(Collectors.toList()),
@@ -277,12 +298,22 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				links);
 	}
 
+	protected static final String SELF_RESOURCE_ID_TOKEN = "#resourceId#";
 	protected List<Link> buildSingleResourceLinks(
 			Serializable id,
 			String[] perspective,
+			Link singleResourceSelfLink,
 			ResourcePermissions resourcePermissions) {
 		List<Link> ls = new ArrayList<>();
-		Link selfLink = linkTo(methodOn(getClass()).getOne(id, perspective)).withSelfRel();
+		Link selfLink;
+		if (singleResourceSelfLink != null) {
+			String baseSelfResourceLinkHref = singleResourceSelfLink.getHref();
+			String token = URLEncoder.encode(SELF_RESOURCE_ID_TOKEN, StandardCharsets.UTF_8);
+			baseSelfResourceLinkHref = baseSelfResourceLinkHref.replace(token, id.toString());
+			selfLink = Link.of(baseSelfResourceLinkHref).withSelfRel();
+		} else {
+			selfLink = linkTo(methodOn(getClass()).getOne(id, perspective)).withSelfRel();
+		}
 		Map<String, Object> expandMap = new HashMap<>();
 		expandMap.put("perspective", perspective);
 		ls.add(selfLink.expand(expandMap));
@@ -296,99 +327,106 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			String[] perspective,
 			Pageable pageable,
 			Page<?> page,
+			Link resourceCollectionBaseSelfLink,
 			ResourcePermissions resourcePermissions) {
 		List<Link> ls = new ArrayList<>();
 		if (pageable == null) {
 			// Enllaços que es retornen quan no es fa cap consulta
 			Link selfLink = buildFindLinkWithParams(
-					linkTo(getClass()).withSelfRel(),
+					resourceCollectionBaseSelfLink != null ? resourceCollectionBaseSelfLink : linkTo(getClass()).withSelfRel(),
 					null,
 					null,
 					null,
 					null,
 					null);
-			ls.add(selfLinkWithDefaultProperties(selfLink, true));
 			if (resourcePermissions.isReadGranted()) {
+				ls.add(selfLinkWithDefaultProperties(selfLink, true));
 				// Els enllaços de les accions find, getOne i create només es
 				// retornen si a la petició s'ha especificat informació de
 				// paginació.
-				ls.add(buildFindLink("find"));
+				ls.add(buildFindLink(resourceCollectionBaseSelfLink));
 				Link getOneLink = linkTo(methodOn(getClass()).getOne(null, null)).withRel("getOne");
 				String getOneLinkHref = getOneLink.getHref().replace("perspective", "perspective*");
 				ls.add(Link.of(UriTemplate.of(getOneLinkHref), "getOne"));
 				ls.add(linkTo(methodOn(getClass()).artifacts()).withRel("artifacts"));
+			} else {
+				ls.add(selfLink);
 			}
 		} else {
 			// Enllaços que es retornen amb els resultats de la consulta
 			Link selfLink = buildFindLinkWithParams(
-					linkTo(getClass()).withSelfRel(),
+					resourceCollectionBaseSelfLink != null ? resourceCollectionBaseSelfLink : linkTo(getClass()).withSelfRel(),
 					quickFilter,
 					filter,
 					namedQuery,
 					perspective,
 					pageable);
-			ls.add(selfLinkWithDefaultProperties(selfLink, false));
-			if (resourcePermissions.isReadGranted() && pageable.isPaged()) {
-				if (pageable.getPageNumber() < page.getTotalPages()) {
-					if (!page.isFirst()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("first"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										pageable.first()));
-					}
-					if (page.hasPrevious()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("previous"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										pageable.previousOrFirst()));
-					}
-					if (page.hasNext()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("next"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										pageable.next()));
-					}
-					if (!page.isLast()) {
-						ls.add(
-								buildFindLinkWithParams(
-										linkTo(getClass()).withRel("last"),
-										quickFilter,
-										filter,
-										namedQuery,
-										perspective,
-										PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
-					}
-					if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
-						Link findLink = buildFindLinkWithParams(
-								linkTo(getClass()).withRel("toPageNumber"),
-								quickFilter,
-								filter,
-								namedQuery,
-								perspective,
-								PageRequest.of(0, pageable.getPageSize()));
-						// Al link generat li eliminam la variable page amb el valor 0
-						String findLinkHref = findLink.getHref().replace("page=0&", "").replace("page=0", "");
-						TemplateVariables findTemplateVariables = new TemplateVariables(
-								new TemplateVariable("page", VariableType.REQUEST_PARAM));
-						// I a més hi afegim la variable page
-						ls.add(
-								Link.of(
-										UriTemplate.of(findLinkHref).with(findTemplateVariables),
-										"toPageNumber"));
+			if (resourcePermissions.isReadGranted()) {
+				ls.add(selfLinkWithDefaultProperties(selfLink, false));
+				if (resourcePermissions.isReadGranted() && pageable.isPaged()) {
+					if (pageable.getPageNumber() < page.getTotalPages()) {
+						if (!page.isFirst()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("first"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.first()));
+						}
+						if (page.hasPrevious()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("previous"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.previousOrFirst()));
+						}
+						if (page.hasNext()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("next"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.next()));
+						}
+						if (!page.isLast()) {
+							ls.add(
+									buildFindLinkWithParams(
+											linkTo(getClass()).withRel("last"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
+						}
+						if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
+							Link findLink = buildFindLinkWithParams(
+									linkTo(getClass()).withRel("toPageNumber"),
+									quickFilter,
+									filter,
+									namedQuery,
+									perspective,
+									PageRequest.of(0, pageable.getPageSize()));
+							// Al link generat li eliminam la variable page amb el valor 0
+							String findLinkHref = findLink.getHref().replace("page=0&", "").replace("page=0", "");
+							TemplateVariables findTemplateVariables = new TemplateVariables(
+									new TemplateVariable("page", VariableType.REQUEST_PARAM));
+							// I a més hi afegim la variable page
+							ls.add(
+									Link.of(
+											UriTemplate.of(findLinkHref).with(findTemplateVariables),
+											"toPageNumber"));
+						}
 					}
 				}
+			} else {
+				ls.add(selfLink);
 			}
 		}
 		return ls;
@@ -404,27 +442,33 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		// s'afegirà aquest Affordance per a que aparegui com a "default" i així les
 		// demés Affordances (create, update, patch, ...) apareguin amb el nom que toca.
 
-		// La idea seria poder utilitzar el mètode HTTP GET per a retornar la informació
-		// dels camps del recurs, p erò la class HalFormsTemplateBuilder filtra el mètode
+		// Seria ideal poder utilitzar el mètode HTTP GET per a retornar la informació
+		// dels camps del recurs, però la class HalFormsTemplateBuilder filtra el mètode
 		// GET evitant que surti als _templates. Per això hem utilitzat el mètode PUT
 		// (per posar-ne algun) per quan volem que surtin els properties i el mètode
 		// OPTIONS per quan volem ocultar-los.
 		// https://github.com/spring-projects/spring-hateoas/issues/1683
+
+		// Hem modificat les classes HalFormsTemplateBuilder i HalFormsPropertyFactory
+		// per a que mostrin als templates les Affordances amb mètode GET amb les seves
+		// properties.
 		return Affordances.of(selfLink).
-				afford(showProperties ? HttpMethod.PUT : HttpMethod.OPTIONS).
+				afford(showProperties ? HttpMethod.GET : HttpMethod.OPTIONS).
 				withInputAndOutput(getResourceClass()).
-				withName(selfLink.getRel().value()).
+				withName("default").
 				toLink();
 	}
 
-	protected Link buildFindLink(String rel) {
-		Link findLink = linkTo(methodOn(getClass()).find(null, null, null, null, null)).withRel(rel);
+	protected Link buildFindLink(
+			Link baseLink) {
+		String rel = "find";
+		Link findLink = baseLink != null ? baseLink : linkTo(methodOn(getClass()).find(null, null, null, null, null)).withRel(rel);
 		// Al link generat li canviam les variables namedQuery i
 		// perspective perquè no les posa com a múltiples.
 		String findLinkHref = findLink.getHref().
 				replace("namedQuery", "namedQuery*").
-				replace("perspective", "perspective*").
-				replace("field", "field*");
+				replace("perspective", "perspective*")/*.
+				replace("field", "field*")*/;
 		// I a més hi afegim les variables page, size i sort que no les
 		// detecta a partir de la classe de tipus Pageable
 		TemplateVariables findTemplateVariables = new TemplateVariables(
@@ -450,7 +494,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				expandMap.put("page", "UNPAGED");
 			}
 		}
-		if (pageable != null && pageable.getSort() != null) {
+		if (pageable != null) {
 			expandMap.put(
 					"sort",
 					pageable.getSort().stream().
@@ -502,7 +546,6 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		Link reportLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
 		return Link.of(reportLink.toUri().toString() + "/report/" + artifact.getCode()).withSelfRel();
 	}
-
 	private Link buildReportLinkWithAffordances(ResourceArtifact artifact) {
 		String rel = "generate_" + artifact.getCode();
 		Link reportLink = buildReportLink(artifact);
@@ -519,7 +562,6 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					toLink();
 		}
 	}
-
 	@SneakyThrows
 	private Link buildReportItemLink(String code, int index) {
 		Link reportLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
@@ -527,12 +569,12 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	private String filterWithFieldParameters(String filter, Class<?> resourceClass) {
+		// Retorna l'spring filter emplenat amb paràmetres del request
 		Optional<HttpServletRequest> request = HttpRequestUtil.getCurrentHttpRequest();
-		Set<String> paramNames = request.get().getParameterMap().keySet();
-		List<String> filterResourceFields = new ArrayList<String>();
-		ReflectionUtils.doWithFields(resourceClass, new FieldCallback() {
-			@Override
-			public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+		if (request.isPresent()) {
+			Set<String> paramNames = request.get().getParameterMap().keySet();
+			List<String> filterResourceFields = new ArrayList<>();
+			ReflectionUtils.doWithFields(resourceClass, field -> {
 				int modifiers = field.getModifiers();
 				boolean isStaticFinal = Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers);
 				if (!isStaticFinal) {
@@ -543,57 +585,65 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 						filterResourceFields.add(field.getName());
 					}
 				}
-			}
-		});
-		String[] springFilterParts = filterResourceFields.stream().
-				map(p -> requestParamResourceFieldToSpringFilter(p, resourceClass)).
-				filter(Objects::nonNull).
-				toArray(String[]::new);
-		if (springFilterParts.length > 0) {
-			String requestParamsFilter = String.join(" and ", springFilterParts);
-			if (filter != null && !filter.isBlank()) {
-				return "(" + filter + ") and (" + requestParamsFilter + ")";
+			});
+			String[] springFilterParts = filterResourceFields.stream().
+					map(p -> requestParamResourceFieldToSpringFilter(resourceClass, p, request.get())).
+					filter(Objects::nonNull).
+					toArray(String[]::new);
+			if (springFilterParts.length > 0) {
+				String requestParamsFilter = String.join(" and ", springFilterParts);
+				if (filter != null && !filter.isBlank()) {
+					return "(" + filter + ") and (" + requestParamsFilter + ")";
+				} else {
+					return requestParamsFilter;
+				}
 			} else {
-				return requestParamsFilter;
+				return filter;
 			}
 		} else {
 			return filter;
 		}
 	}
 
-	private String requestParamResourceFieldToSpringFilter(String requestParamResource, Class<?> resourceClass) {
-		Optional<HttpServletRequest> request = HttpRequestUtil.getCurrentHttpRequest();
+	private String requestParamResourceFieldToSpringFilter(
+			Class<?> resourceClass,
+			String requestParamResource,
+			HttpServletRequest request) {
 		Field field = ReflectionUtils.findField(resourceClass, requestParamResource);
-		boolean isFieldReferenceType = field.getType().isAssignableFrom(ResourceReference.class);
-		boolean isFieldTextType = field.isEnumConstant() ||
-				field.getType().isAssignableFrom(String.class) ||
-				field.getType().isAssignableFrom(Date.class) ||
-				field.getType().isAssignableFrom(LocalDate.class) ||
-				field.getType().isAssignableFrom(LocalDateTime.class) ||
-				field.getType().isAssignableFrom(ZonedDateTime.class) ||
-				field.getType().isAssignableFrom(Instant.class) ||
-				field.getType().isAssignableFrom(YearMonth.class) ||
-				field.getType().isAssignableFrom(MonthDay.class);
-		if (isFieldReferenceType) {
-			String value = request.get().getParameter(requestParamResource);
-			return "(" + requestParamResource + ".id:" + value + ")";
-		} else {
-			String value = request.get().getParameter(requestParamResource);
-			if (isFieldTextType && value != null) value = "'" + value + "'";
-			String value1 = request.get().getParameter(requestParamResource + "1");
-			if (isFieldTextType && value1 != null) value1 = "'" + value1 + "'";
-			String value2 = request.get().getParameter(requestParamResource + "2");
-			if (isFieldTextType && value2 != null) value2 = "'" + value2 + "'";
-			String valueLike = request.get().getParameter(requestParamResource + "~");
-			if (value != null) {
-				return "(" + requestParamResource + ":" + value + ")";
-			} else if (value1 != null && value2 != null) {
-				return "(" + requestParamResource + ">:" + value1 + " and " + requestParamResource + "<:" + value2 + ")";
-			} else if (valueLike != null) {
-				return "(" + requestParamResource + "~'*" + valueLike + "*')";
+		if (field != null) {
+			boolean isFieldReferenceType = field.getType().isAssignableFrom(ResourceReference.class);
+			boolean isFieldTextType = field.isEnumConstant() ||
+					field.getType().isAssignableFrom(String.class) ||
+					field.getType().isAssignableFrom(Date.class) ||
+					field.getType().isAssignableFrom(LocalDate.class) ||
+					field.getType().isAssignableFrom(LocalDateTime.class) ||
+					field.getType().isAssignableFrom(ZonedDateTime.class) ||
+					field.getType().isAssignableFrom(Instant.class) ||
+					field.getType().isAssignableFrom(YearMonth.class) ||
+					field.getType().isAssignableFrom(MonthDay.class);
+			if (isFieldReferenceType) {
+				String value = request.getParameter(requestParamResource);
+				return "(" + requestParamResource + ".id:" + value + ")";
 			} else {
-				return null;
+				String value = request.getParameter(requestParamResource);
+				if (isFieldTextType && value != null) value = "'" + value + "'";
+				String value1 = request.getParameter(requestParamResource + "1");
+				if (isFieldTextType && value1 != null) value1 = "'" + value1 + "'";
+				String value2 = request.getParameter(requestParamResource + "2");
+				if (isFieldTextType && value2 != null) value2 = "'" + value2 + "'";
+				String valueLike = request.getParameter(requestParamResource + "~");
+				if (value != null) {
+					return "(" + requestParamResource + ":" + value + ")";
+				} else if (value1 != null && value2 != null) {
+					return "(" + requestParamResource + ">:" + value1 + " and " + requestParamResource + "<:" + value2 + ")";
+				} else if (valueLike != null) {
+					return "(" + requestParamResource + "~'*" + valueLike + "*')";
+				} else {
+					return null;
+				}
 			}
+		} else {
+			return null;
 		}
 	}
 

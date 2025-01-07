@@ -15,14 +15,16 @@ booleanTextFalse,
 booleanNullAsFalse
 }*/
 
-export const isFieldNumericType = (field: any) => {
-    return field?.type === 'number' || 
-    field?.type === 'decimal' || 
-    field?.type === 'currency' || 
-    field?.type === 'date' || 
-    field?.type === 'time' || 
-    field?.type === 'datetime-local' || 
-    field?.type === 'duration';
+export const isFieldNumericType = (field: any, forcedType?: any) => {
+    const type = forcedType ?? field?.type;
+    const isNumeric = type === 'number' ||
+        type === 'decimal' ||
+        type === 'currency' ||
+        type === 'date' ||
+        type === 'time' ||
+        type === 'datetime-local' ||
+        type === 'duration';
+    return isNumeric;
 }
 
 export const formattedFieldValue = (value: any, field?: any, config?: any): string => {

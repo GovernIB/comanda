@@ -2,19 +2,25 @@ package es.caib.comanda.configuracio.back.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import es.caib.comanda.configuracio.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.configuracio.logic.intf.model.OnChangeEvent;
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.Serializable;
 
 /**
  * Mètodes dels controladors de l'API REST per a modificar un recurs de l'aplicació.
  *
- * @author Limit Tecnologies
+ * @author Josep Gayà
  */
 public interface MutableResourceController<R extends Resource<? extends Serializable>, ID extends Serializable>
 		extends ReadonlyResourceController<R, ID> {
@@ -32,7 +38,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	/**
 	 * Modifica un recurs existent amb la informació especificada.
 	 *
-	 * @param resourceId
+	 * @param id
 	 *            id de l'element que es vol modificar.
 	 * @param resource
 	 *            informació del recurs.
@@ -43,14 +49,14 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            si s'envia una modificació errònia o no permesa.
 	 */
 	ResponseEntity<EntityModel<R>> update(
-			final ID resourceId,
+			final ID id,
 			final R resource,
 			BindingResult bindingResult) throws MethodArgumentNotValidException;
 
 	/**
 	 * Modifica un recurs existent amb la informació especificada.
 	 *
-	 * @param resourceId
+	 * @param id
 	 *            id de l'element que es vol modificar.
 	 * @param jsonNode
 	 *            camps del recurs que s'han de modificar.
@@ -63,20 +69,19 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            si s'envia una modificació errònia o no permesa.
 	 */
 	ResponseEntity<EntityModel<R>> patch(
-			final ID resourceId,
+			final ID id,
 			final JsonNode jsonNode,
 			final BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException;
 
 	/**
 	 * Esborra un recurs existent.
 	 *
-	 * @param resourceId
+	 * @param id
 	 *            id de l'element que es vol esborrar.
 	 * @return HTTP 200 si tot ha anat be.
 	 */
 	ResponseEntity<?> delete(
-			final ID resourceId);
-
+			final ID id);
 
 	/**
 	 * Processament en el backend dels canvis en els camps dels recursos que
@@ -94,5 +99,79 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 */
 	ResponseEntity<String> onChange(
 			final OnChangeEvent onChangeEvent) throws JsonProcessingException;
+
+	/**
+	 * Consulta paginada de les opcions disponibles per a emplenar un camp de
+	 * tipus ResourceReference.
+	 *
+	 * @param <RR>
+	 *            Classe del recurs (ha d'estendre de Resource).
+	 * @param fieldName
+	 *            nom del camp del recurs.
+	 * @param quickFilter
+	 *            text per a filtrar múltiples camps.
+	 * @param filter
+	 *            consulta en format Spring Filter.
+	 * @param namedQueries
+	 *            llista de noms de consultes a aplicar.
+	 * @param perspectives
+	 *            la llista de perspectives a aplicar.
+	 * @param pageable
+	 *            informació sobre la pagina de resultats que es vol obtenir.
+	 * @return la pàgina amb els resultats de la consulta.
+	 */
+	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
+			final String fieldName,
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable);
+
+	/**
+	 * Consulta d'una de les opcions disponibles per a emplenar un camp de
+	 * tipus ResourceReference.
+	 *
+	 * @param <RR>
+	 *            Classe del recurs (ha d'estendre de Resource).
+	 * @param <RID>
+	 *            Tipus de l'id del recurs (ha d'estendre de Serializable).
+	 * @param fieldName
+	 *            nom del camp del recurs.
+	 * @param id
+	 *            id de l'element que es vol consultar.
+	 * @param perspectives
+	 *            la llista de perspectives a aplicar.
+	 * @return L'element amb l'id especificat.
+	 */
+	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> fieldOptionsGetOne(
+			final String fieldName,
+			final RID id,
+			final String[] perspectives);
+
+	/**
+	 * Execució d'una acció associada al recurs.
+	 *
+	 * @param code
+	 *            codi de l'acció a executar.
+	 * @param params
+	 *            paràmetres per a executar l'acció.
+	 * @param bindingResult
+	 *            instància de BindingResult per a poder validar els paràmetres.
+	 * @return el resultat de l'execució.
+	 * @throws ArtifactNotFoundException
+	 *             si no es troba l'informe amb el codi especificat.
+	 * @throws JsonProcessingException
+	 *             si es produeix algun error al extreure els paràmetres.
+	 * @throws MethodArgumentNotValidException
+	 *             si es troben errors de validació en els paràmetres.
+	 */
+	ResponseEntity<?> artifactActionExec(
+			@PathVariable
+			@Parameter(description = "Codi de l'acció")
+			final String code,
+			@RequestBody(required = false)
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
 
 }

@@ -1,5 +1,7 @@
 package es.caib.comanda.configuracio.logic.intf.util;
 
+import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.GenericTypeResolver;
@@ -8,6 +10,7 @@ import org.springframework.util.ClassUtils;
 
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -22,24 +25,73 @@ import java.util.Set;
  */
 public class TypeUtil {
 
-	public static Type getArgumentTypeFromGenericSuperclass(
+	public static <R> Class<R> getArgumentClassFromGenericSuperclass(
 			Class<?> clazz,
 			Class<?> superClass,
 			int index) {
-		return GenericTypeResolver.resolveTypeArguments(
-				clazz,
-				superClass != null ? superClass : clazz)[index];
+		return (Class<R>)Objects.requireNonNull(
+				GenericTypeResolver.resolveTypeArguments(
+						clazz,
+						superClass != null ? superClass : clazz))[index];
 	}
-	public static Type getArgumentTypeFromGenericSuperclass(Class<?> clazz, int index) {
-		return getArgumentTypeFromGenericSuperclass(clazz, null, index);
+	public static <R> Class<R> getArgumentClassFromGenericSuperclass(Class<?> clazz, int index) {
+		return getArgumentClassFromGenericSuperclass(clazz, null, index);
+	}
+
+	public static Class<? extends Resource<?>> getReferencedResourceClass(Field field) {
+		Class<? extends Resource<?>> referencedClass = null;
+		if (Collection.class.isAssignableFrom(field.getType()) && field.getGenericType() instanceof ParameterizedType) {
+			ParameterizedType resourceFieldGenericType = (ParameterizedType)field.getGenericType();
+			Type[] resourceFieldArgTypes = resourceFieldGenericType.getActualTypeArguments();
+			ParameterizedType parameterizedType = (ParameterizedType)resourceFieldArgTypes[0];
+			referencedClass = (Class<? extends Resource<?>>)parameterizedType.getActualTypeArguments()[0];
+		} else {
+			boolean isArrayType = field.getType().isArray();
+			Class<?> fieldType = isArrayType ? field.getType().getComponentType() : field.getType();
+			if (ResourceReference.class.isAssignableFrom(fieldType)) {
+				ParameterizedType parameterizedType;
+				if (isArrayType) {
+					parameterizedType = (ParameterizedType)((GenericArrayType)field.getGenericType()).getGenericComponentType();
+				} else {
+					parameterizedType = (ParameterizedType)field.getGenericType();
+				}
+				referencedClass = (Class<? extends Resource<?>>)parameterizedType.getActualTypeArguments()[0];
+			} else if (Resource.class.isAssignableFrom(fieldType)) {
+				referencedClass = (Class<? extends Resource<?>>)fieldType;
+			}
+		}
+		return referencedClass;
 	}
 
 	public static boolean isNotNullField(Field field) {
 		return field.getAnnotation(NotNull.class) != null;
 	}
 
+	public static boolean isMultipleFieldType(Field field) {
+		return isArrayFieldType(field) || isCollectionFieldType(field);
+	}
+
+	public static boolean isArrayFieldType(Field field) {
+		return field.getType().isArray();
+	}
+
 	public static boolean isCollectionFieldType(Field field) {
 		return Collection.class.isAssignableFrom(field.getType()) && field.getGenericType() instanceof ParameterizedType;
+	}
+
+	public static Class<?> getCollectionFieldType(Field field) {
+		if (isCollectionFieldType(field)) {
+			ParameterizedType resourceFieldGenericType = (ParameterizedType)field.getGenericType();
+			Type[] resourceFieldArgTypes = resourceFieldGenericType.getActualTypeArguments();
+			if (resourceFieldArgTypes[0] instanceof ParameterizedType) {
+				ParameterizedType parameterizedType = (ParameterizedType)resourceFieldArgTypes[0];
+				return (Class<?>)parameterizedType.getRawType();
+			} else {
+				return (Class<?>)resourceFieldArgTypes[0];
+			}
+		} else {
+			return null;
+		}
 	}
 
 	public static <T> Set<Class<T>> findAssignableClasses(Class<T> assignableType, String... packagesToScan) {

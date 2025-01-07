@@ -25,6 +25,7 @@ const componentsCa = {
             title: 'Modificar',
         },
         delete: {
+            title: 'Esborrar',
             single: {
                 title: 'Esborrar element',
                 confirm: 'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',

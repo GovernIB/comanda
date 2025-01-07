@@ -5,28 +5,42 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.configuracio.back.config.WebMvcConfig;
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceField;
 import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.configuracio.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.configuracio.logic.intf.exception.ComponentNotFoundException;
 import es.caib.comanda.configuracio.logic.intf.exception.ResourceFieldNotFoundException;
-import es.caib.comanda.configuracio.logic.intf.model.OnChangeEvent;
-import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.configuracio.logic.intf.service.MutableResourceService;
+import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.configuracio.logic.intf.service.ResourceServiceLocator;
+import es.caib.comanda.configuracio.logic.intf.util.JsonUtil;
+import es.caib.comanda.configuracio.logic.intf.util.RequestSessionUtil;
+import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.ReflectUtils;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.mediatype.Affordances;
 import org.springframework.hateoas.mediatype.ConfigurableAffordance;
 import org.springframework.http.HttpMethod;
@@ -51,10 +65,11 @@ import javax.validation.groups.Default;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 /**
  * <p>Classe base pels controladors de l'API REST que conté els mètodes
@@ -67,7 +82,7 @@ import java.util.stream.Collectors;
  *            el tipus de la clau primària del recurs. Aquest tipus ha
  *            d'implementar la interfície Serializable.
  * 
- * @author Limit Tecnologies
+ * @author Josep Gayà
  */
 @Slf4j
 public abstract class BaseMutableResourceController<R extends Resource<? extends Serializable>, ID extends Serializable>
@@ -81,8 +96,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	protected ObjectMapper objectMapper;
 	@Autowired
 	protected SmartValidator validator;
-	@Autowired
-	private ApplicationContext applicationContext;
+
+	private ExpressionParser parser;
 
 	@Override
 	@PostMapping
@@ -93,7 +108,9 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			@Validated({ Resource.OnCreate.class, Default.class })
 			final R resource) {
 		log.debug("Creant recurs (resource={})", resource);
-		R created = getMutableResourceService().create(resource);
+		R created = getMutableResourceService().create(
+				resource,
+				getAnswersFromHeaderOrRequest(null));
 		final URI uri = MvcUriComponentsBuilder.fromController(getClass()).
 				path("/{id}").
 				buildAndExpand(created.getId()).
@@ -104,24 +121,25 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 						buildSingleResourceLinks(
 								created.getId(),
 								null,
+								null,
 								resourceApiService.permissionsCurrentUser(
 										getResourceClass(),
 										null)).toArray(new Link[0])));
 	}
 
 	@Override
-	@PutMapping(value = "/{resourceId}")
+	@PutMapping(value = "/{id}")
 	@Operation(summary = "Modifica tots els camps d'un recurs")
-	@PreAuthorize("hasPermission(#resourceId, this.getResourceClass().getName(), this.getOperation('UPDATE'))")
+	@PreAuthorize("hasPermission(#id, this.getResourceClass().getName(), this.getOperation('UPDATE'))")
 	public ResponseEntity<EntityModel<R>> update(
 			@PathVariable
 			@Parameter(description = "Identificador del recurs")
-			final ID resourceId,
+			final ID id,
 			@RequestBody
 			final R resource,
 			BindingResult bindingResult) throws MethodArgumentNotValidException {
-		log.debug("Modificant recurs (resourceId={}, resource={})", resourceId, resource);
-		updateResourceIdAndPk(resourceId, resource);
+		log.debug("Modificant recurs (id={}, resource={})", id, resource);
+		updateResourceIdAndPk(id, resource);
 		validator.validate(
 				resource,
 				bindingResult,
@@ -135,36 +153,38 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 					bindingResult);
 		} else {
 			R updated = getMutableResourceService().update(
-					resourceId,
-					resource);
+					id,
+					resource,
+					getAnswersFromHeaderOrRequest(null));
 			return ResponseEntity.ok(
 					toEntityModel(
 							updated,
 							buildSingleResourceLinks(
 									updated.getId(),
 									null,
+									null,
 									resourceApiService.permissionsCurrentUser(
 											getResourceClass(),
-											resourceId)).toArray(new Link[0])));
+											id)).toArray(new Link[0])));
 		}
 	}
 
 	@Override
-	@PatchMapping(value = "/{resourceId}")
+	@PatchMapping(value = "/{id}")
 	@Operation(summary = "Modifica parcialment un recurs")
-	@PreAuthorize("hasPermission(#resourceId, this.getResourceClass().getName(), this.getOperation('PATCH'))")
+	@PreAuthorize("hasPermission(#id, this.getResourceClass().getName(), this.getOperation('PATCH'))")
 	public ResponseEntity<EntityModel<R>> patch(
 			@PathVariable
 			@Parameter(description = "Identificador del recurs")
-			final ID resourceId,
+			final ID id,
 			@RequestBody
 			final JsonNode jsonNode,
 			BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException {
-		log.debug("Modificant parcialment el recurs (resourceId={}, jsonNode={})", resourceId, jsonNode);
-		R resource = getMutableResourceService().getOne(resourceId, null);
+		log.debug("Modificant parcialment el recurs (id={}, jsonNode={})", id, jsonNode);
+		R resource = getMutableResourceService().getOne(id, null);
 		fillResourceWithFieldsMap(
 				resource,
-				fromJsonToMap(jsonNode, getResourceClass()));
+				JsonUtil.getInstance().fromJsonToMap(jsonNode, getResourceClass()));
 		validateResource(
 				resource,
 				1,
@@ -172,29 +192,33 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 				Resource.OnUpdate.class,
 				Default.class);
 		R updated = getMutableResourceService().update(
-				resourceId,
-				resource);
+				id,
+				resource,
+				getAnswersFromHeaderOrRequest(null));
 		return ResponseEntity.ok(
 				toEntityModel(
 						updated,
 						buildSingleResourceLinks(
 								updated.getId(),
 								null,
+								null,
 								resourceApiService.permissionsCurrentUser(
 										getResourceClass(),
-										resourceId)).toArray(new Link[0])));
+										id)).toArray(new Link[0])));
 	}
 
 	@Override
-	@DeleteMapping(value = "/{resourceId}")
+	@DeleteMapping(value = "/{id}")
 	@Operation(summary = "Esborra un recurs")
-	@PreAuthorize("hasPermission(#resourceId, this.getResourceClass().getName(), this.getOperation('DELETE'))")
+	@PreAuthorize("hasPermission(#id, this.getResourceClass().getName(), this.getOperation('DELETE'))")
 	public ResponseEntity<?> delete(
 			@PathVariable
 			@Parameter(description = "Identificador del recurs")
-			final ID resourceId) {
-		log.debug("Esborrant recurs (resourceId={})", resourceId);
-		getMutableResourceService().delete(resourceId);
+			final ID id) {
+		log.debug("Esborrant recurs (id={})", id);
+		getMutableResourceService().delete(
+				id,
+				getAnswersFromHeaderOrRequest(null));
 		return ResponseEntity.ok().build();
 	}
 
@@ -210,13 +234,13 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		R previous = null;
 		if (onChangeEvent.getPrevious() != null) {
 			previous = (R)ReflectUtils.newInstance(resourceClass);
-			fillResourceWithFieldsMap(
+			JsonUtil.getInstance().fillResourceWithFieldsMap(
 					previous,
-					fromJsonToMap(onChangeEvent.getPrevious(), resourceClass),
+					JsonUtil.getInstance().fromJsonToMap(onChangeEvent.getPrevious(), resourceClass),
 					null,
 					null);
 		}
-		Object fieldValueObject = fillResourceWithFieldsMap(
+		Object fieldValueObject = JsonUtil.getInstance().fillResourceWithFieldsMap(
 				ReflectUtils.newInstance(resourceClass),
 				null,
 				onChangeEvent.getFieldName(),
@@ -236,6 +260,162 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		}
 	}
 
+	@Override
+	@GetMapping(value = "/fields/{fieldName}/options")
+	@Operation(summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference")
+	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
+	public <RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@RequestParam(value = "quickFilter", required = false)
+			@Parameter(description = "Filtre ràpid (text)")
+			final String quickFilter,
+			@RequestParam(value = "filter", required = false)
+			@Parameter(description = "Consulta en format Spring Filter")
+			final String filter,
+			@RequestParam(value = "namedQuery", required = false)
+			@Parameter(description = "Consultes predefinides")
+			final String[] namedQueries,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives,
+			@Parameter(description = "Paginació dels resultats", required = false)
+			final Pageable pageable) {
+		log.debug("Consultant possibles valors del camp amb filtre i paginació (" +
+				"fieldName={},quickFilter={},filter={},namedQueries={},perspectives={},pageable={})",
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable);
+		Class<?> resourceClass = getResourceClass();
+		Optional<FieldAndClass> referencedResourceFieldAndClass = findReferenceFieldAndClass(resourceClass, fieldName);
+		if (referencedResourceFieldAndClass.isPresent()) {
+			Link resourceCollectionBaseSelfLink = linkTo(methodOn(getClass()).fieldOptionsFind(
+					fieldName,
+					quickFilter,
+					filter,
+					namedQueries,
+					perspectives,
+					pageable)).withSelfRel();
+			if (pageable != null) {
+				// Només es fa la consulta de recursos si la petició conté informació de paginació.
+				Class<?> referencedResourceClass = referencedResourceFieldAndClass.get().getClazz();
+				ReadonlyResourceService<RR, ?> resourceService = (ReadonlyResourceService<RR, ?>) ResourceServiceLocator.getInstance().
+						getReadOnlyEntityResourceServiceForResourceClass(referencedResourceClass);
+				Page<RR> page = resourceService.findPage(
+						quickFilter,
+						fieldOptionsProcessedFilterWithFieldAnnotation(
+								referencedResourceFieldAndClass.get().getField(),
+								filter),
+						fieldOptionsProcessedNamedQueriesWithFieldAnnotation(
+								referencedResourceFieldAndClass.get().getField(),
+								namedQueries),
+						perspectives,
+						fieldOptionsProcessedPageableWithResourceAnnotation(
+								pageable,
+								referencedResourceClass));
+				Link singleResourceSelfLink = linkTo(methodOn(getClass()).fieldOptionsGetOne(
+						fieldName,
+						SELF_RESOURCE_ID_TOKEN,
+						null)).withSelfRel();
+				return ResponseEntity.ok(
+						toPagedModel(
+								page,
+								perspectives,
+								singleResourceSelfLink,
+								ResourcePermissions.readOnly(),
+								buildOptionsLinks(
+										quickFilter,
+										filter,
+										namedQueries,
+										perspectives,
+										pageable,
+										page,
+										resourceCollectionBaseSelfLink,
+										ResourcePermissions.readOnly()).toArray(new Link[0])));
+			} else {
+				// Si la petició no conté informació depaginació únicament es retornen els ellaços
+				// a les possibles accions sobre aquest recurs.
+				return ResponseEntity.ok(
+						PagedModel.empty(
+								buildOptionsLinks(
+										quickFilter,
+										filter,
+										namedQueries,
+										perspectives,
+										null,
+										null,
+										resourceCollectionBaseSelfLink,
+										ResourcePermissions.readOnly())));
+			}
+		}
+		throw new ResourceFieldNotFoundException(resourceClass, fieldName);
+	}
+
+	@Override
+	@GetMapping(value = "/fields/{fieldName}/options/{id}")
+	@Operation(summary = "Consulta d'una de les opcions disponibles per a emplenar un camp de tipus ResourceReferencee")
+	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
+	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> fieldOptionsGetOne(
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@PathVariable
+			@Parameter(description = "Id de l'element")
+			final RID id,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives) {
+		log.debug("Consultant un dels possibles valors del camp (fieldName={},id={},perspectives={})",
+				fieldName,
+				id,
+				perspectives);
+		Class<?> resourceClass = getResourceClass();
+		Optional<FieldAndClass> referencedResourceFieldAndClass = findReferenceFieldAndClass(resourceClass, fieldName);
+		if (referencedResourceFieldAndClass.isPresent()) {
+			Class<?> referencedResourceClass = referencedResourceFieldAndClass.get().getClazz();
+			ReadonlyResourceService<RR, RID> resourceService = (ReadonlyResourceService<RR, RID>)ResourceServiceLocator.getInstance().
+					getReadOnlyEntityResourceServiceForResourceClass(referencedResourceClass);
+			RR resource = resourceService.getOne(id, perspectives);
+			Link singleResourceSelfLink = linkTo(methodOn(getClass()).fieldOptionsGetOne(
+					fieldName,
+					SELF_RESOURCE_ID_TOKEN,
+					null)).withSelfRel();
+			EntityModel<RR> entityModel = toEntityModel(
+					resource,
+					buildSingleResourceLinks(
+							resource.getId(),
+							perspectives,
+							singleResourceSelfLink,
+							ResourcePermissions.readOnly()).toArray(new Link[0]));
+			return ResponseEntity.ok(entityModel);
+		}
+		throw new ResourceFieldNotFoundException(resourceClass, fieldName);
+	}
+
+	@Override
+	@PostMapping("/artifacts/action/{code}")
+	@Operation(summary = "Execució d'una acció associada a un recurs")
+	@PreAuthorize("hasPermission(null, this.getResourceClass().getName(), this.getOperation('ACTION'))")
+	public ResponseEntity<?> artifactActionExec(
+			@PathVariable
+			@Parameter(description = "Codi de l'acció")
+			final String code,
+			@RequestBody(required = false)
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException {
+		Object paramsObject = getArtifactFormClass(
+				ResourceArtifactType.ACTION,
+				code,
+				params,
+				bindingResult);
+		Object result = getMutableResourceService().actionExec(code, paramsObject);
+		return ResponseEntity.ok(result);
+	}
+
 	protected MutableResourceService<R, ID> getMutableResourceService() {
 		if (readonlyResourceService instanceof MutableResourceService) {
 			return (MutableResourceService<R, ID>)readonlyResourceService;
@@ -248,10 +428,12 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	protected List<Link> buildSingleResourceLinks(
 			Serializable id,
 			String[] perspective,
+			Link singleResourceSelfLink,
 			ResourcePermissions resourcePermissions) {
 		List<Link> links = super.buildSingleResourceLinks(
 				id,
 				perspective,
+				singleResourceSelfLink,
 				resourcePermissions);
 		Link selfLink = links.stream().
 				filter(l -> l.getRel().value().equals("self")).
@@ -260,6 +442,7 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			if (resourcePermissions.isWriteGranted()) {
 				ConfigurableAffordance affordance = Affordances.of(selfLink).
 						afford(HttpMethod.OPTIONS).
+						withName("default").
 						andAfford(HttpMethod.PUT).
 						withInputAndOutput(getResourceClass()).
 						withName("update").
@@ -277,6 +460,7 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 						links.indexOf(selfLink),
 						Affordances.of(selfLink).
 								afford(HttpMethod.OPTIONS).
+								withName("default").
 								andAfford(HttpMethod.DELETE).
 								withName("delete").
 								toLink());
@@ -285,6 +469,7 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		return links;
 	}
 
+	@Override
 	protected List<Link> buildResourceCollectionLinks(
 			String quickFilter,
 			String filter,
@@ -292,6 +477,7 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			String[] perspective,
 			Pageable pageable,
 			Page<?> page,
+			Link resourceCollectionBaseSelfLink,
 			ResourcePermissions resourcePermissions) {
 		List<Link> links = super.buildResourceCollectionLinks(
 				quickFilter,
@@ -300,6 +486,7 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 				perspective,
 				pageable,
 				page,
+				resourceCollectionBaseSelfLink,
 				resourcePermissions);
 		Link selfLink = links.stream().
 				filter(l -> l.getRel().value().equals("self")).
@@ -316,6 +503,42 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			}
 		}
 		return links;
+	}
+
+	protected List<Link> buildOptionsLinks(
+			String quickFilter,
+			String filter,
+			String[] namedQuery,
+			String[] perspective,
+			Pageable pageable,
+			Page<?> page,
+			Link resourceCollectionBaseSelfLink,
+			ResourcePermissions resourcePermissions) {
+		return buildResourceCollectionLinks(
+				quickFilter,
+				filter,
+				namedQuery,
+				perspective,
+				pageable,
+				page,
+				resourceCollectionBaseSelfLink,
+				resourcePermissions).stream().
+				filter(l -> !l.getRel().value().equals("getOne")).
+				collect(Collectors.toList());
+	}
+
+	@Override
+	protected Link[] buildArtifactsLinks(List<ResourceArtifact> artifacts) {
+		List<Link> ls = new ArrayList<>();
+		Link selfLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
+		ls.add(selfLinkWithDefaultProperties(selfLink, false));
+		artifacts.forEach(a -> {
+			if (ResourceArtifactType.ACTION == a.getType()) {
+				ls.add(buildActionLinkWithAffordances(a));
+			}
+		});
+		ls.addAll(Arrays.asList(super.buildArtifactsLinks(artifacts)));
+		return ls.toArray(new Link[0]);
 	}
 
 	protected <T extends Resource<?>> void validateResource(
@@ -354,69 +577,6 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 				}
 			});
 		}
-	}
-
-	protected Map<String, Object> fromJsonToMap(
-			JsonNode jsonNode,
-			Class<?> resourceClass) throws JsonProcessingException {
-		if (jsonNode != null) {
-			Map<String, Object> jsonMap = objectMapper.convertValue(
-					jsonNode,
-					new TypeReference<>(){});
-			Object jsonResource = objectMapper.treeToValue(jsonNode, resourceClass);
-			Map<String, Object> map = new HashMap<>();
-			jsonMap.keySet().stream().forEach(k -> {
-				Field field = ReflectionUtils.findField(resourceClass, k);
-				if (field != null) {
-					if (!k.equals("id")) {
-						ReflectionUtils.makeAccessible(field);
-						Object value = ReflectionUtils.getField(field, jsonResource);
-						map.put(k, value);
-					} else {
-						// Feim això perquè el camp id no es copia (no sabem per què)
-						map.put(k, jsonMap.get(k));
-					}
-				}
-			});
-			return map;
-		}
-		return null;
-	}
-
-	protected Object fillResourceWithFieldsMap(
-			Object resource,
-			Map<String, Object> fields,
-			String fieldName,
-			JsonNode fieldValue) {
-		if (fields != null) {
-			fields.forEach((k, v) -> {
-				Field field = ReflectionUtils.findField(resource.getClass(), k);
-				if (field != null) {
-					ReflectionUtils.makeAccessible(field);
-					ReflectionUtils.setField(field, resource, v);
-				}
-			});
-		}
-		Object fieldValueObject = null;
-		if (fieldName != null) {
-			Field field = ReflectionUtils.findField(resource.getClass(), fieldName);
-			if (field != null) {
-				try {
-					ReflectionUtils.makeAccessible(field);
-					String fieldJson = objectMapper.writeValueAsString(fieldValue);
-					JsonNode jsonNode = objectMapper.readTree("{\"" + field.getName() + "\": " + fieldJson + "}");
-					Object jsonResource = objectMapper.treeToValue(jsonNode, resource.getClass());
-					fieldValueObject = ReflectionUtils.getField(field, jsonResource);
-				} catch (JsonProcessingException ex) {
-					log.error(
-							"Error al parsejar el valor del camp " + fieldName + " del JSON " + fieldValue,
-							ex);
-				}
-			} else {
-				throw new ResourceFieldNotFoundException(resource.getClass(), fieldName);
-			}
-		}
-		return fieldValueObject;
 	}
 
 	protected Map<String, AnswerRequiredException.AnswerValue> getAnswersFromHeaderOrRequest(
@@ -474,8 +634,93 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		}
 	}
 
+	private Optional<FieldAndClass> findReferenceFieldAndClass(
+			Class<?> resourceClass,
+			String fieldName) {
+		if (!fieldName.isBlank()) {
+			String currentFieldName;
+			if (fieldName.contains(".")) {
+				String[] fieldNameParts = fieldName.split("\\.");
+				currentFieldName = fieldNameParts[0];
+			} else {
+				currentFieldName = fieldName;
+			}
+			Field currentField = ReflectionUtils.findField(resourceClass, currentFieldName);
+			if (currentField != null && ResourceReference.class.isAssignableFrom(currentField.getType())) {
+				Class<?> referencedResourceClass = TypeUtil.getReferencedResourceClass(currentField);
+				if (fieldName.contains(".")) {
+					return findReferenceFieldAndClass(
+							referencedResourceClass,
+							fieldName.substring(currentFieldName.length() + 1));
+				} else {
+					return Optional.of(
+							new FieldAndClass(currentField, referencedResourceClass));
+				}
+			}
+		}
+		return Optional.empty();
+	}
+
+	private String fieldOptionsProcessedFilterWithFieldAnnotation(Field field, String filterFromRequest) {
+		String processedFilter = filterFromRequest;
+		ResourceField resourceFieldAnnotation = field.getAnnotation(ResourceField.class);
+		if (resourceFieldAnnotation != null && resourceFieldAnnotation.springFilter().isEmpty()) {
+			String springFilter = resourceFieldAnnotation.springFilter();
+			if (springFilter.startsWith("#{") && springFilter.endsWith("}")) {
+				String expressionToParse = springFilter.substring(2, springFilter.length() - 1);
+				StandardEvaluationContext context = new StandardEvaluationContext(
+						new ProcessedOptionsQueryExpressionContext(RequestSessionUtil.getRequestSession()));
+				String parsedSpringFilter = getExpressionParser().
+						parseExpression(expressionToParse).
+						getValue(context, String.class);
+				processedFilter = parsedSpringFilter + (filterFromRequest != null ? " and (" + filterFromRequest + ")" : "");
+			} else {
+				processedFilter = springFilter + (filterFromRequest != null ? " and (" + filterFromRequest + ")" : "");
+			}
+		}
+		return processedFilter;
+	}
+
+	private String[] fieldOptionsProcessedNamedQueriesWithFieldAnnotation(Field field, String[] namedQueries) {
+		List<String> processedNamedQueries = Arrays.asList(namedQueries != null ? namedQueries : new String[0]);
+		ResourceField resourceFieldAnnotation = field.getAnnotation(ResourceField.class);
+		if (resourceFieldAnnotation != null) {
+			Collections.addAll(processedNamedQueries, resourceFieldAnnotation.namedQueries());
+		}
+		return processedNamedQueries.toArray(new String[0]);
+	}
+
+	private Pageable fieldOptionsProcessedPageableWithResourceAnnotation(
+			Pageable pageable,
+			Class<?> resourceClass) {
+		if (pageable != null) {
+			ResourceConfig resourceConfigAnotation = resourceClass.getAnnotation(ResourceConfig.class);
+			if (resourceConfigAnotation != null) {
+				Sort sort = Sort.unsorted();
+				if (resourceConfigAnotation.defaultSortFields().length > 0) {
+					List<Sort.Order> orders = new ArrayList<>();
+					for (ResourceConfig.ResourceSort sortField: resourceConfigAnotation.defaultSortFields()) {
+						orders.add(new Sort.Order(sortField.direction(), sortField.field()));
+					}
+					sort = Sort.by(orders);
+				}/* else if (!resourceConfigAnotation.descriptionField().isEmpty()) {
+					sort = Sort.by(Sort.Order.asc(resourceConfigAnotation.descriptionField()));
+				}*/
+				if (pageable.isPaged()) {
+					return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSortOr(sort));
+				} else {
+					return new WebMvcConfig.UnpagedButSorted(pageable.getSortOr(sort));
+				}
+			} else {
+				return pageable;
+			}
+		} else {
+			return Pageable.unpaged();
+		}
+	}
+
 	private void updateResourceIdAndPk(
-			ID resourceId,
+			ID id,
 			R resource) {
 		// Posa valor al camp id del recurs per a assegurar que aquest
 		// camp estigui emplenat a l'hora de fer validacions.
@@ -487,7 +732,36 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			ReflectionUtils.setField(
 					idField,
 					resource,
-					resourceId);
+					id);
+		}
+	}
+
+	private ExpressionParser getExpressionParser() {
+		if (parser == null) {
+			parser = new SpelExpressionParser();
+		}
+		return parser;
+	}
+
+	@SneakyThrows
+	private Link buildActionLink(ResourceArtifact artifact) {
+		Link reportLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
+		return Link.of(reportLink.toUri().toString() + "/action/" + artifact.getCode()).withSelfRel();
+	}
+	private Link buildActionLinkWithAffordances(ResourceArtifact artifact) {
+		String rel = "exec_" + artifact.getCode();
+		Link reportLink = buildActionLink(artifact);
+		if (artifact.getFormClass() != null) {
+			return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
+					afford(HttpMethod.POST).
+					withInputAndOutput(artifact.getFormClass()).
+					withName(rel).
+					toLink();
+		} else {
+			return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
+					afford(HttpMethod.POST).
+					withName(rel).
+					toLink();
 		}
 	}
 
@@ -496,6 +770,19 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	public static class OnChangeForSerialization {
 		@JsonInclude
 		private Map<String, Object> map;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	private static class FieldAndClass {
+		private Field field;
+		private Class<?> clazz;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	public static class ProcessedOptionsQueryExpressionContext {
+		private Object session;
 	}
 
 }

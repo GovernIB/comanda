@@ -21,7 +21,7 @@ import java.util.Date;
 /**
  * Mètodes per al mapeig d'objectes.
  *
- * @author Límit Tecnologies
+ * @author Josep Gayà
  */
 @Slf4j
 @Component
@@ -127,12 +127,14 @@ public class ObjectMappingHelper {
 				if (cln != null) {
 					ReflectionUtils.doWithFields(object.getClass(), field -> {
 						if (!isStaticFinal(field)) {
-							ReflectionUtils.makeAccessible(field);
-							Object value = getFieldValue(object, field);
-							ReflectionUtils.setField(
-									field,
-									cln,
-									value);
+							try {
+								Object value = getFieldValue(object, field.getName());
+								ReflectionUtils.setField(
+										field,
+										cln,
+										value);
+							} catch (NoSuchFieldException ignored) {
+							}
 						}
 					});
 					return cln;
@@ -192,19 +194,19 @@ public class ObjectMappingHelper {
 	}
 
 	private String getResourceEntityDescription(ResourceEntity<?, ?> persistable) {
-		Class<? extends Resource<?>> resourceClass = (Class)TypeUtil.getArgumentTypeFromGenericSuperclass(
+		Class<? extends Resource<?>> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
 				persistable.getClass(),
 				ResourceEntity.class,
 				0);
 		String descriptionFieldName = getResourceDescriptionFieldName(resourceClass);
 		if (descriptionFieldName != null) {
-			if (persistable instanceof EmbeddableEntity) {
+			if (persistable instanceof EmbeddableEntity<?, ?>) {
 				EmbeddableEntity<?, ?> embeddableEntity = (EmbeddableEntity<?, ?>)persistable;
 				Object embedded = embeddableEntity.getEmbedded();
 				try {
-					return (String) getFieldValue(
+					return (String)getFieldValue(
 							embedded,
-							embedded.getClass().getDeclaredField(descriptionFieldName));
+							descriptionFieldName);
 				} catch (Exception ex) {
 					log.warn(
 							"Couldn't find description field {} in embedded class {}",
@@ -214,9 +216,9 @@ public class ObjectMappingHelper {
 				}
 			} else {
 				try {
-					return (String) getFieldValue(
+					return (String)getFieldValue(
 							persistable,
-							persistable.getClass().getDeclaredField(descriptionFieldName));
+							descriptionFieldName);
 				} catch (Exception ex) {
 					log.warn(
 							"Couldn't find description field {} in entity class {}",
@@ -264,12 +266,13 @@ public class ObjectMappingHelper {
 
 	private Object getFieldValue(
 			Object object,
-			Field field) {
-		String getMethodName = methodNameFromField(field.getName(), "get");
+			String fieldName) throws NoSuchFieldException {
+		String getMethodName = methodNameFromField(fieldName, "get");
 		Method method = ReflectionUtils.findMethod(object.getClass(), getMethodName);
 		if (method != null) {
 			return ReflectionUtils.invokeMethod(method, object);
 		} else {
+			Field field = object.getClass().getDeclaredField(fieldName);
 			ReflectionUtils.makeAccessible(field);
 			return ReflectionUtils.getField(field, object);
 		}

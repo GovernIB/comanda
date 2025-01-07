@@ -25,9 +25,10 @@ const componentsEn = {
             title: 'Update',
         },
         delete: {
+            title: 'Delete',
             single: {
                 title: 'Delete item',
-                confirm: 'Are you sure you want to delete this item (this action can not be undone)?',
+                confirm: 'Are you sure you want to delete this item (this action can\'t be undone)?',
                 success: 'Deleted items',
                 error: 'Error deleting items',
             },
@@ -54,7 +55,7 @@ const componentsEn = {
         },
         delete: {
             title: 'Delete',
-            confirm: 'Are you sure you want to delete this item (this action can not be undone)?',
+            confirm: 'Are you sure you want to delete this item (this action can\'t be undone)?',
             success: 'Element deleted',
             error: 'Error deleting element',
         },

@@ -2,23 +2,33 @@ package es.caib.comanda.configuracio.back.config;
 
 import es.caib.comanda.configuracio.back.controller.MutableResourceController;
 import es.caib.comanda.configuracio.back.controller.ReadonlyResourceController;
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceField;
+import es.caib.comanda.configuracio.logic.intf.model.Resource;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
+import es.caib.comanda.configuracio.logic.intf.util.I18nUtil;
 import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
+import org.springframework.hateoas.*;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsConfiguration;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsOptions;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Set;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 /**
  * Configuració de HAL-FORMS.
- * 
- * @author Limit Tecnologies
+ *
+ * @author Josep Gayà
  */
 @Slf4j
 public abstract class BaseHalFormsConfig {
@@ -46,7 +56,7 @@ public abstract class BaseHalFormsConfig {
 	private HalFormsConfiguration withResourceController(
 			HalFormsConfiguration halFormsConfiguration,
 			Class<MutableResourceController> resourceControllerClass) {
-		Class<?> resourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
+		Class<?> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
 				resourceControllerClass,
 				ReadonlyResourceController.class,
 				0);
@@ -60,6 +70,16 @@ public abstract class BaseHalFormsConfig {
 							field);
 				},
 				this::isEnumField);
+		ReflectionUtils.doWithFields(
+				resourceClass,
+				field -> {
+					configurationWithResourceReferenceOptions(
+							halFormsConfigurationHolder,
+							resourceControllerClass,
+							resourceClass,
+							field);
+				},
+				field -> ResourceReference.class.isAssignableFrom(field.getType()));
 		return halFormsConfigurationHolder.getValue();
 	}
 
@@ -74,7 +94,29 @@ public abstract class BaseHalFormsConfig {
 						resourceField.getName(),
 						metadata -> HalFormsOptions.
 								inline(getInlineOptionsEnumConstants(resourceField)).
-								withMinItems(TypeUtil.isNotNullField(resourceField) ? 1L : null).
+								withValueField("id").
+								withPromptField("description").
+								withMinItems(TypeUtil.isNotNullField(resourceField) ? 1L : 0L).
+								withMaxItems(TypeUtil.isMultipleFieldType(resourceField) ? null : 1L)));
+	}
+
+	private void configurationWithResourceReferenceOptions(
+			MutableHolder<HalFormsConfiguration> halFormsConfigurationHolder,
+			Class<MutableResourceController> resourceControllerClass,
+			Class<?> resourceClass,
+			Field resourceField) {
+		log.info("New HAL-FORMS resource reference options (class={}, field={})", resourceClass, resourceField.getName());
+		halFormsConfigurationHolder.setValue(
+				halFormsConfigurationHolder.getValue().withOptions(
+						resourceClass,
+						resourceField.getName(),
+						metadata -> HalFormsOptions.
+								remote(getRemoteOptionsLink(
+										resourceControllerClass,
+										resourceField.getName())).
+								withValueField("id").
+								withPromptField(getRemoteOptionsPromptField(resourceField)).
+								withMinItems(TypeUtil.isNotNullField(resourceField) ? 1L : 0L).
 								withMaxItems(TypeUtil.isCollectionFieldType(resourceField) ? null : 1L)));
 	}
 
@@ -86,18 +128,75 @@ public abstract class BaseHalFormsConfig {
 		}
 	}
 
-	private Object[] getInlineOptionsEnumConstants(Field field) {
+	private FieldOption[] getInlineOptionsEnumConstants(Field field) {
+		Object[] enumConstants;
 		if (field.getType().isArray()) {
-			return field.getType().getComponentType().getEnumConstants();
+			enumConstants = field.getType().getComponentType().getEnumConstants();
 		} else {
-			return field.getType().getEnumConstants();
+			enumConstants = field.getType().getEnumConstants();
 		}
+		return Arrays.stream(enumConstants).
+				map(e -> new FieldOption(
+						e.toString(),
+						I18nUtil.getInstance().getI18nEnumDescription(
+								field,
+								e.toString()))).
+				toArray(FieldOption[]::new);
 	}
+
+	private Link getRemoteOptionsLink(
+			Class<MutableResourceController> resourceControllerClass,
+			String fieldName) {
+		Link findLink = linkTo(methodOn(resourceControllerClass).fieldOptionsFind(
+				fieldName,
+				null,
+				null,
+				null,
+				null,
+				null)).withRel(IanaLinkRelations.SELF_VALUE);
+		// Al link generat li canviam les variables namedQuery i
+		// perspective perquè no les posa com a múltiples.
+		String findLinkHref = findLink.getHref().
+				replace("namedQuery", "namedQuery*").
+				replace("perspective", "perspective*");
+		// I a més hi afegim les variables page, size i sort que no les
+		// detecta a partir de la classe de tipus Pageable
+		TemplateVariables findTemplateVariables = new TemplateVariables(
+				new TemplateVariable("page", TemplateVariable.VariableType.REQUEST_PARAM),
+				new TemplateVariable("size", TemplateVariable.VariableType.REQUEST_PARAM),
+				new TemplateVariable("sort", TemplateVariable.VariableType.REQUEST_PARAM).composite());
+		return Link.of(UriTemplate.of(findLinkHref).with(findTemplateVariables), findLink.getRel());
+	}
+
+	private String getRemoteOptionsPromptField(Field field) {
+		String descriptionField = null;
+		ResourceField fieldAnnotation = field.getAnnotation(ResourceField.class);
+		if (fieldAnnotation != null && !fieldAnnotation.descriptionField().isEmpty()) {
+			descriptionField = fieldAnnotation.descriptionField();
+		} else {
+			Class<? extends Resource<?>> referencedResourceClass = TypeUtil.getReferencedResourceClass(field);
+			ResourceConfig configAnnotation = referencedResourceClass.getAnnotation(ResourceConfig.class);
+			if (configAnnotation != null && !configAnnotation.descriptionField().isEmpty()) {
+				descriptionField = configAnnotation.descriptionField();
+			} else {
+				descriptionField = "id";
+			}
+		}
+		return descriptionField;
+	}
+
 	@Getter
 	@Setter
 	@AllArgsConstructor
 	public static class MutableHolder<T> {
 		private T value;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	public static class FieldOption {
+		private String id;
+		private String description;
 	}
 
 }

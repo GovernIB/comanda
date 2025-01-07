@@ -17,7 +17,7 @@ export const generateDataGroups = (dataInici: string, dataFi: string, agrupacio:
         } else if (agrupacio === 'MINUT') {
             djs = djs.add(1, 'minute');
         }
-    } while (djs.isBefore(dataFiJs));
+    } while (!djs.isAfter(dataFiJs));
     return dataGroups;
 }
 

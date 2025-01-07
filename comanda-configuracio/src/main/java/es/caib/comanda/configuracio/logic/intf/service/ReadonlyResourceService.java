@@ -41,6 +41,8 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	/**
 	 * Consulta paginada de recursos.
 	 *
+	 * @param quickFilter
+	 *            filtre ràpid en format text.
 	 * @param filter
 	 *            consulta en format Spring Filter.
 	 * @param namedQueries
@@ -52,6 +54,7 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 * @return la llista de recursos.
 	 */
 	Page<R> findPage(
+			String quickFilter,
 			String filter,
 			String[] namedQueries,
 			String[] perspectives,

@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
+import es.caib.comanda.configuracio.logic.intf.annotation.ResourceConfig;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@ResourceConfig(quickFilterFields = { "codi", "nom" })
 public class App extends BaseResource<Long> {
 
 	@NotNull
@@ -32,14 +34,14 @@ public class App extends BaseResource<Long> {
 	@Size(max = 200)
 	private String infoUrl;
 	@NotNull
-	private Integer infoInterval;
+	private Integer infoInterval = 1;
 	@Setter(AccessLevel.NONE)
 	private LocalDateTime infoData;
 	@NotNull
 	@Size(max = 200)
 	private String salutUrl;
 	@NotNull
-	private Integer salutInterval;
+	private Integer salutInterval = 1;
 	@Size(max = 10)
 	@Setter(AccessLevel.NONE)
 	private String versio;

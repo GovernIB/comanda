@@ -99,7 +99,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		}
 	}
 
-	private static class UnpagedButSorted implements Pageable {
+	public static class UnpagedButSorted implements Pageable {
 		private final Sort sort;
 		public UnpagedButSorted(Sort sort) {
 			this.sort = sort;

@@ -25,6 +25,7 @@ const componentsEs = {
             title: 'Modificar',
         },
         delete: {
+            title: 'Borrar',
             single: {
                 title: 'Borrar elemento',
                 confirm: '¿Está seguro de que quiere borrar este elemento (esta acción no se puede deshacer)?',

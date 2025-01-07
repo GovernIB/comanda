@@ -8,6 +8,7 @@ import es.caib.comanda.configuracio.logic.intf.exception.ResourceNotFoundExcepti
 import es.caib.comanda.configuracio.logic.intf.model.Resource;
 import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifact;
 import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
 import es.caib.comanda.configuracio.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.TypeUtil;
 import es.caib.comanda.configuracio.logic.springfilter.FilterSpecification;
@@ -79,6 +80,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public Page<R> findPage(
+			String quickFilter,
 			String filter,
 			String[] namedQueries,
 			String[] perspectives,
@@ -95,9 +97,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				namedQueries,
 				perspectives);
 		Page<E> resultat = internalFindEntities(
+				quickFilter,
 				filter,
 				namedQueries,
-				perspectives,
 				pageable);
 		long elapsedDatabase = System.currentTimeMillis() - t0;
 		beforeConversion(resultat.getContent());
@@ -178,7 +180,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected E getEntity(ID id, String[] perspectives) throws ResourceNotFoundException {
 		Optional<E> result;
 		Specification<E> pkSpec = new PkSpec<>(id);
-		String additionalSpringFilter = additionalSpringFilter(null, null, perspectives);
+		String additionalSpringFilter = additionalSpringFilter(null, null);
 		if (additionalSpringFilter != null && !additionalSpringFilter.trim().isEmpty()) {
 			result = resourceRepository.findOne(pkSpec.and(getSpringFilterSpecification(additionalSpringFilter)));
 		} else {
@@ -197,27 +199,26 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected Page<E> internalFindEntities(
+			String quickFilter,
 			String filter,
 			String[] namedFilters,
-			String[] perspectives,
 			Pageable pageable) {
 		Page<E> resultat;
 		Specification<E> processedSpecification = toProcessedSpecification(
+				quickFilter,
 				filter,
-				namedFilters,
-				perspectives);
+				namedFilters);
 		if (processedSpecification != null) {
 			log.debug("Consulta amb specification (specification={})", processedSpecification);
 			if (pageable.isUnpaged()) {
 				org.springframework.data.domain.Sort processedSort = toProcessedSort(
-						addDefaultSort(pageable.getSort()),
-						perspectives);
+						addDefaultSort(pageable.getSort()));
 				List<E> resultList = resourceRepository.findAll(
 						processedSpecification,
 						processedSort);
 				resultat = new PageImpl<E>(resultList, pageable, resultList.size());
 			} else {
-				Pageable processedPageable = toProcessedPageableSort(pageable, perspectives);
+				Pageable processedPageable = toProcessedPageableSort(pageable);
 				resultat = resourceRepository.findAll(
 						processedSpecification,
 						processedPageable);
@@ -226,12 +227,11 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			log.debug("Consulta sense specification");
 			if (pageable.isUnpaged()) {
 				org.springframework.data.domain.Sort processedSort = toProcessedSort(
-						addDefaultSort(pageable.getSort()),
-						perspectives);
+						addDefaultSort(pageable.getSort()));
 				List<E> resultList = resourceRepository.findAll(processedSort);
 				resultat = new PageImpl<>(resultList, pageable, resultList.size());
 			} else {
-				Pageable processedPageable = toProcessedPageableSort(pageable, perspectives);
+				Pageable processedPageable = toProcessedPageableSort(pageable);
 				resultat = resourceRepository.findAll(processedPageable);
 			}
 		}
@@ -255,14 +255,21 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected Specification<E> toProcessedSpecification(
+			String quickFilter,
 			String filter,
-			String[] namedFilters,
-			String[] perspectives) {
-		Specification<E> processedSpecification = getSpringFilterSpecification(filter);
+			String[] namedFilters) {
+		Specification<E> processedSpecification = getSpringFilterSpecification(
+				buildSpringFilterForQuickFilter(
+						getResourceClass(),
+						null,
+						quickFilter));
+		processedSpecification = appendSpecificationWithAnd(
+				processedSpecification,
+				getSpringFilterSpecification(filter));
 		processedSpecification = appendSpecificationWithAnd(
 				processedSpecification,
 				getSpringFilterSpecification(
-						additionalSpringFilter(filter, namedFilters, perspectives)));
+						additionalSpringFilter(filter, namedFilters)));
 		if (namedFilters != null) {
 			for (String namedFilter: namedFilters) {
 				Specification<E> namedSpecification = null;
@@ -277,7 +284,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						namedSpecification);
 			}
 		}
-		return processSpecification(processedSpecification);
+		Specification<E> finalSpecification = processSpecification(processedSpecification);
+		return finalSpecification != null ? finalSpecification : Specification.where(null);
 	}
 
 	protected Specification<E> getSpringFilterSpecification(String springFilter) {
@@ -300,6 +308,40 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		} else {
 			return currentSpecification;
 		}
+	}
+
+	private String buildSpringFilterForQuickFilter(
+			Class<? extends Resource<?>> resourceClass,
+			String prefix,
+			String quickFilter) {
+		ResourceConfig resourceConfigAnnotation = resourceClass.getAnnotation(ResourceConfig.class);
+		if (quickFilter != null) {
+			String[] quickFilterFields = quickFilterGetFieldsFromResourceClass(resourceClass);
+			if (quickFilterFields != null) {
+				log.debug(
+						"Construint filtre Spring Filter per quickFilter (resourceClass={}, quickFilter={})",
+						getResourceClass(),
+						quickFilter);
+				StringBuilder quickFilterSpringFilter = new StringBuilder();
+				for (String quickFilterField : resourceConfigAnnotation.quickFilterFields()) {
+					String springFilter = getSpringFilterFromQuickFilterPath(
+							quickFilterField.split("\\."),
+							resourceClass,
+							quickFilterField,
+							quickFilter,
+							prefix);
+					if (springFilter != null) {
+						appendSpringFilter(
+								quickFilterSpringFilter,
+								springFilter,
+								" or ");
+					}
+				}
+				log.debug("Filtre Spring Filter resultant: {}", quickFilterSpringFilter);
+				return quickFilterSpringFilter.toString();
+			}
+		}
+		return null;
 	}
 
 	protected R entityToResource(E entity) {
@@ -326,8 +368,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
-			String[] namedQueries,
-			String[] perspectives) {
+			String[] namedQueries) {
 		return null;
 	}
 
@@ -379,7 +420,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	protected Class<R> getResourceClass() {
 		if (resourceClass == null) {
-			resourceClass = (Class<R>)TypeUtil.getArgumentTypeFromGenericSuperclass(
+			resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
 					getClass(),
 					BaseReadonlyResourceService.class,
 					0);
@@ -389,7 +430,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	protected Class<E> getEntityClass() {
 		if (entityClass == null) {
-			entityClass = (Class<E>)TypeUtil.getArgumentTypeFromGenericSuperclass(
+			entityClass = TypeUtil.getArgumentClassFromGenericSuperclass(
 					getClass(),
 					BaseReadonlyResourceService.class,
 					2);
@@ -402,37 +443,22 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				forEach(c -> reportGeneratorMap.put(c, reportGenerator));
 	}
 
-	private Pageable toProcessedPageableSort(Pageable pageable, String[] perspectives) {
+	private Pageable toProcessedPageableSort(Pageable pageable) {
 		return PageRequest.of(
 				pageable.getPageNumber(),
 				pageable.getPageSize(),
 				toProcessedSort(
-						addDefaultSort(pageable.getSort()),
-						perspectives));
+						addDefaultSort(pageable.getSort())));
 	}
 
-	private org.springframework.data.domain.Sort toProcessedSort(
-			org.springframework.data.domain.Sort sort,
-			String[] perspectives) {
-		org.springframework.data.domain.Sort sortToProcess = null;
-		org.springframework.data.domain.Sort perspectiveSort = null;
-		if (perspectives != null) {
-			perspectiveSort = getSortWithPerspectives(perspectives, sort);
-		}
-		if (perspectiveSort != null) {
-			if (sort != null) {
-				sortToProcess = perspectiveSort;
-				sort.stream().forEach(sortToProcess::and);
-			}
-		} else {
-			sortToProcess = sort;
-		}
-		org.springframework.data.domain.Sort resultSort;
-		if (sortToProcess != null) {
-			log.debug("\tProcessant ordenació " + sortToProcess);
-			if (sortToProcess.isSorted()) {
-				List<Sort.Order> orders = new ArrayList<Sort.Order>();
-				for (Sort.Order order: sortToProcess) {
+	private Sort toProcessedSort(
+			Sort sort) {
+		Sort resultSort;
+		if (sort != null) {
+			log.debug("\tProcessant ordenació " + sort);
+			if (sort.isSorted()) {
+				List<Sort.Order> orders = new ArrayList<>();
+				for (Sort.Order order: sort) {
 					String[] orderPaths = toProcessedSortPath(
 							order.getProperty().split("\\."),
 							getEntityClass());
@@ -450,12 +476,12 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						log.debug("\t\tS'ha ignorat l'ordenació pel camp " + order.getProperty());
 					}
 				}
-				resultSort = org.springframework.data.domain.Sort.by(orders);
+				resultSort = Sort.by(orders);
 			} else {
-				resultSort = sortToProcess;
+				resultSort = sort;
 			}
 		} else {
-			resultSort = org.springframework.data.domain.Sort.unsorted();
+			resultSort = Sort.unsorted();
 		}
 		return resultSort;
 	}
@@ -467,7 +493,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			log.debug("\t\tProcessant path d'ordenació" + Arrays.toString(path) + " per l'entitat " + entityClass);
 			Field entityField = ReflectionUtils.findField(entityClass, path[0]);
 			if (entityField != null) {
-				if (BaseAuditableEntity.class.isAssignableFrom(entityField.getType())) {
+				if (Persistable.class.isAssignableFrom(entityField.getType())) {
 					// Si el camp és una referència a una altra entitat
 					if (path.length > 1) {
 						// Si no s'ha arribat al final del path es torna a fer el
@@ -488,26 +514,30 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 					} else {
 						// Si s'ha arribat al final del path s'agafa l'ordenació
 						// definida a l'anotació del recurs de l'entitat.
-						log.debug("\t\t\tDetectat camp d'entitat de tipus referencia final " + path[0] + ", s'afegeix ordenació de l'anotació del recurs");
-						Class<?> resourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
-								entityField.getType(),
-								BaseAuditableEntity.class,
-								0);
-						List<String> sortPaths = new ArrayList<String>();
-						for (SortedField sortedField: getResourceDefaultSortFields(resourceClass)) {
-							String[] ops = toProcessedSortPath(
-									sortedField.getField().split("\\."),
-									entityField.getType());
-							if (ops != null) {
-								sortPaths.addAll(Arrays.asList(ops));
+						if (EmbeddableEntity.class.isAssignableFrom(entityField.getType())) {
+							log.debug("\t\t\tDetectat camp d'entitat que és referencia final " + path[0] + " de tipus EmbeddableEntity, s'afegeix ordenació de l'anotació del recurs");
+							Class<?> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
+									entityField.getType(),
+									EmbeddableEntity.class,
+									0);
+							List<String> sortPaths = new ArrayList<String>();
+							for (SortedField sortedField: getResourceDefaultSortFields(resourceClass)) {
+								String[] ops = toProcessedSortPath(
+										sortedField.getField().split("\\."),
+										entityField.getType());
+								if (ops != null) {
+									sortPaths.addAll(Arrays.asList(ops));
+								}
 							}
-						}
-						if (!sortPaths.isEmpty()) {
-							// Retorna els paths afegint de nou el primer camp
-							return sortPaths.stream().
-									filter(p -> !p.isEmpty()).
-									map(p -> path[0] + "." + p).
-									toArray(String[]::new);
+							if (!sortPaths.isEmpty()) {
+								// Retorna els paths afegint de nou el primer camp
+								return sortPaths.stream().
+										filter(p -> !p.isEmpty()).
+										map(p -> path[0] + "." + p).
+										toArray(String[]::new);
+							} else {
+								return new String[] { String.join(".", path[0], "id") };
+							}
 						} else {
 							return new String[] { String.join(".", path[0], "id") };
 						}
@@ -520,7 +550,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				}
 			} else {
 				if (EmbeddableEntity.class.isAssignableFrom(entityClass)) {
-					Class<?> resourceClass = (Class<?>)TypeUtil.getArgumentTypeFromGenericSuperclass(
+					Class<?> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
 							entityClass,
 							EmbeddableEntity.class,
 							0);
@@ -545,17 +575,128 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
-	private org.springframework.data.domain.Sort addDefaultSort(org.springframework.data.domain.Sort sort) {
+	private Sort addDefaultSort(Sort sort) {
 		if (sort == null || sort.isEmpty()) {
-			List<Sort.Order> orders = new ArrayList<Sort.Order>();
+			List<Sort.Order> orders = new ArrayList<>();
 			for (SortedField sortedField: getResourceDefaultSortFields(getResourceClass())) {
 				orders.add(new Sort.Order(
 						sortedField.getDirection(),
 						sortedField.getField()));
 			}
-			return org.springframework.data.domain.Sort.by(orders);
+			return Sort.by(orders);
+		} else {
+			return sort;
 		}
-		return sort;
+	}
+
+	private String[] quickFilterGetFieldsFromResourceClass(Class<?> resourceClass) {
+		ResourceConfig resourceConfigAnnotation = resourceClass.getAnnotation(ResourceConfig.class);
+		if (resourceConfigAnnotation != null && resourceConfigAnnotation.quickFilterFields().length > 0) {
+			return resourceConfigAnnotation.quickFilterFields();
+		} else {
+			log.warn("Quick filter fields not specified for resource (class={})", resourceClass.getName());
+			return null;
+		}
+	}
+
+	private String getSpringFilterFromQuickFilterPath(
+			String[] currentPath,
+			Class<?> resourceClass,
+			String fieldName,
+			String quickFilter,
+			String filterFieldPrefix) {
+		log.debug("\t\tProcessant path de quickFilter" + Arrays.toString(currentPath) + " pel recurs " + resourceClass);
+		Field resourceField = ReflectionUtils.findField(resourceClass, currentPath[0]);
+		if (resourceField != null) {
+			Class<?> processedResourceType = resourceField.getType();
+			boolean resourceTypeIsCollection = false;
+			Class<?> collectionFieldType = TypeUtil.getCollectionFieldType(resourceField);
+			if (collectionFieldType != null) {
+				processedResourceType = collectionFieldType;
+				resourceTypeIsCollection = true;
+			}
+			StringBuilder springFilter = new StringBuilder();
+			if (ResourceReference.class.isAssignableFrom(processedResourceType)) {
+				// Si el camp és una referència a una altra entitat
+				if (currentPath.length > 1) {
+					// Si no s'ha arribat al final del path es torna a fer el
+					// procés amb l'entitat a la que es fa referència.
+					log.debug("\t\t\tDetectat camp de tipus referencia no final " + currentPath[0] + ", tornant a cercar");
+					if (resourceTypeIsCollection) {
+						springFilter.append("exists(");
+					}
+					springFilter.append(
+							getSpringFilterFromQuickFilterPath(
+									Arrays.copyOfRange(currentPath, 1, currentPath.length),
+									TypeUtil.getReferencedResourceClass(resourceField),
+									fieldName,
+									quickFilter,
+									filterFieldPrefix));
+					if (resourceTypeIsCollection) {
+						springFilter.append(")");
+					}
+				} else {
+					log.debug("\t\t\tDetectat camp de tipus referencia final. S'inclouran tots els seus camps del quickFilter");
+					springFilter.append("(");
+					if (resourceTypeIsCollection) {
+						springFilter.append("exists(");
+					}
+					springFilter.append(
+							buildSpringFilterForQuickFilter(
+									TypeUtil.getReferencedResourceClass(resourceField),
+									(filterFieldPrefix != null) ? filterFieldPrefix + resourceField.getName() + "." : resourceField.getName() + ".",
+									quickFilter));
+					if (resourceTypeIsCollection) {
+						springFilter.append(")");
+					}
+					springFilter.append(")");
+				}
+			} else {
+				log.debug("\t\t\tAfegint camp final");
+				// Si el camp no és una referència a una altra entitat
+				if (filterFieldPrefix != null) {
+					springFilter.append(filterFieldPrefix);
+				}
+				springFilter.append(fieldName);
+				springFilter.append('~');
+				springFilter.append("'");
+				springFilter.append("*");
+				springFilter.append(cleanReservedFilterCharacters(quickFilter));
+				springFilter.append("*");
+				springFilter.append("'");
+			}
+			return springFilter.toString();
+		} else {
+			log.debug("\t\t\tCamp no trobat");
+			return null;
+		}
+	}
+
+	private void appendSpringFilter(
+			StringBuilder sb,
+			String springFilter,
+			String separator) {
+		if (springFilter != null && !springFilter.isEmpty()) {
+			if (sb.length() > 0) {
+				sb.append(separator);
+			}
+			sb.append("(");
+			sb.append(springFilter);
+			sb.append(")");
+		}
+	}
+
+	private String cleanReservedFilterCharacters(String quickFilter) {
+		StringBuilder sb = new StringBuilder();
+		for (int n = 0; n < quickFilter.length(); n++) {
+			char c = quickFilter.charAt(n);
+			if (c == '\'') {
+				sb.append("\\'");
+			} else {
+				sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 
 	@Getter

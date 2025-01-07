@@ -338,7 +338,7 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
         const requestArgs = {
             ...args,
             data: {
-                resourceId: id,
+                id,
                 perspective: args?.perspectives,
                 ...argsData,
             },
@@ -601,7 +601,7 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
             const realState = state ?? currentState;
             if (resourceName && !isCurrentLoading && realState) {
                 if (id != null) {
-                    getPromiseFromStateLink(realState, 'getOne', { data: { resourceId: id, ...args?.getOneData } }, true).
+                    getPromiseFromStateLink(realState, 'getOne', { data: { id, ...args?.getOneData } }, true).
                         then((state: State) => {
                             callRequestExecFn(
                                 state,

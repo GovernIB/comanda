@@ -67,8 +67,9 @@ public class ResourceReference<R extends Resource<ID>, ID extends Serializable> 
 	public String toString() {
 		Class<R> resourceClass = null;
 		try {
-			resourceClass = (Class<R>) TypeUtil.getArgumentTypeFromGenericSuperclass(getClass(), 1);
-		} catch (Exception ignored) {}
+			resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(getClass(), 0);
+		} catch (Exception ignored) {
+		}
 		return "Referencia al recurs " + (resourceClass != null ? resourceClass.getName() : "<unknown>") +
 				" (id=" + id + ", " +
 				"description=" + description + ")";

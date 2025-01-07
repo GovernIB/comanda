@@ -23,5 +23,6 @@ public @interface ResourceField {
 	public String helperText() default "";
 	public String helperTextI18n() default "";
 	public String springFilter() default "";
+	public String[] namedQueries() default {};
 
 }

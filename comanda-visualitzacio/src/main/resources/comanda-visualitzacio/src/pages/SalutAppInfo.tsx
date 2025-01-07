@@ -137,12 +137,12 @@ const AppInfo: React.FC<any> = (props) => {
 const LatenciaBarChart: React.FC<any> = (props) => {
     const {
         dataInici,
-        dataFi,
         agrupacio,
         latencies
     } = props;
     const { t } = useTranslation();
-    const baseDataGroups = generateDataGroups(dataInici, dataFi, agrupacio);
+    const latenciesMaxData = latencies[latencies.length - 1].data;
+    const baseDataGroups = generateDataGroups(dataInici, latenciesMaxData, agrupacio);
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
@@ -263,7 +263,6 @@ const SalutAppInfo: React.FC = () => {
         <Grid size={6}>
             {dataLoaded && <LatenciaBarChart
                 dataInici={reportParams?.dataInici}
-                dataFi={reportParams?.dataFi}
                 agrupacio={reportParams?.agrupacio}
                 latencies={latencies} />}
         </Grid>
