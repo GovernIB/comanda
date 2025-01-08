@@ -19,7 +19,7 @@ public class ArtifactNotFoundException extends NotFoundException {
 			Class<?> resourceClass,
 			ResourceArtifactType type,
 			String code) {
-		super("Report " + getArtifactId(resourceClass, type, code));
+		super("Artifact " + getArtifactId(resourceClass, type, code));
 		this.resourceClass = resourceClass;
 		this.type = type;
 		this.code = code;

@@ -131,9 +131,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public List<ResourceArtifact> artifactGetAllowed(ResourceArtifactType type) {
-		log.debug(
-				"Consultant els artefactes permesos (type={})",
-				type);
+		log.debug("Consultant els artefactes permesos (type={})", type);
 		List<ResourceArtifact> artifacts = new ArrayList<>();
 		if (type == null || type == ResourceArtifactType.REPORT) {
 			return reportGeneratorMap.entrySet().stream().
@@ -149,10 +147,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public Optional<Class<?>> artifactGetFormClass(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
-		log.debug(
-				"Consultant la classe de formulari per l'artefacte (type={}, code={})",
-				type,
-				code);
+		log.debug("Consultant la classe de formulari per l'artefacte (type={}, code={})", type, code);
 		if (type == ResourceArtifactType.REPORT) {
 			ReportDataGenerator<?, ?> generator = reportGeneratorMap.get(code);
 			if (generator != null) {

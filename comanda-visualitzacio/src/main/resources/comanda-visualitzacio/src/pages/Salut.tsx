@@ -44,6 +44,7 @@ const useAppData = () => {
     const {
         isReady: appApiIsReady,
         find: appApiFind,
+        action: appApiAction,
     } = useResourceApiService('app');
     const {
         isReady: salutApiIsReady,
@@ -54,7 +55,7 @@ const useAppData = () => {
     const [estats, setEstats] = React.useState<Record<string, any>>({});
     const [salutLastItems, setSalutLastItems] = React.useState<any[]>();
     const [reportParams, setReportParams] = React.useState<any>();
-    const refresh = (dataInici: string, dataFi: string, agrupacio: string) => {
+    const refresh = (dataInici: string, dataFi: string, agrupacio: string, actionExec?: boolean) => {
         const reportParams = {
             dataInici,
             dataFi,
@@ -63,7 +64,15 @@ const useAppData = () => {
         setReportParams(reportParams);
         if (appApiIsReady && salutApiIsReady) {
             setLoading(true);
-            appApiFind({ unpaged: true }).
+            const refreshPromise = new Promise((resolve, reject) => {
+                if (actionExec) {
+                    appApiAction({ code: 'refresh' }).then(resolve).catch(reject);
+                } else {
+                    resolve(null);
+                }
+            });
+            refreshPromise.then(() => {
+                appApiFind({ unpaged: true }).
                 then((response) => {
                     setApps(response.rows);
                 }).
@@ -89,6 +98,7 @@ const useAppData = () => {
                 then(() => {
                     setLoading(false);
                 });
+            });
         }
     }
     return {

@@ -30,6 +30,7 @@ type ResourceApiMethods = {
     delette: (id: any, args?: ResourceApiRequestArgs) => Promise<void>;
     onChange: (id: any, args: ResourceApiOnChangeArgs) => Promise<void>;
     artifacts: (args: ResourceApiRequestArgs) => Promise<State>;
+    action: (args: ResourceApiActionArgs) => Promise<any>;
     report: (args: ResourceApiReportArgs) => Promise<any[]>;
 }
 
@@ -108,6 +109,10 @@ export type ResourceApiOnChangeArgs = ResourceApiRequestArgs & {
     action?: string;
     report?: string;
     filter?: string;
+};
+
+export type ResourceApiActionArgs = ResourceApiRequestArgs & {
+    code: string;
 };
 
 export type ResourceApiReportArgs = ResourceApiRequestArgs & {
@@ -481,6 +486,39 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
             request('artifacts', null, { ...args }).then(resolve).catch(reject);
         });
     }, [request]);
+    const action = React.useCallback((args?: ResourceApiActionArgs): Promise<any[]> => {
+        return new Promise((resolve, reject) => {
+            request('artifacts').
+                then((state: State) => {
+                    if (args?.code != null) {
+                        const actionRel = 'exec_' + args.code;
+                        const actionLink = state.links.get(actionRel);
+                        if (actionLink != null) {
+                            request(actionRel, null, { ...args }, state).
+                                then((state: State) => {
+                                    const result = state.data;
+                                    resolve(result);
+                                }).
+                                catch((error: ResourceApiError) => {
+                                    processAnswerRequiredError(
+                                        error,
+                                        null,
+                                        args,
+                                        onChange,
+                                        getOpenAnswerRequiredDialog()).
+                                        then(resolve).
+                                        catch(reject);
+                                });
+                        } else {
+                            reject('Action ' + args.code + ' not found in artifacts');
+                        }
+                    } else {
+                        reject('Action code not specified')
+                    }
+                }).
+                catch(reject);
+        });
+    }, [request]);
     const report = React.useCallback((args?: ResourceApiReportArgs): Promise<any[]> => {
         return new Promise((resolve, reject) => {
             request('artifacts').
@@ -523,6 +561,7 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
         delette,
         onChange,
         artifacts,
+        action,
         report,
     };
 }

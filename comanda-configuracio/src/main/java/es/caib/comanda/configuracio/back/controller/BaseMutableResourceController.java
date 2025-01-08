@@ -745,20 +745,20 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@SneakyThrows
 	private Link buildActionLink(ResourceArtifact artifact) {
-		Link reportLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
-		return Link.of(reportLink.toUri().toString() + "/action/" + artifact.getCode()).withSelfRel();
+		Link actionLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
+		return Link.of(actionLink.toUri() + "/action/" + artifact.getCode()).withSelfRel();
 	}
 	private Link buildActionLinkWithAffordances(ResourceArtifact artifact) {
 		String rel = "exec_" + artifact.getCode();
-		Link reportLink = buildActionLink(artifact);
+		Link actionLink = buildActionLink(artifact);
 		if (artifact.getFormClass() != null) {
-			return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
+			return Affordances.of(Link.of(actionLink.toUri().toString()).withRel(rel)).
 					afford(HttpMethod.POST).
 					withInputAndOutput(artifact.getFormClass()).
 					withName(rel).
 					toLink();
 		} else {
-			return Affordances.of(Link.of(reportLink.toUri().toString()).withRel(rel)).
+			return Affordances.of(Link.of(actionLink.toUri().toString()).withRel(rel)).
 					afford(HttpMethod.POST).
 					withName(rel).
 					toLink();

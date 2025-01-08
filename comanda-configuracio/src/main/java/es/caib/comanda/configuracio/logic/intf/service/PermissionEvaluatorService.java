@@ -17,6 +17,7 @@ public interface PermissionEvaluatorService extends PermissionEvaluator {
 		GET_ONE,
 		FIND,
 		ARTIFACT,
+		ACTION,
 		REPORT
 	}
 

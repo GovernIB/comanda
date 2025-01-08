@@ -2,10 +2,7 @@ package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.configuracio.logic.intf.annotation.ResourceField;
 import es.caib.comanda.configuracio.logic.intf.exception.*;
-import es.caib.comanda.configuracio.logic.intf.model.Reorderable;
-import es.caib.comanda.configuracio.logic.intf.model.Resource;
-import es.caib.comanda.configuracio.logic.intf.model.ResourceArtifactType;
-import es.caib.comanda.configuracio.logic.intf.model.ResourceReference;
+import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.service.MutableResourceService;
 import es.caib.comanda.configuracio.logic.intf.util.CompositePkUtil;
 import es.caib.comanda.configuracio.logic.intf.util.StringUtil;
@@ -24,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class BaseMutableResourceService<R extends Resource<ID>, ID extends Serializable, E extends Persistable<ID>>
@@ -137,6 +135,35 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		} else {
 			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.ACTION, code);
 		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<ResourceArtifact> artifactGetAllowed(ResourceArtifactType type) {
+		log.debug("Consultant els artefactes permesos (type={})", type);
+		List<ResourceArtifact> artifacts = new ArrayList<>(super.artifactGetAllowed(type));
+		if (type == null || type == ResourceArtifactType.ACTION) {
+			return actionExecutorMap.entrySet().stream().
+					map(r -> new ResourceArtifact(
+							ResourceArtifactType.ACTION,
+							r.getKey(),
+							r.getValue().getParameterClass())).
+					collect(Collectors.toList());
+		}
+		return artifacts;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<Class<?>> artifactGetFormClass(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
+		log.debug("Consultant la classe de formulari per l'artefacte (type={}, code={})", type, code);
+		if (type == ResourceArtifactType.ACTION) {
+			ActionExecutor<?, ?> generator = actionExecutorMap.get(code);
+			if (generator != null) {
+				return generator.getParameterClass() != null ? Optional.of(generator.getParameterClass()) : Optional.empty();
+			}
+		}
+		return super.artifactGetFormClass(type, code);
 	}
 
 	protected void updateEntityWithResource(E entity, R resource) {
@@ -638,9 +665,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		 * @throws ActionExecutionException
 		 *             si es produeix algun error generant les dades.
 		 */
-		List<R> exec(
-				String code,
-				P params) throws ActionExecutionException;
+		R exec(String code, P params) throws ActionExecutionException;
 	}
 
 }

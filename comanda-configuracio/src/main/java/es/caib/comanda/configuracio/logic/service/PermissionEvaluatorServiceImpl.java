@@ -68,6 +68,7 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 					return (BasePermission)BasePermission.READ;
 				case UPDATE:
 				case PATCH:
+				case ACTION:
 					return (BasePermission)BasePermission.WRITE;
 				case CREATE:
 					return (BasePermission)BasePermission.CREATE;

@@ -19,7 +19,7 @@ export type SalutToolbarProps = {
     subtitle?: string;
     state?: React.ReactElement;
     ready: boolean;
-    onRefresh: (dataInici: string, dataFi: string, agrupacio: string) => void;
+    onRefresh: (dataInici: string, dataFi: string, agrupacio: string, execAction?: boolean) => void;
     goBackActive?: boolean;
 }
 
@@ -38,10 +38,9 @@ const agrupacioFromMinutes = (intervalMinutes: number) => {
 }
 
 const useReportInterval = (intervalMinutes?: number) => {
-    if (intervalMinutes != null) {
-        const dataRef = dayjs();
-        const dataInici = dataRef.subtract(intervalMinutes, 'm').set('second', 0).set('millisecond', 0).subtract(1, 'minute');
-        const dataFi = dataRef.set('second', 0).set('millisecond', 0).subtract(1, 'minute');
+    if (intervalMinutes != null && intervalMinutes > 0) {
+        const dataFi = dayjs().set('second', 59).set('millisecond', 999);
+        const dataInici = dataFi.subtract(intervalMinutes - 1, 'm').set('second', 0).set('millisecond', 0);
         const dataIniciFormat = dataInici.format('YYYY-MM-DDTHH:mm:ss');
         const dataFiFormat = dataFi.format('YYYY-MM-DDTHH:mm:ss');
         const agrupacio = agrupacioFromMinutes(intervalMinutes);
@@ -149,8 +148,8 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         dataFi,
         agrupacio,
     } = useReportInterval(appDataRangeMinutes);
-    const refresh = () => {
-        appDataRangeMinutes != null && onRefresh(dataInici, dataFi, agrupacio);
+    const refresh = (execAction?: boolean) => {
+        appDataRangeMinutes != null && onRefresh(dataInici, dataFi, agrupacio, execAction);
     }
     React.useEffect(() => {
         // Refresca les dades quan es carrega la pàgina i quan es canvien les dates o l'agrupació
@@ -178,7 +177,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         element: <AppDataRangeSelect onChange={setAppDataRangeMinutes} />
     }, {
         position: 2,
-        element: <IconButton onClick={() => refresh()} title={t('page.salut.refrescar')}>
+        element: <IconButton onClick={() => refresh(true)} title={t('page.salut.refrescar')}>
             <Icon>refresh</Icon>
         </IconButton>
     }];

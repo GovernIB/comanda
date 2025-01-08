@@ -544,7 +544,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@SneakyThrows
 	private Link buildReportLink(ResourceArtifact artifact) {
 		Link reportLink = linkTo(methodOn(getClass()).artifacts()).withSelfRel();
-		return Link.of(reportLink.toUri().toString() + "/report/" + artifact.getCode()).withSelfRel();
+		return Link.of(reportLink.toUri() + "/report/" + artifact.getCode()).withSelfRel();
 	}
 	private Link buildReportLinkWithAffordances(ResourceArtifact artifact) {
 		String rel = "generate_" + artifact.getCode();
