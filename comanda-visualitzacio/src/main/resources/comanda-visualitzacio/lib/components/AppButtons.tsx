@@ -86,3 +86,12 @@ export const useReportDialogButtons: () => DialogButton[] = () => {
         componentProps: { variant: 'contained' }
     }];
 };
+
+export const useCloseDialogButtons: () => DialogButton[] = () => {
+    const { t } = useBaseAppContext();
+    return [{
+        value: false,
+        text: t('buttons.close.close'),
+        componentProps: { variant: 'outlined' }
+    }];
+};

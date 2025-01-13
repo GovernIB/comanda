@@ -81,6 +81,9 @@ const componentsEs = {
             generate: 'Generar',
             cancel: 'Cancelar',
         },
+        close: {
+            close: 'Cerrar'
+        },
         misc: {
             retry: 'Reintentar',
         },

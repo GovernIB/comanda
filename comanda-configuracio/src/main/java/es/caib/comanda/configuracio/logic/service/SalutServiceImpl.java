@@ -3,9 +3,7 @@ package es.caib.comanda.configuracio.logic.service;
 import es.caib.comanda.configuracio.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.service.SalutService;
-import es.caib.comanda.configuracio.persist.entity.SalutEntity;
-import es.caib.comanda.configuracio.persist.entity.SalutIntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.SalutSubsistemaEntity;
+import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +31,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private SubsistemaRepository subsistemaRepository;
 	@Autowired
 	private SalutSubsistemaRepository salutSubsistemaRepository;
+	@Autowired
+	private SalutMissatgeRepository salutMissatgeRepository;
+	@Autowired
+	private SalutDetallRepository salutDetallRepository;
 
 	@PostConstruct
 	public void init() {
@@ -78,6 +80,28 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						findFirst();
 				salutSubsistema.ifPresent(subsistema -> subsistema.setNom(s.getNom()));
 			});
+		}
+		boolean missatgesActive = Arrays.asList(perspectives).contains(Salut.PERSP_MISSATGES);
+		if (missatgesActive) {
+			List<SalutMissatgeEntity> salutMissatges = salutMissatgeRepository.findBySalut(entity);
+			resource.setMissatges(
+					salutMissatges.stream().
+							map(s -> objectMappingHelper.newInstanceMap(
+									s,
+									SalutMissatge.class,
+									"salut")).
+							collect(Collectors.toList()));
+		}
+		boolean detallsActive = Arrays.asList(perspectives).contains(Salut.PERSP_DETALLS);
+		if (detallsActive) {
+			List<SalutDetallEntity> salutDetalls = salutDetallRepository.findBySalut(entity);
+			resource.setDetalls(
+					salutDetalls.stream().
+							map(s -> objectMappingHelper.newInstanceMap(
+									s,
+									SalutDetall.class,
+									"salut")).
+							collect(Collectors.toList()));
 		}
 		return null;
 	}

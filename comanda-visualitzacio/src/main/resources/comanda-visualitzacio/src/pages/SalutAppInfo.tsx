@@ -18,13 +18,16 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Icon from '@mui/material/Icon';
+import Button from '@mui/material/Button';
 import { LineChart } from '@mui/x-charts/LineChart';
 import {
     BasePage,
+    useContentDialog,
     useResourceApiService,
     dateFormatLocale,
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
+import UpdownBarChart from '../components/UpdownBarChart';
 import {
     generateDataGroups,
     toXAxisDataGroups
@@ -42,6 +45,7 @@ const useAppData = (id: any) => {
     } = useResourceApiService('salut');
     const [loading, setLoading] = React.useState<boolean>();
     const [app, setApp] = React.useState<any>();
+    const [estats, setEstats] = React.useState<Record<string, any>>({});
     const [latencies, setLatencies] = React.useState<Record<string, any>>({});
     const [salutCurrentApp, setSalutCurrentApp] = React.useState<any>();
     const [reportParams, setReportParams] = React.useState<any>();
@@ -54,41 +58,38 @@ const useAppData = (id: any) => {
         setReportParams(reportParams);
         if (appApiIsReady && salutApiIsReady) {
             setLoading(true);
-            appGetOne(id).
-                then((app) => {
-                    setApp(app);
-                    return app;
-                }).
-                then((app) => new Promise((resolve, reject) => {
-                    const reportData = {
-                        ...reportParams,
-                        appCodi: app.codi
-                    };
-                    salutApiReport({ code: 'latencia', data: reportData }).
-                        then(items => {
-                            setLatencies(items);
-                            resolve(items);
-                        }).
-                        catch(reject);
-                })).
-                then(() => new Promise((resolve, reject) => {
-                    const findArgs = {
-                        page: 0,
-                        size: 1,
-                        sorts: ['data,desc'],
-                        perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES'],
-                    };
-                    salutApiFind(findArgs).
-                        then(({ rows }) => {
-                            const salutCurrentApp = rows?.[0];
-                            setSalutCurrentApp(salutCurrentApp);
-                            resolve(salutCurrentApp);
-                        }).
-                        catch(reject);
-                })).
-                finally(() => {
-                    setLoading(false);
-                });
+            let appCodi: any;
+            appGetOne(id).then((app) => {
+                setApp(app);
+                appCodi = app.codi;
+            }).then(() => {
+                const reportData = {
+                    ...reportParams,
+                    appCodi
+                };
+                return salutApiReport({ code: 'estat', data: reportData })
+            }).then((items) => {
+                setEstats({ [appCodi]: items });
+                const reportData = {
+                    ...reportParams,
+                    appCodi
+                };
+                return salutApiReport({ code: 'latencia', data: reportData });
+            }).then((items) => {
+                setLatencies(items);
+                const findArgs = {
+                    page: 0,
+                    size: 1,
+                    sorts: ['data,desc'],
+                    perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES', 'SAL_MISSATGES', 'SAL_DETALLS'],
+                };
+                return salutApiFind(findArgs);
+            }).then(({ rows }) => {
+                const salutCurrentApp = rows?.[0];
+                setSalutCurrentApp(salutCurrentApp);
+            }).finally(() => {
+                setLoading(false);
+            });
         }
     }
     return {
@@ -96,6 +97,7 @@ const useAppData = (id: any) => {
         loading,
         refresh,
         app,
+        estats,
         latencies,
         salutCurrentApp,
         reportParams,
@@ -103,7 +105,10 @@ const useAppData = (id: any) => {
 }
 
 const AppInfo: React.FC<any> = (props) => {
-    const { salutCurrentApp: app } = props;
+    const {
+        salutCurrentApp: app,
+        detailsDialogShow
+    } = props;
     const { t } = useTranslation();
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
     const bdEstat = app && <Typography><Chip label={app.bdEstat} size="small" color={app.bdEstat === 'UP' ? 'success' : 'error'} /></Typography>;
@@ -113,6 +118,19 @@ const AppInfo: React.FC<any> = (props) => {
         <Chip label={app.missatgeWarnCount} size="small" color="warning" />&nbsp;/&nbsp;
         <Chip label={app.missatgeInfoCount} size="small" color="info" />
     </>;
+    const detalls = app.detalls;
+    const detallsContent = detalls?.length ? <List sx={{ ml: 2 }}>
+        {detalls.map((d: any) => <ListItem secondaryAction={d.valor} disablePadding>
+            <ListItemText primary={d.nom} sx={{ '& span': { fontWeight: 'bold' } }} />
+        </ListItem>)}
+    </List> : null;
+    const detailsButton = detalls?.length ? <Button
+        size="small"
+        variant="contained"
+        onClick={() => detailsDialogShow(null, detallsContent, undefined, { fullWidth: true, maxWidth: 'md' })}
+        sx={{ mt: 8 }}>
+        {t('page.salut.info.detalls')}
+    </Button> : null;
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.info.title')}</Typography>
@@ -129,6 +147,9 @@ const AppInfo: React.FC<any> = (props) => {
                 <ListItem secondaryAction={missatges} disablePadding>
                     <ListItemText primary={t('page.salut.info.missatges')} sx={{ '& span': { fontWeight: 'bold' } }} />
                 </ListItem>
+                {detalls?.length && <ListItem secondaryAction={detailsButton} disablePadding>
+                    <ListItemText />
+                </ListItem>}
             </List>
         </CardContent>
     </Card>;
@@ -220,6 +241,26 @@ const Subsistemes: React.FC<any> = (props) => {
     </Card>;
 }
 
+const Estats: React.FC<any> = (props) => {
+    const {
+        dataInici,
+        agrupacio,
+        estats
+    } = props;
+    const { t } = useTranslation();
+    return <Card variant="outlined">
+        <CardContent>
+            <Typography gutterBottom variant="h5" component="div">{t('page.salut.estats.title')}</Typography>
+            <Box sx={{ height: '200px' }}>
+                <UpdownBarChart
+                    dataInici={dataInici}
+                    agrupacio={agrupacio}
+                    estats={estats} />
+            </Box>
+        </CardContent>
+    </Card>;
+}
+
 const SalutAppInfo: React.FC = () => {
     const { id } = useParams();
     const { t } = useTranslation();
@@ -228,6 +269,7 @@ const SalutAppInfo: React.FC = () => {
         loading,
         refresh: appDataRefresh,
         app,
+        estats,
         latencies,
         salutCurrentApp,
         reportParams,
@@ -256,9 +298,12 @@ const SalutAppInfo: React.FC = () => {
         }}>
         <CircularProgress size={100} />
     </Box> : null;
+    const [detailsDialogShow, detailsDialogComponent] = useContentDialog();
     const detailsComponent = appStateUp ? <Grid container spacing={2}>
         <Grid size={6}>
-            <AppInfo salutCurrentApp={salutCurrentApp} />
+            <AppInfo
+                salutCurrentApp={salutCurrentApp}
+                detailsDialogShow={detailsDialogShow} />
         </Grid>
         <Grid size={6}>
             {dataLoaded && <LatenciaBarChart
@@ -273,13 +318,17 @@ const SalutAppInfo: React.FC = () => {
             <Subsistemes salutCurrentApp={salutCurrentApp} />
         </Grid>
         <Grid size={12}>
-
+            {dataLoaded && <Estats
+                dataInici={reportParams?.dataInici}
+                agrupacio={reportParams?.agrupacio}
+                estats={estats} />}
         </Grid>
     </Grid> : <Alert icon={<Icon>warning</Icon>} severity="warning">
         {t('page.salut.noDetailsIfDown')}
     </Alert>;
     return <BasePage toolbar={toolbar}>
         {loading ? loadingComponent : detailsComponent}
+        {detailsDialogComponent}
     </BasePage>;
 }
 

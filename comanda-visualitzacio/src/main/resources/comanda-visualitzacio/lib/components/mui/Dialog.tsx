@@ -4,7 +4,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import { DialogButton, ContentDialogShowFn, MessageDialogShowFn } from '../BaseAppContext';
-import { useMessageDialogButtons, useConfirmDialogButtons } from '../AppButtons';
+import { useCloseDialogButtons, useMessageDialogButtons } from '../AppButtons';
 import DialogButtons from './DialogButtons';
 
 export type DialogProps = React.PropsWithChildren & {
@@ -20,7 +20,7 @@ export const useContentDialog: ((
     dialogButtons?: DialogButton[],
     validateFn?: (value?: any) => Promise<boolean>,
     resolveValueFn?: (value?: any) => any) => [ContentDialogShowFn, React.ReactElement]) = (dialogButtons, validateFn, resolveValueFn) => {
-    const defaultDialogButtons = useConfirmDialogButtons();
+    const defaultDialogButtons = useCloseDialogButtons();
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string | null>();
     const [content, setContent] = React.useState<React.ReactElement>();

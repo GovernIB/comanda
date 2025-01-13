@@ -42,6 +42,7 @@ const translationEs = {
                 bdEstat: "Database",
                 appLatencia: "Latency",
                 missatges: "Messages",
+                detalls: "Details",
             },
             latencia: {
                 title: "Latency",
@@ -64,6 +65,9 @@ const translationEs = {
                     estat: "State",
                     latencia: "Latency",
                 },
+            },
+            estats: {
+                title: "States",
             },
         },
         apps: {

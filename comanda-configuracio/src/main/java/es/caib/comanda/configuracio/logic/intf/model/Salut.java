@@ -21,6 +21,8 @@ public class Salut extends BaseResource<Long> {
 
 	public static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
 	public static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
+	public static final String PERSP_MISSATGES = "SAL_MISSATGES";
+	public static final String PERSP_DETALLS = "SAL_DETALLS";
 
 	@NotNull
 	@Size(max = 16)
@@ -56,5 +58,7 @@ public class Salut extends BaseResource<Long> {
 
 	private List<SalutIntegracio> integracions;
 	private List<SalutSubsistema> subsistemes;
+	private List<SalutMissatge> missatges;
+	private List<SalutDetall> detalls;
 
 }

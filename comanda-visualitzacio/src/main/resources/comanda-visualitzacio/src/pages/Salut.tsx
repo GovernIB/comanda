@@ -12,7 +12,6 @@ import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
-import { BarChart } from '@mui/x-charts/BarChart';
 import { useTheme } from '@mui/material/styles';
 import {
     BasePage,
@@ -20,25 +19,8 @@ import {
     useBaseAppContext,
     dateFormatLocale,
 } from 'reactlib';
-import {
-    generateDataGroups,
-    isDataInGroup,
-    toXAxisDataGroups
-} from '../util/dataGroup';
-
 import SalutToolbar from '../components/SalutToolbar';
-
-const getEstatsMaxData = (estats: any) => {
-    let estatsMaxData = estats?.[estats.length - 1]?.data;
-    const estatApps = Object.keys(estats);
-    estatApps?.forEach((a: any) => {
-        const maxData = estats[a][estats[a].length - 1]?.data;
-        if (estatsMaxData == null || maxData > estatsMaxData) {
-            estatsMaxData = maxData;
-        }
-    });
-    return estatsMaxData;
-}
+import UpdownBarChart from '../components/UpdownBarChart';
 
 const useAppData = () => {
     const {
@@ -64,41 +46,33 @@ const useAppData = () => {
         setReportParams(reportParams);
         if (appApiIsReady && salutApiIsReady) {
             setLoading(true);
-            const refreshPromise = new Promise((resolve, reject) => {
+            new Promise((resolve, reject) => {
                 if (actionExec) {
                     appApiAction({ code: 'refresh' }).then(resolve).catch(reject);
                 } else {
                     resolve(null);
                 }
-            });
-            refreshPromise.then(() => {
-                appApiFind({ unpaged: true }).
-                then((response) => {
-                    setApps(response.rows);
-                }).
-                then(() => new Promise((resolve, reject) => {
-                    salutApiReport({ code: 'salut_last' }).
-                        then(items => {
-                            setSalutLastItems(items);
-                            resolve(items);
-                        }).
-                        catch(reject);
-                })).
-                then((updownItems) => new Promise((resolve, reject) => {
-                    const ps: Promise<any>[] = (updownItems as any[])?.map((i: any) => {
-                        const reportData = {
-                            ...reportParams,
-                            appCodi: i.codi
-                        };
-                        return salutApiReport({ code: 'estat', data: reportData }).
-                            then(ii => setEstats(e => ({ ...e, [i.codi]: ii })));
+            }).then(() => {
+                return appApiFind({ unpaged: true });
+            }).then((response) => {
+                setApps(response.rows);
+                return salutApiReport({ code: 'salut_last' });
+            }).then(salutLastItems => {
+                setSalutLastItems(salutLastItems);
+                const ps: Promise<any>[] = (salutLastItems as any[])?.map((i: any) => {
+                    const reportData = {
+                        ...reportParams,
+                        appCodi: i.codi
+                    };
+                    return new Promise((resolve, reject) => {
+                        salutApiReport({ code: 'estat', data: reportData }).then(ii => {
+                            setEstats(e => ({ ...e, [i.codi]: ii }))
+                            resolve(null);
+                        }).catch(reject);
                     });
-                    Promise.all(ps).then(resolve).catch(reject);
-                })).
-                then(() => {
-                    setLoading(false);
                 });
-            });
+                return Promise.all(ps);
+            }).finally(() => setLoading(false));
         }
     }
     return {
@@ -132,64 +106,6 @@ const UpdownGaugeChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
             },
         })}
         text={({ value }) => `${(value ?? 0) * salutLastItems.length / 100} / ${salutLastItems.length}`} />;
-}
-
-const UpdownBarChart: React.FC<any> = (props) => {
-    const {
-        dataInici,
-        agrupacio,
-        estats
-    } = props;
-    const theme = useTheme();
-    const estatsMaxData = getEstatsMaxData(estats);
-    const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
-    const seriesUp = baseDataGroups.map(g => {
-        let up = 0;
-        const estatApps = Object.keys(estats);
-        estatApps?.forEach((a: any) => {
-            const estatForGroup = estats[a].find((ea: any) => isDataInGroup(ea.data, g, agrupacio));
-            up = up + (estatForGroup?.alwaysUp ? 1 : 0);
-        });
-        return up;
-    });
-    const seriesUpDown = baseDataGroups.map(g => {
-        let upDown = 0;
-        const estatApps = Object.keys(estats);
-        estatApps?.forEach((a: any) => {
-            const estatForGroup = estats[a].find((ea: any) => isDataInGroup(ea.data, g, agrupacio));
-            upDown = upDown + (estatForGroup != null && !estatForGroup?.alwaysUp && !estatForGroup?.alwaysDown ? 1 : 0);
-        });
-        return upDown;
-    });
-    const seriesDown = baseDataGroups.map(g => {
-        let down = 0;
-        const estatApps = Object.keys(estats);
-        estatApps?.forEach((a: any) => {
-            const estatForGroup = estats[a].find((ea: any) => isDataInGroup(ea.data, g, agrupacio));
-            down = down + (estatForGroup?.alwaysDown ? 1 : 0);
-        });
-        return down;
-    });
-    const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
-    const series = [{
-        data: seriesUp,
-        label: 'up',
-        stack: 'total',
-        color: theme.palette.success.main
-    }, {
-        data: seriesUpDown,
-        label: 'up/down',
-        stack: 'total',
-        color: theme.palette.warning.main
-    }, {
-        data: seriesDown,
-        label: 'down',
-        stack: 'total',
-        color: theme.palette.error.main
-    }];
-    return <BarChart
-        xAxis={[{ scaleType: 'band', data: dataGroups }]}
-        series={series} />;
 }
 
 const ItemStateChip: React.FC<any> = (props: { up: boolean, date: string }) => {

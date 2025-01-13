@@ -16,6 +16,7 @@ export { MuiForm } from './components/mui/form/MuiForm';
 export { FormField } from './components/form/FormField';
 
 export { Toolbar } from './components/mui/Toolbar';
+export { useContentDialog, useMessageDialog, Dialog } from './components/mui/Dialog';
 
 export { envVar } from './util/envVars';
 export { numberFormat, numberFormatCurrency } from './util/numberFormat';

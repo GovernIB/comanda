@@ -85,6 +85,9 @@ const componentsCa = {
             generate: 'Generar',
             cancel: 'Cancel·lar',
         },
+        close: {
+            close: 'Tancar'
+        },
         misc: {
             retry: 'Tornar a provar',
         },

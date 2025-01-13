@@ -7,12 +7,12 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
+import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import {
     Toolbar,
     useBaseAppContext,
 } from 'reactlib';
-import { Typography } from '@mui/material';
 
 export type SalutToolbarProps = {
     title: string;
