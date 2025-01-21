@@ -1,7 +1,8 @@
 package es.caib.comanda.configuracio.persist.entity;
 
-import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.App;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * Entitat de base de dades que representa una aplicació a monitoritzar.
@@ -46,9 +48,14 @@ public class AppEntity extends BaseAuditableEntity<App> {
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
 
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "integracio int where int.app_id = id)")
+	@OneToMany(mappedBy="app", cascade = CascadeType.ALL)
+	private Set<AppIntegracioEntity> appIntegracions;
+	@OneToMany(mappedBy="app", cascade = CascadeType.ALL)
+	private Set<AppSubsistemaEntity> appSubsistemes;
+
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "app_integracio int where int.app_id = id)")
 	private Integer integracioCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "subsistema sub where sub.app_id = id)")
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "app_subsistema sub where sub.app_id = id)")
 	private Integer subsistemaCount;
 
 }

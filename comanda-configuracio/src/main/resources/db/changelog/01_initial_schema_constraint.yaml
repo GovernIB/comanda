@@ -1,66 +1,26 @@
 databaseChangeLog:
 - changeSet:
-    id: init-constraint-1
+    id: init-constraint-conf-1
     author: limit
     changes:
     - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}integracio
+        baseTableName: ${db_prefix}app_integracio
         baseColumnNames: app_id
         referencedTableName: ${db_prefix}app
         referencedColumnNames: id
-        constraintName: ${db_prefix}integracio_app_fk
+        constraintName: ${db_prefix}app_integracio_app_fk
 - changeSet:
-    id: init-constraint-2
+    id: init-constraint-conf-2
     author: limit
     changes:
     - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}subsistema
+        baseTableName: ${db_prefix}app_subsistema
         baseColumnNames: app_id
         referencedTableName: ${db_prefix}app
         referencedColumnNames: id
-        constraintName: ${db_prefix}subsistema_app_fk
+        constraintName: ${db_prefix}app_subsistema_app_fk
 - changeSet:
-    id: init-constraint-3
-    author: limit
-    changes:
-    - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}salut_integracio
-        baseColumnNames: salut_id
-        referencedTableName: ${db_prefix}salut
-        referencedColumnNames: id
-        constraintName: ${db_prefix}salutint_salut_fk
-- changeSet:
-    id: init-constraint-4
-    author: limit
-    changes:
-    - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}salut_subsistema
-        baseColumnNames: salut_id
-        referencedTableName: ${db_prefix}salut
-        referencedColumnNames: id
-        constraintName: ${db_prefix}salutsub_salut_fk
-- changeSet:
-    id: init-constraint-5
-    author: limit
-    changes:
-    - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}salut_missatge
-        baseColumnNames: salut_id
-        referencedTableName: ${db_prefix}salut
-        referencedColumnNames: id
-        constraintName: ${db_prefix}salutmsg_salut_fk
-- changeSet:
-    id: init-constraint-6
-    author: limit
-    changes:
-    - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}salut_detall
-        baseColumnNames: salut_id
-        referencedTableName: ${db_prefix}salut
-        referencedColumnNames: id
-        constraintName: ${db_prefix}salutdet_salut_fk
-- changeSet:
-    id: init-constraint-7
+    id: init-constraint-conf-3
     author: limit
     changes:
     - addUniqueConstraint:
@@ -68,18 +28,18 @@ databaseChangeLog:
         columnNames: codi
         constraintName: ${db_prefix}app_codi_uk
 - changeSet:
-    id: init-constraint-8
+    id: init-constraint-conf-4
     author: limit
     changes:
     - addUniqueConstraint:
-        tableName: ${db_prefix}integracio
+        tableName: ${db_prefix}app_integracio
         columnNames: app_id,codi
-        constraintName: ${db_prefix}integracio_appcodi_uk
+        constraintName: ${db_prefix}app_integracio_appcodi_uk
 - changeSet:
-    id: init-constraint-9
+    id: init-constraint-conf-5
     author: limit
     changes:
     - addUniqueConstraint:
-        tableName: ${db_prefix}subsistema
+        tableName: ${db_prefix}app_subsistema
         columnNames: app_id,codi
-        constraintName: ${db_prefix}subsistema_appcodi_uk
+        constraintName: ${db_prefix}app_subsistema_appcodi_uk

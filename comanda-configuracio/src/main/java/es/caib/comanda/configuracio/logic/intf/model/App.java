@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
-import es.caib.comanda.configuracio.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.hateoas.InputType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Informació d'una aplicació a monitoritzar.
@@ -50,5 +52,8 @@ public class App extends BaseResource<Long> {
 
 	private Integer integracioCount;
 	private Integer subsistemaCount;
+
+	private List<AppIntegracio> integracions;
+	private List<AppSubsistema> subsistemes;
 
 }

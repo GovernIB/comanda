@@ -4,158 +4,18 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>es.caib.comanda</groupId>
-		<artifactId>comanda</artifactId>
+		<artifactId>comanda-bom-ms</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../comanda-bom-ms</relativePath>
 	</parent>
 	<artifactId>comanda-configuracio</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<description>MS responsable de la gestió les configuracions les aplicacions a Comanda</description>
+	<description>MS encarregat de gestionar les configuracions</description>
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-hateoas</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-rest</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-json</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-acl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>${openapi.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-hateoas</artifactId>
-			<version>${openapi.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-security</artifactId>
-			<version>${openapi.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.turkraft</groupId>
-			<artifactId>spring-filter</artifactId>
-			<version>${spring.filter.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-salut-lib</artifactId>
+			<artifactId>comanda-ms</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.liquibase</groupId>
-			<artifactId>liquibase-core</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.xml.bind</groupId>
-					<artifactId>jaxb-api</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!-- <dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<scope>runtime</scope>
-		</dependency> -->
-		<dependency>
-			<groupId>com.oracle.database.jdbc</groupId>
-			<artifactId>ojdbc11</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-		</dependency>
 	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.liquibase</groupId>
-				<artifactId>liquibase-maven-plugin</artifactId>
-				<configuration>
-					<propertyFile>liquibase/liquibase.properties</propertyFile>
-				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-starter-data-jpa</artifactId>
-					</dependency>
-					<dependency>
-						<groupId>org.liquibase</groupId>
-						<artifactId>liquibase-core</artifactId>
-						<version>${liquibase.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.liquibase.ext</groupId>
-						<artifactId>liquibase-hibernate5</artifactId>
-						<version>${liquibase.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>jakarta.validation</groupId>
-						<artifactId>jakarta.validation-api</artifactId>
-					</dependency>
-					<!--
-					<dependency>
-						<groupId>org.hsqldb</groupId>
-						<artifactId>hsqldb</artifactId>
-						<version>2.6.1</version>
-					</dependency>
-					<dependency>
-						<groupId>com.oracle.database.jdbc</groupId>
-						<artifactId>ojdbc11</artifactId>
-						<version>21.5.0.0</version>
-					</dependency>
-					<dependency>
-						<groupId>org.postgresql</groupId>
-						<artifactId>postgresql</artifactId>
-						<version>42.3.2</version>
-					</dependency>
-					-->
-				</dependencies>
-			</plugin>
-		</plugins>
-	</build>
 </project>

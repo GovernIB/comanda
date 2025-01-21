@@ -4,33 +4,49 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>es.caib.comanda</groupId>
-		<artifactId>comanda</artifactId>
+		<artifactId>comanda-bom</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../comanda-bom</relativePath>
 	</parent>
 	<artifactId>comanda-gateway</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<description>API Gateway per Comanda</description>
-	<packaging>jar</packaging>
 	<properties>
-		<java.version>11</java.version>
+		<spring-boot.version>2.7.18</spring-boot.version>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>
 		<logstash.logback.version>7.0</logstash.logback.version>
 		<spring.cloud.zipkin.version>2.2.8.RELEASE</spring.cloud.zipkin.version>
-		<docker.image.prefix>mscomanda</docker.image.prefix>
-		<docker.image.name>${project.artifactId}</docker.image.name>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-gateway</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-hateoas</artifactId>
+		</dependency>
+		<!-- <dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
@@ -45,162 +61,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-
-		<!-- Necessari per WAR -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+		</dependency> -->
 	</dependencies>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>${spring-cloud.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>io.fabric8</groupId>
-				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.45.0</version>
-				<configuration>
-					<verbose>true</verbose>
-					<images>
-						<image>
-							<name>${docker.image.prefix}/${docker.image.name}</name>
-							<alias>${project.artifactId}</alias>
-							<build>
-								<!--copies artifact to docker build dir in target-->
-								<assembly>
-									<descriptorRef>artifact</descriptorRef>
-								</assembly>
-								<dockerFile>Dockerfile</dockerFile>
-								<tags>
-									<tag>latest</tag>
-									<tag>${project.version}</tag>
-								</tags>
-							</build>
-						</image>
-					</images>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
-	<repositories>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-		</repository>
-	</repositories>
-
-	<profiles>
-		<profile>
-			<id>boot</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-maven-plugin</artifactId>
-						<configuration>
-							<layers>
-								<enabled>true</enabled>
-								<includeLayerTools>true</includeLayerTools>
-							</layers>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
-			<id>jboss</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-maven-plugin</artifactId>
-						<configuration>
-							<classifier>war</classifier>
-							<skip>true</skip><!-- Evita repackaging d'un jar -->
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-war-plugin</artifactId>
-						<version>3.3.1</version>
-						<configuration>
-<!--							<packagingExcludes>WEB-INF/lib/spring-boot-starter-tomcat-*.jar</packagingExcludes>-->
-							<failOnMissingWebXml>false</failOnMissingWebXml>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>build-helper-maven-plugin</artifactId>
-						<version>3.3.0</version>
-						<executions>
-							<execution>
-								<id>default-cli</id>
-								<goals>
-									<goal>attach-artifact</goal>
-								</goals>
-								<configuration>
-									<artifacts>
-										<artifact>
-											<file>${project.build.directory}/${project.build.finalName}.war</file>
-											<type>war</type>
-										</artifact>
-									</artifacts>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-
-			<dependencies>
-				<dependency>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-tomcat</artifactId>
-					<scope>provided</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
-
 </project>

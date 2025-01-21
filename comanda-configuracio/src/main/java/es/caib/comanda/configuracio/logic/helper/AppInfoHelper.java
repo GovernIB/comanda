@@ -1,13 +1,13 @@
 package es.caib.comanda.configuracio.logic.helper;
 
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.SubsistemaEntity;
+import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
+import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.salut.model.AppInfo;
-import es.caib.comanda.salut.model.IntegracioInfo;
+import es.caib.comanda.ms.salut.model.AppInfo;
+import es.caib.comanda.ms.salut.model.IntegracioInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -56,11 +56,11 @@ public class AppInfoHelper {
 	}
 
 	private void refreshIntegracions(AppEntity app, List<IntegracioInfo> integracioInfos) {
-		List<IntegracioEntity> integracionsDb = integracioRepository.findByApp(app);
+		List<AppIntegracioEntity> integracionsDb = integracioRepository.findByApp(app);
 		// Actualitzam les integracions existents i cream les integracions que falten a la base de dades
 		if (integracioInfos != null) {
 			integracioInfos.forEach(iin -> {
-				Optional<IntegracioEntity> integracioDb = integracionsDb.stream().
+				Optional<AppIntegracioEntity> integracioDb = integracionsDb.stream().
 						filter(idb -> idb.getCodi().equals(iin.getCodi())).
 						findFirst();
 				if (integracioDb.isPresent()) {
@@ -71,7 +71,7 @@ public class AppInfoHelper {
 				} else {
 					// Si la integració no existeix la cream
 					log.debug("\tCreant nova integració {}", iin.getCodi());
-					IntegracioEntity integracioNova = new IntegracioEntity();
+					AppIntegracioEntity integracioNova = new AppIntegracioEntity();
 					integracioNova.setCodi(iin.getCodi());
 					integracioNova.setNom(iin.getNom());
 					integracioNova.setActiva(true);
@@ -93,11 +93,11 @@ public class AppInfoHelper {
 	}
 
 	private void refreshSubsistemes(AppEntity app, List<AppInfo> subsistemaInfos) {
-		List<SubsistemaEntity> subsistemesDb = subsistemaRepository.findByApp(app);
+		List<AppSubsistemaEntity> subsistemesDb = subsistemaRepository.findByApp(app);
 		// Actualitzam els subsistemes existents i cream els subsistemes que falten a la base de dades
 		if (subsistemaInfos != null) {
 			subsistemaInfos.forEach(sin -> {
-				Optional<SubsistemaEntity> subsistemaDb = subsistemesDb.stream().
+				Optional<AppSubsistemaEntity> subsistemaDb = subsistemesDb.stream().
 						filter(sdb -> sdb.getCodi().equals(sin.getCodi())).
 						findFirst();
 				if (subsistemaDb.isPresent()) {
@@ -108,7 +108,7 @@ public class AppInfoHelper {
 				} else {
 					// Si la integració no existeix la cream
 					log.debug("\tCreant nou subsistema {}", sin.getCodi());
-					SubsistemaEntity subsistemaNou = new SubsistemaEntity();
+					AppSubsistemaEntity subsistemaNou = new AppSubsistemaEntity();
 					subsistemaNou.setCodi(sin.getCodi());
 					subsistemaNou.setNom(sin.getNom());
 					subsistemaNou.setActiu(true);

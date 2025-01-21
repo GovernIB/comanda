@@ -1,0 +1,192 @@
+databaseChangeLog:
+- changeSet:
+    id: init-table-salut-1
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}salut
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}salut_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(16)
+        - column:
+            constraints:
+                nullable: false
+            name: data
+            type: TIMESTAMP
+        - column:
+            constraints:
+                nullable: false
+            name: app_estat
+            type: VARCHAR(20)
+        - column:
+            name: app_latencia
+            type: INTEGER
+        - column:
+            name: bd_estat
+            type: VARCHAR(20)
+        - column:
+            name: bd_latencia
+            type: INTEGER
+- changeSet:
+    id: init-table-salut-2
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}salut_integracio
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}salut_integracio_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(16)
+        - column:
+            constraints:
+                nullable: false
+            name: estat
+            type: VARCHAR(20)
+        - column:
+            name: latencia
+            type: INTEGER
+        - column:
+            constraints:
+                nullable: false
+            name: total_ok
+            type: INTEGER
+        - column:
+            constraints:
+                nullable: false
+            name: total_error
+            type: INTEGER
+        - column:
+            constraints:
+                nullable: false
+            name: salut_id
+            type: BIGINT
+- changeSet:
+    id: init-table-salut-3
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}salut_subsistema
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}salut_subsistema_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(16)
+        - column:
+            constraints:
+                nullable: false
+            name: estat
+            type: VARCHAR(20)
+        - column:
+            name: latencia
+            type: INTEGER
+        - column:
+            constraints:
+                nullable: false
+            name: total_ok
+            type: INTEGER
+        - column:
+            constraints:
+                nullable: false
+            name: total_error
+            type: INTEGER
+        - column:
+            constraints:
+                nullable: false
+            name: salut_id
+            type: BIGINT
+- changeSet:
+    id: init-table-salut-4
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}salut_missatge
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}salut_missatge_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: data
+            type: TIMESTAMP
+        - column:
+            constraints:
+                nullable: false
+            name: nivell
+            type: VARCHAR(10)
+        - column:
+            name: missatge
+            type: VARCHAR(2048)
+        - column:
+            constraints:
+                nullable: false
+            name: salut_id
+            type: BIGINT
+- changeSet:
+    id: init-table-salut-5
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}salut_detall
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}salut_detall_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(10)
+        - column:
+            constraints:
+                nullable: false
+            name: nom
+            type: VARCHAR(100)
+        - column:
+            name: valor
+            type: VARCHAR(1024)
+        - column:
+            constraints:
+                nullable: false
+            name: salut_id
+            type: BIGINT

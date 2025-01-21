@@ -49,7 +49,10 @@ const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
     const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
     React.useEffect(() => {
         if (apiIsReady) {
-            const resourceNames = apiIndex?.links.getAll().map(l => l.rel);
+            const apiLinks = apiIndex?.links.getAll();
+            //const apiLinks = apiIndex?.links.getAll().length ? apiIndex?.links.getAll() : apiIndex?.data?.links;
+            console.log('>>> apiLinks', apiLinks)
+            const resourceNames = apiLinks?.map((l: any) => l.rel);
             const processedMenuEntries = menuEntries?.
                 filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
                 map(e => {

@@ -1,0 +1,41 @@
+databaseChangeLog:
+- changeSet:
+    id: init-constraint-salut-1
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_integracio
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutint_salut_fk
+- changeSet:
+    id: init-constraint-salut-2
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_subsistema
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutsub_salut_fk
+- changeSet:
+    id: init-constraint-salut-3
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_missatge
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutmsg_salut_fk
+- changeSet:
+    id: init-constraint-salut-4
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}salut_detall
+        baseColumnNames: salut_id
+        referencedTableName: ${db_prefix}salut
+        referencedColumnNames: id
+        constraintName: ${db_prefix}salutdet_salut_fk

@@ -1,7 +1,8 @@
 package es.caib.comanda.configuracio.back.controller;
 
-import es.caib.comanda.configuracio.logic.intf.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.App;
+import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

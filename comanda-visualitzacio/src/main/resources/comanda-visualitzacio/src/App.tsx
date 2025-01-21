@@ -13,6 +13,7 @@ export const App: React.FC = () => {
         title: t('menu.salut'),
         to: '/',
         icon: 'monitor_heart',
+        resourceName: 'salut',
     }, {
         id: 'app',
         title: t('menu.app'),

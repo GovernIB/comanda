@@ -1,4 +1,4 @@
 databaseChangeLog:
 - changeSet:
-    id: init-acl-1
+    id: init-acl-conf-1
     author: limit

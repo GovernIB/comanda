@@ -1,7 +1,8 @@
 package es.caib.comanda.configuracio.persist.repository;
 
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.SubsistemaEntity;
+import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
+import es.caib.comanda.ms.persist.repository.BaseRepository;
 
 import java.util.List;
 
@@ -10,9 +11,9 @@ import java.util.List;
  * 
  * @author Límit Tecnologies
  */
-public interface SubsistemaRepository extends BaseRepository<SubsistemaEntity, Long> {
+public interface SubsistemaRepository extends BaseRepository<AppSubsistemaEntity, Long> {
 
-	List<SubsistemaEntity> findByApp(AppEntity app);
-	List<SubsistemaEntity> findByAppCodi(String codi);
+	List<AppSubsistemaEntity> findByApp(AppEntity app);
+	List<AppSubsistemaEntity> findByAppCodi(String codi);
 
 }
