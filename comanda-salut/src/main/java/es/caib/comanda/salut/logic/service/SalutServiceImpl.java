@@ -31,6 +31,11 @@ import java.util.stream.Collectors;
 @Service
 public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, SalutEntity> implements SalutService {
 
+	private static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
+	private static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
+	private static final String PERSP_MISSATGES = "SAL_MISSATGES";
+	private static final String PERSP_DETALLS = "SAL_DETALLS";
+
 	@Autowired
 	private SalutIntegracioRepository salutIntegracioRepository;
 	@Autowired
@@ -67,7 +72,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			SalutEntity entity,
 			Salut resource,
 			String[] perspectives) {
-		boolean integracionsActive = Arrays.asList(perspectives).contains(Salut.PERSP_INTEGRACIONS);
+		boolean integracionsActive = Arrays.asList(perspectives).contains(PERSP_INTEGRACIONS);
 		if (integracionsActive) {
 			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalut(entity);
 			resource.setIntegracions(
@@ -84,7 +89,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				salutIntegracio.ifPresent(integracio -> integracio.setNom(i.getNom()));
 			});*/
 		}
-		boolean subsistemesActive = Arrays.asList(perspectives).contains(Salut.PERSP_SUBSISTEMES);
+		boolean subsistemesActive = Arrays.asList(perspectives).contains(PERSP_SUBSISTEMES);
 		if (subsistemesActive) {
 			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalut(entity);
 			resource.setSubsistemes(
@@ -101,7 +106,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				salutSubsistema.ifPresent(subsistema -> subsistema.setNom(s.getNom()));
 			});*/
 		}
-		boolean missatgesActive = Arrays.asList(perspectives).contains(Salut.PERSP_MISSATGES);
+		boolean missatgesActive = Arrays.asList(perspectives).contains(PERSP_MISSATGES);
 		if (missatgesActive) {
 			List<SalutMissatgeEntity> salutMissatges = salutMissatgeRepository.findBySalut(entity);
 			resource.setMissatges(
@@ -112,7 +117,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 									"salut")).
 							collect(Collectors.toList()));
 		}
-		boolean detallsActive = Arrays.asList(perspectives).contains(Salut.PERSP_DETALLS);
+		boolean detallsActive = Arrays.asList(perspectives).contains(PERSP_DETALLS);
 		if (detallsActive) {
 			List<SalutDetallEntity> salutDetalls = salutDetallRepository.findBySalut(entity);
 			resource.setDetalls(

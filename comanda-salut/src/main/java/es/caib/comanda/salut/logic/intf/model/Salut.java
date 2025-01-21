@@ -20,11 +20,6 @@ import java.util.List;
 @NoArgsConstructor
 public class Salut extends BaseResource<Long> {
 
-	public static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
-	public static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
-	public static final String PERSP_MISSATGES = "SAL_MISSATGES";
-	public static final String PERSP_DETALLS = "SAL_DETALLS";
-
 	@NotNull
 	@Size(max = 16)
 	private String codi;
@@ -39,7 +34,6 @@ public class Salut extends BaseResource<Long> {
 	@NotNull
 	private SalutEstat bdEstat;
 	private Integer bdLatencia;
-
 
 	private Boolean appUp;
 	private Boolean bdUp;
