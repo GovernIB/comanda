@@ -1,62 +1,16 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: comanda-gateway
-  cloud:
-    gateway:
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - DELETE
-              - PUT
-              - PATCH
-              - OPTIONS
-      routes:
-#        - id: discovery-server
-#          uri: lb://comanda-discovery-server
-#          predicates:
-#            - Path=/discovery/**
-#        - id: comanda-config-server
-#          uri: lb://comanda-cloud-config
-#          predicates:
-#            - Path=/config-server/**
-        - id: comanda-configuracio-service
-          uri: lb://comanda-configuracio-service
-          predicates:
-            - Path=/api/v1/configuracio/**
-
-        - id: comanda-salut-service
-          uri: lb://comanda-salut-service
-          predicates:
-            - Path=/api/v1/salut/**
-
-        - id: comanda-recoleccio-service
-          uri: lb://comanda-recoleccio-service
-          predicates:
-            - Path=/api/v1/recoleccio/**
-
-        - id: comanda-alarmes-service
-          uri: lb://comanda-alarmes-service
-          predicates:
-            - Path=/api/v1/alarmes/**
-
-        - id: comanda-visualitzacio-service
-          uri: lb://comanda-visualitzacio-service
-          predicates:
-            -Path=/api/v1/visualitzacio/**
-
-#  zipkin:
-#    enabled: false
-#    base-url: http://localhost:9411/
-
-eureka:
-  client:
-    register-with-eureka: false
-    service-url:
-      defaultZone: http://comanda:C0m4ndaEurek4@comanda-eureka:8761/eureka
+  main:
+    web-application-type: reactive
+#  cloud:
+#    gateway:
+#      globalcors:
+#        default-filters:
+#          - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+#        cors-configurations:
+#          '[/**]':
+#            allowed-origins: "*"
+#            allowed-methods: "*"
+#            allowed-headers: "*"
+#            allow-credentials: true

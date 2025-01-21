@@ -18,12 +18,7 @@
 // S'ha afegit la configuració del camp multiple
 package org.springframework.hateoas.mediatype.hal.forms;
 
-import static org.springframework.http.HttpMethod.*;
-
-import java.util.*;
-import java.util.function.Function;
-
-import es.caib.comanda.configuracio.logic.intf.util.HalFormsUtil;
+import es.caib.comanda.ms.logic.intf.util.HalFormsUtil;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
@@ -33,6 +28,11 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import java.util.*;
+import java.util.function.Function;
+
+import static org.springframework.http.HttpMethod.*;
 
 /**
  * Factory to create {@link HalFormsProperty} instances.

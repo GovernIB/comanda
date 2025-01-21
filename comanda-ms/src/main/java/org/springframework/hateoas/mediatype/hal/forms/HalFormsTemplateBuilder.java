@@ -16,18 +16,9 @@
 // S'ha llevat el filtre que evita que les Affordances amb el mètode GET apareguin als templates
 package org.springframework.hateoas.mediatype.hal.forms;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.hateoas.Affordance;
+import org.springframework.hateoas.*;
 import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
-import org.springframework.hateoas.IanaLinkRelations;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
@@ -35,15 +26,20 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 class HalFormsTemplateBuilder {
 
 	private final MessageResolver resolver;
-	private final HalFormsPropertyFactory factory;
+	private final org.springframework.hateoas.mediatype.hal.forms.HalFormsPropertyFactory factory;
 
 	public HalFormsTemplateBuilder(HalFormsConfiguration configuration, MessageResolver resolver) {
 
 		this.resolver = resolver;
-		this.factory = new HalFormsPropertyFactory(configuration, resolver);
+		this.factory = new org.springframework.hateoas.mediatype.hal.forms.HalFormsPropertyFactory(configuration, resolver);
 	}
 
 	/**
@@ -85,7 +81,7 @@ class HalFormsTemplateBuilder {
 		return templates;
 	}
 
-	private HalFormsTemplate applyTo(HalFormsTemplate template, HalFormsTemplateBuilder.TemplateTitle templateTitle) {
+	private HalFormsTemplate applyTo(HalFormsTemplate template, TemplateTitle templateTitle) {
 
 		return Optional.ofNullable(resolver.resolve(templateTitle)) //
 				.filter(StringUtils::hasText) //
