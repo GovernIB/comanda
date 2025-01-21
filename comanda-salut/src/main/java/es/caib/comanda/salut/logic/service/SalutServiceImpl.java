@@ -168,10 +168,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				"NOT",
 				"Notib",
 				null,
-				"",
+				"https://dev.caib.es/notibapi/interna/appInfo",
 				1,
 				null,
-				"",
+				"https://dev.caib.es/notibapi/interna/salut",
 				1,
 				"1.0",
 				true);

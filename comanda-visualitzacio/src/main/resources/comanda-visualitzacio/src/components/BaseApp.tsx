@@ -50,8 +50,6 @@ const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
     React.useEffect(() => {
         if (apiIsReady) {
             const apiLinks = apiIndex?.links.getAll();
-            //const apiLinks = apiIndex?.links.getAll().length ? apiIndex?.links.getAll() : apiIndex?.data?.links;
-            console.log('>>> apiLinks', apiLinks)
             const resourceNames = apiLinks?.map((l: any) => l.rel);
             const processedMenuEntries = menuEntries?.
                 filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).

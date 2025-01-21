@@ -139,7 +139,7 @@ const AppDataTable: React.FC<any> = (props: { apps: any[], salutLastItems: any[]
         <TableBody>
             {apps?.map(app => {
                 const appUpdownItem = salutLastItems?.find(i => i.codi === app.codi);
-                return <TableRow
+                return appUpdownItem != null ? <TableRow
                     key={app.id}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     <TableCell component="th" scope="row">
@@ -174,7 +174,7 @@ const AppDataTable: React.FC<any> = (props: { apps: any[], salutLastItems: any[]
                             component={getLinkComponent()}
                             to={'appinfo/' + app.id}>{t('page.salut.apps.detalls')}</Button>
                     </TableCell>
-                </TableRow>;
+                </TableRow> : null;
             })}
         </TableBody>
     </Table>;
