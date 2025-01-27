@@ -7,26 +7,14 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
-		<module>comanda-bom</module>
-		<module>comanda-bom-front</module>
-		<module>comanda-bom-ms</module>
-		<module>comanda-ms</module>
+		<module>comanda-ms-common</module>
+		<module>comanda-ms-configuracio</module>
+		<module>comanda-ms-salut</module>
+		<module>comanda-ms-visualitzacio</module>
+		<module>comanda-ms-gateway</module>
+		<module>comanda-ms-client</module>
+		<module>comanda-back</module>
+		<module>comanda-ear</module>
 		<module>comanda-salut-lib</module>
-		<module>comanda-configuracio</module>
-		<module>comanda-salut</module>
-		<module>comanda-gateway</module>
-		<module>comanda-visualitzacio</module>
-		<module>comanda-service-client</module>
-		<!-- <module>comanda-cloud-config</module>
-		<module>comanda-discovery</module>
-		<module>comanda-gateway</module>
-		<module>comanda-configuracio</module>
-		<module>comanda-recoleccio</module>
-		<module>comanda-salut</module>
-		<module>comanda-alarmes</module>
-		<module>comanda-visualitzacio</module>
-		<module>comanda-client-service</module>
-		<module>comanda-salut-lib</module>
-		<module>comanda-ear</module> -->
 	</modules>
 </project>
