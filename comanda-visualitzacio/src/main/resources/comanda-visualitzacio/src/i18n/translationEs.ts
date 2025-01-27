@@ -8,7 +8,6 @@ const translationEs = {
             title: "Salut",
             refrescar: "Refrescar",
             nd: "N/D",
-            noDetailsIfDown: "No se pueden mostrar los detalles si la aplicación está caida",
             apps: {
                 column: {
                     estat: "Estado",

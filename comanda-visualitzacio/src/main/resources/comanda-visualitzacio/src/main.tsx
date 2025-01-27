@@ -16,7 +16,7 @@ import {
 
 dayjs.extend(duration);
 
-LicenseInfo.setLicenseKey('89030bade1b4837f62ee60358d25fa78Tz04MjczMyxFPTE3Mzc2MzAzMDcwMDAsUz1wcm8sTE09c3Vic2NyaXB0aW9uLEtWPTI=');
+LicenseInfo.setLicenseKey('d7a3848ee04d821438959d61037634beTz0xMDY1ODQsRT0xNzY5Mjk5MTk5MDAwLFM9cHJvLExNPXN1YnNjcmlwdGlvbixQVj1pbml0aWFsLEtWPTI=');
 
 export const envVars = {
     VITE_API_URL: import.meta.env.VITE_API_URL,

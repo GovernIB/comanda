@@ -1,5 +1,8 @@
 package es.caib.comanda.salut.logic.service;
 
+import es.caib.comanda.client.AppServiceClient;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
@@ -7,19 +10,19 @@ import es.caib.comanda.salut.logic.intf.model.*;
 import es.caib.comanda.salut.logic.intf.service.SalutService;
 import es.caib.comanda.salut.persist.entity.*;
 import es.caib.comanda.salut.persist.repository.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +39,11 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private static final String PERSP_MISSATGES = "SAL_MISSATGES";
 	private static final String PERSP_DETALLS = "SAL_DETALLS";
 
+	@Value("${es.caib.comanda.keycloak.username:#{null}}")
+	private String keycloakUsername;
+	@Value("${es.caib.comanda.keycloak.password:#{null}}")
+	private String keycloakPassword;
+
 	@Autowired
 	private SalutIntegracioRepository salutIntegracioRepository;
 	@Autowired
@@ -46,6 +54,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private SalutDetallRepository salutDetallRepository;
 	@Autowired
 	private SalutInfoHelper salutInfoHelper;
+	@Autowired
+	private AppServiceClient appServiceClient;
+	@Autowired
+	private KeycloakHelper keycloakHelper;
 
 	@PostConstruct
 	public void init() {
@@ -73,7 +85,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			Salut resource,
 			String[] perspectives) {
 		boolean integracionsActive = Arrays.asList(perspectives).contains(PERSP_INTEGRACIONS);
+		boolean subsistemesActive = Arrays.asList(perspectives).contains(PERSP_SUBSISTEMES);
+		App appForEntity = null;
 		if (integracionsActive) {
+			appForEntity = appFindByCodi(entity.getCodi());
 			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalut(entity);
 			resource.setIntegracions(
 					salutIntegracions.stream().
@@ -82,15 +97,19 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 									SalutIntegracio.class,
 									"salut")).
 							collect(Collectors.toList()));
-			/*integracioRepository.findByAppCodi(entity.getCodi()).forEach(i -> {
-				Optional<SalutIntegracio> salutIntegracio = resource.getIntegracions().stream().
-						filter(si -> si.getCodi().equals(i.getCodi())).
-						findFirst();
-				salutIntegracio.ifPresent(integracio -> integracio.setNom(i.getNom()));
-			});*/
+			if (appForEntity != null) {
+				appForEntity.getIntegracions().forEach(i -> {
+					Optional<SalutIntegracio> salutIntegracio = resource.getIntegracions().stream().
+							filter(si -> si.getCodi().equals(i.getCodi())).
+							findFirst();
+					salutIntegracio.ifPresent(integracio -> integracio.setNom(i.getNom()));
+				});
+			}
 		}
-		boolean subsistemesActive = Arrays.asList(perspectives).contains(PERSP_SUBSISTEMES);
 		if (subsistemesActive) {
+			if (appForEntity == null) {
+				appForEntity = appFindByCodi(entity.getCodi());
+			}
 			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalut(entity);
 			resource.setSubsistemes(
 					salutSubsistemes.stream().
@@ -99,12 +118,14 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 									SalutSubsistema.class,
 									"salut")).
 							collect(Collectors.toList()));
-			/*subsistemaRepository.findByAppCodi(entity.getCodi()).forEach(s -> {
-				Optional<SalutSubsistema> salutSubsistema = resource.getSubsistemes().stream().
-						filter(ss -> ss.getCodi().equals(s.getCodi())).
-						findFirst();
-				salutSubsistema.ifPresent(subsistema -> subsistema.setNom(s.getNom()));
-			});*/
+			if (appForEntity != null) {
+				appForEntity.getSubsistemes().forEach(s -> {
+					Optional<SalutSubsistema> salutSubsistema = resource.getSubsistemes().stream().
+							filter(ss -> ss.getCodi().equals(s.getCodi())).
+							findFirst();
+					salutSubsistema.ifPresent(subsistema -> subsistema.setNom(s.getNom()));
+				});
+			}
 		}
 		boolean missatgesActive = Arrays.asList(perspectives).contains(PERSP_MISSATGES);
 		if (missatgesActive) {
@@ -155,47 +176,40 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	}
 
 	private List<App> appFindByActivaTrue() {
-		List<App> activeApps = new ArrayList<>();
-		activeApps.add(notibApp());
-		return activeApps;
+		PagedModel<EntityModel<App>> apps = appServiceClient.find(
+				null,
+				"activa:true",
+				null,
+				null,
+				"UNPAGED",
+				null,
+				getAuthorizationHeader());
+		return apps.getContent().stream().
+				map(EntityModel::getContent).
+				collect(Collectors.toList());
 	}
 
-	/*private App appFindByCode(String code) {
-		if ("NOT".equals(code)) {
-			return notibApp();
+	private App appFindByCodi(String codi) {
+		PagedModel<EntityModel<App>> apps = appServiceClient.find(
+				null,
+				"codi:'" + codi + "'",
+				null,
+				null,
+				"UNPAGED",
+				null,
+				getAuthorizationHeader());
+		if (!apps.getContent().isEmpty()) {
+			return apps.getContent().iterator().next().getContent();
 		} else {
 			return null;
 		}
-	}*/
-
-	private App notibApp() {
-		return new App(
-				"NOT",
-				"Notib",
-				null,
-				"https://dev.caib.es/notibapi/interna/appInfo",
-				1,
-				null,
-				"https://dev.caib.es/notibapi/interna/salut",
-				1,
-				"1.0",
-				true);
 	}
 
-	@Getter
-	@Setter
-	@AllArgsConstructor
-	private static class App {
-		private String codi;
-		private String nom;
-		private String descripcio;
-		private String infoUrl;
-		private Integer infoInterval = 1;
-		private LocalDateTime infoData;
-		private String salutUrl;
-		private Integer salutInterval = 1;
-		private String versio;
-		private boolean activa;
+	private String getAuthorizationHeader() {
+		String accessToken = keycloakHelper.getAccessTokenWithUsernamePassword(
+				keycloakUsername,
+				keycloakPassword);
+		return accessToken != null ? "Bearer " + accessToken : null;
 	}
 
 	/**

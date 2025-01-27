@@ -27,5 +27,8 @@ public class BaseConfig {
 	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
 	public static final String PROP_SCHEDULER_APP_INFO_CRON = PROPERTY_PREFIX + "scheduler.app.info.cron";
 	public static final String PROP_SCHEDULER_SALUT_INFO_CRON = PROPERTY_PREFIX + "scheduler.salut.info.cron";
+	public static final String PROP_KEYCLOAK_BASE_URL = PROPERTY_PREFIX + "keycloak.base.url";
+	public static final String PROP_KEYCLOAK_REALM = PROPERTY_PREFIX + "keycloak.realm";
+	public static final String PROP_KEYCLOAK_CLIENT_ID = PROPERTY_PREFIX + "keycloak.client.id";
 
 }

@@ -10,7 +10,10 @@ import org.springframework.context.annotation.ComponentScan;
  * @author Límit Tecnologies
  */
 @SpringBootApplication
-@ComponentScan({ "es.caib.comanda.ms", "es.caib.comanda.salut" })
+@ComponentScan({
+		"es.caib.comanda.ms",
+		"es.caib.comanda.salut",
+		"es.caib.comanda.client" })
 public class ComandaSalutApp {
 
 	public static void main(String[] args) {

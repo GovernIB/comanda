@@ -12,20 +12,12 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<description>API Gateway per Comanda</description>
 	<properties>
-		<spring-boot.version>2.7.18</spring-boot.version>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>
-		<logstash.logback.version>7.0</logstash.logback.version>
-		<spring.cloud.zipkin.version>2.2.8.RELEASE</spring.cloud.zipkin.version>
+		<!-- <logstash.logback.version>7.0</logstash.logback.version>
+		<spring.cloud.zipkin.version>2.2.8.RELEASE</spring.cloud.zipkin.version> -->
 	</properties>
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring-boot.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
@@ -39,10 +31,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-gateway</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-hateoas</artifactId>
 		</dependency>
 		<!-- <dependency>
 			<groupId>org.springframework.cloud</groupId>

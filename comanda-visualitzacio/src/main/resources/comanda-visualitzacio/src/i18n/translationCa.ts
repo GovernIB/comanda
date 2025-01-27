@@ -8,7 +8,6 @@ const translationCa = {
             title: "Salut",
             refrescar: "Refrescar",
             nd: "N/D",
-            noDetailsIfDown: "No es poden mostrar els detalls si l'aplicació està caiguda",
             apps: {
                 column: {
                     estat: "Estat",

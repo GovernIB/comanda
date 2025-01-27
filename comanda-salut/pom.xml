@@ -17,5 +17,10 @@
 			<artifactId>comanda-ms</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>comanda-service-client</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 </project>

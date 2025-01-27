@@ -1,16 +1,16 @@
 spring:
   application:
     name: comanda-gateway
-  main:
-    web-application-type: reactive
 #  cloud:
 #    gateway:
+#      default-filters:
+#        - RemoveRequestHeader=Access-Control-Request-Method
+#        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 #      globalcors:
-#        default-filters:
-#          - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+#        add-to-simple-url-handler-mapping: true
 #        cors-configurations:
 #          '[/**]':
 #            allowed-origins: "*"
-#            allowed-methods: "*"
 #            allowed-headers: "*"
+#            allowed-methods: "*"
 #            allow-credentials: true

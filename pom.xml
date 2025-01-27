@@ -16,6 +16,7 @@
 		<module>comanda-salut</module>
 		<module>comanda-gateway</module>
 		<module>comanda-visualitzacio</module>
+		<module>comanda-service-client</module>
 		<!-- <module>comanda-cloud-config</module>
 		<module>comanda-discovery</module>
 		<module>comanda-gateway</module>

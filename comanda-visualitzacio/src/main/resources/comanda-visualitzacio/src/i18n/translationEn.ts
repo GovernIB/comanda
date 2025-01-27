@@ -8,7 +8,6 @@ const translationEs = {
             title: "Health",
             refrescar: "Refresh",
             nd: "N/A",
-            noDetailsIfDown: "Couldn't show details if application is down",
             apps: {
                 column: {
                     estat: "State",

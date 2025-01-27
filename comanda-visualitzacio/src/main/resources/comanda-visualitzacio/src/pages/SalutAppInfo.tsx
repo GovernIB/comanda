@@ -16,8 +16,6 @@ import TableRow from '@mui/material/TableRow';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Icon from '@mui/material/Icon';
 import Button from '@mui/material/Button';
 import { LineChart } from '@mui/x-charts/LineChart';
 import {
@@ -118,7 +116,7 @@ const AppInfo: React.FC<any> = (props) => {
         <Chip label={app.missatgeWarnCount} size="small" color="warning" />&nbsp;/&nbsp;
         <Chip label={app.missatgeInfoCount} size="small" color="info" />
     </>;
-    const detalls = app.detalls;
+    const detalls = app?.detalls;
     const detallsContent = detalls?.length ? <List sx={{ ml: 2 }}>
         {detalls.map((d: any) => <ListItem secondaryAction={d.valor} disablePadding>
             <ListItemText primary={d.nom} sx={{ '& span': { fontWeight: 'bold' } }} />
@@ -263,7 +261,6 @@ const Estats: React.FC<any> = (props) => {
 
 const SalutAppInfo: React.FC = () => {
     const { id } = useParams();
-    const { t } = useTranslation();
     const {
         ready,
         loading,
@@ -275,7 +272,6 @@ const SalutAppInfo: React.FC = () => {
         reportParams,
     } = useAppData(id);
     const dataLoaded = ready && loading != null && !loading;
-    const appStateUp = salutCurrentApp?.appEstat === 'UP';
     const toolbarState = salutCurrentApp?.appEstat ? <Chip
         label={salutCurrentApp.appEstat}
         size="small"
@@ -299,7 +295,7 @@ const SalutAppInfo: React.FC = () => {
         <CircularProgress size={100} />
     </Box> : null;
     const [detailsDialogShow, detailsDialogComponent] = useContentDialog();
-    const detailsComponent = appStateUp ? <Grid container spacing={2}>
+    const detailsComponent = <Grid container spacing={2}>
         <Grid size={6}>
             <AppInfo
                 salutCurrentApp={salutCurrentApp}
@@ -323,9 +319,7 @@ const SalutAppInfo: React.FC = () => {
                 agrupacio={reportParams?.agrupacio}
                 estats={estats} />}
         </Grid>
-    </Grid> : <Alert icon={<Icon>warning</Icon>} severity="warning">
-        {t('page.salut.noDetailsIfDown')}
-    </Alert>;
+    </Grid>;
     return <BasePage toolbar={toolbar}>
         {loading ? loadingComponent : detailsComponent}
         {detailsDialogComponent}
