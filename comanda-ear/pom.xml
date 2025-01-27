@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 	</parent>
 	<artifactId>comanda-ear</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>ear</packaging>
 	<properties>
 		<docker.base.image>${project.parent.artifactId}</docker.base.image>
@@ -16,6 +16,19 @@
 		<docker.jboss.dir>jboss-eap-7.2</docker.jboss.dir>
 	</properties>
 	<dependencies>
+		<!-- Dependència per a poder excloure els jars de Tomcat de la carpeta lib (si no els excloem el desplegament dona errors) -->
+		<!--
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		-->
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-back</artifactId>
@@ -42,7 +55,7 @@
 					<version>6</version>
 					<initializeInOrder>true</initializeInOrder>
 					<skinnyWars>true</skinnyWars>
-					<packagingExcludes></packagingExcludes>
+					<packagingExcludes>lib/org.apache.tomcat.*.jar</packagingExcludes>
 					<archive>
 						<manifestEntries>
 							<Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
@@ -84,7 +97,7 @@
 										<inline>
 											<fileSets>
 												<fileSet>
-													<directory>${basedir}/docker/jboss</directory>
+													<directory>${basedir}/src/main/docker/jboss</directory>
 													<outputDirectory>config</outputDirectory>
 												</fileSet>
 											</fileSets>
@@ -97,7 +110,7 @@
 										<inline>
 											<fileSets>
 												<fileSet>
-													<directory>${basedir}/docker/properties</directory>
+													<directory>${basedir}/src/main/docker/properties</directory>
 													<outputDirectory>${project.parent.artifactId}</outputDirectory>
 												</fileSet>
 											</fileSets>

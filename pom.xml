@@ -4,9 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>es.caib.comanda</groupId>
 	<artifactId>comanda</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>pom</packaging>
 	<modules>
+		<module>comanda-bom</module>
+		<module>comanda-bom-ms</module>
 		<module>comanda-ms-common</module>
 		<module>comanda-ms-configuracio</module>
 		<module>comanda-ms-salut</module>

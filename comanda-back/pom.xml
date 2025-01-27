@@ -5,11 +5,11 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 		<relativePath>../comanda-bom</relativePath>
 	</parent>
 	<artifactId>comanda-back</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>war</packaging>
 	<description>Backoffice de l'aplicació</description>
 	<build>
