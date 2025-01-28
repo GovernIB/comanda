@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * Configuració dels components de persistència.
  * 
- * @author Josep Gayà
+ * @author Límit Tecnologies
  */
 @Slf4j
 public abstract class BasePersistenceConfig {

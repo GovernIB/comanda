@@ -14,7 +14,7 @@ import java.util.Optional;
 /**
  * Configuració per a les entitats de base de dades auditables.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Configuration
 @EnableJpaAuditing

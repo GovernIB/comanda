@@ -6,7 +6,7 @@ import lombok.Getter;
  * Excepció que es llança quan s'ha intentat esborrar un recurs però no s'ha
  * pogut per algun motiu.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class ResourceNotDeletedException extends RuntimeException {

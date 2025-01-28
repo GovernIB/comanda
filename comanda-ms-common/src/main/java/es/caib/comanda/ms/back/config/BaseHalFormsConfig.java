@@ -29,7 +29,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 /**
  * Configuració de HAL-FORMS.
  *
- * @author Josep Gayà
+ * @author Límit Tecnologies
  */
 @Slf4j
 @EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL_FORMS)

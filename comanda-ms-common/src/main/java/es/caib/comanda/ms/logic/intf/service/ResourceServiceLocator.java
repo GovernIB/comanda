@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Localitzador de serveis de tipus ResourceService donat un recurs.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Component
 public class ResourceServiceLocator implements ApplicationContextAware {

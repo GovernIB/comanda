@@ -12,7 +12,7 @@ import java.io.Serializable;
  * @param <ID> el tipus de la clau primària de l'entitat que correspon al recurs.
  *            Aquest tipus ha d'implementar Serializable.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface Resource<ID extends Serializable> {
 

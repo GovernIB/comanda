@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @param <R> classe del recurs.
  * @param <ID> classe de la clau primària del recurs.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Slf4j
 public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID extends Serializable, E extends Persistable<ID>>

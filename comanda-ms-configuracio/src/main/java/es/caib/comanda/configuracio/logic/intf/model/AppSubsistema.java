@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
 /**
  * Informació d'un subsistema.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @NoArgsConstructor

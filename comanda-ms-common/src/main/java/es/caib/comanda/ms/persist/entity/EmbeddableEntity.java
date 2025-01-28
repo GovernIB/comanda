@@ -8,7 +8,7 @@ import java.io.Serializable;
  * Interfície que han d'implementar totes les entitats que incorporin el recurs
  * com a camp embedded.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface EmbeddableEntity<R, PK extends Serializable> extends Persistable<PK> {
 

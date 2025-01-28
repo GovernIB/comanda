@@ -13,7 +13,7 @@ import java.io.Serializable;
 /**
  * Mètodes per a la comprovació de permisos.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Component
 public class PermissionHelper {

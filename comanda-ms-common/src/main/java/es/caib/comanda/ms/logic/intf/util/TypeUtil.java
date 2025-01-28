@@ -21,7 +21,7 @@ import java.util.Set;
 /**
  * Utilitats per a obtenir informació dels tipus Java via reflection.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public class TypeUtil {
 

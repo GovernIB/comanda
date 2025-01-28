@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * Informació per a l'informe de latència del recurs salut.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @AllArgsConstructor

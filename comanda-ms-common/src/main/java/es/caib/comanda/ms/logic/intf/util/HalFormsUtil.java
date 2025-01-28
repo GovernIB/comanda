@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Utilitats per a HAL-FORMS.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public class HalFormsUtil {
 

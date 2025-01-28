@@ -12,7 +12,7 @@ import javax.validation.constraints.Size;
 /**
  * Detall que forma part d'una informació de salut.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @NoArgsConstructor

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 /**
  * Missatge que forma part d'una informació de salut.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @NoArgsConstructor

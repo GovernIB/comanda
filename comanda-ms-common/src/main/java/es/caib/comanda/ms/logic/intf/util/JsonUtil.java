@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * Utilitats per a dades en format JSON.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Component
 public class JsonUtil implements ApplicationContextAware {

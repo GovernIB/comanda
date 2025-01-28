@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 /**
  * Informació d'un subsistema.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @NoArgsConstructor

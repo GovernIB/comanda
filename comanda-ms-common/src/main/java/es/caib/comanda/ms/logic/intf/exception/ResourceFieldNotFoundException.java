@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * Excepció que es llança quan no es troba un camp del recurs.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class ResourceFieldNotFoundException extends NotFoundException {

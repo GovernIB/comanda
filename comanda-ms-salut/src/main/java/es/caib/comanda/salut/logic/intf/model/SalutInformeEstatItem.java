@@ -11,7 +11,7 @@ import java.util.Date;
 /**
  * Informació per a l'informe històric d'estat del recurs salut.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @AllArgsConstructor

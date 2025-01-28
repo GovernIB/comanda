@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
  * Informació de salut retornada per una app que està relacionada amb
  * una integració.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @Setter

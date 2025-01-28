@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Configuració de HAL-FORMS.
  * 
- * @author Josep Gayà
+ * @author Límit Tecnologies
  */
 @Configuration
 public class BackHalFormsConfig extends BaseHalFormsConfig {

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 /**
  * Informació per a l'informe de latència del recurs salut.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @Setter

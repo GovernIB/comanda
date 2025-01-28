@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 /**
  * Interfície que han d'implementar totes les entitats amb camps d'auditoria.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface AuditableEntity {
 

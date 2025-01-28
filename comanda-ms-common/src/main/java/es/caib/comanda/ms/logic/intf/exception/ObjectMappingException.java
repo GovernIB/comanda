@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * Excepció que es llança quan es produeixen errors en el mapeig recurs - entitat.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class ObjectMappingException extends RuntimeException {

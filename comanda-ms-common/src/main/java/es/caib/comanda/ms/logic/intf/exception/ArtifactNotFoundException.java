@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * Excepció que es llença quan no es troba l'informe.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class ArtifactNotFoundException extends NotFoundException {

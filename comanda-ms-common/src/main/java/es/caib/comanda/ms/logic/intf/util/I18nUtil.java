@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
 /**
  * Utilitats per a traduir missatges.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Component
 public class I18nUtil implements ApplicationContextAware {

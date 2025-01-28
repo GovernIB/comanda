@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 /**
  * Configuración de los componentes de persistencia.
  * 
- * @author Josep Gayà
+ * @author Límit Tecnologies
  */
 @Configuration
 @EnableJpaRepositories(

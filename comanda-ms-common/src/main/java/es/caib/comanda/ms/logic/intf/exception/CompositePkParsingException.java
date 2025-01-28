@@ -8,7 +8,7 @@ import java.io.Serializable;
  * Excepció que es llança quan es produeix un error al deserialitzar una clau
  * primària composta.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class CompositePkParsingException extends RuntimeException {

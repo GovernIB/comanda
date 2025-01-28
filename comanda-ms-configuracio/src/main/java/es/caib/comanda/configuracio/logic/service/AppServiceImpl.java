@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 /**
  * Implementació del servei de gestió d'aplicacions.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Slf4j
 @Service

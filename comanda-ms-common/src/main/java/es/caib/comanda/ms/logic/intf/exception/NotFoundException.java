@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * Excepció que es llença quan no es troba un element que suposadament existeix.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public abstract class NotFoundException extends RuntimeException {

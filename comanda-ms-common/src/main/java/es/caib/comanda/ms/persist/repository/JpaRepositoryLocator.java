@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Localitzador de repositoris de tipus EmbeddableRepository donat una entitat.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Component
 public class JpaRepositoryLocator implements ApplicationContextAware {

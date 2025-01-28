@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Definició del servei de l'API REST.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface ResourceApiService {
 

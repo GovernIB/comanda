@@ -9,7 +9,7 @@ import java.util.Optional;
 /**
  * Utilitats per a obtenir informació de la petició HTTP.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public class HttpRequestUtil {
 

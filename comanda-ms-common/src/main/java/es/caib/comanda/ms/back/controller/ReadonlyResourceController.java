@@ -18,7 +18,7 @@ import java.io.Serializable;
 /**
  * Mètodes dels controladors de l'API REST per a consultar un recurs de l'aplicació.
  * 
- * @author Josep Gayà
+ * @author Límit Tecnologies
  */
 public interface ReadonlyResourceController<R extends Resource<? extends Serializable>, ID extends Serializable> {
 

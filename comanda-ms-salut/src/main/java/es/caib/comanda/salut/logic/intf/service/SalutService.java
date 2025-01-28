@@ -6,7 +6,7 @@ import es.caib.comanda.salut.logic.intf.model.Salut;
 /**
  * Servei de consulta d'informació de salut.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface SalutService extends ReadonlyResourceService<Salut, Long> {
 

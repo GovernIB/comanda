@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Informació d'una aplicació a monitoritzar.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @Setter

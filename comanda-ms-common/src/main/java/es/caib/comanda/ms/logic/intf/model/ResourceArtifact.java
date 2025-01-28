@@ -8,7 +8,7 @@ import lombok.Setter;
 /**
  * Informació sobre un artefacte d'un recurs.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @Setter

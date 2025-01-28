@@ -20,7 +20,7 @@ import java.io.Serializable;
 /**
  * Mètodes dels controladors de l'API REST per a modificar un recurs de l'aplicació.
  *
- * @author Josep Gayà
+ * @author Límit Tecnologies
  */
 public interface MutableResourceController<R extends Resource<? extends Serializable>, ID extends Serializable>
 		extends ReadonlyResourceController<R, ID> {

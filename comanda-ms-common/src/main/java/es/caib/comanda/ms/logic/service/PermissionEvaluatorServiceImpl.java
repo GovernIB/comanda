@@ -14,7 +14,7 @@ import java.io.Serializable;
 /**
  * Implementació del servei d'avaluació de permisos.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Slf4j
 @Service("permissionEvaluatorService")

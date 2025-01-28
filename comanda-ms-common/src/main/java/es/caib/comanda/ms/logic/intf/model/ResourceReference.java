@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * Referència genèrica cap a una altra entitat del model.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter @Setter
 public class ResourceReference<R extends Resource<ID>, ID extends Serializable> implements Resource<ID> {

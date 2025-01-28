@@ -13,7 +13,7 @@ import org.springframework.security.config.annotation.method.configuration.Globa
 /**
  * Configuració de la seguretat a nivell de mètode.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Configuration
 @DependsOn({ "permissionEvaluatorService" })

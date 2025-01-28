@@ -21,7 +21,7 @@ import java.util.Date;
 /**
  * Mètodes per al mapeig d'objectes.
  *
- * @author Josep Gayà
+ * @author Límit Tecnologies
  */
 @Slf4j
 @Component

@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * Excepció que es llança quan falla la generació d'un informe.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class ReportGenerationException extends RuntimeException {

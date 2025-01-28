@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * Excepció que es llança quan s'intenta crear un recurs que ja existeix.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class ResourceAlreadyExistsException extends RuntimeException {

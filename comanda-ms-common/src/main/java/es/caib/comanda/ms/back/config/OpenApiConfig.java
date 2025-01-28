@@ -16,7 +16,7 @@ import java.util.jar.Manifest;
 /**
  * Configuració de Springdoc OpenAPI.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Slf4j
 public abstract class OpenApiConfig {

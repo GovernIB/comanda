@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * Configuració de Spring MVC.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {

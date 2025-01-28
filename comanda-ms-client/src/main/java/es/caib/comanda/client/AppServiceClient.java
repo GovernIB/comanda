@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 /**
  * Client pel servei de configuració.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
-@FeignClient(value = "app", url = "http://localhost:8081/api/apps")
+@FeignClient(value = "app", url = "${spring.cloud.openfeign.client.config.app.url}")
 public interface AppServiceClient {
 
 	@GetMapping(value = "/{id}")

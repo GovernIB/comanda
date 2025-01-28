@@ -10,7 +10,7 @@ import java.util.List;
  * i es detecta que, per a poder processar-lo, és necessari disposar de la
  * resposta a una pregunta que no ens ha arribat.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class AnswerRequiredException extends RuntimeException {

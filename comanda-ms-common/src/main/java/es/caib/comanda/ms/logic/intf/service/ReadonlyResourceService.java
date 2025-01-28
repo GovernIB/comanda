@@ -19,7 +19,7 @@ import java.util.Optional;
  * @param <R> classe del recurs.
  * @param <ID> classe de la clau primària del recurs.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface ReadonlyResourceService<R extends Resource<? extends Serializable>, ID extends Serializable> {
 

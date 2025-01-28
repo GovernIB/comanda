@@ -6,7 +6,7 @@ import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 /**
  * Servei de gestió d'aplicacions.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface AppService extends MutableResourceService<App, Long> {
 

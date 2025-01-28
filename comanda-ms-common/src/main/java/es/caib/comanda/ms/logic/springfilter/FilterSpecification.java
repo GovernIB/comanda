@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Implementació de la interfície Specification per les consultes Spring Filter.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public class FilterSpecification<T> extends com.turkraft.springfilter.boot.FilterSpecification<T> {
 

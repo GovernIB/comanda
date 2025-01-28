@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 /**
  * Informació d'una integració.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @NoArgsConstructor

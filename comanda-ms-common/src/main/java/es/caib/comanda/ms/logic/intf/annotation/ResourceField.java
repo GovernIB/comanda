@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * Anotació per a configurar un camp d'un recurs de l'API REST.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

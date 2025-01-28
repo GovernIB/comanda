@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Informació de salut retornada per una app.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 @Setter

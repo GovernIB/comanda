@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 /**
  * Configuració de les tasques periòdiques.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Configuration
 @EnableScheduling

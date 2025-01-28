@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * Excepció que es llença quan no es troba el recurs.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class ResourceNotFoundException extends NotFoundException {

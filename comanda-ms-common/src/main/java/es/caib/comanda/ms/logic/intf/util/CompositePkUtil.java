@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * Utilitats per a serialitzar i deserialitzar claus primàries compostes.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public class CompositePkUtil {
 

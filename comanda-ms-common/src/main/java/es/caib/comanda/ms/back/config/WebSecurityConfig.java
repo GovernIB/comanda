@@ -12,7 +12,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 /**
  * Configuració de Spring Security.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @EnableWebSecurity
 public class WebSecurityConfig {

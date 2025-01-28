@@ -33,7 +33,7 @@ import java.util.function.BiFunction;
 /**
  * Implementació de la interfície Specification per les consultes Spring Filter.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public class ExpressionGenerator extends com.turkraft.springfilter.parser.generator.expression.ExpressionGenerator {
 

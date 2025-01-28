@@ -5,7 +5,7 @@ import org.springframework.security.access.PermissionEvaluator;
 /**
  * Definició del servei d'avaluació de permisos.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public interface PermissionEvaluatorService extends PermissionEvaluator {
 

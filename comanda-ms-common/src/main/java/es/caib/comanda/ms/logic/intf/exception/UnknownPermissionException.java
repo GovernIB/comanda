@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * Excepció que es llança quan no es pot identificar el permís especificat.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Getter
 public class UnknownPermissionException extends NotFoundException {

@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * Helper per a la comunicació amb Keycloak.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Slf4j
 @Component

@@ -3,7 +3,7 @@ package es.caib.comanda.ms.logic.intf.util;
 /**
  * Utilitats per strings.
  * 
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 public class StringUtil {
 

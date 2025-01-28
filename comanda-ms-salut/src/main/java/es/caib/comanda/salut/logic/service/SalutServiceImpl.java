@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * Implementació del servei de consulta d'informació de salut.
  *
- * @author Limit Tecnologies
+ * @author Límit Tecnologies
  */
 @Slf4j
 @Service
