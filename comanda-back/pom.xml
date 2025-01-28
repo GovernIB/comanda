@@ -36,6 +36,7 @@
 							<webResources>
 								<resource>
 									<directory>../comanda-ms-visualitzacio/src/main/resources/comanda-visualitzacio/dist</directory>
+									<targetPath>WEB-INF/classes/static</targetPath>
 								</resource>
 							</webResources>
 						</configuration>

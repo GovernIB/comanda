@@ -95,7 +95,7 @@ export type MuiGridProps = {
     onRowsChange?: (rows: GridRowsProp) => void;
     onRowOrderChange?: GridEventListener<"rowOrderChange">;
     apiRef?: GridApiRef;
-    datagridApiRef?: React.MutableRefObject<GridApiPro>;
+    datagridApiRef?: React.MutableRefObject<GridApiPro | null>;
     height?: number;
     autoHeight?: true;
     striped?: true;

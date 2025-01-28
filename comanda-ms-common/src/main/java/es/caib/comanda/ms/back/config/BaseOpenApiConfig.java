@@ -19,7 +19,7 @@ import java.util.jar.Manifest;
  * @author Límit Tecnologies
  */
 @Slf4j
-public abstract class OpenApiConfig {
+public abstract class BaseOpenApiConfig {
 
 	@Bean
 	public OpenAPI customOpenAPI() {

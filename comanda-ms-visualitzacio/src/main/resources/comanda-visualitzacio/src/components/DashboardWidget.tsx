@@ -27,7 +27,7 @@ type DashboardWidgetData = {
     loading: boolean;
 }
 
-const useDashboardWidgetData = (resourceName: string) => {
+const useDashboardWidgetData = (_resourceName: string) => {
     const data: DashboardWidgetData = {
         title: 'Exemple',
         itemName: 'Registres',

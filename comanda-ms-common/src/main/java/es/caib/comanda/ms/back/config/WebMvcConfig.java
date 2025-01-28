@@ -65,6 +65,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		registry.addMapping("/**").allowedOrigins("*").allowedMethods("*");
 	}
 
+
 	public static class CustomPageableHandlerMethodArgumentResolver extends PageableHandlerMethodArgumentResolverSupport implements PageableArgumentResolver {
 		private final SortArgumentResolver sortResolver = new SortHandlerMethodArgumentResolver();
 		@Override
