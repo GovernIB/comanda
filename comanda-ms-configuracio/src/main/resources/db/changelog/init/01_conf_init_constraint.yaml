@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: init-constraint-conf-1
+    id: conf-init-constraint-1
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -10,7 +10,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}app_integracio_app_fk
 - changeSet:
-    id: init-constraint-conf-2
+    id: conf-init-constraint-2
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -20,7 +20,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}app_subsistema_app_fk
 - changeSet:
-    id: init-constraint-conf-3
+    id: conf-init-constraint-3
     author: limit
     changes:
     - addUniqueConstraint:
@@ -28,7 +28,7 @@ databaseChangeLog:
         columnNames: codi
         constraintName: ${db_prefix}app_codi_uk
 - changeSet:
-    id: init-constraint-conf-4
+    id: conf-init-constraint-4
     author: limit
     changes:
     - addUniqueConstraint:
@@ -36,7 +36,7 @@ databaseChangeLog:
         columnNames: app_id,codi
         constraintName: ${db_prefix}app_integracio_appcodi_uk
 - changeSet:
-    id: init-constraint-conf-5
+    id: conf-init-constraint-5
     author: limit
     changes:
     - addUniqueConstraint:

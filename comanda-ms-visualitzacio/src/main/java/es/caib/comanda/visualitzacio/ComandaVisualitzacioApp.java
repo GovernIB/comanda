@@ -2,7 +2,7 @@ package es.caib.comanda.visualitzacio;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.hateoas.config.EnableHypermediaSupport;
+import org.springframework.context.annotation.ComponentScan;
 
 /**
  * Classe principal del microservei comanda-visualitzacio.
@@ -10,7 +10,9 @@ import org.springframework.hateoas.config.EnableHypermediaSupport;
  * @author Límit Tecnologies
  */
 @SpringBootApplication
-@EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL_FORMS)
+@ComponentScan({
+		"es.caib.comanda.ms",
+		"es.caib.comanda.visualitzacio" })
 public class ComandaVisualitzacioApp {
 
 	public static void main(String[] args) {

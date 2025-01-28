@@ -1,4 +1,4 @@
 databaseChangeLog:
 - changeSet:
-    id: init-acl-salut-1
+    id: conf-init-sequence-1
     author: limit

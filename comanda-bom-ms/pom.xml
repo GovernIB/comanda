@@ -114,6 +114,11 @@
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
+	<profiles>
+		<profile>
+
+		</profile>
+	</profiles>
 	<build>
 		<plugins>
 			<!--

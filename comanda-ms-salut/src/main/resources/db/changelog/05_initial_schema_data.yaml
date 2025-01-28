@@ -1,4 +1,0 @@
-databaseChangeLog:
-  - changeSet:
-      id: init-data-salut-1
-      author: limit

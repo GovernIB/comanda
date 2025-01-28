@@ -1,0 +1,10 @@
+databaseChangeLog:
+-  property:
+    name: db_prefix
+    value: cmd_
+- includeAll:
+    path: db/changelog/init
+    errorIfMissingOrEmpty: false
+- includeAll:
+    path: db/changelog/changes
+    errorIfMissingOrEmpty: false

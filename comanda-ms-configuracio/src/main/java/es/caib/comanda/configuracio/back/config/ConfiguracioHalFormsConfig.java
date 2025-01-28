@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Josep Gayà
  */
 @Configuration
-public class HalFormsConfig extends BaseHalFormsConfig {
+public class ConfiguracioHalFormsConfig extends BaseHalFormsConfig {
 
 	@Override
 	protected String[] getControllerPackages() {

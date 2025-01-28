@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: init-constraint-salut-1
+    id: salut-init-constraint-1
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -10,7 +10,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}salutint_salut_fk
 - changeSet:
-    id: init-constraint-salut-2
+    id: salut-init-constraint-salut-2
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -20,7 +20,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}salutsub_salut_fk
 - changeSet:
-    id: init-constraint-salut-3
+    id: salut-init-constraint-3
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -30,7 +30,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}salutmsg_salut_fk
 - changeSet:
-    id: init-constraint-salut-4
+    id: salut-init-constraint-4
     author: limit
     changes:
     - addForeignKeyConstraint:

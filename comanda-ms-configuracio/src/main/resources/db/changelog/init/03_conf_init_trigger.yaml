@@ -1,4 +1,4 @@
 databaseChangeLog:
 - changeSet:
-    id: init-trigger-conf-1
+    id: conf-init-trigger-1
     author: limit

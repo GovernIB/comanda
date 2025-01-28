@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: init-table-conf-1
+    id: conf-init-table-1
     author: limit
     changes:
     - createTable:
@@ -76,7 +76,7 @@ databaseChangeLog:
             name: v
             type: BIGINT
 - changeSet:
-    id: init-table-conf-2
+    id: conf-init-table-2
     author: limit
     changes:
     - createTable:
@@ -128,7 +128,7 @@ databaseChangeLog:
             name: v
             type: BIGINT
 - changeSet:
-    id: init-table-conf-3
+    id: conf-init-table-3
     author: limit
     changes:
     - createTable:

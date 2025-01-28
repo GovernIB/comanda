@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: init-table-salut-1
+    id: salut-init-table-1
     author: limit
     changes:
     - createTable:
@@ -39,7 +39,7 @@ databaseChangeLog:
             name: bd_latencia
             type: INTEGER
 - changeSet:
-    id: init-table-salut-2
+    id: salut-init-table-2
     author: limit
     changes:
     - createTable:
@@ -82,7 +82,7 @@ databaseChangeLog:
             name: salut_id
             type: BIGINT
 - changeSet:
-    id: init-table-salut-3
+    id: salut-init-table-3
     author: limit
     changes:
     - createTable:
@@ -125,7 +125,7 @@ databaseChangeLog:
             name: salut_id
             type: BIGINT
 - changeSet:
-    id: init-table-salut-4
+    id: salut-init-table-4
     author: limit
     changes:
     - createTable:
@@ -158,7 +158,7 @@ databaseChangeLog:
             name: salut_id
             type: BIGINT
 - changeSet:
-    id: init-table-salut-5
+    id: salut-init-table-5
     author: limit
     changes:
     - createTable:
