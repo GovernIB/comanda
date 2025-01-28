@@ -35,7 +35,15 @@ services:
       - spring.jpa.properties.hibernate.dialect=${HIBERNATE_DIALECT}
       - spring.security.oauth2.resourceserver.jwt.issuer-uri=${AUTH_URL}/realms/${AUTH_REALM}
       - es.caib.comanda.app.url=${APP_URL:-http://localhost:8080}
-      - es.caib.comanda.front.prefix=${APP_URL:-}
+      - es.caib.comanda.front.prefix=${FRONT_PREFIX:-}
+      - es.caib.comanda.client.app.url=${CLIENT_APP_URL}
+      - es.caib.comanda.scheduler.app.info.cron=${APP_INFO_CRON:-0 */1 * * * *}
+      - es.caib.comanda.scheduler.salut.info.cron=${SALUT_INFO_CRON:-0 */1 * * * *}
+      - es.caib.comanda.keycloak.base.url=${AUTH_URL}
+      - es.caib.comanda.keycloak.realm=${AUTH_REALM}
+      - es.caib.comanda.keycloak.client.id=${AUTH_CLIENTID}
+      - es.caib.comanda.keycloak.username=${CLIENT_USERNAME}
+      - es.caib.comanda.keycloak.password=${CLIENT_PASSWORD}
       - VITE_API_PUBLIC_URL=${APP_URL:-http://localhost:8080}/comandafront/api
       - VITE_API_PRIVATE_URL=${APP_URL:-http://localhost:8080}/comandaback/api
       - VITE_AUTH_KEYCLOAK_URL=${AUTH_URL}
