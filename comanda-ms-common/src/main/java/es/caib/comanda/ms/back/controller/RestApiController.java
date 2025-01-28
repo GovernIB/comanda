@@ -8,6 +8,7 @@ import es.caib.comanda.ms.logic.intf.util.TypeUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @Hidden
 @RestController
+@Profile("!visualizacio")
 @RequestMapping(BaseConfig.API_PATH)
 public class RestApiController {
 

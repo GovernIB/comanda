@@ -4,6 +4,7 @@ import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.core.Authentication;
@@ -17,6 +18,7 @@ import java.util.Optional;
  * @author Límit Tecnologies
  */
 @Configuration
+@Profile("!visualizacio")
 @EnableJpaAuditing
 public class AuditingConfig {
 
