@@ -5,11 +5,11 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom-front</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 		<relativePath>../comanda-bom-front</relativePath>
 	</parent>
 	<artifactId>comanda-ms-visualitzacio</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<description>Frontend de l'aplicació</description>
 	<properties>
 		<frontend.resources.path>src/main/resources/comanda-visualitzacio</frontend.resources.path>
@@ -47,4 +47,25 @@
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.4.0</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>${frontend.resources.path}</directory>
+							<includes>
+								<include>**/dist/**</include>
+								<include>**/node_modules/**</include>
+							</includes>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

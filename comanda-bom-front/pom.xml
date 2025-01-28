@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 		<relativePath>../comanda-bom</relativePath>
 	</parent>
 	<artifactId>comanda-bom-front</artifactId>
@@ -73,22 +73,6 @@
 							<excludes>
 								<exclude>${frontend.resources.path}/**</exclude>
 							</excludes>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-clean-plugin</artifactId>
-						<configuration>
-							<filesets>
-								<fileset>
-									<directory>${frontend.resources.path}</directory>
-									<includes>
-										<include>**/dist/**</include>
-										<include>**/node_modules/**</include>
-									</includes>
-									<followSymlinks>false</followSymlinks>
-								</fileset>
-							</filesets>
 						</configuration>
 					</plugin>
 				</plugins>
