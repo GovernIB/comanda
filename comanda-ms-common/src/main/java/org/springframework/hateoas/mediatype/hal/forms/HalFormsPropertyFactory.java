@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// S'ha afegit el mètode GET a ENTITY_ALTERING_METHODS
 // S'ha afegit l'opció d'emplenar el camp value
 // S'ha afegit la configuració del camp multiple
+// S'ha afegit el mètode GET a ENTITY_ALTERING_METHODS per a que aquest mètode inclogui properties a la resposta
 package org.springframework.hateoas.mediatype.hal.forms;
 
 import es.caib.comanda.ms.logic.intf.util.HalFormsUtil;

@@ -49,6 +49,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Flow;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -79,7 +80,7 @@ public class PropertyUtils {
 	private static class ReactiveWrappers {
 
 		static List<Class<?>> getTypesToUnwrap() {
-			return Arrays.asList(/*Publisher.class*/);
+			return Arrays.asList(Flow.Publisher.class);
 		}
 	}
 

@@ -71,7 +71,7 @@
 									<goal>npm</goal>
 								</goals>
 								<configuration>
-									<arguments>run build-front</arguments>
+									<arguments>run build-jboss</arguments>
 								</configuration>
 							</execution>
 						</executions>

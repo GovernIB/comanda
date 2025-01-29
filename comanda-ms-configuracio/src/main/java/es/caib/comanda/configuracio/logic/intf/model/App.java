@@ -48,7 +48,7 @@ public class App extends BaseResource<Long> {
 	@Setter(AccessLevel.NONE)
 	private String versio;
 	@InputType("checkbox")
-	private boolean activa;
+	private boolean activa = true;
 
 	private Integer integracioCount;
 	private Integer subsistemaCount;
