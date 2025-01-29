@@ -7,6 +7,7 @@ SYSTEM_PROPS_FILE=$SCRIPT_DIR/system-props.xml
 KEYCLOAK_FILE=$SCRIPT_DIR/keycloak.xml
 LOGGING_FILE=$SCRIPT_DIR/logging.xml
 MAIL_FILE=$SCRIPT_DIR/mail.xml
+UNDERTOW_FILE=$SCRIPT_DIR/undertow.xml
 TEMP_PROPS_FILE=$SCRIPT_DIR/jboss_properties.tmp
 JBOSS_PROPS_FILE=/home/jboss/apps/comanda/comanda.properties
 JBOSS_SYSTEM_PROPS_FILE=/home/jboss/apps/comanda/comanda.system.properties
@@ -31,6 +32,8 @@ sed -i '/<subsystem xmlns="urn:jboss:domain:logging:6.0">/,/<\/subsystem>/c \<su
 sed -e '/<subsystem xmlns="urn:jboss:domain:logging:6.0"\/>/ {' -e "r $LOGGING_FILE" -e 'd' -e '}' -i $CONFIG_STANDALONE_FILE
 sed -i '/<subsystem xmlns="urn:jboss:domain:mail:3.0">/,/<\/subsystem>/c \<subsystem xmlns="urn:jboss:domain:mail:3.0"\/>' $CONFIG_STANDALONE_FILE
 sed -e '/<subsystem xmlns="urn:jboss:domain:mail:3.0"\/>/ {' -e "r $MAIL_FILE" -e 'd' -e '}' -i $CONFIG_STANDALONE_FILE
+sed -i '/<subsystem xmlns="urn:jboss:domain:undertow:7.0" default-server="default-server" default-virtual-host="default-host" default-servlet-container="default" default-security-domain="other">/,/<\/subsystem>/c \<subsystem xmlns="urn:jboss:domain:undertow:7.0" default-server="default-server" default-virtual-host="default-host" default-servlet-container="default" default-security-domain="other"\/>' $CONFIG_STANDALONE_FILE
+sed -e '/<subsystem xmlns="urn:jboss:domain:undertow:7.0" default-server="default-server" default-virtual-host="default-host" default-servlet-container="default" default-security-domain="other"\/>/ {' -e "r $UNDERTOW_FILE" -e 'd' -e '}' -i $CONFIG_STANDALONE_FILE
 echo "...fitxer de configuració de JBoss modificat"
 
 echo "Modificant fitxers de properties per incorporar variables d'entorn..."
