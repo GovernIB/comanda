@@ -42,7 +42,6 @@
 					<version>6</version>
 					<initializeInOrder>true</initializeInOrder>
 					<packagingExcludes>lib/org.apache.tomcat.*.jar</packagingExcludes>
-					<!--<packagingExcludes>lib/org.apache.tomcat.*.jar,lib/org.springframework.hateoas-spring-hateoas-*.jar</packagingExcludes>-->
 					<skinnyWars>true</skinnyWars>
 					<archive>
 						<manifestEntries>

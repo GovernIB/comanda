@@ -1,10 +1,12 @@
 package es.caib.comanda.ms.logic.intf.util;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.ComponentNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 import es.caib.comanda.ms.logic.intf.service.ResourceServiceLocator;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +32,28 @@ public class HalFormsUtil {
 			} catch (ComponentNotFoundException ignored) {}
 		}
 		return values;
+	}
+
+	public static <T extends Annotation> T getFieldAnnotation(
+			Class<?> resourceClass,
+			String fieldName,
+			Class<T> annotationClass) {
+		try {
+			return resourceClass.getDeclaredField(fieldName).getAnnotation(annotationClass);
+		} catch (NoSuchFieldException e) {
+			return null;
+		}
+	}
+
+	public static boolean isOnChangeActive(Class<?> resourceClass, String fieldName) {
+		try {
+			ResourceField resourceField = resourceClass.
+					getDeclaredField(fieldName).
+					getAnnotation(ResourceField.class);
+			return resourceField != null && resourceField.onChangeActive();
+		} catch (NoSuchFieldException e) {
+			return false;
+		}
 	}
 
 	private static Map<String, Object> toMap(Object object) {

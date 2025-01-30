@@ -1,26 +1,9 @@
-/*
- * Copyright 2019-2022 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 // S'ha llevat el filtre que evita que les Affordances amb el mètode GET apareguin als templates
 package org.springframework.hateoas.mediatype.hal.forms;
 
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.hateoas.*;
-import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
 import org.springframework.hateoas.mediatype.MessageResolver;
-import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -31,15 +14,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-class HalFormsTemplateBuilder {
+public class CustomHalFormsTemplateBuilder extends HalFormsTemplateBuilder {
 
 	private final MessageResolver resolver;
-	private final org.springframework.hateoas.mediatype.hal.forms.HalFormsPropertyFactory factory;
+	private final CustomHalFormsPropertyFactory customFactory;
 
-	public HalFormsTemplateBuilder(HalFormsConfiguration configuration, MessageResolver resolver) {
-
+	public CustomHalFormsTemplateBuilder(HalFormsConfiguration configuration, MessageResolver resolver) {
+		super(configuration, resolver);
 		this.resolver = resolver;
-		this.factory = new org.springframework.hateoas.mediatype.hal.forms.HalFormsPropertyFactory(configuration, resolver);
+		this.customFactory = new CustomHalFormsPropertyFactory(configuration, resolver);
 	}
 
 	/**
@@ -48,6 +31,7 @@ class HalFormsTemplateBuilder {
 	 * @param resource
 	 * @return
 	 */
+	@Override
 	public Map<String, HalFormsTemplate> findTemplates(RepresentationModel<?> resource) {
 
 		Map<String, HalFormsTemplate> templates = new HashMap<>();
@@ -61,11 +45,10 @@ class HalFormsTemplateBuilder {
 				}) //
 				.map(HalFormsAffordanceModel.class::cast) //
 				//.filter(it -> !it.hasHttpMethod(HttpMethod.GET)) //
-				.filter(it -> !it.hasHttpMethod(HttpMethod.GET) || (it.hasHttpMethod(HttpMethod.GET) && it.getInput().stream().findFirst().isPresent())) //
 				.forEach(it -> {
 
 					HalFormsTemplate template = HalFormsTemplate.forMethod(it.getHttpMethod()) //
-							.withProperties(factory.createProperties(it))
+							.withProperties(customFactory.createProperties(it))
 							.withContentType(it.getInput().getPrimaryMediaType());
 
 					String target = it.getLink().expand().getHref();
@@ -81,7 +64,7 @@ class HalFormsTemplateBuilder {
 		return templates;
 	}
 
-	private HalFormsTemplate applyTo(HalFormsTemplate template, TemplateTitle templateTitle) {
+	private HalFormsTemplate applyTo(HalFormsTemplate template, CustomHalFormsTemplateBuilder.TemplateTitle templateTitle) {
 
 		return Optional.ofNullable(resolver.resolve(templateTitle)) //
 				.filter(StringUtils::hasText) //
@@ -102,8 +85,8 @@ class HalFormsTemplateBuilder {
 			this.soleTemplate = soleTemplate;
 		}
 
-		public static TemplateTitle of(HalFormsAffordanceModel affordance, boolean soleTemplate) {
-			return new TemplateTitle(affordance, soleTemplate);
+		public static CustomHalFormsTemplateBuilder.TemplateTitle of(HalFormsAffordanceModel affordance, boolean soleTemplate) {
+			return new CustomHalFormsTemplateBuilder.TemplateTitle(affordance, soleTemplate);
 		}
 
 		/*
@@ -122,7 +105,7 @@ class HalFormsTemplateBuilder {
 					.toArray(String[]::new);
 		}
 
-		private static Stream<String> getCodesFor(String name, InputPayloadMetadata type) {
+		private static Stream<String> getCodesFor(String name, AffordanceModel.InputPayloadMetadata type) {
 
 			String global = String.format(TEMPLATE_TEMPLATE, name);
 

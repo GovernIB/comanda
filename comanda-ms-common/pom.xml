@@ -20,37 +20,6 @@
 					<skip>true</skip>
 				</configuration>
 			</plugin>
-			<!--
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<artifactSet>
-						<includes>
-							<include>org.springframework.hateoas:spring-hateoas</include>
-						</includes>
-					</artifactSet>
-					<filters>
-						<filter>
-							<artifact>org.springframework.hateoas:spring-hateoas</artifact>
-							<excludes>
-								<exclude>META-INF/*</exclude>
-								<exclude>META-INF/maven/**</exclude>
-								<exclude>*.txt</exclude>
-							</excludes>
-						</filter>
-					</filters>
-				</configuration>
-			</plugin>
-			-->
 		</plugins>
 	</build>
 </project>

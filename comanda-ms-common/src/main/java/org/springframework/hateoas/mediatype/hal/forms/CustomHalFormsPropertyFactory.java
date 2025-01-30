@@ -18,6 +18,7 @@
 // S'ha afegit el mètode GET a ENTITY_ALTERING_METHODS per a que aquest mètode inclogui properties a la resposta
 package org.springframework.hateoas.mediatype.hal.forms;
 
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.HalFormsUtil;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
@@ -29,6 +30,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.validation.constraints.Size;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
@@ -41,7 +44,7 @@ import static org.springframework.http.HttpMethod.*;
  * @since 1.3
  * @soundtrack The Chicks - March March (Gaslighter)
  */
-class HalFormsPropertyFactory {
+class CustomHalFormsPropertyFactory {
 
 	private static final Set<HttpMethod> ENTITY_ALTERING_METHODS = EnumSet.of(GET, POST, PUT, PATCH);
 
@@ -49,13 +52,13 @@ class HalFormsPropertyFactory {
 	private final MessageResolver resolver;
 
 	/**
-	 * Creates a new {@link HalFormsPropertyFactory} for the given {@link HalFormsConfiguration} and
+	 * Creates a new {@link CustomHalFormsPropertyFactory} for the given {@link HalFormsConfiguration} and
 	 * {@link MessageResolver}.
 	 *
 	 * @param configuration must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
 	 */
-	public HalFormsPropertyFactory(HalFormsConfiguration configuration, MessageResolver resolver) {
+	public CustomHalFormsPropertyFactory(HalFormsConfiguration configuration, MessageResolver resolver) {
 
 		Assert.notNull(configuration, "HalFormsConfiguration must not be null!");
 		Assert.notNull(resolver, "MessageResolver must not be null!");
@@ -83,6 +86,47 @@ class HalFormsPropertyFactory {
 		return model.createProperties((payload, metadata) -> {
 
 			String inputType = metadata.getInputType();
+
+			Class<?> resolvedType = payload.getPropertyMetadata(metadata.getName()).get().getType().resolve();
+			if (resolvedType != null) {
+				if (boolean.class.isAssignableFrom(resolvedType) || Boolean.class.isAssignableFrom(resolvedType)) {
+					inputType = "checkbox";
+				} else if (Duration.class.isAssignableFrom(resolvedType)) {
+					inputType = null;
+				} else if (ResourceReference.class.isAssignableFrom(resolvedType) || resolvedType.isEnum()) {
+					inputType = "search";
+				} else if (resolvedType.isArray() && byte.class.equals(resolvedType.getComponentType())) {
+					inputType = "file";
+				}
+			}
+
+			Number minValue = metadata.getMin();
+			Number maxValue = metadata.getMax();
+			if (resolvedType != null) {
+				Size size = HalFormsUtil.getFieldAnnotation(
+						Objects.requireNonNull(payload.getType()),
+						metadata.getName(),
+						Size.class);
+				if (size != null && String.class.isAssignableFrom(resolvedType)) {
+					inputType = "text";
+					minValue = null;
+					maxValue = null;
+				}
+			}
+
+			Long minLength = metadata.getMinLength();
+			Long maxLength = metadata.getMaxLength();
+			if (resolvedType != null) {
+				Size size = HalFormsUtil.getFieldAnnotation(
+						Objects.requireNonNull(payload.getType()),
+						metadata.getName(),
+						Size.class);
+				if (size != null) {
+					minLength = size.min() > 0 ? (long)size.min() : null;
+					maxLength = size.max() < Integer.MAX_VALUE ? (long)size.max() : null;
+				}
+			}
+
 			HalFormsOptions options = optionsFactory.getOptions(payload, metadata);
 
 			Map<String, Object> values = HalFormsUtil.getNewResourceValues(payload.getType());
@@ -91,10 +135,10 @@ class HalFormsPropertyFactory {
 					.withName(metadata.getName())
 					.withRequired(metadata.isRequired()) //
 					.withReadOnly(metadata.isReadOnly())
-					.withMin(metadata.getMin())
-					.withMax(metadata.getMax())
-					.withMinLength(metadata.getMinLength())
-					.withMaxLength(metadata.getMaxLength())
+					.withMin(minValue)
+					.withMax(maxValue)
+					.withMinLength(minLength)
+					.withMaxLength(maxLength)
 					.withRegex(lookupRegex(metadata)) //
 					.withType(inputType) //
 					.withValue(options != null ? options.getSelectedValue() : values.get(metadata.getName())) //
@@ -106,11 +150,15 @@ class HalFormsPropertyFactory {
 
 			Function<String, I18nedPropertyMetadata> factory = I18nedPropertyMetadata.factory(payload, property);
 
-			return Optional.of(property)
+			HalFormsProperty i18nProperty = Optional.of(property)
 					.map(it -> i18n(it, factory.apply("_placeholder"), it::withPlaceholder))
 					.map(it -> i18n(it, factory.apply("_prompt"), it::withPrompt))
 					.map(it -> model.hasHttpMethod(HttpMethod.PATCH) ? it.withRequired(false) : it)
 					.orElse(property);
+
+			boolean onChangeActive = payload.getType() != null && HalFormsUtil.isOnChangeActive(payload.getType(), metadata.getName());
+			String metadataName = metadata.getName() + (onChangeActive ? "*" : "");
+			return i18nProperty.withName(metadataName);
 		});
 	}
 

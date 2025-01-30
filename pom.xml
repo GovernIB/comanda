@@ -19,4 +19,26 @@
 		<module>comanda-ear</module>
 		<module>comanda-salut-lib</module>
 	</modules>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>3.2.1</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<doCheck>false</doCheck>
+					<doUpdate>false</doUpdate>
+					<ignoreEmptyScmUrl>true</ignoreEmptyScmUrl>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

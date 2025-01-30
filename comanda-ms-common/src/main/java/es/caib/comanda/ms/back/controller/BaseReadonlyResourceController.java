@@ -452,8 +452,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		// Hem modificat les classes HalFormsTemplateBuilder i HalFormsPropertyFactory
 		// per a que mostrin als templates les Affordances amb mètode GET amb les seves
 		// properties.
-
-		HttpMethod showPropertiesMethod = HttpMethod.POST;
+		HttpMethod showPropertiesMethod = HttpMethod.GET;
 		return Affordances.of(selfLink).
 				afford(showProperties ? showPropertiesMethod : HttpMethod.OPTIONS).
 				withInputAndOutput(getResourceClass()).
