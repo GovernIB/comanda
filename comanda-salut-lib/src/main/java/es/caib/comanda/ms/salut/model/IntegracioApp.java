@@ -11,6 +11,7 @@ public enum IntegracioApp {
     EML ("E-mail"),
     EMS ("Emiserv"),
     EVI ("EvidenciesIB"),
+    GDC ("Gestor documental"),
     HEL ("Helium"),
     ITD ("InterDoc"),
     LGI ("LoginIB"),
@@ -26,7 +27,8 @@ public enum IntegracioApp {
     SIS ("Sistra"),
     SI2 ("Sistra2"),
     TRA ("TranslatorIB"),
-    USR ("Usuaris");
+    USR ("Usuaris"),
+    VFI ("Validació firma");
 
     private final String nom;
 
