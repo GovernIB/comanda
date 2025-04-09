@@ -14,6 +14,7 @@
 		<docker.base.image>${project.parent.artifactId}</docker.base.image>
 		<docker.jboss.userhome>/home/jboss</docker.jboss.userhome>
 		<docker.jboss.dir>jboss-eap-7.2</docker.jboss.dir>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
 		<dependency>

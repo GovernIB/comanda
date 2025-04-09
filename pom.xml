@@ -18,6 +18,7 @@
 		<module>comanda-back</module>
 		<module>comanda-ear</module>
 		<module>comanda-salut-lib</module>
+		<module>comanda-ms-estadistica</module>
 	</modules>
 	<build>
 		<plugins>
