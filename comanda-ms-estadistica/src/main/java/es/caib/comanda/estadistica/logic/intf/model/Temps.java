@@ -22,10 +22,10 @@ public class Temps extends BaseResource<Long> {
     @NotNull
     private int mes;
     @NotNull
-    private int dia;
+    private int setmana;
     @NotNull
     private DiaSetmanaEnum diaSetmana;
     @NotNull
-    private int hora;
+    private int dia;
 
 }

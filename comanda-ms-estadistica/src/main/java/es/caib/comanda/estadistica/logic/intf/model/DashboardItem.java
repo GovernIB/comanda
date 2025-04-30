@@ -19,6 +19,6 @@ public class DashboardItem extends BaseResource<Long> {
     @NotNull
     private ResourceReference<Dashboard, Long> dashboard;
     @NotNull
-    private ResourceReference<EstadisticaView, Long> view;
+    private ResourceReference<EstadisticaSimpleWidget, Long> view;
 
 }

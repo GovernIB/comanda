@@ -30,4 +30,6 @@ public class IndicadorEntity extends BaseEntity<Indicador> {
     private String descripcio;
     @Column(name = "aplicacio_codi", length = 16, nullable = false)
     private String aplicacioCodi;
+    @Column(name = "format", length = 64)
+    private String format;
 }

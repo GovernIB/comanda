@@ -34,6 +34,6 @@ public class DashboardItemEntity extends BaseEntity<DashboardItem> {
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dboard_item_view_fk"),
             nullable = false)
-    private EstadisticaViewEntity view;
+    private EstadisticaWidgetEntity view;
 
 }
