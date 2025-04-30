@@ -110,7 +110,7 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-salut-lib</artifactId>
+			<artifactId>comanda-lib</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
