@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
+import es.caib.comanda.ms.estadistica.model.Format;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,6 @@ public class Indicador extends BaseResource<Long> {
     @NotNull
     @Size(max = 16)
     private String aplicacioCodi;
+    private Format format;
 
 }

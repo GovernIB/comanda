@@ -4,23 +4,59 @@ databaseChangeLog:
     author: limit
     changes:
     - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}app_integracio
-        baseColumnNames: app_id
-        referencedTableName: ${db_prefix}app
+        baseTableName: ${db_prefix}entorn_app
+        baseColumnNames: entorn_id
+        referencedTableName: ${db_prefix}entorn
         referencedColumnNames: id
-        constraintName: ${db_prefix}app_integracio_app_fk
+        constraintName: ${db_prefix}entorn_app_entorn_fk
 - changeSet:
     id: conf-init-constraint-2
     author: limit
     changes:
     - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}app_subsistema
+        baseTableName: ${db_prefix}entorn_app
         baseColumnNames: app_id
         referencedTableName: ${db_prefix}app
         referencedColumnNames: id
-        constraintName: ${db_prefix}app_subsistema_app_fk
+        constraintName: ${db_prefix}entorn_app_app_fk
 - changeSet:
     id: conf-init-constraint-3
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}app_integracio
+        baseColumnNames: entorn_app_id
+        referencedTableName: ${db_prefix}entorn_app
+        referencedColumnNames: id
+        constraintName: ${db_prefix}app_integ_entorn_app_fk
+- changeSet:
+    id: conf-init-constraint-4
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}app_subsistema
+        baseColumnNames: entorn_app_id
+        referencedTableName: ${db_prefix}entorn_app
+        referencedColumnNames: id
+        constraintName: ${db_prefix}app_subs_entorn_app_fk
+- changeSet:
+    id: conf-init-constraint-5
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}entorn
+        columnNames: codi
+        constraintName: ${db_prefix}entorn_codi_uk
+- changeSet:
+    id: conf-init-constraint-6
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}entorn_app
+        columnNames: entorn_id,app_id
+        constraintName: ${db_prefix}entorn_app_entapp_uk
+- changeSet:
+    id: conf-init-constraint-7
     author: limit
     changes:
     - addUniqueConstraint:
@@ -28,18 +64,18 @@ databaseChangeLog:
         columnNames: codi
         constraintName: ${db_prefix}app_codi_uk
 - changeSet:
-    id: conf-init-constraint-4
+    id: conf-init-constraint-8
     author: limit
     changes:
     - addUniqueConstraint:
         tableName: ${db_prefix}app_integracio
-        columnNames: app_id,codi
+        columnNames: entorn_app_id,codi
         constraintName: ${db_prefix}app_integracio_appcodi_uk
 - changeSet:
-    id: conf-init-constraint-5
+    id: conf-init-constraint-9
     author: limit
     changes:
     - addUniqueConstraint:
         tableName: ${db_prefix}app_subsistema
-        columnNames: app_id,codi
+        columnNames: entorn_app_id,codi
         constraintName: ${db_prefix}app_subsistema_appcodi_uk

@@ -44,11 +44,16 @@ public class KeycloakHelper {
 
 	public String getAccessTokenWithUsernamePassword(String username, String password) {
 		if (isKeycloakConfigured()) {
-			return getAccessToken(
-					"password",
-					username,
-					password,
-					null);
+			try {
+				return getAccessToken(
+						"password",
+						username,
+						password,
+						null);
+			} catch (Exception ex) {
+				log.error("Error obtenint token de access Keycloak", ex);
+				throw ex;
+			}
 		} else {
 			log.error("Couldn't get access token: missing keycloak configuration parameters");
 			return null;

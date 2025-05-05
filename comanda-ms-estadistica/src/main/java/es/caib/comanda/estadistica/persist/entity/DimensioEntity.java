@@ -19,7 +19,7 @@ import java.util.List;
 @Table(
         name = BaseConfig.DB_PREFIX + "est_dimensio",
         uniqueConstraints = {
-                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "dim_nom_uk", columnNames = { "nom", "aplicacio_codi" })
+                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "dim_nom_uk", columnNames = { "nom", "entorn_app_id" })
         }
 )
 @Getter
@@ -31,8 +31,8 @@ public class DimensioEntity extends BaseEntity<Dimensio> {
     private String nom;
     @Column(name = "descripcio", length = 1024)
     private String descripcio;
-    @Column(name = "aplicacio_codi", length = 16, nullable = false)
-    private String aplicacioCodi;
+    @Column(name = "entorn_app_id", nullable = false)
+    private Long entornAppId;
     @OneToMany(mappedBy = "dimensio", cascade = CascadeType.ALL)
     private List<DimensioValorEntity> valors;
 

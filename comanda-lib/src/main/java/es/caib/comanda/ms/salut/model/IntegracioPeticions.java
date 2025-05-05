@@ -26,16 +26,24 @@ public class IntegracioPeticions {
     @Synchronized
     public void addPeticioTotal(String organ) {
         totalOk++;
-        if (organ != null && !organ.isBlank()) {
-            organOk.put(organ, organOk.getOrDefault(organ, 0L) + 1);
+        if (organ != null && organ.trim().length() > 0) {
+            Long count = organOk.get(organ);
+            if (count == null) {
+                count = 0L;
+            }
+            organOk.put(organ, count + 1);
         }
     }
 
     @Synchronized
     public void addPeticioError(String organ) {
         totalError++;
-        if (organ != null && !organ.isBlank()) {
-            organError.put(organ, organError.getOrDefault(organ, 0L) + 1);
+        if (organ != null && organ.trim().length() > 0) {
+            Long count = organError.get(organ);
+            if (count == null) {
+                count = 0L;
+            }
+            organError.put(organ, count + 1);
         }
     }
 

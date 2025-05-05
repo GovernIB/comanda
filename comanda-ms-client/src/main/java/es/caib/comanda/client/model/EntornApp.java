@@ -1,0 +1,36 @@
+package es.caib.comanda.client.model;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Getter
+@NoArgsConstructor
+public class EntornApp {
+
+	private Long id;
+	private EntornRef entorn;
+	private AppRef app;
+
+	private String infoUrl;
+	private Integer infoInterval;
+	private LocalDateTime infoData;
+	private String versio;
+	private boolean activa;
+
+	private String salutUrl;
+	private Integer salutInterval;
+
+	private Integer integracioCount;
+	private Integer subsistemaCount;
+
+	private List<AppIntegracio> integracions;
+	private List<AppSubsistema> subsistemes;
+
+	private String estadisticaInfoUrl;
+	private String estadisticaUrl;
+	private String estadisticaCron;
+
+}

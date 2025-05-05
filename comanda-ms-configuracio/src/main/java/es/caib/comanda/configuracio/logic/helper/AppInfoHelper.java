@@ -3,6 +3,7 @@ package es.caib.comanda.configuracio.logic.helper;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
@@ -34,29 +35,30 @@ public class AppInfoHelper {
 	@Autowired
 	private SubsistemaRepository subsistemaRepository;
 
-	public void refreshAppInfo(AppEntity app) {
-		log.debug("Refrescant informació de l'app {}", app.getCodi());
+	public void refreshAppInfo(EntornAppEntity entornApp) {
+		log.debug("Refrescant informació de l'app {}", entornApp.getApp().getCodi());
 		RestTemplate restTemplate = new RestTemplate();
 		try {
-			AppInfo appInfo = restTemplate.getForObject(app.getInfoUrl(), AppInfo.class);
+			AppInfo appInfo = restTemplate.getForObject(entornApp.getInfoUrl(), AppInfo.class);
 			if (appInfo != null) {
-				app.setInfoData(
+				entornApp.setInfoData(
 						appInfo.getData().toInstant().
 								atZone(ZoneId.systemDefault()).
 								toLocalDateTime());
-				app.setVersio(appInfo.getVersio());
-				refreshIntegracions(app, appInfo.getIntegracions());
-				refreshSubsistemes(app, appInfo.getSubsistemes());
+				entornApp.setVersio(appInfo.getVersio());
+				refreshIntegracions(entornApp, appInfo.getIntegracions());
+				refreshSubsistemes(entornApp, appInfo.getSubsistemes());
 			}
 		} catch (RestClientException ex) {
-			log.warn("No s'ha pogut obtenir informació de salut de l'app {}: {}",
-					app.getCodi(),
+			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
+					entornApp.getApp().getCodi(),
+					entornApp.getEntorn().getCodi(),
 					ex.getLocalizedMessage());
 		}
 	}
 
-	private void refreshIntegracions(AppEntity app, List<IntegracioInfo> integracioInfos) {
-		List<AppIntegracioEntity> integracionsDb = integracioRepository.findByApp(app);
+	private void refreshIntegracions(EntornAppEntity entornApp, List<IntegracioInfo> integracioInfos) {
+		List<AppIntegracioEntity> integracionsDb = integracioRepository.findByEntornApp(entornApp);
 		// Actualitzam les integracions existents i cream les integracions que falten a la base de dades
 		if (integracioInfos != null) {
 			integracioInfos.forEach(iin -> {
@@ -75,7 +77,7 @@ public class AppInfoHelper {
 					integracioNova.setCodi(iin.getCodi());
 					integracioNova.setNom(iin.getNom());
 					integracioNova.setActiva(true);
-					integracioNova.setApp(app);
+					integracioNova.setEntornApp(entornApp);
 					integracioRepository.save(integracioNova);
 				}
 			});
@@ -92,8 +94,8 @@ public class AppInfoHelper {
 		});
 	}
 
-	private void refreshSubsistemes(AppEntity app, List<AppInfo> subsistemaInfos) {
-		List<AppSubsistemaEntity> subsistemesDb = subsistemaRepository.findByApp(app);
+	private void refreshSubsistemes(EntornAppEntity entornApp, List<AppInfo> subsistemaInfos) {
+		List<AppSubsistemaEntity> subsistemesDb = subsistemaRepository.findByEntornApp(entornApp);
 		// Actualitzam els subsistemes existents i cream els subsistemes que falten a la base de dades
 		if (subsistemaInfos != null) {
 			subsistemaInfos.forEach(sin -> {
@@ -112,7 +114,7 @@ public class AppInfoHelper {
 					subsistemaNou.setCodi(sin.getCodi());
 					subsistemaNou.setNom(sin.getNom());
 					subsistemaNou.setActiu(true);
-					subsistemaNou.setApp(app);
+					subsistemaNou.setEntornApp(entornApp);
 					subsistemaRepository.save(subsistemaNou);
 				}
 			});

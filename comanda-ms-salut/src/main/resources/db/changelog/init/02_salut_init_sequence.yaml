@@ -2,3 +2,24 @@ databaseChangeLog:
 - changeSet:
     id: salut-init-sequence-1
     author: limit
+#    changes:
+#        - createSequence:
+#            sequenceName: ${db_prefix}salut_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}salut_detall_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}salut_integracio_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}salut_missatge_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}salut_subsistema_seq
+#            startValue: 1
+#            incrementBy: 1

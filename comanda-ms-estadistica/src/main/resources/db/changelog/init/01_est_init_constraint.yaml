@@ -1,0 +1,163 @@
+databaseChangeLog:
+- changeSet:
+    id: est-init-constraint-1
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}est_dimensio
+        columnNames: nom, entorn_app_id
+        constraintName: ${db_prefix}dim_nom_uk
+- changeSet:
+    id: est-init-constraint-2
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_dimensio_valor
+        baseColumnNames: dimensio_id
+        referencedTableName: ${db_prefix}est_dimensio
+        referencedColumnNames: id
+        constraintName: ${db_prefix}dim_valor_dim_fk
+- changeSet:
+    id: est-init-constraint-3
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}est_indicador
+        columnNames: nom, entorn_app_id
+        constraintName: ${db_prefix}ind_nom_uk
+- changeSet:
+    id: est-init-constraint-4
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_fet
+        baseColumnNames: indicador_id
+        referencedTableName: ${db_prefix}est_indicador
+        referencedColumnNames: id
+        constraintName: ${db_prefix}fet_indicador_fk
+- changeSet:
+    id: est-init-constraint-5
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_fet
+        baseColumnNames: temps_id
+        referencedTableName: ${db_prefix}est_temps
+        referencedColumnNames: id
+        constraintName: ${db_prefix}fet_temps_fk
+- changeSet:
+    id: est-init-constraint-6
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_fet_dimensio_valor
+        baseColumnNames: fet_id
+        referencedTableName: ${db_prefix}est_fet
+        referencedColumnNames: id
+        constraintName: ${db_prefix}fet_dim_valor_fet_fk
+- changeSet:
+    id: est-init-constraint-7
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_fet_dimensio_valor
+        baseColumnNames: dimensio_valor_id
+        referencedTableName: ${db_prefix}est_dimensio_valor
+        referencedColumnNames: id
+        constraintName: ${db_prefix}fet_dim_valor_dim_valor_fk
+- changeSet:
+    id: est-init-constraint-8
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_widget
+        baseColumnNames: indicador_id
+        referencedTableName: ${db_prefix}est_indicador
+        referencedColumnNames: id
+        constraintName: ${db_prefix}view_indicador_fk
+- changeSet:
+    id: est-init-constraint-9
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_widget
+        baseColumnNames: agrupament_dimensio_id
+        referencedTableName: ${db_prefix}est_dimensio
+        referencedColumnNames: id
+        constraintName: ${db_prefix}view_taula_dimensio_fk
+- changeSet:
+    id: est-init-constraint-10
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}est_widget
+        columnNames: titol, entorn_app_id
+        constraintName: ${db_prefix}widget_titol_uk
+- changeSet:
+    id: est-init-constraint-11
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_widget_dim_valor
+        baseColumnNames: widget_id
+        referencedTableName: ${db_prefix}est_widget
+        referencedColumnNames: id
+        constraintName: ${db_prefix}widget_dvalor_widget_fk
+- changeSet:
+    id: est-init-constraint-12
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_widget_dim_valor
+        baseColumnNames: dimensio_valor_id
+        referencedTableName: ${db_prefix}est_dimensio_valor
+        referencedColumnNames: id
+        constraintName: ${db_prefix}widget_dvalor_dvalor_fk
+- changeSet:
+    id: est-init-constraint-13
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}indicador_table
+        baseColumnNames: indicador_id
+        referencedTableName: ${db_prefix}est_indicador
+        referencedColumnNames: id
+        constraintName: ${db_prefix}indtab_indicador_fk
+- changeSet:
+    id: est-init-constraint-14
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}indicador_table
+        baseColumnNames: widget_id
+        referencedTableName: ${db_prefix}est_widget
+        referencedColumnNames: id
+        constraintName: ${db_prefix}indtab_widget_fk
+- changeSet:
+    id: est-init-constraint-15
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_dashboard_item
+        baseColumnNames: dashboard_id
+        referencedTableName: ${db_prefix}est_dashboard
+        referencedColumnNames: id
+        constraintName: ${db_prefix}dboard_item_dboard_fk
+- changeSet:
+    id: est-init-constraint-16
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_dashboard_item
+        baseColumnNames: view_id
+        referencedTableName: ${db_prefix}est_widget
+        referencedColumnNames: id
+        constraintName: ${db_prefix}dboard_item_view_fk
+- changeSet:
+    id: est-init-constraint-17
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}est_dashboard
+        columnNames: titol
+        constraintName: ${db_prefix}dashboard_titol_uk

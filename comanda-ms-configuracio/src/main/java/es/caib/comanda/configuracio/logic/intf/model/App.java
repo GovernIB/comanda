@@ -21,7 +21,9 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@ResourceConfig(quickFilterFields = { "codi", "nom" })
+@ResourceConfig(
+		quickFilterFields = { "codi", "nom" },
+		descriptionField = "nom")
 public class App extends BaseResource<Long> {
 
 	@NotNull
@@ -32,28 +34,10 @@ public class App extends BaseResource<Long> {
 	private String nom;
 	@Size(max = 1000)
 	private String descripcio;
-	@NotNull
-	@Size(max = 200)
-	private String infoUrl;
-	@NotNull
-	private Integer infoInterval = 1;
-	@Setter(AccessLevel.NONE)
-	private LocalDateTime infoData;
-	@NotNull
-	@Size(max = 200)
-	private String salutUrl;
-	@NotNull
-	private Integer salutInterval = 1;
-	@Size(max = 10)
-	@Setter(AccessLevel.NONE)
-	private String versio;
 	@InputType("checkbox")
 	private boolean activa = true;
 
-	private Integer integracioCount;
-	private Integer subsistemaCount;
 
-	private List<AppIntegracio> integracions;
-	private List<AppSubsistema> subsistemes;
+	private List<EntornApp> entornApps;
 
 }

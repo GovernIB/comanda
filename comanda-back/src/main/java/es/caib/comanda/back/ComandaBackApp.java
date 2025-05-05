@@ -26,6 +26,7 @@ import java.util.jar.Manifest;
 				"es.caib.comanda.ms",
 				"es.caib.comanda.configuracio",
 				"es.caib.comanda.salut",
+				"es.caib.comanda.estadistica",
 				"es.caib.comanda.back"
 		},
 		excludeFilters = @ComponentScan.Filter(
@@ -34,7 +35,9 @@ import java.util.jar.Manifest;
 						"es\\.caib\\.comanda\\.configuracio\\.back\\.config\\..*",
 						"es\\.caib\\.comanda\\.configuracio\\.persist\\.config\\..*",
 						"es\\.caib\\.comanda\\.salut\\.back\\.config\\..*",
-						"es\\.caib\\.comanda\\.salut\\.persist\\.config\\..*"
+						"es\\.caib\\.comanda\\.salut\\.persist\\.config\\..*",
+						"es\\.caib\\.comanda\\.estadistica\\.back\\.config\\..*",
+						"es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*"
 				})
 )
 public class ComandaBackApp extends SpringBootServletInitializer {

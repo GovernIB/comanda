@@ -15,7 +15,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -49,7 +48,6 @@ public class FetEntity extends BaseEntity<Fet> {
             inverseJoinColumns = @JoinColumn(name = "dimensio_valor_id")
     )
     private Set<DimensioValorEntity> dimensioValors;
-    private LocalDateTime timestamp;
     private Double valor;
 
 }

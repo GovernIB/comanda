@@ -20,8 +20,7 @@ public class Dimensio extends BaseResource<Long> {
     @Size(max = 1024)
     private String descripcio;
     @NotNull
-    @Size(max = 16)
-    private String aplicacioCodi;
+    private Long entornAppId;
     private List<DimensioValor> valors;
 
 

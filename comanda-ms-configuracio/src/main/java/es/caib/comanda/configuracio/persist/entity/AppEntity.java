@@ -10,6 +10,7 @@ import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -33,29 +34,10 @@ public class AppEntity extends BaseAuditableEntity<App> {
 	private String nom;
 	@Column(name = "descripcio", length = 1000, nullable = false)
 	private String descripcio;
-	@Column(name = "info_url", length = 200, nullable = false)
-	private String infoUrl;
-	@Column(name = "info_interval", nullable = false)
-	private Integer infoInterval;
-	@Column(name = "info_data")
-	private LocalDateTime infoData;
-	@Column(name = "salut_url", length = 200, nullable = false)
-	private String salutUrl;
-	@Column(name = "salut_interval", nullable = false)
-	private Integer salutInterval;
-	@Column(name = "versio", length = 10)
-	private String versio;
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
 
-	@OneToMany(mappedBy="app", cascade = CascadeType.ALL)
-	private Set<AppIntegracioEntity> appIntegracions;
-	@OneToMany(mappedBy="app", cascade = CascadeType.ALL)
-	private Set<AppSubsistemaEntity> appSubsistemes;
-
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "app_integracio int where int.app_id = id)")
-	private Integer integracioCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "app_subsistema sub where sub.app_id = id)")
-	private Integer subsistemaCount;
+	@OneToMany(mappedBy= "app", cascade = CascadeType.ALL)
+	private List<EntornAppEntity> entornApps;
 
 }

@@ -1,22 +1,39 @@
 package es.caib.comanda.salut.logic.service;
 
 import es.caib.comanda.client.AppServiceClient;
+import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
-import es.caib.comanda.salut.logic.intf.model.*;
+import es.caib.comanda.salut.logic.intf.model.Salut;
+import es.caib.comanda.salut.logic.intf.model.SalutDetall;
+import es.caib.comanda.salut.logic.intf.model.SalutInformeAgrupacio;
+import es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem;
+import es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem;
+import es.caib.comanda.salut.logic.intf.model.SalutInformeParams;
+import es.caib.comanda.salut.logic.intf.model.SalutIntegracio;
+import es.caib.comanda.salut.logic.intf.model.SalutMissatge;
+import es.caib.comanda.salut.logic.intf.model.SalutSubsistema;
 import es.caib.comanda.salut.logic.intf.service.SalutService;
-import es.caib.comanda.salut.persist.entity.*;
-import es.caib.comanda.salut.persist.repository.*;
+import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
+import es.caib.comanda.salut.persist.entity.SalutEntity;
+import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
+import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
+import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
+import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
+import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
+import es.caib.comanda.salut.persist.repository.SalutRepository;
+import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -57,6 +74,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	@Autowired
 	private AppServiceClient appServiceClient;
 	@Autowired
+	private EntornAppServiceClient entornAppServiceClient;
+	@Autowired
 	private KeycloakHelper keycloakHelper;
 
 	@PostConstruct
@@ -67,16 +86,23 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	}
 
 	@Override
-	@Transactional
+//	@Transactional
 	public void getSalutInfo() {
 		log.debug("Iniciant consulta periòdica de salut");
 		List<App> apps = appFindByActivaTrue();
 		apps.forEach(a -> {
-			try {
-				salutInfoHelper.getSalutInfo(a.getCodi(), a.getSalutUrl());
-			} catch (Exception ex) {
-				log.error("No s'ha pogut consultar la salut de l'aplicació {}", a.getCodi(), ex);
-			}
+			if (a.getEntornApps().isEmpty())
+				return;
+
+			a.getEntornApps().parallelStream().forEach(ea -> {
+				if (ea.isActiva()) {
+					try {
+						salutInfoHelper.getSalutInfo(ea, ea.getSalutUrl());
+					} catch (Exception ex) {
+						log.error("No s'ha pogut consultar la salut de l'aplicació {}", a.getCodi(), ex);
+					}
+				}
+			});
 		});
 	}
 
@@ -86,9 +112,9 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			String[] perspectives) {
 		boolean integracionsActive = Arrays.asList(perspectives).contains(PERSP_INTEGRACIONS);
 		boolean subsistemesActive = Arrays.asList(perspectives).contains(PERSP_SUBSISTEMES);
-		App appForEntity = null;
+		EntornApp entornAppForEntity = null;
 		if (integracionsActive) {
-			appForEntity = appFindByCodi(entity.getCodi());
+			entornAppForEntity = entornAppFindById(entity.getEntornAppId());
 			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalut(entity);
 			resource.setIntegracions(
 					salutIntegracions.stream().
@@ -97,8 +123,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 									SalutIntegracio.class,
 									"salut")).
 							collect(Collectors.toList()));
-			if (appForEntity != null) {
-				appForEntity.getIntegracions().forEach(i -> {
+			if (entornAppForEntity != null) {
+				entornAppForEntity.getIntegracions().forEach(i -> {
 					Optional<SalutIntegracio> salutIntegracio = resource.getIntegracions().stream().
 							filter(si -> si.getCodi().equals(i.getCodi())).
 							findFirst();
@@ -107,8 +133,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			}
 		}
 		if (subsistemesActive) {
-			if (appForEntity == null) {
-				appForEntity = appFindByCodi(entity.getCodi());
+			if (entornAppForEntity == null) {
+				entornAppForEntity = entornAppFindById(entity.getEntornAppId());
 			}
 			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalut(entity);
 			resource.setSubsistemes(
@@ -118,8 +144,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 									SalutSubsistema.class,
 									"salut")).
 							collect(Collectors.toList()));
-			if (appForEntity != null) {
-				appForEntity.getSubsistemes().forEach(s -> {
+			if (entornAppForEntity != null) {
+				entornAppForEntity.getSubsistemes().forEach(s -> {
 					Optional<SalutSubsistema> salutSubsistema = resource.getSubsistemes().stream().
 							filter(ss -> ss.getCodi().equals(s.getCodi())).
 							findFirst();
@@ -153,7 +179,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	}
 
 	/**
-	 * Darrera informació de salut de cada aplicació.
+	 * Darrera informació de salut de cada aplicació/entorn.
 	 */
 	public class InformeSalutLast implements ReportDataGenerator<Object, Salut> {
 		@Override
@@ -189,20 +215,31 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				collect(Collectors.toList());
 	}
 
-	private App appFindByCodi(String codi) {
-		PagedModel<EntityModel<App>> apps = appServiceClient.find(
-				null,
-				"codi:'" + codi + "'",
-				null,
-				null,
-				"UNPAGED",
+//	private App appFindByCodi(String codi) {
+//		PagedModel<EntityModel<App>> apps = appServiceClient.find(
+//				null,
+//				"codi:'" + codi + "'",
+//				null,
+//				null,
+//				"UNPAGED",
+//				null,
+//				getAuthorizationHeader());
+//		if (!apps.getContent().isEmpty()) {
+//			return apps.getContent().iterator().next().getContent();
+//		} else {
+//			return null;
+//		}
+//	}
+
+	private EntornApp entornAppFindById(Long entornAppId) {
+		EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
+				entornAppId,
 				null,
 				getAuthorizationHeader());
-		if (!apps.getContent().isEmpty()) {
-			return apps.getContent().iterator().next().getContent();
-		} else {
-			return null;
+		if (entornApp != null) {
+			return entornApp.getContent();
 		}
+		return null;
 	}
 
 	private String getAuthorizationHeader() {
@@ -236,27 +273,27 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			List<SalutInformeEstatItem> data;
 			if (SalutInformeAgrupacio.ANY == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeEstatAny(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MES == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeEstatMes(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.DIA == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeEstatDia(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.HORA == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeEstatHora(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MINUT == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeEstatMinut(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else {
@@ -294,27 +331,27 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			List<SalutInformeLatenciaItem> data;
 			if (SalutInformeAgrupacio.ANY == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeLatenciaAny(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MES == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeLatenciaMes(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.DIA == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeLatenciaDia(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.HORA == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeLatenciaHora(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MINUT == params.getAgrupacio()) {
 				data = ((SalutRepository)resourceRepository).informeLatenciaMinut(
-						params.getAppCodi(),
+						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else {

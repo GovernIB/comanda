@@ -2,14 +2,24 @@ package es.caib.comanda.estadistica.persist.entity;
 
 import es.caib.comanda.estadistica.logic.intf.model.DashboardItem;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
-public class DashboardItemEntity extends BaseEntity<DashboardItem> {
+@Entity
+@Table(name = BaseConfig.DB_PREFIX + "est_dashboard_item")
+@Getter
+@Setter
+@NoArgsConstructor
+public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
 
     @Column(name = "pos_x", nullable = false)
     private int posX;

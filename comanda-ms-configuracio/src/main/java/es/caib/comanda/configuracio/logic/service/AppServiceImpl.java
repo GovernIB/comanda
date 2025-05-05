@@ -2,16 +2,15 @@ package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
-import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
-import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.intf.service.AppService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,34 +49,48 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	public void refreshAppInfo() {
 		log.debug("Iniciant refresc periòdic de la informació de les apps");
 		List<AppEntity> apps = appRepository.findByActivaTrue();
-		apps.forEach(a -> {
-			try {
-				appInfoHelper.refreshAppInfo(a);
-			} catch (Exception ex) {
-				log.error("No s'ha pogut refrescar la informació de l'aplicació {}", a.getCodi(), ex);
-			}
+		apps.forEach(app -> {
+			if (app.getEntornApps().isEmpty())
+				return;
+
+			app.getEntornApps().parallelStream().forEach(entornApp -> {
+				try {
+					if (entornApp.isActiva()) {
+						appInfoHelper.refreshAppInfo(entornApp);
+					}
+				} catch (Exception ex) {
+					log.error("No s'ha pogut refrescar la informació de l'aplicació {} en l'entorn {}",
+							app.getCodi(),
+							entornApp.getEntorn().getCodi(),
+							ex);
+				}
+			});
 		});
 	}
 
 	@Override
 	protected void afterConversion(AppEntity entity, App resource) {
-		List<AppIntegracioEntity> integracions = integracioRepository.findByApp(entity);
-		if (!integracions.isEmpty()) {
-			resource.setIntegracions(
-					integracions.stream().map(i -> new AppIntegracio(
-							i.getCodi(),
-							i.getNom(),
-							i.isActiva(),
-							null)).collect(Collectors.toList()));
-		}
-		List<AppSubsistemaEntity> subsistemes = subsistemaRepository.findByApp(entity);
-		if (!integracions.isEmpty()) {
-			resource.setSubsistemes(
-					subsistemes.stream().map(s -> new AppSubsistema(
-								s.getCodi(),
-								s.getNom(),
-								s.isActiu(),
-								null)).collect(Collectors.toList()));
+		List<EntornAppEntity> entornApps = entity.getEntornApps();
+		if (!entornApps.isEmpty()) {
+			resource.setEntornApps(
+					entornApps.stream().map(e -> {
+						EntornApp entornApp = EntornApp.builder()
+								.app(ResourceReference.toResourceReference(entity.getId(), entity.getNom()))
+								.entorn(ResourceReference.toResourceReference(e.getEntorn().getId(), e.getEntorn().getNom()))
+								.infoUrl(e.getInfoUrl())
+								.infoData(e.getInfoData())
+								.versio(e.getVersio())
+								.activa(e.isActiva())
+								.salutUrl(e.getSalutUrl())
+								.salutInterval(e.getSalutInterval())
+								.estadisticaInfoUrl(e.getEstadisticaInfoUrl())
+								.estadisticaUrl(e.getEstadisticaUrl())
+								.estadisticaCron(e.getEstadisticaCron())
+								.build();
+						entornApp.setId(e.getId());
+						return entornApp;
+					}).collect(Collectors.toList())
+			);
 		}
 	}
 

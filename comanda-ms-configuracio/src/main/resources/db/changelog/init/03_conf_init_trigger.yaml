@@ -2,3 +2,64 @@ databaseChangeLog:
 - changeSet:
     id: conf-init-trigger-1
     author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}app_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}app_trg
+#                    BEFORE INSERT ON ${db_prefix}app
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}app_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}entorn_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}entorn_trg
+#                    BEFORE INSERT ON ${db_prefix}entorn
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}entorn_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}entorn_app_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}entorn_app_trg
+#                    BEFORE INSERT ON ${db_prefix}entorn_app
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}entorn_app_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}app_integracio_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}app_integracio_trg
+#                    BEFORE INSERT ON ${db_prefix}app_integracio
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}app_integracio_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}app_subsistema_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}app_subsistema_trg
+#                    BEFORE INSERT ON ${db_prefix}app_subsistema
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}app_subsistema_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;

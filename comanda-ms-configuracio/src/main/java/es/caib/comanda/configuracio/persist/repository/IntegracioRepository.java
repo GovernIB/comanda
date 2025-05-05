@@ -2,6 +2,7 @@ package es.caib.comanda.configuracio.persist.repository;
 
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
 import java.util.List;
@@ -13,7 +14,6 @@ import java.util.List;
  */
 public interface IntegracioRepository extends BaseRepository<AppIntegracioEntity, Long> {
 
-	List<AppIntegracioEntity> findByApp(AppEntity app);
-	List<AppIntegracioEntity> findByAppCodi(String codi);
+	List<AppIntegracioEntity> findByEntornApp(EntornAppEntity entornApp);
 
 }

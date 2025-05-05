@@ -1,16 +1,31 @@
 package es.caib.comanda.salut.logic.helper;
 
-import es.caib.comanda.ms.salut.model.*;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.ms.salut.model.DetallSalut;
+import es.caib.comanda.ms.salut.model.EstatSalutEnum;
+import es.caib.comanda.ms.salut.model.IntegracioSalut;
+import es.caib.comanda.ms.salut.model.MissatgeSalut;
+import es.caib.comanda.ms.salut.model.SalutInfo;
+import es.caib.comanda.ms.salut.model.SubsistemaSalut;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.SalutNivell;
-import es.caib.comanda.salut.persist.entity.*;
-import es.caib.comanda.salut.persist.repository.*;
+import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
+import es.caib.comanda.salut.persist.entity.SalutEntity;
+import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
+import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
+import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
+import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
+import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
+import es.caib.comanda.salut.persist.repository.SalutRepository;
+import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -36,28 +51,32 @@ public class SalutInfoHelper {
 	@Autowired
 	private SalutDetallRepository salutDetallRepository;
 
-	public void getSalutInfo(String appCodi, String salutUrl) {
-		log.debug("Consultant informació de salut de l'app {}", appCodi);
+	@Transactional
+	public void getSalutInfo(EntornApp entornApp, String salutUrl) {
+		log.debug("Consultant informació de salut de l'app {}, entorn {}",
+				entornApp.getApp().getNom(),
+				entornApp.getEntorn().getNom());
 		RestTemplate restTemplate = new RestTemplate();
 		try {
 			SalutInfo salutInfo = restTemplate.getForObject(salutUrl, SalutInfo.class);
-			crearSalut(salutInfo);
+			crearSalut(salutInfo, entornApp.getId());
 		} catch (RestClientException ex) {
 			SalutEntity salut = new SalutEntity();
-			salut.setCodi(appCodi);
+			salut.setEntornAppId(entornApp.getId());
 			salut.setData(LocalDateTime.now());
 			salut.setAppEstat(SalutEstat.UNKNOWN);
 			salutRepository.save(salut);
-			log.warn("No s'ha pogut obtenir informació de salut de l'app {}: {}",
-					appCodi,
+			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
+					entornApp.getApp().getId(),
+					entornApp.getEntorn().getId(),
 					ex.getLocalizedMessage());
 		}
 	}
 
-	private void crearSalut(SalutInfo info) {
+	private void crearSalut(SalutInfo info, Long entornAppId) {
 		if (info != null) {
 			SalutEntity salut = new SalutEntity();
-			salut.setCodi(info.getCodi());
+			salut.setEntornAppId(entornAppId);
 			salut.setData(toLocalDateTime(info.getData()));
 			salut.setAppEstat(toSalutEstat(info.getEstat().getEstat()));
 			salut.setAppLatencia(info.getEstat().getLatencia());
@@ -78,8 +97,8 @@ public class SalutInfoHelper {
 				salutIntegracio.setCodi(i.getCodi());
 				salutIntegracio.setEstat(toSalutEstat(i.getEstat()));
 				salutIntegracio.setLatencia(i.getLatencia());
-				salutIntegracio.setTotalOk(i.getPeticions().getTotalOk());
-				salutIntegracio.setTotalError(i.getPeticions().getTotalError());
+				salutIntegracio.setTotalOk(i.getPeticions() != null ? i.getPeticions().getTotalOk() : 0L);
+				salutIntegracio.setTotalError(i.getPeticions() != null ? i.getPeticions().getTotalError() : 0L);
 				salutIntegracio.setSalut(salut);
 				salutIntegracioRepository.save(salutIntegracio);
 			});

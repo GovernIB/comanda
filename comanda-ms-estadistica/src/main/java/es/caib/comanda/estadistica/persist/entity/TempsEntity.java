@@ -4,6 +4,7 @@ import es.caib.comanda.estadistica.logic.intf.model.DiaSetmanaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.Temps;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,12 +15,14 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 
 @Entity
 @Table(name = BaseConfig.DB_PREFIX + "est_temps")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class TempsEntity extends BaseEntity<Temps> {
 
     @Column(name = "data", nullable = false)
@@ -30,12 +33,22 @@ public class TempsEntity extends BaseEntity<Temps> {
     private int trimestre;
     @Column(name = "mes", nullable = false)
     private int mes;
+    @Column(name = "setmana", nullable = false)
+    private int setmana;
     @Column(name = "dia", nullable = false)
     private int dia;
     @Column(name = "diaSetmana", length = 2, nullable = false)
     @Enumerated(EnumType.STRING)
     private DiaSetmanaEnum diaSetmana;
-    @Column(name = "hora", nullable = false)
-    private int hora;
+
+    public TempsEntity(LocalDate data) {
+        this.data = data;
+        this.anualitat = data.getYear();
+        this.trimestre = data.getMonthValue() / 3;
+        this.mes = data.getMonthValue();
+        this.setmana = data.get(WeekFields.ISO.weekOfWeekBasedYear());
+        this.diaSetmana = DiaSetmanaEnum.valueOfDayOfWeek(data.getDayOfWeek());
+        this.dia = data.getDayOfMonth();
+    }
 
 }

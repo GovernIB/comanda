@@ -10,21 +10,12 @@ import java.util.List;
 @NoArgsConstructor
 public class App {
 
+	private Long id;
 	private String codi;
 	private String nom;
 	private String descripcio;
-	private String infoUrl;
-	private Integer infoInterval;
-	private LocalDateTime infoData;
-	private String salutUrl;
-	private Integer salutInterval;
-	private String versio;
-	private boolean activa;
+	private boolean activa = true;
 
-	private Integer integracioCount;
-	private Integer subsistemaCount;
-
-	private List<AppIntegracio> integracions;
-	private List<AppSubsistema> subsistemes;
+	private List<EntornApp> entornApps;
 
 }

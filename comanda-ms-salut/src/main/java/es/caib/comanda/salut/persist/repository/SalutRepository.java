@@ -23,12 +23,12 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 	@Query("FROM " +
 			"    SalutEntity s1 " +
 			"WHERE " +
-			"    s1.data in (SELECT MAX(data) from SalutEntity s2 where s1.codi = s2.codi AND s2.data < :data) " +
-			"AND (:codi IS NULL or s1.codi = :codi) " +
+			"    s1.data in (SELECT MAX(s2.data) from SalutEntity s2 where s1.entornAppId = s2.entornAppId AND s2.data < :data) " +
+			"AND (:entornAppId IS NULL or s1.entornAppId = :entornAppId) " +
 			"ORDER BY " +
-			"    s1.codi ASC")
+			"    s1.entornAppId ASC")
 	List<SalutEntity> informeSalutLast(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("data") LocalDateTime data);
 
 	String INFORME_ESTAT_ANY = "SELECT " +
@@ -41,7 +41,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -58,7 +58,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -75,7 +75,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -92,7 +92,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -109,7 +109,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -119,27 +119,27 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
 	@Query(INFORME_ESTAT_ANY)
 	List<SalutInformeEstatItem> informeEstatAny(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_ESTAT_MES)
 	List<SalutInformeEstatItem> informeEstatMes(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_ESTAT_DIA)
 	List<SalutInformeEstatItem> informeEstatDia(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_ESTAT_HORA)
 	List<SalutInformeEstatItem> informeEstatHora(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_ESTAT_MINUT)
 	List<SalutInformeEstatItem> informeEstatMinut(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 
@@ -150,7 +150,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -164,7 +164,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -178,7 +178,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -192,7 +192,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -206,7 +206,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"FROM " +
 			"    SalutEntity AS s " +
 			"WHERE " +
-			"    s.codi = :codi " +
+			"    s.entornAppId = :entornAppId " +
 			"AND s.data >= :dataInici " +
 			"AND s.data <= :dataFi " +
 			"GROUP BY " +
@@ -216,27 +216,27 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
 	@Query(INFORME_LATENCIA_ANY)
 	List<SalutInformeLatenciaItem> informeLatenciaAny(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_LATENCIA_MES)
 	List<SalutInformeLatenciaItem> informeLatenciaMes(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_LATENCIA_DIA)
 	List<SalutInformeLatenciaItem> informeLatenciaDia(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_LATENCIA_HORA)
 	List<SalutInformeLatenciaItem> informeLatenciaHora(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 	@Query(INFORME_LATENCIA_MINUT)
 	List<SalutInformeLatenciaItem> informeLatenciaMinut(
-			@Param("codi") String codi,
+			@Param("entornAppId") Long entornAppId,
 			@Param("dataInici") LocalDateTime dataInici,
 			@Param("dataFi") LocalDateTime dataFi);
 

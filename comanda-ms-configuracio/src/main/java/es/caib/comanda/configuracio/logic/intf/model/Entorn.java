@@ -17,7 +17,9 @@ import javax.validation.constraints.Size;
 @Getter
 @Setter
 @NoArgsConstructor
-@ResourceConfig(quickFilterFields = { "codi", "nom" })
+@ResourceConfig(
+        quickFilterFields = { "codi", "nom" },
+        descriptionField = "nom")
 public class Entorn extends BaseResource<Long> {
 
     @NotNull

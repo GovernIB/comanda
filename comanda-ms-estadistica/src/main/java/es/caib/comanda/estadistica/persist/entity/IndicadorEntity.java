@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity;
 
 import es.caib.comanda.estadistica.logic.intf.model.Indicador;
+import es.caib.comanda.ms.estadistica.model.Format;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
@@ -9,6 +10,8 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -16,7 +19,7 @@ import javax.persistence.UniqueConstraint;
 @Table(
         name = BaseConfig.DB_PREFIX + "est_indicador",
         uniqueConstraints = {
-                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "ind_nom_uk", columnNames = { "nom", "aplicacio_codi" })
+                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "ind_nom_uk", columnNames = { "nom", "entorn_app_id" })
         }
 )
 @Getter
@@ -28,8 +31,9 @@ public class IndicadorEntity extends BaseEntity<Indicador> {
     private String nom;
     @Column(name = "descripcio", length = 1024)
     private String descripcio;
-    @Column(name = "aplicacio_codi", length = 16, nullable = false)
-    private String aplicacioCodi;
+    @Column(name = "entorn_app_id", nullable = false)
+    private Long entornAppId;
     @Column(name = "format", length = 64)
-    private String format;
+    @Enumerated(EnumType.STRING)
+    private Format format;
 }

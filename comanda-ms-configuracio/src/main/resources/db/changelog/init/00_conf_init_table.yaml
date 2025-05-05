@@ -4,6 +4,33 @@ databaseChangeLog:
     author: limit
     changes:
     - createTable:
+        tableName: ${db_prefix}entorn
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}entorn_pk
+            - column:
+                name: codi
+                type: varchar(16)
+                constraints:
+                    nullable: false
+            - column:
+                name: nom
+                type: varchar(255)
+            - addUniqueConstraint:
+                tableName: ${db_prefix}entorn
+                columnNames: codi
+                constraintName: ${db_prefix}entorn_codi_uk
+- changeSet:
+    id: conf-init-table-2
+    author: limit
+    changes:
+    - createTable:
         tableName: ${db_prefix}app
         columns:
         - column:
@@ -28,34 +55,8 @@ databaseChangeLog:
             name: descripcio
             type: VARCHAR(1000)
         - column:
-            constraints:
-                nullable: false
-            name: info_url
-            type: VARCHAR(200)
-        - column:
-            constraints:
-                nullable: false
-            name: info_interval
-            type: INT
-        - column:
-            name: info_data
-            type: DATETIME
-        - column:
-            constraints:
-                nullable: false
-            name: salut_url
-            type: VARCHAR(200)
-        - column:
-            constraints:
-                nullable: false
-            name: salut_interval
-            type: INT
-        - column:
-            name: versio
-            type: VARCHAR(10)
-        - column:
-            name: activa
-            type: BOOLEAN
+              name: activa
+              type: BOOLEAN
         - column:
             constraints:
                 nullable: false
@@ -76,7 +77,89 @@ databaseChangeLog:
             name: v
             type: BIGINT
 - changeSet:
-    id: conf-init-table-2
+    id: conf-init-table-3
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}entorn_app
+        columns:
+            - column:
+                constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: ${db_prefix}entorn_app_pk
+                name: id
+                type: BIGINT
+                autoIncrement: true
+            - column:
+                constraints:
+                    nullable: false
+                name: entorn_id
+                type: BIGINT
+            - column:
+                constraints:
+                    nullable: false
+                name: app_id
+                type: BIGINT
+            - column:
+                constraints:
+                    nullable: false
+                name: info_url
+                type: VARCHAR(200)
+            - column:
+                constraints:
+                    nullable: false
+                name: info_interval
+                type: INT
+            - column:
+                name: info_data
+                type: DATETIME
+            - column:
+                constraints:
+                    nullable: false
+                name: salut_url
+                type: VARCHAR(200)
+            - column:
+                constraints:
+                    nullable: false
+                name: salut_interval
+                type: INT
+            - column:
+                  name: estadistica_info_url
+                  type: VARCHAR(200)
+            - column:
+                  name: estadistica_url
+                  type: VARCHAR(200)
+            - column:
+                  name: estadistica_cron
+                  type: VARCHAR(40)
+            - column:
+                name: versio
+                type: VARCHAR(10)
+            - column:
+                name: activa
+                type: BOOLEAN
+            - column:
+                constraints:
+                    nullable: false
+                name: created_by
+                type: VARCHAR(64)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_date
+                type: TIMESTAMP
+            - column:
+                name: lastmod_by
+                type: VARCHAR(64)
+            - column:
+                name: lastmod_date
+                type: TIMESTAMP
+            - column:
+                name: v
+                type: BIGINT
+- changeSet:
+    id: conf-init-table-4
     author: limit
     changes:
     - createTable:
@@ -106,7 +189,7 @@ databaseChangeLog:
         - column:
             constraints:
                 nullable: false
-            name: app_id
+            name: entorn_app_id
             type: BIGINT
         - column:
             constraints:
@@ -128,7 +211,7 @@ databaseChangeLog:
             name: v
             type: BIGINT
 - changeSet:
-    id: conf-init-table-3
+    id: conf-init-table-5
     author: limit
     changes:
     - createTable:
@@ -158,7 +241,7 @@ databaseChangeLog:
         - column:
               constraints:
                   nullable: false
-              name: app_id
+              name: entorn_app_id
               type: BIGINT
         - column:
             constraints:

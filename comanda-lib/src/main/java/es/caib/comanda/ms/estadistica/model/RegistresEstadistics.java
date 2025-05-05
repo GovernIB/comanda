@@ -13,6 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class RegistresEstadistics {
     private Temps temps;
-    private List<Dimensio> dimensionsDescripcio;
+//    private List<Dimensio> dimensionsDescripcio;
     private List<RegistreEstadistic> fets;
 }

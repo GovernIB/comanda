@@ -2,3 +2,40 @@ databaseChangeLog:
 - changeSet:
     id: conf-init-data-1
     author: limit
+    changes:
+        - insert:
+            tableName: ${db_prefix}entorn
+            columns:
+                - column:
+                    name: codi
+                    value: "DEV"
+                - column:
+                    name: nom
+                    value: "Entorn de desenvolupament"
+        - insert:
+            tableName: ${db_prefix}entorn
+            columns:
+                - column:
+                    name: codi
+                    value: "PRE"
+                - column:
+                    name: nom
+                    value: "Entorn de proves"
+        - insert:
+            tableName: ${db_prefix}entorn
+            columns:
+                - column:
+                    name: codi
+                    value: "PRO"
+                - column:
+                    name: nom
+                    value: "Entorn de producció"
+        - insert:
+            tableName: ${db_prefix}entorn
+            columns:
+                - column:
+                    name: codi
+                    value: "SE"
+                - column:
+                    name: nom
+                    value: "Entorn de serveis estables"

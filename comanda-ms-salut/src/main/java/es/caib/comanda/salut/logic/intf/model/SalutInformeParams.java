@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class SalutInformeParams {
 
 	@NotNull
-	private String appCodi;
+	private Long entornAppId;
 	@NotNull
 	private LocalDateTime dataInici;
 	@NotNull

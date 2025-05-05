@@ -1,0 +1,19 @@
+databaseChangeLog:
+- changeSet:
+    id: est-init-data-1
+    author: limit
+    changes:
+    - createIndex:
+        tableName: ${db_prefix}est_fet
+        indexName: ${db_prefix}est_fet_temps_ind_i
+        columns:
+            - column:
+                name: temps_id
+            - column:
+                name: indicador_id
+    - createIndex:
+        tableName: ${db_prefix}est_dimensio_valor
+        indexName: ${db_prefix}est_dimensio_valor_dim_i
+        columns:
+            - column:
+                name: dimensio_id

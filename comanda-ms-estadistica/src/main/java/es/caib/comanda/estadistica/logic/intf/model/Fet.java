@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Getter
@@ -21,8 +20,6 @@ public class Fet extends BaseResource<Long> {
     private Temps temps;
     @NotEmpty
     private Set<DimensioValor> dimensioValors;
-    @NotNull
-    private LocalDateTime timestamp;
     @NotNull
     private Double valor;
 

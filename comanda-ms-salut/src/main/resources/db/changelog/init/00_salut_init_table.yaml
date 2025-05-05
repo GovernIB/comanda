@@ -17,8 +17,8 @@ databaseChangeLog:
         - column:
             constraints:
                 nullable: false
-            name: codi
-            type: VARCHAR(16)
+            name: entorn_app_id
+            type: BIGINT
         - column:
             constraints:
                 nullable: false

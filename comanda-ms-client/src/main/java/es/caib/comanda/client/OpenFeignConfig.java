@@ -10,7 +10,9 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @EnableFeignClients(clients = {
-		AppServiceClient.class
+		AppServiceClient.class,
+		EntornServiceClient.class,
+		EntornAppServiceClient.class
 })
 public class OpenFeignConfig {
 

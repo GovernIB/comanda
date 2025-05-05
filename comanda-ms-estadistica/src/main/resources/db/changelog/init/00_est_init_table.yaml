@@ -1,0 +1,442 @@
+databaseChangeLog:
+- changeSet:
+    id: est-init-table-1
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_dimensio
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_dimensio_pk
+            - column:
+                name: nom
+                type: varchar(64)
+                constraints:
+                    nullable: false
+            - column:
+                name: descripcio
+                type: varchar(1024)
+            - column:
+                name: entorn_app_id
+                type: bigint
+                constraints:
+                    nullable: false
+- changeSet:
+    id: est-init-table-2
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_dimensio_valor
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_dimensio_valor_pk
+            - column:
+                name: valor
+                type: varchar(255)
+            - column:
+                name: dimensio_id
+                type: bigint
+                constraints:
+                    nullable: false
+- changeSet:
+    id: est-init-table-3
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_indicador
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_indicador_pk
+            - column:
+                name: nom
+                type: varchar(64)
+                constraints:
+                    nullable: false
+            - column:
+                name: descripcio
+                type: varchar(1024)
+            - column:
+                name: entorn_app_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: format
+                type: varchar(64)
+- changeSet:
+    id: est-init-table-4
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_temps
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_temps_pk
+            - column:
+                name: data
+                type: date
+                constraints:
+                    nullable: false
+            - column:
+                name: anualitat
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: trimestre
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: mes
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: setmana
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: dia
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: diaSetmana
+                type: varchar(2)
+                constraints:
+                    nullable: false
+- changeSet:
+    id: est-init-table-5
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_fet
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_fet_pk
+            - column:
+                name: indicador_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: temps_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: valor
+                type: double
+- changeSet:
+    id: est-init-table-6
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_fet_dimensio_valor
+        columns:
+            - column:
+                name: fet_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: dimensio_valor_id
+                type: bigint
+                constraints:
+                    nullable: false
+- changeSet:
+    id: est-init-table-7
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_widget
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_widget_pk
+            - column:
+                name: widget_type
+                type: varchar(16)
+                constraints:
+                    nullable: false
+            - column:
+                name: titol
+                type: varchar(64)
+                constraints:
+                    nullable: false
+            - column:
+                name: descripcio
+                type: varchar(1024)
+            - column:
+                name: entorn_app_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: inici_unitat
+                type: varchar(16)
+            - column:
+                name: inici
+                type: int
+            - column:
+                name: duracio_unitat
+                type: varchar(16)
+            - column:
+                name: duracio
+                type: int
+            - column:
+                name: indicador_id
+                type: bigint
+            - column:
+                name: tipus_grafic
+                type: varchar(16)
+            - column:
+                name: tipus_valors
+                type: varchar(16)
+            - column:
+                name: temps_agrupacio
+                type: varchar(16)
+            - column:
+                name: llegenda_x
+                type: varchar(64)
+            - column:
+                name: llegenda_y
+                type: varchar(64)
+            - column:
+                name: unitat
+                type: varchar(64)
+            - column:
+                name: agrupament_dimensio_id
+                type: bigint
+            - column:
+                name: agrupament_dimensio_titol
+                type: varchar(64)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_by
+                type: VARCHAR(64)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_date
+                type: TIMESTAMP
+            - column:
+                name: lastmod_by
+                type: VARCHAR(64)
+            - column:
+                name: lastmod_date
+                type: TIMESTAMP
+            - column:
+                name: v
+                type: BIGINT
+- changeSet:
+    id: est-init-table-8
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_widget_dim_valor
+        columns:
+            - column:
+                name: widget_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: dimensio_valor_id
+                type: bigint
+                constraints:
+                    nullable: false
+- changeSet:
+    id: est-init-table-9
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}indicador_table
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}indicador_table_pk
+            - column:
+                name: indicador_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: widget_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: tipus
+                type: varchar(16)
+            - column:
+                name: titol
+                type: varchar(64)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_by
+                type: VARCHAR(64)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_date
+                type: TIMESTAMP
+            - column:
+                name: lastmod_by
+                type: VARCHAR(64)
+            - column:
+                name: lastmod_date
+                type: TIMESTAMP
+            - column:
+                name: v
+                type: BIGINT
+- changeSet:
+    id: est-init-table-10
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_dashboard
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_dashboard_pk
+            - column:
+                name: titol
+                type: varchar(64)
+                constraints:
+                    nullable: false
+            - column:
+                name: descripcio
+                type: varchar(1024)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_by
+                type: VARCHAR(64)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_date
+                type: TIMESTAMP
+            - column:
+                name: lastmod_by
+                type: VARCHAR(64)
+            - column:
+                name: lastmod_date
+                type: TIMESTAMP
+            - column:
+                name: v
+                type: BIGINT
+- changeSet:
+    id: est-init-table-11
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_dashboard_item
+        columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_dashboard_item_pk
+            - column:
+                name: pos_x
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: pos_y
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: width
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: height
+                type: int
+                constraints:
+                    nullable: false
+            - column:
+                name: dashboard_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: view_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                constraints:
+                    nullable: false
+                name: created_by
+                type: VARCHAR(64)
+            - column:
+                constraints:
+                    nullable: false
+                name: created_date
+                type: TIMESTAMP
+            - column:
+                name: lastmod_by
+                type: VARCHAR(64)
+            - column:
+                name: lastmod_date
+                type: TIMESTAMP
+            - column:
+                name: v
+                type: BIGINT

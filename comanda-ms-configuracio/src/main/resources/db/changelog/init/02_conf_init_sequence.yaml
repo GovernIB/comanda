@@ -2,3 +2,25 @@ databaseChangeLog:
 - changeSet:
     id: conf-init-sequence-1
     author: limit
+#    changes:
+#        - createSequence:
+#            sequenceName: ${db_prefix}app_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}entorn_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}entorn_app_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}app_integracio_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}app_subsistema_seq
+#            startValue: 1
+#            incrementBy: 1
+

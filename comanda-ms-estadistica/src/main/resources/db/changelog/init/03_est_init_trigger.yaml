@@ -1,0 +1,113 @@
+databaseChangeLog:
+- changeSet:
+    id: est-init-trigger-1
+    author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_dimensio_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_dimensio_trg
+#                    BEFORE INSERT ON ${db_prefix}est_dimensio
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_dimensio_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_dimensio_valor_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_dimensio_valor_trg
+#                    BEFORE INSERT ON ${db_prefix}est_dimensio_valor
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_dimensio_valor_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_indicador_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_indicador_trg
+#                    BEFORE INSERT ON ${db_prefix}est_indicador
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_indicador_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_temps_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_temps_trg
+#                    BEFORE INSERT ON ${db_prefix}est_temps
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_temps_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_fet_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_fet_trg
+#                    BEFORE INSERT ON ${db_prefix}est_fet
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_fet_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_widget_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_widget_trg
+#                    BEFORE INSERT ON ${db_prefix}est_widget
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_widget_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}indicador_table_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}indicador_table_trg
+#                    BEFORE INSERT ON ${db_prefix}indicador_table
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}indicador_table_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_dashboard_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_dashboard_trg
+#                    BEFORE INSERT ON ${db_prefix}est_dashboard
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_dashboard_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}est_dashboard_item_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}est_dashboard_item_trg
+#                    BEFORE INSERT ON ${db_prefix}est_dashboard_item
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}est_dashboard_item_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;

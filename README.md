@@ -20,8 +20,11 @@ spring.datasource.username=DB_USERNAME
 spring.datasource.password=DB_PASSWORD
 spring.security.oauth2.resourceserver.jwt.issuer-uri=https://AUTH_HOST/realms/AUTH_REALM
 es.caib.comanda.client.app.url=http://localhost:8080/api/apps
+es.caib.comanda.client.entorn.url=http://localhost:8080/api/entorns
+es.caib.comanda.client.entorn.app.url=http://localhost:8080/api/entornApps
 es.caib.comanda.scheduler.app.info.cron=0 */1 * * * *
 es.caib.comanda.scheduler.salut.info.cron=0 */1 * * * *
+es.caib.comanda.scheduler.estadistica.info.cron=1 0 * * * *
 es.caib.comanda.keycloak.base.url=https://AUTH_HOST
 es.caib.comanda.keycloak.realm=AUTH_REALM
 es.caib.comanda.keycloak.client.id=AUTH_CLIENT_ID
@@ -108,8 +111,11 @@ Exemple de contingut del fitxer jboss.properties:
 ```
 spring.security.oauth2.resourceserver.jwt.issuer-uri=https://AUTH_HOST/realms/AUTH_REALM
 es.caib.comanda.client.app.url=http://localhost:8080/api/apps
+es.caib.comanda.client.entorn.url=http://localhost:8080/api/entorns
+es.caib.comanda.client.entorn.app.url=http://localhost:8080/api/entornApps
 es.caib.comanda.scheduler.app.info.cron=0 */1 * * * *
 es.caib.comanda.scheduler.salut.info.cron=0 */1 * * * *
+es.caib.comanda.scheduler.estadistica.info.cron=1 0 * * * *
 es.caib.comanda.keycloak.base.url=https://AUTH_HOST
 es.caib.comanda.keycloak.realm=AUTH_REALM
 es.caib.comanda.keycloak.client.id=AUTH_CLIENT_ID

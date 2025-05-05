@@ -26,8 +26,8 @@ import java.util.Set;
 @NoArgsConstructor
 public class SalutEntity extends BaseEntity<Salut> {
 
-	@Column(name = "codi", length = 16, nullable = false)
-	private String codi;
+	@Column(name = "entorn_app_id", nullable = false)
+	private Long entornAppId;
 	@Column(name = "data", nullable = false)
 	private LocalDateTime data;
 	@Enumerated(EnumType.STRING)

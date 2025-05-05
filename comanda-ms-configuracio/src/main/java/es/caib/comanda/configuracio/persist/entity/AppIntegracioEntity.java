@@ -17,7 +17,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = BaseConfig.DB_PREFIX + "app_integracio",
 		uniqueConstraints = {
-				@UniqueConstraint(name = BaseConfig.DB_PREFIX + "app_integracio_appcodi_uk", columnNames = { "app_id", "codi" })
+				@UniqueConstraint(name = BaseConfig.DB_PREFIX + "app_integracio_appcodi_uk", columnNames = { "entorn_app_id", "codi" })
 		})
 @Getter
 @Setter
@@ -33,9 +33,9 @@ public class AppIntegracioEntity extends BaseAuditableEntity<AppIntegracio> {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
-			name = "app_id",
+			name = "entorn_app_id",
 			referencedColumnName = "id",
-			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "app_integracio_app_fk"))
-	private AppEntity app;
+			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "app_integ_entorn_app_fk"))
+	private EntornAppEntity entornApp;
 
 }

@@ -1,6 +1,5 @@
 package es.caib.comanda.ms.estadistica.model;
 
-import java.time.DayOfWeek;
 
 public enum DiaSetmanaEnum {
     DL,
@@ -11,16 +10,17 @@ public enum DiaSetmanaEnum {
     DS,
     DG;
 
-    public static DiaSetmanaEnum valueOf(DayOfWeek dayOfWeek) {
+    public static DiaSetmanaEnum valueOf(int dayOfWeek) {
         switch (dayOfWeek) {
-            case MONDAY: return DL;
-            case TUESDAY: return DM;
-            case WEDNESDAY: return DC;
-            case THURSDAY: return DJ;
-            case FRIDAY: return DV;
-            case SATURDAY: return DS;
-            case SUNDAY: return DG;
+            case 2: return DL;
+            case 3: return DM;
+            case 4: return DC;
+            case 5: return DJ;
+            case 6: return DV;
+            case 7: return DS;
+            case 1: return DG;
             default: return null;
         }
     }
+
 }

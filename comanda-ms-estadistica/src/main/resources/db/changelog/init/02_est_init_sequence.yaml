@@ -1,0 +1,45 @@
+databaseChangeLog:
+- changeSet:
+    id: est-init-sequence-1
+    author: limit
+#    changes:
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_dimensio_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_dimensio_valor_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_indicador_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_temps_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_fet_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_widget_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}indicador_table_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_dashboard_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}est_dashboard_item_seq
+#            startValue: 1
+#            incrementBy: 1
+#        - createSequence:
+#            sequenceName: ${db_prefix}estadistica_seq
+#            startValue: 1
+#            incrementBy: 1

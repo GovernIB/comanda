@@ -2,3 +2,64 @@ databaseChangeLog:
 - changeSet:
     id: salut-init-trigger-1
     author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}salut_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}salut_trg
+#                    BEFORE INSERT ON ${db_prefix}salut
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}salut_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}salut_detall_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}salut_detall_trg
+#                    BEFORE INSERT ON ${db_prefix}salut_detall
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}salut_detall_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}salut_integracio_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}salut_integracio_trg
+#                    BEFORE INSERT ON ${db_prefix}salut_integracio
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}salut_integracio_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}salut_missatge_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}salut_missatge_trg
+#                    BEFORE INSERT ON ${db_prefix}salut_missatge
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}salut_missatge_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+#        - createProcedure:
+#            procedureName: ${db_prefix}salut_subsistema_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}salut_subsistema_trg
+#                    BEFORE INSERT ON ${db_prefix}salut_subsistema
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}salut_subsistema_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;

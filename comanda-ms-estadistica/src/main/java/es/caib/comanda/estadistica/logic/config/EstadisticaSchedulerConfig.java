@@ -16,7 +16,7 @@ public class EstadisticaSchedulerConfig {
 
     @Scheduled(cron = "${" + BaseConfig.PROP_SCHEDULER_ESTADISTIQUES_INFO_CRON + ":1 0 * * * *}")
     public void getEstadistiques() {
-
+        fetService.getEstadisticaInfo();
     }
 
 }

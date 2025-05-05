@@ -3,7 +3,7 @@ package es.caib.comanda.estadistica.persist.entity;
 import es.caib.comanda.estadistica.logic.intf.model.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.model.TableColumnsEnum;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,7 +23,7 @@ import javax.persistence.Table;
 @Getter
 @Setter
 @NoArgsConstructor
-public class IndicadorTaulaEntity extends BaseEntity<IndicadorTaula> {
+public class IndicadorTaulaEntity extends BaseAuditableEntity<IndicadorTaula> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(

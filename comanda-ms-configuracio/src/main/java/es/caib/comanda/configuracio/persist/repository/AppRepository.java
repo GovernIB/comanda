@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.persist.repository;
 
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
 import java.util.List;
@@ -12,6 +13,6 @@ import java.util.List;
  */
 public interface AppRepository extends BaseRepository<AppEntity, Long> {
 
-	List<AppEntity> findByActivaTrue();
+    List<AppEntity> findByActivaTrue();
 
 }

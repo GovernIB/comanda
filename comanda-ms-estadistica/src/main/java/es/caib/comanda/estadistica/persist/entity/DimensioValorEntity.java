@@ -22,7 +22,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 public class DimensioValorEntity extends BaseEntity<DimensioValor> {
 
-    @Column(name = "valor", length = 255, nullable = false)
+    @Column(name = "valor", length = 255)
     private String valor;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,6 +30,6 @@ public class DimensioValorEntity extends BaseEntity<DimensioValor> {
             name = "dimensio_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dim_valor_dim_fk"))
-    private DimensioEntity dimension;
+    private DimensioEntity dimensio;
 
 }
