@@ -1,6 +1,5 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
-import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.PostgreSQL10Dialect;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +18,8 @@ public class FetRepositoryDialectFactory {
 
     @Autowired
     private OracleFetRepositoryDialect oracleFetRepositoryDialect;
-
     @Autowired
     private PostgreSQLFetRepositoryDialect postgreSQLFetRepositoryDialect;
-
-    @Autowired
-    private MariaDBFetRepositoryDialect mariaDBFetRepositoryDialect;
-
     @Autowired
     private EntityManagerFactory entityManagerFactory;
 
@@ -50,8 +44,6 @@ public class FetRepositoryDialectFactory {
                 currentDialect = oracleFetRepositoryDialect;
             } else if (PostgreSQL10Dialect.class.isAssignableFrom(dialectClass)) {
                 currentDialect = postgreSQLFetRepositoryDialect;
-            } else if (MariaDBDialect.class.isAssignableFrom(dialectClass)) {
-                currentDialect = mariaDBFetRepositoryDialect;
             } else {
                 // Default to Oracle for unknown dialects
                 currentDialect = oracleFetRepositoryDialect;

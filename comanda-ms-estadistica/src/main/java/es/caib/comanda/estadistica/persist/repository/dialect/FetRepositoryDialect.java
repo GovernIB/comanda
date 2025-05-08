@@ -27,31 +27,4 @@ public interface FetRepositoryDialect {
 
     String getFindByEntornAppIdAndTempsDataBetweenAndDimensionQuery(Map<String, List<String>> dimensionsFiltre);
 
-//    /**
-//     * Obté la consulta SQL per trobar estadístiques anuals per entornAppId.
-//     *
-//     * @return La cadena de consulta SQL
-//     */
-//    String getFindAnnualStatsByEntornAppIdQuery();
-//
-//    /**
-//     * Obté la consulta SQL per trobar estadístiques per entornAppId i període.
-//     *
-//     * @return La cadena de consulta SQL
-//     */
-//    String getFindStatsByEntornAppIdAndPeriodQuery();
-//
-//    /**
-//     * Obté la consulta SQL per trobar estadístiques per entornAppId, període i dimensions.
-//     *
-//     * @return La cadena de consulta SQL
-//     */
-//    String getFindStatsByEntornAppIdAndPeriodAndDimensionsQuery();
-//
-//    /**
-//     * Obté la consulta SQL per trobar estadístiques per entornAppId, període i múltiples dimensions.
-//     *
-//     * @return La cadena de consulta SQL
-//     */
-//    String getFindStatsByEntornAppIdAndPeriodAndMultipleDimensionsQuery();
 }

@@ -42,7 +42,6 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
     private EntornAppServiceClient entornAppServiceClient;
 
     @Override
-//    @Transactional
     public void getEstadisticaInfo() {
         log.debug("Iniciant consulta periòdica de estadístiques");
         List<App> apps = appFindByActivaTrue();
@@ -53,14 +52,7 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
             a.getEntornApps().parallelStream().forEach(ea -> {
                 if (ea.isActiva() && !Strings.isBlank(ea.getEstadisticaInfoUrl()) && !Strings.isBlank(ea.getEstadisticaUrl())) {
                     try {
-//                        LocalDate dataEstadistiques =
                         estadisticaHelper.getEstadisticaInfo(ea, ea.getEstadisticaInfoUrl(), ea.getEstadisticaUrl());
-                        // No need to migrate data as it's already stored in the database
-//                        try {
-//                            estadisticaMongoHelper.migrarDades(ea.getId(), dataEstadistiques);
-//                        } catch (Exception ex) {
-//                            log.error("No s'han pogut migrar les estadístiques de l'aplicació {}, entorn {} a MongoDB", a.getCodi(), ea.getEntorn().getNom(), ex);
-//                        }
                     } catch (Exception ex) {
                         log.error("No s'han pogut consultar les estadístiques de l'aplicació {}, entorn {}", a.getCodi(), ea.getEntorn().getNom(), ex);
                     }
@@ -141,8 +133,4 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
                 dimensionsFiltre);
     }
 
-//    @Override
-//    public List<ResumAnual> getResumAnual(Long entornAppId) {
-//        return estadisticaHelper.getResumAnual(entornAppId);
-//    }
 }

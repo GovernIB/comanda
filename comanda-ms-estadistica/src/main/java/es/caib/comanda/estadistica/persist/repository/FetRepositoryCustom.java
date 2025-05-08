@@ -83,44 +83,4 @@ public interface FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre);
 
-//    /**
-//     * Find annual statistics by entornAppId
-//     * Uses dialect-specific SQL to access values from dimensions_json and indicadors_json
-//     */
-//    List<Object[]> findAnnualStatsByEntornAppId(Long entornAppId);
-//
-//    /**
-//     * Find statistics by entornAppId and period
-//     * Uses dialect-specific SQL to access values from dimensions_json and indicadors_json
-//     */
-//    List<Object[]> findStatsByEntornAppIdAndPeriod(
-//            Long entornAppId,
-//            LocalDate dataInici,
-//            LocalDate dataFi,
-//            String nivellAgrupacio);
-//
-//    /**
-//     * Find statistics by entornAppId, period, and dimensions
-//     * Uses dialect-specific SQL to access values from dimensions_json and indicadors_json
-//     * and to filter by dimensions
-//     */
-//    List<Object[]> findStatsByEntornAppIdAndPeriodAndDimensions(
-//            Long entornAppId,
-//            LocalDate dataInici,
-//            LocalDate dataFi,
-//            String nivellAgrupacio,
-//            String dimensioNom,
-//            List<String> dimensioValors);
-//
-//    /**
-//     * Find statistics by entornAppId, period, and multiple dimensions
-//     * Uses dialect-specific SQL to access values from dimensions_json and indicadors_json
-//     * and to filter by multiple dimensions with multiple values
-//     */
-//    List<Object[]> findStatsByEntornAppIdAndPeriodAndMultipleDimensions(
-//            Long entornAppId,
-//            LocalDate dataInici,
-//            LocalDate dataFi,
-//            String nivellAgrupacio,
-//            String dimensionsJson);
 }

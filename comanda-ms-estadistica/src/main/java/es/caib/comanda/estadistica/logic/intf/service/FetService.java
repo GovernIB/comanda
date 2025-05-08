@@ -24,7 +24,7 @@ public interface FetService extends ReadonlyResourceService<Fet, Long> {
      *
      * @param entornAppId identificador de l'entorn de l'aplicació del qual es desitja migrar les dades.
      */
-    void migrarDades(Long entornAppId); //, LocalDate data);
+    void migrarDades(Long entornAppId);
 
     /**
      * Obté les estadístiques d'un entornAppId en un període.
@@ -33,7 +33,6 @@ public interface FetService extends ReadonlyResourceService<Fet, Long> {
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi);
-//            NivellAgrupacio nivellAgrupacio);
 
     /**
      * Obté les estadístiques d'un entornAppId en un període i filtrat per dimensions.
@@ -43,10 +42,5 @@ public interface FetService extends ReadonlyResourceService<Fet, Long> {
             LocalDate dataInici,
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre);
-//            NivellAgrupacio nivellAgrupacio);
 
-//    /**
-//     * Obté un resum anual d'estadístiques d'un entornAppId.
-//     */
-//    List<ResumAnual> getResumAnual(Long entornAppId);
 }
