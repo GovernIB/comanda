@@ -19,6 +19,33 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.util.List;
 
+/**
+ * Representa una entitat abstracta per a widgets d'estadística, emmagatzemada a la base de dades.
+ *
+ * Aquesta classe defineix la configuració bàsica comuna per a tots els widgets d'estadística.
+ * Inclou elements com el títol, la descripció, relacions amb entitats externes i paràmetres
+ * per establir el rang periòdic del widget. És la base per altres entitats més específiques.
+ *
+ * Relacions:
+ * - `valorDimensions`: Relació amb l'entitat `DimensioValorEntity` que especifica dimensions i els seus valors associats.
+ *
+ * Propietats principals:
+ * - `titol`: Títol descriptiu del widget amb una longitud màxima de 64 caràcters.
+ * - `descripcio`: Descripció opcional del widget amb una longitud de fins a 1024 caràcters.
+ * - `entornAppId`: Identificador de l'entorn d'aplicació que està associat al widget.
+ * - `iniciUnitat` i `inici`: Especifica la unitat de temps i el nombre d'unitats per determinar el període inicial.
+ * - `duracioUnitat` i `duracio`: Defineix la unitat de temps i la duració per establir l'abast del widget.
+ *
+ * Ús:
+ * Aquesta entitat s'ha de fer servir com a classe base per altres widgets específics, implementant funcionalitats particulars
+ * mitjançant la discriminació pel camp `widget_type`.
+ *
+ * Validacions i restriccions:
+ * - El camp `titol` és obligatori i únic per entorn d'aplicació.
+ * - El període temporal derivat de `inici*` i `duracio*` ha de ser definit correctament per assegurar el seu ús adequat.
+ *
+ * Autor: Límit Tecnologies
+ */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "widget_type", discriminatorType = DiscriminatorType.STRING) // Identifica el tipus d'entitat

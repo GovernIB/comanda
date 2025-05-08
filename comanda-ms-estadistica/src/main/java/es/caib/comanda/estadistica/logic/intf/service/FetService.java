@@ -8,9 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Servei de consulta d'informació de estadística: Fets.
+ * Interfície que defineix els serveis per gestionar recursos de tipus "Fet".
  *
- * @author Límit Tecnologies
+ * Aquesta interfície permet obtenir estadístiques associades a les aplicacions i els seus entorns, així com migrar dades i aplicar
+ * filtres específics. Els mètodes ofereixen funcionalitats per manejar informació estructurada en períodes específics i filtres
+ * per dimensions.
+ *
+ * Relació amb la classe "Fet":
+ * - Un "Fet" encapsula dades estadístiques amb informació temporal, dimensions i indicadors. Aquesta interfície permet manipular
+ *   i explotar aquestes dades segons necessitats específiques del sistema.
  */
 public interface FetService extends ReadonlyResourceService<Fet, Long> {
 

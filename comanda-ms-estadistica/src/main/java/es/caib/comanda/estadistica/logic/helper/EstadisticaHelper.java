@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Lògica comuna per a obtenir i consultar la informació estadística de les apps.
+ * Lògica comuna per a obtenir i consultar informació estadística de les apps.
  *
  * @author Límit Tecnologies
  */
@@ -296,6 +296,15 @@ public class EstadisticaHelper {
 
 
 
+    /**
+     * Recupera una llista de fets estadístics corresponents a un entorn d'aplicació específic i a un període de dates especificat.
+     * Els fets estadístics inclouen informació agregada relativa a dimensions, indicadors i temps associats.
+     *
+     * @param entornAppId Identificador de l'entorn d'aplicació pel qual es volen recuperar els fets estadístics.
+     * @param dataInici Data d'inici del període pel qual es volen recuperar els fets estadístics.
+     * @param dataFi Data de finalització del període pel qual es volen recuperar els fets estadístics.
+     * @return Una llista d'objectes {@link Fet} que representen els fets estadístics associats al període i entorn especificats.
+     */
     @Transactional(readOnly = true)
     public List<Fet> getEstadistiquesPeriode(
             Long entornAppId,
@@ -313,6 +322,19 @@ public class EstadisticaHelper {
         return toFets(fets);
     }
 
+    /**
+     * Recupera una llista de fets estadístics corresponents a un entorn d'aplicació específic i a un període de dates especificat,
+     * tenint en compte un conjunt de dimensions filtrades. Si no es proporcionen filtres de dimensions, es fa una crida a la funcionalitat
+     * estàndard que no té en compte dimensions (mètode {@link #getEstadistiquesPeriode}).
+     *
+     * @param entornAppId Identificador de l'entorn d'aplicació pel qual es volen recuperar els fets estadístics.
+     * @param dataInici Data d'inici del període pel qual es volen recuperar els fets estadístics.
+     * @param dataFi Data de finalització del període pel qual es volen recuperar els fets estadístics.
+     * @param dimensionsFiltre Un mapa que conté les dimensions a filtrar, on la clau és el nom de la dimensió i el valor és
+     *                         una llista de valors que s'han de considerar per aquesta dimensió.
+     * @return Una llista d'objectes {@link Fet} que representen els fets estadístics associats al període, l'entorn i
+     *         les dimensions especificades en els filtres.
+     */
     @Transactional(readOnly = true)
     public List<Fet> getEstadistiquesPeriodeAmbDimensions(
             Long entornAppId,

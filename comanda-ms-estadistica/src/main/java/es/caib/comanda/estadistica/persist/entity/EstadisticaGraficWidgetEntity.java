@@ -16,6 +16,18 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 
+/**
+ * Representa una entitat destinada a emmagatzemar les característiques d'un widget estadístic de tipus gràfic. Aquesta classe hereta de
+ * EstadisticaWidgetEntity amb el tipus generificat EstadisticaGraficWidget. Conté propietats específiques per a la configuració de gràfics
+ * estadístics, com el tipus de gràfic, el format de valors, la llegenda dels eixos i l'agrupació temporal, així com una relació amb un indicador.
+ *
+ * Aquesta entitat està anotada amb JPA per a ser emmagatzemada en una taula que compartix estructures amb altres tipus de widget gràfics.
+ * El discriminator value per aquesta entitat és "GRAFIC".
+ *
+ * Aquesta classe és utilitzada en conjunció amb widgets estadístics per proporcionar representacions visuals de les dades.
+ *
+ * @author Límit Tecnologies
+ */
 @Entity
 @DiscriminatorValue("GRAFIC") // Valor específic al discriminador
 public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<EstadisticaGraficWidget> {

@@ -2,6 +2,23 @@ package es.caib.comanda.estadistica.logic.intf.model;
 
 import java.time.DayOfWeek;
 
+/**
+ * Enum que representa els dies de la setmana en format abreujat en català.
+ *
+ * Aquesta enumeració defineix els següents valors:
+ * - DL: Dilluns
+ * - DM: Dimarts
+ * - DC: Dimecres
+ * - DJ: Dijous
+ * - DV: Divendres
+ * - DS: Dissabte
+ * - DG: Diumenge
+ *
+ * També proporciona una funcionalitat per obtenir el valor corresponent de l'enumeració basant-se en un objecte
+ * de tipus DayOfWeek utilitzant el mètode estàtic `valueOfDayOfWeek(DayOfWeek)`.
+ *
+ * @author Límit Tecnologies
+ */
 public enum DiaSetmanaEnum {
     DL,
     DM,

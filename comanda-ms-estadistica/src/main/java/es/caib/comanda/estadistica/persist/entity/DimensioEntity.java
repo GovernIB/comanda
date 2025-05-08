@@ -15,6 +15,34 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.util.List;
 
+/**
+ * Representa l'entitat de persistència per a les dimensions en el sistema estadístic.
+ *
+ * Les dimensions són utilitzades per a categoritzar i organitzar dades dins d'un context específic d'una aplicació.
+ * Aquesta classe inclou les propietats de la dimensió, com ara el nom, el codi, una descripció opcional, l'identificador
+ * de l'entorn d'aplicació al qual pertany, i una llista de valors associats.
+ *
+ * Es defineix com una entitat JPA amb mapeig a una taula de base de dades anomenada "est_dimensio". Té una
+ * restricció d'unicitat basada en les columnes `nom` i `entorn_app_id`.
+ *
+ * Relacions:
+ * - Té una relació OneToMany amb l'entitat DimensioValorEntity per gestionar els valors associats a la dimensió.
+ *
+ * Columnes:
+ * - `codi`: Un codi únic i obligatori per identificar la dimensió (màx. 16 caràcters).
+ * - `nom`: Un nom únic dins del mateix entorn d'aplicació (màx. 64 caràcters, obligatori).
+ * - `descripcio`: Una descripció opcional de la dimensió (màx. 1024 caràcters).
+ * - `entorn_app_id`: Identificador obligatori de l'entorn d'aplicació.
+ *
+ * Validacions:
+ * - `codi` i `nom` són obligatoris i tenen restriccions de longitud.
+ * - La relació amb DimensioValorEntity s'administra amb cascada per assegurar que els valors associats es gestionen
+ *   automàticament amb la dimensió.
+ *
+ * Aquesta classe extén BaseEntity per heretar propietats i funcionalitats comunes, com la gestió de l'identificador únic.
+ *
+ * @author Límit Tecnologies
+ */
 @Entity
 @Table(
         name = BaseConfig.DB_PREFIX + "est_dimensio",

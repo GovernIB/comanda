@@ -14,6 +14,19 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+/**
+ * Classe que representa un element del Dashboard (quadre de comandament) en forma d'entitat de base de dades.
+ *
+ * Aquesta entitat conté informació sobre la configuració d'un element visual del Dashboard, incloent la seva posició (X, Y),
+ * dimensions (amplada i alçada) i les referències al Dashboard al qual pertany i l'element visual (widget) que representa.
+ *
+ * La taula associada a aquesta entitat està definida amb un prefix configurat a BaseConfig. Compta amb clau forana tant cap al Dashboard
+ * com cap a l'EstadisticaWidgetEntity, definint la relació ambdós elements.
+ *
+ * Aquesta classe hereta de BaseAuditableEntity, proporcionant funcionalitats estàndard per al control d'auditoria i identificador únic.
+ *
+ * Autor: Límit Tecnologies
+ */
 @Entity
 @Table(name = BaseConfig.DB_PREFIX + "est_dashboard_item")
 @Getter

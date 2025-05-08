@@ -9,6 +9,33 @@ import lombok.Setter;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ * Classe que representa un IndicadorTaula.
+ *
+ * Aquesta classe s'utilitza per establir la relació entre un indicador i un widget estadístic, associant-los a un tipus de
+ * columna específic en una taula, i proporcionant un títol opcional.
+ *
+ * Camps principals:
+ * - `indicador`: Referència obligatòria a un objecte de tipus Indicador, que defineix les propietats del mateix.
+ * - `widget`: Referència obligatòria a un objecte del tipus EstadisticaTaulaWidget, que conté el widget associat.
+ * - `tipus`: Enumeració obligatòria per definir el tipus de columna.
+ * - `titol`: Camp de text obligatori que defineix el títol associat (màxim 64 caràcters).
+ *
+ * Validacions:
+ * - `indicador` i `widget` no poden ser nuls.
+ * - `titol` no pot superar els 64 caràcters.
+ * - `tipus` ha de ser un valor vàlid de l'enumeració TableColumnsEnum.
+ *
+ * Objectiu:
+ * - Proporcionar una representació estructurada d'un indicador associat a una taula estadística, útil en l'anàlisi i gestió
+ *   de dades en formats tabulars.
+ * - Permetre la configuració de relacions entre indicadors, widgets i configuracions de columna dins un entorn visual
+ *   estadístic.
+ *
+ * Aquesta classe hereta de BaseResource amb un identificador de tipus Long.
+ *
+ * @author Límit Tecnologies
+ */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -13,8 +13,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implementation of FetRepositoryCustom that uses the FetRepositoryDialectFactory
- * to get the appropriate dialect implementation and execute the queries.
+ * Implementació de l'interfície personalitzada FetRepositoryCustom. Proporciona funcionalitats específiques per
+ * consultar entitats de tipus FetEntity utilitzant consultes SQL personalitzades segons el dialecte configurat.
+ *
+ * Aquesta classe utilitza EntityManager per executar consultes natives SQL que inclouen criteris de filtre com
+ * l'identificador de l'entorn de l'aplicació, rangs de dates i valors de dimensions especificats.
+ *
+ * @author Límit Tecnologies
  */
 @Repository
 public class FetRepositoryCustomImpl implements FetRepositoryCustom {

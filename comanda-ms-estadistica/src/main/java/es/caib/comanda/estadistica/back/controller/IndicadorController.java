@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Servei de consulta d'informació de salut.
+ * Servei de consulta d'informació de indicadors estadístics.
  *
  * @author Límit Tecnologies
  */

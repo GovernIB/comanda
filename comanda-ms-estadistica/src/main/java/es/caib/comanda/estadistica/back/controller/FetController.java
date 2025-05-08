@@ -76,6 +76,12 @@ public class FetController extends BaseReadonlyResourceController<Fet, Long> {
         );
     }
 
+    /**
+     * Extreu la clau de dimensió d'una cadena completa que segueix un format específic.
+     *
+     * @param fullKey La cadena completa que conté la informació de la dimensió, normalment amb prefix "dimensions." o "dimensions[".
+     * @return La clau de dimensió processada sense el prefix ni caràcters addicionals, o la cadena original si no correspon als formats predefinits.
+     */
     private String extractDimensionKey(String fullKey) {
         if (fullKey.startsWith("dimensions.")) {
             return fullKey.substring("dimensions.".length()); // Retorna després del punt
@@ -117,6 +123,13 @@ public class FetController extends BaseReadonlyResourceController<Fet, Long> {
 
     //    GET /api/fets/estadistiques/migrar?entornAppId=1
 
+    /**
+     * Obtenció de dades estadístiques d'ahir per a un entorn d'aplicació específic.
+     *
+     * @param entornAppId Identificador de l'entorn d'aplicació per al qual es realitza la migració de dades.
+     * @return Una entitat de resposta HTTP {@code ResponseEntity} amb el resultat de l'operació. Retorna "OK" si la migració s'ha
+     *         completat correctament o un missatge d'error si ha fallat.
+     */
     @GetMapping("/estadistiques/migrar")
     public ResponseEntity<String> getMigrarDades(@RequestParam Long entornAppId) {
 //            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {

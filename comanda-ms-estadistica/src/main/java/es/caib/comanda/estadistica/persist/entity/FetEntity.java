@@ -19,6 +19,22 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.util.Map;
 
+/**
+ * Classe que representa una entitat de fet dins el sistema d'estadístiques.
+ * Aquesta entitat emmagatzema informació detallada relacionada amb un fet específic.
+ * Inclou associacions amb altres entitats i dades addicionals estructurades en formats JSON.
+ *
+ * Les dades emmagatzemades inclouen:
+ *
+ * - Una associació amb l'entitat TempsEntity, que permet identificar i relacionar amb un període de temps determinat.
+ * - Informació en format JSON sobre dimensions específiques (Map<String, String>).
+ * - Informació en format JSON sobre indicadors específics (Map<String, Double>).
+ * - L'identificador de l'entorn d'aplicació on s'està realitzant el registre (entornAppId).
+ *
+ * Aquesta classe extén la funcionalitat de BaseEntity amb el recurs associat de tipus Fet.
+ *
+ * @author Límit Tecnologies
+ */
 @Entity
 @Table(name = BaseConfig.DB_PREFIX + "est_fet")
 //@TypeDef(name = "json", typeClass = JsonType.class)

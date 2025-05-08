@@ -9,6 +9,20 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Repositori que proporciona accés a operacions específiques relacionades amb l'entitat de fet (FetEntity).
+ * Aquest repositori estén la funcionalitat de BaseRepository i afegeix mètodes personalitzats per a manejar
+ * consultes específiques i operacions relacionades amb dades estadístiques.
+ *
+ * Les operacions inclouen:
+ * - Eliminació de registres mitjançant criteris definits (temps i entorn d'aplicació).
+ * - Consultes per data, identificador d'entorn, i intervals de temps específics.
+ * - Execució de procediments SQL per generar consultes personalitzades basades en dimensions i indicadors.
+ *
+ * Aquest repositori també integra funcionalitats addicionals mitjançant el FetRepositoryCustom.
+ *
+ * @author Límit Tecnologies
+ */
 public interface FetRepository extends BaseRepository<FetEntity, Long>, FetRepositoryCustom {
 
     void deleteAllByTempsAndEntornAppId(TempsEntity temps, Long entornAppId);

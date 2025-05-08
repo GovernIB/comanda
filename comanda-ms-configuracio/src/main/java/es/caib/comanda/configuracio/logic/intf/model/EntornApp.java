@@ -40,6 +40,7 @@ public class EntornApp extends BaseResource<Long> {
 	@Size(max = 200)
 	private String infoUrl;
 	@NotNull
+	@Builder.Default
 	private Integer infoInterval = 1;
 	@Setter(AccessLevel.NONE)
 	private LocalDateTime infoData;
@@ -47,6 +48,7 @@ public class EntornApp extends BaseResource<Long> {
 	@Setter(AccessLevel.NONE)
 	private String versio;
 	@InputType("checkbox")
+	@Builder.Default
 	private boolean activa = true;
 
 	// Informació de salut
@@ -54,6 +56,7 @@ public class EntornApp extends BaseResource<Long> {
 	@Size(max = 200)
 	private String salutUrl;
 	@NotNull
+	@Builder.Default
 	private Integer salutInterval = 1;
 
 	private List<AppIntegracio> integracions;
