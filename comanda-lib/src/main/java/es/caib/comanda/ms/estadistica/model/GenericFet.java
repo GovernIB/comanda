@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenericFet implements Fet {
-    private String nom;
+    private String codi;
     private Double valor;
 }

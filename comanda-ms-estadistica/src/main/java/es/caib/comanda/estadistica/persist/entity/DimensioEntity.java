@@ -27,6 +27,8 @@ import java.util.List;
 @NoArgsConstructor
 public class DimensioEntity extends BaseEntity<Dimensio> {
 
+    @Column(name = "codi", length = 16, nullable = false)
+    private String codi;
     @Column(name = "nom", length = 64, nullable = false)
     private String nom;
     @Column(name = "descripcio", length = 1024)

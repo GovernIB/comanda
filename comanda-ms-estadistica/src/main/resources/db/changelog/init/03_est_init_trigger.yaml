@@ -1,8 +1,272 @@
 databaseChangeLog:
 - changeSet:
+    id: create_generar_consulta_procedure_oracle
+    author: limit
+    dbms: "oracle"
+    changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+                CREATE OR REPLACE PROCEDURE GENERAR_CONSULTA_ENTORN_APP (
+                    p_entorn_app_id IN NUMBER,
+                    p_dimension_filters IN VARCHAR2, -- Filtre de dimensions en format clau-valor
+                    p_data IN DATE,                  -- Data per filtrar (pot ser NULL)
+                    p_resultat OUT SYS_REFCURSOR
+                ) AS
+                    sql_query CLOB;
+                    dynamic_dimension_columns CLOB := '';
+                    dynamic_indicator_columns CLOB := '';
+                    static_dimension_columns CLOB := '';
+                    static_indicator_columns CLOB := '';
+                    dimension_condition CLOB := '';
+                    data_condition CLOB := '';
+                BEGIN
+                    -- 1. Generar columnes dinàmiques per dimensions ordenades pel codi
+                    FOR dim IN (SELECT LOWER(codi) AS codi, REPLACE(LOWER(codi), '''', '''''') AS escaped_clau
+                                FROM COMANDA.CMD_EST_DIMENSIO
+                                WHERE entorn_app_id = p_entorn_app_id
+                                ORDER BY LOWER(codi)) LOOP
+                        -- Construir columnes JSON dinàmiques
+                        dynamic_dimension_columns := dynamic_dimension_columns || '"' || dim.escaped_clau || '" VARCHAR2(1000 CHAR) PATH ''$."' || dim.escaped_clau || '"'', ';
+                        -- Construir columnes estàtiques (per garantir que totes les dimensions siguin presents)
+                        static_dimension_columns := static_dimension_columns || '"' || dim.escaped_clau || '", ';
+                    END LOOP;
+                    
+                    -- 2. Generar columnes dinàmiques per indicadors ordenats pel codi
+                    FOR ind IN (SELECT LOWER(codi) AS codi, REPLACE(LOWER(codi), '''', '''''') AS escaped_clau
+                                FROM COMANDA.CMD_EST_INDICADOR
+                                WHERE entorn_app_id = p_entorn_app_id
+                                ORDER BY LOWER(codi)) LOOP
+                        -- Construir columnes JSON dinàmiques
+                        dynamic_indicator_columns := dynamic_indicator_columns || '"' || ind.escaped_clau || '" NUMBER PATH ''$."' || ind.escaped_clau || '"'', ';
+                        -- Construir columnes estàtiques (per garantir que tots els indicadors siguin presents)
+                        static_indicator_columns := static_indicator_columns || '"' || ind.escaped_clau || '", ';
+                    END LOOP;
+                    
+                    -- Eliminar l'última coma de les columnes dinàmiques/estàtiques
+                    dynamic_dimension_columns := RTRIM(dynamic_dimension_columns, ', ');
+                    dynamic_indicator_columns := RTRIM(dynamic_indicator_columns, ', ');
+                    static_dimension_columns := RTRIM(static_dimension_columns, ', ');
+                    static_indicator_columns := RTRIM(static_indicator_columns, ', ');
+                
+                    -- 3. Construir la condició basada en els valors de les dimensions (si està present)
+                    IF p_dimension_filters IS NOT NULL AND LENGTH(p_dimension_filters) > 0 THEN
+                        dimension_condition := ' AND (' || p_dimension_filters || ') ';
+                    END IF;
+                    
+                    -- 4. Configurar la condició de temps només si p_data està informat
+                    IF p_data IS NOT NULL THEN
+                        data_condition := ' AND f.temps.data = TO_DATE(''' || TO_CHAR(p_data, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') ';
+                    END IF;
+                    
+                    -- 5. Construir la consulta principal ordenada i amb totes les columnes
+                    sql_query := '
+                        SELECT
+                            ' || static_dimension_columns || ',
+                            ' || static_indicator_columns || '
+                        FROM (
+                            SELECT
+                                d.*,
+                                i.*
+                            FROM COMANDA.CMD_EST_FET f
+                            -- Extraiem les dimensions del JSON
+                            CROSS JOIN JSON_TABLE(
+                                f.dimensions_json,
+                                ''$'' COLUMNS (
+                                    ' || dynamic_dimension_columns || '
+                                )
+                            ) d
+                            -- Extraiem els indicadors del JSON
+                            CROSS JOIN JSON_TABLE(
+                                f.indicadors_json,
+                                ''$'' COLUMNS (
+                                    ' || dynamic_indicator_columns || '
+                                )
+                            ) i
+                            WHERE f.entorn_app_id = ' || p_entorn_app_id || '
+                                ' || data_condition || '
+                                ' || dimension_condition || '
+                        )
+                        ORDER BY 1 ASC'; -- Ordena segons les dimensions, després indicadors
+                        
+                    -- Obrir el cursor amb la consulta generada
+                    OPEN p_resultat FOR sql_query;
+                END;
+                /
+
+- changeSet:
+    id: create_generar_consulta_procedure_postgresql
+    author: limit
+    dbms: "postgresql"
+    changes:
+        - sql:
+              splitStatements: false
+              stripComments: true
+              sql: |
+                  CREATE OR REPLACE PROCEDURE generar_consulta_entorn_app (
+                      p_entorn_app_id INT,
+                      p_dimension_filters TEXT, -- Filtres dinàmics per dimensions
+                      p_data DATE,              -- Data per filtrar (pot ser NULL)
+                      INOUT p_resultat REFCURSOR -- Cursor com a resultat
+                  )
+                  LANGUAGE plpgsql
+                  AS $$
+                  DECLARE
+                      sql_query TEXT;
+                      dynamic_dimension_columns TEXT := '';
+                      dynamic_indicator_columns TEXT := '';
+                      static_dimension_columns TEXT := '';
+                      static_indicator_columns TEXT := '';
+                      dimension_condition TEXT := '';
+                      data_condition TEXT := '';
+                  BEGIN
+                      -- 1. Generar columnes dinàmiques per dimensions
+                      FOR dim IN SELECT LOWER(codi) AS codi
+                                 FROM comanda.cmd_est_dimensio
+                                 WHERE entorn_app_id = p_entorn_app_id
+                                 ORDER BY LOWER(codi)
+                      LOOP
+                          dynamic_dimension_columns := dynamic_dimension_columns || format('"%s" TEXT PATH ''$."%s"'', ', dim.codi, dim.codi);
+                          static_dimension_columns := static_dimension_columns || format('"%s", ', dim.codi);
+                      END LOOP;
+
+                      -- 2. Generar columnes dinàmiques per indicadors
+                      FOR ind IN SELECT LOWER(codi) AS codi
+                                 FROM comanda.cmd_est_indicador
+                                 WHERE entorn_app_id = p_entorn_app_id
+                                 ORDER BY LOWER(codi)
+                      LOOP
+                          dynamic_indicator_columns := dynamic_indicator_columns || format('"%s" NUMERIC PATH ''$."%s"'', ', ind.codi, ind.codi);
+                          static_indicator_columns := static_indicator_columns || format('"%s", ', ind.codi);
+                      END LOOP;
+
+                      -- Eliminar la última coma de les columnes
+                      static_dimension_columns := RTRIM(static_dimension_columns, ', ');
+                      static_indicator_columns := RTRIM(static_indicator_columns, ', ');
+  
+                      -- 3. Construir la condició de dimensions
+                      IF p_dimension_filters IS NOT NULL AND LENGTH(p_dimension_filters) > 0 THEN
+                          dimension_condition := ' AND (' || p_dimension_filters || ') ';
+                      END IF;
+  
+                      -- 4. Construir la condició de temps
+                      IF p_data IS NOT NULL THEN
+                          data_condition := ' AND f.temps.data = ''' || p_data || ''' ';
+                      END IF;
+
+                      -- 5. Construir la consulta SQL
+                      sql_query := format('
+                          SELECT 
+                              %s,
+                              %s
+                          FROM (
+                              SELECT
+                                  d.*,
+                                  i.*
+                              FROM comanda.cmd_est_fet f
+                              CROSS JOIN jsonb_to_recordset(f.dimensions_json::jsonb) AS d(%s)
+                              CROSS JOIN jsonb_to_recordset(f.indicadors_json::jsonb) AS i(%s)
+                              WHERE f.entorn_app_id = %s
+                                %s
+                                %s
+                          ) AS temp_result
+                          ORDER BY 1 ASC',
+                          static_dimension_columns,
+                          static_indicator_columns,
+                          dynamic_dimension_columns,
+                          dynamic_indicator_columns,
+                          p_entorn_app_id,
+                          data_condition,
+                          dimension_condition
+                      );
+
+                      -- 6. Obrir el cursor
+                      OPEN p_resultat FOR EXECUTE sql_query;
+                  END;
+                  $$;                
+
+- changeSet:
+    id: create_generar_consulta_procedure_mariadb
+    author: limit
+    dbms: "mariadb"
+    changes:
+        - sql:
+              splitStatements: false
+              stripComments: true
+              sql: |
+                  DELIMITER //
+
+                  CREATE PROCEDURE generar_consulta_entorn_app (
+                      IN p_entorn_app_id INT,
+                      IN p_dimension_filters TEXT, -- Filtres de dimensions dinàmics
+                      IN p_data DATE,              -- Data per filtrar (pot ser NULL)
+                      OUT p_resultat TEXT          -- Retornem la consulta final com a text (MariaDB no suporta OUT per cursors)
+                  )
+                  BEGIN
+                      DECLARE sql_query TEXT DEFAULT '';
+                      DECLARE dynamic_dimension_columns TEXT DEFAULT '';
+                      DECLARE dynamic_indicator_columns TEXT DEFAULT '';
+                      DECLARE static_dimension_columns TEXT DEFAULT '';
+                      DECLARE static_indicator_columns TEXT DEFAULT '';
+                      DECLARE dimension_condition TEXT DEFAULT '';
+                      DECLARE data_condition TEXT DEFAULT '';
+
+                      -- 1. Generar columnes dinàmiques per dimensions
+                      SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '` VARCHAR(1000) JSON PATH ''$.', LOWER(codi), ''''))
+                      INTO dynamic_dimension_columns
+                      FROM comanda.cmd_est_dimensio
+                      WHERE entorn_app_id = p_entorn_app_id;
+
+                      SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '`'))
+                      INTO static_dimension_columns
+                      FROM comanda.cmd_est_dimensio
+                      WHERE entorn_app_id = p_entorn_app_id;
+
+                      -- 2. Generar columnes dinàmiques per indicadors
+                      SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '` DECIMAL(10, 2) JSON PATH ''$.', LOWER(codi), ''''))
+                      INTO dynamic_indicator_columns
+                      FROM comanda.cmd_est_indicador
+                      WHERE entorn_app_id = p_entorn_app_id;
+
+                      SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '`'))
+                      INTO static_indicator_columns
+                      FROM comanda.cmd_est_indicador
+                      WHERE entorn_app_id = p_entorn_app_id;
+
+                      -- 3. Construir la condició de dimensions
+                      IF p_dimension_filters IS NOT NULL AND LENGTH(p_dimension_filters) > 0 THEN
+                          SET dimension_condition = CONCAT(' AND (', p_dimension_filters, ') ');
+                      END IF;
+
+                      -- 4. Construir la condició de temps
+                      IF p_data IS NOT NULL THEN
+                          SET data_condition = CONCAT(' AND f.temps_data = ''', p_data, ''' ');
+                      END IF;
+
+                      -- 5. Construir la consulta final
+                      SET sql_query = CONCAT(
+                          'SELECT ', static_dimension_columns, ', ', static_indicator_columns, '
+                          FROM (
+                              SELECT d.*, i.*
+                              FROM comanda.cmd_est_fet f
+                              CROSS JOIN JSON_TABLE(f.dimensions_json, ''$'' COLUMNS (', dynamic_dimension_columns, ')) AS d
+                              CROSS JOIN JSON_TABLE(f.indicadors_json, ''$'' COLUMNS (', dynamic_indicator_columns, ')) AS i
+                              WHERE f.entorn_app_id = ', p_entorn_app_id, 
+                          data_condition, dimension_condition, ') AS temp_result
+                          ORDER BY 1 ASC'
+                      );
+
+                      -- 6. Retornar el resultat
+                      SET p_resultat = sql_query;
+                  END;
+                  //
+
+                  DELIMITER ;
+
+- changeSet:
     id: est-init-trigger-1
     author: limit
-#    changes:
 #        - createProcedure:
 #            procedureName: ${db_prefix}est_dimensio_trg
 #            relativeToChangelogFile: true

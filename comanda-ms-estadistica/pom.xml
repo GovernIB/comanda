@@ -23,5 +23,28 @@
             <artifactId>comanda-ms-client</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.vladmihalcea</groupId>-->
+<!--            <artifactId>hibernate-types-52</artifactId>-->
+<!--            <version>2.21.1</version>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; MongoDB &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-data-mongodb</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>de.flapdoodle.embed</groupId>-->
+<!--            <artifactId>de.flapdoodle.embed.mongo</artifactId>-->
+<!--            <version>4.20.0</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>de.flapdoodle.embed</groupId>-->
+<!--            <artifactId>de.flapdoodle.embed.process</artifactId>-->
+<!--            <version>4.15.2</version>-->
+<!--        </dependency>-->
+
     </dependencies>
 </project>

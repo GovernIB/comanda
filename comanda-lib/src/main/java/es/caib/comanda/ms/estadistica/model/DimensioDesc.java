@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DimensioDesc {
+    private String codi;
     private String nom;
     private String descripcio;
     private List<String> valors;

@@ -26,16 +26,6 @@ databaseChangeLog:
         columnNames: nom, entorn_app_id
         constraintName: ${db_prefix}ind_nom_uk
 - changeSet:
-    id: est-init-constraint-4
-    author: limit
-    changes:
-    - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}est_fet
-        baseColumnNames: indicador_id
-        referencedTableName: ${db_prefix}est_indicador
-        referencedColumnNames: id
-        constraintName: ${db_prefix}fet_indicador_fk
-- changeSet:
     id: est-init-constraint-5
     author: limit
     changes:
@@ -45,26 +35,6 @@ databaseChangeLog:
         referencedTableName: ${db_prefix}est_temps
         referencedColumnNames: id
         constraintName: ${db_prefix}fet_temps_fk
-- changeSet:
-    id: est-init-constraint-6
-    author: limit
-    changes:
-    - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}est_fet_dimensio_valor
-        baseColumnNames: fet_id
-        referencedTableName: ${db_prefix}est_fet
-        referencedColumnNames: id
-        constraintName: ${db_prefix}fet_dim_valor_fet_fk
-- changeSet:
-    id: est-init-constraint-7
-    author: limit
-    changes:
-    - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}est_fet_dimensio_valor
-        baseColumnNames: dimensio_valor_id
-        referencedTableName: ${db_prefix}est_dimensio_valor
-        referencedColumnNames: id
-        constraintName: ${db_prefix}fet_dim_valor_dim_valor_fk
 - changeSet:
     id: est-init-constraint-8
     author: limit

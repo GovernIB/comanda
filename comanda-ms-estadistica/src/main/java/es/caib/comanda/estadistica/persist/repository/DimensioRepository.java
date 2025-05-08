@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface DimensioRepository extends BaseRepository<DimensioEntity, Long> {
 
-    Optional<DimensioEntity> findByNomAndEntornAppId(String nom, Long entornAppId);
+    Optional<DimensioEntity> findByCodiAndEntornAppId(String codi, Long entornAppId);
 
     List<DimensioEntity> findByEntornAppId(Long entornAppId);
 

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IndicadorDesc {
+    private String codi;
     private String nom;
     private String descripcio;
     private Format format;

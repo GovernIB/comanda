@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenericDimensio implements Dimensio {
-    private String nom;
+    private String codi;
     private String valor;
 }

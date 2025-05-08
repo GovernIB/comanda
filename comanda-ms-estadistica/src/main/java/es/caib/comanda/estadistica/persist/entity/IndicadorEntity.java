@@ -27,6 +27,8 @@ import javax.persistence.UniqueConstraint;
 @NoArgsConstructor
 public class IndicadorEntity extends BaseEntity<Indicador> {
 
+    @Column(name = "codi", length = 16, nullable = false)
+    private String codi;
     @Column(name = "nom", length = 64, nullable = false)
     private String nom;
     @Column(name = "descripcio", length = 1024)

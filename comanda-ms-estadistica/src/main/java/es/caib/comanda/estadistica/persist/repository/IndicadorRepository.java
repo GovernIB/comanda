@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface IndicadorRepository extends BaseRepository<IndicadorEntity, Long> {
 
-    Optional<IndicadorEntity> findByNomAndEntornAppId(String nom, Long entornAppId);
+    Optional<IndicadorEntity> findByCodiAndEntornAppId(String codi, Long entornAppId);
 
     List<IndicadorEntity> findByEntornAppId(Long entornAppId);
 

@@ -15,6 +15,11 @@ databaseChangeLog:
                     nullable: false
                     primaryKeyName: ${db_prefix}est_dimensio_pk
             - column:
+                name: codi
+                type: varchar(16)
+                constraints:
+                    nullable: false
+            - column:
                 name: nom
                 type: varchar(64)
                 constraints:
@@ -65,6 +70,11 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
                     primaryKeyName: ${db_prefix}est_indicador_pk
+            - column:
+                name: codi
+                type: varchar(16)
+                constraints:
+                    nullable: false
             - column:
                 name: nom
                 type: varchar(64)
@@ -147,32 +157,18 @@ databaseChangeLog:
                     nullable: false
                     primaryKeyName: ${db_prefix}est_fet_pk
             - column:
-                name: indicador_id
-                type: bigint
-                constraints:
-                    nullable: false
-            - column:
                 name: temps_id
                 type: bigint
                 constraints:
                     nullable: false
             - column:
-                name: valor
-                type: double
-- changeSet:
-    id: est-init-table-6
-    author: limit
-    changes:
-    - createTable:
-        tableName: ${db_prefix}est_fet_dimensio_valor
-        columns:
+                name: dimensions_json
+                type: varchar(4000)
             - column:
-                name: fet_id
-                type: bigint
-                constraints:
-                    nullable: false
+                name: indicadors_json
+                type: varchar(4000)
             - column:
-                name: dimensio_valor_id
+                name: entorn_app_id
                 type: bigint
                 constraints:
                     nullable: false
