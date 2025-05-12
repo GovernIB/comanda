@@ -1,6 +1,8 @@
 package es.caib.comanda.salut.logic.helper;
 
+import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.salut.model.DetallSalut;
 import es.caib.comanda.ms.salut.model.EstatSalutEnum;
 import es.caib.comanda.ms.salut.model.IntegracioSalut;
@@ -19,8 +21,8 @@ import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -37,28 +39,37 @@ import java.util.List;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class SalutInfoHelper {
 
-	@Autowired
-	private SalutRepository salutRepository;
-	@Autowired
-	private SalutIntegracioRepository salutIntegracioRepository;
-	@Autowired
-	private SalutSubsistemaRepository salutSubsistemaRepository;
-	@Autowired
-	private SalutMissatgeRepository salutMissatgeRepository;
-	@Autowired
-	private SalutDetallRepository salutDetallRepository;
+	private final SalutRepository salutRepository;
+	private final SalutIntegracioRepository salutIntegracioRepository;
+	private final SalutSubsistemaRepository salutSubsistemaRepository;
+	private final SalutMissatgeRepository salutMissatgeRepository;
+	private final SalutDetallRepository salutDetallRepository;
+
+	private final KeycloakHelper keycloakHelper;
+	private final MonitorServiceClient monitorServiceClient;
 
 	@Transactional
-	public void getSalutInfo(EntornApp entornApp, String salutUrl) {
-		log.debug("Consultant informació de salut de l'app {}, entorn {}",
+	public void getSalutInfo(EntornApp entornApp) {
+		log.debug("Obtenint dades de salut de l'app {}, entorn {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom());
 		RestTemplate restTemplate = new RestTemplate();
+		MonitorSalut monitorSalut = new MonitorSalut(
+				entornApp.getId(),
+				entornApp.getSalutUrl(),
+				monitorServiceClient,
+				keycloakHelper.getAuthorizationHeader());
+
 		try {
-			SalutInfo salutInfo = restTemplate.getForObject(salutUrl, SalutInfo.class);
+			// Obtenir dades de salut de l'aplicació
+			monitorSalut.startAction();
+			SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
+			monitorSalut.endAction();
+			// Guardar les dades de salut a la base de dades
 			crearSalut(salutInfo, entornApp.getId());
 		} catch (RestClientException ex) {
 			SalutEntity salut = new SalutEntity();
@@ -66,10 +77,13 @@ public class SalutInfoHelper {
 			salut.setData(LocalDateTime.now());
 			salut.setAppEstat(SalutEstat.UNKNOWN);
 			salutRepository.save(salut);
-			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
-					entornApp.getApp().getId(),
-					entornApp.getEntorn().getId(),
+			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
+					entornApp.getApp().getNom(),
+					entornApp.getEntorn().getNom(),
 					ex.getLocalizedMessage());
+			if (!monitorSalut.isFinishedAction()) {
+				monitorSalut.endAction(ex);
+			}
 		}
 	}
 

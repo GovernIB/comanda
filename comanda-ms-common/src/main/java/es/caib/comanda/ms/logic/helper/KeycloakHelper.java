@@ -26,6 +26,10 @@ public class KeycloakHelper {
 	private String keycloakRealm;
 	@Value("${" + BaseConfig.PROP_KEYCLOAK_CLIENT_ID + ":#{null}}")
 	private String keycloakClientId;
+	@Value("${" + BaseConfig.PROP_KEYCLOAK_USERNAME + ":#{null}}")
+	private String keycloakUsername;
+	@Value("${" + BaseConfig.PROP_KEYCLOAK_PASSWORD + ":#{null}}")
+	private String keycloakPassword;
 
 	private RestTemplate restTemplate;
 
@@ -95,4 +99,17 @@ public class KeycloakHelper {
 		return restTemplate;
 	}
 
+	public String getAuthorizationHeader() {
+		String accessToken = getAccessTokenWithUsernamePassword(
+				keycloakUsername,
+				keycloakPassword);
+		return accessToken != null ? "Bearer " + accessToken : null;
+	}
+
+	public String getAuthorizationHeader(String keycloakUsername, String keycloakPassword) {
+		String accessToken = getAccessTokenWithUsernamePassword(
+				keycloakUsername,
+				keycloakPassword);
+		return accessToken != null ? "Bearer " + accessToken : null;
+	}
 }

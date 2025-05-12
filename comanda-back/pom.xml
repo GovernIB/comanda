@@ -28,6 +28,11 @@
 			<artifactId>comanda-ms-estadistica</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>comanda-ms-monitor</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 	<profiles>
 		<profile>

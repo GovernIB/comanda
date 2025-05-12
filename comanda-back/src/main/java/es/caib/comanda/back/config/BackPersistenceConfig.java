@@ -16,7 +16,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 				"es.caib.comanda.ms.persist",
 				"es.caib.comanda.configuracio.persist",
 				"es.caib.comanda.salut.persist",
-				"es.caib.comanda.estadistica.persist"
+				"es.caib.comanda.estadistica.persist",
+				"es.caib.comanda.monitor.persist"
 		},
 		entityManagerFactoryRef = "mainEntityManager",
 		transactionManagerRef = "mainTransactionManager",
@@ -29,7 +30,8 @@ public class BackPersistenceConfig extends BasePersistenceConfig {
 				"es.caib.comanda.ms.persist",
 				"es.caib.comanda.configuracio.persist",
 				"es.caib.comanda.salut.persist",
-				"es.caib.comanda.estadistica.persist"
+				"es.caib.comanda.estadistica.persist",
+				"es.caib.comanda.monitor.persist"
 		};
 	}
 

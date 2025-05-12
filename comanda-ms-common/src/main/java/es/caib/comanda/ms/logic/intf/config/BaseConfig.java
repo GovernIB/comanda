@@ -31,5 +31,7 @@ public class BaseConfig {
 	public static final String PROP_KEYCLOAK_BASE_URL = PROPERTY_PREFIX + "keycloak.base.url";
 	public static final String PROP_KEYCLOAK_REALM = PROPERTY_PREFIX + "keycloak.realm";
 	public static final String PROP_KEYCLOAK_CLIENT_ID = PROPERTY_PREFIX + "keycloak.client.id";
+	public static final String PROP_KEYCLOAK_USERNAME = PROPERTY_PREFIX + "keycloak.username";
+	public static final String PROP_KEYCLOAK_PASSWORD = PROPERTY_PREFIX + "keycloak.password";
 
 }

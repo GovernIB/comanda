@@ -1,17 +1,21 @@
 package es.caib.comanda.configuracio.logic.helper;
 
-import es.caib.comanda.configuracio.persist.entity.AppEntity;
+import es.caib.comanda.client.MonitorServiceClient;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.repository.AppRepository;
+import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.salut.model.AppInfo;
 import es.caib.comanda.ms.salut.model.IntegracioInfo;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,21 +29,36 @@ import java.util.Optional;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class AppInfoHelper {
 
-	@Autowired
-	private AppRepository appRepository;
-	@Autowired
-	private IntegracioRepository integracioRepository;
-	@Autowired
-	private SubsistemaRepository subsistemaRepository;
+	private final EntornAppRepository entornAppRepository;
+	private final IntegracioRepository integracioRepository;
+	private final SubsistemaRepository subsistemaRepository;
 
-	public void refreshAppInfo(EntornAppEntity entornApp) {
-		log.debug("Refrescant informació de l'app {}", entornApp.getApp().getCodi());
+	private final KeycloakHelper keycloakHelper;
+	private final MonitorServiceClient monitorServiceClient;
+
+	@Transactional
+	public void refreshAppInfo(Long entornAppId) {
+		log.debug("Refrescant informació de l'entornApp {}", entornAppId);
+		EntornAppEntity entornApp = entornAppRepository.findById(entornAppId)
+				.orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, entornAppId.toString()));
+
 		RestTemplate restTemplate = new RestTemplate();
+		MonitorApp monitorApp = new MonitorApp(
+				entornApp.getId(),
+				entornApp.getInfoUrl(),
+				monitorServiceClient,
+				keycloakHelper.getAuthorizationHeader());
+
 		try {
+			// Obtenim informació de l'app
+			monitorApp.startAction();
 			AppInfo appInfo = restTemplate.getForObject(entornApp.getInfoUrl(), AppInfo.class);
+			monitorApp.endAction();
+			// Guardar la informació de l'app a la base de dades
 			if (appInfo != null) {
 				entornApp.setInfoData(
 						appInfo.getData().toInstant().
@@ -51,9 +70,12 @@ public class AppInfoHelper {
 			}
 		} catch (RestClientException ex) {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
-					entornApp.getApp().getCodi(),
-					entornApp.getEntorn().getCodi(),
+					entornApp.getApp().getNom(),
+					entornApp.getEntorn().getNom(),
 					ex.getLocalizedMessage());
+			if (!monitorApp.isFinishedAction()) {
+				monitorApp.endAction(ex);
+			}
 		}
 	}
 

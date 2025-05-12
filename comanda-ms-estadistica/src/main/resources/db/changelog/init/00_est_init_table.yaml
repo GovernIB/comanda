@@ -16,17 +16,17 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}est_dimensio_pk
             - column:
                 name: codi
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: nom
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: descripcio
-                type: varchar(1024)
+                type: varchar(1024 ${varcharUnit})
             - column:
                 name: entorn_app_id
                 type: bigint
@@ -49,7 +49,7 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}est_dimensio_valor_pk
             - column:
                 name: valor
-                type: varchar(255)
+                type: varchar(255 ${varcharUnit})
             - column:
                 name: dimensio_id
                 type: bigint
@@ -72,17 +72,17 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}est_indicador_pk
             - column:
                 name: codi
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: nom
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: descripcio
-                type: varchar(1024)
+                type: varchar(1024 ${varcharUnit})
             - column:
                 name: entorn_app_id
                 type: bigint
@@ -90,7 +90,7 @@ databaseChangeLog:
                     nullable: false
             - column:
                 name: format
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
 - changeSet:
     id: est-init-table-4
     author: limit
@@ -138,7 +138,7 @@ databaseChangeLog:
                     nullable: false
             - column:
                 name: diaSetmana
-                type: varchar(2)
+                type: varchar(2 ${varcharUnit})
                 constraints:
                     nullable: false
 - changeSet:
@@ -163,10 +163,10 @@ databaseChangeLog:
                     nullable: false
             - column:
                 name: dimensions_json
-                type: varchar(4000)
+                type: varchar(4000 ${varcharUnit})
             - column:
                 name: indicadors_json
-                type: varchar(4000)
+                type: varchar(4000 ${varcharUnit})
             - column:
                 name: entorn_app_id
                 type: bigint
@@ -189,17 +189,17 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}est_widget_pk
             - column:
                 name: widget_type
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: titol
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: descripcio
-                type: varchar(1024)
+                type: varchar(1024 ${varcharUnit})
             - column:
                 name: entorn_app_id
                 type: bigint
@@ -207,13 +207,13 @@ databaseChangeLog:
                     nullable: false
             - column:
                 name: inici_unitat
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
             - column:
                 name: inici
                 type: int
             - column:
                 name: duracio_unitat
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
             - column:
                 name: duracio
                 type: int
@@ -222,33 +222,33 @@ databaseChangeLog:
                 type: bigint
             - column:
                 name: tipus_grafic
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
             - column:
                 name: tipus_valors
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
             - column:
                 name: temps_agrupacio
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
             - column:
                 name: llegenda_x
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
             - column:
                 name: llegenda_y
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
             - column:
                 name: unitat
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
             - column:
                 name: agrupament_dimensio_id
                 type: bigint
             - column:
                 name: agrupament_dimensio_titol
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
                 name: created_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -256,7 +256,7 @@ databaseChangeLog:
                 type: TIMESTAMP
             - column:
                 name: lastmod_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 name: lastmod_date
                 type: TIMESTAMP
@@ -307,15 +307,15 @@ databaseChangeLog:
                     nullable: false
             - column:
                 name: tipus
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
             - column:
                 name: titol
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
                 name: created_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -323,7 +323,7 @@ databaseChangeLog:
                 type: TIMESTAMP
             - column:
                 name: lastmod_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 name: lastmod_date
                 type: TIMESTAMP
@@ -347,17 +347,17 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}est_dashboard_pk
             - column:
                 name: titol
-                type: varchar(64)
+                type: varchar(64 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: descripcio
-                type: varchar(1024)
+                type: varchar(1024 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
                 name: created_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -365,7 +365,7 @@ databaseChangeLog:
                 type: TIMESTAMP
             - column:
                 name: lastmod_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 name: lastmod_date
                 type: TIMESTAMP
@@ -421,7 +421,7 @@ databaseChangeLog:
                 constraints:
                     nullable: false
                 name: created_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -429,7 +429,7 @@ databaseChangeLog:
                 type: TIMESTAMP
             - column:
                 name: lastmod_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 name: lastmod_date
                 type: TIMESTAMP

@@ -10,9 +10,4 @@ import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
  */
 public interface AppService extends MutableResourceService<App, Long> {
 
-	/**
-	 * Refresca la informació de totes les aplicacions actives.
-	 */
-	public void refreshAppInfo();
-
 }

@@ -12,13 +12,14 @@
 		<module>comanda-ms-common</module>
 		<module>comanda-ms-configuracio</module>
 		<module>comanda-ms-salut</module>
+		<module>comanda-ms-estadistica</module>
+		<module>comanda-ms-monitor</module>
 		<module>comanda-ms-visualitzacio</module>
 		<module>comanda-ms-gateway</module>
 		<module>comanda-ms-client</module>
 		<module>comanda-back</module>
 		<module>comanda-ear</module>
 		<module>comanda-lib</module>
-		<module>comanda-ms-estadistica</module>
 	</modules>
 	<build>
 		<plugins>

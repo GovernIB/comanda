@@ -10,9 +10,4 @@ import es.caib.comanda.salut.logic.intf.model.Salut;
  */
 public interface SalutService extends ReadonlyResourceService<Salut, Long> {
 
-	/**
-	 * Obté informació de salut de totes les aplicacions actives.
-	 */
-	public void getSalutInfo();
-
 }

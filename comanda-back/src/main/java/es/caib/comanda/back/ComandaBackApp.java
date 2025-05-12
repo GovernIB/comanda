@@ -1,6 +1,5 @@
 package es.caib.comanda.back;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -27,6 +26,7 @@ import java.util.jar.Manifest;
 				"es.caib.comanda.configuracio",
 				"es.caib.comanda.salut",
 				"es.caib.comanda.estadistica",
+				"es.caib.comanda.monitor",
 				"es.caib.comanda.back"
 		},
 		excludeFilters = @ComponentScan.Filter(
@@ -37,7 +37,9 @@ import java.util.jar.Manifest;
 						"es\\.caib\\.comanda\\.salut\\.back\\.config\\..*",
 						"es\\.caib\\.comanda\\.salut\\.persist\\.config\\..*",
 						"es\\.caib\\.comanda\\.estadistica\\.back\\.config\\..*",
-						"es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*"
+						"es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*",
+						"es\\.caib\\.comanda\\.monitor\\.back\\.config\\..*",
+						"es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*"
 				})
 )
 public class ComandaBackApp extends SpringBootServletInitializer {

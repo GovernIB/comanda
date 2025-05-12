@@ -1,0 +1,62 @@
+databaseChangeLog:
+- changeSet:
+    id: monitor-init-table-1
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}monitor
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}monitor_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            name: entorn_app_id
+            type: BIGINT
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(16 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: tipus
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: data
+            type: TIMESTAMP
+        - column:
+            name: url
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: operacio
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            name: temps_resposta
+            type: BIGINT
+        - column:
+            constraints:
+                nullable: false
+            name: estat
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            name: codi_usuari
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            name: error_descripcio
+            type: VARCHAR(1024 ${varcharUnit})
+        - column:
+            name: excepcio_msg
+            type: VARCHAR(1024 ${varcharUnit})
+        - column:
+            name: excepcio_stacktrace
+            type: VARCHAR(4000 ${varcharUnit})

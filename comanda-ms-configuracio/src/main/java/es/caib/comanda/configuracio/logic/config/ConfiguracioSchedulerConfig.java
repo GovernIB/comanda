@@ -1,11 +1,11 @@
 package es.caib.comanda.configuracio.logic.config;
 
-import es.caib.comanda.configuracio.logic.intf.service.AppService;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * Configuració de les tasques periòdiques.
@@ -16,12 +16,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 @EnableScheduling
 public class ConfiguracioSchedulerConfig {
 
-	@Autowired
-	private AppService appService;
-
-	@Scheduled(cron = "${" + BaseConfig.PROP_SCHEDULER_APP_INFO_CRON + ":0 */1 * * * *}")
-	public void appInfo() {
-		appService.refreshAppInfo();
+	@Primary
+	@Bean(name = "configuracioTaskScheduler")
+	public TaskScheduler configuracioTaskScheduler() {
+		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+		scheduler.setPoolSize(10); // Ajusta segons les necessitats
+		scheduler.setThreadNamePrefix("app-tasques-");
+		return scheduler;
 	}
 
 }

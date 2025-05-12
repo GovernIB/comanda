@@ -1,8 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
-import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.Fet;
@@ -11,17 +9,13 @@ import es.caib.comanda.estadistica.persist.entity.FetEntity;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Implementació de la interfície FetService que ofereix funcionalitats per consultar estadístiques i gestionar dades
@@ -51,13 +45,8 @@ import java.util.stream.Collectors;
 @Service
 public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEntity> implements FetService {
 
-    @Value("${es.caib.comanda.keycloak.username:#{null}}")
-    private String keycloakUsername;
-    @Value("${es.caib.comanda.keycloak.password:#{null}}")
-    private String keycloakPassword;
-
-    @Autowired
-    private AppServiceClient appServiceClient;
+//    @Autowired
+//    private AppServiceClient appServiceClient;
     @Autowired
     private KeycloakHelper keycloakHelper;
     @Autowired
@@ -65,72 +54,15 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
     @Autowired
     private EntornAppServiceClient entornAppServiceClient;
 
-    /**
-     * Consulta periòdica automàtica de les estadístiques de totes les aplicacions actives i els seus entorns associats.
-     *
-     * Aquest mètode obté la llista d'aplicacions actives, itera sobre cada entorn actiu associat a aquestes aplicacions
-     * i, si els URLs d'estadístiques estan disponibles, invoca el mètode corresponent per obtenir la informació d'estadística.
-     *
-     * Característiques clau:
-     * - Cada entorn associat d'una aplicació es processa de manera paral·lela per optimitzar el rendiment.
-     * - Els errors durant la consulta d'estadístiques es registren al log amb el detall del codi de l'aplicació i el nom de l'entorn afectats.
-     *
-     * Escenaris en què no es realitza cap acció:
-     * - Si l'aplicació no té entorns associats.
-     * - Si l'entorn no està actiu o li manquen els URLs necessaris d'estadístiques.
-     *
-     * La consulta es fa a través del helper `estadisticaHelper`, que encapsula la lògica per recuperar les dades d'estadística.
-     */
-    @Override
-    public void getEstadisticaInfo() {
-        log.debug("Iniciant consulta periòdica de estadístiques");
-        List<App> apps = appFindByActivaTrue();
-        apps.forEach(a -> {
-            if (a.getEntornApps().isEmpty())
-                return;
-
-            a.getEntornApps().parallelStream().forEach(ea -> {
-                if (ea.isActiva() && !Strings.isBlank(ea.getEstadisticaInfoUrl()) && !Strings.isBlank(ea.getEstadisticaUrl())) {
-                    try {
-                        estadisticaHelper.getEstadisticaInfo(ea, ea.getEstadisticaInfoUrl(), ea.getEstadisticaUrl());
-                    } catch (Exception ex) {
-                        log.error("No s'han pogut consultar les estadístiques de l'aplicació {}, entorn {}", a.getCodi(), ea.getEntorn().getNom(), ex);
-                    }
-                }
-            });
-        });
-    }
-
     private EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
                 null,
-                getAuthorizationHeader());
+                keycloakHelper.getAuthorizationHeader());
         if (entornApp != null) {
             return entornApp.getContent();
         }
         return null;
-    }
-
-    private List<App> appFindByActivaTrue() {
-        PagedModel<EntityModel<App>> apps = appServiceClient.find(
-                null,
-                "activa:true",
-                null,
-                null,
-                "UNPAGED",
-                null,
-                getAuthorizationHeader());
-        return apps.getContent().stream().
-                map(EntityModel::getContent).
-                collect(Collectors.toList());
-    }
-
-    private String getAuthorizationHeader() {
-        String accessToken = keycloakHelper.getAccessTokenWithUsernamePassword(
-                keycloakUsername,
-                keycloakPassword);
-        return accessToken != null ? "Bearer " + accessToken : null;
     }
 
     @Override
@@ -138,7 +70,7 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
         try {
             log.info("Migració de dades manual de ahir per entornAppId: {}", entornAppId);
             EntornApp entornApp = entornAppFindById(entornAppId);
-            estadisticaHelper.getEstadisticaInfo(entornApp, entornApp.getEstadisticaInfoUrl(), entornApp.getEstadisticaUrl());
+            estadisticaHelper.getEstadisticaInfoDades(entornApp);
         } catch (Exception e) {
             log.error("Error en la migració de dades", e);
             throw e;

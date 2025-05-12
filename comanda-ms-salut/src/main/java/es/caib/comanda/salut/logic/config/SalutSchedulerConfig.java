@@ -1,27 +1,26 @@
 package es.caib.comanda.salut.logic.config;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
-import es.caib.comanda.salut.logic.intf.service.SalutService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * Configuració de les tasques periòdiques.
  *
  * @author Límit Tecnologies
  */
+//@Profile("!back")
 @Configuration
 @EnableScheduling
 public class SalutSchedulerConfig {
 
-	@Autowired
-	private SalutService salutService;
-
-	@Scheduled(cron = "${" + BaseConfig.PROP_SCHEDULER_SALUT_INFO_CRON + ":0 */1 * * * *}")
-	public void salutInfo() {
-		salutService.getSalutInfo();
+	@Bean(name = "salutTaskScheduler")
+	public TaskScheduler salutTaskScheduler() {
+		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+		scheduler.setPoolSize(10); // Ajusta segons les necessitats
+		scheduler.setThreadNamePrefix("salut-tasques-");
+		return scheduler;
 	}
-
 }

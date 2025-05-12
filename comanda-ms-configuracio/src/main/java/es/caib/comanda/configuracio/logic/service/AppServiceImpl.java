@@ -7,17 +7,12 @@ import es.caib.comanda.configuracio.logic.intf.service.AppService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
-import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,39 +29,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	private AppInfoHelper appInfoHelper;
 	@Autowired
 	private AppRepository appRepository;
-	@Autowired
-	private IntegracioRepository integracioRepository;
-	@Autowired
-	private SubsistemaRepository subsistemaRepository;
-
-	@PostConstruct
-	public void init() {
-		register(new RefreshAction(this));
-	}
-
-	@Override
-	@Transactional
-	public void refreshAppInfo() {
-		log.debug("Iniciant refresc periòdic de la informació de les apps");
-		List<AppEntity> apps = appRepository.findByActivaTrue();
-		apps.forEach(app -> {
-			if (app.getEntornApps().isEmpty())
-				return;
-
-			app.getEntornApps().parallelStream().forEach(entornApp -> {
-				try {
-					if (entornApp.isActiva()) {
-						appInfoHelper.refreshAppInfo(entornApp);
-					}
-				} catch (Exception ex) {
-					log.error("No s'ha pogut refrescar la informació de l'aplicació {} en l'entorn {}",
-							app.getCodi(),
-							entornApp.getEntorn().getCodi(),
-							ex);
-				}
-			});
-		});
-	}
 
 	@Override
 	protected void afterConversion(AppEntity entity, App resource) {
@@ -91,22 +53,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 						return entornApp;
 					}).collect(Collectors.toList())
 			);
-		}
-	}
-
-	public static class RefreshAction implements ActionExecutor<Object, Object> {
-		private final AppServiceImpl appServiceImpl;
-		public RefreshAction(AppServiceImpl appServiceImpl) {
-			this.appServiceImpl = appServiceImpl;
-		}
-		@Override
-		public String[] getSupportedActionCodes() {
-			return new String[] { "refresh" };
-		}
-		@Override
-		public Object exec(String code, Object params) throws ActionExecutionException {
-			appServiceImpl.refreshAppInfo();
-			return null;
 		}
 	}
 

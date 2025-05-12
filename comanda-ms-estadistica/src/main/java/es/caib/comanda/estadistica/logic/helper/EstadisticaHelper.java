@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.Temps;
@@ -24,7 +25,7 @@ import es.caib.comanda.ms.estadistica.model.GenericFet;
 import es.caib.comanda.ms.estadistica.model.IndicadorDesc;
 import es.caib.comanda.ms.estadistica.model.RegistreEstadistic;
 import es.caib.comanda.ms.estadistica.model.RegistresEstadistics;
-import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
+import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -58,7 +59,8 @@ public class EstadisticaHelper {
     private final TempsRepository tempsRepository;
     private final FetRepository fetRepository;
 
-    protected final ObjectMappingHelper objectMappingHelper;
+    private final KeycloakHelper keycloakHelper;
+    private final MonitorServiceClient monitorServiceClient;
 
     // OBTENCIÓ i DESAT D'ESTADISTIQUES
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,27 +70,48 @@ public class EstadisticaHelper {
      * La informació inclou indicadors, dimensions i registres estadístics que es creen i es guarden en el sistema a partir de les dades rebudes.
      *
      * @param entornApp               Objecte que representa l'aplicació i l'entorn per als quals es recupera informació estadística.
-     * @param estadisticaInfoUrl      URL des d'on es consulta informació estadística, incloent-hi dimensions i indicadors.
-     * @param estadisticaUrl          URL des d'on es recuperen registres estadístics.
      */
     @Transactional
-    public void getEstadisticaInfo(EntornApp entornApp, String estadisticaInfoUrl, String estadisticaUrl) {
-        log.debug("Consultant informació estadística de l'app {}, entorn {}",
+    public void getEstadisticaInfoDades(EntornApp entornApp) {
+        log.debug("Obtenint informació i dades estadístiques de l'app {}, entorn {}",
                 entornApp.getApp().getNom(),
                 entornApp.getEntorn().getNom());
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().set(0, getConverter());
+        MonitorEstadistica monitorEstadistica = new MonitorEstadistica(
+                entornApp.getId(),
+                entornApp.getEstadisticaInfoUrl(),
+                entornApp.getEstadisticaUrl(),
+                monitorServiceClient,
+                keycloakHelper.getAuthorizationHeader());
 
         try {
-            EstadistiquesInfo estadistiquesInfo = restTemplate.getForObject(estadisticaInfoUrl, EstadistiquesInfo.class);
+            // Obtenir informació estadística de l'app i dimensions
+            monitorEstadistica.startInfoAction();
+            EstadistiquesInfo estadistiquesInfo = restTemplate.getForObject(entornApp.getEstadisticaInfoUrl(), EstadistiquesInfo.class);
+            monitorEstadistica.endInfoAction();
+            // Guardar la inforció de l'estructura de les dades estadístiques
             crearIndicadorsIDimensions(estadistiquesInfo, entornApp.getId());
-            RegistresEstadistics registresEstadistics = restTemplate.getForObject(estadisticaUrl, RegistresEstadistics.class);
+
+            // Obtenir les dades estadístiques
+            monitorEstadistica.startDadesAction();
+            RegistresEstadistics registresEstadistics = restTemplate.getForObject(entornApp.getEstadisticaUrl(), RegistresEstadistics.class);
+            monitorEstadistica.endDadesAction();
+            // Guardar les dades estadístiques
             crearEstadistiques(registresEstadistics, entornApp.getId());
         } catch (RestClientException ex) {
-            log.warn("No s'ha pogut obtenir informació estadistica de l'app {}, entorn {}: {}",
-                    entornApp.getApp().getId(),
-                    entornApp.getEntorn().getId(),
+            String warnMsg = monitorEstadistica.isFinishedInfoAction()
+                    ? "No s'han pogut obtenir dades estadístiques "
+                    : "No s'ha pogut obtenir informació estadística ";
+            log.warn(warnMsg + "de l'app {}, entorn {}: {}",
+                    entornApp.getApp().getNom(),
+                    entornApp.getEntorn().getNom(),
                     ex.getLocalizedMessage());
+            if (!monitorEstadistica.isFinishedInfoAction()) {
+                monitorEstadistica.endInfoAction(ex);
+            } else if (!monitorEstadistica.isFinishedDadesAction()) {
+                monitorEstadistica.endDadesAction(ex);
+            }
         }
     }
 

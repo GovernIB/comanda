@@ -21,11 +21,6 @@ import java.util.Map;
 public interface FetService extends ReadonlyResourceService<Fet, Long> {
 
     /**
-     * Obté informació estadística de totes les aplicacions actives.
-     */
-    void getEstadisticaInfo();
-
-    /**
      * Obté les dades estadístiques d'ahir relacionades amb l'entorn especificat d'una aplicació.
      *
      * @param entornAppId identificador de l'entorn de l'aplicació del qual es desitja migrar les dades.

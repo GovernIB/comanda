@@ -16,12 +16,12 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}entorn_pk
             - column:
                 name: codi
-                type: varchar(16)
+                type: varchar(16 ${varcharUnit})
                 constraints:
                     nullable: false
             - column:
                 name: nom
-                type: varchar(255)
+                type: varchar(255 ${varcharUnit})
             - addUniqueConstraint:
                 tableName: ${db_prefix}entorn
                 columnNames: codi
@@ -45,15 +45,15 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: codi
-            type: VARCHAR(16)
+            type: VARCHAR(16 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
             name: nom
-            type: VARCHAR(100)
+            type: VARCHAR(100 ${varcharUnit})
         - column:
             name: descripcio
-            type: VARCHAR(1000)
+            type: VARCHAR(1000 ${varcharUnit})
         - column:
               name: activa
               type: BOOLEAN
@@ -61,7 +61,7 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: created_by
-            type: VARCHAR(64)
+            type: VARCHAR(64 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
@@ -69,7 +69,7 @@ databaseChangeLog:
             type: TIMESTAMP
         - column:
             name: lastmod_by
-            type: VARCHAR(64)
+            type: VARCHAR(64 ${varcharUnit})
         - column:
             name: lastmod_date
             type: TIMESTAMP
@@ -105,7 +105,7 @@ databaseChangeLog:
                 constraints:
                     nullable: false
                 name: info_url
-                type: VARCHAR(200)
+                type: VARCHAR(200 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -118,7 +118,7 @@ databaseChangeLog:
                 constraints:
                     nullable: false
                 name: salut_url
-                type: VARCHAR(200)
+                type: VARCHAR(200 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -126,16 +126,16 @@ databaseChangeLog:
                 type: INT
             - column:
                   name: estadistica_info_url
-                  type: VARCHAR(200)
+                  type: VARCHAR(200 ${varcharUnit})
             - column:
                   name: estadistica_url
-                  type: VARCHAR(200)
+                  type: VARCHAR(200 ${varcharUnit})
             - column:
                   name: estadistica_cron
-                  type: VARCHAR(40)
+                  type: VARCHAR(40 ${varcharUnit})
             - column:
                 name: versio
-                type: VARCHAR(10)
+                type: VARCHAR(10 ${varcharUnit})
             - column:
                 name: activa
                 type: BOOLEAN
@@ -143,7 +143,7 @@ databaseChangeLog:
                 constraints:
                     nullable: false
                 name: created_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -151,7 +151,7 @@ databaseChangeLog:
                 type: TIMESTAMP
             - column:
                 name: lastmod_by
-                type: VARCHAR(64)
+                type: VARCHAR(64 ${varcharUnit})
             - column:
                 name: lastmod_date
                 type: TIMESTAMP
@@ -177,12 +177,12 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: codi
-            type: VARCHAR(16)
+            type: VARCHAR(16 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
             name: nom
-            type: VARCHAR(100)
+            type: VARCHAR(100 ${varcharUnit})
         - column:
             name: activa
             type: BOOLEAN
@@ -195,7 +195,7 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: created_by
-            type: VARCHAR(64)
+            type: VARCHAR(64 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
@@ -203,7 +203,7 @@ databaseChangeLog:
             type: TIMESTAMP
         - column:
             name: lastmod_by
-            type: VARCHAR(64)
+            type: VARCHAR(64 ${varcharUnit})
         - column:
             name: lastmod_date
             type: TIMESTAMP
@@ -229,12 +229,12 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: codi
-            type: VARCHAR(16)
+            type: VARCHAR(16 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
             name: nom
-            type: VARCHAR(100)
+            type: VARCHAR(100 ${varcharUnit})
         - column:
             name: actiu
             type: BOOLEAN
@@ -247,7 +247,7 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: created_by
-            type: VARCHAR(64)
+            type: VARCHAR(64 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
@@ -255,7 +255,7 @@ databaseChangeLog:
             type: TIMESTAMP
         - column:
             name: lastmod_by
-            type: VARCHAR(64)
+            type: VARCHAR(64 ${varcharUnit})
         - column:
             name: lastmod_date
             type: TIMESTAMP

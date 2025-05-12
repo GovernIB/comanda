@@ -1,18 +1,27 @@
 package es.caib.comanda.estadistica.back.controller;
 
+import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.Fet;
 import es.caib.comanda.estadistica.logic.intf.service.FetService;
+import es.caib.comanda.estadistica.logic.service.EstadisticaSchedulerService;
 import es.caib.comanda.ms.back.controller.BaseReadonlyResourceController;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.ms.logic.intf.model.Resource;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.groups.Default;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +32,24 @@ import java.util.stream.Collectors;
  *
  * @author Límit Tecnologies
  */
+@Slf4j
 @RestController("fetController")
 @RequestMapping(BaseConfig.API_PATH + "/fets")
 @Tag(name = "Fet", description = "Servei de consulta de fets")
 public class FetController extends BaseReadonlyResourceController<Fet, Long> {
+
+    @Autowired
+    private EstadisticaSchedulerService schedulerService;
+
+    @PostMapping("/programar")
+    public ResponseEntity<Void> create(
+            @RequestBody
+            @Validated({Resource.OnCreate.class, Default.class})
+            final EntornApp entornApp) {
+        log.info("Rebuda petició d'actualització de procés de salut per entornApp: {}", entornApp.getId());
+        schedulerService.programarTasca(entornApp);
+        return ResponseEntity.ok().build();
+    }
 
     //    GET /api/fets/estadistiques/periode/dimensions
     //    ?entornAppId=1

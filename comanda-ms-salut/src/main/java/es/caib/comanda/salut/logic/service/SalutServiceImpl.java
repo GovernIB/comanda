@@ -1,13 +1,10 @@
 package es.caib.comanda.salut.logic.service;
 
-import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
-import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
-import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutDetall;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeAgrupacio;
@@ -30,9 +27,7 @@ import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -56,11 +51,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private static final String PERSP_MISSATGES = "SAL_MISSATGES";
 	private static final String PERSP_DETALLS = "SAL_DETALLS";
 
-	@Value("${es.caib.comanda.keycloak.username:#{null}}")
-	private String keycloakUsername;
-	@Value("${es.caib.comanda.keycloak.password:#{null}}")
-	private String keycloakPassword;
-
 	@Autowired
 	private SalutIntegracioRepository salutIntegracioRepository;
 	@Autowired
@@ -69,10 +59,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private SalutMissatgeRepository salutMissatgeRepository;
 	@Autowired
 	private SalutDetallRepository salutDetallRepository;
-	@Autowired
-	private SalutInfoHelper salutInfoHelper;
-	@Autowired
-	private AppServiceClient appServiceClient;
 	@Autowired
 	private EntornAppServiceClient entornAppServiceClient;
 	@Autowired
@@ -83,27 +69,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(new InformeSalutLast());
 		register(new InformeEstat());
 		register(new InformeLatencia());
-	}
-
-	@Override
-//	@Transactional
-	public void getSalutInfo() {
-		log.debug("Iniciant consulta periòdica de salut");
-		List<App> apps = appFindByActivaTrue();
-		apps.forEach(a -> {
-			if (a.getEntornApps().isEmpty())
-				return;
-
-			a.getEntornApps().parallelStream().forEach(ea -> {
-				if (ea.isActiva()) {
-					try {
-						salutInfoHelper.getSalutInfo(ea, ea.getSalutUrl());
-					} catch (Exception ex) {
-						log.error("No s'ha pogut consultar la salut de l'aplicació {}", a.getCodi(), ex);
-					}
-				}
-			});
-		});
 	}
 
 	protected Salut applyPerspectives(
@@ -201,52 +166,15 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 	}
 
-	private List<App> appFindByActivaTrue() {
-		PagedModel<EntityModel<App>> apps = appServiceClient.find(
-				null,
-				"activa:true",
-				null,
-				null,
-				"UNPAGED",
-				null,
-				getAuthorizationHeader());
-		return apps.getContent().stream().
-				map(EntityModel::getContent).
-				collect(Collectors.toList());
-	}
-
-//	private App appFindByCodi(String codi) {
-//		PagedModel<EntityModel<App>> apps = appServiceClient.find(
-//				null,
-//				"codi:'" + codi + "'",
-//				null,
-//				null,
-//				"UNPAGED",
-//				null,
-//				getAuthorizationHeader());
-//		if (!apps.getContent().isEmpty()) {
-//			return apps.getContent().iterator().next().getContent();
-//		} else {
-//			return null;
-//		}
-//	}
-
 	private EntornApp entornAppFindById(Long entornAppId) {
 		EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
 				entornAppId,
 				null,
-				getAuthorizationHeader());
+				keycloakHelper.getAuthorizationHeader());
 		if (entornApp != null) {
 			return entornApp.getContent();
 		}
 		return null;
-	}
-
-	private String getAuthorizationHeader() {
-		String accessToken = keycloakHelper.getAccessTokenWithUsernamePassword(
-				keycloakUsername,
-				keycloakPassword);
-		return accessToken != null ? "Bearer " + accessToken : null;
 	}
 
 	/**

@@ -28,13 +28,13 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: app_estat
-            type: VARCHAR(20)
+            type: VARCHAR(20 ${varcharUnit})
         - column:
             name: app_latencia
             type: INTEGER
         - column:
             name: bd_estat
-            type: VARCHAR(20)
+            type: VARCHAR(20 ${varcharUnit})
         - column:
             name: bd_latencia
             type: INTEGER
@@ -57,12 +57,12 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: codi
-            type: VARCHAR(16)
+            type: VARCHAR(16 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
             name: estat
-            type: VARCHAR(20)
+            type: VARCHAR(20 ${varcharUnit})
         - column:
             name: latencia
             type: INTEGER
@@ -100,12 +100,12 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: codi
-            type: VARCHAR(16)
+            type: VARCHAR(16 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
             name: estat
-            type: VARCHAR(20)
+            type: VARCHAR(20 ${varcharUnit})
         - column:
             name: latencia
             type: INTEGER
@@ -148,10 +148,10 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: nivell
-            type: VARCHAR(10)
+            type: VARCHAR(10 ${varcharUnit})
         - column:
             name: missatge
-            type: VARCHAR(2048)
+            type: VARCHAR(2048 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
@@ -176,15 +176,15 @@ databaseChangeLog:
             constraints:
                 nullable: false
             name: codi
-            type: VARCHAR(10)
+            type: VARCHAR(10 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
             name: nom
-            type: VARCHAR(100)
+            type: VARCHAR(100 ${varcharUnit})
         - column:
             name: valor
-            type: VARCHAR(1024)
+            type: VARCHAR(1024 ${varcharUnit})
         - column:
             constraints:
                 nullable: false
