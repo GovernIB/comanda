@@ -2,6 +2,7 @@ const translationEs = {
     menu: {
         salut: "Salud",
         app: "Aplicaciones",
+        monitor: "Monitor",
     },
     page: {
         salut: {
@@ -73,6 +74,20 @@ const translationEs = {
             title: "Aplicaciones",
             create: "Crear aplicación",
             update: "Modificar aplicación",
+        },
+        monitors: {
+            title: "Monitores",
+            detail: {
+                title: "Detalles de la comunicación con la integración",
+                data: "Fecha",
+                operacio: "Descripción",
+                tipus: "Tipo",
+                estat: "Estado",
+                codiUsuari: "Usuario",
+                errorDescripcio: "Descripción del error",
+                excepcioMessage: "Mensaje de la excepción",
+                excepcioStacktrace: "Traza de la excepción",
+            },
         },
         notFound: "No encontrado",
     }

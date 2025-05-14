@@ -3,6 +3,7 @@ package es.caib.comanda.monitor.persist.entity;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
+import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.management.monitor.Monitor;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -23,18 +23,18 @@ import java.time.LocalDateTime;
 /**
  * Representa l'entitat MonitorEntity que modela les dades d'auditoria i monitorització dins
  * l'aplicació. Defineix les propietats i comportament relacionats amb registres de monitoratge.
- * Està construïda a partir de BaseEntity.
+ * Està construïda a partir de BaseEntity.</br>
  *
  * Les propietats d'aquesta entitat permeten descriure informació rellevant sobre l'activitat
- * registrada, com el codi de mòdul, tipus d'acció, estat, errors i temps de resposta.
+ * registrada, com el codi de mòdul, tipus d'acció, estat, errors i temps de resposta.</br>
  *
  * Aquesta entitat està configurada per ser persistida a la base de dades en una taula específica
- * definida a partir del prefix general de configuració.
+ * definida a partir del prefix general de configuració.</br>
  *
- * Funcionalitats principals inclouen:
- * - Tractament i limitació de longituds per a descripcions d'errors i traça d'excepcions.
- * - Suport per a enumeracions com ModulEnum, AccioTipusEnum i EstatEnum.
- * - Capacitat per a registrar operacions específiques, usuari i detalls temporals.
+ * Funcionalitats principals inclouen:</br>
+ * - Tractament i limitació de longituds per a descripcions d'errors i traça d'excepcions.</br>
+ * - Suport per a enumeracions com ModulEnum, AccioTipusEnum i EstatEnum.</br>
+ * - Capacitat per a registrar operacions específiques, usuari i detalls temporals.</br>
  *
  * Aquest component permet la configuració personalitzada via constructors o patrons Builder,
  * afavorint la seguretat i integritat de les dades emmagatzemades.

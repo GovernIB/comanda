@@ -2,6 +2,7 @@ const translationCa = {
     menu: {
         salut: "Salut",
         app: "Aplicacions",
+        monitor: "Monitor",
     },
     page: {
         salut: {
@@ -74,7 +75,26 @@ const translationCa = {
             create: "Crear aplicació",
             update: "Modificar aplicació",
         },
+        monitors: {
+            title: "Monitors",
+            detail: {
+                title: "Detalls de la comunicació amb la integració",
+                data: "Data",
+                operacio: "Descripció",
+                tipus: "Tipus",
+                estat: "Estat",
+                codiUsuari: "Usuari",
+                errorDescripcio: "Descripció de l'error",
+                excepcioMessage: "Missatge de l'excepció",
+                excepcioStacktrace: "Traça de l'excepció",
+            },
+        },
         notFound: "No trobat",
+    },
+    components: {
+        copiarContingut: "Copiar contingut",
+        copiarContingutTitle: "Copiar el contingut",
+        copiarContingutSuccess: "Contingut copiar al portapapers",
     }
 };
 

@@ -13,4 +13,9 @@ import org.springframework.context.annotation.Profile;
 @Profile("!back")
 public class HateoasMessageResolverConfig extends BaseHateoasMessageResolverConfig {
 
+	@Override
+	protected String getBasename() {
+		return "comanda.monitor-rest-messages";
+	}
+
 }

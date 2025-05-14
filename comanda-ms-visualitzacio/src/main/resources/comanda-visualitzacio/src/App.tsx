@@ -20,6 +20,12 @@ export const App: React.FC = () => {
         to: '/app',
         icon: 'widgets',
         resourceName: 'app',
+    }, {
+        id: 'monitor',
+        title: t('menu.monitor'),
+        to: '/monitor',
+        icon: 'monitor',
+        resourceName: 'monitor',
     }];
     return <BaseApp
         code="cmd"

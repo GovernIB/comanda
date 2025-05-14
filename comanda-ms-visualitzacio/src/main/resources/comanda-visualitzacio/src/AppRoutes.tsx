@@ -3,6 +3,7 @@ import Salut from './pages/Salut';
 import SalutAppInfo from './pages/SalutAppInfo';
 import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
+import Monitors, { MonitorForm } from './pages/Monitor';
 
 const AppRoutes: React.FC = () => {
     return <Routes>
@@ -14,6 +15,14 @@ const AppRoutes: React.FC = () => {
                 <Route index element={<AppForm />} />
                 <Route path=":id" element={<AppForm />} />
             </Route>
+        </Route>
+        <Route path="monitor">
+            <Route index element={<Monitors />} />
+            {/* <Route path=":id" element={<MonitorForm />} />
+            <Route path="form">
+                <Route index element={<MonitorForm />} />
+                <Route path=":id" element={<MonitorForm />} />
+            </Route> */}
         </Route>
         <Route path="*" element={<NotFoundPage />} />
     </Routes>;
