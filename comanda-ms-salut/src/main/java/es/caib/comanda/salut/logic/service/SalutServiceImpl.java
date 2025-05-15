@@ -3,6 +3,7 @@ package es.caib.comanda.salut.logic.service;
 import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.intf.model.Salut;
@@ -31,9 +32,11 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -66,12 +69,12 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 
 	@PostConstruct
 	public void init() {
-		register(new InformeSalutLast());
-		register(new InformeEstat());
-		register(new InformeLatencia());
+		register(Salut.SALUT_REPORT_LAST, new InformeSalutLast());
+		register(Salut.SALUT_REPORT_ESTAT, new InformeEstat());
+		register(Salut.SALUT_REPORT_LATENCIA, new InformeLatencia());
 	}
 
-	protected Salut applyPerspectives(
+	protected void applyPerspectives(
 			SalutEntity entity,
 			Salut resource,
 			String[] perspectives) {
@@ -140,29 +143,22 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 									"salut")).
 							collect(Collectors.toList()));
 		}
-		return null;
 	}
 
 	/**
 	 * Darrera informació de salut de cada aplicació/entorn.
 	 */
-	public class InformeSalutLast implements ReportDataGenerator<Object, Salut> {
+	public class InformeSalutLast implements ReportGenerator<SalutEntity, Serializable, Salut> {
 		@Override
-		public String[] getSupportedReportCodes() {
-			return new String[] { "salut_last" };
-		}
-		@Override
-		public Class<Object> getParameterClass() {
-			return null;
-		}
-		@Override
-		public List<Salut> generate(
-				String code,
-				Object params) throws ReportGenerationException {
-			List<SalutEntity> saluts = ((SalutRepository)resourceRepository).informeSalutLast(
-					null,
-					LocalDateTime.now());
+		public List<Salut> generateData(String code, SalutEntity entity, Serializable params) throws ReportGenerationException {
+			List<SalutEntity> saluts = ((SalutRepository)entityRepository).informeSalutLast(
+				null,
+				LocalDateTime.now());
 			return entitiesToResources(saluts);
+		}
+
+		@Override
+		public void onChange(Serializable previous, String fieldName, Object fieldValue, Map answers, String[] previousFieldNames, Serializable target) {
 		}
 	}
 
@@ -185,42 +181,35 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	 *   - dataFi: data de fi.
 	 *   - agrupacio: agrupació temporal dels resultats.
 	 */
-	public class InformeEstat implements ReportDataGenerator<SalutInformeParams, SalutInformeEstatItem> {
+	public class InformeEstat implements ReportGenerator<SalutEntity, SalutInformeParams, SalutInformeEstatItem> {
 		@Override
-		public String[] getSupportedReportCodes() {
-			return new String[] { "estat" };
-		}
-		@Override
-		public Class<SalutInformeParams> getParameterClass() {
-			return SalutInformeParams.class;
-		}
-		@Override
-		public List<SalutInformeEstatItem> generate(
+		public List<SalutInformeEstatItem> generateData(
 				String code,
+				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
 			List<SalutInformeEstatItem> data;
 			if (SalutInformeAgrupacio.ANY == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeEstatAny(
+				data = ((SalutRepository)entityRepository).informeEstatAny(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MES == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeEstatMes(
+				data = ((SalutRepository)entityRepository).informeEstatMes(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.DIA == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeEstatDia(
+				data = ((SalutRepository)entityRepository).informeEstatDia(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.HORA == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeEstatHora(
+				data = ((SalutRepository)entityRepository).informeEstatHora(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MINUT == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeEstatMinut(
+				data = ((SalutRepository)entityRepository).informeEstatMinut(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
@@ -232,6 +221,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						"Unknown agrupacio value: " + params.getAgrupacio());
 			}
 			return data;
+		}
+
+		@Override
+		public void onChange(SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
 		}
 	}
 
@@ -243,42 +236,35 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	 *   - dataFi: data de fi.
 	 *   - agrupacio: agrupació temporal dels resultats.
 	 */
-	public class InformeLatencia implements ReportDataGenerator<SalutInformeParams, SalutInformeLatenciaItem> {
+	public class InformeLatencia implements ReportGenerator<SalutEntity, SalutInformeParams, SalutInformeLatenciaItem> {
 		@Override
-		public String[] getSupportedReportCodes() {
-			return new String[] { "latencia" };
-		}
-		@Override
-		public Class<SalutInformeParams> getParameterClass() {
-			return SalutInformeParams.class;
-		}
-		@Override
-		public List<SalutInformeLatenciaItem> generate(
+		public List<SalutInformeLatenciaItem> generateData(
 				String code,
+				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
 			List<SalutInformeLatenciaItem> data;
 			if (SalutInformeAgrupacio.ANY == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeLatenciaAny(
+				data = ((SalutRepository)entityRepository).informeLatenciaAny(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MES == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeLatenciaMes(
+				data = ((SalutRepository)entityRepository).informeLatenciaMes(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.DIA == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeLatenciaDia(
+				data = ((SalutRepository)entityRepository).informeLatenciaDia(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.HORA == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeLatenciaHora(
+				data = ((SalutRepository)entityRepository).informeLatenciaHora(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
 			} else if (SalutInformeAgrupacio.MINUT == params.getAgrupacio()) {
-				data = ((SalutRepository)resourceRepository).informeLatenciaMinut(
+				data = ((SalutRepository)entityRepository).informeLatenciaMinut(
 						params.getEntornAppId(),
 						params.getDataInici(),
 						params.getDataFi());
@@ -290,6 +276,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						"Unknown agrupacio value: " + params.getAgrupacio());
 			}
 			return data;
+		}
+
+		@Override
+		public void onChange(SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
 		}
 	}
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -15,7 +16,7 @@ import java.util.Date;
  */
 @Getter
 @AllArgsConstructor
-public class SalutInformeEstatItem {
+public class SalutInformeEstatItem implements Serializable {
 
 	private LocalDateTime data;
 	@JsonIgnore

@@ -1,7 +1,9 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfigArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.hateoas.InputType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,8 +30,17 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ResourceConfig(quickFilterFields = { "codi", "nom" })
+@ResourceConfig(
+	quickFilterFields = { "codi", "nom" },
+	artifacts = {
+		@ResourceConfigArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REFRESH, formClass = EntornApp.EntornAppParamAction.class),
+		@ResourceConfigArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),
+	}
+)
 public class EntornApp extends BaseResource<Long> {
+
+	public final static String ENTORN_APP_ACTION_REFRESH = "refresh";
+	public final static String ENTORN_APP_ACTION_REPROGRAMAR = "reprogramar";
 
 	@Transient
 	private ResourceReference<App, Long> app;
@@ -71,5 +83,13 @@ public class EntornApp extends BaseResource<Long> {
 	@Size(max = 200)
 	private String estadisticaUrl;
 	private String estadisticaCron;
+
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class EntornAppParamAction implements Serializable {
+		private Long entornAppId;
+	}
 
 }

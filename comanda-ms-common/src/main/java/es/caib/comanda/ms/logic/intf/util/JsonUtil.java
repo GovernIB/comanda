@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * Utilitats per a dades en format JSON.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Component
@@ -28,20 +28,20 @@ public class JsonUtil implements ApplicationContextAware {
 	protected ObjectMapper objectMapper;
 
 	public <T> T fromJsonToObjectWithType(
-			JsonNode jsonNode,
-			Class<T> targetType) throws JsonProcessingException {
+		JsonNode jsonNode,
+		Class<T> targetType) throws JsonProcessingException {
 		return objectMapper.treeToValue(
-				jsonNode != null ? jsonNode : objectMapper.createObjectNode(),
-				targetType);
+			jsonNode != null ? jsonNode : objectMapper.createObjectNode(),
+			targetType);
 	}
 
 	public <T> Map<String, Object> fromJsonToMap(
-			JsonNode jsonNode,
-			Class<T> targetType) throws JsonProcessingException {
+		JsonNode jsonNode,
+		Class<T> targetType) throws JsonProcessingException {
 		if (jsonNode != null) {
 			Map<String, Object> jsonMap = objectMapper.convertValue(
-					jsonNode,
-					new TypeReference<>(){});
+				jsonNode,
+				new TypeReference<>(){});
 			T jsonAsObject = fromJsonToObjectWithType(jsonNode, targetType);
 			Map<String, Object> map = new HashMap<>();
 			jsonMap.keySet().forEach(k -> {
@@ -64,10 +64,10 @@ public class JsonUtil implements ApplicationContextAware {
 
 	@SneakyThrows
 	public Object fillResourceWithFieldsMap(
-			Object resource,
-			Map<String, Object> fields,
-			String fieldName,
-			JsonNode fieldValue) throws ResourceFieldNotFoundException {
+		Object resource,
+		Map<String, Object> fields,
+		String fieldName,
+		JsonNode fieldValue) throws ResourceFieldNotFoundException {
 		if (fields != null) {
 			fields.forEach((k, v) -> {
 				Field field = ReflectionUtils.findField(resource.getClass(), k);

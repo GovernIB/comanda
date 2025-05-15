@@ -41,9 +41,9 @@ public class ObjectMappingHelper {
 	 *            quan es dona algun error en el mapeig.
 	 */
 	public <T> T newInstanceMap(
-			Object source,
-			Class<T> targetClass,
-			String... ignoredFields) throws ObjectMappingException {
+		Object source,
+		Class<T> targetClass,
+		String... ignoredFields) throws ObjectMappingException {
 		if (source != null) {
 			try {
 				T target = getNewInstance(targetClass);
@@ -52,9 +52,9 @@ public class ObjectMappingHelper {
 					return target;
 				} else {
 					throw new ObjectMappingException(
-							source.getClass(),
-							targetClass,
-							"Couldn't find no args constructor or builder");
+						source.getClass(),
+						targetClass,
+						"Couldn't find no args constructor or builder");
 				}
 			} catch (Exception ex) {
 				throw new ObjectMappingException(source.getClass(), targetClass, ex);
@@ -75,42 +75,39 @@ public class ObjectMappingHelper {
 	 *            quan es dona algun error en el mapeig.
 	 */
 	public void map(
-			Object source,
-			Object target,
-			String... ignoredFields) throws ObjectMappingException {
+		Object source,
+		Object target,
+		String... ignoredFields) throws ObjectMappingException {
 		ReflectionUtils.doWithFields(
-				source.getClass(),
-				sourceField -> {
-					ReflectionUtils.makeAccessible(sourceField);
-					Field targetField = ReflectionUtils.findField(target.getClass(), sourceField.getName());
-					if (targetField != null) {
-						if (isSimpleType(sourceField.getType())) {
-							ReflectionUtils.makeAccessible(targetField);
-							ReflectionUtils.setField(
-									targetField,
-									target,
-									sourceField.get(source));
-						} else if (ResourceEntity.class.isAssignableFrom(sourceField.getType()) && ResourceReference.class.isAssignableFrom(targetField.getType())) {
-							ResourceEntity<?, ?> entity = (ResourceEntity<?, ?>)sourceField.get(source);
-							ResourceReference<?, ?> resourceReference = null;
-							if (entity != null) {
-								resourceReference = toResourceReference(entity);
-							}
-							ReflectionUtils.makeAccessible(targetField);
-							ReflectionUtils.setField(
-									targetField,
-									target,
-									resourceReference);
-						} else {
-							ReflectionUtils.makeAccessible(targetField);
-							ReflectionUtils.setField(
-									targetField,
-									target,
-									null);
+			source.getClass(),
+			sourceField -> {
+				ReflectionUtils.makeAccessible(sourceField);
+				Field targetField = ReflectionUtils.findField(target.getClass(), sourceField.getName());
+				if (targetField != null) {
+					if (isSimpleType(sourceField.getType())) {
+						setFieldValue(
+							target,
+							targetField,
+							sourceField.get(source));
+					} else if (ResourceEntity.class.isAssignableFrom(sourceField.getType()) && ResourceReference.class.isAssignableFrom(targetField.getType())) {
+						ResourceEntity<?, ?> entity = (ResourceEntity<?, ?>)sourceField.get(source);
+						ResourceReference<?, ?> resourceReference = null;
+						if (entity != null) {
+							resourceReference = toResourceReference(entity);
 						}
+						setFieldValue(
+							target,
+							targetField,
+							resourceReference);
+					} else {
+						setFieldValue(
+							target,
+							targetField,
+							null);
 					}
-				},
-				field -> ignoredFields == null || !Arrays.asList(ignoredFields).contains(field.getName()));
+				}
+			},
+			field -> ignoredFields == null || !Arrays.asList(ignoredFields).contains(field.getName()));
 	}
 
 	/**
@@ -129,10 +126,11 @@ public class ObjectMappingHelper {
 						if (!isStaticFinal(field)) {
 							try {
 								Object value = getFieldValue(object, field.getName());
+								ReflectionUtils.makeAccessible(field);
 								ReflectionUtils.setField(
-										field,
-										cln,
-										value);
+									field,
+									cln,
+									value);
 							} catch (NoSuchFieldException ignored) {
 							}
 						}
@@ -140,15 +138,15 @@ public class ObjectMappingHelper {
 					return cln;
 				} else {
 					throw new ObjectMappingException(
-							object.getClass(),
-							object.getClass(),
-							"Couldn't find no args constructor or builder");
+						object.getClass(),
+						object.getClass(),
+						"Couldn't find no args constructor or builder");
 				}
 			} catch (Exception ex) {
 				throw new ObjectMappingException(
-						object.getClass(),
-						object.getClass(),
-						ex);
+					object.getClass(),
+					object.getClass(),
+					ex);
 			}
 		} else {
 			return null;
@@ -165,11 +163,11 @@ public class ObjectMappingHelper {
 	 * @param <T> el tipus de la classe que es vol instanciar
 	 */
 	private <T> T getNewInstance(
-			Class<T> targetClass) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		Class<T> targetClass) throws InvocationTargetException, InstantiationException, IllegalAccessException {
 		Constructor<T> noArgsConstructor = Arrays.stream((Constructor<T>[])targetClass.getConstructors()).
-				filter(c -> c.getParameterCount() == 0).
-				findFirst().
-				orElse(null);
+			filter(c -> c.getParameterCount() == 0).
+			findFirst().
+			orElse(null);
 		if (noArgsConstructor != null) {
 			return noArgsConstructor.newInstance();
 		} else {
@@ -178,54 +176,38 @@ public class ObjectMappingHelper {
 				Class<?> builderReturnType = builderMethod.getReturnType();
 				Object builderInstance = ReflectionUtils.invokeMethod(builderMethod, null);
 				return (T)ReflectionUtils.invokeMethod(
-						ReflectionUtils.findMethod(builderReturnType, "build"),
-						builderInstance);
+					ReflectionUtils.findMethod(builderReturnType, "build"),
+					builderInstance);
 			}
 		}
 		return null;
 	}
 
 	private ResourceReference<?, ?> toResourceReference(
-			ResourceEntity<?, ?> entity) {
+		ResourceEntity<?, ?> entity) {
 		return ResourceReference.toResourceReference(
-				(Serializable)entity.getId(),
-				//entity.getEntityDescription());
-				getResourceEntityDescription(entity));
+			(Serializable)entity.getId(),
+			//entity.getEntityDescription());
+			getResourceEntityDescription(entity));
 	}
 
 	private String getResourceEntityDescription(ResourceEntity<?, ?> persistable) {
 		Class<? extends Resource<?>> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-				persistable.getClass(),
-				ResourceEntity.class,
-				0);
+			persistable.getClass(),
+			ResourceEntity.class,
+			0);
 		String descriptionFieldName = getResourceDescriptionFieldName(resourceClass);
 		if (descriptionFieldName != null) {
-			if (persistable instanceof EmbeddableEntity<?, ?>) {
-				EmbeddableEntity<?, ?> embeddableEntity = (EmbeddableEntity<?, ?>)persistable;
-				Object embedded = embeddableEntity.getEmbedded();
-				try {
-					return (String)getFieldValue(
-							embedded,
-							descriptionFieldName);
-				} catch (Exception ex) {
-					log.warn(
-							"Couldn't find description field {} in embedded class {}",
-							descriptionFieldName,
-							embedded.getClass().getName(),
-							ex);
-				}
-			} else {
-				try {
-					return (String)getFieldValue(
-							persistable,
-							descriptionFieldName);
-				} catch (Exception ex) {
-					log.warn(
-							"Couldn't find description field {} in entity class {}",
-							descriptionFieldName,
-							persistable.getClass().getName(),
-							ex);
-				}
+			try {
+				return (String)getFieldValue(
+					persistable,
+					descriptionFieldName);
+			} catch (Exception ex) {
+				log.warn(
+					"Couldn't find description field {} in entity class {}",
+					descriptionFieldName,
+					persistable.getClass().getName(),
+					ex);
 			}
 		}
 		return resourceClass.getSimpleName() + " (id=" + persistable.getId() + ")";
@@ -239,35 +221,35 @@ public class ObjectMappingHelper {
 				return descriptionField;
 			} else {
 				log.warn(
-						"Couldn't find description field for resource class {}: ResourceConfig.descriptionField not configured",
-						resourceClass.getName());
+					"Couldn't find description field for resource class {}: ResourceConfig.descriptionField not configured",
+					resourceClass.getName());
 				return null;
 			}
 		} else {
 			log.warn(
-					"Couldn't find description field for resource class {}: ResourceConfig annotation not found",
-					resourceClass.getName());
+				"Couldn't find description field for resource class {}: ResourceConfig annotation not found",
+				resourceClass.getName());
 			return null;
 		}
 	}
 
 	private boolean isSimpleType(Class<?> type) {
 		return type.isPrimitive() ||
-				Boolean.class == type ||
-				Character.class == type ||
-				Serializable.class.isAssignableFrom(type) ||
-				CharSequence.class.isAssignableFrom(type) ||
-				Number.class.isAssignableFrom(type) ||
-				Date.class.isAssignableFrom(type) ||
-				LocalTime.class.isAssignableFrom(type) ||
-				LocalDateTime.class.isAssignableFrom(type) ||
-				Enum.class.isAssignableFrom(type);
+			Boolean.class == type ||
+			Character.class == type ||
+			(Serializable.class.isAssignableFrom(type) && !ResourceReference.class.isAssignableFrom(type)) ||
+			CharSequence.class.isAssignableFrom(type) ||
+			Number.class.isAssignableFrom(type) ||
+			Date.class.isAssignableFrom(type) ||
+			LocalTime.class.isAssignableFrom(type) ||
+			LocalDateTime.class.isAssignableFrom(type) ||
+			Enum.class.isAssignableFrom(type);
 	}
 
 	private Object getFieldValue(
-			Object object,
-			String fieldName) throws NoSuchFieldException {
-		String getMethodName = methodNameFromField(fieldName, "get");
+		Object object,
+		String fieldName) throws NoSuchFieldException {
+		String getMethodName = methodNameFromFieldName(fieldName, "get");
 		Method method = ReflectionUtils.findMethod(object.getClass(), getMethodName);
 		if (method != null) {
 			return ReflectionUtils.invokeMethod(method, object);
@@ -278,12 +260,29 @@ public class ObjectMappingHelper {
 		}
 	}
 
+	private void setFieldValue(
+		Object object,
+		Field field,
+		Object value) {
+		String setMethodName = methodNameFromFieldName(field.getName(), "set");
+		Method method = ReflectionUtils.findMethod(object.getClass(), setMethodName, field.getType());
+		if (method != null) {
+			ReflectionUtils.invokeMethod(method, object, value);
+		} else {
+			ReflectionUtils.makeAccessible(field);
+			ReflectionUtils.setField(
+				field,
+				object,
+				value);
+		}
+	}
+
 	private boolean isStaticFinal(Field field) {
 		int modifiers = field.getModifiers();
 		return Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers);
 	}
 
-	private String methodNameFromField(String fieldName, String prefix) {
+	private String methodNameFromFieldName(String fieldName, String prefix) {
 		return prefix + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
 	}
 

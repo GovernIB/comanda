@@ -4,12 +4,14 @@ package org.springframework.hateoas.mediatype.hal.forms;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.mediatype.MessageResolver;
+import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -38,38 +40,46 @@ public class CustomHalFormsTemplateBuilder extends HalFormsTemplateBuilder {
 		Link selfLink = resource.getLink(IanaLinkRelations.SELF).orElse(null);
 
 		resource.getLinks().stream() //
-				.flatMap(it -> it.getAffordances().stream()) //
-				.map(it -> it.getAffordanceModel(MediaTypes.HAL_FORMS_JSON)) //
-				.peek(it -> {
-					Assert.notNull(it, "No HAL Forms affordance model found but expected!");
-				}) //
-				.map(HalFormsAffordanceModel.class::cast) //
-				//.filter(it -> !it.hasHttpMethod(HttpMethod.GET)) //
-				.forEach(it -> {
+			.flatMap(it -> it.getAffordances().stream()) //
+			.map(it -> it.getAffordanceModel(MediaTypes.HAL_FORMS_JSON)) //
+			.peek(it -> {
+				Assert.notNull(it, "No HAL Forms affordance model found but expected!");
+			}) //
+			.map(HalFormsAffordanceModel.class::cast) //
+			.filter(it -> {
+				List<HalFormsProperty> properties = customFactory.createProperties(it);
+				boolean exclude = it.hasHttpMethod(HttpMethod.GET) && properties.isEmpty();
+				return !exclude;
+			}) // .filter(it -> !it.hasHttpMethod(HttpMethod.GET)) //
+			.forEach(it -> {
 
-					HalFormsTemplate template = HalFormsTemplate.forMethod(it.getHttpMethod()) //
-							.withProperties(customFactory.createProperties(it))
-							.withContentType(it.getInput().getPrimaryMediaType());
+				HalFormsTemplate template = HalFormsTemplate.forMethod(it.getHttpMethod()) //
+					.withProperties(customFactory.createProperties(it))
+					.withContentType(it.getInput().getPrimaryMediaType());
 
-					String target = it.getLink().expand().getHref();
+				String target = it.getLink().expand().getHref();
 
-					if (selfLink == null || !target.equals(selfLink.getHref())) {
-						template = template.withTarget(target);
-					}
+				if (selfLink == null || !target.equals(selfLink.getHref())) {
+					template = template.withTarget(target);
+				}
 
-					template = applyTo(template, TemplateTitle.of(it, templates.isEmpty()));
-					templates.put(templates.isEmpty() ? "default" : it.getName(), template);
-				});
+				template = applyTo(template, TemplateTitle.of(it, templates.isEmpty()));
+				templates.put(templates.isEmpty() ? "default" : it.getName(), template);
+			});
 
 		return templates;
 	}
 
-	private HalFormsTemplate applyTo(HalFormsTemplate template, CustomHalFormsTemplateBuilder.TemplateTitle templateTitle) {
+	public CustomHalFormsPropertyFactory getCustomHalFormsPropertyFactory() {
+		return customFactory;
+	}
+
+	private HalFormsTemplate applyTo(HalFormsTemplate template, TemplateTitle templateTitle) {
 
 		return Optional.ofNullable(resolver.resolve(templateTitle)) //
-				.filter(StringUtils::hasText) //
-				.map(template::withTitle) //
-				.orElse(template);
+			.filter(StringUtils::hasText) //
+			.map(template::withTitle) //
+			.orElse(template);
 	}
 
 	private static class TemplateTitle implements MessageSourceResolvable {
@@ -85,8 +95,8 @@ public class CustomHalFormsTemplateBuilder extends HalFormsTemplateBuilder {
 			this.soleTemplate = soleTemplate;
 		}
 
-		public static CustomHalFormsTemplateBuilder.TemplateTitle of(HalFormsAffordanceModel affordance, boolean soleTemplate) {
-			return new CustomHalFormsTemplateBuilder.TemplateTitle(affordance, soleTemplate);
+		public static TemplateTitle of(HalFormsAffordanceModel affordance, boolean soleTemplate) {
+			return new TemplateTitle(affordance, soleTemplate);
 		}
 
 		/*
@@ -98,11 +108,11 @@ public class CustomHalFormsTemplateBuilder extends HalFormsTemplateBuilder {
 		public String[] getCodes() {
 
 			Stream<String> seed = Stream.concat(//
-					Stream.of(affordance.getName()), //
-					soleTemplate ? Stream.of("default") : Stream.empty());
+				Stream.of(affordance.getName()), //
+				soleTemplate ? Stream.of("default") : Stream.empty());
 
 			return seed.flatMap(it -> getCodesFor(it, affordance.getInput())) //
-					.toArray(String[]::new);
+				.toArray(String[]::new);
 		}
 
 		private static Stream<String> getCodesFor(String name, AffordanceModel.InputPayloadMetadata type) {
@@ -110,7 +120,7 @@ public class CustomHalFormsTemplateBuilder extends HalFormsTemplateBuilder {
 			String global = String.format(TEMPLATE_TEMPLATE, name);
 
 			Stream<String> inputBased = type.getI18nCodes().stream() //
-					.map(it -> String.format("%s.%s", it, global));
+				.map(it -> String.format("%s.%s", it, global));
 
 			return Stream.concat(inputBased, Stream.of(global));
 		}

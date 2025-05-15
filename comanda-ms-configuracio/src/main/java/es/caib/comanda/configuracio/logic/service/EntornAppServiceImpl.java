@@ -8,6 +8,7 @@ import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppParamAction;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
@@ -17,17 +18,16 @@ import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -59,8 +59,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @PostConstruct
     public void init() {
-        register(new EntornAppServiceImpl.RefreshAction(entornAppRepository, appInfoHelper));
-        register(new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService));
+        register(EntornApp.ENTORN_APP_ACTION_REFRESH, new EntornAppServiceImpl.RefreshAction(entornAppRepository, appInfoHelper));
+        register(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService));
     }
 
     @Override
@@ -86,15 +86,15 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @Override
-    protected void afterCreateSave(EntornAppEntity entity, EntornApp resource) {
-        super.afterCreateSave(entity, resource);
+    protected void afterCreateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        super.afterCreateSave(entity, resource, answers, anyOrderChanged);
         schedulerService.programarTasca(entity);
         programarTasquesSalutEstadistica(entity);
     }
 
     @Override
-    protected void afterUpdateSave(EntornAppEntity entity, EntornApp resource) {
-        super.afterUpdateSave(entity, resource);
+    protected void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         schedulerService.programarTasca(entity);
         programarTasquesSalutEstadistica(entity);
     }
@@ -131,7 +131,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     // ACCIONS
 
-    public static class RefreshAction implements ActionExecutor<EntornAppParamAction, Object> {
+    public static class RefreshAction implements ActionExecutor<EntornAppEntity, EntornAppParamAction, EntornApp> {
         private final EntornAppRepository entornAppRepository;
         private final AppInfoHelper appInfoHelper;
 
@@ -139,14 +139,10 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             this.entornAppRepository = entornAppRepository;
             this.appInfoHelper = appInfoHelper;
         }
-        @Override
-        public String[] getSupportedActionCodes() {
-            return new String[] { "refresh" };
-        }
 
         @Transactional
         @Override
-        public Object exec(String code, EntornAppParamAction params) throws ActionExecutionException {
+        public EntornApp exec(String code, EntornAppEntity entity, EntornAppParamAction params) throws ActionExecutionException {
 
             try {
                 log.info("Executant procés per l'entornApp {}",params.getEntornAppId());
@@ -159,9 +155,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             }
             return null;
         }
+
+        @Override
+        public void onChange(EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
+        }
     }
 
-    public static class ReprogramarAction implements ActionExecutor<EntornAppParamAction, Object> {
+    public static class ReprogramarAction implements ActionExecutor<EntornAppEntity, EntornAppParamAction, EntornApp> {
         private final EntornAppRepository entornAppRepository;
         private final ConfiguracioSchedulerService schedulerService;
 
@@ -169,13 +169,9 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             this.entornAppRepository = entornAppRepository;
             this.schedulerService = schedulerService;
         }
-        @Override
-        public String[] getSupportedActionCodes() {
-            return new String[] { "reprogramar" };
-        }
 
         @Override
-        public Object exec(String code, EntornAppParamAction params) throws ActionExecutionException {
+        public EntornApp exec(String code, EntornAppEntity entity, EntornAppParamAction params) throws ActionExecutionException {
 
             EntornAppEntity entornApp = entornAppRepository.findById(params.getEntornAppId())
                     .orElseThrow(() -> new ActionExecutionException(EntornApp.class, params.getEntornAppId(), code, "EntornApp actiu no trobat"));
@@ -183,12 +179,10 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             schedulerService.programarTasca(entornApp);
             return null;
         }
-    }
 
-    @Getter
-    @Setter
-    public static class EntornAppParamAction implements Serializable {
-        private Long entornAppId;
+        @Override
+        public void onChange(EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
+        }
     }
 
 }

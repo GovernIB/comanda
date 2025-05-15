@@ -15,7 +15,7 @@ import java.util.Map;
  * @author Límit Tecnologies
  */
 public interface MutableResourceService<R extends Resource<? extends Serializable>, ID extends Serializable>
-		extends ReadonlyResourceService<R, ID> {
+	extends ReadonlyResourceService<R, ID> {
 
 	/**
 	 * Crea una nova instància del recurs per a inicialitzar el formulari de creació.
@@ -39,8 +39,8 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *             si es requereixen respostes de l'usuari per a crear el registre.
 	 */
 	R create(
-			R resource,
-			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceAlreadyExistsException, ResourceNotCreatedException, AnswerRequiredException;
+		R resource,
+		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceAlreadyExistsException, ResourceNotCreatedException, AnswerRequiredException;
 
 	/**
 	 * Actualitza la informació d'un recurs.
@@ -60,9 +60,9 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *             si es requereixen respostes de l'usuari per a modificar el registre.
 	 */
 	R update(
-			ID id,
-			R resource,
-			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotUpdatedException, AnswerRequiredException;
+		ID id,
+		R resource,
+		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotUpdatedException, AnswerRequiredException;
 
 	/**
 	 * Esborra un recurs donat el seu identificador.
@@ -77,8 +77,8 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *             si es requereixen respostes de l'usuari per a esborrar el registre.
 	 */
 	void delete(
-			ID id,
-			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotDeletedException, AnswerRequiredException;
+		ID id,
+		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotDeletedException, AnswerRequiredException;
 
 	/**
 	 * Processament en el backend dels canvis en els camps dels recursos que
@@ -97,18 +97,22 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 * @param answers
 	 *            respostes a les preguntes formulades en el front.
 	 * @return un map amb els canvis resultants de processar la petició.
+	 * @throws ResourceFieldNotFoundException
+	 *            si no es troba el camp del recurs.
 	 * @throws AnswerRequiredException
 	 *            si es requereix alguna resposta addicional de l'usuari.
 	 */
 	Map<String, Object> onChange(
-			R previous,
-			String fieldName,
-			Object fieldValue,
-			Map<String, AnswerRequiredException.AnswerValue> answers) throws AnswerRequiredException;
+		R previous,
+		String fieldName,
+		Object fieldValue,
+		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException;
 
 	/**
 	 * Executa l'acció amb el codi especificat.
 	 *
+	 * @param id
+	 *            identificació del recurs (pot ser null si l'acció no s'executa sobre un recurs determinat).
 	 * @param code
 	 *            el codi de l'acció.
 	 * @param params
@@ -120,6 +124,9 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 * @throws ActionExecutionException
 	 *             si es produeix algun error executant l'acció.
 	 */
-	<P> Object actionExec(String code, P params) throws ArtifactNotFoundException, ActionExecutionException;
+	<P extends Serializable> Serializable artifactActionExec(
+		ID id,
+		String code,
+		P params) throws ArtifactNotFoundException, ActionExecutionException;
 
 }

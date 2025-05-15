@@ -1,6 +1,9 @@
 package es.caib.comanda.salut.logic.intf.model;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfigArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,7 +21,18 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@ResourceConfig(
+	artifacts = {
+		@ResourceConfigArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST),
+		@ResourceConfigArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTAT, formClass = SalutInformeParams.class),
+		@ResourceConfigArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
+	}
+)
 public class Salut extends BaseResource<Long> {
+
+	public final static String SALUT_REPORT_LAST = "salut_last";
+	public final static String SALUT_REPORT_ESTAT = "estat";
+	public final static String SALUT_REPORT_LATENCIA = "latencia";
 
 	@NotNull
 	@Size(max = 16)

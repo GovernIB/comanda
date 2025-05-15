@@ -5,6 +5,7 @@ import es.caib.comanda.ms.logic.intf.exception.ComponentNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 import es.caib.comanda.ms.logic.intf.service.ResourceServiceLocator;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 /**
  * Utilitats per a HAL-FORMS.
- * 
+ *
  * @author Límit Tecnologies
  */
 public class HalFormsUtil {
@@ -24,7 +25,7 @@ public class HalFormsUtil {
 		if (resourceServiceLocator != null) {
 			try {
 				MutableResourceService<?, ?> mutableResourceService = ResourceServiceLocator.getInstance().
-						getMutableEntityResourceServiceForResourceClass(resourceClass);
+					getMutableEntityResourceServiceForResourceClass(resourceClass);
 				Object newInstance = mutableResourceService.newResourceInstance();
 				if (newInstance != null) {
 					values.putAll(toMap(newInstance));
@@ -35,9 +36,9 @@ public class HalFormsUtil {
 	}
 
 	public static <T extends Annotation> T getFieldAnnotation(
-			Class<?> resourceClass,
-			String fieldName,
-			Class<T> annotationClass) {
+		Class<?> resourceClass,
+		String fieldName,
+		Class<T> annotationClass) {
 		try {
 			return resourceClass.getDeclaredField(fieldName).getAnnotation(annotationClass);
 		} catch (NoSuchFieldException e) {
@@ -46,12 +47,11 @@ public class HalFormsUtil {
 	}
 
 	public static boolean isOnChangeActive(Class<?> resourceClass, String fieldName) {
-		try {
-			ResourceField resourceField = resourceClass.
-					getDeclaredField(fieldName).
-					getAnnotation(ResourceField.class);
+		Field field = ReflectionUtils.findField(resourceClass, fieldName);
+		if (field != null) {
+			ResourceField resourceField = resourceClass.getAnnotation(ResourceField.class);
 			return resourceField != null && resourceField.onChangeActive();
-		} catch (NoSuchFieldException e) {
+		} else {
 			return false;
 		}
 	}

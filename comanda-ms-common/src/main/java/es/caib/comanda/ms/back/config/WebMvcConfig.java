@@ -1,5 +1,6 @@
 package es.caib.comanda.ms.back.config;
 
+import es.caib.comanda.ms.logic.intf.model.UnpagedButSorted;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.ClassPathResource;
@@ -26,7 +27,7 @@ import java.util.List;
 
 /**
  * Configuració de Spring MVC.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Configuration
@@ -44,27 +45,26 @@ public class WebMvcConfig implements WebMvcConfigurer {
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		// ResourceHandler per a que totes les peticions desconegudes passin per l'index.html
 		registry.
-		addResourceHandler("/**").
-		addResourceLocations("classpath:/static/").
-		resourceChain(true).
-		addResolver(new PathResourceResolver() {
-			@Override
-			protected Resource getResource(String resourcePath, Resource location) throws IOException {
-				Resource requestedResource = location.createRelative(resourcePath);
-				if (requestedResource.exists() && requestedResource.isReadable()) {
-					return requestedResource;
-				} else {
-					return new ClassPathResource("static/index.html");
+			addResourceHandler("/**").
+			addResourceLocations("classpath:/static/").
+			resourceChain(true).
+			addResolver(new PathResourceResolver() {
+				@Override
+				protected Resource getResource(String resourcePath, Resource location) throws IOException {
+					Resource requestedResource = location.createRelative(resourcePath);
+					if (requestedResource.exists() && requestedResource.isReadable()) {
+						return requestedResource;
+					} else {
+						return new ClassPathResource("static/index.html");
+					}
 				}
-			}
-		});
+			});
 	}
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**").allowedOrigins("*").allowedMethods("*");
 	}
-
 
 	public static class CustomPageableHandlerMethodArgumentResolver extends PageableHandlerMethodArgumentResolverSupport implements PageableArgumentResolver {
 		private final SortArgumentResolver sortResolver = new SortHandlerMethodArgumentResolver();
@@ -74,10 +74,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		}
 		@Override
 		public Pageable resolveArgument(
-				MethodParameter methodParameter,
-				@Nullable ModelAndViewContainer mavContainer,
-				NativeWebRequest webRequest,
-				@Nullable WebDataBinderFactory binderFactory) {
+			MethodParameter methodParameter,
+			@Nullable ModelAndViewContainer mavContainer,
+			NativeWebRequest webRequest,
+			@Nullable WebDataBinderFactory binderFactory) {
 			String page = webRequest.getParameter(getParameterNameToUse(getPageParameterName(), methodParameter));
 			String pageSize = webRequest.getParameter(getParameterNameToUse(getSizeParameterName(), methodParameter));
 			Sort sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
@@ -88,64 +88,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 				return new UnpagedButSorted(sort);
 			} else {
 				Pageable pageable = getPageable(
-						methodParameter,
-						page == null ? "0" : page,
-						pageSize == null || "0".equals(pageSize) ? "10" : pageSize);
+					methodParameter,
+					page == null ? "0" : page,
+					pageSize == null || "0".equals(pageSize) ? "10" : pageSize);
 				if (sort.isSorted()) {
 					return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 				}
 				return pageable;
 			}
-		}
-	}
-
-	public static class UnpagedButSorted implements Pageable {
-		private final Sort sort;
-		public UnpagedButSorted(Sort sort) {
-			this.sort = sort;
-		}
-		@Override
-		public boolean isPaged() {
-			return false;
-		}
-		@Override
-		public Pageable previousOrFirst() {
-			return this;
-		}
-		@Override
-		public Pageable next() {
-			return this;
-		}
-		@Override
-		public boolean hasPrevious() {
-			return false;
-		}
-		@Override
-		public Sort getSort() {
-			return sort;
-		}
-		@Override
-		public int getPageSize() {
-			throw new UnsupportedOperationException();
-		}
-		@Override
-		public int getPageNumber() {
-			throw new UnsupportedOperationException();
-		}
-		@Override
-		public long getOffset() {
-			throw new UnsupportedOperationException();
-		}
-		@Override
-		public Pageable first() {
-			return this;
-		}
-		@Override
-		public Pageable withPage(int pageNumber) {
-			if (pageNumber == 0) {
-				return this;
-			}
-			throw new UnsupportedOperationException();
 		}
 	}
 

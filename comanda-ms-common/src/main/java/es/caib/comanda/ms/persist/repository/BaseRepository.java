@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 /**
  * Repositori base.
- * 
+ *
  * @author Límit Tecnologies
  */
 @NoRepositoryBean

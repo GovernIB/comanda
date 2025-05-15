@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 /**
  * Excepció que es llança quan falla la generació d'un informe.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Getter
@@ -18,27 +18,40 @@ public class ReportGenerationException extends RuntimeException {
 	private final String errorMessage;
 
 	public ReportGenerationException(
-			Class<?> resourceClass,
-			Serializable id,
-			String code,
-			String message) {
+		Class<?> resourceClass,
+		Serializable id,
+		String code,
+		String message) {
 		this(resourceClass, id, code, message, null);
 	}
 
 	public ReportGenerationException(
-			Class<?> resourceClass,
-			Serializable id,
-			String code,
-			Throwable cause) {
+		Class<?> resourceClass,
+		Serializable id,
+		String code,
+		Throwable cause) {
 		this(resourceClass, id, code, null, cause);
 	}
 
 	public ReportGenerationException(
-			Class<?> resourceClass,
-			Serializable id,
-			String code,
-			String message,
-			Throwable cause) {
+		Class<?> resourceClass,
+		String message,
+		Throwable cause) {
+		this(resourceClass, null, null, message, cause);
+	}
+
+	public ReportGenerationException(
+		Class<?> resourceClass,
+		String message) {
+		this(resourceClass, null, null, message, null);
+	}
+
+	public ReportGenerationException(
+		Class<?> resourceClass,
+		Serializable id,
+		String code,
+		String message,
+		Throwable cause) {
 		super("Error generating report " + getReportId(resourceClass, id, code) + " generation failed" + (message != null ? ": " + message : ""), cause);
 		this.resourceClass = resourceClass;
 		this.id = id;

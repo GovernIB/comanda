@@ -3,7 +3,7 @@ package es.caib.comanda.monitor.persist.entity;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
-import es.caib.comanda.client.model.monitor.Monitor;
+import es.caib.comanda.monitor.logic.intf.model.Monitor;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.AllArgsConstructor;

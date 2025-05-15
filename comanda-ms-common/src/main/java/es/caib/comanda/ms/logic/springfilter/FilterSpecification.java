@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * Implementació de la interfície Specification per les consultes Spring Filter.
- * 
+ *
  * @author Límit Tecnologies
  */
 public class FilterSpecification<T> extends com.turkraft.springfilter.boot.FilterSpecification<T> {
@@ -25,9 +25,9 @@ public class FilterSpecification<T> extends com.turkraft.springfilter.boot.Filte
 
 	@Override
 	public Predicate toPredicate(
-			Root<T> root,
-			CriteriaQuery<?> query,
-			CriteriaBuilder criteriaBuilder) {
+		Root<T> root,
+		CriteriaQuery<?> query,
+		CriteriaBuilder criteriaBuilder) {
 		Predicate predicate = null;
 		Map<String, Join<?, ?>> j = getJoins() != null ? getJoins() : new HashMap<String, Join<?, ?>>();
 		String input = getInput();
@@ -41,12 +41,12 @@ public class FilterSpecification<T> extends com.turkraft.springfilter.boot.Filte
 				getPayload()) : null;
 		} else {
 			predicate = (Predicate) ExpressionGenerator.run(
-					getFilter(),
-					root,
-					query,
-					criteriaBuilder,
-					j,
-					getPayload());
+				getFilter(),
+				root,
+				query,
+				criteriaBuilder,
+				j,
+				getPayload());
 		}
 		return predicate;
 	}

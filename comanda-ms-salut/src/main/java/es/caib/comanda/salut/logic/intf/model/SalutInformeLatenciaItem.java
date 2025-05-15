@@ -3,6 +3,7 @@ package es.caib.comanda.salut.logic.intf.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -14,7 +15,7 @@ import java.util.Date;
  */
 @Getter
 @AllArgsConstructor
-public class SalutInformeLatenciaItem {
+public class SalutInformeLatenciaItem implements Serializable {
 
 	private LocalDateTime data;
 	private Double latenciaMitja;

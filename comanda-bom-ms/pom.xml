@@ -16,6 +16,8 @@
 		<spring.filter.version>2.1.6</spring.filter.version>
 		<openapi.version>1.7.0</openapi.version>
 		<liquibase.version>4.4.3</liquibase.version>
+		<jasperreports.version>6.20.6</jasperreports.version>
+		<dynamicreports-core.version>6.12.1</dynamicreports-core.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>

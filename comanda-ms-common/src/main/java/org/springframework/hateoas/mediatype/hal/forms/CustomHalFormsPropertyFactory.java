@@ -18,8 +18,10 @@
 // S'ha afegit el mètode GET a ENTITY_ALTERING_METHODS per a que aquest mètode inclogui properties a la resposta
 package org.springframework.hateoas.mediatype.hal.forms;
 
+import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.HalFormsUtil;
+import es.caib.comanda.ms.logic.intf.util.TypeUtil;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
@@ -28,9 +30,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.validation.constraints.Size;
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
@@ -44,7 +48,7 @@ import static org.springframework.http.HttpMethod.*;
  * @since 1.3
  * @soundtrack The Chicks - March March (Gaslighter)
  */
-class CustomHalFormsPropertyFactory {
+public class CustomHalFormsPropertyFactory {
 
 	private static final Set<HttpMethod> ENTITY_ALTERING_METHODS = EnumSet.of(GET, POST, PUT, PATCH);
 
@@ -91,12 +95,22 @@ class CustomHalFormsPropertyFactory {
 			if (resolvedType != null) {
 				if (boolean.class.isAssignableFrom(resolvedType) || Boolean.class.isAssignableFrom(resolvedType)) {
 					inputType = "checkbox";
+				} else if (Date.class.isAssignableFrom(resolvedType)) {
+					inputType = "datetime-local";
 				} else if (Duration.class.isAssignableFrom(resolvedType)) {
 					inputType = null;
+				} else if (FileReference.class.equals(resolvedType)) {
+					inputType = "file";
 				} else if (ResourceReference.class.isAssignableFrom(resolvedType) || resolvedType.isEnum()) {
 					inputType = "search";
-				} else if (resolvedType.isArray() && byte.class.equals(resolvedType.getComponentType())) {
-					inputType = "file";
+				} else {
+					Field currentField = ReflectionUtils.findField(Objects.requireNonNull(payload.getType()), metadata.getName());
+					if (currentField != null && TypeUtil.isMultipleFieldType(currentField)) {
+						Class<?> multipleType = TypeUtil.getMultipleFieldType(currentField);
+						if (multipleType != null && (ResourceReference.class.isAssignableFrom(multipleType) || multipleType.isEnum())) {
+							inputType = "search";
+						}
+					}
 				}
 			}
 
@@ -104,9 +118,9 @@ class CustomHalFormsPropertyFactory {
 			Number maxValue = metadata.getMax();
 			if (resolvedType != null) {
 				Size size = HalFormsUtil.getFieldAnnotation(
-						Objects.requireNonNull(payload.getType()),
-						metadata.getName(),
-						Size.class);
+					Objects.requireNonNull(payload.getType()),
+					metadata.getName(),
+					Size.class);
 				if (size != null && String.class.isAssignableFrom(resolvedType)) {
 					inputType = "text";
 					minValue = null;
@@ -118,9 +132,9 @@ class CustomHalFormsPropertyFactory {
 			Long maxLength = metadata.getMaxLength();
 			if (resolvedType != null) {
 				Size size = HalFormsUtil.getFieldAnnotation(
-						Objects.requireNonNull(payload.getType()),
-						metadata.getName(),
-						Size.class);
+					Objects.requireNonNull(payload.getType()),
+					metadata.getName(),
+					Size.class);
 				if (size != null) {
 					minLength = size.min() > 0 ? (long)size.min() : null;
 					maxLength = size.max() < Integer.MAX_VALUE ? (long)size.max() : null;
@@ -132,17 +146,17 @@ class CustomHalFormsPropertyFactory {
 			Map<String, Object> values = HalFormsUtil.getNewResourceValues(payload.getType());
 
 			HalFormsProperty property = new HalFormsProperty()
-					.withName(metadata.getName())
-					.withRequired(metadata.isRequired()) //
-					.withReadOnly(metadata.isReadOnly())
-					.withMin(minValue)
-					.withMax(maxValue)
-					.withMinLength(minLength)
-					.withMaxLength(maxLength)
-					.withRegex(lookupRegex(metadata)) //
-					.withType(inputType) //
-					.withValue(options != null ? options.getSelectedValue() : values.get(metadata.getName())) //
-					.withOptions(options);
+				.withName(metadata.getName())
+				.withRequired(metadata.isRequired()) //
+				.withReadOnly(metadata.isReadOnly())
+				.withMin(minValue)
+				.withMax(maxValue)
+				.withMinLength(minLength)
+				.withMaxLength(maxLength)
+				.withRegex(lookupRegex(metadata)) //
+				.withType(inputType) //
+				.withValue(options != null ? options.getSelectedValue() : values.get(metadata.getName())) //
+				.withOptions(options);
 
 			if (options != null && options.getMaxItems() == null) {
 				property = property.withMulti(true);
@@ -151,10 +165,10 @@ class CustomHalFormsPropertyFactory {
 			Function<String, I18nedPropertyMetadata> factory = I18nedPropertyMetadata.factory(payload, property);
 
 			HalFormsProperty i18nProperty = Optional.of(property)
-					.map(it -> i18n(it, factory.apply("_placeholder"), it::withPlaceholder))
-					.map(it -> i18n(it, factory.apply("_prompt"), it::withPrompt))
-					.map(it -> model.hasHttpMethod(HttpMethod.PATCH) ? it.withRequired(false) : it)
-					.orElse(property);
+				.map(it -> i18n(it, factory.apply("_placeholder"), it::withPlaceholder))
+				.map(it -> i18n(it, factory.apply("_prompt"), it::withPrompt))
+				.map(it -> model.hasHttpMethod(HttpMethod.PATCH) ? it.withRequired(false) : it)
+				.orElse(property);
 
 			boolean onChangeActive = payload.getType() != null && HalFormsUtil.isOnChangeActive(payload.getType(), metadata.getName());
 			String metadataName = metadata.getName() + (onChangeActive ? "*" : "");
@@ -174,13 +188,13 @@ class CustomHalFormsPropertyFactory {
 	}
 
 	private HalFormsProperty i18n(HalFormsProperty property, MessageSourceResolvable metadata,
-	                              Function<String, HalFormsProperty> application) {
+								  Function<String, HalFormsProperty> application) {
 
 		String resolved = resolver.resolve(metadata);
 
 		return !StringUtils.hasText(resolved)
-				? property
-				: application.apply(resolved);
+			? property
+			: application.apply(resolved);
 	}
 
 	private static class I18nedPropertyMetadata implements MessageSourceResolvable {
@@ -197,7 +211,7 @@ class CustomHalFormsPropertyFactory {
 		}
 
 		public static Function<String, I18nedPropertyMetadata> factory(InputPayloadMetadata metadata,
-		                                                               HalFormsProperty property) {
+																	   HalFormsProperty property) {
 			return suffix -> new I18nedPropertyMetadata("%s.".concat(suffix), metadata, property);
 		}
 
@@ -224,8 +238,8 @@ class CustomHalFormsPropertyFactory {
 			List<String> codes = new ArrayList<>();
 
 			metadata.getI18nCodes().stream() //
-					.map(it -> String.format("%s.%s", it, globalCode)) //
-					.forEach(codes::add);
+				.map(it -> String.format("%s.%s", it, globalCode)) //
+				.forEach(codes::add);
 
 			codes.add(globalCode);
 

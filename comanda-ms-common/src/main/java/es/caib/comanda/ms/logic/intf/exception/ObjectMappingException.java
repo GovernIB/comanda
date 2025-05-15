@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * Excepció que es llança quan es produeixen errors en el mapeig recurs - entitat.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Getter

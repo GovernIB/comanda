@@ -40,29 +40,29 @@ public class RestApiController {
 	@Operation(summary = "Consulta l'índex de serveis de l'aplicació")
 	public ResponseEntity<CollectionModel<?>> index() {
 		List<Link> indexLinks = resourceApiService.resourceFindAllowed().stream().
-				map(this::toApiResourceControllerLink).
-				collect(Collectors.toList());
+			map(this::toApiResourceControllerLink).
+			collect(Collectors.toList());
 		CollectionModel<?> resources = CollectionModel.of(
-				Collections.emptySet(),
-				indexLinks.toArray(Link[]::new));
+			Collections.emptySet(),
+			indexLinks.toArray(Link[]::new));
 		return ResponseEntity.ok(resources);
 	}
 
 	private Link toApiResourceControllerLink(Class<? extends Resource<?>> resourceClass) {
 		Optional<ReadonlyResourceController<?, ?>> apiResourceControllerForResource = apiResourceControllers.stream().
-				filter(c -> isApiResourceControllerForResource(c, resourceClass)).
-				findFirst();
+			filter(c -> isApiResourceControllerForResource(c, resourceClass)).
+			findFirst();
 		String rel = StringUtil.decapitalize(resourceClass.getSimpleName());
 		return linkTo(ClassUtils.getUserClass(apiResourceControllerForResource.get())).withRel(rel);
 	}
 
 	private boolean isApiResourceControllerForResource(
-			ReadonlyResourceController<?, ?> apiResourceController,
-			Class<? extends Resource<?>> resourceClass) {
+		ReadonlyResourceController<?, ?> apiResourceController,
+		Class<? extends Resource<?>> resourceClass) {
 		Class<?> controllerResourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-				apiResourceController.getClass(),
-				ReadonlyResourceController.class,
-				0);
+			apiResourceController.getClass(),
+			ReadonlyResourceController.class,
+			0);
 		return controllerResourceClass.equals(resourceClass);
 	}
 

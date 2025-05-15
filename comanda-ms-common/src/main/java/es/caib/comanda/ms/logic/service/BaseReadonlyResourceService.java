@@ -1,23 +1,26 @@
 package es.caib.comanda.ms.logic.service;
 
+import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
-import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
-import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
-import es.caib.comanda.ms.logic.intf.model.Resource;
-import es.caib.comanda.ms.logic.intf.model.ResourceArtifact;
-import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
-import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfigArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
+import es.caib.comanda.ms.logic.intf.exception.*;
+import es.caib.comanda.ms.logic.intf.model.*;
 import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.util.StringUtil;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;
 import es.caib.comanda.ms.logic.springfilter.FilterSpecification;
-import es.caib.comanda.ms.persist.entity.EmbeddableEntity;
+import es.caib.comanda.ms.persist.entity.ResourceEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,130 +30,255 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
- * Servei amb la funcionalitat básica per a la gestió d'un recurs en mode només lectura.
+ * Servei amb la funcionalitat básica per a la gestió d'un recurs que només es pot consultar.
  *
  * @param <R> classe del recurs.
  * @param <ID> classe de la clau primària del recurs.
+ * @param <E> classe de l'entitat de base de dades del recurs.
  *
  * @author Límit Tecnologies
  */
 @Slf4j
-public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID extends Serializable, E extends Persistable<ID>>
-		implements ReadonlyResourceService<R, ID> {
+public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID extends Serializable, E extends ResourceEntity<R, ID>>
+	implements ReadonlyResourceService<R, ID> {
 
 	@Autowired
-	protected BaseRepository<E, ID> resourceRepository;
+	protected BaseRepository<E, ID> entityRepository;
 	@Autowired
 	protected ObjectMappingHelper objectMappingHelper;
+	@Autowired
+	protected JasperReportsHelper jasperReportsHelper;
+	@Autowired
+	protected ResourceEntityMappingHelper resourceEntityMappingHelper;
 
 	private Class<R> resourceClass;
 	private Class<E> entityClass;
-	private final Map<String, ReportDataGenerator<?, ?>> reportGeneratorMap = new HashMap<>();
+	private final Map<String, ReportGenerator<E, ?, ? extends Serializable>> reportGeneratorMap = new HashMap<>();
+	private final Map<String, FilterProcessor<?>> filterProcessorMap = new HashMap<>();
+	private final Map<String, PerspectiveApplicator<E, R>> perspectiveApplicatorMap = new HashMap<>();
+	private final Map<String, FieldDownloader<E>> fieldDownloaderMap = new HashMap<>();
 
 	@Override
 	@Transactional(readOnly = true)
 	public R getOne(
-			ID id,
-			String[] perspectives) throws ResourceNotFoundException {
-		log.debug("Consultant recurs amb id (id={}, perspectives={})", id, perspectives);
+		ID id,
+		String[] perspectives) throws ResourceNotFoundException {
+		log.debug("Getting single resource (id={}, perspectives={})", id, perspectives);
 		beforeGetOne(perspectives);
 		E entity = getEntity(id, perspectives);
 		beforeConversion(entity);
 		R response = entityToResource(entity);
 		afterConversion(entity, response);
 		if (perspectives != null) {
-			R perspectivesResponse = applyPerspectives(entity, response, perspectives);
-			if (perspectivesResponse != null) {
-				return perspectivesResponse;
-			} else {
-				return response;
-			}
-		} else {
-			return response;
+			applyPerspectives(entity, response, perspectives);
 		}
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public Page<R> findPage(
-			String quickFilter,
-			String filter,
-			String[] namedQueries,
-			String[] perspectives,
-			Pageable pageable) {
-		long t0 = System.currentTimeMillis();
-		log.debug(
-				"Consulta de pàgina d'entitats amb filtre i paginació (filter={}, namedQueries={}, perspectives={}, pageable={})",
-				filter,
-				Arrays.toString(namedQueries),
-				Arrays.toString(perspectives),
-				pageable);
-		beforeFind(
-				filter,
-				namedQueries,
-				perspectives);
-		Page<E> resultat = internalFindEntities(
-				quickFilter,
-				filter,
-				namedQueries,
-				pageable);
-		long elapsedDatabase = System.currentTimeMillis() - t0;
-		beforeConversion(resultat.getContent());
-		Page<R> response = new PageImpl<>(
-				entitiesToResources(resultat.getContent()),
-				pageable,
-				resultat.getTotalElements());
-		afterConversion(resultat.getContent(), response.getContent());
-		if (perspectives != null) {
-			List<R> perspectivesResponse = applyPerspectives(
-					resultat.getContent(),
-					response.getContent(),
-					perspectives);
-			if (perspectivesResponse != null) {
-				response = new PageImpl<>(
-						perspectivesResponse,
-						pageable,
-						response.getTotalElements());
-			}
-		}
-		long elapsedConversion = System.currentTimeMillis() - t0;
-		log.debug(
-				"Temps consumit en la consulta (database={}ms, conversion={}ms)",
-				elapsedDatabase,
-				elapsedConversion);
 		return response;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<ResourceArtifact> artifactGetAllowed(ResourceArtifactType type) {
-		log.debug("Consultant els artefactes permesos (type={})", type);
+	public Page<R> findPage(
+		String quickFilter,
+		String filter,
+		String[] namedQueries,
+		String[] perspectives,
+		Pageable pageable) {
+		long t0 = System.currentTimeMillis();
+		log.debug(
+			"Querying entities page with filter and pagination (" +
+				"quickFilter={}, filter={}, namedQueries={}, " +
+				"perspectives={}, pageable={})",
+			quickFilter,
+			filter,
+			Arrays.toString(namedQueries),
+			Arrays.toString(perspectives),
+			pageable);
+		beforeFind(
+			quickFilter,
+			filter,
+			namedQueries,
+			pageable);
+		Page<E> resultat = internalFindEntities(
+			quickFilter,
+			filter,
+			namedQueries,
+			pageable);
+		long elapsedDatabase = System.currentTimeMillis() - t0;
+		beforeConversion(resultat.getContent());
+		Page<R> response = new PageImpl<>(
+			entitiesToResources(resultat.getContent()),
+			pageable,
+			resultat.getTotalElements());
+		afterConversion(resultat.getContent(), response.getContent());
+		if (perspectives != null) {
+			applyPerspectives(
+				resultat.getContent(),
+				response.getContent(),
+				perspectives);
+		}
+		long elapsedConversion = System.currentTimeMillis() - t0;
+		log.debug(
+			"Query elapsed time (database={}ms, conversion={}ms)",
+			elapsedDatabase,
+			elapsedConversion);
+		return response;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public DownloadableFile export(
+		String quickFilter,
+		String filter,
+		String[] namedQueries,
+		String[] perspectives,
+		Pageable pageable,
+		ExportField[] fields,
+		ReportFileType fileType,
+		OutputStream out) {
+		long t0 = System.currentTimeMillis();
+		log.debug(
+			"Querying entities for export with filter and pagination (" +
+				"quickFilter={}, filter={}, namedQueries={}, " +
+				"perspectives={}, pageable={}, fieldNamesAndLabels={}, fileType={})",
+			quickFilter,
+			filter,
+			Arrays.toString(namedQueries),
+			Arrays.toString(perspectives),
+			pageable,
+			fields,
+			fileType);
+		beforeFind(
+			quickFilter,
+			filter,
+			namedQueries,
+			pageable);
+		Page<E> resultat = internalFindEntities(
+			quickFilter,
+			filter,
+			namedQueries,
+			pageable);
+		long elapsedDatabase = System.currentTimeMillis() - t0;
+		beforeConversion(resultat.getContent());
+		Page<R> response = new PageImpl<>(
+			entitiesToResources(resultat.getContent()),
+			pageable,
+			resultat.getTotalElements());
+		afterConversion(resultat.getContent(), response.getContent());
+		long elapsedConversion = System.currentTimeMillis() - elapsedDatabase;
+		DownloadableFile exportFile = jasperReportsHelper.export(
+			getResourceClass(),
+			response.getContent(),
+			fields,
+			fileType,
+			out);
+		long elapsedGeneration = System.currentTimeMillis() - elapsedDatabase;
+		log.debug(
+			"Export elapsed time (database={}ms, conversion={}ms, generation={}ms)",
+			elapsedDatabase,
+			elapsedConversion,
+			elapsedGeneration);
+		return exportFile;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public DownloadableFile fieldDownload(
+		ID id,
+		String fieldName,
+		OutputStream out) throws ResourceNotFoundException, ResourceFieldNotFoundException, FieldArtifactNotFoundException, IOException {
+		Field field = ReflectionUtils.findField(getResourceClass(), fieldName);
+		if (field != null) {
+			FieldDownloader<E> fieldDownloader = fieldDownloaderMap.get(fieldName);
+			if (fieldDownloader != null) {
+				return fieldDownloader.download(
+					getEntity(id, null),
+					fieldName,
+					out);
+			} else {
+				throw new FieldArtifactNotFoundException(getResourceClass(), FieldArtifactType.DOWNLOAD, fieldName);
+			}
+		} else {
+			throw new ResourceFieldNotFoundException(getResourceClass(), fieldName);
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<ResourceArtifact> artifactFindAll(ResourceArtifactType type) {
+		log.debug("Querying all artifacts (type={})", type);
 		List<ResourceArtifact> artifacts = new ArrayList<>();
+		if (type == null || type == ResourceArtifactType.PERSPECTIVE) {
+			artifacts.addAll(
+				perspectiveApplicatorMap.keySet().stream().
+					map(pa -> new ResourceArtifact(
+						ResourceArtifactType.PERSPECTIVE,
+						pa,
+						null,
+						null)).
+					collect(Collectors.toList()));
+		}
 		if (type == null || type == ResourceArtifactType.REPORT) {
-			return reportGeneratorMap.entrySet().stream().
-					map(r -> new ResourceArtifact(
-							ResourceArtifactType.REPORT,
-							r.getKey(),
-							r.getValue().getParameterClass())).
-					collect(Collectors.toList());
+			artifacts.addAll(
+				reportGeneratorMap.keySet().stream().
+					map(code -> new ResourceArtifact(
+						ResourceArtifactType.REPORT,
+						code,
+						artifactRequiresId(ResourceArtifactType.REPORT, code),
+						artifactGetFormClass(ResourceArtifactType.REPORT, code))).
+					collect(Collectors.toList()));
+		}
+		if (type == null || type == ResourceArtifactType.FILTER) {
+			artifacts.addAll(
+				artifactGetFilterAll().stream().
+					map(f -> new ResourceArtifact(
+						ResourceArtifactType.FILTER,
+						f.code(),
+						null,
+						artifactGetFormClass(ResourceArtifactType.FILTER, f.code()))).
+					collect(Collectors.toList()));
 		}
 		return artifacts;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Optional<Class<?>> artifactGetFormClass(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
-		log.debug("Consultant la classe de formulari per l'artefacte (type={}, code={})", type, code);
-		if (type == ResourceArtifactType.REPORT) {
-			ReportDataGenerator<?, ?> generator = reportGeneratorMap.get(code);
-			if (generator != null) {
-				return generator.getParameterClass() != null ? Optional.of(generator.getParameterClass()) : Optional.empty();
+	public ResourceArtifact artifactGetOne(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
+		log.debug("Querying artifact form class (type={}, code={})", type, code);
+		if (type == ResourceArtifactType.PERSPECTIVE) {
+			PerspectiveApplicator<?, ?> perspectiveApplicator = perspectiveApplicatorMap.get(code);
+			if (perspectiveApplicator != null) {
+				return new ResourceArtifact(
+					ResourceArtifactType.PERSPECTIVE,
+					code,
+					null,
+					null);
+			}
+		} else if (type == ResourceArtifactType.REPORT) {
+			ReportGenerator<E, ?, ?> reportGenerator = reportGeneratorMap.get(code);
+			if (reportGenerator != null) {
+				return new ResourceArtifact(
+					ResourceArtifactType.REPORT,
+					code,
+					artifactRequiresId(ResourceArtifactType.REPORT, code),
+					artifactGetFormClass(ResourceArtifactType.REPORT, code));
+			}
+		} else if (type == ResourceArtifactType.FILTER) {
+			if (artifactIsPresentInResourceConfig(type, code)) {
+				return new ResourceArtifact(
+					ResourceArtifactType.FILTER,
+					code,
+					null,
+					artifactGetFormClass(ResourceArtifactType.FILTER, code));
 			}
 		}
 		throw new ArtifactNotFoundException(getResourceClass(), type, code);
@@ -158,14 +286,99 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	@Override
 	@Transactional(readOnly = true)
-	public <P> List<?> reportGenerate(String code, P params) throws ArtifactNotFoundException, ReportGenerationException {
-		log.debug(
-				"Generant l'informe(code={}, params={})",
-				code,
-				params);
-		ReportDataGenerator<P, ?> generator = (ReportDataGenerator<P, ?>)reportGeneratorMap.get(code);
+	public <P extends Serializable> Map<String, Object> artifactOnChange(
+		ResourceArtifactType type,
+		String code,
+		P previous,
+		String fieldName,
+		Object fieldValue,
+		Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
+		log.debug("Processing onChange event (previous={}, fieldName={}, fieldValue={}, answers={})",
+			previous,
+			fieldName,
+			fieldValue,
+			answers);
+		ResourceArtifact artifact = artifactGetOne(type, code);
+		if (artifact.getFormClass() != null) {
+			onChangeCheckIfFieldExists(artifact.getFormClass(), fieldName);
+			return onChangeProcessRecursiveLogic(
+				previous,
+				fieldName,
+				fieldValue,
+				null,
+				(previous1,
+				 fieldName1,
+				 fieldValue1,
+				 answers1,
+				 previousFieldNames,
+				 target) -> internalArtifactOnChange(
+					type,
+					code,
+					previous1,
+					fieldName1,
+					fieldValue1,
+					answers1,
+					previousFieldNames,
+					target),
+				answers);
+		} else {
+			log.warn("Couldn't find form class for artifact (resourceClass={}, type={}, code={})", getResourceClass(), type, code);
+			return new HashMap<>();
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public <P extends Serializable> List<?> artifactReportGenerateData(
+		ID id,
+		String code,
+		P params) throws ArtifactNotFoundException, ReportGenerationException {
+		log.debug("Generating report data (id={}, code={}, params={})", id, code, params);
+		ReportGenerator<E, P, ?> generator = (ReportGenerator<E, P, ?>) reportGeneratorMap.get(code);
 		if (generator != null) {
-			return generator.generate(code, params);
+			E entity = null;
+			if (id != null) {
+				entity = getEntity(id, null);
+			}
+			return generator.generateData(code, entity, params);
+		} else {
+			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.REPORT, code);
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public DownloadableFile artifactReportGenerateFile(
+		String code,
+		List<?> data,
+		ReportFileType fileType,
+		OutputStream out) throws ArtifactNotFoundException, ReportGenerationException {
+		log.debug("Generating report file (code={}, data={}, fileType={})", code, data, fileType);
+		ReportGenerator<E, ?, ?> generator = reportGeneratorMap.get(code);
+		if (generator != null) {
+			DownloadableFile downloadableFile = generator.generateFile(code, data, fileType, out);
+			if (downloadableFile != null) {
+				return downloadableFile;
+			} else {
+				URL reportUrl = generator.getJasperReportUrl(code, fileType);
+				if (reportUrl != null) {
+					return jasperReportsHelper.generate(
+						getResourceClass(),
+						code,
+						reportUrl,
+						data,
+						LocaleContextHolder.getLocale(),
+						null,
+						fileType,
+						out);
+				} else {
+					throw new ReportGenerationException(
+						getResourceClass(),
+						null,
+						code,
+						"Couldn't generate report file: both generateFile and getJasperReportUrl methods returned null (fileType=" + fileType + ")");
+				}
+			}
 		} else {
 			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.REPORT, code);
 		}
@@ -176,9 +389,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		Specification<E> pkSpec = new PkSpec<>(id);
 		String additionalSpringFilter = additionalSpringFilter(null, null);
 		if (additionalSpringFilter != null && !additionalSpringFilter.trim().isEmpty()) {
-			result = resourceRepository.findOne(pkSpec.and(getSpringFilterSpecification(additionalSpringFilter)));
+			result = entityRepository.findOne(pkSpec.and(getSpringFilterSpecification(additionalSpringFilter)));
 		} else {
-			result = resourceRepository.findOne(pkSpec);
+			result = entityRepository.findOne(pkSpec);
 		}
 		if (result.isPresent()) {
 			return result.get();
@@ -193,80 +406,108 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected Page<E> internalFindEntities(
-			String quickFilter,
-			String filter,
-			String[] namedFilters,
-			Pageable pageable) {
+		String quickFilter,
+		String filter,
+		String[] namedFilters,
+		Pageable pageable) {
 		Page<E> resultat;
 		Specification<E> processedSpecification = toProcessedSpecification(
-				quickFilter,
-				filter,
-				namedFilters);
+			quickFilter,
+			filter,
+			namedFilters);
 		if (processedSpecification != null) {
 			log.debug("Consulta amb specification (specification={})", processedSpecification);
 			if (pageable.isUnpaged()) {
 				Sort processedSort = toProcessedSort(
-						addDefaultSort(pageable.getSort()));
-				List<E> resultList = resourceRepository.findAll(
-						processedSpecification,
-						processedSort);
+					addDefaultSort(pageable.getSort()));
+				List<E> resultList = entityRepository.findAll(
+					processedSpecification,
+					processedSort);
 				resultat = new PageImpl<E>(resultList, pageable, resultList.size());
 			} else {
 				Pageable processedPageable = toProcessedPageableSort(pageable);
-				resultat = resourceRepository.findAll(
-						processedSpecification,
-						processedPageable);
+				resultat = entityRepository.findAll(
+					processedSpecification,
+					processedPageable);
 			}
 		} else {
 			log.debug("Consulta sense specification");
 			if (pageable.isUnpaged()) {
 				Sort processedSort = toProcessedSort(
-						addDefaultSort(pageable.getSort()));
-				List<E> resultList = resourceRepository.findAll(processedSort);
+					addDefaultSort(pageable.getSort()));
+				List<E> resultList = entityRepository.findAll(processedSort);
 				resultat = new PageImpl<>(resultList, pageable, resultList.size());
 			} else {
 				Pageable processedPageable = toProcessedPageableSort(pageable);
-				resultat = resourceRepository.findAll(processedPageable);
+				resultat = entityRepository.findAll(processedPageable);
 			}
 		}
 		return resultat;
 	}
 
-	protected List<R> applyPerspectives(
-			List<E> entities,
-			List<R> resources,
-			String[] perspectives) {
-		List<R> resourcesWithPerspectives = new ArrayList<>();
-		for (int i = 0; i < entities.size(); i++) {
-			R resourceWithPerspectives = applyPerspectives(entities.get(i), resources.get(i), perspectives);
-			if (resourceWithPerspectives != null) {
-				resourcesWithPerspectives.add(resourceWithPerspectives);
-			} else {
-				resourcesWithPerspectives.add(resources.get(i));
-			}
-		}
-		return resourcesWithPerspectives;
+	protected R entityToResource(E entity) {
+		return resourceEntityMappingHelper.entityToResource(entity, getResourceClass());
 	}
 
-	protected Specification<E> toProcessedSpecification(
-			String quickFilter,
-			String filter,
-			String[] namedFilters) {
-		Specification<E> processedSpecification = getSpringFilterSpecification(
-				buildSpringFilterForQuickFilter(
-						getResourceClass(),
-						null,
-						quickFilter));
+	protected List<R> entitiesToResources(List<E> entities) {
+		return entities.stream().map(this::entityToResource).collect(Collectors.toList());
+	}
+
+	protected void applyPerspectives(
+		List<E> entities,
+		List<R> resources,
+		String[] perspectives) throws ArtifactNotFoundException {
+		Arrays.stream(perspectives).forEach(p -> {
+			PerspectiveApplicator<E, R> perspectiveApplicator = perspectiveApplicatorMap.get(p);
+			if (perspectiveApplicator != null) {
+				boolean modified = perspectiveApplicator.applyMultiple(p, entities, resources);
+				if (!modified) {
+					IntStream.range(0, entities.size()).forEach(i -> {
+						perspectiveApplicator.applySingle(
+							p,
+							entities.get(i),
+							resources.get(i));
+					});
+				}
+			} else {
+				throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.PERSPECTIVE, p);
+			}
+		});
+	}
+
+	protected void applyPerspectives(
+		E entity,
+		R resource,
+		String[] perspectives) {
+		Arrays.stream(perspectives).forEach(p -> {
+			PerspectiveApplicator<E, R> perspectiveApplicator = perspectiveApplicatorMap.get(p);
+			if (perspectiveApplicator != null) {
+				perspectiveApplicator.applySingle(p, entity, resource);
+			} else {
+				throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.PERSPECTIVE, p);
+			}
+		});
+	}
+
+	protected <P> Specification<P> toProcessedSpecification(
+		String quickFilter,
+		String filter,
+		String[] namedFilters) {
+		Specification<P> processedSpecification = getSpringFilterSpecification(
+			buildSpringFilterForQuickFilter(
+				getResourceClass(),
+				null,
+				quickFilter));
 		processedSpecification = appendSpecificationWithAnd(
-				processedSpecification,
-				getSpringFilterSpecification(filter));
+			processedSpecification,
+			getSpringFilterSpecification(filter));
 		processedSpecification = appendSpecificationWithAnd(
-				processedSpecification,
-				getSpringFilterSpecification(
-						additionalSpringFilter(filter, namedFilters)));
+			processedSpecification,
+			getSpringFilterSpecification(
+				additionalSpringFilter(filter, namedFilters)));
 		if (namedFilters != null) {
 			for (String namedFilter: namedFilters) {
-				Specification<E> namedSpecification = null;
+				Specification<P> namedSpecification = null;
 				String namedSpringFilter = namedFilterToSpringFilter(namedFilter);
 				if (namedSpringFilter != null) {
 					namedSpecification = getSpringFilterSpecification(namedSpringFilter);
@@ -274,25 +515,25 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 					namedSpecification = namedFilterToSpecification(namedFilter);
 				}
 				processedSpecification = appendSpecificationWithAnd(
-						processedSpecification,
-						namedSpecification);
+					processedSpecification,
+					namedSpecification);
 			}
 		}
-		Specification<E> finalSpecification = processSpecification(processedSpecification);
+		Specification<P> finalSpecification = processSpecification(processedSpecification);
 		return finalSpecification != null ? finalSpecification : Specification.where(null);
 	}
 
-	protected Specification<E> getSpringFilterSpecification(String springFilter) {
+	protected <P> Specification<P> getSpringFilterSpecification(String springFilter) {
 		if (springFilter != null) {
-			return new FilterSpecification<E>(springFilter);
+			return new FilterSpecification<P>(springFilter);
 		} else {
 			return null;
 		}
 	}
 
-	protected Specification<E> appendSpecificationWithAnd(
-			Specification<E> currentSpecification,
-			Specification<E> specification) {
+	protected <P> Specification<P> appendSpecificationWithAnd(
+		Specification<P> currentSpecification,
+		Specification<P> specification) {
 		if (specification != null) {
 			if (currentSpecification != null) {
 				return currentSpecification.and(specification);
@@ -304,31 +545,31 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
-	private String buildSpringFilterForQuickFilter(
-			Class<? extends Resource<?>> resourceClass,
-			String prefix,
-			String quickFilter) {
+	protected String buildSpringFilterForQuickFilter(
+		Class<? extends Resource<?>> resourceClass,
+		String prefix,
+		String quickFilter) {
 		ResourceConfig resourceConfigAnnotation = resourceClass.getAnnotation(ResourceConfig.class);
 		if (quickFilter != null) {
 			String[] quickFilterFields = quickFilterGetFieldsFromResourceClass(resourceClass);
 			if (quickFilterFields != null) {
 				log.debug(
-						"Construint filtre Spring Filter per quickFilter (resourceClass={}, quickFilter={})",
-						getResourceClass(),
-						quickFilter);
+					"Construint filtre Spring Filter per quickFilter (resourceClass={}, quickFilter={})",
+					getResourceClass(),
+					quickFilter);
 				StringBuilder quickFilterSpringFilter = new StringBuilder();
 				for (String quickFilterField : resourceConfigAnnotation.quickFilterFields()) {
 					String springFilter = getSpringFilterFromQuickFilterPath(
-							quickFilterField.split("\\."),
-							resourceClass,
-							quickFilterField,
-							quickFilter,
-							prefix);
+						quickFilterField.split("\\."),
+						resourceClass,
+						quickFilterField,
+						quickFilter,
+						prefix);
 					if (springFilter != null) {
 						appendSpringFilter(
-								quickFilterSpringFilter,
-								springFilter,
-								" or ");
+							quickFilterSpringFilter,
+							springFilter,
+							" or ");
 					}
 				}
 				log.debug("Filtre Spring Filter resultant: {}", quickFilterSpringFilter);
@@ -338,63 +579,160 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		return null;
 	}
 
-	protected R entityToResource(E entity) {
-		return objectMappingHelper.newInstanceMap(
-				entity,
-				getResourceClass());
-	}
-	protected List<R> entitiesToResources(List<E> entities) {
-		return entities.stream().
-				map(this::entityToResource).
-				collect(Collectors.toList());
-	}
-
 	protected List<SortedField> getResourceDefaultSortFields(Class<?> resourceClass) {
 		ResourceConfig resourceAnnotation = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceAnnotation != null && resourceAnnotation.defaultSortFields().length > 0) {
 			return Arrays.stream(resourceAnnotation.defaultSortFields()).
-					map(s -> new SortedField(s.field(), s.direction())).
-					collect(Collectors.toList());
+				map(s -> new SortedField(s.field(), s.direction())).
+				collect(Collectors.toList());
 		} else {
 			return Collections.emptyList();
 		}
 	}
 
-	protected String additionalSpringFilter(
-			String currentSpringFilter,
-			String[] namedQueries) {
-		return null;
+	protected void onChangeCheckIfFieldExists(Class<?> formClass, String fieldName) {
+		if (fieldName != null) {
+			Field field = ReflectionUtils.findField(formClass, fieldName);
+			if (field == null) {
+				throw new ResourceFieldNotFoundException(formClass, fieldName);
+			}
+		}
 	}
 
-	protected R applyPerspectives(
-			E entity,
-			R resource,
-			String[] perspectives) {
+	protected <P extends Serializable> Map<String, Object> onChangeProcessRecursiveLogic(
+		P previous,
+		String fieldName,
+		Object fieldValue,
+		String[] previousFieldNames,
+		OnChangeLogicProcessor<P> onChangeLogicProcessor,
+		Map<String, AnswerRequiredException.AnswerValue> answers) {
+		Map<String, Object> changesToReturn = null;
+		P newInstance = (P)newClassInstance(previous.getClass());
+		if (newInstance != null) {
+			Map<String, Object> changes = new HashMap<>();
+			ProxyFactory factory = new ProxyFactory(newInstance);
+			factory.setProxyTargetClass(true);
+			factory.addAdvice((MethodInterceptor) invocation -> {
+				String methodName = invocation.getMethod().getName();
+				Object[] arguments = invocation.getArguments();
+				if (methodName.startsWith("set") && arguments.length > 0) {
+					changes.put(
+						StringUtil.decapitalize(methodName.substring("set".length())),
+						arguments[0]);
+				}
+				return invocation.proceed();
+			});
+			P target = (P)factory.getProxy();
+			if (onChangeLogicProcessor != null) {
+				onChangeLogicProcessor.onChange(
+					previous,
+					fieldName,
+					fieldValue,
+					answers,
+					previousFieldNames,
+					target);
+			}
+			if (!changes.isEmpty()) {
+				changesToReturn = new HashMap<>(changes);
+				for (String changedFieldName: changes.keySet()) {
+					Field changedField = ReflectionUtils.findField(previous.getClass(), changedFieldName);
+					if (changedField != null) {
+						ResourceField fieldAnnotation = changedField.getAnnotation(ResourceField.class);
+						if (fieldAnnotation != null && fieldAnnotation.onChangeActive()) {
+							Object previousWithChanges = cloneObjectWithFieldsMap(
+								previous,
+								fieldName,
+								fieldValue,
+								changes,
+								changedFieldName);
+							List<String> previousFieldNamesWithChangedFieldName = new ArrayList<>();
+							if (previousFieldNames != null) {
+								previousFieldNamesWithChangedFieldName.addAll(Arrays.asList(previousFieldNames));
+							}
+							if (fieldName != null) {
+								previousFieldNamesWithChangedFieldName.add(fieldName);
+							}
+							Map<String, Object> changesPerField = onChangeProcessRecursiveLogic(
+								(P)previousWithChanges,
+								changedFieldName,
+								changes.get(changedFieldName),
+								previousFieldNamesWithChangedFieldName.toArray(new String[0]),
+								onChangeLogicProcessor,
+								answers);
+							if (changesPerField != null) {
+								changesToReturn.putAll(changesPerField);
+							}
+						}
+					}
+				}
+			}
+		}
+		return changesToReturn;
+	}
+
+	protected Object cloneObjectWithFieldsMap(
+		Object resource,
+		String fieldName,
+		Object fieldValue,
+		Map<String, Object> fields,
+		String excludeField) {
+		Object clonedResource = objectMappingHelper.clone(resource);
+		if (fieldName != null) {
+			Field field = ReflectionUtils.findField(resource.getClass(), fieldName);
+			if (field != null) {
+				ReflectionUtils.makeAccessible(field);
+				ReflectionUtils.setField(field, clonedResource, fieldValue);
+			} else {
+				log.error(
+					"Processing onChange request: couldn't find field {} on resource {}",
+					fieldName,
+					resource.getClass().getName());
+			}
+		}
+		fields.forEach((k, v) -> {
+			if (!k.equals(excludeField)) {
+				Field f = ReflectionUtils.findField(resource.getClass(), k);
+				if (f != null) {
+					ReflectionUtils.makeAccessible(f);
+					ReflectionUtils.setField(f, clonedResource, v);
+				}
+			}
+		});
+		return clonedResource;
+	}
+
+	protected <C> C newClassInstance(Class<C> clazz) {
+		try {
+			return clazz.getDeclaredConstructor().newInstance();
+		} catch (Exception ex) {
+			log.error("Couldn't create new resource instance (resourceClass={})", getResourceClass(), ex);
+			return null;
+		}
+	}
+
+	protected String additionalSpringFilter(
+		String currentSpringFilter,
+		String[] namedQueries) {
 		return null;
 	}
 
 	protected String namedFilterToSpringFilter(String name) {
 		return null;
 	}
-	protected Specification<E> namedFilterToSpecification(String name) {
+	protected <P> Specification<P> namedFilterToSpecification(String name) {
 		return null;
 	}
 
-	protected Specification<E> processSpecification(Specification<E> specification) {
+	protected <P> Specification<P> processSpecification(Specification<P> specification) {
 		return specification;
-	}
-
-	protected Sort getSortWithPerspectives(
-			String[] perspectives,
-			Sort currentSort) {
-		return null;
 	}
 
 	protected void beforeGetOne(String[] perspectives) {}
 	protected void beforeFind(
-			String springFilter,
-			String[] namedQueries,
-			String[] perspectives) {}
+		String quickFilter,
+		String springFilter,
+		String[] namedQueries,
+		Pageable pageable) {}
 	protected void beforeConversion(E entity) {}
 	protected void afterConversion(E entity, R resource) {}
 	protected void beforeConversion(List<E> entities) {
@@ -415,9 +753,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected Class<R> getResourceClass() {
 		if (resourceClass == null) {
 			resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-					getClass(),
-					BaseReadonlyResourceService.class,
-					0);
+				getClass(),
+				BaseReadonlyResourceService.class,
+				0);
 		}
 		return resourceClass;
 	}
@@ -425,28 +763,153 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected Class<E> getEntityClass() {
 		if (entityClass == null) {
 			entityClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-					getClass(),
-					BaseReadonlyResourceService.class,
-					2);
+				getClass(),
+				BaseReadonlyResourceService.class,
+				2);
 		}
 		return entityClass;
 	}
 
-	protected void register(ReportDataGenerator<?, ?> reportGenerator) {
-		Arrays.stream(reportGenerator.getSupportedReportCodes()).
-				forEach(c -> reportGeneratorMap.put(c, reportGenerator));
+	protected <P extends Serializable> void internalArtifactOnChange(
+		ResourceArtifactType type,
+		String code,
+		P previous,
+		String fieldName,
+		Object fieldValue,
+		Map<String, AnswerRequiredException.AnswerValue> answers,
+		String[] previousFieldsChanged,
+		P target) {
+		if (type == ResourceArtifactType.REPORT) {
+			ReportGenerator<E, P, ?> reportGenerator = (ReportGenerator<E, P, ?>) reportGeneratorMap.get(code);
+			if (reportGenerator != null) {
+				reportGenerator.onChange(
+					previous,
+					fieldName,
+					fieldValue,
+					answers,
+					previousFieldsChanged,
+					target);
+			}
+		} else if (type == ResourceArtifactType.FILTER) {
+			FilterProcessor<P> filterProcessor = (FilterProcessor<P>)filterProcessorMap.get(code);
+			if (filterProcessor != null) {
+				filterProcessor.onChange(
+					previous,
+					fieldName,
+					fieldValue,
+					answers,
+					previousFieldsChanged,
+					target);
+			}
+		}
+	}
+
+	protected void register(
+		String reportCode,
+		ReportGenerator<E, ?, ?> reportGenerator) {
+		if (artifactIsPresentInResourceConfig(ResourceArtifactType.REPORT, reportCode)) {
+			reportGeneratorMap.put(reportCode, reportGenerator);
+		} else {
+			log.error("Artifact not registered because it doesn't exist in ResourceConfig annotation (" +
+				"resourceClass=" + getResourceClass() + ", " +
+				"artifactType=" + ResourceArtifactType.REPORT + ", " +
+				"artifactCode=" + reportCode + ")");
+		}
+	}
+
+	protected void register(
+		String filterCode,
+		FilterProcessor<?> filterProcessor) {
+		if (artifactIsPresentInResourceConfig(ResourceArtifactType.FILTER, filterCode)) {
+			filterProcessorMap.put(filterCode, filterProcessor);
+		} else {
+			log.error("Artifact not registered because it doesn't exist in ResourceConfig annotation (" +
+				"resourceClass=" + getResourceClass() + ", " +
+				"artifactType=" + ResourceArtifactType.FILTER + ", " +
+				"artifactCode=" + filterCode + ")");
+		}
+	}
+
+	protected void register(
+		String perspectiveCode,
+		PerspectiveApplicator<E, R> perspectiveApplicator) {
+		if (artifactIsPresentInResourceConfig(ResourceArtifactType.PERSPECTIVE, perspectiveCode)) {
+			perspectiveApplicatorMap.put(perspectiveCode, perspectiveApplicator);
+		} else {
+			log.error("Artifact not registered because it doesn't exist in ResourceConfig annotation (" +
+				"resourceClass=" + getResourceClass() + ", " +
+				"artifactType=" + ResourceArtifactType.PERSPECTIVE + ", " +
+				"artifactCode=" + perspectiveCode + ")");
+		}
+	}
+
+	protected void register(
+		String fieldName,
+		FieldDownloader<E> fieldDownloader) {
+		fieldDownloaderMap.put(fieldName, fieldDownloader);
+	}
+
+	protected Boolean artifactRequiresId(ResourceArtifactType type, String code) {
+		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
+		if (resourceConfig != null && (type == ResourceArtifactType.ACTION || type == ResourceArtifactType.REPORT)) {
+			Optional<ResourceConfigArtifact> artifact = Arrays.stream(resourceConfig.artifacts()).
+				filter(a -> a.type() == type && a.code().equals(code)).
+				findFirst();
+			if (artifact.isPresent()) {
+				return artifact.get().requiresId();
+			}
+		}
+		return null;
+	}
+
+	protected Class<? extends Serializable> artifactGetFormClass(ResourceArtifactType type, String code) {
+		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
+		if (resourceConfig != null) {
+			Optional<ResourceConfigArtifact> artifact = Arrays.stream(resourceConfig.artifacts()).
+				filter(a -> a.type() == type && a.code().equals(code)).
+				findFirst();
+			if (artifact.isPresent() && !artifact.get().formClass().equals(Serializable.class)) {
+				return artifact.get().formClass();
+			}
+		}
+		return null;
+	}
+
+	protected boolean artifactIsPresentInResourceConfig(
+		ResourceArtifactType type,
+		String code) {
+		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
+		if (resourceConfig != null) {
+			Optional<ResourceConfigArtifact> artifacts = Arrays.stream(resourceConfig.artifacts()).
+				filter(a -> a.type() == type && a.code().equals(code)).
+				findFirst();
+			return artifacts.isPresent();
+		} else {
+			return false;
+		}
+	}
+
+	protected List<ResourceConfigArtifact> artifactGetFilterAll() {
+		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
+		if (resourceConfig != null) {
+			return Arrays.stream(resourceConfig.artifacts()).
+				filter(a -> a.type() == ResourceArtifactType.FILTER).
+				collect(Collectors.toList());
+		} else {
+			return Collections.emptyList();
+		}
 	}
 
 	private Pageable toProcessedPageableSort(Pageable pageable) {
 		return PageRequest.of(
-				pageable.getPageNumber(),
-				pageable.getPageSize(),
-				toProcessedSort(
-						addDefaultSort(pageable.getSort())));
+			pageable.getPageNumber(),
+			pageable.getPageSize(),
+			toProcessedSort(
+				addDefaultSort(pageable.getSort())));
 	}
 
 	private Sort toProcessedSort(
-			Sort sort) {
+		Sort sort) {
 		Sort resultSort;
 		if (sort != null) {
 			log.debug("\tProcessant ordenació " + sort);
@@ -454,8 +917,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				List<Sort.Order> orders = new ArrayList<>();
 				for (Sort.Order order: sort) {
 					String[] orderPaths = toProcessedSortPath(
-							order.getProperty().split("\\."),
-							getEntityClass());
+						order.getProperty().split("\\."),
+						getEntityClass());
 					if (orderPaths != null) {
 						for (String orderPath: orderPaths) {
 							if (order.isAscending()) {
@@ -481,8 +944,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	private String[] toProcessedSortPath(
-			String[] path,
-			Class<?> entityClass) {
+		String[] path,
+		Class<?> entityClass) {
 		if (path.length > 0) {
 			log.debug("\t\tProcessant path d'ordenació" + Arrays.toString(path) + " per l'entitat " + entityClass);
 			Field entityField = ReflectionUtils.findField(entityClass, path[0]);
@@ -494,47 +957,21 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						// procés amb l'entitat a la que es fa referència.
 						log.debug("\t\t\tDetectat camp d'entitat de tipus referencia no final " + path[0] + ", tornant a processar");
 						String[] orderPaths = toProcessedSortPath(
-								Arrays.copyOfRange(path, 1, path.length),
-								entityField.getType());
+							Arrays.copyOfRange(path, 1, path.length),
+							entityField.getType());
 						if (orderPaths != null) {
 							// Retorna els paths afegint de nou el primer camp
 							return Arrays.stream(orderPaths).
-									filter(p -> !p.isEmpty()).
-									map(p -> path[0] + "." + p).
-									toArray(String[]::new);
+								filter(p -> !p.isEmpty()).
+								map(p -> path[0] + "." + p).
+								toArray(String[]::new);
 						} else {
 							return null;
 						}
 					} else {
 						// Si s'ha arribat al final del path s'agafa l'ordenació
 						// definida a l'anotació del recurs de l'entitat.
-						if (EmbeddableEntity.class.isAssignableFrom(entityField.getType())) {
-							log.debug("\t\t\tDetectat camp d'entitat que és referencia final " + path[0] + " de tipus EmbeddableEntity, s'afegeix ordenació de l'anotació del recurs");
-							Class<?> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-									entityField.getType(),
-									EmbeddableEntity.class,
-									0);
-							List<String> sortPaths = new ArrayList<String>();
-							for (SortedField sortedField: getResourceDefaultSortFields(resourceClass)) {
-								String[] ops = toProcessedSortPath(
-										sortedField.getField().split("\\."),
-										entityField.getType());
-								if (ops != null) {
-									sortPaths.addAll(Arrays.asList(ops));
-								}
-							}
-							if (!sortPaths.isEmpty()) {
-								// Retorna els paths afegint de nou el primer camp
-								return sortPaths.stream().
-										filter(p -> !p.isEmpty()).
-										map(p -> path[0] + "." + p).
-										toArray(String[]::new);
-							} else {
-								return new String[] { String.join(".", path[0], "id") };
-							}
-						} else {
-							return new String[] { String.join(".", path[0], "id") };
-						}
+						return new String[] { String.join(".", path[0], "id") };
 					}
 				} else {
 					// Si el camp no és una referència a una altra entitat
@@ -543,26 +980,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 					return new String[] { path[0] };
 				}
 			} else {
-				if (EmbeddableEntity.class.isAssignableFrom(entityClass)) {
-					Class<?> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-							entityClass,
-							EmbeddableEntity.class,
-							0);
-					log.debug("\t\t\tDetectat camp que no pertany a l'entitat " + path[0] + ", el cercam al recurs " + resourceClass);
-					Field resourceField = ReflectionUtils.findField(resourceClass, path[0]);
-					if (resourceField != null) {
-						// Si el camp pertany al recurs aleshores hi afegeix .embedded just abans
-						log.debug("\t\t\t\t Camp " + path[0] + " trobat al recurs, l'afegim posant '.embedded'");
-						return new String[]{String.join(".", "embedded", path[0])};
-					} else {
-						// Si el camp tampoc pertany al recurs aleshores retorna null
-						log.warn("Ordenació no aplicable pel recurs {}, camp no trobat: {}", resourceClass, path[0]);
-						return null;
-					}
-				} else {
-					log.warn("Ordenació no aplicable pel recurs {}, camp no trobat: {}", resourceClass, path[0]);
-					return null;
-				}
+				log.warn("Ordenació no aplicable pel recurs {}, camp no trobat: {}", resourceClass, path[0]);
+				return null;
 			}
 		} else {
 			return null;
@@ -574,8 +993,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			List<Sort.Order> orders = new ArrayList<>();
 			for (SortedField sortedField: getResourceDefaultSortFields(getResourceClass())) {
 				orders.add(new Sort.Order(
-						sortedField.getDirection(),
-						sortedField.getField()));
+					sortedField.getDirection(),
+					sortedField.getField()));
 			}
 			return Sort.by(orders);
 		} else {
@@ -594,11 +1013,11 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	private String getSpringFilterFromQuickFilterPath(
-			String[] currentPath,
-			Class<?> resourceClass,
-			String fieldName,
-			String quickFilter,
-			String filterFieldPrefix) {
+		String[] currentPath,
+		Class<?> resourceClass,
+		String fieldName,
+		String quickFilter,
+		String filterFieldPrefix) {
 		log.debug("\t\tProcessant path de quickFilter" + Arrays.toString(currentPath) + " pel recurs " + resourceClass);
 		Field resourceField = ReflectionUtils.findField(resourceClass, currentPath[0]);
 		if (resourceField != null) {
@@ -620,12 +1039,12 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						springFilter.append("exists(");
 					}
 					springFilter.append(
-							getSpringFilterFromQuickFilterPath(
-									Arrays.copyOfRange(currentPath, 1, currentPath.length),
-									TypeUtil.getReferencedResourceClass(resourceField),
-									fieldName,
-									quickFilter,
-									filterFieldPrefix));
+						getSpringFilterFromQuickFilterPath(
+							Arrays.copyOfRange(currentPath, 1, currentPath.length),
+							TypeUtil.getReferencedResourceClass(resourceField),
+							fieldName,
+							quickFilter,
+							filterFieldPrefix));
 					if (resourceTypeIsCollection) {
 						springFilter.append(")");
 					}
@@ -636,10 +1055,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						springFilter.append("exists(");
 					}
 					springFilter.append(
-							buildSpringFilterForQuickFilter(
-									TypeUtil.getReferencedResourceClass(resourceField),
-									(filterFieldPrefix != null) ? filterFieldPrefix + resourceField.getName() + "." : resourceField.getName() + ".",
-									quickFilter));
+						buildSpringFilterForQuickFilter(
+							TypeUtil.getReferencedResourceClass(resourceField),
+							(filterFieldPrefix != null) ? filterFieldPrefix + resourceField.getName() + "." : resourceField.getName() + ".",
+							quickFilter));
 					if (resourceTypeIsCollection) {
 						springFilter.append(")");
 					}
@@ -651,13 +1070,17 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				if (filterFieldPrefix != null) {
 					springFilter.append(filterFieldPrefix);
 				}
+				springFilter.append("lower(");
 				springFilter.append(fieldName);
-				springFilter.append('~');
+				springFilter.append(")");
+				springFilter.append("~");
+				springFilter.append("lower(");
 				springFilter.append("'");
-				springFilter.append("*");
+				springFilter.append("%");
 				springFilter.append(cleanReservedFilterCharacters(quickFilter));
-				springFilter.append("*");
+				springFilter.append("%");
 				springFilter.append("'");
+				springFilter.append(")");
 			}
 			return springFilter.toString();
 		} else {
@@ -667,9 +1090,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	private void appendSpringFilter(
-			StringBuilder sb,
-			String springFilter,
-			String separator) {
+		StringBuilder sb,
+		String springFilter,
+		String separator) {
 		if (springFilter != null && !springFilter.isEmpty()) {
 			if (sb.length() > 0) {
 				sb.append(separator);
@@ -706,19 +1129,180 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		private PK id;
 		@Override
 		public Predicate toPredicate(
-				Root<E> root,
-				CriteriaQuery<?> query,
-				CriteriaBuilder criteriaBuilder) {
+			Root<E> root,
+			CriteriaQuery<?> query,
+			CriteriaBuilder criteriaBuilder) {
 			return criteriaBuilder.equal(root.get("id"), id);
 		}
 	}
 
-	public interface ReportDataGenerator <P, D> {
-		String[] getSupportedReportCodes();
-		Class<P> getParameterClass();
-		List<D> generate(
-				String code,
-				P params) throws ReportGenerationException;
+	/**
+	 * Interfície a implementar pels artefactes encarregats d'aplicar perspectives als recursos.
+	 *
+	 * @param <E> classe de l'entitat a la qual està associada aquesta perspectiva.
+	 * @param <R> classe del recurs al qual està associada aquesta perspectiva.
+	 */
+	public interface PerspectiveApplicator<E extends ResourceEntity<R, ?>, R extends Resource<?>> {
+		/**
+		 * Aplica la perspectiva a múltiples recursos. Es pot sobreescriure o deixar sense implementar.
+		 * Si es deixa sense implementar s'aplicarà la perspectiva a cada recurs per separat.
+		 *
+		 * @param code
+		 *            el codi de la perspectiva a aplicar.
+		 * @param entities
+		 *            la llista d'entitats per a aplicar la perspectiva.
+		 * @param resources
+		 *            la llista de recursos a on aplicar la perspectiva.
+		 * @return true si s'ha fet alguna modificació o false en cas contrari.
+		 * @throws PerspectiveApplicationException
+		 *             si es produeix algun error aplicant la perspectiva.
+		 */
+		default boolean applyMultiple(
+			String code,
+			List<E> entities,
+			List<R> resources) throws PerspectiveApplicationException {
+			return false;
+		}
+		/**
+		 * Aplica la perspectiva a un únic recurs.
+		 *
+		 * @param code
+		 *            el codi de la perspectiva a aplicar.
+		 * @param entity
+		 *            l'entitat per a aplicar la perspectiva.
+		 * @param resource
+		 *            el recurs a on aplicar la perspectiva.
+		 * @throws PerspectiveApplicationException
+		 *             si es produeix algun error aplicant la perspectiva.
+		 */
+		void applySingle(
+			String code,
+			E entity,
+			R resource) throws PerspectiveApplicationException;
+	}
+
+	/**
+	 * Interfície a implementar pels processadors de lògica onChange.
+	 *
+	 * @param <R> classe del recurs.
+	 */
+	@FunctionalInterface
+	public interface OnChangeLogicProcessor<R extends Serializable> {
+		/**
+		 * Processa la lògica onChange d'un camp.
+		 *
+		 * @param previous
+		 *            el recurs amb els valors previs a la modificació.
+		 * @param fieldName
+		 *            el nom del camp modificat.
+		 * @param fieldValue
+		 *            el valor del camp modificat.
+		 * @param answers
+		 *            les respostes associades a la petició actual.
+		 * @param previousFieldNames
+		 *            la llista de camps canviats amb anterioritat a l'actual petició onChange.
+		 * @param target
+		 *            el recurs emmagatzemat a base de dades.
+		 */
+		void onChange(
+			R previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			String[] previousFieldNames,
+			R target);
+	}
+
+	/**
+	 * Interfície a implementar pels artefactes encarregats de generar dades pels informes.
+	 *
+	 * @param <E> classe de l'entitat a la que està associada l'informe.
+	 * @param <P> classe dels paràmetres necessaris per a generar l'informe.
+	 * @param <R> classe de la llista de dades retornades al generar l'informe.
+	 */
+	public interface ReportGenerator<E extends ResourceEntity<?, ?>, P extends Serializable, R extends Serializable> extends BaseMutableResourceService.OnChangeLogicProcessor<P> {
+		/**
+		 * Genera les dades per l'informe.
+		 *
+		 * @param code
+		 *            el codi de l'informe.
+		 * @param entity
+		 *            entitat sobre la que es genera l'informe (pot ser null si l'acció no s'executa sobre una entitat
+		 *            en concret).
+		 * @param params
+		 *            els paràmetres per a la generació.
+		 * @return la llista amb les dades generades.
+		 * @throws ReportGenerationException
+		 *             si es produeix algun error generant les dades.
+		 */
+		List<R> generateData(
+			String code,
+			E entity,
+			P params) throws ReportGenerationException;
+		/**
+		 * Genera el fitxer amb l'informe.
+		 *
+		 * @param code
+		 *            el codi de l'informe.
+		 * @param data
+		 *            les dades de l'informe.
+		 * @param fileType
+		 *            tipus de fitxer que s'ha de generar.
+		 * @param out
+		 *            stream a on posar el fitxer generat.
+		 * @return el fitxer generat o null si aquest generador no implementa aquesta funcionalitat.
+		 */
+		default DownloadableFile generateFile(
+			String code,
+			List<?> data,
+			ReportFileType fileType,
+			OutputStream out) {
+			return null;
+		}
+		/**
+		 * Retorna la ubicació del recurs amb l'informe de JasperReports.
+		 *
+		 * @param code
+		 *            el codi de l'informe.
+		 * @param fileType
+		 *            tipus de fitxer que s'ha de generar.
+		 * @return la ubicació de l'informe.
+		 */
+		default URL getJasperReportUrl(String code, ReportFileType fileType) {
+			return null;
+		}
+	}
+
+	/**
+	 * Interfície a implementar pels artefactes encarregats de filtrar els recursos.
+	 *
+	 * @param <R> classe del recurs que representa el filtre.
+	 */
+	public interface FilterProcessor<R extends Serializable> extends BaseMutableResourceService.OnChangeLogicProcessor<R> {
+	}
+
+	/**
+	 * Interfície a implementar per a retornar els arxius associats a un camp.
+	 *
+	 * @param <E> classe de l'entitat.
+	 */
+	public interface FieldDownloader<E extends ResourceEntity<?, ?>> {
+		/**
+		 * Retorna l'arxiu associat.
+		 *
+		 * @param entity
+		 *            l'entitat amb els valors previs a la modificació.
+		 * @param fieldName
+		 *            el nom del camp de l'entitat.
+		 * @param out
+		 *            stream a on posar el fitxer generat.
+		 * @throws IOException
+		 *             si es produeix algun error de E/S al descarregar l'arxiu.
+		 */
+		DownloadableFile download(
+			E entity,
+			String fieldName,
+			OutputStream out) throws IOException;
 	}
 
 }

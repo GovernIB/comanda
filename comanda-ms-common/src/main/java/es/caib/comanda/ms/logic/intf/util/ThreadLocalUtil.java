@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Helper per a gestionar informació del TreadLocal. La llibreria base-boot
  * s'encarregarà de eliminar aquesta informació en cada perició al back.
- * 
+ *
  * @author Límit Tecnologies
  */
 public class ThreadLocalUtil {

@@ -12,7 +12,7 @@ import java.lang.reflect.Field;
 
 /**
  * Utilitats per a traduir missatges.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Component
@@ -22,14 +22,14 @@ public class I18nUtil implements ApplicationContextAware {
 	private MessageSource messageSource;
 
 	public String getI18nEnumDescription(
-			Field field,
-			String enumValue) {
+		Field field,
+		String enumValue) {
 		try {
 			String i18nKey = field.getDeclaringClass().getName() + "." + field.getName() + "." + enumValue;
 			return messageSource.getMessage(
-					i18nKey,
-					null,
-					LocaleContextHolder.getLocale());
+				i18nKey,
+				null,
+				LocaleContextHolder.getLocale());
 		} catch (NoSuchMessageException ex) {
 			try {
 				Class<?> fieldType;
@@ -40,9 +40,9 @@ public class I18nUtil implements ApplicationContextAware {
 				}
 				String i18nKey = fieldType.getName() + "." + enumValue;
 				return messageSource.getMessage(
-						i18nKey,
-						null,
-						LocaleContextHolder.getLocale());
+					i18nKey,
+					null,
+					LocaleContextHolder.getLocale());
 			} catch (NoSuchMessageException ex2) {
 				return enumValue;
 			}

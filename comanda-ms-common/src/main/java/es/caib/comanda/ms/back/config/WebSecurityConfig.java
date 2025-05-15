@@ -11,7 +11,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
  * Configuració de Spring Security.
- * 
+ *
  * @author Límit Tecnologies
  */
 @EnableWebSecurity
@@ -30,18 +30,18 @@ public class WebSecurityConfig {
 		}
 		if (isPermitAllRequestsByDefault()) {
 			http.authorizeHttpRequests().
-			requestMatchers(new AntPathRequestMatcher("/sysenv")).permitAll().
-			requestMatchers(new AntPathRequestMatcher("/manifest")).permitAll().
-			requestMatchers(publicRequestMatchers()).permitAll().
-			requestMatchers(privateRequestMatchers()).authenticated().
-			anyRequest().permitAll();
+				requestMatchers(new AntPathRequestMatcher("/sysenv")).permitAll().
+				requestMatchers(new AntPathRequestMatcher("/manifest")).permitAll().
+				requestMatchers(publicRequestMatchers()).permitAll().
+				requestMatchers(privateRequestMatchers()).authenticated().
+				anyRequest().permitAll();
 		} else {
 			http.authorizeHttpRequests().
-			requestMatchers(new AntPathRequestMatcher("/sysenv")).permitAll().
-			requestMatchers(new AntPathRequestMatcher("/manifest")).permitAll().
-			requestMatchers(publicRequestMatchers()).permitAll().
-			requestMatchers(privateRequestMatchers()).authenticated().
-			anyRequest().denyAll();
+				requestMatchers(new AntPathRequestMatcher("/sysenv")).permitAll().
+				requestMatchers(new AntPathRequestMatcher("/manifest")).permitAll().
+				requestMatchers(publicRequestMatchers()).permitAll().
+				requestMatchers(privateRequestMatchers()).authenticated().
+				anyRequest().denyAll();
 		}
 		customHttpSecurityConfiguration(http);
 		return http.build();
@@ -50,13 +50,13 @@ public class WebSecurityConfig {
 
 	protected RequestMatcher[] publicRequestMatchers() {
 		return new RequestMatcher[] {
-				new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
+			new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
 		};
 	}
 
 	protected RequestMatcher[] privateRequestMatchers() {
 		return new RequestMatcher[] {
-				new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
+			new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
 		};
 	}
 

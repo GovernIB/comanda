@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 /**
  * Anotació per a configurar un recurs de l'API REST.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -24,9 +24,11 @@ public @interface ResourceConfig {
 	public String resourceDescription() default "";
 	public String resourceDescriptionI18n() default "";
 	public String descriptionField() default "";
+	public String orderField() default "";
 	public ResourceSort[] defaultSortFields() default {};
 	public String[] quickFilterFields() default {};
 	public Class<? extends Resource> parentEntity() default Resource.class;
+	public ResourceConfigArtifact[] artifacts() default {};
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)

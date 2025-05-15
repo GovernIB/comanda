@@ -2,7 +2,7 @@ package es.caib.comanda.ms.logic.intf.util;
 
 /**
  * Helper encarregat de gestionar la sessió de l'usuari.
- * 
+ *
  * @author Límit Tecnologies
  */
 public class RequestSessionUtil {

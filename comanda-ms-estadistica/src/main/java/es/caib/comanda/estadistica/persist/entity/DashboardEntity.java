@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.entity;
 
+import es.caib.comanda.estadistica.logic.intf.model.Dashboard;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
@@ -35,7 +36,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class DashboardEntity extends BaseAuditableEntity<Long> {
+public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
 
     @Column(name = "titol", length = 64, nullable = false)
     private String titol;

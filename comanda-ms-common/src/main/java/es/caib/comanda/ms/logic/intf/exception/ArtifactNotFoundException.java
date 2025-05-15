@@ -5,7 +5,7 @@ import lombok.Getter;
 
 /**
  * Excepció que es llença quan no es troba l'informe.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Getter
@@ -16,9 +16,9 @@ public class ArtifactNotFoundException extends NotFoundException {
 	private final String code;
 
 	public ArtifactNotFoundException(
-			Class<?> resourceClass,
-			ResourceArtifactType type,
-			String code) {
+		Class<?> resourceClass,
+		ResourceArtifactType type,
+		String code) {
 		super("Artifact " + getArtifactId(resourceClass, type, code));
 		this.resourceClass = resourceClass;
 		this.type = type;
@@ -26,9 +26,9 @@ public class ArtifactNotFoundException extends NotFoundException {
 	}
 
 	private static String getArtifactId(
-			Class<?> resourceClass,
-			ResourceArtifactType type,
-			String code) {
+		Class<?> resourceClass,
+		ResourceArtifactType type,
+		String code) {
 		return "(resourceClass=" + resourceClass.getName() + ", type=" + type + ", code=" + code + ")";
 	}
 

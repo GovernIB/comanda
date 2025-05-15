@@ -7,11 +7,11 @@ import java.lang.annotation.Target;
 
 /**
  * Anotació per a configurar un camp d'un recurs de l'API REST.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target(ElementType.FIELD)
 public @interface ResourceField {
 
 	public String type() default "";
@@ -26,3 +26,4 @@ public @interface ResourceField {
 	public String[] namedQueries() default {};
 
 }
+

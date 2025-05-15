@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * Excepció que es llença quan no es troba un element que suposadament existeix.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Getter

@@ -1,6 +1,6 @@
 package es.caib.comanda.configuracio.persist.entity;
 
-import es.caib.comanda.configuracio.logic.intf.model.App;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
@@ -34,7 +34,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EntornAppEntity extends BaseAuditableEntity<App> {
+public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(

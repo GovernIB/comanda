@@ -8,5 +8,6 @@ package es.caib.comanda.ms.logic.intf.model;
 public enum ResourceArtifactType {
 	ACTION,
 	REPORT,
-	FILTER
+	FILTER,
+	PERSPECTIVE
 }

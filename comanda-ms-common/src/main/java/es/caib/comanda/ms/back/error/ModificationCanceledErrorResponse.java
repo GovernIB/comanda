@@ -10,7 +10,7 @@ import lombok.Setter;
 /**
  * Objecte d'error de l'API REST que es retorna quan es cancel·la alguna
  * acció que involucra modificació de dades.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Getter
@@ -21,9 +21,9 @@ public class ModificationCanceledErrorResponse extends ErrorResponse {
 	private final String action;
 
 	public ModificationCanceledErrorResponse(
-			int status,
-			String message,
-			String action) {
+		int status,
+		String message,
+		String action) {
 		super(status, message);
 		this.action = action;
 	}

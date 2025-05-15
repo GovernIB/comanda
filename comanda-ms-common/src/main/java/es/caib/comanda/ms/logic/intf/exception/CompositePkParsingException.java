@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * Excepció que es llança quan es produeix un error al deserialitzar una clau
  * primària composta.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Getter
@@ -18,27 +18,27 @@ public class CompositePkParsingException extends RuntimeException {
 	private final Class<?> compositePkClass;
 
 	public CompositePkParsingException(
-			String id,
-			Serializable pk,
-			Class<?> compositePkClass,
-			String message) {
+		String id,
+		Serializable pk,
+		Class<?> compositePkClass,
+		String message) {
 		this(id, pk, compositePkClass, message, null);
 	}
 
 	public CompositePkParsingException(
-			String id,
-			Serializable pk,
-			Class<?> compositePkClass,
-			Throwable cause) {
+		String id,
+		Serializable pk,
+		Class<?> compositePkClass,
+		Throwable cause) {
 		this(id, pk, compositePkClass, null, cause);
 	}
 
 	public CompositePkParsingException(
-			String id,
-			Serializable pk,
-			Class<?> compositePkClass,
-			String message,
-			Throwable cause) {
+		String id,
+		Serializable pk,
+		Class<?> compositePkClass,
+		String message,
+		Throwable cause) {
 		super(getExceptionMessage(id, pk, compositePkClass) + ": " + message, cause);
 		this.id = id;
 		this.pk = pk;
@@ -46,9 +46,9 @@ public class CompositePkParsingException extends RuntimeException {
 	}
 
 	private static String getExceptionMessage(
-			String id,
-			Serializable pk,
-			Class<?> compositePkClass) {
+		String id,
+		Serializable pk,
+		Class<?> compositePkClass) {
 		if (id != null) {
 			return "Composite pk deserialization failed (id=" + id + ", compositePkClass=" + compositePkClass + ")";
 		} else {

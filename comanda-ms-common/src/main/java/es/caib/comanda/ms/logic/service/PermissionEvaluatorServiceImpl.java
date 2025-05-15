@@ -13,7 +13,7 @@ import java.io.Serializable;
 
 /**
  * Implementació del servei d'avaluació de permisos.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -25,36 +25,36 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 
 	@Override
 	public boolean hasPermission(
-			Authentication authentication,
-			Object domainObject,
-			Object permission) {
+		Authentication authentication,
+		Object domainObject,
+		Object permission) {
 		log.debug("Comprovant permisos per a accedir a l'entitat (authentication={}, domainObject={}, permission={})",
-				authentication,
-				domainObject,
-				permission);
+			authentication,
+			domainObject,
+			permission);
 		return permissionHelper.checkResourcePermission(
-				authentication,
-				null,
-				domainObject.getClass().getName(),
-				toBasePermission(permission));
+			authentication,
+			null,
+			domainObject.getClass().getName(),
+			toBasePermission(permission));
 	}
 
 	@Override
 	public boolean hasPermission(
-			Authentication authentication,
-			Serializable targetId,
-			String targetType,
-			Object permission) {
+		Authentication authentication,
+		Serializable targetId,
+		String targetType,
+		Object permission) {
 		log.debug("Comprovant permisos per a accedir al recurs (authentication={}, targetId={}, targetType={}, permission={})",
-				authentication,
-				targetId,
-				targetType,
-				permission);
+			authentication,
+			targetId,
+			targetType,
+			permission);
 		return permissionHelper.checkResourcePermission(
-				authentication,
-				targetId,
-				targetType,
-				toBasePermission(permission));
+			authentication,
+			targetId,
+			targetType,
+			toBasePermission(permission));
 	}
 
 	private BasePermission toBasePermission(Object objectPermission) {
@@ -63,11 +63,15 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 			switch (restapiOperation) {
 				case GET_ONE:
 				case FIND:
+				case EXPORT:
 				case ARTIFACT:
 				case REPORT:
+				case FIELDDOWNLOAD:
 					return (BasePermission)BasePermission.READ;
 				case UPDATE:
 				case PATCH:
+				case ONCHANGE:
+				case OPTIONS:
 				case ACTION:
 					return (BasePermission)BasePermission.WRITE;
 				case CREATE:
