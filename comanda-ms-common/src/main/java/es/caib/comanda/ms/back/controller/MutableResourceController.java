@@ -3,17 +3,16 @@ package es.caib.comanda.ms.back.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
+import es.caib.comanda.ms.logic.intf.model.FieldOption;
 import es.caib.comanda.ms.logic.intf.model.OnChangeEvent;
 import es.caib.comanda.ms.logic.intf.model.Resource;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.Serializable;
 
@@ -151,6 +150,29 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 		final String fieldName,
 		final RID id,
 		final String[] perspectives);
+
+	/**
+	 * Consulta les opcions disponibles per a un camp de tipus enumerat.
+	 *
+	 * @param fieldName
+	 *            nom del camp del recurs.
+	 * @return la llista d'opcions disponibles.
+	 */
+	ResponseEntity<CollectionModel<EntityModel<FieldOption>>> fieldEnumOptionsFind(
+		final String fieldName);
+
+	/**
+	 * Consulta una de les opcions disponibles per a un camp de tipus enumerat.
+	 *
+	 * @param fieldName
+	 *            nom del camp del recurs.
+	 * @param value
+	 *            valor de l'enumerat a retornar.
+	 * @return l'opció demanada.
+	 */
+	ResponseEntity<EntityModel<FieldOption>> fieldEnumOptionsGetOne(
+		final String fieldName,
+		final String value);
 
 	/**
 	 * Execució d'una acció associada a un recurs.

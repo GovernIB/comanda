@@ -143,6 +143,8 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 *            el tipus de l'artefacte.
 	 * @param code
 	 *            el codi de l'artefacte.
+	 * @param id
+	 *            la clau primària del recurs sobre el que s'executa l'artefacte (pot ser null).
 	 * @param previous
 	 *            informació del recurs abans del canvi.
 	 * @param fieldName
@@ -163,10 +165,27 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	<P extends Serializable> Map<String, Object> artifactOnChange(
 		ResourceArtifactType type,
 		String code,
+		Serializable id,
 		P previous,
 		String fieldName,
 		Object fieldValue,
 		Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException;
+
+	/**
+	 * Consulta les opcions disponibles per a un camp de tipus enumerat d'un artefacte.
+	 *
+	 * @param type
+	 *            el tipus de l'artefacte.
+	 * @param code
+	 *            el codi de l'artefacte.
+	 * @param fieldName
+	 *            nom del camp del recurs.
+	 * @return la llista d'opcions disponibles.
+	 */
+	List<FieldOption> artifactFieldEnumOptions(
+		ResourceArtifactType type,
+		String code,
+		String fieldName);
 
 	/**
 	 * Genera les dades de l'informe.

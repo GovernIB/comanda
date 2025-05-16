@@ -158,7 +158,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 
 		@Override
-		public void onChange(Serializable previous, String fieldName, Object fieldValue, Map answers, String[] previousFieldNames, Serializable target) {
+		public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
 		}
 	}
 
@@ -224,7 +224,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 
 		@Override
-		public void onChange(SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
+		public void onChange(Serializable id, SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
 		}
 	}
 
@@ -279,7 +279,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 
 		@Override
-		public void onChange(SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
+		public void onChange(Serializable id, SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
 		}
 	}
 

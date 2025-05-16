@@ -219,8 +219,7 @@ const Monitors: React.FC = () => {
         <MuiGrid
             title={t('page.monitors.title')}
             toolbarAdditionalRow={
-                <> 
-                {/* <MonitorFilter></MonitorFilter> */}
+                <> <MonitorFilter></MonitorFilter>
                 <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
             }
             resourceName="monitor"

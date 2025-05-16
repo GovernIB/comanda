@@ -105,7 +105,9 @@ const UpdownGaugeChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
                 fill: theme.palette.error.main,
             },
         })}
-        text={({ value }) => `${(value ?? 0) * salutLastItems.length / 100} / ${salutLastItems.length}`} />;
+        text={({ value }) => salutLastItems?.length ?
+        `${(value ?? 0) * salutLastItems?.length / 100} / ${salutLastItems?.length}` :
+        `${(value ?? 0)} ` } />;
 }
 
 const ItemStateChip: React.FC<any> = (props: { up: boolean, date: string }) => {
@@ -209,8 +211,10 @@ const Salut: React.FC = () => {
                 <CircularProgress size={100} />
             </Box> : <Grid container spacing={2}>
                 <Grid size={3}>
-                    {dataLoaded && <UpdownGaugeChart
-                        salutLastItems={salutLastItems} />}
+                    {/* TODO Sense un height, el UpdownGaugeChart podia creixer infinitament cap avall. */}
+                    <Box sx={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {dataLoaded && <UpdownGaugeChart salutLastItems={salutLastItems} />}
+                    </Box>
                 </Grid>
                 <Grid size={9} style={{ height: '200px' }}>
                     {dataLoaded && <UpdownBarChart

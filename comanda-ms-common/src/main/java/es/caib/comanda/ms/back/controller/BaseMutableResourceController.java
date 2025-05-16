@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
@@ -206,6 +207,7 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		Object fieldValue = getOnChangeFieldValue(onChangeEvent, getResourceClass());
 		Map<String, AnswerRequiredException.AnswerValue> answers = getAnswersFromHeaderOrRequest(onChangeEvent.getAnswers());
 		Map<String, Object> processat = getMutableResourceService().onChange(
+			(ID)onChangeEvent.getId(),
 			previous,
 			onChangeEvent.getFieldName(),
 			fieldValue,
@@ -302,6 +304,60 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			null,
 			null,
 			singleResourceBaseSelfLink);
+	}
+
+	@Override
+	@GetMapping(value = "/fields/{fieldName}/enumOptions")
+	@Operation(summary = "Consulta les opcions disponibles per a emplenar un camp enumerat")
+	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
+	public ResponseEntity<CollectionModel<EntityModel<FieldOption>>> fieldEnumOptionsFind(
+		@PathVariable
+		@Parameter(description = "Nom del camp")
+		final String fieldName) {
+		log.debug("Consultant possibles valors pel camp enumerat (fieldName={})", fieldName);
+		List<FieldOption> fieldOptions = getMutableResourceService().fieldEnumOptions(fieldName);
+		Link selfLink = linkTo(methodOn(getClass()).fieldEnumOptionsFind(fieldName)).withSelfRel();
+		if (fieldOptions != null) {
+			return ResponseEntity.ok(
+				CollectionModel.of(
+					fieldOptions.stream().
+						map(fo -> EntityModel.of(
+							fo,
+							linkTo(methodOn(getClass()).fieldEnumOptionsGetOne(fieldName, fo.getValue())).withSelfRel())).
+						collect(Collectors.toList()),
+					selfLink));
+		} else {
+			return ResponseEntity.ok(CollectionModel.empty(selfLink));
+		}
+	}
+
+	@Override
+	@GetMapping(value = "/fields/{fieldName}/enumOptions/{value}")
+	@Operation(summary = "Consulta una de les opcions disponibles per a emplenar un camp enumerat")
+	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
+	public ResponseEntity<EntityModel<FieldOption>> fieldEnumOptionsGetOne(
+		@PathVariable
+		@Parameter(description = "Nom del camp")
+		final String fieldName,
+		@PathVariable
+		@Parameter(description = "Valor de l'opció")
+		final String value) {
+		log.debug("Consultant un únic valor pel camp enumerat (fieldName={}, value={})", fieldName, value);
+		List<FieldOption> fieldOptions = getMutableResourceService().fieldEnumOptions(fieldName);
+		FieldOption found = null;
+		if (fieldOptions != null) {
+			found = fieldOptions.stream().
+				filter(fo -> fo.getValue().equals(value)).
+				findFirst().orElse(null);
+		}
+		if (found != null) {
+			return ResponseEntity.ok(
+				EntityModel.of(
+					found,
+					linkTo(methodOn(getClass()).fieldEnumOptionsGetOne(fieldName, found.getValue())).withSelfRel()));
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
 
 	@Override

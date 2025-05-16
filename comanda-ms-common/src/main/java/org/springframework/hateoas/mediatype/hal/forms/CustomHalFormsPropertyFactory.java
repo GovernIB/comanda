@@ -18,6 +18,7 @@
 // S'ha afegit el mètode GET a ENTITY_ALTERING_METHODS per a que aquest mètode inclogui properties a la resposta
 package org.springframework.hateoas.mediatype.hal.forms;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.HalFormsUtil;
@@ -93,7 +94,14 @@ public class CustomHalFormsPropertyFactory {
 
 			Class<?> resolvedType = payload.getPropertyMetadata(metadata.getName()).get().getType().resolve();
 			if (resolvedType != null) {
-				if (boolean.class.isAssignableFrom(resolvedType) || Boolean.class.isAssignableFrom(resolvedType)) {
+				Field currentField = ReflectionUtils.findField(Objects.requireNonNull(payload.getType()), metadata.getName());
+				ResourceField resourceField = null;
+				if (currentField != null) {
+					resourceField = currentField.getAnnotation(ResourceField.class);
+				}
+				if (resourceField != null && resourceField.enumType()) {
+					inputType = "search";
+				} else if (boolean.class.isAssignableFrom(resolvedType) || Boolean.class.isAssignableFrom(resolvedType)) {
 					inputType = "checkbox";
 				} else if (Date.class.isAssignableFrom(resolvedType)) {
 					inputType = "datetime-local";
@@ -103,13 +111,10 @@ public class CustomHalFormsPropertyFactory {
 					inputType = "file";
 				} else if (ResourceReference.class.isAssignableFrom(resolvedType) || resolvedType.isEnum()) {
 					inputType = "search";
-				} else {
-					Field currentField = ReflectionUtils.findField(Objects.requireNonNull(payload.getType()), metadata.getName());
-					if (currentField != null && TypeUtil.isMultipleFieldType(currentField)) {
-						Class<?> multipleType = TypeUtil.getMultipleFieldType(currentField);
-						if (multipleType != null && (ResourceReference.class.isAssignableFrom(multipleType) || multipleType.isEnum())) {
-							inputType = "search";
-						}
+				} else if (currentField != null && TypeUtil.isMultipleFieldType(currentField)) {
+					Class<?> multipleType = TypeUtil.getMultipleFieldType(currentField);
+					if (multipleType != null && (ResourceReference.class.isAssignableFrom(multipleType) || multipleType.isEnum())) {
+						inputType = "search";
 					}
 				}
 			}
@@ -122,7 +127,6 @@ public class CustomHalFormsPropertyFactory {
 					metadata.getName(),
 					Size.class);
 				if (size != null && String.class.isAssignableFrom(resolvedType)) {
-					inputType = "text";
 					minValue = null;
 					maxValue = null;
 				}

@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -157,7 +158,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
 
         @Override
-        public void onChange(EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
+        public void onChange(Serializable id, EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
         }
     }
 
@@ -181,7 +182,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
 
         @Override
-        public void onChange(EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
+        public void onChange(Serializable id, EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
         }
     }
 

@@ -289,11 +289,14 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	public <P extends Serializable> Map<String, Object> artifactOnChange(
 		ResourceArtifactType type,
 		String code,
+		Serializable id,
 		P previous,
 		String fieldName,
 		Object fieldValue,
 		Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
-		log.debug("Processing onChange event (previous={}, fieldName={}, fieldValue={}, answers={})",
+		log.debug("Processing onChange event for artifact (type={}, code={}, previous={}, fieldName={}, fieldValue={}, answers={})",
+			type,
+			code,
 			previous,
 			fieldName,
 			fieldValue,
@@ -302,11 +305,13 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		if (artifact.getFormClass() != null) {
 			onChangeCheckIfFieldExists(artifact.getFormClass(), fieldName);
 			return onChangeProcessRecursiveLogic(
+				id,
 				previous,
 				fieldName,
 				fieldValue,
 				null,
-				(previous1,
+				(id2,
+				 previous1,
 				 fieldName1,
 				 fieldValue1,
 				 answers1,
@@ -314,6 +319,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				 target) -> internalArtifactOnChange(
 					type,
 					code,
+					id2,
 					previous1,
 					fieldName1,
 					fieldValue1,
@@ -329,12 +335,35 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	@Override
 	@Transactional(readOnly = true)
+	public List<FieldOption> artifactFieldEnumOptions(
+		ResourceArtifactType type,
+		String code,
+		String fieldName) {
+		log.debug("Querying field enum options for artifact (type={}, code={}, fieldName={})",
+			type,
+			code,
+			fieldName);
+		BaseMutableResourceService.FieldOptionsProvider fieldOptionsProvider = artifactGetFieldOptionsProvider(type, code);
+		if (fieldOptionsProvider != null) {
+			return fieldOptionsProvider.getOptions(fieldName);
+		} else {
+			log.warn("Couldn't find FieldOptionsProvider for artifact (resourceClass={}, type={}, code={}, fieldName={})",
+				getResourceClass(),
+				type,
+				code,
+				fieldName);
+			return null;
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public <P extends Serializable> List<?> artifactReportGenerateData(
 		ID id,
 		String code,
 		P params) throws ArtifactNotFoundException, ReportGenerationException {
 		log.debug("Generating report data (id={}, code={}, params={})", id, code, params);
-		ReportGenerator<E, P, ?> generator = (ReportGenerator<E, P, ?>) reportGeneratorMap.get(code);
+		ReportGenerator<E, P, ?> generator = (ReportGenerator<E, P, ?>)reportGeneratorMap.get(code);
 		if (generator != null) {
 			E entity = null;
 			if (id != null) {
@@ -600,6 +629,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected <P extends Serializable> Map<String, Object> onChangeProcessRecursiveLogic(
+		Serializable id,
 		P previous,
 		String fieldName,
 		Object fieldValue,
@@ -625,6 +655,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			P target = (P)factory.getProxy();
 			if (onChangeLogicProcessor != null) {
 				onChangeLogicProcessor.onChange(
+					id,
 					previous,
 					fieldName,
 					fieldValue,
@@ -653,6 +684,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 								previousFieldNamesWithChangedFieldName.add(fieldName);
 							}
 							Map<String, Object> changesPerField = onChangeProcessRecursiveLogic(
+								id,
 								(P)previousWithChanges,
 								changedFieldName,
 								changes.get(changedFieldName),
@@ -699,6 +731,18 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			}
 		});
 		return clonedResource;
+	}
+
+	protected BaseMutableResourceService.FieldOptionsProvider artifactGetFieldOptionsProvider(
+		ResourceArtifactType type,
+		String code) {
+		BaseMutableResourceService.FieldOptionsProvider fieldOptionsProvider = null;
+		if (type == ResourceArtifactType.REPORT) {
+			fieldOptionsProvider = reportGeneratorMap.get(code);
+		} else if (type == ResourceArtifactType.FILTER) {
+			fieldOptionsProvider = filterProcessorMap.get(code);
+		}
+		return fieldOptionsProvider;
 	}
 
 	protected <C> C newClassInstance(Class<C> clazz) {
@@ -773,6 +817,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected <P extends Serializable> void internalArtifactOnChange(
 		ResourceArtifactType type,
 		String code,
+		Serializable id,
 		P previous,
 		String fieldName,
 		Object fieldValue,
@@ -783,6 +828,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			ReportGenerator<E, P, ?> reportGenerator = (ReportGenerator<E, P, ?>) reportGeneratorMap.get(code);
 			if (reportGenerator != null) {
 				reportGenerator.onChange(
+					id,
 					previous,
 					fieldName,
 					fieldValue,
@@ -794,6 +840,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			FilterProcessor<P> filterProcessor = (FilterProcessor<P>)filterProcessorMap.get(code);
 			if (filterProcessor != null) {
 				filterProcessor.onChange(
+					id,
 					previous,
 					fieldName,
 					fieldValue,
@@ -1191,6 +1238,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		/**
 		 * Processa la lògica onChange d'un camp.
 		 *
+		 * @param id
+		 *            clau primària del recurs.
 		 * @param previous
 		 *            el recurs amb els valors previs a la modificació.
 		 * @param fieldName
@@ -1205,6 +1254,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 *            el recurs emmagatzemat a base de dades.
 		 */
 		void onChange(
+			Serializable id,
 			R previous,
 			String fieldName,
 			Object fieldValue,
@@ -1220,7 +1270,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	 * @param <P> classe dels paràmetres necessaris per a generar l'informe.
 	 * @param <R> classe de la llista de dades retornades al generar l'informe.
 	 */
-	public interface ReportGenerator<E extends ResourceEntity<?, ?>, P extends Serializable, R extends Serializable> extends BaseMutableResourceService.OnChangeLogicProcessor<P> {
+	public interface ReportGenerator<E extends ResourceEntity<?, ?>, P extends Serializable, R extends Serializable>
+		extends BaseMutableResourceService.OnChangeLogicProcessor<P>, BaseMutableResourceService.FieldOptionsProvider {
 		/**
 		 * Genera les dades per l'informe.
 		 *
@@ -1271,6 +1322,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		default URL getJasperReportUrl(String code, ReportFileType fileType) {
 			return null;
 		}
+		@Override
+		default List<FieldOption> getOptions(String fieldName) {
+			return new ArrayList<>();
+		}
 	}
 
 	/**
@@ -1278,7 +1333,12 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	 *
 	 * @param <R> classe del recurs que representa el filtre.
 	 */
-	public interface FilterProcessor<R extends Serializable> extends BaseMutableResourceService.OnChangeLogicProcessor<R> {
+	public interface FilterProcessor<R extends Serializable>
+		extends BaseMutableResourceService.OnChangeLogicProcessor<R>, BaseMutableResourceService.FieldOptionsProvider {
+		@Override
+		default List<FieldOption> getOptions(String fieldName) {
+			return new ArrayList<>();
+		}
 	}
 
 	/**

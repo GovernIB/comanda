@@ -3,10 +3,7 @@ package es.caib.comanda.ms.logic.service;
 import es.caib.comanda.ms.logic.helper.ResourceReferenceToEntityHelper;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.exception.*;
-import es.caib.comanda.ms.logic.intf.model.FileReference;
-import es.caib.comanda.ms.logic.intf.model.Resource;
-import es.caib.comanda.ms.logic.intf.model.ResourceArtifact;
-import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.*;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;
 import es.caib.comanda.ms.persist.entity.ReorderableEntity;
@@ -43,6 +40,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	private final Map<String, ActionExecutor<E, ?, ?>> actionExecutorMap = new HashMap<>();
 	private final Map<String, OnChangeLogicProcessor<R>> onChangeLogicProcessorMap = new HashMap<>();
 	private final Map<String, FieldFileManager<E>> fieldFileManagerMap = new HashMap<>();
+	private final Map<String, FieldOptionsProvider> fieldOptionsProviderMap = new HashMap<>();
 
 	@Override
 	public R newResourceInstance() {
@@ -144,17 +142,20 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Object> onChange(
+		ID id,
 		R previous,
 		String fieldName,
 		Object fieldValue,
 		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException {
-		log.debug("Processing onChange event (previous={}, fieldName={}, fieldValue={}, answers={})",
+		log.debug("Processing onChange event (id={}, previous={}, fieldName={}, fieldValue={}, answers={})",
+			id,
 			previous,
 			fieldName,
 			fieldValue,
 			answers);
 		onChangeCheckIfFieldExists(getResourceClass(), fieldName);
 		return onChangeProcessRecursiveLogic(
+			id,
 			previous,
 			fieldName,
 			fieldValue,
@@ -179,6 +180,19 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			return executor.exec(code, entity, params);
 		} else {
 			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.ACTION, code);
+		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<FieldOption> fieldEnumOptions(String fieldName) {
+		log.debug("Querying field enum options (fieldName={})", fieldName);
+		FieldOptionsProvider fieldOptionsProvider = fieldOptionsProviderMap.get(fieldName);
+		if (fieldOptionsProvider != null) {
+			return fieldOptionsProvider.getOptions(fieldName);
+		} else {
+			log.warn("Couldn't find FieldOptionsProvider (resourceClass={}, fieldName={})", getResourceClass(), fieldName);
+			return null;
 		}
 	}
 
@@ -247,6 +261,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 
 	@Override
 	public void onChange(
+		Serializable id,
 		R previous,
 		String fieldName,
 		Object fieldValue,
@@ -255,6 +270,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		R target) {
 		if (onChangeLogicProcessorMap.get(fieldName) != null) {
 			onChangeLogicProcessorMap.get(fieldName).onChange(
+				id,
 				previous,
 				fieldName,
 				fieldValue,
@@ -268,6 +284,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	protected <P extends Serializable> void internalArtifactOnChange(
 		ResourceArtifactType type,
 		String code,
+		Serializable id,
 		P previous,
 		String fieldName,
 		Object fieldValue,
@@ -277,6 +294,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		super.internalArtifactOnChange(
 			type,
 			code,
+			id,
 			previous,
 			fieldName,
 			fieldValue,
@@ -287,6 +305,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			ActionExecutor<E, P, ?> actionExecutor = (ActionExecutor<E, P, ?>)actionExecutorMap.get(code);
 			if (actionExecutor != null) {
 				actionExecutor.onChange(
+					id,
 					previous,
 					fieldName,
 					fieldValue,
@@ -295,6 +314,19 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 					target);
 			}
 		}
+	}
+
+	@Override
+	protected BaseMutableResourceService.FieldOptionsProvider artifactGetFieldOptionsProvider(
+		ResourceArtifactType type,
+		String code) {
+		BaseMutableResourceService.FieldOptionsProvider fieldOptionsProvider = null;
+		if (type == ResourceArtifactType.ACTION) {
+			fieldOptionsProvider = actionExecutorMap.get(code);
+		} else {
+			fieldOptionsProvider = super.artifactGetFieldOptionsProvider(type, code);
+		}
+		return fieldOptionsProvider;
 	}
 
 	protected ID buildPkChechingIfEntityAlreadyExists(R resource) {
@@ -458,6 +490,12 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		fieldFileManagerMap.put(fieldName, fieldFileManager);
 	}
 
+	protected void register(
+		String fieldName,
+		FieldOptionsProvider fieldOptionsProvider) {
+		fieldOptionsProviderMap.put(fieldName, fieldOptionsProvider);
+	}
+
 	private E saveFlushAndRefresh(E entity) {
 		E saved = entityRepository.saveAndFlush(entity);
 		entityRepository.refresh(saved);
@@ -548,7 +586,8 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	 * @param <P> classe dels paràmetres necessaris per a executar l'acció.
 	 * @param <R> classe de la resposta retornada com a resultat.
 	 */
-	public interface ActionExecutor<E extends ResourceEntity<?, ?>, P extends Serializable, R extends Serializable> extends OnChangeLogicProcessor<P> {
+	public interface ActionExecutor<E extends ResourceEntity<?, ?>, P extends Serializable, R extends Serializable>
+		extends OnChangeLogicProcessor<P>, FieldOptionsProvider {
 		/**
 		 * Executa l'acció.
 		 *
@@ -564,6 +603,17 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		 *             si es produeix algun error generant les dades.
 		 */
 		R exec(String code, E entity, P params) throws ActionExecutionException;
+		@Override
+		default List<FieldOption> getOptions(String fieldName) {
+			return new ArrayList<>();
+		}
+	}
+
+	/**
+	 * Interfície a implementar per a retornar les opcions de camps enumerats.
+	 */
+	public interface FieldOptionsProvider {
+		List<FieldOption> getOptions(String fieldName);
 	}
 
 }
