@@ -8,29 +8,28 @@ import {
     useGridSelector,
     gridPageSelector,
     gridPageSizeSelector,
-    gridPaginationRowRangeSelector,
     selectedGridRowsCountSelector,
     GridRowSelectionModel,
 } from '@mui/x-data-grid';
 import Pagination from '@mui/material/Pagination';
 import { useBaseAppContext } from '../../BaseAppContext';
 
-type GridFooterSelectionProps = {
+type DataGridFooterSelectionProps = {
     setRowSelectionModel: (rowSelectionModel: GridRowSelectionModel) => void;
 };
 
-type GridFooterPaginationProps = {
+type DataGridFooterPaginationProps = {
     pageInfo: any;
 };
 
-type GridFooterProps = {
+type DataGridFooterProps = {
     selectionActive: boolean;
     paginationActive: boolean;
     pageInfo: any;
     setRowSelectionModel: (rowSelectionModel: GridRowSelectionModel) => void;
 };
 
-const GridFooterSelection: React.FC<GridFooterSelectionProps> = (props) => {
+const DataGridFooterSelection: React.FC<DataGridFooterSelectionProps> = (props) => {
     const { setRowSelectionModel } = props;
     const { t } = useBaseAppContext();
     const apiRef = useGridApiContext();
@@ -47,18 +46,24 @@ const GridFooterSelection: React.FC<GridFooterSelectionProps> = (props) => {
     </Box>;
 }
 
-const GridFooterPagination: React.FC<GridFooterPaginationProps> = (props) => {
+const GridFooterPagination: React.FC<DataGridFooterPaginationProps> = (props) => {
     const { pageInfo } = props;
+    const { t } = useBaseAppContext();
     const apiRef = useGridApiContext();
     const page = useGridSelector(apiRef, gridPageSelector);
     const pageSize = useGridSelector(apiRef, gridPageSizeSelector);
     const pageCount = pageInfo?.totalElements && pageSize ? Math.ceil(pageInfo.totalElements / pageSize) : undefined;
-    const firstElementIndex = page * pageSize + 1;
-    const rowRange = useGridSelector(apiRef, gridPaginationRowRangeSelector);
+	const pageRowCount = pageInfo?.totalElements <= pageSize 
+	    ? pageInfo?.totalElements 
+	    : page === (pageCount ?? 0) - 1 
+	        ? pageInfo?.totalElements % pageSize || pageSize 
+	        : pageSize;
+	const firstElementIndex = page * pageSize + 1;
+	const lastElement = Math.min(firstElementIndex + pageRowCount - 1, pageInfo?.totalElements);
     const boxStyle = { display: 'flex', justifContent: 'flex-end', alignItems: 'center' };
     return <Box style={boxStyle}>
         <Box>
-            {pageInfo && rowRange ? ((firstElementIndex + ' a ' + (firstElementIndex + rowRange.lastRowIndex)) + ' de ' + pageInfo.totalElements) : ''}
+            {pageInfo != null ? t('grid.pageInfo', { from: firstElementIndex, to: lastElement, count: pageInfo.totalElements }) : ''}
         </Box>
         <Pagination
             color="primary"
@@ -68,7 +73,7 @@ const GridFooterPagination: React.FC<GridFooterPaginationProps> = (props) => {
     </Box>;
 }
 
-const GridFooter: React.FC<GridFooterProps> = (props) => {
+const DataGridFooter: React.FC<DataGridFooterProps> = (props) => {
     const {
         selectionActive,
         setRowSelectionModel,
@@ -77,9 +82,9 @@ const GridFooter: React.FC<GridFooterProps> = (props) => {
     } = props;
     const showFooter = selectionActive || paginationActive;
     return showFooter ? <GridFooterContainer>
-        <GridFooterSelection setRowSelectionModel={setRowSelectionModel} />
+        <DataGridFooterSelection setRowSelectionModel={setRowSelectionModel} />
         {paginationActive && <GridFooterPagination pageInfo={pageInfo} />}
     </GridFooterContainer> : null;
 }
 
-export default GridFooter;
+export default DataGridFooter;

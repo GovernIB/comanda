@@ -14,9 +14,9 @@ const componentsEn = {
             message: 'Server connection lost',
         }
     },
-    grid: {
-        refresh: {
-            title: 'Refresh',
+    datacommon: {
+        details: {
+            title: 'Details',
         },
         create: {
             title: 'Create',
@@ -27,12 +27,31 @@ const componentsEn = {
         delete: {
             title: 'Delete',
             single: {
-                title: 'Delete item',
+                title: 'Confirmation',
                 confirm: 'Are you sure you want to delete this item (this action can\'t be undone)?',
                 success: 'Deleted items',
                 error: 'Error deleting items',
             },
         },
+        export: {
+            title: 'Export',
+        },
+        refresh: {
+            title: 'Refresh',
+        },
+        toolbar: {
+            error: 'An error has occurred',
+        },
+        findDisabled: 'Without searching',
+        noRows: 'No data',
+        error: 'Error',
+    },
+    grid: {
+        selection: {
+            one: '1 selected row ',
+            multiple: '{{count}} selected rows',
+        },
+        pageInfo: '{{from}} to {{to}} of {{count}}',
     },
     form: {
         goBack: {
@@ -59,6 +78,45 @@ const componentsEn = {
             success: 'Element deleted',
             error: 'Error deleting element',
         },
+        field: {
+            reference: {
+                open: 'Open',
+                close: 'Close',
+                clear: 'Clear',
+                loading: 'Loading...',
+                noOptions: 'No options',
+                page: 'Showing {{size}} out of {{totalElements}} elements',
+                advanced: {
+                    title: 'Select value'
+                }
+            },
+            checkboxSelect: {
+                true: 'Yes',
+                false: 'No',
+            },
+        },
+        dialog: {
+            create: 'Create',
+            update: 'Update',
+        },
+        validate: {
+            error: 'Validation error',
+        },
+        submission: {
+            defaulterror: 'Error'
+        },
+    },
+    actionreport: {
+        action: {
+            confirm: {
+                title: 'Confirmation',
+                message: 'Are you sure you want to execute the action {{action}}?'
+            },
+            error: 'Error executing action'
+        },
+        report: {
+            error: 'Error generating report'
+        }
     },
     buttons: {
         answerRequired: {
@@ -81,10 +139,8 @@ const componentsEn = {
             generate: 'Generate',
             cancel: 'Cancel',
         },
-        close: {
-            close: 'Close'
-        },
         misc: {
+            close: 'Close',
             retry: 'Retry',
         },
     },

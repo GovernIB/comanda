@@ -20,7 +20,7 @@ import Button from '@mui/material/Button';
 import { LineChart } from '@mui/x-charts/LineChart';
 import {
     BasePage,
-    useContentDialog,
+    useMuiContentDialog,
     useResourceApiService,
     dateFormatLocale,
 } from 'reactlib';
@@ -294,7 +294,7 @@ const SalutAppInfo: React.FC = () => {
         }}>
         <CircularProgress size={100} />
     </Box> : null;
-    const [detailsDialogShow, detailsDialogComponent] = useContentDialog();
+    const [detailsDialogShow, detailsDialogComponent] = useMuiContentDialog();
     const detailsComponent = <Grid container spacing={2}>
         <Grid size={6}>
             <AppInfo

@@ -10,11 +10,22 @@ import Menu, { MenuEntry } from './Menu';
 import OfflineMessage from './OfflineMessage';
 import { useToolbarMenuIcon } from './ToolbarMenuIcon';
 import { FormFieldCheckbox } from './form/FormFieldCheckbox';
+import { FormFieldCheckboxSelect } from './form/FormFieldCheckboxSelect';
+import { FormFieldColor } from './form/FormFieldColor';
+import { FormFieldDate } from './form/FormFieldDate';
+import { FormFieldDateTimeLocal } from './form/FormFieldDateTimeLocal';
+import { FormFieldDuration } from './form/FormFieldDuration';
+import { FormFieldEnum } from './form/FormFieldEnum';
 import { FormFieldNumber } from './form/FormFieldNumber';
+import { FormFieldReference } from './form/FormFieldReference';
 import { FormFieldText } from './form/FormFieldText';
+import { FormFieldTime } from './form/FormFieldTime';
+import { FormFieldRange } from './form/FormFieldRange';
+import { FormFieldFile } from './form/FormFieldFile';
 
 export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
-    title: string;
+    title?: string | React.ReactElement;
+    footer?: React.ReactElement;
     version?: string;
     logo?: string;
     logoStyle?: any;
@@ -28,20 +39,54 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     appbarStyle?: any;
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
+    objectesSyncSessio?: any;
 };
 
 const baseFormFieldComponents = [{
     type: 'checkbox',
     component: FormFieldCheckbox,
 }, {
+    type: 'checkbox-select',
+    component: FormFieldCheckboxSelect,
+}, {
+    type: 'color',
+    component: FormFieldColor,
+}, {
+    type: 'date',
+    component: FormFieldDate,
+}, {
+    type: 'datetime-local',
+    component: FormFieldDateTimeLocal,
+}, {
+    type: 'decimal',
+    component: FormFieldNumber,
+}, {
+    type: 'duration',
+    component: FormFieldDuration,
+}, {
+    type: 'enum',
+    component: FormFieldEnum,
+}, {
     type: 'number',
     component: FormFieldNumber,
+}, {
+    type: 'reference',
+    component: FormFieldReference,
 }, {
     type: 'text',
     component: FormFieldText,
 }, {
     type: 'textarea',
     component: FormFieldText,
+}, {
+    type: 'time',
+    component: FormFieldTime,
+}, {
+    type: 'range',
+    component: FormFieldRange,
+}, {
+    type: 'file',
+    component: FormFieldFile,
 }];
 
 const MuiComponentsConfigurer: React.FC = () => {
@@ -101,6 +146,7 @@ const useMenu = (
 export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
     const {
         title,
+        footer,
         version,
         logo,
         logoStyle,
@@ -116,6 +162,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         additionalHeaderComponents,
         additionalAuthComponents,
         children,
+        objectesSyncSessio,
         ...otherProps
     } = props;
     const mergedFormFieldComponents = [...baseFormFieldComponents, ...(formFieldComponents ?? [])];
@@ -132,6 +179,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         version={version}
         logo={logo}
         logoStyle={logoStyle}
+        objectesSyncSessio={objectesSyncSessio}
         menuButton={!menuShrinkDisabled && menuEntries != null ? menuButton : undefined}
         additionalToolbarComponents={additionalHeaderComponents}
         additionalAuthComponents={additionalAuthComponents}
@@ -144,13 +192,12 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         {...otherProps}
         contentComponentSlots={{
             appbar: appbarComponent,
+            footer,
             menu: menuComponent,
             offline: offlineComponent,
         }}>
-        <>
-            <MuiComponentsConfigurer />
-            {children}
-        </>
+        <MuiComponentsConfigurer />
+        {children}
     </BaseApp>;
 }
 

@@ -1,13 +1,18 @@
 import React from 'react';
+import { ResourceType } from '../ResourceApiContext';
+import { ResourceApiError } from '../ResourceApiProvider';
 
 export type FormApi = {
+    getId: () => any;
     getData: () => any;
     refresh: () => void;
     reset: (data?: any, id?: any) => void;
     revert: (unconfirmed?: boolean) => void;
+    validate: () => void;
     save: () => Promise<any>;
     delete: () => void;
     setFieldValue: (name: string, value: any) => void;
+    handleSubmissionErrors: (error: ResourceApiError, temporalMessageTitle?: string) => void;
 };
 
 export type FormApiRef = React.MutableRefObject<FormApi | undefined>;
@@ -29,12 +34,10 @@ export type FormFieldDataAction = {
     payload: FormFieldDataActionPayload;
 };
 
-export type FormResourceType = 'action' | 'report' | 'filter';
-
 export type FormContextType = {
     id?: any;
     resourceName: string;
-    resourceType?: FormResourceType;
+    resourceType?: ResourceType;
     resourceTypeCode?: string;
     isLoading: boolean;
     isReady: boolean;

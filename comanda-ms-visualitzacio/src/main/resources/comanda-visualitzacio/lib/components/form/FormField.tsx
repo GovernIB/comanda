@@ -1,7 +1,7 @@
 import React from 'react';
-//import { useWhatChanged } from '@simbathesailor/use-what-changed';
 import { useBaseAppContext } from '../BaseAppContext';
 import useLogConsole from '../../util/useLogConsole';
+import { processType } from '../../util/fields';
 import {
     useFormContext,
     FormFieldDataActionType,
@@ -51,6 +51,16 @@ export type FormFieldCustomProps = FormFieldCommonProps & {
     onChange: (value: any) => void;
 };
 
+const useFormFieldComponent = (type?: string, field?: any, fieldTypeMap?: Map<string, string>) => {
+    const { getFormFieldComponent } = useBaseAppContext();
+    const fieldType = field?.type ? (fieldTypeMap?.get(field?.type) ?? field?.type) : field?.type;
+    const processedType = processType(field, type ?? fieldType);
+    return {
+        type: processedType,
+        FormFieldComponent: getFormFieldComponent(processedType),
+    };
+}
+
 const FormFieldRenderer: React.FC<FormFieldRendererProps> = (props) => {
     const {
         name,
@@ -69,34 +79,18 @@ const FormFieldRenderer: React.FC<FormFieldRendererProps> = (props) => {
         debug,
         ...otherProps
     } = props;
-    /*useWhatChanged([
-        name,
-        labelProp,
-        value,
-        field,
-        fieldError,
-        fieldTypeMap,
-        inline,
-        required,
-        disabled,
-        readOnly,
-        onFieldValueChange,
-        componentProps,
-        type,
-        debug,
-        otherProps]);*/
-    const { getFormFieldComponent } = useBaseAppContext();
     const logConsole = useLogConsole(LOG_PREFIX);
     const label = labelProp ?? field?.label ?? name;
     debug && logConsole.debug('Field', name, 'rendered', (value ? 'with value: ' + value : 'empty'));
-    const fieldType = type ?? field?.type;
-    const mappedFieldType = fieldTypeMap?.get(fieldType) ?? fieldType;
-    const FormFieldComponent: React.FC<FormFieldCustomProps> | undefined = field ? getFormFieldComponent(mappedFieldType) : undefined;
+    const {
+        type: formFieldType,
+        FormFieldComponent,
+    } = useFormFieldComponent(type, field, fieldTypeMap);
     return FormFieldComponent ? <FormFieldComponent
         name={name}
         label={label}
         value={value}
-        type={fieldType}
+        type={formFieldType}
         field={field}
         fieldError={fieldError}
         inline={inline}
@@ -122,8 +116,6 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         debug,
         ...otherProps
     } = props;
-    const [field, setField] = React.useState<any>();
-    const [fieldError, setFieldError] = React.useState<FormFieldError | undefined>();
     const {
         isReady: isFormReady,
         isSaveActionPresent,
@@ -136,20 +128,20 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         commonFieldComponentProps,
     } = useFormContext();
     const filterContext = useOptionalFilterContext();
-    React.useEffect(() => {
+    const field = React.useMemo(() => {
         if (fields) {
             const field = fields.find(f => f.name === name);
-            setField(field ?? null);
+            return field ?? null;
         }
-    }, [fields]);
-    React.useEffect(() => {
+    }, [fields, name]);
+    const fieldError = React.useMemo(() => {
         if (fieldErrors) {
             const fieldError = fieldErrors.find(e => e.field === name);
-            setFieldError(fieldError ?? undefined);
+            return fieldError ?? undefined;
         } else {
-            setFieldError(undefined);
+            return undefined;
         }
-    }, [fieldErrors]);
+    }, [fieldErrors, name]);
     const isReady = isFormReady && field !== undefined;
     const value = dataGetFieldValue(name);
     const handleFieldValueChange = React.useCallback((value: any) => {

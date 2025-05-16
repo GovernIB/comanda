@@ -10,7 +10,7 @@ import {
     MuiForm,
     FormField,
     dateFormatLocale,
-    useContentDialog,
+    useMuiContentDialog,
     useFilterApiRef,
     springFilterBuilder as builder,
 } from 'reactlib';
@@ -202,7 +202,7 @@ const MonitorFilter: React.FC<any> = () => {
 
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
-    const [detailDialogShow, detailDialogComponent] = useContentDialog();
+    const [detailDialogShow, detailDialogComponent] = useMuiContentDialog();
     const showDetail = (data: any) => {
         detailDialogShow(
             t('page.monitors.detail.title'),

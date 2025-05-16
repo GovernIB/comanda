@@ -14,9 +14,9 @@ const componentsCa = {
             message: 'Sense connexió amb el servidor',
         }
     },
-    grid: {
-        refresh: {
-            title: 'Refrescar',
+    datacommon: {
+        details: {
+            title: 'Detalls',
         },
         create: {
             title: 'Crear',
@@ -27,16 +27,31 @@ const componentsCa = {
         delete: {
             title: 'Esborrar',
             single: {
-                title: 'Esborrar element',
+                title: 'Confirmació',
                 confirm: 'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
                 success: 'Element esborrat',
                 error: 'Error esborrant element',
             },
         },
-        error: {
-            toolbar: 'S\'ha produit un error',
+        export: {
+            title: 'Exportar',
         },
+        refresh: {
+            title: 'Refrescar',
+        },
+        toolbar: {
+            error: 'S\'ha produit un error',
+        },
+        findDisabled: 'Sense consultar',
         noRows: 'Sense dades',
+        error: 'Error',
+    },
+    grid: {
+        selection: {
+            one: '1 fila seleccionada',
+            multiple: '{{count}} files seleccionades',
+        },
+        pageInfo: '{{from}} a {{to}} de {{count}}',
     },
     form: {
         goBack: {
@@ -63,6 +78,45 @@ const componentsCa = {
             success: 'Element esborrat',
             error: 'Error esborrant element',
         },
+        field: {
+            reference: {
+                open: 'Obrir',
+                close: 'Tancar',
+                clear: 'Esborrar',
+                loading: 'Carregant...',
+                noOptions: 'Sense opcions',
+                page: 'Mostrant {{size}} de {{totalElements}} elements',
+                advanced: {
+                    title: 'Seleccionar valor'
+                }
+            },
+            checkboxSelect: {
+                true: 'Si',
+                false: 'No',
+            },
+        },
+        dialog: {
+            create: 'Crear',
+            update: 'Modificar',
+        },
+        validate: {
+            error: 'Error de validació',
+        },
+        submission: {
+            defaulterror: 'Error'
+        },
+    },
+    actionreport: {
+        action: {
+            confirm: {
+                title: 'Confirmació',
+                message: 'Estau segur que voleu executar l\'acció {{action}}?'
+            },
+            error: 'Error executant l\'acció'
+        },
+        report: {
+            error: 'Error generant l\'informe'
+        }
     },
     buttons: {
         answerRequired: {
@@ -85,10 +139,8 @@ const componentsCa = {
             generate: 'Generar',
             cancel: 'Cancel·lar',
         },
-        close: {
-            close: 'Tancar'
-        },
         misc: {
+            close: 'Tancar',
             retry: 'Tornar a provar',
         },
     }

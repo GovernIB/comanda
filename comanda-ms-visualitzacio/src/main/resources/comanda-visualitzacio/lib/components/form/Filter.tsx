@@ -15,6 +15,7 @@ export type FilterProps = React.PropsWithChildren & {
     apiRef?: FilterApiRef;
     formApiRef?: FormApiRef;
     springFilterBuilder: (data: any) => string | undefined;
+    initialData?: any;
     additionalData?: any;
     initOnChangeRequest?: boolean;
     commonFieldComponentProps?: any;
@@ -39,6 +40,8 @@ export const Filter: React.FC<FilterProps> = (props) => {
         code,
         buttonControlled,
         springFilterBuilder,
+        initialData,
+        additionalData,
         onDataChange,
         onSpringFilterChange,
         apiRef: apiRefProp,
@@ -53,21 +56,24 @@ export const Filter: React.FC<FilterProps> = (props) => {
         formApiRefProp.current = formApiRef.current;
     }
     const filter = (data?: any) => {
-        const formData = data ?? formApiRef.current?.getData();
-        const springFilter = springFilterBuilder(formData);
-        onSpringFilterChange?.(springFilter);
-        onDataChange?.(formData);
+        formApiRef.current.validate().
+            then(() => {
+                const formData = data ?? formApiRef.current?.getData();
+                const springFilter = springFilterBuilder(formData);
+                onSpringFilterChange?.(springFilter);
+            });
     }
-    const clear = () => {
+    const clear = (data?: any) => {
         setNextDataChangeAsUncontrolled(true);
-        formApiRef.current?.revert(true);
+        formApiRef.current?.reset(data);
     }
     const handleDataChange = (data: any) => {
+        onDataChange?.(data);
         if (nextDataChangeAsUncontrolled) {
             setNextDataChangeAsUncontrolled(false);
             filter(data);
-        } else {
-            !buttonControlled && filter(data);
+        } else if (!buttonControlled) {
+            filter(data);
         }
     }
     const fieldTypeMap = new Map<string, string>([
@@ -94,8 +100,10 @@ export const Filter: React.FC<FilterProps> = (props) => {
     return <FilterContext.Provider value={context}>
         <Form
             resourceName={resourceName}
-            resourceType='filter'
+            resourceType='FILTER'
             resourceTypeCode={code}
+            initialData={initialData}
+            additionalData={additionalData}
             onDataChange={handleDataChange}
             fieldTypeMap={fieldTypeMap}
             apiRef={formApiRef}

@@ -1,10 +1,7 @@
 import React from 'react';
-import MuiDialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
+import {Dialog as MuiDialog, IconButton, DialogTitle, DialogContent, DialogContentText, Icon} from '@mui/material';
 import { DialogButton, ContentDialogShowFn, MessageDialogShowFn } from '../BaseAppContext';
-import { useCloseDialogButtons, useMessageDialogButtons } from '../AppButtons';
+import { useMessageDialogButtons, useConfirmDialogButtons } from '../AppButtons';
 import DialogButtons from './DialogButtons';
 
 export type DialogProps = React.PropsWithChildren & {
@@ -14,13 +11,14 @@ export type DialogProps = React.PropsWithChildren & {
     buttons?: DialogButton[];
     buttonCallback?: (value: any) => void;
     componentProps?: any;
+    ref?: React.RefObject<HTMLDivElement | null>;
 };
 
 export const useContentDialog: ((
     dialogButtons?: DialogButton[],
     validateFn?: (value?: any) => Promise<boolean>,
-    resolveValueFn?: (value?: any) => any) => [ContentDialogShowFn, React.ReactElement]) = (dialogButtons, validateFn, resolveValueFn) => {
-    const defaultDialogButtons = useCloseDialogButtons();
+    resolveValueFn?: (value?: any) => any) => [ContentDialogShowFn, React.ReactElement, React.RefObject<HTMLDivElement | null>]) = (dialogButtons, validateFn, resolveValueFn) => {
+    const defaultDialogButtons = useConfirmDialogButtons();
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string | null>();
     const [content, setContent] = React.useState<React.ReactElement>();
@@ -28,6 +26,7 @@ export const useContentDialog: ((
     const [dialogProps, setDialogProps] = React.useState<any>();
     const [resolveFn, setResolveFn] = React.useState<(value: any) => void>();
     const [rejectFn, setRejectFn] = React.useState<(value: any) => void>();
+    const dialogRef = React.useRef<HTMLDivElement | null>(null);
     const showDialog: ContentDialogShowFn = (
         title: string | null,
         content: React.ReactElement,
@@ -74,8 +73,9 @@ export const useContentDialog: ((
         closeCallback={closeCallback}
         title={title}
         buttons={buttons}
-        componentProps={dialogProps}>{content}</Dialog>;
-    return [showDialog, dialogComponent];
+        componentProps={dialogProps}
+        ref={dialogRef}>{content}</Dialog>;
+    return [showDialog, dialogComponent, dialogRef];
 }
 
 export const useMessageDialog: (() => [MessageDialogShowFn, React.ReactElement]) = () => {
@@ -83,7 +83,7 @@ export const useMessageDialog: (() => [MessageDialogShowFn, React.ReactElement])
     const [showContentDialog, dialogComponent] = useContentDialog(dialogButtons);
     const showDialog: MessageDialogShowFn = (
         title: string | null,
-        message: string,
+        message: string | React.ReactElement,
         dialogButtons?: DialogButton[],
         componentProps?: any) => {
         const content = message ? <DialogContentText>{message}</DialogContentText> : <></>;
@@ -100,15 +100,30 @@ export const Dialog: React.FC<DialogProps> = (props) => {
         title,
         buttons,
         componentProps,
+        ref,
         children,
     } = props;
+
+    const closeSiNoClickFora = (_event: React.MouseEvent, reason?: string) => {
+        if (reason === "backdropClick") return; // Evita cerrar por clic en fondo
+        closeCallback();
+    };
+
     return <MuiDialog
         open={open}
-        onClose={() => closeCallback()}
+        onClose={closeSiNoClickFora}
+        ref={ref}
         {...componentProps}>
-        {title && <DialogTitle>{title}</DialogTitle>}
+        {<DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#f5f5f5", borderBottom: "1px solid #e3e3e3", padding: "5px 24px" }}>
+            <span>{title?title:""}</span>
+            <IconButton onClick={() => closeCallback()} aria-label="close">
+                <Icon>close</Icon>
+            </IconButton>
+        </DialogTitle>}
         <DialogContent>{children}</DialogContent>
-        {buttons && <DialogButtons buttons={buttons} handleClose={(value: any) => buttonCallback?.(value)} />}
+        {buttons && <DialogButtons
+            buttons={buttons}
+            handleClose={(value: any) => buttonCallback?.(value)} />}
     </MuiDialog>;
 }
 

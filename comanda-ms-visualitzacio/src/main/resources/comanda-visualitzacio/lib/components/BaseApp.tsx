@@ -8,6 +8,7 @@ import { ResourceApiFormFieldDefault } from './form/FormFieldDefault';
 import {
     BaseAppContext,
     MessageDialogShowFn,
+    DialogButton,
     TemporalMessageShowFn,
     TemporalMessageSeverity,
     RouterNavigateFunction,
@@ -25,6 +26,7 @@ type I18nAddResourceBundleCallback = (lang: string, ns: string, bundle: any) => 
 
 type ContentComponentSlots = {
     appbar: React.ReactElement;
+    footer?: React.ReactElement;
     menu?: React.ReactElement;
     offline: React.ReactElement;
 };
@@ -53,19 +55,24 @@ export type BaseAppContentComponentProps = React.PropsWithChildren & {
     marginsDisabled: boolean;
     contentExpandsToAvailableHeight: boolean;
     appbarComponent?: React.ReactElement;
+    footerComponent?: React.ReactElement;
     menuComponent?: React.ReactElement;
     offlineComponent?: React.ReactElement;
     legacyMargins?: boolean;
 };
 
 const useDialog = () => {
-    const dialogShowFn = React.useRef<MessageDialogShowFn>();
+    const dialogShowFn = React.useRef<MessageDialogShowFn>(undefined);
     const setMessageDialogShow = (fn: MessageDialogShowFn) => {
         dialogShowFn.current = fn;
     }
-    const messageDialogShow: MessageDialogShowFn = (title: string | null, message: string, componentProps?: any) => {
+    const messageDialogShow: MessageDialogShowFn = (
+        title: string | null,
+        message: string | React.ReactElement,
+        dialogButtons?: DialogButton[],
+        componentProps?: any) => {
         if (dialogShowFn.current) {
-            return dialogShowFn.current(title, message, componentProps);
+            return dialogShowFn.current(title, message, dialogButtons, componentProps);
         } else {
             console.warn('Dialog component not configured in BaseApp');
             return new Promise((_resolve, reject) => reject());
@@ -78,7 +85,7 @@ const useDialog = () => {
 }
 
 const useTemporalMessage = () => {
-    const temporalMessageShowFn = React.useRef<TemporalMessageShowFn>();
+    const temporalMessageShowFn = React.useRef<TemporalMessageShowFn>(undefined);
     const setTemporalMessageShow = (fn: TemporalMessageShowFn) => {
         temporalMessageShowFn.current = fn;
     }
@@ -216,13 +223,13 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
         marginsDisabled,
         contentExpandsToAvailableHeight,
         appbarComponent,
+        footerComponent,
         menuComponent,
         offlineComponent,
         children,
     } = props;
     const margins = {
-        margin: 0,
-        marginBottom: 0
+        margin: '16px 24px',
     };
     const mainBoxHeight = contentExpandsToAvailableHeight ? '100vh' : undefined;
     const childrenOrOfflineComponent = !offline ? children : offlineComponent;
@@ -231,7 +238,6 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
         <div style={{
             display: 'flex',
             flexGrow: 1,
-            minHeight: 0,
             ...(!marginsDisabled ? margins : null)
         }}>
             {menuComponent}
@@ -242,6 +248,7 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
                 {appReady ? childrenOrOfflineComponent : null}
             </main>
         </div>
+        {footerComponent}
     </div>;
 }
 
@@ -264,7 +271,9 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         contentComponentSlots,
         children,
     } = props;
+    // TODO: undo
     const { offline } = useResourceApiContext();
+    // const offline  = false;
     const [marginsDisabled, setMarginsDisabled] = React.useState<boolean>(false);
     const [contentExpandsToAvailableHeight, setContentExpandsToAvailableHeight] = React.useState<boolean>(false);
     const getLinkComponent = () => linkComponent;
@@ -333,6 +342,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             marginsDisabled={marginsDisabled}
             contentExpandsToAvailableHeight={contentExpandsToAvailableHeight}
             appbarComponent={contentComponentSlots.appbar}
+            footerComponent={contentComponentSlots.footer}
             menuComponent={contentComponentSlots.menu}
             offlineComponent={contentComponentSlots.offline}>
             {children}
