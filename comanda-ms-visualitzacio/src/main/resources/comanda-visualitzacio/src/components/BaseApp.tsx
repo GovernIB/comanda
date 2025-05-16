@@ -121,10 +121,24 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     }
     return <MuiBaseApp
         code={code}
-        logo={logo}
-        logoStyle={logoStyle}
-        title={title}
-        version={version}
+        headerTitle={title}
+        headerVersion={version}
+        headerLogo={logo}
+        headerLogoStyle={logoStyle}
+        headerAppbarBackgroundColor={appbarBackgroundColor}
+        headerAppbarBackgroundImg={appbarBackgroundImg}
+        /*headerAdditionalComponents={availableLanguages?.length ? [
+            <HeaderLanguageSelector
+                key="sel_lang"
+                languages={availableLanguages}
+                sx={{ mr: 2 }} />
+        ] : undefined}*/
+        headerAdditionalAuthComponents={availableLanguages?.length ? [
+            <AuthLanguageSelector
+                key="sel_lang"
+                languages={availableLanguages}
+                sx={{ mr: 2 }} />
+        ] : undefined}
         persistentSession
         persistentLanguage
         i18nUseTranslation={useTranslation}
@@ -136,21 +150,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerUseLocationPath={useLocationPath}
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
-        menuEntries={baseAppMenuEntries}
-        /*additionalHeaderComponents={availableLanguages?.length ? [
-            <HeaderLanguageSelector
-                key="sel_lang"
-                languages={availableLanguages}
-                sx={{ mr: 2 }} />
-        ] : undefined}*/
-        additionalAuthComponents={availableLanguages?.length ? [
-            <AuthLanguageSelector
-                key="sel_lang"
-                languages={availableLanguages}
-                sx={{ mr: 2 }} />
-        ] : undefined}
-        appbarBackgroundColor={appbarBackgroundColor}
-        appbarBackgroundImg={appbarBackgroundImg}>
+        menuEntries={baseAppMenuEntries}>
         <CustomLocalizationProvider>
             {children}
         </CustomLocalizationProvider>
