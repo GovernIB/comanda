@@ -90,7 +90,14 @@ const translationEs = {
             },
         },
         notFound: "No encontrado",
-    }
+    },
+    components: {
+        clear: "Limpiar",
+        search: "Buscar",
+        copiarContingut: "Copiar contenido",
+        copiarContingutTitle: "Copiar el contenido",
+        copiarContingutSuccess: "Contenido copiado al portapapeles",
+    },
 };
 
 export default translationEs;

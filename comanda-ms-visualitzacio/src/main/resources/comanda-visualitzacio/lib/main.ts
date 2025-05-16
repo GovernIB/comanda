@@ -13,7 +13,9 @@ export { MuiGrid, useGridApiRef, useGridApiContext } from './components/mui/grid
 
 export { useFormApiRef, useFormApiContext } from './components/form/Form';
 export { MuiForm } from './components/mui/form/MuiForm';
+export { MuiFilter } from './components/mui/form/MuiFilter';
 export { FormField } from './components/form/FormField';
+export { useFilterApiRef } from './components/form/Filter';
 
 export { Toolbar } from './components/mui/Toolbar';
 export { useContentDialog, useMessageDialog, Dialog } from './components/mui/Dialog';
@@ -21,6 +23,7 @@ export { useContentDialog, useMessageDialog, Dialog } from './components/mui/Dia
 export { envVar } from './util/envVars';
 export { numberFormat, numberFormatCurrency } from './util/numberFormat';
 export { dateFormatLocale, timeFormatLocale } from './util/dateFormat';
+export * as springFilterBuilder from './util/springFilterBuilder';
 
 export type { MenuEntry } from './components/mui/Menu';
 export type { NewGridColDef as GridColDef } from './components/mui/grid/MuiGrid';

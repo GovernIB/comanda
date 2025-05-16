@@ -92,10 +92,12 @@ const translationCa = {
         notFound: "No trobat",
     },
     components: {
+        clear: "Netetjar",
+        search: "Cercar",
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
-    }
+    },
 };
 
 export default translationCa;
