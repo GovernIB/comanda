@@ -737,7 +737,7 @@ const generateResourceApiMethods = (request: Function, getOpenAnswerRequiredDial
                         if (args.fileType != null) {
                             resolve(stateToBlobResponse(state));
                         } else {
-                            const result = state.data;
+                            const result = state.data.content;
                             resolve(result);
                         }
                     }).

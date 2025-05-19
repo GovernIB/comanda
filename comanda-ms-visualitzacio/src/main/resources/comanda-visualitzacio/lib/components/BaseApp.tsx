@@ -240,7 +240,7 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
             <main style={{
                 flexGrow: 1,
                 minWidth: 0,
-                ...(!marginsDisabled ? { margin: '16px 24px' } : null)
+                ...(!marginsDisabled ? { margin: '16px 24px' } : null),
             }}>
                 {appReady ? childrenOrOfflineComponent : null}
             </main>
