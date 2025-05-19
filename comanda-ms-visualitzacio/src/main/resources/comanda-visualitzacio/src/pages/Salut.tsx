@@ -26,11 +26,11 @@ const useAppData = () => {
     const {
         isReady: appApiIsReady,
         find: appApiFind,
-        action: appApiAction,
+        artifactAction: appApiAction,
     } = useResourceApiService('app');
     const {
         isReady: salutApiIsReady,
-        report: salutApiReport,
+        artifactReport: salutApiReport,
     } = useResourceApiService('salut');
     const [loading, setLoading] = React.useState<boolean>();
     const [apps, setApps] = React.useState<any[]>();
@@ -48,7 +48,7 @@ const useAppData = () => {
             setLoading(true);
             new Promise((resolve, reject) => {
                 if (actionExec) {
-                    appApiAction({ code: 'refresh' }).then(resolve).catch(reject);
+                    appApiAction(null, { code: 'refresh' }).then(resolve).catch(reject);
                 } else {
                     resolve(null);
                 }
@@ -56,16 +56,16 @@ const useAppData = () => {
                 return appApiFind({ unpaged: true });
             }).then((response) => {
                 setApps(response.rows);
-                return salutApiReport({ code: 'salut_last' });
+                return salutApiReport(null, { code: 'salut_last' });
             }).then(salutLastItems => {
-                setSalutLastItems(salutLastItems);
+                setSalutLastItems(salutLastItems as any[]);
                 const ps: Promise<any>[] = (salutLastItems as any[])?.map((i: any) => {
                     const reportData = {
                         ...reportParams,
                         appCodi: i.codi
                     };
                     return new Promise((resolve, reject) => {
-                        salutApiReport({ code: 'estat', data: reportData }).then(ii => {
+                        salutApiReport(null, { code: 'estat', data: reportData }).then(ii => {
                             setEstats(e => ({ ...e, [i.codi]: ii }))
                             resolve(null);
                         }).catch(reject);
