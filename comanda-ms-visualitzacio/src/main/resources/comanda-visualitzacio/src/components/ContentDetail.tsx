@@ -27,7 +27,7 @@ export const ContentDetail: React.FC<ContentDetailProps> = (props) => {
         <Grid container spacing={1}>
             {elements?.
                 filter(item => (item.value !== undefined && item.value !== '') || item.contentValue || (item.subElements !== undefined && item.subElements.length>0)).
-                map((item, index) => <React.Fragment key={index}>
+                map((item, index, filteredArray) => <React.Fragment key={index}>
                     {!!item.label && <Grid size={{xs:12, sm:4}}>
                         <Typography variant="subtitle1" fontWeight={item.boldLabel ?? true ? "bold" : "medium"} >
                             {item.label}
@@ -54,9 +54,10 @@ export const ContentDetail: React.FC<ContentDetailProps> = (props) => {
                                 </Grid>
                             </React.Fragment>
                             ))}
+                    {(index !== (filteredArray.length - 1)) &&
                     <Grid size={12}>
                         <Divider sx={{ my: 1 }} />
-                    </Grid>
+                    </Grid>}
                 </React.Fragment>)}
         </Grid>
     </Box>;
