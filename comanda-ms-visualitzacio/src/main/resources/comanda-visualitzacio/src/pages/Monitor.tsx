@@ -19,7 +19,10 @@ import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Button, Icon } from '@mui/material';
 
-const moduleOptions = ['SALUT', 'ESTADISTICA'];
+const moduleOptions = [
+    { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
+    { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' }
+];
 
 type TabMonitorProps = {
     selectedModule: string,
@@ -27,6 +30,7 @@ type TabMonitorProps = {
 }
 
 const TabMonitor: React.FC<TabMonitorProps> = (props) => {
+    const { t } = useTranslation();
     const { selectedModule, handleTabChange } = props;
     return <Tabs
         value={selectedModule}
@@ -35,7 +39,7 @@ const TabMonitor: React.FC<TabMonitorProps> = (props) => {
         indicatorColor="primary"
         sx={{ mb: 2 }} >
         {moduleOptions.map((option) => (
-            <Tab key={option} label={option} value={option} />
+            <Tab key={option.value} label={t(option.labelKey)} value={option.value} />
         ))}
     </Tabs>;
 }

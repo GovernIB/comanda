@@ -88,6 +88,10 @@ const translationEs = {
                 excepcioMessage: "Exception message",
                 excepcioStacktrace: "Exception stack trace",
             },
+            modulEnum: {
+                salut: "Salud",
+                estadistica: "Estadística",
+            },
         },
         notFound: "Not found",
     },

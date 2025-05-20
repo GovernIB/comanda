@@ -31,7 +31,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ResourceConfig(
-	quickFilterFields = { "codi", "nom" },
+	quickFilterFields = { "entorn.codi", "entorn.nom" },
 	artifacts = {
 		@ResourceConfigArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REFRESH, formClass = EntornApp.EntornAppParamAction.class),
 		@ResourceConfigArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),

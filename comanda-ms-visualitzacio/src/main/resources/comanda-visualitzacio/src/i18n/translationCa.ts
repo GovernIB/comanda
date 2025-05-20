@@ -88,6 +88,10 @@ const translationCa = {
                 excepcioMessage: "Missatge de l'excepció",
                 excepcioStacktrace: "Traça de l'excepció",
             },
+            modulEnum: {
+                salut: "Salut",
+                estadistica: "Estadística",
+            },
         },
         notFound: "No trobat",
     },
