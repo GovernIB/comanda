@@ -2,6 +2,7 @@ const translationCa = {
     menu: {
         salut: "Salut",
         app: "Aplicacions",
+        entorn: "Entorns",
         monitor: "Monitor",
     },
     page: {
@@ -74,6 +75,14 @@ const translationCa = {
             title: "Aplicacions",
             create: "Crear aplicació",
             update: "Modificar aplicació",
+            general: "General",
+            entornApp: "Entorns de l'aplicació",
+        },
+        entorns: {
+            title: "Entorns",
+        },
+        appsEntorns: {
+            title: "Entorns",
         },
         monitors: {
             title: "Monitors",

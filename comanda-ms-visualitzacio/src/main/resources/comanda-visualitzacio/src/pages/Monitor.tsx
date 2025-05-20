@@ -218,10 +218,10 @@ const Monitors: React.FC = () => {
         );
     }
     const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
-    const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
-    return <GridPage>
+    return <GridPage disableMargins>
         <MuiGrid
             title={t('page.monitors.title')}
             toolbarAdditionalRow={

@@ -193,6 +193,11 @@ const Salut: React.FC = () => {
         estats,
         reportParams,
     } = useAppData();
+    const { setMarginsDisabled } = useBaseAppContext();
+    React.useEffect(() => {
+        setMarginsDisabled(true);
+        return () => setMarginsDisabled(false);
+    }, []);
     const dataLoaded = ready && loading != null && !loading;
     const toolbar = <SalutToolbar
         title={t('page.salut.title')}

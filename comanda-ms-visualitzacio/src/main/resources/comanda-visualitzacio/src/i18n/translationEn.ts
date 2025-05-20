@@ -2,6 +2,7 @@ const translationEs = {
     menu: {
         salut: "Health",
         app: "Applications",
+        entorn: "Environments",
         monitor: "Monitor",
     },
     page: {
@@ -74,6 +75,14 @@ const translationEs = {
             title: "Applications",
             create: "Create application",
             update: "Update application",
+            general: "General",
+            entornApp: "App environments",
+        },
+        entorns: {
+            title: "Environments",
+        },
+        appsEntorns: {
+            title: "Environments",
         },
         monitors: {
             title: "Monitors",

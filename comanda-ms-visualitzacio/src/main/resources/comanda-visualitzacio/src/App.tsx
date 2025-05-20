@@ -5,46 +5,59 @@ import logo from './assets/goib_logo.png';
 import headerBackground from './assets/background.jpg';
 import AppRoutes from './AppRoutes';
 
-
 export const App: React.FC = () => {
     const { t } = useTranslation();
-    const menuEntries = [{
-        id: 'salut',
-        title: t('menu.salut'),
-        to: '/',
-        icon: 'monitor_heart',
-        resourceName: 'salut',
-    }, {
-        id: 'app',
-        title: t('menu.app'),
-        to: '/app',
-        icon: 'widgets',
-        resourceName: 'app',
-    }, {
-        id: 'monitor',
-        title: t('menu.monitor'),
-        to: '/monitor',
-        icon: 'monitor',
-        resourceName: 'monitor',
-    }];
-    return <BaseApp
-        code="cmd"
-        logo={logo}
-        logoStyle={{
-            '& img': { height: '38px' },
-            pl: 2,
-            pr: 4,
-            mr: 4,
-            borderRight: '2px solid #fff'
-        }}
-        title="Comanda"
-        version="0.1"
-        availableLanguages={['ca', 'es']}
-        menuEntries={menuEntries}
-        appbarBackgroundColor="#083c6b"
-        appbarBackgroundImg={headerBackground}>
-        <AppRoutes />
-    </BaseApp>;
-}
+    const menuEntries = [
+        {
+            id: 'salut',
+            title: t('menu.salut'),
+            to: '/',
+            icon: 'monitor_heart',
+            resourceName: 'salut',
+        },
+        {
+            id: 'app',
+            title: t('menu.app'),
+            to: '/app',
+            icon: 'widgets',
+            resourceName: 'app',
+        },
+        {
+            id: 'entorn',
+            title: t('menu.entorn'),
+            to: '/entorn',
+            icon: 'domain',
+            resourceName: 'entorn',
+        },
+        {
+            id: 'monitor',
+            title: t('menu.monitor'),
+            to: '/monitor',
+            icon: 'monitor',
+            resourceName: 'monitor',
+        },
+    ];
+    return (
+        <BaseApp
+            code="cmd"
+            logo={logo}
+            logoStyle={{
+                '& img': { height: '38px' },
+                pl: 2,
+                pr: 4,
+                mr: 4,
+                borderRight: '2px solid #fff',
+            }}
+            title="Comanda"
+            version="0.1"
+            availableLanguages={['ca', 'es']}
+            menuEntries={menuEntries}
+            appbarBackgroundColor="#083c6b"
+            appbarBackgroundImg={headerBackground}
+        >
+            <AppRoutes />
+        </BaseApp>
+    );
+};
 
 export default App;
