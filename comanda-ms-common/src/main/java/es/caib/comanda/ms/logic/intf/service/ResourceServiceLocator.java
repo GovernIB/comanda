@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Localitzador de serveis de tipus ResourceService donat un recurs.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Component
@@ -22,13 +22,13 @@ public class ResourceServiceLocator implements ApplicationContextAware {
 	protected List<ReadonlyResourceService<?, ?>> resourceServices;
 
 	public ReadonlyResourceService<?, ?> getReadOnlyEntityResourceServiceForResourceClass(
-		Class<?> resourceClass) throws ComponentNotFoundException {
+			Class<?> resourceClass) throws ComponentNotFoundException {
 		ReadonlyResourceService<?, ?> resourceServiceFound = null;
 		for (ReadonlyResourceService<?, ?> resourceService: resourceServices) {
 			Class<?> serviceResourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-				resourceService.getClass(),
-				ReadonlyResourceService.class,
-				0);
+					resourceService.getClass(),
+					ReadonlyResourceService.class,
+					0);
 			if (resourceClass.equals(serviceResourceClass)) {
 				resourceServiceFound = resourceService;
 				break;
@@ -42,7 +42,7 @@ public class ResourceServiceLocator implements ApplicationContextAware {
 	}
 
 	public MutableResourceService<?, ?> getMutableEntityResourceServiceForResourceClass(
-		Class<?> resourceClass) throws ComponentNotFoundException {
+			Class<?> resourceClass) throws ComponentNotFoundException {
 		ReadonlyResourceService<?, ?> readOnlyService = getReadOnlyEntityResourceServiceForResourceClass(resourceClass);
 		if (readOnlyService instanceof MutableResourceService) {
 			return (MutableResourceService<?, ?>)readOnlyService;

@@ -1,7 +1,7 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
-import es.caib.comanda.ms.logic.intf.annotation.ResourceConfigArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -33,8 +33,8 @@ import java.util.List;
 @ResourceConfig(
 	quickFilterFields = { "entorn.codi", "entorn.nom" },
 	artifacts = {
-		@ResourceConfigArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REFRESH, formClass = EntornApp.EntornAppParamAction.class),
-		@ResourceConfigArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),
+		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REFRESH, formClass = EntornApp.EntornAppParamAction.class),
+		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),
 	}
 )
 public class EntornApp extends BaseResource<Long> {

@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * Configuració dels components de persistència.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -58,14 +58,14 @@ public abstract class BasePersistenceConfig {
 			String url = dataSourceProps.getUrl();
 			if (jndiName != null) {
 				log.debug("\tDatasource properties:\n" +
-					"\t\tjndiName=" + jndiName);
+						"\t\tjndiName=" + jndiName);
 			} else if (url != null) {
 				String username = dataSourceProps.getUsername();
 				String password = dataSourceProps.getPassword();
 				log.debug("\tDatasource properties:\n" +
-					"\t\turl=" + url + "\n" +
-					"\t\tusername=" + username + "\n" +
-					(password != null ? "\t\tpassword=******" : ""));
+						"\t\turl=" + url + "\n" +
+						"\t\tusername=" + username + "\n" +
+						(password != null ? "\t\tpassword=******" : ""));
 			} else {
 				log.debug("\tDatasource with no properties defined");
 			}
@@ -76,8 +76,8 @@ public abstract class BasePersistenceConfig {
 			dataSource = dataSourceLookup.getDataSource(jndiName);
 		} else {
 			dataSource = dataSourceProps.
-				initializeDataSourceBuilder().
-				build();
+					initializeDataSourceBuilder().
+					build();
 		}
 		log.debug("...main DataSource successfully created.");
 		return dataSource;
@@ -102,12 +102,12 @@ public abstract class BasePersistenceConfig {
 			log.debug("\t- Property hibernate.hbm2ddl.auto=" + hibernateHbm2ddlAutoValue);
 		}
 		LocalContainerEntityManagerFactoryBean entityManager = builder.
-			dataSource(mainDataSource()).
-			persistenceUnit(getPersistenceUnitName()).
-			packages(getEntityPackages()).
-			properties(properties).
-			jta(isJboss()).
-			build();
+				dataSource(mainDataSource()).
+				persistenceUnit(getPersistenceUnitName()).
+				packages(getEntityPackages()).
+				properties(properties).
+				jta(isJboss()).
+				build();
 		log.debug("...main EntityManagerFactory successfully created.");
 		return entityManager;
 	}

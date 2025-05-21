@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Definició del servei de l'API REST.
- *
+ * 
  * @author Límit Tecnologies
  */
 public interface ResourceApiService {
@@ -38,7 +38,7 @@ public interface ResourceApiService {
 	 * @return els permisos.
 	 */
 	public ResourcePermissions permissionsCurrentUser(
-		Class<?> resourceClass,
-		Serializable resourceId);
+			Class<?> resourceClass,
+			Serializable resourceId);
 
 }

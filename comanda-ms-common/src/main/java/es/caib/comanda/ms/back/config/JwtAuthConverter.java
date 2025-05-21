@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 /**
  * Classe de conversió entre un token JWT i un token d'autenticació de Spring Security.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Component
@@ -31,8 +31,8 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
 	@Override
 	public AbstractAuthenticationToken convert(Jwt jwt) {
 		Collection<GrantedAuthority> authorities = Stream.concat(
-			jwtGrantedAuthoritiesConverter.convert(jwt).stream(),
-			extractJwtGrantedAuthorities(jwt).stream()).collect(Collectors.toSet());
+				jwtGrantedAuthoritiesConverter.convert(jwt).stream(),
+				extractJwtGrantedAuthorities(jwt).stream()).collect(Collectors.toSet());
 		return new JwtAuthenticationToken(jwt, authorities, getPrincipalClaimName(jwt));
 	}
 

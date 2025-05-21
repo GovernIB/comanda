@@ -33,8 +33,8 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 *             si no s'ha trobat el recurs especificat.
 	 */
 	R getOne(
-		ID id,
-		String[] perspectives) throws ResourceNotFoundException;
+			ID id,
+			String[] perspectives) throws ResourceNotFoundException;
 
 	/**
 	 * Consulta paginada de recursos.
@@ -52,11 +52,11 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 * @return la llista de recursos.
 	 */
 	Page<R> findPage(
-		String quickFilter,
-		String filter,
-		String[] namedQueries,
-		String[] perspectives,
-		Pageable pageable);
+			String quickFilter,
+			String filter,
+			String[] namedQueries,
+			String[] perspectives,
+			Pageable pageable);
 
 	/**
 	 * Exportació de recursos.
@@ -80,14 +80,14 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 * @return la llista de recursos.
 	 */
 	DownloadableFile export(
-		String quickFilter,
-		String filter,
-		String[] namedQueries,
-		String[] perspectives,
-		Pageable pageable,
-		ExportField[] fields,
-		ReportFileType fileType,
-		OutputStream out);
+			String quickFilter,
+			String filter,
+			String[] namedQueries,
+			String[] perspectives,
+			Pageable pageable,
+			ExportField[] fields,
+			ReportFileType fileType,
+			OutputStream out);
 
 	/**
 	 * Descàrrega del fitxer associat a un camp del recurs.
@@ -109,9 +109,9 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 *             si es produeix algun error de E/S al descarregar l'arxiu.
 	 */
 	DownloadableFile fieldDownload(
-		ID id,
-		String fieldName,
-		OutputStream out) throws ResourceNotFoundException, ResourceFieldNotFoundException, FieldArtifactNotFoundException, IOException;
+			ID id,
+			String fieldName,
+			OutputStream out) throws ResourceNotFoundException, ResourceFieldNotFoundException, FieldArtifactNotFoundException, IOException;
 
 	/**
 	 * Retorna la llista d'artefactes del tipus especificat als quals l'usuari te accés.
@@ -163,13 +163,13 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 *            si es requereix alguna resposta addicional de l'usuari.
 	 */
 	<P extends Serializable> Map<String, Object> artifactOnChange(
-		ResourceArtifactType type,
-		String code,
-		Serializable id,
-		P previous,
-		String fieldName,
-		Object fieldValue,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException;
+			ResourceArtifactType type,
+			String code,
+			Serializable id,
+			P previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException;
 
 	/**
 	 * Consulta les opcions disponibles per a un camp de tipus enumerat d'un artefacte.
@@ -180,18 +180,21 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 *            el codi de l'artefacte.
 	 * @param fieldName
 	 *            nom del camp del recurs.
+	 * @param requestParameterMap
+	 *            paràmetres de la petició.
 	 * @return la llista d'opcions disponibles.
 	 */
 	List<FieldOption> artifactFieldEnumOptions(
-		ResourceArtifactType type,
-		String code,
-		String fieldName);
+			ResourceArtifactType type,
+			String code,
+			String fieldName,
+			Map<String,String[]> requestParameterMap);
 
 	/**
 	 * Genera les dades de l'informe.
 	 *
 	 * @param id
-	 *            identificació del recurs (pot ser null si l'informe no es genera sobre un recurs determinat).
+	 *            clau primària del recurs (pot ser null si l'informe no es genera sobre un recurs determinat).
 	 * @param code
 	 *            el codi de l'informe.
 	 * @param params
@@ -204,9 +207,9 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 *             si es produeix algun error generant l'informe.
 	 */
 	<P extends Serializable> List<?> artifactReportGenerateData(
-		ID id,
-		String code,
-		P params) throws ArtifactNotFoundException, ReportGenerationException;
+			ID id,
+			String code,
+			P params) throws ArtifactNotFoundException, ReportGenerationException;
 
 	/**
 	 * Genera el fitxer de l'informe.
@@ -226,9 +229,9 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 *             si es produeix algun error generant el fitxer.
 	 */
 	DownloadableFile artifactReportGenerateFile(
-		String code,
-		List<?> data,
-		ReportFileType fileType,
-		OutputStream out) throws ArtifactNotFoundException, ReportGenerationException;
+			String code,
+			List<?> data,
+			ReportFileType fileType,
+			OutputStream out) throws ArtifactNotFoundException, ReportGenerationException;
 
 }

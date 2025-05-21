@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 /**
  * Repositori base.
- *
+ * 
  * @author Límit Tecnologies
  */
 @NoRepositoryBean
@@ -36,6 +36,6 @@ public interface BaseRepository<E, PK extends Serializable> extends JpaRepositor
 	 * @param entity
 	 *            l'entitat a fusionar.
 	 */
-	void merge(E entity);
+	E merge(E entity);
 
 }

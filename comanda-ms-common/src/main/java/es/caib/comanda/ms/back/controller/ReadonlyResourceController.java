@@ -18,14 +18,14 @@ import java.io.Serializable;
 
 /**
  * Mètodes dels controladors de l'API REST per a consultar un recurs de l'aplicació.
- *
+ * 
  * @author Límit Tecnologies
  */
 public interface ReadonlyResourceController<R extends Resource<? extends Serializable>, ID extends Serializable> {
 
 	/**
 	 * Retorna un recurs donat el seu id.
-	 *
+	 * 
 	 * @param id
 	 *            id de l'element que es vol consultar.
 	 * @param perspectives
@@ -33,14 +33,14 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return la informació del recurs.
 	 */
 	ResponseEntity<EntityModel<R>> getOne(
-		final ID id,
-		final String[] perspectives);
+			final ID id,
+			final String[] perspectives);
 
 	/**
 	 * Consulta paginada de recursos.
-	 *
+	 * 
 	 * @param quickFilter
-	 *            text per a filtrar múltiples camps.
+	 *            text per a filtrar en els camps definits com a quickFilter.
 	 * @param filter
 	 *            consulta en format Spring Filter.
 	 * @param namedQueries
@@ -52,12 +52,11 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return la llista de recusos.
 	 */
 	ResponseEntity<PagedModel<EntityModel<R>>> find(
-		final String quickFilter,
-		final String filter,
-		final String[] namedQueries,
-		final String[] perspectives,
-		final Pageable pageable);
-
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable);
 
 	/**
 	 * Exportació de recursos.
@@ -81,13 +80,13 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *             si es produeix algun error al escriure l'arxiu a la resposta.
 	 */
 	ResponseEntity<InputStreamResource> export(
-		final String quickFilter,
-		final String filter,
-		final String[] namedQueries,
-		final String[] perspectives,
-		final Pageable pageable,
-		final String[] fields,
-		final ReportFileType fileType) throws IOException;
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable,
+			final String[] fields,
+			final ReportFileType fileType) throws IOException;
 
 	/**
 	 * Descàrrega de l'arxiu associat a un camp del recurs.
@@ -101,8 +100,8 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *             si es produeix algun error al escriure l'arxiu a la resposta.
 	 */
 	ResponseEntity<InputStreamResource> fieldDownload(
-		final ID id,
-		final String fieldName) throws IOException;
+			final ID id,
+			final String fieldName) throws IOException;
 
 	/**
 	 * Retorna la llista d'artefactes relacionats amb aquest servei.
@@ -123,8 +122,8 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *             si no es troba l'artefacte especificat.
 	 */
 	ResponseEntity<EntityModel<ResourceArtifact>> artifactGetOne(
-		final ResourceArtifactType type,
-		final String code) throws ArtifactNotFoundException;
+			final ResourceArtifactType type,
+			final String code) throws ArtifactNotFoundException;
 
 	/**
 	 * Processa els canvis en els camps del formulari d'un artefacte.
@@ -142,9 +141,9 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *             si es produeix algun error al extreure els paràmetres.
 	 */
 	ResponseEntity<String> artifactFormOnChange(
-		final ResourceArtifactType type,
-		final String code,
-		final OnChangeEvent onChangeEvent) throws ArtifactNotFoundException, JsonProcessingException;
+			final ResourceArtifactType type,
+			final String code,
+			final OnChangeEvent onChangeEvent) throws ArtifactNotFoundException, JsonProcessingException;
 
 	/**
 	 * Valida el formulari associat a un artefacte.
@@ -166,10 +165,10 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *             si es troben errors de validació en els paràmetres.
 	 */
 	ResponseEntity<?> artifactFormValidate(
-		final ResourceArtifactType type,
-		final String code,
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
+			final ResourceArtifactType type,
+			final String code,
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
 
 	/**
 	 * Consulta les opcions disponibles per a emplenar un camp enumerat que pertany al formulari d'un artefacte.
@@ -183,9 +182,9 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return la llista d'opcions disponibles.
 	 */
 	ResponseEntity<CollectionModel<EntityModel<FieldOption>>> artifactFieldEnumOptionsFind(
-		final ResourceArtifactType type,
-		final String code,
-		final String fieldName);
+			final ResourceArtifactType type,
+			final String code,
+			final String fieldName);
 
 	/**
 	 * Consulta una de les opcions disponibles per a un camp de tipus enumerat.
@@ -201,10 +200,10 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return l'opció demanada.
 	 */
 	ResponseEntity<EntityModel<FieldOption>> artifactFieldEnumOptionsGetOne(
-		final ResourceArtifactType type,
-		final String code,
-		final String fieldName,
-		final String value);
+			final ResourceArtifactType type,
+			final String code,
+			final String fieldName,
+			final String value);
 
 	/**
 	 * Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany
@@ -231,14 +230,14 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
 	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFieldOptionsFind(
-		final ResourceArtifactType type,
-		final String code,
-		final String fieldName,
-		final String quickFilter,
-		final String filter,
-		final String[] namedQueries,
-		final String[] perspectives,
-		final Pageable pageable);
+			final ResourceArtifactType type,
+			final String code,
+			final String fieldName,
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable);
 
 	/**
 	 * Consulta una de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany
@@ -260,11 +259,11 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return L'element amb l'id especificat.
 	 */
 	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactFieldOptionsGetOne(
-		final ResourceArtifactType type,
-		final String code,
-		final String fieldName,
-		final RID id,
-		final String[] perspectives);
+			final ResourceArtifactType type,
+			final String code,
+			final String fieldName,
+			final RID id,
+			final String[] perspectives);
 
 	/**
 	 * Generació d'un informe associat a un tipus de recurs.
@@ -286,10 +285,10 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *             si es troben errors de validació en els paràmetres.
 	 */
 	ResponseEntity<InputStreamResource> artifactReportGenerate(
-		final String code,
-		final ReportFileType fileType,
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException;
+			final String code,
+			final ReportFileType fileType,
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException;
 
 	/**
 	 * Generació d'un informe associat a un recurs determinat.
@@ -313,11 +312,11 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *             si es troben errors de validació en els paràmetres.
 	 */
 	ResponseEntity<InputStreamResource> artifactReportGenerate(
-		final ID id,
-		final String code,
-		final ReportFileType fileType,
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException;
+			final ID id,
+			final String code,
+			final ReportFileType fileType,
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException;
 
 	/**
 	 * Consulta paginada de les opcions disponibles per a emplenar un camp de
@@ -342,13 +341,13 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
 	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactReportFieldOptionsFind(
-		final String code,
-		final String fieldName,
-		final String quickFilter,
-		final String filter,
-		final String[] namedQueries,
-		final String[] perspectives,
-		final Pageable pageable);
+			final String code,
+			final String fieldName,
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable);
 
 	/**
 	 * Consulta d'una de les opcions disponibles per a emplenar un camp de
@@ -369,10 +368,10 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return L'element amb l'id especificat.
 	 */
 	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactReportFieldOptionsGetOne(
-		final String code,
-		final String fieldName,
-		final RID id,
-		final String[] perspectives);
+			final String code,
+			final String fieldName,
+			final RID id,
+			final String[] perspectives);
 
 	/**
 	 * Consulta paginada de les opcions disponibles per a emplenar un camp de
@@ -397,13 +396,13 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
 	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFilterFieldOptionsFind(
-		final String code,
-		final String fieldName,
-		final String quickFilter,
-		final String filter,
-		final String[] namedQueries,
-		final String[] perspectives,
-		final Pageable pageable);
+			final String code,
+			final String fieldName,
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable);
 
 	/**
 	 * Consulta d'una de les opcions disponibles per a emplenar un camp de
@@ -424,9 +423,9 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @return L'element amb l'id especificat.
 	 */
 	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactFilterFieldOptionsGetOne(
-		final String code,
-		final String fieldName,
-		final RID id,
-		final String[] perspectives);
+			final String code,
+			final String fieldName,
+			final RID id,
+			final String[] perspectives);
 
 }

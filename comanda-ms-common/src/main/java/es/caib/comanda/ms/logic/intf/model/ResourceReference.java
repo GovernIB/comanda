@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 /**
  * Referència genèrica cap a una altra entitat del model.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Getter
@@ -24,16 +24,16 @@ public class ResourceReference<R extends Resource<ID>, ID extends Serializable> 
 		return toResourceReference(resource.getId(), null);
 	}
 	public static <R extends Resource<ID>, ID extends Serializable> ResourceReference<R, ID> toResourceReference(
-		R resource,
-		String description) {
+			R resource,
+			String description) {
 		return toResourceReference(resource.getId(), description);
 	}
 	public static <R extends Resource<ID>, ID extends Serializable> ResourceReference<R, ID> toResourceReference(ID id) {
 		return toResourceReference(id, null);
 	}
 	public static <R extends Resource<ID>, ID extends Serializable> ResourceReference<R, ID> toResourceReference(
-		ID id,
-		String description) {
+			ID id,
+			String description) {
 		ResourceReference<R, ID> genericReference = new ResourceReference<R, ID>();
 		genericReference.setId(id);
 		genericReference.setDescription(description);
@@ -72,8 +72,8 @@ public class ResourceReference<R extends Resource<ID>, ID extends Serializable> 
 		} catch (Exception ignored) {
 		}
 		return "Referencia al recurs " + (resourceClass != null ? resourceClass.getName() : "<unknown>") +
-			" (id=" + id + ", " +
-			"description=" + description + ")";
+				" (id=" + id + ", " +
+				"description=" + description + ")";
 	}
 
 }

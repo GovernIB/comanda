@@ -28,11 +28,11 @@ public class FilterSpecification<T> extends com.turkraft.springfilter.boot.Filte
 		Root<T> root,
 		CriteriaQuery<?> query,
 		CriteriaBuilder criteriaBuilder) {
-		Predicate predicate = null;
+		Predicate predicate;
 		Map<String, Join<?, ?>> j = getJoins() != null ? getJoins() : new HashMap<String, Join<?, ?>>();
 		String input = getInput();
 		if (input != null) {
-			predicate = !input.trim().isEmpty() ? (Predicate) ExpressionGenerator.run(
+			predicate = !input.trim().isEmpty() ? (Predicate)ExpressionGenerator.run(
 				Filter.from(input),
 				root,
 				query,

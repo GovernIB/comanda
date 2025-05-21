@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * Excepció que es llança quan no es troba un camp del recurs.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Getter

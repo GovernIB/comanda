@@ -1,6 +1,3 @@
-/**
- * 
- */
 package es.caib.comanda.ms.logic.intf.annotation;
 
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
@@ -13,12 +10,12 @@ import java.lang.annotation.Target;
 
 /**
  * Anotació per a configurar un artefacte.
- *
+ * 
  * @author Limit Tecnologies
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ResourceConfigArtifact {
+public @interface ResourceArtifact {
 
 	ResourceArtifactType type();
 	String code();

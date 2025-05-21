@@ -9,7 +9,7 @@ import java.util.List;
  * Excepció que es llança quan es processa l'event onChange provinent del front
  * i es detecta que, per a poder processar-lo, és necessari disposar de la
  * resposta a una pregunta que no ens ha arribat.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Getter
@@ -24,16 +24,16 @@ public class AnswerRequiredException extends RuntimeException {
 	private List<CustomAnswer> availableAnswers;
 
 	public AnswerRequiredException(
-		Class<?> clazz,
-		String answerCode,
-		String question) {
+			Class<?> clazz,
+			String answerCode,
+			String question) {
 		this(clazz, answerCode, question, (Object)null);
 	}
 	public AnswerRequiredException(
-		Class<?> clazz,
-		String answerCode,
-		String question,
-		Object questionData) {
+			Class<?> clazz,
+			String answerCode,
+			String question,
+			Object questionData) {
 		super("Answer '" + answerCode + "' required to process changes");
 		this.clazz = clazz;
 		this.answerCode = answerCode;
@@ -43,18 +43,18 @@ public class AnswerRequiredException extends RuntimeException {
 	}
 
 	public AnswerRequiredException(
-		Class<?> clazz,
-		String answerCode,
-		String question,
-		List<CustomAnswer> availableAnswers) {
+			Class<?> clazz,
+			String answerCode,
+			String question,
+			List<CustomAnswer> availableAnswers) {
 		this(clazz, answerCode, question, null, availableAnswers);
 	}
 	public AnswerRequiredException(
-		Class<?> clazz,
-		String answerCode,
-		String question,
-		Object questionData,
-		List<CustomAnswer> availableAnswers) {
+			Class<?> clazz,
+			String answerCode,
+			String question,
+			Object questionData,
+			List<CustomAnswer> availableAnswers) {
 		super("Answer '" + answerCode + "' required to process changes");
 		this.clazz = clazz;
 		this.answerCode = answerCode;
@@ -65,20 +65,20 @@ public class AnswerRequiredException extends RuntimeException {
 	}
 
 	public AnswerRequiredException(
-		Class<?> clazz,
-		String answerCode,
-		String question,
-		Boolean trueFalseAnswerRequired,
-		Boolean stringAnswerFieldActive) {
+			Class<?> clazz,
+			String answerCode,
+			String question,
+			Boolean trueFalseAnswerRequired,
+			Boolean stringAnswerFieldActive) {
 		this(clazz, answerCode, question, null, trueFalseAnswerRequired, stringAnswerFieldActive);
 	}
 	public AnswerRequiredException(
-		Class<?> clazz,
-		String answerCode,
-		String question,
-		Object questionData,
-		Boolean trueFalseAnswerRequired,
-		Boolean stringAnswerFieldActive) {
+			Class<?> clazz,
+			String answerCode,
+			String question,
+			Object questionData,
+			Boolean trueFalseAnswerRequired,
+			Boolean stringAnswerFieldActive) {
 		super("Answer '" + answerCode + "' required to process changes");
 		this.clazz = clazz;
 		this.answerCode = answerCode;
@@ -90,12 +90,12 @@ public class AnswerRequiredException extends RuntimeException {
 
 	public AnswerRequiredError toAnswerRequiredError() {
 		return new AnswerRequiredError(
-			answerCode,
-			question,
-			questionData,
-			trueFalseAnswerRequired,
-			stringAnswerFieldActive,
-			availableAnswers);
+				answerCode,
+				question,
+				questionData,
+				trueFalseAnswerRequired,
+				stringAnswerFieldActive,
+				availableAnswers);
 	}
 
 	@Getter

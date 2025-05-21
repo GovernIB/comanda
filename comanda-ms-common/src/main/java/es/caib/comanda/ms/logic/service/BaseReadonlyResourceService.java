@@ -4,7 +4,7 @@ import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
-import es.caib.comanda.ms.logic.intf.annotation.ResourceConfigArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.*;
 import es.caib.comanda.ms.logic.intf.model.*;
@@ -50,7 +50,7 @@ import java.util.stream.IntStream;
  */
 @Slf4j
 public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID extends Serializable, E extends ResourceEntity<R, ID>>
-	implements ReadonlyResourceService<R, ID> {
+		implements ReadonlyResourceService<R, ID> {
 
 	@Autowired
 	protected BaseRepository<E, ID> entityRepository;
@@ -71,8 +71,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public R getOne(
-		ID id,
-		String[] perspectives) throws ResourceNotFoundException {
+			ID id,
+			String[] perspectives) throws ResourceNotFoundException {
 		log.debug("Getting single resource (id={}, perspectives={})", id, perspectives);
 		beforeGetOne(perspectives);
 		E entity = getEntity(id, perspectives);
@@ -88,122 +88,122 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public Page<R> findPage(
-		String quickFilter,
-		String filter,
-		String[] namedQueries,
-		String[] perspectives,
-		Pageable pageable) {
+			String quickFilter,
+			String filter,
+			String[] namedQueries,
+			String[] perspectives,
+			Pageable pageable) {
 		long t0 = System.currentTimeMillis();
 		log.debug(
-			"Querying entities page with filter and pagination (" +
-				"quickFilter={}, filter={}, namedQueries={}, " +
-				"perspectives={}, pageable={})",
-			quickFilter,
-			filter,
-			Arrays.toString(namedQueries),
-			Arrays.toString(perspectives),
-			pageable);
+				"Querying entities page with filter and pagination (" +
+						"quickFilter={}, filter={}, namedQueries={}, " +
+						"perspectives={}, pageable={})",
+				quickFilter,
+				filter,
+				Arrays.toString(namedQueries),
+				Arrays.toString(perspectives),
+				pageable);
 		beforeFind(
-			quickFilter,
-			filter,
-			namedQueries,
-			pageable);
+				quickFilter,
+				filter,
+				namedQueries,
+				pageable);
 		Page<E> resultat = internalFindEntities(
-			quickFilter,
-			filter,
-			namedQueries,
-			pageable);
+				quickFilter,
+				filter,
+				namedQueries,
+				pageable);
 		long elapsedDatabase = System.currentTimeMillis() - t0;
 		beforeConversion(resultat.getContent());
 		Page<R> response = new PageImpl<>(
-			entitiesToResources(resultat.getContent()),
-			pageable,
-			resultat.getTotalElements());
+				entitiesToResources(resultat.getContent()),
+				pageable,
+				resultat.getTotalElements());
 		afterConversion(resultat.getContent(), response.getContent());
 		if (perspectives != null) {
 			applyPerspectives(
-				resultat.getContent(),
-				response.getContent(),
-				perspectives);
+					resultat.getContent(),
+					response.getContent(),
+					perspectives);
 		}
 		long elapsedConversion = System.currentTimeMillis() - t0;
 		log.debug(
-			"Query elapsed time (database={}ms, conversion={}ms)",
-			elapsedDatabase,
-			elapsedConversion);
+				"Query elapsed time (database={}ms, conversion={}ms)",
+				elapsedDatabase,
+				elapsedConversion);
 		return response;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public DownloadableFile export(
-		String quickFilter,
-		String filter,
-		String[] namedQueries,
-		String[] perspectives,
-		Pageable pageable,
-		ExportField[] fields,
-		ReportFileType fileType,
-		OutputStream out) {
+			String quickFilter,
+			String filter,
+			String[] namedQueries,
+			String[] perspectives,
+			Pageable pageable,
+			ExportField[] fields,
+			ReportFileType fileType,
+			OutputStream out) {
 		long t0 = System.currentTimeMillis();
 		log.debug(
-			"Querying entities for export with filter and pagination (" +
-				"quickFilter={}, filter={}, namedQueries={}, " +
-				"perspectives={}, pageable={}, fieldNamesAndLabels={}, fileType={})",
-			quickFilter,
-			filter,
-			Arrays.toString(namedQueries),
-			Arrays.toString(perspectives),
-			pageable,
-			fields,
-			fileType);
+				"Querying entities for export with filter and pagination (" +
+						"quickFilter={}, filter={}, namedQueries={}, " +
+						"perspectives={}, pageable={}, fieldNamesAndLabels={}, fileType={})",
+				quickFilter,
+				filter,
+				Arrays.toString(namedQueries),
+				Arrays.toString(perspectives),
+				pageable,
+				fields,
+				fileType);
 		beforeFind(
-			quickFilter,
-			filter,
-			namedQueries,
-			pageable);
+				quickFilter,
+				filter,
+				namedQueries,
+				pageable);
 		Page<E> resultat = internalFindEntities(
-			quickFilter,
-			filter,
-			namedQueries,
-			pageable);
+				quickFilter,
+				filter,
+				namedQueries,
+				pageable);
 		long elapsedDatabase = System.currentTimeMillis() - t0;
 		beforeConversion(resultat.getContent());
 		Page<R> response = new PageImpl<>(
-			entitiesToResources(resultat.getContent()),
-			pageable,
-			resultat.getTotalElements());
+				entitiesToResources(resultat.getContent()),
+				pageable,
+				resultat.getTotalElements());
 		afterConversion(resultat.getContent(), response.getContent());
 		long elapsedConversion = System.currentTimeMillis() - elapsedDatabase;
 		DownloadableFile exportFile = jasperReportsHelper.export(
-			getResourceClass(),
-			response.getContent(),
-			fields,
-			fileType,
-			out);
+				getResourceClass(),
+				response.getContent(),
+				fields,
+				fileType,
+				out);
 		long elapsedGeneration = System.currentTimeMillis() - elapsedDatabase;
 		log.debug(
-			"Export elapsed time (database={}ms, conversion={}ms, generation={}ms)",
-			elapsedDatabase,
-			elapsedConversion,
-			elapsedGeneration);
+				"Export elapsed time (database={}ms, conversion={}ms, generation={}ms)",
+				elapsedDatabase,
+				elapsedConversion,
+				elapsedGeneration);
 		return exportFile;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public DownloadableFile fieldDownload(
-		ID id,
-		String fieldName,
-		OutputStream out) throws ResourceNotFoundException, ResourceFieldNotFoundException, FieldArtifactNotFoundException, IOException {
+			ID id,
+			String fieldName,
+			OutputStream out) throws ResourceNotFoundException, ResourceFieldNotFoundException, FieldArtifactNotFoundException, IOException {
 		Field field = ReflectionUtils.findField(getResourceClass(), fieldName);
 		if (field != null) {
 			FieldDownloader<E> fieldDownloader = fieldDownloaderMap.get(fieldName);
 			if (fieldDownloader != null) {
 				return fieldDownloader.download(
-					getEntity(id, null),
-					fieldName,
-					out);
+						getEntity(id, null),
+						fieldName,
+						out);
 			} else {
 				throw new FieldArtifactNotFoundException(getResourceClass(), FieldArtifactType.DOWNLOAD, fieldName);
 			}
@@ -214,71 +214,71 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<ResourceArtifact> artifactFindAll(ResourceArtifactType type) {
+	public List<es.caib.comanda.ms.logic.intf.model.ResourceArtifact> artifactFindAll(ResourceArtifactType type) {
 		log.debug("Querying all artifacts (type={})", type);
-		List<ResourceArtifact> artifacts = new ArrayList<>();
+		List<es.caib.comanda.ms.logic.intf.model.ResourceArtifact> artifacts = new ArrayList<>();
 		if (type == null || type == ResourceArtifactType.PERSPECTIVE) {
 			artifacts.addAll(
-				perspectiveApplicatorMap.keySet().stream().
-					map(pa -> new ResourceArtifact(
-						ResourceArtifactType.PERSPECTIVE,
-						pa,
-						null,
-						null)).
-					collect(Collectors.toList()));
+					perspectiveApplicatorMap.keySet().stream().
+							map(pa -> new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+									ResourceArtifactType.PERSPECTIVE,
+									pa,
+									null,
+									null)).
+							collect(Collectors.toList()));
 		}
 		if (type == null || type == ResourceArtifactType.REPORT) {
 			artifacts.addAll(
-				reportGeneratorMap.keySet().stream().
-					map(code -> new ResourceArtifact(
-						ResourceArtifactType.REPORT,
-						code,
-						artifactRequiresId(ResourceArtifactType.REPORT, code),
-						artifactGetFormClass(ResourceArtifactType.REPORT, code))).
-					collect(Collectors.toList()));
+					reportGeneratorMap.keySet().stream().
+							map(code -> new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+									ResourceArtifactType.REPORT,
+									code,
+									artifactRequiresId(ResourceArtifactType.REPORT, code),
+									artifactGetFormClass(ResourceArtifactType.REPORT, code))).
+							collect(Collectors.toList()));
 		}
 		if (type == null || type == ResourceArtifactType.FILTER) {
 			artifacts.addAll(
-				artifactGetFilterAll().stream().
-					map(f -> new ResourceArtifact(
-						ResourceArtifactType.FILTER,
-						f.code(),
-						null,
-						artifactGetFormClass(ResourceArtifactType.FILTER, f.code()))).
-					collect(Collectors.toList()));
+					artifactGetFilterAll().stream().
+							map(f -> new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+									ResourceArtifactType.FILTER,
+									f.code(),
+									null,
+									artifactGetFormClass(ResourceArtifactType.FILTER, f.code()))).
+							collect(Collectors.toList()));
 		}
 		return artifacts;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public ResourceArtifact artifactGetOne(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
+	public es.caib.comanda.ms.logic.intf.model.ResourceArtifact artifactGetOne(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
 		log.debug("Querying artifact form class (type={}, code={})", type, code);
 		if (type == ResourceArtifactType.PERSPECTIVE) {
 			PerspectiveApplicator<?, ?> perspectiveApplicator = perspectiveApplicatorMap.get(code);
 			if (perspectiveApplicator != null) {
-				return new ResourceArtifact(
-					ResourceArtifactType.PERSPECTIVE,
-					code,
-					null,
-					null);
+				return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+						ResourceArtifactType.PERSPECTIVE,
+						code,
+						null,
+						null);
 			}
 		} else if (type == ResourceArtifactType.REPORT) {
 			ReportGenerator<E, ?, ?> reportGenerator = reportGeneratorMap.get(code);
 			if (reportGenerator != null) {
-				return new ResourceArtifact(
-					ResourceArtifactType.REPORT,
-					code,
-					artifactRequiresId(ResourceArtifactType.REPORT, code),
-					artifactGetFormClass(ResourceArtifactType.REPORT, code));
+				return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+						ResourceArtifactType.REPORT,
+						code,
+						artifactRequiresId(ResourceArtifactType.REPORT, code),
+						artifactGetFormClass(ResourceArtifactType.REPORT, code));
 			}
 		} else if (type == ResourceArtifactType.FILTER) {
 			if (artifactIsPresentInResourceConfig(type, code)) {
-				return new ResourceArtifact(
-					ResourceArtifactType.FILTER,
-					code,
-					null,
-					artifactGetFormClass(ResourceArtifactType.FILTER, code));
+				return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+						ResourceArtifactType.FILTER,
+						code,
+						null,
+						artifactGetFormClass(ResourceArtifactType.FILTER, code));
 			}
 		}
 		throw new ArtifactNotFoundException(getResourceClass(), type, code);
@@ -287,46 +287,46 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public <P extends Serializable> Map<String, Object> artifactOnChange(
-		ResourceArtifactType type,
-		String code,
-		Serializable id,
-		P previous,
-		String fieldName,
-		Object fieldValue,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
+			ResourceArtifactType type,
+			String code,
+			Serializable id,
+			P previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
 		log.debug("Processing onChange event for artifact (type={}, code={}, previous={}, fieldName={}, fieldValue={}, answers={})",
-			type,
-			code,
-			previous,
-			fieldName,
-			fieldValue,
-			answers);
-		ResourceArtifact artifact = artifactGetOne(type, code);
-		if (artifact.getFormClass() != null) {
-			onChangeCheckIfFieldExists(artifact.getFormClass(), fieldName);
-			return onChangeProcessRecursiveLogic(
-				id,
+				type,
+				code,
 				previous,
 				fieldName,
 				fieldValue,
-				null,
-				(id2,
-				 previous1,
-				 fieldName1,
-				 fieldValue1,
-				 answers1,
-				 previousFieldNames,
-				 target) -> internalArtifactOnChange(
-					type,
-					code,
-					id2,
-					previous1,
-					fieldName1,
-					fieldValue1,
-					answers1,
-					previousFieldNames,
-					target),
 				answers);
+		es.caib.comanda.ms.logic.intf.model.ResourceArtifact artifact = artifactGetOne(type, code);
+		if (artifact.getFormClass() != null) {
+			onChangeCheckIfFieldExists(artifact.getFormClass(), fieldName);
+			return onChangeProcessRecursiveLogic(
+					id,
+					previous,
+					fieldName,
+					fieldValue,
+					null,
+					(id2,
+					 previous1,
+					 fieldName1,
+					 fieldValue1,
+					 answers1,
+					 previousFieldNames,
+					 target) -> internalArtifactOnChange(
+							type,
+							code,
+							id2,
+							previous1,
+							fieldName1,
+							fieldValue1,
+							answers1,
+							previousFieldNames,
+							target),
+					answers);
 		} else {
 			log.warn("Couldn't find form class for artifact (resourceClass={}, type={}, code={})", getResourceClass(), type, code);
 			return new HashMap<>();
@@ -336,22 +336,25 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public List<FieldOption> artifactFieldEnumOptions(
-		ResourceArtifactType type,
-		String code,
-		String fieldName) {
-		log.debug("Querying field enum options for artifact (type={}, code={}, fieldName={})",
-			type,
-			code,
-			fieldName);
-		BaseMutableResourceService.FieldOptionsProvider fieldOptionsProvider = artifactGetFieldOptionsProvider(type, code);
-		if (fieldOptionsProvider != null) {
-			return fieldOptionsProvider.getOptions(fieldName);
-		} else {
-			log.warn("Couldn't find FieldOptionsProvider for artifact (resourceClass={}, type={}, code={}, fieldName={})",
-				getResourceClass(),
+			ResourceArtifactType type,
+			String code,
+			String fieldName,
+			Map<String,String[]> requestParameterMap) {
+		log.debug("Querying field enum options for artifact (type={}, code={}, fieldName={}, requestParameterMap={})",
 				type,
 				code,
-				fieldName);
+				fieldName,
+				requestParameterMap);
+		BaseMutableResourceService.FieldOptionsProvider fieldOptionsProvider = artifactGetFieldOptionsProvider(type, code);
+		if (fieldOptionsProvider != null) {
+			return fieldOptionsProvider.getOptions(fieldName, requestParameterMap);
+		} else {
+			log.warn("Couldn't find FieldOptionsProvider for artifact (resourceClass={}, type={}, code={}, fieldName={}, requestParameterMap={})",
+					getResourceClass(),
+					type,
+					code,
+					fieldName,
+					requestParameterMap);
 			return null;
 		}
 	}
@@ -359,9 +362,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public <P extends Serializable> List<?> artifactReportGenerateData(
-		ID id,
-		String code,
-		P params) throws ArtifactNotFoundException, ReportGenerationException {
+			ID id,
+			String code,
+			P params) throws ArtifactNotFoundException, ReportGenerationException {
 		log.debug("Generating report data (id={}, code={}, params={})", id, code, params);
 		ReportGenerator<E, P, ?> generator = (ReportGenerator<E, P, ?>)reportGeneratorMap.get(code);
 		if (generator != null) {
@@ -378,10 +381,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	@Override
 	@Transactional(readOnly = true)
 	public DownloadableFile artifactReportGenerateFile(
-		String code,
-		List<?> data,
-		ReportFileType fileType,
-		OutputStream out) throws ArtifactNotFoundException, ReportGenerationException {
+			String code,
+			List<?> data,
+			ReportFileType fileType,
+			OutputStream out) throws ArtifactNotFoundException, ReportGenerationException {
 		log.debug("Generating report file (code={}, data={}, fileType={})", code, data, fileType);
 		ReportGenerator<E, ?, ?> generator = reportGeneratorMap.get(code);
 		if (generator != null) {
@@ -392,20 +395,20 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				URL reportUrl = generator.getJasperReportUrl(code, fileType);
 				if (reportUrl != null) {
 					return jasperReportsHelper.generate(
-						getResourceClass(),
-						code,
-						reportUrl,
-						data,
-						LocaleContextHolder.getLocale(),
-						null,
-						fileType,
-						out);
+							getResourceClass(),
+							code,
+							reportUrl,
+							data,
+							LocaleContextHolder.getLocale(),
+							null,
+							fileType,
+							out);
 				} else {
 					throw new ReportGenerationException(
-						getResourceClass(),
-						null,
-						code,
-						"Couldn't generate report file: both generateFile and getJasperReportUrl methods returned null (fileType=" + fileType + ")");
+							getResourceClass(),
+							null,
+							code,
+							"Couldn't generate report file: both generateFile and getJasperReportUrl methods returned null (fileType=" + fileType + ")");
 				}
 			}
 		} else {
@@ -430,40 +433,40 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			if (additionalSpringFilter != null && !additionalSpringFilter.trim().isEmpty()) {
 				idMessage = "{id=" + idToString + ", springFilter=" + additionalSpringFilter + "}";
 			}
-			throw new ResourceNotFoundException(resourceClass, idMessage);
+			throw new ResourceNotFoundException(getResourceClass(), idMessage);
 		}
 	}
 
 	protected Page<E> internalFindEntities(
-		String quickFilter,
-		String filter,
-		String[] namedFilters,
-		Pageable pageable) {
+			String quickFilter,
+			String filter,
+			String[] namedFilters,
+			Pageable pageable) {
 		Page<E> resultat;
 		Specification<E> processedSpecification = toProcessedSpecification(
-			quickFilter,
-			filter,
-			namedFilters);
+				quickFilter,
+				filter,
+				namedFilters);
 		if (processedSpecification != null) {
 			log.debug("Consulta amb specification (specification={})", processedSpecification);
 			if (pageable.isUnpaged()) {
 				Sort processedSort = toProcessedSort(
-					addDefaultSort(pageable.getSort()));
+						addDefaultSort(pageable.getSort()));
 				List<E> resultList = entityRepository.findAll(
-					processedSpecification,
-					processedSort);
+						processedSpecification,
+						processedSort);
 				resultat = new PageImpl<E>(resultList, pageable, resultList.size());
 			} else {
 				Pageable processedPageable = toProcessedPageableSort(pageable);
 				resultat = entityRepository.findAll(
-					processedSpecification,
-					processedPageable);
+						processedSpecification,
+						processedPageable);
 			}
 		} else {
 			log.debug("Consulta sense specification");
 			if (pageable.isUnpaged()) {
 				Sort processedSort = toProcessedSort(
-					addDefaultSort(pageable.getSort()));
+						addDefaultSort(pageable.getSort()));
 				List<E> resultList = entityRepository.findAll(processedSort);
 				resultat = new PageImpl<>(resultList, pageable, resultList.size());
 			} else {
@@ -483,9 +486,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected void applyPerspectives(
-		List<E> entities,
-		List<R> resources,
-		String[] perspectives) throws ArtifactNotFoundException {
+			List<E> entities,
+			List<R> resources,
+			String[] perspectives) throws ArtifactNotFoundException {
 		Arrays.stream(perspectives).forEach(p -> {
 			PerspectiveApplicator<E, R> perspectiveApplicator = perspectiveApplicatorMap.get(p);
 			if (perspectiveApplicator != null) {
@@ -493,9 +496,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				if (!modified) {
 					IntStream.range(0, entities.size()).forEach(i -> {
 						perspectiveApplicator.applySingle(
-							p,
-							entities.get(i),
-							resources.get(i));
+								p,
+								entities.get(i),
+								resources.get(i));
 					});
 				}
 			} else {
@@ -505,9 +508,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected void applyPerspectives(
-		E entity,
-		R resource,
-		String[] perspectives) {
+			E entity,
+			R resource,
+			String[] perspectives) {
 		Arrays.stream(perspectives).forEach(p -> {
 			PerspectiveApplicator<E, R> perspectiveApplicator = perspectiveApplicatorMap.get(p);
 			if (perspectiveApplicator != null) {
@@ -519,21 +522,21 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected <P> Specification<P> toProcessedSpecification(
-		String quickFilter,
-		String filter,
-		String[] namedFilters) {
+			String quickFilter,
+			String filter,
+			String[] namedFilters) {
 		Specification<P> processedSpecification = getSpringFilterSpecification(
-			buildSpringFilterForQuickFilter(
-				getResourceClass(),
-				null,
-				quickFilter));
+				buildSpringFilterForQuickFilter(
+						getResourceClass(),
+						null,
+						quickFilter));
 		processedSpecification = appendSpecificationWithAnd(
-			processedSpecification,
-			getSpringFilterSpecification(filter));
+				processedSpecification,
+				getSpringFilterSpecification(filter));
 		processedSpecification = appendSpecificationWithAnd(
-			processedSpecification,
-			getSpringFilterSpecification(
-				additionalSpringFilter(filter, namedFilters)));
+				processedSpecification,
+				getSpringFilterSpecification(
+						additionalSpringFilter(filter, namedFilters)));
 		if (namedFilters != null) {
 			for (String namedFilter: namedFilters) {
 				Specification<P> namedSpecification = null;
@@ -544,8 +547,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 					namedSpecification = namedFilterToSpecification(namedFilter);
 				}
 				processedSpecification = appendSpecificationWithAnd(
-					processedSpecification,
-					namedSpecification);
+						processedSpecification,
+						namedSpecification);
 			}
 		}
 		Specification<P> finalSpecification = processSpecification(processedSpecification);
@@ -561,8 +564,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected <P> Specification<P> appendSpecificationWithAnd(
-		Specification<P> currentSpecification,
-		Specification<P> specification) {
+			Specification<P> currentSpecification,
+			Specification<P> specification) {
 		if (specification != null) {
 			if (currentSpecification != null) {
 				return currentSpecification.and(specification);
@@ -575,30 +578,30 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected String buildSpringFilterForQuickFilter(
-		Class<? extends Resource<?>> resourceClass,
-		String prefix,
-		String quickFilter) {
+			Class<? extends Resource<?>> resourceClass,
+			String prefix,
+			String quickFilter) {
 		ResourceConfig resourceConfigAnnotation = resourceClass.getAnnotation(ResourceConfig.class);
 		if (quickFilter != null) {
 			String[] quickFilterFields = quickFilterGetFieldsFromResourceClass(resourceClass);
 			if (quickFilterFields != null) {
 				log.debug(
-					"Construint filtre Spring Filter per quickFilter (resourceClass={}, quickFilter={})",
-					getResourceClass(),
-					quickFilter);
+						"Construint filtre Spring Filter per quickFilter (resourceClass={}, quickFilter={})",
+						getResourceClass(),
+						quickFilter);
 				StringBuilder quickFilterSpringFilter = new StringBuilder();
 				for (String quickFilterField : resourceConfigAnnotation.quickFilterFields()) {
 					String springFilter = getSpringFilterFromQuickFilterPath(
-						quickFilterField.split("\\."),
-						resourceClass,
-						quickFilterField,
-						quickFilter,
-						prefix);
+							quickFilterField.split("\\."),
+							resourceClass,
+							quickFilterField,
+							quickFilter,
+							prefix);
 					if (springFilter != null) {
 						appendSpringFilter(
-							quickFilterSpringFilter,
-							springFilter,
-							" or ");
+								quickFilterSpringFilter,
+								springFilter,
+								" or ");
 					}
 				}
 				log.debug("Filtre Spring Filter resultant: {}", quickFilterSpringFilter);
@@ -612,8 +615,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		ResourceConfig resourceAnnotation = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceAnnotation != null && resourceAnnotation.defaultSortFields().length > 0) {
 			return Arrays.stream(resourceAnnotation.defaultSortFields()).
-				map(s -> new SortedField(s.field(), s.direction())).
-				collect(Collectors.toList());
+					map(s -> new SortedField(s.field(), s.direction())).
+					collect(Collectors.toList());
 		} else {
 			return Collections.emptyList();
 		}
@@ -629,13 +632,13 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected <P extends Serializable> Map<String, Object> onChangeProcessRecursiveLogic(
-		Serializable id,
-		P previous,
-		String fieldName,
-		Object fieldValue,
-		String[] previousFieldNames,
-		OnChangeLogicProcessor<P> onChangeLogicProcessor,
-		Map<String, AnswerRequiredException.AnswerValue> answers) {
+			Serializable id,
+			P previous,
+			String fieldName,
+			Object fieldValue,
+			String[] previousFieldNames,
+			OnChangeLogicProcessor<P> onChangeLogicProcessor,
+			Map<String, AnswerRequiredException.AnswerValue> answers) {
 		Map<String, Object> changesToReturn = null;
 		P newInstance = (P)newClassInstance(previous.getClass());
 		if (newInstance != null) {
@@ -647,21 +650,21 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				Object[] arguments = invocation.getArguments();
 				if (methodName.startsWith("set") && arguments.length > 0) {
 					changes.put(
-						StringUtil.decapitalize(methodName.substring("set".length())),
-						arguments[0]);
+							StringUtil.decapitalize(methodName.substring("set".length())),
+							arguments[0]);
 				}
 				return invocation.proceed();
 			});
 			P target = (P)factory.getProxy();
 			if (onChangeLogicProcessor != null) {
 				onChangeLogicProcessor.onChange(
-					id,
-					previous,
-					fieldName,
-					fieldValue,
-					answers,
-					previousFieldNames,
-					target);
+						id,
+						previous,
+						fieldName,
+						fieldValue,
+						answers,
+						previousFieldNames,
+						target);
 			}
 			if (!changes.isEmpty()) {
 				changesToReturn = new HashMap<>(changes);
@@ -671,11 +674,11 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						ResourceField fieldAnnotation = changedField.getAnnotation(ResourceField.class);
 						if (fieldAnnotation != null && fieldAnnotation.onChangeActive()) {
 							Object previousWithChanges = cloneObjectWithFieldsMap(
-								previous,
-								fieldName,
-								fieldValue,
-								changes,
-								changedFieldName);
+									previous,
+									fieldName,
+									fieldValue,
+									changes,
+									changedFieldName);
 							List<String> previousFieldNamesWithChangedFieldName = new ArrayList<>();
 							if (previousFieldNames != null) {
 								previousFieldNamesWithChangedFieldName.addAll(Arrays.asList(previousFieldNames));
@@ -684,13 +687,13 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 								previousFieldNamesWithChangedFieldName.add(fieldName);
 							}
 							Map<String, Object> changesPerField = onChangeProcessRecursiveLogic(
-								id,
-								(P)previousWithChanges,
-								changedFieldName,
-								changes.get(changedFieldName),
-								previousFieldNamesWithChangedFieldName.toArray(new String[0]),
-								onChangeLogicProcessor,
-								answers);
+									id,
+									(P)previousWithChanges,
+									changedFieldName,
+									changes.get(changedFieldName),
+									previousFieldNamesWithChangedFieldName.toArray(new String[0]),
+									onChangeLogicProcessor,
+									answers);
 							if (changesPerField != null) {
 								changesToReturn.putAll(changesPerField);
 							}
@@ -703,11 +706,11 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected Object cloneObjectWithFieldsMap(
-		Object resource,
-		String fieldName,
-		Object fieldValue,
-		Map<String, Object> fields,
-		String excludeField) {
+			Object resource,
+			String fieldName,
+			Object fieldValue,
+			Map<String, Object> fields,
+			String excludeField) {
 		Object clonedResource = objectMappingHelper.clone(resource);
 		if (fieldName != null) {
 			Field field = ReflectionUtils.findField(resource.getClass(), fieldName);
@@ -716,9 +719,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				ReflectionUtils.setField(field, clonedResource, fieldValue);
 			} else {
 				log.error(
-					"Processing onChange request: couldn't find field {} on resource {}",
-					fieldName,
-					resource.getClass().getName());
+						"Processing onChange request: couldn't find field {} on resource {}",
+						fieldName,
+						resource.getClass().getName());
 			}
 		}
 		fields.forEach((k, v) -> {
@@ -734,8 +737,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected BaseMutableResourceService.FieldOptionsProvider artifactGetFieldOptionsProvider(
-		ResourceArtifactType type,
-		String code) {
+			ResourceArtifactType type,
+			String code) {
 		BaseMutableResourceService.FieldOptionsProvider fieldOptionsProvider = null;
 		if (type == ResourceArtifactType.REPORT) {
 			fieldOptionsProvider = reportGeneratorMap.get(code);
@@ -755,8 +758,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected String additionalSpringFilter(
-		String currentSpringFilter,
-		String[] namedQueries) {
+			String currentSpringFilter,
+			String[] namedQueries) {
 		return null;
 	}
 
@@ -773,10 +776,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	protected void beforeGetOne(String[] perspectives) {}
 	protected void beforeFind(
-		String quickFilter,
-		String springFilter,
-		String[] namedQueries,
-		Pageable pageable) {}
+			String quickFilter,
+			String springFilter,
+			String[] namedQueries,
+			Pageable pageable) {}
 	protected void beforeConversion(E entity) {}
 	protected void afterConversion(E entity, R resource) {}
 	protected void beforeConversion(List<E> entities) {
@@ -797,9 +800,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected Class<R> getResourceClass() {
 		if (resourceClass == null) {
 			resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-				getClass(),
-				BaseReadonlyResourceService.class,
-				0);
+					getClass(),
+					BaseReadonlyResourceService.class,
+					0);
 		}
 		return resourceClass;
 	}
@@ -807,101 +810,101 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected Class<E> getEntityClass() {
 		if (entityClass == null) {
 			entityClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-				getClass(),
-				BaseReadonlyResourceService.class,
-				2);
+					getClass(),
+					BaseReadonlyResourceService.class,
+					2);
 		}
 		return entityClass;
 	}
 
 	protected <P extends Serializable> void internalArtifactOnChange(
-		ResourceArtifactType type,
-		String code,
-		Serializable id,
-		P previous,
-		String fieldName,
-		Object fieldValue,
-		Map<String, AnswerRequiredException.AnswerValue> answers,
-		String[] previousFieldsChanged,
-		P target) {
+			ResourceArtifactType type,
+			String code,
+			Serializable id,
+			P previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			String[] previousFieldsChanged,
+			P target) {
 		if (type == ResourceArtifactType.REPORT) {
 			ReportGenerator<E, P, ?> reportGenerator = (ReportGenerator<E, P, ?>) reportGeneratorMap.get(code);
 			if (reportGenerator != null) {
 				reportGenerator.onChange(
-					id,
-					previous,
-					fieldName,
-					fieldValue,
-					answers,
-					previousFieldsChanged,
-					target);
+						id,
+						previous,
+						fieldName,
+						fieldValue,
+						answers,
+						previousFieldsChanged,
+						target);
 			}
 		} else if (type == ResourceArtifactType.FILTER) {
 			FilterProcessor<P> filterProcessor = (FilterProcessor<P>)filterProcessorMap.get(code);
 			if (filterProcessor != null) {
 				filterProcessor.onChange(
-					id,
-					previous,
-					fieldName,
-					fieldValue,
-					answers,
-					previousFieldsChanged,
-					target);
+						id,
+						previous,
+						fieldName,
+						fieldValue,
+						answers,
+						previousFieldsChanged,
+						target);
 			}
 		}
 	}
 
 	protected void register(
-		String reportCode,
-		ReportGenerator<E, ?, ?> reportGenerator) {
+			String reportCode,
+			ReportGenerator<E, ?, ?> reportGenerator) {
 		if (artifactIsPresentInResourceConfig(ResourceArtifactType.REPORT, reportCode)) {
 			reportGeneratorMap.put(reportCode, reportGenerator);
 		} else {
 			log.error("Artifact not registered because it doesn't exist in ResourceConfig annotation (" +
-				"resourceClass=" + getResourceClass() + ", " +
-				"artifactType=" + ResourceArtifactType.REPORT + ", " +
-				"artifactCode=" + reportCode + ")");
+					"resourceClass=" + getResourceClass() + ", " +
+					"artifactType=" + ResourceArtifactType.REPORT + ", " +
+					"artifactCode=" + reportCode + ")");
 		}
 	}
 
 	protected void register(
-		String filterCode,
-		FilterProcessor<?> filterProcessor) {
+			String filterCode,
+			FilterProcessor<?> filterProcessor) {
 		if (artifactIsPresentInResourceConfig(ResourceArtifactType.FILTER, filterCode)) {
 			filterProcessorMap.put(filterCode, filterProcessor);
 		} else {
 			log.error("Artifact not registered because it doesn't exist in ResourceConfig annotation (" +
-				"resourceClass=" + getResourceClass() + ", " +
-				"artifactType=" + ResourceArtifactType.FILTER + ", " +
-				"artifactCode=" + filterCode + ")");
+					"resourceClass=" + getResourceClass() + ", " +
+					"artifactType=" + ResourceArtifactType.FILTER + ", " +
+					"artifactCode=" + filterCode + ")");
 		}
 	}
 
 	protected void register(
-		String perspectiveCode,
-		PerspectiveApplicator<E, R> perspectiveApplicator) {
+			String perspectiveCode,
+			PerspectiveApplicator<E, R> perspectiveApplicator) {
 		if (artifactIsPresentInResourceConfig(ResourceArtifactType.PERSPECTIVE, perspectiveCode)) {
 			perspectiveApplicatorMap.put(perspectiveCode, perspectiveApplicator);
 		} else {
 			log.error("Artifact not registered because it doesn't exist in ResourceConfig annotation (" +
-				"resourceClass=" + getResourceClass() + ", " +
-				"artifactType=" + ResourceArtifactType.PERSPECTIVE + ", " +
-				"artifactCode=" + perspectiveCode + ")");
+					"resourceClass=" + getResourceClass() + ", " +
+					"artifactType=" + ResourceArtifactType.PERSPECTIVE + ", " +
+					"artifactCode=" + perspectiveCode + ")");
 		}
 	}
 
 	protected void register(
-		String fieldName,
-		FieldDownloader<E> fieldDownloader) {
+			String fieldName,
+			FieldDownloader<E> fieldDownloader) {
 		fieldDownloaderMap.put(fieldName, fieldDownloader);
 	}
 
 	protected Boolean artifactRequiresId(ResourceArtifactType type, String code) {
 		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceConfig != null && (type == ResourceArtifactType.ACTION || type == ResourceArtifactType.REPORT)) {
-			Optional<ResourceConfigArtifact> artifact = Arrays.stream(resourceConfig.artifacts()).
-				filter(a -> a.type() == type && a.code().equals(code)).
-				findFirst();
+			Optional<ResourceArtifact> artifact = Arrays.stream(resourceConfig.artifacts()).
+					filter(a -> a.type() == type && a.code().equals(code)).
+					findFirst();
 			if (artifact.isPresent()) {
 				return artifact.get().requiresId();
 			}
@@ -912,9 +915,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected Class<? extends Serializable> artifactGetFormClass(ResourceArtifactType type, String code) {
 		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceConfig != null) {
-			Optional<ResourceConfigArtifact> artifact = Arrays.stream(resourceConfig.artifacts()).
-				filter(a -> a.type() == type && a.code().equals(code)).
-				findFirst();
+			Optional<ResourceArtifact> artifact = Arrays.stream(resourceConfig.artifacts()).
+					filter(a -> a.type() == type && a.code().equals(code)).
+					findFirst();
 			if (artifact.isPresent() && !artifact.get().formClass().equals(Serializable.class)) {
 				return artifact.get().formClass();
 			}
@@ -923,25 +926,25 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected boolean artifactIsPresentInResourceConfig(
-		ResourceArtifactType type,
-		String code) {
+			ResourceArtifactType type,
+			String code) {
 		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceConfig != null) {
-			Optional<ResourceConfigArtifact> artifacts = Arrays.stream(resourceConfig.artifacts()).
-				filter(a -> a.type() == type && a.code().equals(code)).
-				findFirst();
+			Optional<ResourceArtifact> artifacts = Arrays.stream(resourceConfig.artifacts()).
+					filter(a -> a.type() == type && a.code().equals(code)).
+					findFirst();
 			return artifacts.isPresent();
 		} else {
 			return false;
 		}
 	}
 
-	protected List<ResourceConfigArtifact> artifactGetFilterAll() {
+	protected List<ResourceArtifact> artifactGetFilterAll() {
 		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceConfig != null) {
 			return Arrays.stream(resourceConfig.artifacts()).
-				filter(a -> a.type() == ResourceArtifactType.FILTER).
-				collect(Collectors.toList());
+					filter(a -> a.type() == ResourceArtifactType.FILTER).
+					collect(Collectors.toList());
 		} else {
 			return Collections.emptyList();
 		}
@@ -949,14 +952,14 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	private Pageable toProcessedPageableSort(Pageable pageable) {
 		return PageRequest.of(
-			pageable.getPageNumber(),
-			pageable.getPageSize(),
-			toProcessedSort(
-				addDefaultSort(pageable.getSort())));
+				pageable.getPageNumber(),
+				pageable.getPageSize(),
+				toProcessedSort(
+						addDefaultSort(pageable.getSort())));
 	}
 
 	private Sort toProcessedSort(
-		Sort sort) {
+			Sort sort) {
 		Sort resultSort;
 		if (sort != null) {
 			log.debug("\tProcessant ordenació " + sort);
@@ -964,8 +967,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				List<Sort.Order> orders = new ArrayList<>();
 				for (Sort.Order order: sort) {
 					String[] orderPaths = toProcessedSortPath(
-						order.getProperty().split("\\."),
-						getEntityClass());
+							order.getProperty().split("\\."),
+							getEntityClass());
 					if (orderPaths != null) {
 						for (String orderPath: orderPaths) {
 							if (order.isAscending()) {
@@ -991,8 +994,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	private String[] toProcessedSortPath(
-		String[] path,
-		Class<?> entityClass) {
+			String[] path,
+			Class<?> entityClass) {
 		if (path.length > 0) {
 			log.debug("\t\tProcessant path d'ordenació" + Arrays.toString(path) + " per l'entitat " + entityClass);
 			Field entityField = ReflectionUtils.findField(entityClass, path[0]);
@@ -1004,14 +1007,14 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						// procés amb l'entitat a la que es fa referència.
 						log.debug("\t\t\tDetectat camp d'entitat de tipus referencia no final " + path[0] + ", tornant a processar");
 						String[] orderPaths = toProcessedSortPath(
-							Arrays.copyOfRange(path, 1, path.length),
-							entityField.getType());
+								Arrays.copyOfRange(path, 1, path.length),
+								entityField.getType());
 						if (orderPaths != null) {
 							// Retorna els paths afegint de nou el primer camp
 							return Arrays.stream(orderPaths).
-								filter(p -> !p.isEmpty()).
-								map(p -> path[0] + "." + p).
-								toArray(String[]::new);
+									filter(p -> !p.isEmpty()).
+									map(p -> path[0] + "." + p).
+									toArray(String[]::new);
 						} else {
 							return null;
 						}
@@ -1027,7 +1030,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 					return new String[] { path[0] };
 				}
 			} else {
-				log.warn("Ordenació no aplicable pel recurs {}, camp no trobat: {}", resourceClass, path[0]);
+				log.warn("Ordenació no aplicable pel recurs {}, camp no trobat: {}", getResourceClass(), path[0]);
 				return null;
 			}
 		} else {
@@ -1040,8 +1043,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			List<Sort.Order> orders = new ArrayList<>();
 			for (SortedField sortedField: getResourceDefaultSortFields(getResourceClass())) {
 				orders.add(new Sort.Order(
-					sortedField.getDirection(),
-					sortedField.getField()));
+						sortedField.getDirection(),
+						sortedField.getField()));
 			}
 			return Sort.by(orders);
 		} else {
@@ -1060,11 +1063,11 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	private String getSpringFilterFromQuickFilterPath(
-		String[] currentPath,
-		Class<?> resourceClass,
-		String fieldName,
-		String quickFilter,
-		String filterFieldPrefix) {
+			String[] currentPath,
+			Class<?> resourceClass,
+			String fieldName,
+			String quickFilter,
+			String filterFieldPrefix) {
 		log.debug("\t\tProcessant path de quickFilter" + Arrays.toString(currentPath) + " pel recurs " + resourceClass);
 		Field resourceField = ReflectionUtils.findField(resourceClass, currentPath[0]);
 		if (resourceField != null) {
@@ -1086,12 +1089,12 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						springFilter.append("exists(");
 					}
 					springFilter.append(
-						getSpringFilterFromQuickFilterPath(
-							Arrays.copyOfRange(currentPath, 1, currentPath.length),
-							TypeUtil.getReferencedResourceClass(resourceField),
-							fieldName,
-							quickFilter,
-							filterFieldPrefix));
+							getSpringFilterFromQuickFilterPath(
+									Arrays.copyOfRange(currentPath, 1, currentPath.length),
+									TypeUtil.getReferencedResourceClass(resourceField),
+									fieldName,
+									quickFilter,
+									filterFieldPrefix));
 					if (resourceTypeIsCollection) {
 						springFilter.append(")");
 					}
@@ -1102,10 +1105,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 						springFilter.append("exists(");
 					}
 					springFilter.append(
-						buildSpringFilterForQuickFilter(
-							TypeUtil.getReferencedResourceClass(resourceField),
-							(filterFieldPrefix != null) ? filterFieldPrefix + resourceField.getName() + "." : resourceField.getName() + ".",
-							quickFilter));
+							buildSpringFilterForQuickFilter(
+									TypeUtil.getReferencedResourceClass(resourceField),
+									(filterFieldPrefix != null) ? filterFieldPrefix + resourceField.getName() + "." : resourceField.getName() + ".",
+									quickFilter));
 					if (resourceTypeIsCollection) {
 						springFilter.append(")");
 					}
@@ -1137,9 +1140,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	private void appendSpringFilter(
-		StringBuilder sb,
-		String springFilter,
-		String separator) {
+			StringBuilder sb,
+			String springFilter,
+			String separator) {
 		if (springFilter != null && !springFilter.isEmpty()) {
 			if (sb.length() > 0) {
 				sb.append(separator);
@@ -1176,9 +1179,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		private PK id;
 		@Override
 		public Predicate toPredicate(
-			Root<E> root,
-			CriteriaQuery<?> query,
-			CriteriaBuilder criteriaBuilder) {
+				Root<E> root,
+				CriteriaQuery<?> query,
+				CriteriaBuilder criteriaBuilder) {
 			return criteriaBuilder.equal(root.get("id"), id);
 		}
 	}
@@ -1205,9 +1208,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 *             si es produeix algun error aplicant la perspectiva.
 		 */
 		default boolean applyMultiple(
-			String code,
-			List<E> entities,
-			List<R> resources) throws PerspectiveApplicationException {
+				String code,
+				List<E> entities,
+				List<R> resources) throws PerspectiveApplicationException {
 			return false;
 		}
 		/**
@@ -1223,9 +1226,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 *             si es produeix algun error aplicant la perspectiva.
 		 */
 		void applySingle(
-			String code,
-			E entity,
-			R resource) throws PerspectiveApplicationException;
+				String code,
+				E entity,
+				R resource) throws PerspectiveApplicationException;
 	}
 
 	/**
@@ -1254,13 +1257,13 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 *            el recurs emmagatzemat a base de dades.
 		 */
 		void onChange(
-			Serializable id,
-			R previous,
-			String fieldName,
-			Object fieldValue,
-			Map<String, AnswerRequiredException.AnswerValue> answers,
-			String[] previousFieldNames,
-			R target);
+				Serializable id,
+				R previous,
+				String fieldName,
+				Object fieldValue,
+				Map<String, AnswerRequiredException.AnswerValue> answers,
+				String[] previousFieldNames,
+				R target);
 	}
 
 	/**
@@ -1271,7 +1274,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	 * @param <R> classe de la llista de dades retornades al generar l'informe.
 	 */
 	public interface ReportGenerator<E extends ResourceEntity<?, ?>, P extends Serializable, R extends Serializable>
-		extends BaseMutableResourceService.OnChangeLogicProcessor<P>, BaseMutableResourceService.FieldOptionsProvider {
+			extends BaseMutableResourceService.OnChangeLogicProcessor<P>, BaseMutableResourceService.FieldOptionsProvider {
 		/**
 		 * Genera les dades per l'informe.
 		 *
@@ -1287,9 +1290,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 *             si es produeix algun error generant les dades.
 		 */
 		List<R> generateData(
-			String code,
-			E entity,
-			P params) throws ReportGenerationException;
+				String code,
+				E entity,
+				P params) throws ReportGenerationException;
 		/**
 		 * Genera el fitxer amb l'informe.
 		 *
@@ -1304,10 +1307,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 * @return el fitxer generat o null si aquest generador no implementa aquesta funcionalitat.
 		 */
 		default DownloadableFile generateFile(
-			String code,
-			List<?> data,
-			ReportFileType fileType,
-			OutputStream out) {
+				String code,
+				List<?> data,
+				ReportFileType fileType,
+				OutputStream out) {
 			return null;
 		}
 		/**
@@ -1323,7 +1326,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			return null;
 		}
 		@Override
-		default List<FieldOption> getOptions(String fieldName) {
+		default List<FieldOption> getOptions(String fieldName, Map<String,String[]> requestParameterMap) {
 			return new ArrayList<>();
 		}
 	}
@@ -1334,9 +1337,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	 * @param <R> classe del recurs que representa el filtre.
 	 */
 	public interface FilterProcessor<R extends Serializable>
-		extends BaseMutableResourceService.OnChangeLogicProcessor<R>, BaseMutableResourceService.FieldOptionsProvider {
+			extends BaseMutableResourceService.OnChangeLogicProcessor<R>, BaseMutableResourceService.FieldOptionsProvider {
 		@Override
-		default List<FieldOption> getOptions(String fieldName) {
+		default List<FieldOption> getOptions(String fieldName, Map<String,String[]> requestParameterMap) {
 			return new ArrayList<>();
 		}
 	}
@@ -1360,9 +1363,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 *             si es produeix algun error de E/S al descarregar l'arxiu.
 		 */
 		DownloadableFile download(
-			E entity,
-			String fieldName,
-			OutputStream out) throws IOException;
+				E entity,
+				String fieldName,
+				OutputStream out) throws IOException;
 	}
 
 }

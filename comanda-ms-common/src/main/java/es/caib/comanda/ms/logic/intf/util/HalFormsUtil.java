@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * Utilitats per a HAL-FORMS.
- *
+ * 
  * @author Límit Tecnologies
  */
 public class HalFormsUtil {
@@ -25,7 +25,7 @@ public class HalFormsUtil {
 		if (resourceServiceLocator != null) {
 			try {
 				MutableResourceService<?, ?> mutableResourceService = ResourceServiceLocator.getInstance().
-					getMutableEntityResourceServiceForResourceClass(resourceClass);
+						getMutableEntityResourceServiceForResourceClass(resourceClass);
 				Object newInstance = mutableResourceService.newResourceInstance();
 				if (newInstance != null) {
 					values.putAll(toMap(newInstance));
@@ -36,9 +36,9 @@ public class HalFormsUtil {
 	}
 
 	public static <T extends Annotation> T getFieldAnnotation(
-		Class<?> resourceClass,
-		String fieldName,
-		Class<T> annotationClass) {
+			Class<?> resourceClass,
+			String fieldName,
+			Class<T> annotationClass) {
 		try {
 			return resourceClass.getDeclaredField(fieldName).getAnnotation(annotationClass);
 		} catch (NoSuchFieldException e) {

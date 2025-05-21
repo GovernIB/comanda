@@ -1,6 +1,3 @@
-/**
- * 
- */
 package es.caib.comanda.ms.back.error;
 
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
@@ -30,7 +27,7 @@ import java.util.Objects;
 
 /**
  * Tractament global de les excepcions en els controladors.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -48,46 +45,46 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(NotFoundException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ResponseEntity<Object> handleNotFoundException(
-		NotFoundException ex,
-		WebRequest request) {
+			NotFoundException ex,
+			WebRequest request) {
 		log.warn(ex.getMessage());
 		return buildErrorResponse(
-			ex,
-			ex.getMessage(),
-			HttpStatus.NOT_FOUND,
-			request);
+				ex,
+				ex.getMessage(),
+				HttpStatus.NOT_FOUND,
+				request);
 	}
 
 	@ExceptionHandler(ResourceAlreadyExistsException.class)
 	@ResponseStatus(HttpStatus.CONFLICT)
 	public ResponseEntity<Object> handleResourceAlreadyExistsException(
-		ResourceAlreadyExistsException ex,
-		WebRequest request) {
+			ResourceAlreadyExistsException ex,
+			WebRequest request) {
 		log.warn(ex.getMessage());
 		return buildErrorResponse(
-			ex,
-			ex.getMessage(),
-			HttpStatus.CONFLICT,
-			request);
+				ex,
+				ex.getMessage(),
+				HttpStatus.CONFLICT,
+				request);
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	public ResponseEntity<Object> handleAccessDeniedException(
-		AccessDeniedException ex,
-		WebRequest request) {
+			AccessDeniedException ex,
+			WebRequest request) {
 		return buildErrorResponse(
-			ex,
-			ex.getMessage(),
-			HttpStatus.FORBIDDEN,
-			request);
+				ex,
+				ex.getMessage(),
+				HttpStatus.FORBIDDEN,
+				request);
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<Object> handleDataIntegrityViolationException(
-		DataIntegrityViolationException ex,
-		WebRequest request) {
+			DataIntegrityViolationException ex,
+			WebRequest request) {
 		if (ex.getCause() != null && ex.getCause().getClass().getSimpleName().equals("ConstraintViolationException")) {
 			String constraintName = null;
 			try {
@@ -105,9 +102,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 				try {
 					String errorKey = BaseConfig.BASE_PACKAGE + ".error.handling.DataIntegrityViolationException." + constraintNameUpper + ".message";
 					errorMessage = messageSource.getMessage(
-						errorKey,
-						null,
-						request.getLocale());
+							errorKey,
+							null,
+							request.getLocale());
 				} catch (NoSuchMessageException nmex) {
 					String errorKey = BaseConfig.BASE_PACKAGE + ".error.handling.ConstraintViolationException.message";
 					if (constraintNameUpper.endsWith("_FK")) {
@@ -118,150 +115,150 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 						errorKey = BaseConfig.BASE_PACKAGE + ".error.handling.PrimaryKeyViolationException.message";
 					}
 					errorMessage = messageSource.getMessage(
-						errorKey,
-						new String[] { constraintName },
-						request.getLocale());
+							errorKey,
+							new String[] { constraintName },
+							request.getLocale());
 				}
 			} else {
 				errorMessage = ex.getMessage();
 			}
 			return buildConstraintValidationErrorResponse(
-				ex,
-				errorMessage,
-				HttpStatus.INTERNAL_SERVER_ERROR,
-				request,
-				constraintName);
+					ex,
+					errorMessage,
+					HttpStatus.INTERNAL_SERVER_ERROR,
+					request,
+					constraintName);
 		} else {
 			return buildErrorResponse(
-				ex,
-				ex.getMessage(),
-				HttpStatus.INTERNAL_SERVER_ERROR,
-				request);
+					ex,
+					ex.getMessage(),
+					HttpStatus.INTERNAL_SERVER_ERROR,
+					request);
 		}
 	}
 
 	@ExceptionHandler(AnswerRequiredException.class)
 	@ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-	public ResponseEntity<Object> handleOnChangeAnswerRequiredException(
-		AnswerRequiredException ex,
-		WebRequest request) {
-		return buildOnChangeAnswerRequiredErrorResponse(
-			ex,
-			ex.getMessage(),
-			HttpStatus.UNPROCESSABLE_ENTITY,
-			request,
-			ex.toAnswerRequiredError());
+	public ResponseEntity<Object> handleAnswerRequiredException(
+			AnswerRequiredException ex,
+			WebRequest request) {
+		return buildAnswerRequiredErrorResponse(
+				ex,
+				ex.getMessage(),
+				HttpStatus.UNPROCESSABLE_ENTITY,
+				request,
+				ex.toAnswerRequiredError());
 	}
 
 	@ExceptionHandler(ResourceNotCreatedException.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<Object> handleResourceNotCreatedException(
-		ResourceNotCreatedException ex,
-		WebRequest request) {
+			ResourceNotCreatedException ex,
+			WebRequest request) {
 		return buildModificationCanceledErrorResponse(
-			ex,
-			ex.getReason(),
-			HttpStatus.INTERNAL_SERVER_ERROR,
-			request,
-			null);
+				ex,
+				ex.getReason(),
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				request,
+				null);
 	}
 
 	@ExceptionHandler(ResourceNotUpdatedException.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<Object> handleResourceNotUpdatedException(
-		ResourceNotUpdatedException ex,
-		WebRequest request) {
+			ResourceNotUpdatedException ex,
+			WebRequest request) {
 		return buildModificationCanceledErrorResponse(
-			ex,
-			ex.getReason(),
-			HttpStatus.INTERNAL_SERVER_ERROR,
-			request,
-			null);
+				ex,
+				ex.getReason(),
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				request,
+				null);
 	}
 
 	@ExceptionHandler(ResourceNotDeletedException.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<Object> handleResourceNotDeletedException(
-		ResourceNotDeletedException ex,
-		WebRequest request) {
+			ResourceNotDeletedException ex,
+			WebRequest request) {
 		return buildModificationCanceledErrorResponse(
-			ex,
-			ex.getReason(),
-			HttpStatus.INTERNAL_SERVER_ERROR,
-			request,
-			null);
+				ex,
+				ex.getReason(),
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				request,
+				null);
 	}
 
 	@ExceptionHandler(RuntimeException.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<Object> handleAllUncaughtException(
-		RuntimeException ex,
-		WebRequest request) {
+			RuntimeException ex,
+			WebRequest request) {
 		log.error("Uncaught exception", ex);
 		return buildErrorResponse(
-			ex,
-			ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "Unknown error",
-			HttpStatus.INTERNAL_SERVER_ERROR,
-			request);
+				ex,
+				ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "Unknown error",
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				request);
 	}
 
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(
-		MethodArgumentNotValidException ex,
-		HttpHeaders headers,
-		HttpStatus status,
-		WebRequest request) {
+			MethodArgumentNotValidException ex,
+			HttpHeaders headers,
+			HttpStatus status,
+			WebRequest request) {
 		HttpStatus responseStatus = HttpStatus.UNPROCESSABLE_ENTITY;
 		FieldValidationErrorResponse fieldValidationErrorResponse = new FieldValidationErrorResponse(
-			responseStatus.value(),
-			messageSource.getMessage(
-				BaseConfig.BASE_PACKAGE + ".error.handling.MethodArgumentNotValidException.message",
-				new String[] { "validationErrors" },
-				request.getLocale())); // "Validation error. Check 'validationErrors' field for details."
+				responseStatus.value(),
+				messageSource.getMessage(
+					BaseConfig.BASE_PACKAGE + ".error.handling.MethodArgumentNotValidException.message",
+						new String[] { "validationErrors" },
+						request.getLocale())); // "Validation error. Check 'validationErrors' field for details."
 		for (ObjectError objectError: ex.getBindingResult().getGlobalErrors()) {
 			fieldValidationErrorResponse.addValidationError(
-				null,
-				null,
-				objectError.getCode(),
-				objectError.getCodes(),
-				objectError.getArguments(),
-				objectError.getDefaultMessage());
+					null,
+					null,
+					objectError.getCode(),
+					objectError.getCodes(),
+					objectError.getArguments(),
+					objectError.getDefaultMessage());
 		}
 		for (FieldError fieldError: ex.getBindingResult().getFieldErrors()) {
 			fieldValidationErrorResponse.addValidationError(
-				fieldError.getField(),
-				fieldError.getRejectedValue(),
-				fieldError.getCode(),
-				fieldError.getCodes(),
-				fieldError.getArguments(),
-				fieldError.getDefaultMessage());
+					fieldError.getField(),
+					fieldError.getRejectedValue(),
+					fieldError.getCode(),
+					fieldError.getCodes(),
+					fieldError.getArguments(),
+					fieldError.getDefaultMessage());
 		}
 		return toErrorResponseEntity(responseStatus, fieldValidationErrorResponse);
 	}
 
 	@Override
 	public ResponseEntity<Object> handleExceptionInternal(
-		Exception ex,
-		Object body,
-		HttpHeaders headers,
-		HttpStatus status,
-		WebRequest request) {
+			Exception ex,
+			Object body,
+			HttpHeaders headers,
+			HttpStatus status,
+			WebRequest request) {
 		log.error("Internal exception", ex);
 		return buildErrorResponse(ex, status, request);
 	}
 
 	private ResponseEntity<Object> buildErrorResponse(
-		Exception ex,
-		HttpStatus httpStatus,
-		WebRequest request) {
+			Exception ex,
+			HttpStatus httpStatus,
+			WebRequest request) {
 		return buildErrorResponse(ex, ex.getMessage(), httpStatus, request);
 	}
 
 	private ResponseEntity<Object> buildErrorResponse(
-		Exception ex,
-		String message,
-		HttpStatus httpStatus,
-		WebRequest request) {
+			Exception ex,
+			String message,
+			HttpStatus httpStatus,
+			WebRequest request) {
 		ErrorResponse errorResponse = new ErrorResponse(httpStatus.value(), message);
 		if (printStackTrace && isTraceOn(request)) {
 			errorResponse.setStackTrace(ExceptionUtils.getStackTrace(ex));
@@ -269,16 +266,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return toErrorResponseEntity(httpStatus, errorResponse);
 	}
 
-	private ResponseEntity<Object> buildOnChangeAnswerRequiredErrorResponse(
-		Exception ex,
-		String message,
-		HttpStatus httpStatus,
-		WebRequest request,
-		AnswerRequiredException.AnswerRequiredError answerRequiredError) {
+	private ResponseEntity<Object> buildAnswerRequiredErrorResponse(
+			Exception ex,
+			String message,
+			HttpStatus httpStatus,
+			WebRequest request,
+			AnswerRequiredException.AnswerRequiredError answerRequiredError) {
 		AnswerRequiredErrorResponse errorResponse = new AnswerRequiredErrorResponse(
-			httpStatus.value(),
-			message,
-			answerRequiredError);
+				httpStatus.value(),
+				message,
+				answerRequiredError);
 		if (printStackTrace && isTraceOn(request)) {
 			errorResponse.setStackTrace(ExceptionUtils.getStackTrace(ex));
 		}
@@ -286,15 +283,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	private ResponseEntity<Object> buildModificationCanceledErrorResponse(
-		Exception ex,
-		String message,
-		HttpStatus httpStatus,
-		WebRequest request,
-		String action) {
+			Exception ex,
+			String message,
+			HttpStatus httpStatus,
+			WebRequest request,
+			String action) {
 		ErrorResponse errorResponse = new ModificationCanceledErrorResponse(
-			httpStatus.value(),
-			message,
-			action);
+				httpStatus.value(),
+				message,
+				action);
 		if (printStackTrace && isTraceOn(request)) {
 			errorResponse.setStackTrace(ExceptionUtils.getStackTrace(ex));
 		}
@@ -302,17 +299,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	private ResponseEntity<Object> buildConstraintValidationErrorResponse(
-		Exception ex,
-		String message,
-		HttpStatus httpStatus,
-		WebRequest request,
-		String constraintName) {
+			Exception ex,
+			String message,
+			HttpStatus httpStatus,
+			WebRequest request,
+			String constraintName) {
 		ErrorResponse errorResponse;
 		if (constraintName != null) {
 			errorResponse = new ConstraintValidationErrorResponse(
-				httpStatus.value(),
-				message,
-				constraintName);
+					httpStatus.value(),
+					message,
+					constraintName);
 		} else {
 			errorResponse = new ErrorResponse(httpStatus.value(), message);
 		}
@@ -328,12 +325,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	private ResponseEntity<Object> toErrorResponseEntity(
-		HttpStatus httpStatus,
-		ErrorResponse errorResponse) {
+			HttpStatus httpStatus,
+			ErrorResponse errorResponse) {
 		return ResponseEntity.
-			status(httpStatus).
-			header("Content-Type", "application/problem+json; charset=utf-8").
-			body(errorResponse);
+				status(httpStatus).
+				header("Content-Type", "application/problem+json; charset=utf-8").
+				body(errorResponse);
 	}
 
 }

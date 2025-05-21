@@ -7,18 +7,18 @@ import java.lang.annotation.Target;
 
 /**
  * Anotació per a configurar un camp d'un recurs de l'API REST.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ResourceField {
 
-	String type() default "";
-	boolean enumType() default false;
-	String descriptionField() default "";
-	boolean onChangeActive() default false;
-	String springFilter() default "";
-	String[] namedQueries() default {};
+	public String type() default "";
+	public boolean enumType() default false;
+	public String descriptionField() default "";
+	public boolean onChangeActive() default false;
+	public String springFilter() default "";
+	public String[] namedQueries() default {};
 
 }

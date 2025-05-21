@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.logic.helper;
 
-
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.Resource;
@@ -42,7 +42,6 @@ public class ResourceEntityMappingHelper {
 			Class<?> builderReturnType = builderMethod.getReturnType();
 			callBuilderMethodForResource(
 					resource,
-					entityClass,
 					builderInstance,
 					builderReturnType);
 			if (referencedEntities != null) {
@@ -92,7 +91,8 @@ public class ResourceEntityMappingHelper {
 			E entity,
 			R resource,
 			Map<String, Persistable<?>> referencedEntities) {
-		List<String> processedFieldNames = new ArrayList<>();
+		Set<String> ignoredFieldNames = new HashSet<>();
+		addResourceConfigIgnoredFields(resource.getClass(), ignoredFieldNames);
 		// Actualitza els camps de l'entitat que son de tipus Persistable o byte[]
 		ReflectionUtils.doWithFields(entity.getClass(), field -> {
 			// Es modifica el valor de cada camp de l'entitat que és de tipus de Persistable
@@ -110,47 +110,45 @@ public class ResourceEntityMappingHelper {
 							entity,
 							referencedEntity);
 				}
-				processedFieldNames.add(field.getName());
+				ignoredFieldNames.add(field.getName());
 			}
 			if (FileReference.class.isAssignableFrom(field.getType())) {
 				setFileReferenceFieldValue(field, entity);
-				processedFieldNames.add(field.getName());
+				ignoredFieldNames.add(field.getName());
 			}
 		});
 		// Actualitza els demés camps de l'entitat
 		objectMappingHelper.map(
 				resource,
 				entity,
-				processedFieldNames.toArray(new String[0]));
+				ignoredFieldNames.toArray(new String[0]));
 	}
 
 	public <E extends ResourceEntity<R, ?>, R extends Resource<?>> R entityToResource(
 			E entity,
-			Class<R> resourceClass) {
+			Class<R> resourceClass,
+			String... ignoredFields) {
+		Set<String> ignoredFieldNames = new HashSet<>(Arrays.asList(ignoredFields));
+		addResourceConfigIgnoredFields(resourceClass, ignoredFieldNames);
 		return objectMappingHelper.newInstanceMap(
 				entity,
-				resourceClass);
+				resourceClass,
+				ignoredFieldNames.toArray(new String[0]));
 	}
 
-	private <R, E> boolean callBuilderMethodForResource(
+	private <R> void callBuilderMethodForResource(
 			R resource,
-			Class<E> entityClass,
 			Object builderInstance,
 			Class<?> builderReturnType) {
-		boolean builderMethodCalled = false;
 		Optional<Method> resourceMethod = Arrays.stream(ReflectionUtils.getAllDeclaredMethods(builderReturnType)).
 				filter(m -> {
 					Class<?>[] parameterTypes = m.getParameterTypes();
 					return parameterTypes.length > 0 && parameterTypes[0].isAssignableFrom(resource.getClass());
 				}).findFirst();
-		if (resourceMethod.isPresent()) {
-			ReflectionUtils.invokeMethod(
-					resourceMethod.get(),
-					builderInstance,
-					resource);
-			builderMethodCalled = true;
-		}
-		return builderMethodCalled;
+		resourceMethod.ifPresent(method -> ReflectionUtils.invokeMethod(
+				method,
+				builderInstance,
+				resource));
 	}
 
 	private void setFileReferenceFieldValue(Field field, Object target) {
@@ -177,9 +175,18 @@ public class ResourceEntityMappingHelper {
 					ReflectionUtils.invokeMethod(
 							setMethod,
 							target,
-							fileValue);
+							(Object)fileValue);
 				}
 			}
+		}
+	}
+
+	private void addResourceConfigIgnoredFields(
+			Class<?> resourceClass,
+			Set<String> ignoredFieldNames) {
+		ResourceConfig resourceConfig = resourceClass.getAnnotation(ResourceConfig.class);
+		if (resourceConfig != null && resourceConfig.mappingIgnoredFields().length > 0) {
+			ignoredFieldNames.addAll(Arrays.asList(resourceConfig.mappingIgnoredFields()));
 		}
 	}
 

@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * Configuració de Spring MVC.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Configuration
@@ -45,20 +45,20 @@ public class WebMvcConfig implements WebMvcConfigurer {
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		// ResourceHandler per a que totes les peticions desconegudes passin per l'index.html
 		registry.
-			addResourceHandler("/**").
-			addResourceLocations("classpath:/static/").
-			resourceChain(true).
-			addResolver(new PathResourceResolver() {
-				@Override
-				protected Resource getResource(String resourcePath, Resource location) throws IOException {
-					Resource requestedResource = location.createRelative(resourcePath);
-					if (requestedResource.exists() && requestedResource.isReadable()) {
-						return requestedResource;
-					} else {
-						return new ClassPathResource("static/index.html");
-					}
+		addResourceHandler("/**").
+		addResourceLocations("classpath:/static/").
+		resourceChain(true).
+		addResolver(new PathResourceResolver() {
+			@Override
+			protected Resource getResource(String resourcePath, Resource location) throws IOException {
+				Resource requestedResource = location.createRelative(resourcePath);
+				if (requestedResource.exists() && requestedResource.isReadable()) {
+					return requestedResource;
+				} else {
+					return new ClassPathResource("static/index.html");
 				}
-			});
+			}
+		});
 	}
 
 	@Override
@@ -74,10 +74,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		}
 		@Override
 		public Pageable resolveArgument(
-			MethodParameter methodParameter,
-			@Nullable ModelAndViewContainer mavContainer,
-			NativeWebRequest webRequest,
-			@Nullable WebDataBinderFactory binderFactory) {
+				MethodParameter methodParameter,
+				@Nullable ModelAndViewContainer mavContainer,
+				NativeWebRequest webRequest,
+				@Nullable WebDataBinderFactory binderFactory) {
 			String page = webRequest.getParameter(getParameterNameToUse(getPageParameterName(), methodParameter));
 			String pageSize = webRequest.getParameter(getParameterNameToUse(getSizeParameterName(), methodParameter));
 			Sort sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
@@ -88,9 +88,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
 				return new UnpagedButSorted(sort);
 			} else {
 				Pageable pageable = getPageable(
-					methodParameter,
-					page == null ? "0" : page,
-					pageSize == null || "0".equals(pageSize) ? "10" : pageSize);
+						methodParameter,
+						page == null ? "0" : page,
+						pageSize == null || "0".equals(pageSize) ? "10" : pageSize);
 				if (sort.isSorted()) {
 					return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 				}

@@ -12,7 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Globa
 
 /**
  * Configuració de la seguretat a nivell de mètode.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Configuration

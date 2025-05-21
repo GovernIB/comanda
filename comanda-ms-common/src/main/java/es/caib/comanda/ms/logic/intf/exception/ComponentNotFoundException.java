@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * Excepció que es llança quan no es troba un component de l'aplicació.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Getter

@@ -3,7 +3,6 @@ package es.caib.comanda.ms.back.controller;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.model.Resource;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
-import es.caib.comanda.ms.logic.intf.util.StringUtil;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,10 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Hidden
 @RestController
@@ -34,36 +33,35 @@ public class RestApiController {
 	protected ResourceApiService resourceApiService;
 
 	@Autowired(required = false)
-	protected List<ReadonlyResourceController<?, ?>> apiResourceControllers;
+	protected List<BaseController> baseControllers;
 
 	@GetMapping
 	@Operation(summary = "Consulta l'índex de serveis de l'aplicació")
 	public ResponseEntity<CollectionModel<?>> index() {
-		List<Link> indexLinks = resourceApiService.resourceFindAllowed().stream().
-			map(this::toApiResourceControllerLink).
-			collect(Collectors.toList());
+		List<Class<? extends Resource<?>>> allowedResourceClasses = resourceApiService.resourceFindAllowed();
+		List<Link> indexLinks = baseControllers.stream().
+				filter(bc -> bc.isVisibleInApiIndex() && isBaseControllerAllowed(bc, allowedResourceClasses)).
+				map(BaseController::getIndexLink).
+				collect(Collectors.toList());
+		indexLinks.add(0, linkTo(ClassUtils.getUserClass(methodOn(getClass()).index())).withSelfRel());
 		CollectionModel<?> resources = CollectionModel.of(
-			Collections.emptySet(),
-			indexLinks.toArray(Link[]::new));
+				Collections.emptySet(),
+				indexLinks.toArray(Link[]::new));
 		return ResponseEntity.ok(resources);
 	}
 
-	private Link toApiResourceControllerLink(Class<? extends Resource<?>> resourceClass) {
-		Optional<ReadonlyResourceController<?, ?>> apiResourceControllerForResource = apiResourceControllers.stream().
-			filter(c -> isApiResourceControllerForResource(c, resourceClass)).
-			findFirst();
-		String rel = StringUtil.decapitalize(resourceClass.getSimpleName());
-		return linkTo(ClassUtils.getUserClass(apiResourceControllerForResource.get())).withRel(rel);
-	}
-
-	private boolean isApiResourceControllerForResource(
-		ReadonlyResourceController<?, ?> apiResourceController,
-		Class<? extends Resource<?>> resourceClass) {
-		Class<?> controllerResourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-			apiResourceController.getClass(),
-			ReadonlyResourceController.class,
-			0);
-		return controllerResourceClass.equals(resourceClass);
+	private boolean isBaseControllerAllowed(
+			BaseController baseController,
+			List<Class<? extends Resource<?>>> allowedResourceClasses) {
+		if (baseController instanceof ReadonlyResourceController) {
+			Class<?> controllerResourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
+					baseController.getClass(),
+					ReadonlyResourceController.class,
+					0);
+			return allowedResourceClasses.contains(controllerResourceClass);
+		} else {
+			return true;
+		}
 	}
 
 }

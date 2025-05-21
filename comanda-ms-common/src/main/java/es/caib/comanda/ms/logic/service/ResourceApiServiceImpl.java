@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 /**
  * Implementació del servei de l'API REST.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -36,43 +36,41 @@ public class ResourceApiServiceImpl implements ResourceApiService {
 	@Override
 	public List<Class<? extends Resource<?>>> resourceFindAllowed() {
 		return new ArrayList<>(registeredResources).stream().
-			filter(r -> isResourceAllowed(r, null)).
-			sorted(Comparator.comparing(Class::getSimpleName)).
-			collect(Collectors.toList());
+				filter(this::isResourceAllowed).
+				sorted(Comparator.comparing(Class::getSimpleName)).
+				collect(Collectors.toList());
 	}
 
 	@Override
 	public ResourcePermissions permissionsCurrentUser(Class<?> resourceClass, Serializable resourceId) {
 		boolean isReadGranted = permissionHelper.checkResourcePermission(
-			resourceId,
-			resourceClass.getName(),
-			(BasePermission)BasePermission.READ);
+				resourceId,
+				resourceClass.getName(),
+				(BasePermission)BasePermission.READ);
 		boolean isWriteGranted = permissionHelper.checkResourcePermission(
-			resourceId,
-			resourceClass.getName(),
-			(BasePermission)BasePermission.WRITE);
+				resourceId,
+				resourceClass.getName(),
+				(BasePermission)BasePermission.WRITE);
 		boolean isCreateGranted = permissionHelper.checkResourcePermission(
-			resourceId,
-			resourceClass.getName(),
-			(BasePermission)BasePermission.CREATE);
+				resourceId,
+				resourceClass.getName(),
+				(BasePermission)BasePermission.CREATE);
 		boolean isDeleteGranted = permissionHelper.checkResourcePermission(
-			resourceId,
-			resourceClass.getName(),
-			(BasePermission)BasePermission.DELETE);
+				resourceId,
+				resourceClass.getName(),
+				(BasePermission)BasePermission.DELETE);
 		return new ResourcePermissions(
-			isReadGranted,
-			isWriteGranted,
-			isCreateGranted,
-			isDeleteGranted);
+				isReadGranted,
+				isWriteGranted,
+				isCreateGranted,
+				isDeleteGranted);
 	}
 
-	private boolean isResourceAllowed(
-		Class<? extends Resource<?>> resourceClass,
-		BasePermission permission) {
+	private boolean isResourceAllowed(Class<? extends Resource<?>> resourceClass) {
 		return permissionHelper.checkResourcePermission(
-			null,
-			resourceClass.getName(),
-			permission);
+				null,
+				resourceClass.getName(),
+				null);
 	}
 
 }

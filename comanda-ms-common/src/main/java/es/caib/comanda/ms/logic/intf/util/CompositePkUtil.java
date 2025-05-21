@@ -24,14 +24,14 @@ public class CompositePkUtil implements ApplicationContextAware {
 	protected ObjectMapper objectMapper;
 
 	public <CPK extends Serializable> CPK getCompositePkFromSerializedId(
-		String id,
-		Class<?> pkClass) {
+			String id,
+			Class<?> pkClass) {
 		if (id != null) {
 			try {
 				byte[] idBase64 = id.getBytes();
 				return (CPK)objectMapper.readValue(
-					new String(Base64.getDecoder().decode(idBase64)),
-					pkClass);
+						new String(Base64.getDecoder().decode(idBase64)),
+						pkClass);
 			} catch (JsonProcessingException ex) {
 				throw new CompositePkParsingException(id, null, pkClass, ex);
 			}
@@ -57,10 +57,10 @@ public class CompositePkUtil implements ApplicationContextAware {
 		// TODO potser seria millor obligar a que totes les claus primàries estenguessin d'una interfície comuna
 		// TODO per a fer aquesta comprovació
 		return !(
-			Serializable.class.isAssignableFrom(clazz) ||
-				String.class.isAssignableFrom(clazz) ||
-				Number.class.isAssignableFrom(clazz) ||
-				UUID.class.isAssignableFrom(clazz));
+				Serializable.class.isAssignableFrom(clazz) ||
+						String.class.isAssignableFrom(clazz) ||
+						Number.class.isAssignableFrom(clazz) ||
+						UUID.class.isAssignableFrom(clazz));
 	}
 
 	private static ApplicationContext applicationContext;

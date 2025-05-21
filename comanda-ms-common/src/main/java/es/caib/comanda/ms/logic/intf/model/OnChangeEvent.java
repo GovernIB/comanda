@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * Informació de l'event de canvi del valor d'un camp de formulari del front.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Getter

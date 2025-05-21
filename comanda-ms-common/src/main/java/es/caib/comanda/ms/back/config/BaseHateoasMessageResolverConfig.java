@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * Configuració del MessageResolver per a spring-hateoas.
- *
+ * 
  * @author Límit Tecnologies
  */
 public abstract class BaseHateoasMessageResolverConfig {
@@ -55,8 +55,8 @@ public abstract class BaseHateoasMessageResolverConfig {
 		String basename = getBasename();
 		String[] basenames = getBasenames();
 		List<Resource> candidates = loadResourceBundleResources(
-			new String[] { getBasename() },
-			false);
+				new String[] { getBasename() },
+				false);
 		if (commonBasename != null || basename != null || basenames != null) {
 			ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
 			messageSource.setDefaultLocale(getDefaultLocale());
@@ -73,8 +73,8 @@ public abstract class BaseHateoasMessageResolverConfig {
 			messageSource.setDefaultEncoding(StandardCharsets.UTF_8.toString());
 			if (commonBasename != null) {
 				List<Resource> commonBasenameResources = loadResourceBundleResources(
-					new String[] { commonBasename },
-					false);
+						new String[] { commonBasename },
+						false);
 				messageSource.setCommonMessages(loadProperties(commonBasenameResources));
 			}
 			return messageSource;
@@ -100,9 +100,9 @@ public abstract class BaseHateoasMessageResolverConfig {
 			List<Resource> resources = new ArrayList<>();
 			for (String baseName: baseNames) {
 				List<Resource> baseNameResources = Arrays.
-					stream(context.getResources(String.format("classpath:%s%s.properties", baseName, withWildcard ? "*" : ""))).
-					filter(Resource::exists).
-					collect(Collectors.toList());
+						stream(context.getResources(String.format("classpath:%s%s.properties", baseName, withWildcard ? "*" : ""))).
+						filter(Resource::exists).
+						collect(Collectors.toList());
 				resources.addAll(baseNameResources);
 			}
 			return resources;

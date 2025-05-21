@@ -15,7 +15,7 @@ import java.util.jar.Manifest;
 
 /**
  * Configuració de Springdoc OpenAPI.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -31,26 +31,29 @@ public abstract class BaseOpenApiConfig {
 		} catch (IOException ex) {
 			log.error("No s'ha pogut obtenir la versió del fitxer MANIFEST.MF", ex);
 		}
-		OpenAPI openapi = new OpenAPI().info(new Info().title("Comanda configuració API").version(version));
+		OpenAPI openapi = new OpenAPI().info(new Info().title(getTitle()).version(version));
 		if (enableAuthComponent()) {
 			return openapi.
-				components(
-					new Components().addSecuritySchemes(
-						"Bearer token",
-						new SecurityScheme().
-							type(SecurityScheme.Type.HTTP).
-							scheme("bearer").
-							bearerFormat("JWT").
-							in(SecurityScheme.In.HEADER).
-							name("Authorization"))).
-				addSecurityItem(
-					new SecurityRequirement().addList(
-						"Bearer token",
-						Arrays.asList("read", "write")));
+					components(
+							new Components().addSecuritySchemes(
+									"Bearer token",
+									new SecurityScheme().
+									type(SecurityScheme.Type.HTTP).
+									scheme("bearer").
+									bearerFormat("JWT").
+									in(SecurityScheme.In.HEADER).
+									name("Authorization"))).
+					addSecurityItem(
+							new SecurityRequirement().addList(
+									"Bearer token",
+									Arrays.asList("read", "write")));
 		} else {
 			return openapi;
 		}
 	}
+
+
+	protected abstract String getTitle();
 
 	protected abstract boolean enableAuthComponent();
 

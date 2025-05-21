@@ -7,7 +7,7 @@ import lombok.Setter;
 
 /**
  * Informació dels possibles permisos sobre un recurs.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Getter @Setter

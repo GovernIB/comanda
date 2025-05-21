@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class BaseMutableResourceService<R extends Resource<ID>, ID extends Serializable, E extends ResourceEntity<R, ID>>
-	extends BaseReadonlyResourceService<R, ID, E>
-	implements MutableResourceService<R, ID>, BaseReadonlyResourceService.OnChangeLogicProcessor<R> {
+		extends BaseReadonlyResourceService<R, ID, E>
+		implements MutableResourceService<R, ID>, BaseReadonlyResourceService.OnChangeLogicProcessor<R> {
 
 	@Autowired
 	private ResourceReferenceToEntityHelper resourceReferenceToEntityHelper;
@@ -51,89 +51,84 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	@Override
 	@Transactional
 	public R create(
-		R resource,
-		Map<String, AnswerRequiredException.AnswerValue> answers) {
+			R resource,
+			Map<String, AnswerRequiredException.AnswerValue> answers) {
 		log.debug("Creating resource (resource={})", resource);
 		completeResource(resource);
 		ID pk = buildPkChechingIfEntityAlreadyExists(resource);
 		Map<String, Persistable<?>> referencedEntities = resourceReferenceToEntityHelper.getReferencedEntitiesForResource(
-			resource,
-			getEntityClass());
+				resource,
+				getEntityClass());
 		E entity = resourceEntityMappingHelper.resourceToEntity(
-			resource,
-			pk,
-			getEntityClass(),
-			referencedEntities);
+				resource,
+				pk,
+				getEntityClass(),
+				referencedEntities);
 		beforeCreateEntity(entity, resource, answers);
 		resourceEntityMappingHelper.updateEntityWithResource(entity, resource, referencedEntities);
 		beforeCreateSave(entity, resource, answers);
 		boolean anyOrderChanged = reorderIfReorderable(
-			entity,
-			null,
-			null,
-			true,
-			false);
+				entity,
+				null,
+				null,
+				true,
+				false);
 		E saved = saveFlushAndRefresh(entity);
 		fieldFilesSave(resource, saved);
 		afterCreateSave(saved, resource, answers, anyOrderChanged);
 		entityRepository.detach(saved);
 		R response = resourceEntityMappingHelper.entityToResource(saved, getResourceClass());
-		entityRepository.merge(saved);
+		afterConversion(entityRepository.merge(saved), response);
 		return response;
 	}
 
 	@Override
 	@Transactional
 	public R update(
-		ID id,
-		R resource,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
+			ID id,
+			R resource,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
 		log.debug("Updating resource (id={}, resource={})", id, resource);
 		completeResource(resource);
 		E entity = getEntity(id, null);
 		ID reorderPreviousParentId = reorderGetParentId(entity);
 		Long reorderResourceSequence = reorderGetResourceSequence(resource, entity);
-		boolean proceedWithUpdate = beforeUpdateEntity(entity, resource, answers);
-		E saved;
-		if (proceedWithUpdate) {
-			Map<String, Persistable<?>> referencedEntities = resourceReferenceToEntityHelper.getReferencedEntitiesForResource(
+		beforeUpdateEntity(entity, resource, answers);
+		Map<String, Persistable<?>> referencedEntities = resourceReferenceToEntityHelper.getReferencedEntitiesForResource(
 				resource,
 				getEntityClass());
-			resourceEntityMappingHelper.updateEntityWithResource(entity, resource, referencedEntities);
-			beforeUpdateSave(entity, resource, answers);
-			saved = saveFlushAndRefresh(entity);
-			boolean anyOrderChanged = reorderIfReorderable(
+		resourceEntityMappingHelper.updateEntityWithResource(entity, resource, referencedEntities);
+		beforeUpdateSave(entity, resource, answers);
+		E saved = saveFlushAndRefresh(entity);
+		boolean anyOrderChanged = reorderIfReorderable(
 				saved,
 				reorderResourceSequence,
 				reorderPreviousParentId,
 				true,
 				false);
-			fieldFilesSave(resource, saved);
-			afterUpdateSave(saved, resource, answers, anyOrderChanged);
-		} else {
-			saved = entity;
-		}
+		fieldFilesSave(resource, saved);
+		afterUpdateSave(saved, resource, answers, anyOrderChanged);
 		entityRepository.detach(saved);
 		R response = resourceEntityMappingHelper.entityToResource(saved, getResourceClass());
-		entityRepository.merge(saved);
+		afterConversion(entityRepository.merge(saved), response);
 		return response;
 	}
 
 	@Override
 	@Transactional
 	public void delete(
-		ID id,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
+			ID id,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
 		log.debug("Deleting resource (id={})", id);
 		E entity = getEntity(id, null);
 		beforeDelete(entity, answers);
 		entityRepository.delete(entity);
 		reorderIfReorderable(
-			entity,
-			null,
-			null,
-			true,
-			true);
+				entity,
+				null,
+				null,
+				true,
+				true);
 		fieldFilesDelete(entity);
 		entityRepository.flush();
 		afterDelete(entity, answers);
@@ -142,34 +137,33 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Object> onChange(
-		ID id,
-		R previous,
-		String fieldName,
-		Object fieldValue,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException {
-		log.debug("Processing onChange event (id={}, previous={}, fieldName={}, fieldValue={}, answers={})",
-			id,
-			previous,
-			fieldName,
-			fieldValue,
-			answers);
+			ID id,
+			R previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException {
+		log.debug("Processing onChange event (previous={}, fieldName={}, fieldValue={}, answers={})",
+				previous,
+				fieldName,
+				fieldValue,
+				answers);
 		onChangeCheckIfFieldExists(getResourceClass(), fieldName);
 		return onChangeProcessRecursiveLogic(
-			id,
-			previous,
-			fieldName,
-			fieldValue,
-			null,
-			this,
-			answers);
+				id,
+				previous,
+				fieldName,
+				fieldValue,
+				null,
+				this,
+				answers);
 	}
 
 	@Override
 	@Transactional
 	public <P extends Serializable> Serializable artifactActionExec(
-		ID id,
-		String code,
-		P params) throws ArtifactNotFoundException, ActionExecutionException {
+			ID id,
+			String code,
+			P params) throws ArtifactNotFoundException, ActionExecutionException {
 		log.debug("Executing action (code={}, params={})", code, params);
 		ActionExecutor<E, P, ?> executor = (ActionExecutor<E, P, ?>)actionExecutorMap.get(code);
 		if (executor != null) {
@@ -185,13 +179,18 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<FieldOption> fieldEnumOptions(String fieldName) {
-		log.debug("Querying field enum options (fieldName={})", fieldName);
+	public List<FieldOption> fieldEnumOptions(
+			String fieldName,
+			Map<String,String[]> requestParameterMap) {
+		log.debug("Querying field enum options (fieldName={}, requestParameterMap={})", fieldName, requestParameterMap);
 		FieldOptionsProvider fieldOptionsProvider = fieldOptionsProviderMap.get(fieldName);
 		if (fieldOptionsProvider != null) {
-			return fieldOptionsProvider.getOptions(fieldName);
+			return fieldOptionsProvider.getOptions(fieldName, requestParameterMap);
 		} else {
-			log.warn("Couldn't find FieldOptionsProvider (resourceClass={}, fieldName={})", getResourceClass(), fieldName);
+			log.warn("Couldn't find FieldOptionsProvider (resourceClass={}, fieldName={}, requestParameterMap={})",
+					getResourceClass(),
+					fieldName,
+					requestParameterMap);
 			return null;
 		}
 	}
@@ -203,13 +202,13 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		List<ResourceArtifact> artifacts = new ArrayList<>(super.artifactFindAll(type));
 		if (type == null || type == ResourceArtifactType.ACTION) {
 			artifacts.addAll(
-				actionExecutorMap.keySet().stream().
-					map(code -> new ResourceArtifact(
-						ResourceArtifactType.ACTION,
-						code,
-						artifactRequiresId(ResourceArtifactType.ACTION, code),
-						artifactGetFormClass(ResourceArtifactType.ACTION, code))).
-					collect(Collectors.toList()));
+					actionExecutorMap.keySet().stream().
+							map(code -> new ResourceArtifact(
+									ResourceArtifactType.ACTION,
+									code,
+									artifactRequiresId(ResourceArtifactType.ACTION, code),
+									artifactGetFormClass(ResourceArtifactType.ACTION, code))).
+							collect(Collectors.toList()));
 		}
 		return artifacts;
 	}
@@ -222,10 +221,10 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			ActionExecutor<E, ?, ?> generator = actionExecutorMap.get(code);
 			if (generator != null) {
 				return new ResourceArtifact(
-					ResourceArtifactType.ACTION,
-					code,
-					artifactRequiresId(ResourceArtifactType.ACTION, code),
-					artifactGetFormClass(ResourceArtifactType.ACTION, code));
+						ResourceArtifactType.ACTION,
+						code,
+						artifactRequiresId(ResourceArtifactType.ACTION, code),
+						artifactGetFormClass(ResourceArtifactType.ACTION, code));
 			}
 		}
 		return super.artifactGetOne(type, code);
@@ -249,11 +248,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	protected void beforeCreateEntity(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {}
 	protected void beforeCreateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) {}
 	protected void afterCreateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {}
-	protected boolean beforeUpdateEntity(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
-		// Si es retorna true vol dir que s'ha de procedir amb l'update.
-		// Si es retorna false vol dir que l'update no s'ha de fer.
-		return true;
-	}
+	protected void beforeUpdateEntity(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {}
 	protected void beforeUpdateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) {}
 	protected void afterUpdateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {}
 	protected void beforeDelete(E entity, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotDeletedException {}
@@ -261,50 +256,15 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 
 	@Override
 	public void onChange(
-		Serializable id,
-		R previous,
-		String fieldName,
-		Object fieldValue,
-		Map<String, AnswerRequiredException.AnswerValue> answers,
-		String[] previousFieldsChanged,
-		R target) {
+			Serializable id,
+			R previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			String[] previousFieldsChanged,
+			R target) {
 		if (onChangeLogicProcessorMap.get(fieldName) != null) {
 			onChangeLogicProcessorMap.get(fieldName).onChange(
-				id,
-				previous,
-				fieldName,
-				fieldValue,
-				answers,
-				previousFieldsChanged,
-				target);
-		}
-	}
-
-	@Override
-	protected <P extends Serializable> void internalArtifactOnChange(
-		ResourceArtifactType type,
-		String code,
-		Serializable id,
-		P previous,
-		String fieldName,
-		Object fieldValue,
-		Map<String, AnswerRequiredException.AnswerValue> answers,
-		String[] previousFieldsChanged,
-		P target) {
-		super.internalArtifactOnChange(
-			type,
-			code,
-			id,
-			previous,
-			fieldName,
-			fieldValue,
-			answers,
-			previousFieldsChanged,
-			target);
-		if (type == ResourceArtifactType.ACTION) {
-			ActionExecutor<E, P, ?> actionExecutor = (ActionExecutor<E, P, ?>)actionExecutorMap.get(code);
-			if (actionExecutor != null) {
-				actionExecutor.onChange(
 					id,
 					previous,
 					fieldName,
@@ -312,15 +272,50 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 					answers,
 					previousFieldsChanged,
 					target);
+		}
+	}
+
+	@Override
+	protected <P extends Serializable> void internalArtifactOnChange(
+			ResourceArtifactType type,
+			String code,
+			Serializable id,
+			P previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			String[] previousFieldsChanged,
+			P target) {
+		super.internalArtifactOnChange(
+				type,
+				code,
+				id,
+				previous,
+				fieldName,
+				fieldValue,
+				answers,
+				previousFieldsChanged,
+				target);
+		if (type == ResourceArtifactType.ACTION) {
+			ActionExecutor<E, P, ?> actionExecutor = (ActionExecutor<E, P, ?>)actionExecutorMap.get(code);
+			if (actionExecutor != null) {
+				actionExecutor.onChange(
+						id,
+						previous,
+						fieldName,
+						fieldValue,
+						answers,
+						previousFieldsChanged,
+						target);
 			}
 		}
 	}
 
 	@Override
-	protected BaseMutableResourceService.FieldOptionsProvider artifactGetFieldOptionsProvider(
-		ResourceArtifactType type,
-		String code) {
-		BaseMutableResourceService.FieldOptionsProvider fieldOptionsProvider = null;
+	protected FieldOptionsProvider artifactGetFieldOptionsProvider(
+			ResourceArtifactType type,
+			String code) {
+		FieldOptionsProvider fieldOptionsProvider = null;
 		if (type == ResourceArtifactType.ACTION) {
 			fieldOptionsProvider = actionExecutorMap.get(code);
 		} else {
@@ -337,8 +332,8 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			Optional<E> existingEntity = entityRepository.findById(pk);
 			if (existingEntity.isPresent()) {
 				throw new ResourceAlreadyExistsException(
-					resource.getClass(),
-					pk.toString());
+						resource.getClass(),
+						pk.toString());
 			}
 		}
 		return pk;
@@ -387,61 +382,61 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return nextValue;
 	}
 	private boolean reorderIfReorderable(
-		E entity,
-		Long sequenceForEntity,
-		ID previousParentId,
-		boolean sameSequenceInsertBefore,
-		boolean isDelete) {
+			E entity,
+			Long sequenceForEntity,
+			ID previousParentId,
+			boolean sameSequenceInsertBefore,
+			boolean isDelete) {
 		boolean anyOrderChanged = false;
 		if (entity instanceof ReorderableEntity<?>) {
 			ReorderableEntity<ID> reorderableEntity = (ReorderableEntity<ID>)entity;
 			boolean reorderParentIdChanged = !Objects.equals(reorderableEntity.getOrderParentId(), previousParentId);
 			log.debug("\tReordenant entitat {} amb la seqüència {} (previousParentId={})",
-				entity,
-				sequenceForEntity,
-				previousParentId);
+					entity,
+					sequenceForEntity,
+					previousParentId);
 			boolean anyOrderChanged1 = reorderWithParentId(
-				reorderableEntity,
-				sequenceForEntity,
-				reorderableEntity.getOrderParentId(),
-				reorderParentIdChanged,
-				sameSequenceInsertBefore,
-				isDelete);
+					reorderableEntity,
+					sequenceForEntity,
+					reorderableEntity.getOrderParentId(),
+					reorderParentIdChanged,
+					sameSequenceInsertBefore,
+					isDelete);
 			if (anyOrderChanged1) anyOrderChanged = true;
 			if (reorderParentIdChanged) {
 				boolean anyOrderChanged2 = reorderWithParentId(
-					null,
-					null,
-					previousParentId,
-					false,
-					false,
-					false);
+						null,
+						null,
+						previousParentId,
+						false,
+						false,
+						false);
 				if (anyOrderChanged2) anyOrderChanged = true;
 			}
 		}
 		return anyOrderChanged;
 	}
 	private boolean reorderWithParentId(
-		@Nullable ReorderableEntity<ID> reorderableEntity,
-		@Nullable Long sequenceForEntity,
-		@Nullable ID parentId,
-		boolean reorderParentIdChanged,
-		boolean sameSequenceInsertBefore,
-		boolean isDelete) {
+			@Nullable ReorderableEntity<ID> reorderableEntity,
+			@Nullable Long sequenceForEntity,
+			@Nullable ID parentId,
+			boolean reorderParentIdChanged,
+			boolean sameSequenceInsertBefore,
+			boolean isDelete) {
 		boolean anyOrderChanged = false;
 		List<E> linesToReorder = reorderFindLinesWithParent(parentId);
 		log.debug("\tConsulta d'entitats a reordenar (pareId={}): {} entitats trobades",
-			parentId,
-			linesToReorder.size());
+				parentId,
+				linesToReorder.size());
 		boolean inserted = isDelete;
 		long index = 1;
 		for (E value: linesToReorder) {
 			ReorderableEntity<ID> line = (ReorderableEntity<ID>)value;
 			if (!line.equals(reorderableEntity)) {
 				Long currentSequence = line.getOrder();
-				boolean insertHere = sequenceForEntity != null && (sameSequenceInsertBefore ?
-					currentSequence != null && currentSequence.compareTo(sequenceForEntity) >= 0 :
-					currentSequence != null && currentSequence.compareTo(sequenceForEntity) > 0);
+				boolean insertHere = !reorderParentIdChanged && sequenceForEntity != null && (sameSequenceInsertBefore ?
+						currentSequence != null && currentSequence.compareTo(sequenceForEntity) >= 0 :
+						currentSequence != null && currentSequence.compareTo(sequenceForEntity) > 0);
 				if (!inserted && insertHere) {
 					long sequence = reorderSetNextSequence(reorderableEntity, index++);
 					log.debug("\tInsertant entitat {} amb ordre {}", reorderableEntity, sequence);
@@ -466,33 +461,33 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	}
 
 	protected void register(
-		String actionCode,
-		ActionExecutor<E, ?, ?> actionExecutor) {
+			String actionCode,
+			ActionExecutor<E, ?, ?> actionExecutor) {
 		if (artifactIsPresentInResourceConfig(ResourceArtifactType.ACTION, actionCode)) {
 			actionExecutorMap.put(actionCode, actionExecutor);
 		} else {
 			log.error("Artifact not registered because it doesn't exist in ResourceConfig annotation (" +
-				"resourceClass=" + getResourceClass() + ", " +
-				"artifactType=" + ResourceArtifactType.ACTION + ", " +
-				"artifactCode=" + actionCode + ")");
+					"resourceClass=" + getResourceClass() + ", " +
+					"artifactType=" + ResourceArtifactType.ACTION + ", " +
+					"artifactCode=" + actionCode + ")");
 		}
 	}
 
 	protected void register(
-		String fieldName,
-		OnChangeLogicProcessor<R> logicProcessor) {
+			String fieldName,
+			OnChangeLogicProcessor<R> logicProcessor) {
 		onChangeLogicProcessorMap.put(fieldName, logicProcessor);
 	}
 
 	protected void register(
-		String fieldName,
-		FieldFileManager<E> fieldFileManager) {
+			String fieldName,
+			FieldFileManager<E> fieldFileManager) {
 		fieldFileManagerMap.put(fieldName, fieldFileManager);
 	}
 
 	protected void register(
-		String fieldName,
-		FieldOptionsProvider fieldOptionsProvider) {
+			String fieldName,
+			FieldOptionsProvider fieldOptionsProvider) {
 		fieldOptionsProviderMap.put(fieldName, fieldOptionsProvider);
 	}
 
@@ -517,9 +512,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			FieldFileManager<E> fieldFileManager = fieldFileManagerMap.get(field.getName());
 			if (fieldFileManager != null) {
 				fieldFileManager.save(
-					entity,
-					field.getName(),
-					TypeUtil.getFieldOrGetterValue(field, resource));
+						entity,
+						field.getName(),
+						TypeUtil.getFieldOrGetterValue(field, resource));
 			}
 		}, field -> FileReference.class.isAssignableFrom(TypeUtil.getFieldTypeMultipleAware(field)));
 	}
@@ -529,8 +524,8 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			FieldFileManager<E> fieldFileManager = fieldFileManagerMap.get(field.getName());
 			if (fieldFileManager != null) {
 				fieldFileManager.delete(
-					entity,
-					field.getName());
+						entity,
+						field.getName());
 			}
 		}, field -> FileReference.class.isAssignableFrom(TypeUtil.getFieldTypeMultipleAware(field)));
 	}
@@ -550,8 +545,8 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		 *            el nom del camp de l'entitat.
 		 */
 		FileReference read(
-			E entity,
-			String fieldName);
+				E entity,
+				String fieldName);
 		/**
 		 * Lògica per a emmagatzemar l'arxiu associat al camp.
 		 *
@@ -563,9 +558,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		 *            la informació de l'arxiu adjunt.
 		 */
 		void save(
-			E entity,
-			String fieldName,
-			FileReference fileReference);
+				E entity,
+				String fieldName,
+				FileReference fileReference);
 		/**
 		 * Lògica per a esborrar l'arxiu associat al camp.
 		 *
@@ -575,8 +570,8 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		 *            el nom del camp de l'entitat.
 		 */
 		void delete(
-			E entity,
-			String fieldName);
+				E entity,
+				String fieldName);
 	}
 
 	/**
@@ -587,7 +582,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	 * @param <R> classe de la resposta retornada com a resultat.
 	 */
 	public interface ActionExecutor<E extends ResourceEntity<?, ?>, P extends Serializable, R extends Serializable>
-		extends OnChangeLogicProcessor<P>, FieldOptionsProvider {
+			extends OnChangeLogicProcessor<P>, FieldOptionsProvider {
 		/**
 		 * Executa l'acció.
 		 *
@@ -604,7 +599,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		 */
 		R exec(String code, E entity, P params) throws ActionExecutionException;
 		@Override
-		default List<FieldOption> getOptions(String fieldName) {
+		default List<FieldOption> getOptions(String fieldName, Map<String,String[]> requestParameterMap) {
 			return new ArrayList<>();
 		}
 	}
@@ -613,7 +608,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	 * Interfície a implementar per a retornar les opcions de camps enumerats.
 	 */
 	public interface FieldOptionsProvider {
-		List<FieldOption> getOptions(String fieldName);
+		List<FieldOption> getOptions(String fieldName, Map<String,String[]> requestParameterMap);
 	}
 
 }

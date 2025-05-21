@@ -4,7 +4,7 @@ import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
-import es.caib.comanda.ms.logic.intf.annotation.ResourceConfigArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import lombok.AllArgsConstructor;
@@ -53,7 +53,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @ResourceConfig(
     quickFilterFields = { "operacio", "codiUsuari" },
-    artifacts = {@ResourceConfigArtifact(type = ResourceArtifactType.FILTER, code = Monitor.FILTER_MONITOR, formClass = Monitor.FrontFilter.class),}
+    artifacts = {@ResourceArtifact(type = ResourceArtifactType.FILTER, code = Monitor.FILTER_MONITOR, formClass = Monitor.FrontFilter.class),}
 )
 public class Monitor extends BaseResource<Long> {
 

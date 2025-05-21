@@ -1,7 +1,7 @@
 package es.caib.comanda.ms.logic.intf.annotation;
 
-import es.caib.comanda.ms.logic.intf.model.Resource;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.data.domain.Sort;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 /**
  * Anotació per a configurar un recurs de l'API REST.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -27,14 +27,15 @@ public @interface ResourceConfig {
 	String orderField() default "";
 	ResourceSort[] defaultSortFields() default {};
 	String[] quickFilterFields() default {};
-	Class<? extends Resource> parentEntity() default Resource.class;
-	ResourceConfigArtifact[] artifacts() default {};
+	ResourceArtifact[] artifacts() default {};
+	ResourceAccessConstraint[] accessConstraints() default {};
+	String[] mappingIgnoredFields() default {};
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
 	@interface ResourceSort {
 		String field() default "";
-		org.springframework.data.domain.Sort.Direction direction() default org.springframework.data.domain.Sort.Direction.ASC;
+		Sort.Direction direction() default Sort.Direction.ASC;
 	}
 
 }

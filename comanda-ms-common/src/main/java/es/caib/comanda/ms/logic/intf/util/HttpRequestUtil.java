@@ -8,16 +8,16 @@ import java.util.Optional;
 
 /**
  * Utilitats per a obtenir informació de la petició HTTP.
- *
+ * 
  * @author Límit Tecnologies
  */
 public class HttpRequestUtil {
 
 	public static Optional<HttpServletRequest> getCurrentHttpRequest() {
 		return Optional.ofNullable(RequestContextHolder.getRequestAttributes()).
-			filter(ServletRequestAttributes.class::isInstance).
-			map(ServletRequestAttributes.class::cast).
-			map(ServletRequestAttributes::getRequest);
+				filter(ServletRequestAttributes.class::isInstance).
+				map(ServletRequestAttributes.class::cast).
+				map(ServletRequestAttributes::getRequest);
 	}
 
 }

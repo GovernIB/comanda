@@ -17,7 +17,7 @@ import java.util.Map;
  * @author Límit Tecnologies
  */
 public interface MutableResourceService<R extends Resource<? extends Serializable>, ID extends Serializable>
-	extends ReadonlyResourceService<R, ID> {
+		extends ReadonlyResourceService<R, ID> {
 
 	/**
 	 * Crea una nova instància del recurs per a inicialitzar el formulari de creació.
@@ -41,14 +41,14 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *             si es requereixen respostes de l'usuari per a crear el registre.
 	 */
 	R create(
-		R resource,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceAlreadyExistsException, ResourceNotCreatedException, AnswerRequiredException;
+			R resource,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceAlreadyExistsException, ResourceNotCreatedException, AnswerRequiredException;
 
 	/**
 	 * Actualitza la informació d'un recurs.
 	 *
 	 * @param id
-	 *            identificació del recurs.
+	 *            clau primària del recurs.
 	 * @param resource
 	 *            informació del recurs.
 	 * @param answers
@@ -62,15 +62,15 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *             si es requereixen respostes de l'usuari per a modificar el registre.
 	 */
 	R update(
-		ID id,
-		R resource,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotUpdatedException, AnswerRequiredException;
+			ID id,
+			R resource,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotUpdatedException, AnswerRequiredException;
 
 	/**
 	 * Esborra un recurs donat el seu identificador.
 	 *
 	 * @param id
-	 *            identificació del recurs.
+	 *            clau primària del recurs.
 	 * @throws ResourceNotFoundException
 	 *             si no s'ha trobat el recurs especificat.
 	 * @throws ResourceNotDeletedException
@@ -79,8 +79,8 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *             si es requereixen respostes de l'usuari per a esborrar el registre.
 	 */
 	void delete(
-		ID id,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotDeletedException, AnswerRequiredException;
+			ID id,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException, ResourceNotDeletedException, AnswerRequiredException;
 
 	/**
 	 * Processament en el backend dels canvis en els camps dels recursos que
@@ -91,7 +91,7 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 * recurs, que es retornaran com a resposta.
 	 *
 	 * @param id
-	 *            identificació del recurs.
+	 *            clau primària del recurs.
 	 * @param previous
 	 *            informació del recurs abans del canvi.
 	 * @param fieldName
@@ -107,17 +107,17 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *            si es requereix alguna resposta addicional de l'usuari.
 	 */
 	Map<String, Object> onChange(
-		ID id,
-		R previous,
-		String fieldName,
-		Object fieldValue,
-		Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException;
+			ID id,
+			R previous,
+			String fieldName,
+			Object fieldValue,
+			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException;
 
 	/**
 	 * Executa l'acció amb el codi especificat.
 	 *
 	 * @param id
-	 *            identificació del recurs (pot ser null si l'acció no s'executa sobre un recurs determinat).
+	 *            clau primària del recurs (pot ser null si l'acció no s'executa sobre un recurs determinat).
 	 * @param code
 	 *            el codi de l'acció.
 	 * @param params
@@ -130,17 +130,21 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 	 *             si es produeix algun error executant l'acció.
 	 */
 	<P extends Serializable> Serializable artifactActionExec(
-		ID id,
-		String code,
-		P params) throws ArtifactNotFoundException, ActionExecutionException;
+			ID id,
+			String code,
+			P params) throws ArtifactNotFoundException, ActionExecutionException;
 
 	/**
 	 * Consulta les opcions disponibles per a un camp de tipus enumerat.
 	 *
 	 * @param fieldName
 	 *            nom del camp del recurs.
+	 * @param requestParameterMap
+	 *            paràmetres de la petició.
 	 * @return la llista d'opcions disponibles.
 	 */
-	List<FieldOption> fieldEnumOptions(String fieldName);
+	List<FieldOption> fieldEnumOptions(
+			String fieldName,
+			Map<String,String[]> requestParameterMap);
 
 }

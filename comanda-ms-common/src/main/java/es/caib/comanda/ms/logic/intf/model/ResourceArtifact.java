@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 /**
  * Informació sobre un artefacte d'un recurs.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Getter

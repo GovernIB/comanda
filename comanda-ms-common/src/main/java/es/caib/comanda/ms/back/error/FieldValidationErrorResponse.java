@@ -41,10 +41,6 @@ public class FieldValidationErrorResponse extends ErrorResponse {
 		validationErrors.add(new ValidationError(field, rejectedValue, code, codes, arguments, title));
 	}
 
-	public boolean isAnswerRequiredError() {
-		return true;
-	}
-
 	@Getter
 	@Setter
 	@RequiredArgsConstructor

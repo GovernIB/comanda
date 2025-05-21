@@ -19,19 +19,19 @@ import java.util.Set;
 
 /**
  * Utilitats per a obtenir informació dels tipus Java via reflection.
- *
+ * 
  * @author Límit Tecnologies
  */
 public class TypeUtil {
 
 	public static <R> Class<R> getArgumentClassFromGenericSuperclass(
-		Class<?> clazz,
-		Class<?> superClass,
-		int index) {
+			Class<?> clazz,
+			Class<?> superClass,
+			int index) {
 		return (Class<R>)Objects.requireNonNull(
-			GenericTypeResolver.resolveTypeArguments(
-				clazz,
-				superClass != null ? superClass : clazz))[index];
+				GenericTypeResolver.resolveTypeArguments(
+						clazz,
+						superClass != null ? superClass : clazz))[index];
 	}
 	public static <R> Class<R> getArgumentClassFromGenericSuperclass(Class<?> clazz, int index) {
 		return getArgumentClassFromGenericSuperclass(clazz, null, index);
@@ -164,16 +164,16 @@ public class TypeUtil {
 		Set<Class<T>> ret = new HashSet<>();
 		for (String pkg: packagesToScan) {
 			provider.findCandidateComponents(pkg).stream().
-				map(BeanDefinition::getBeanClassName).
-				map(n -> {
-					try {
-						return ClassUtils.forName(n, null);
-					} catch (ClassNotFoundException ex) {
-						return null;
-					}
-				}).
-				filter(Objects::nonNull).
-				forEach(c -> ret.add(((Class<T>)c)));
+					map(BeanDefinition::getBeanClassName).
+					map(n -> {
+						try {
+							return ClassUtils.forName(n, null);
+						} catch (ClassNotFoundException ex) {
+							return null;
+						}
+					}).
+					filter(Objects::nonNull).
+					forEach(c -> ret.add(((Class<T>)c)));
 		}
 		return ret;
 	}

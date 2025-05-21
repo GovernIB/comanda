@@ -35,8 +35,8 @@ public class HalFormsTemplateBuilderConfig {
 			ReflectionUtils.makeAccessible(builderResolverField);
 			MessageResolver builderResolver = (MessageResolver) ReflectionUtils.getField(builderResolverField, halFormsTemplateBuilder);
 			CustomHalFormsTemplateBuilder customHalFormsTemplateBuilder = new CustomHalFormsTemplateBuilder(
-				halFormsConfiguration,
-				builderResolver);
+					halFormsConfiguration,
+					builderResolver);
 			ReflectionUtils.setField(builderField, halFormsTemplatePropertyWriter, customHalFormsTemplateBuilder);
 		}
 	}

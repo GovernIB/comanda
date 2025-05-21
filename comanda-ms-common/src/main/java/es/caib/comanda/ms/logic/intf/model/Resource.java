@@ -8,24 +8,24 @@ import java.io.Serializable;
  * dels tipus primitius com Integer, Long, String, ...). Si la clau primària
  * del recurs és de tipus compost s'ha d'utilitzar la classe
  * CompositePkResource.
- *
+ * 
  * @param <ID> el tipus de la clau primària de l'entitat que correspon al recurs.
  *            Aquest tipus ha d'implementar Serializable.
- *
+ * 
  * @author Límit Tecnologies
  */
 public interface Resource<ID extends Serializable> extends Serializable {
 
 	/**
 	 * Obté el valor del camp id.
-	 *
+	 * 
 	 * @return el valor del camp id.
 	 */
 	ID getId();
 
 	/**
 	 * Estableix el valor del camp id.
-	 *
+	 * 
 	 * @param id
 	 *            el valor del camp id.
 	 */
@@ -53,4 +53,3 @@ public interface Resource<ID extends Serializable> extends Serializable {
 	interface Ignore {}
 
 }
-

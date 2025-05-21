@@ -22,7 +22,7 @@ import java.io.Serializable;
  * @author Límit Tecnologies
  */
 public interface MutableResourceController<R extends Resource<? extends Serializable>, ID extends Serializable>
-	extends ReadonlyResourceController<R, ID> {
+		extends ReadonlyResourceController<R, ID> {
 
 	/**
 	 * Crea un nou recurs amb la informació especificada.
@@ -36,8 +36,8 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            si s'envia una creació errònia o no permesa.
 	 */
 	ResponseEntity<EntityModel<R>> create(
-		final R resource,
-		BindingResult bindingResult) throws MethodArgumentNotValidException;
+			final R resource,
+			BindingResult bindingResult) throws MethodArgumentNotValidException;
 
 	/**
 	 * Modifica un recurs existent amb la informació especificada.
@@ -53,9 +53,9 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            si s'envia una modificació errònia o no permesa.
 	 */
 	ResponseEntity<EntityModel<R>> update(
-		final ID id,
-		final R resource,
-		BindingResult bindingResult) throws MethodArgumentNotValidException;
+			final ID id,
+			final R resource,
+			BindingResult bindingResult) throws MethodArgumentNotValidException;
 
 	/**
 	 * Modifica un recurs existent amb la informació especificada.
@@ -73,9 +73,9 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            si s'envia una modificació errònia o no permesa.
 	 */
 	ResponseEntity<EntityModel<R>> patch(
-		final ID id,
-		final JsonNode jsonNode,
-		final BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException;
+			final ID id,
+			final JsonNode jsonNode,
+			final BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException;
 
 	/**
 	 * Esborra un recurs existent.
@@ -85,7 +85,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @return HTTP 200 si tot ha anat be.
 	 */
 	ResponseEntity<?> delete(
-		final ID id);
+			final ID id);
 
 	/**
 	 * Processament en el backend dels canvis en els camps dels recursos que
@@ -102,7 +102,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            si es produeixen errors al parsejar els camps.
 	 */
 	ResponseEntity<String> onChange(
-		final OnChangeEvent onChangeEvent) throws JsonProcessingException;
+			final OnChangeEvent onChangeEvent) throws JsonProcessingException;
 
 	/**
 	 * Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference.
@@ -124,12 +124,12 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
 	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
-		final String fieldName,
-		final String quickFilter,
-		final String filter,
-		final String[] namedQueries,
-		final String[] perspectives,
-		final Pageable pageable);
+			final String fieldName,
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable);
 
 	/**
 	 * Consulta una de les opcions disponibles per a emplenar un camp de tipus ResourceReference.
@@ -147,9 +147,9 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @return L'element amb l'id especificat.
 	 */
 	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> fieldOptionsGetOne(
-		final String fieldName,
-		final RID id,
-		final String[] perspectives);
+			final String fieldName,
+			final RID id,
+			final String[] perspectives);
 
 	/**
 	 * Consulta les opcions disponibles per a un camp de tipus enumerat.
@@ -159,7 +159,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @return la llista d'opcions disponibles.
 	 */
 	ResponseEntity<CollectionModel<EntityModel<FieldOption>>> fieldEnumOptionsFind(
-		final String fieldName);
+			final String fieldName);
 
 	/**
 	 * Consulta una de les opcions disponibles per a un camp de tipus enumerat.
@@ -171,8 +171,8 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @return l'opció demanada.
 	 */
 	ResponseEntity<EntityModel<FieldOption>> fieldEnumOptionsGetOne(
-		final String fieldName,
-		final String value);
+			final String fieldName,
+			final String value);
 
 	/**
 	 * Execució d'una acció associada a un recurs.
@@ -192,9 +192,9 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *             si es troben errors de validació en els paràmetres.
 	 */
 	ResponseEntity<?> artifactActionExec(
-		final String code,
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
+			final String code,
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
 
 	/**
 	 * Execució d'una acció associada a un recurs amb id.
@@ -216,10 +216,10 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *             si es troben errors de validació en els paràmetres.
 	 */
 	ResponseEntity<?> artifactActionExec(
-		final ID id,
-		final String code,
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
+			final ID id,
+			final String code,
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException;
 
 	/**
 	 * Consulta paginada de les opcions disponibles per a emplenar un camp de
@@ -244,13 +244,13 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
 	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactActionFieldOptionsFind(
-		final String code,
-		final String fieldName,
-		final String quickFilter,
-		final String filter,
-		final String[] namedQueries,
-		final String[] perspectives,
-		final Pageable pageable);
+			final String code,
+			final String fieldName,
+			final String quickFilter,
+			final String filter,
+			final String[] namedQueries,
+			final String[] perspectives,
+			final Pageable pageable);
 
 	/**
 	 * Consulta d'una de les opcions disponibles per a emplenar un camp de
@@ -271,9 +271,9 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @return L'element amb l'id especificat.
 	 */
 	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactActionFieldOptionsGetOne(
-		final String code,
-		final String fieldName,
-		final RID id,
-		final String[] perspectives);
+			final String code,
+			final String fieldName,
+			final RID id,
+			final String[] perspectives);
 
 }

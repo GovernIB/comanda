@@ -13,7 +13,6 @@ import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.model.*;
 import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
-import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
 import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
 import es.caib.comanda.ms.logic.intf.service.ResourceServiceLocator;
@@ -92,7 +91,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  */
 @Slf4j
 public abstract class BaseReadonlyResourceController<R extends Resource<? extends Serializable>, ID extends Serializable>
-	implements ReadonlyResourceController<R, ID> {
+		extends BaseController
+		implements ReadonlyResourceController<R, ID> {
 
 	@Value("${" + BaseConfig.PROP_HTTP_HEADER_ANSWERS + ":Bb-Answers}")
 	private String httpHeaderAnswers;
@@ -123,25 +123,25 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta la informació d'un recurs")
 	@PreAuthorize("this.isPublic() or hasPermission(#resourceId, this.getResourceClass().getName(), this.getOperation('GET_ONE'))")
 	public ResponseEntity<EntityModel<R>> getOne(
-		@PathVariable
-		@Parameter(description = "Identificador del recurs")
-		final ID id,
-		@RequestParam(value = "perspective", required = false)
-		final String[] perspectives) {
+			@PathVariable
+			@Parameter(description = "Identificador del recurs")
+			final ID id,
+			@RequestParam(value = "perspective", required = false)
+			final String[] perspectives) {
 		log.debug("Obtenint recurs (id={})", id);
 		R resource = getReadonlyResourceService().getOne(
-			id,
-			perspectives);
+				id,
+				perspectives);
 		EntityModel<R> entityModel = toEntityModel(
-			resource,
-			buildSingleResourceLinks(
-				resource.getId(),
-				perspectives,
-				true,
-				null,
-				resourceApiService.permissionsCurrentUser(
-					getResourceClass(),
-					id)).toArray(new Link[0]));
+				resource,
+				buildSingleResourceLinks(
+						resource.getId(),
+						perspectives,
+						true,
+						null,
+						resourceApiService.permissionsCurrentUser(
+								getResourceClass(),
+								id)).toArray(new Link[0]));
 		return ResponseEntity.ok(entityModel);
 	}
 
@@ -150,60 +150,60 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta paginada de recursos")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('FIND'))")
 	public ResponseEntity<PagedModel<EntityModel<R>>> find(
-		@RequestParam(value = "quickFilter", required = false)
-		@Parameter(description = "Filtre ràpid (text)")
-		final String quickFilter,
-		@RequestParam(value = "filter", required = false)
-		@Parameter(description = "Consulta en format Spring Filter")
-		final String filter,
-		@RequestParam(value = "namedQuery", required = false)
-		@Parameter(description = "Consultes predefinides")
-		final String[] namedQueries,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives,
-		@Parameter(description = "Paginació dels resultats")
-		final Pageable pageable) {
+			@RequestParam(value = "quickFilter", required = false)
+			@Parameter(description = "Filtre ràpid (text)")
+			final String quickFilter,
+			@RequestParam(value = "filter", required = false)
+			@Parameter(description = "Consulta en format Spring Filter")
+			final String filter,
+			@RequestParam(value = "namedQuery", required = false)
+			@Parameter(description = "Consultes predefinides")
+			final String[] namedQueries,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives,
+			@Parameter(description = "Paginació dels resultats")
+			final Pageable pageable) {
 		log.debug("Consultant recursos amb filtre i paginació (" +
-				"quickFilter={}, filter={}, namedQueries={}, " +
-				"perspectives={}, pageable={})",
-			quickFilter,
-			filter,
-			Arrays.toString(namedQueries),
-			Arrays.toString(perspectives),
-			pageable);
+						"quickFilter={}, filter={}, namedQueries={}, " +
+						"perspectives={}, pageable={})",
+				quickFilter,
+				filter,
+				Arrays.toString(namedQueries),
+				Arrays.toString(perspectives),
+				pageable);
 		ResourcePermissions resourcePermissions = resourceApiService.permissionsCurrentUser(
-			getResourceClass(),
-			null);
+				getResourceClass(),
+				null);
 		if (pageable != null) {
 			// Només es fa la consulta de recursos si la petició conté informació de paginació.
 			long t0 = System.currentTimeMillis();
 			long initialTime = t0;
 			String filterWithFieldParams = filterWithFieldParameters(filter, getResourceClass());
 			Page<R> page = getReadonlyResourceService().findPage(
-				quickFilter,
-				filterWithFieldParams,
-				namedQueries,
-				perspectives,
-				pageable);
+					quickFilter,
+					filterWithFieldParams,
+					namedQueries,
+					perspectives,
+					pageable);
 			long queryTime = System.currentTimeMillis() - t0;
 			log.trace("\ttemps de consulta: {}ms", queryTime);
 			t0 = System.currentTimeMillis();
 			PagedModel<EntityModel<R>> pagedModel = toPagedModel(
-				page,
-				perspectives,
-				true,
-				null,
-				resourcePermissions,
-				buildResourceCollectionLinks(
-					quickFilter,
-					filter,
-					namedQueries,
-					perspectives,
-					pageable,
 					page,
+					perspectives,
+					true,
 					null,
-					resourcePermissions).toArray(new Link[0]));
+					resourcePermissions,
+					buildResourceCollectionLinks(
+							quickFilter,
+							filter,
+							namedQueries,
+							perspectives,
+							pageable,
+							page,
+							null,
+							resourcePermissions).toArray(new Link[0]));
 			long conversionTime = System.currentTimeMillis() - t0;
 			log.trace("\ttemps de conversió dels resultats: {}ms", conversionTime);
 			long totalTime = System.currentTimeMillis() - initialTime;
@@ -215,16 +215,16 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			// retornen els ellaços a les possibles accions sobre aquest
 			// recurs.
 			return ResponseEntity.ok(
-				PagedModel.empty(
-					buildResourceCollectionLinks(
-						quickFilter,
-						filter,
-						namedQueries,
-						perspectives,
-						null,
-						null,
-						null,
-						resourcePermissions)));
+					PagedModel.empty(
+							buildResourceCollectionLinks(
+									quickFilter,
+									filter,
+									namedQueries,
+									perspectives,
+									null,
+									null,
+									null,
+									resourcePermissions)));
 		}
 	}
 
@@ -233,46 +233,46 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Exportació de recursos")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('EXPORT'))")
 	public ResponseEntity<InputStreamResource> export(
-		@RequestParam(value = "quickFilter", required = false)
-		@Parameter(description = "Filtre ràpid (text)")
-		final String quickFilter,
-		@RequestParam(value = "filter", required = false)
-		@Parameter(description = "Consulta en format Spring Filter")
-		final String filter,
-		@RequestParam(value = "namedQuery", required = false)
-		@Parameter(description = "Consultes predefinides")
-		final String[] namedQueries,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives,
-		@Parameter(description = "Paginació dels resultats")
-		final Pageable pageable,
-		@RequestParam(value = "field", required = false)
-		@Parameter(description = "Camps a exportar (tots si no s'especifica)")
-		final String[] fields,
-		@RequestParam(value = "fileType", required = false)
-		@Parameter(description = "Tipus de fitxer que s'ha de generar")
-		final ReportFileType fileType) throws IOException {
+			@RequestParam(value = "quickFilter", required = false)
+			@Parameter(description = "Filtre ràpid (text)")
+			final String quickFilter,
+			@RequestParam(value = "filter", required = false)
+			@Parameter(description = "Consulta en format Spring Filter")
+			final String filter,
+			@RequestParam(value = "namedQuery", required = false)
+			@Parameter(description = "Consultes predefinides")
+			final String[] namedQueries,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives,
+			@Parameter(description = "Paginació dels resultats")
+			final Pageable pageable,
+			@RequestParam(value = "field", required = false)
+			@Parameter(description = "Camps a exportar (tots si no s'especifica)")
+			final String[] fields,
+			@RequestParam(value = "fileType", required = false)
+			@Parameter(description = "Tipus de fitxer que s'ha de generar")
+			final ReportFileType fileType) throws IOException {
 		log.debug("Exportant recursos amb filtre i paginació (" +
-				"quickFilter={}, filter={}, namedQueries={}, perspectives={}, " +
-				"pageable={}, fields={}, fileType={})",
-			quickFilter,
-			filter,
-			Arrays.toString(namedQueries),
-			Arrays.toString(perspectives),
-			pageable,
-			fields,
-			fileType);
+						"quickFilter={}, filter={}, namedQueries={}, perspectives={}, " +
+						"pageable={}, fields={}, fileType={})",
+				quickFilter,
+				filter,
+				Arrays.toString(namedQueries),
+				Arrays.toString(perspectives),
+				pageable,
+				fields,
+				fileType);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DownloadableFile file = getReadonlyResourceService().export(
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable,
-			toExportFields(fields),
-			fileType,
-			baos);
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable,
+				toExportFields(fields),
+				fileType,
+				baos);
 		if (file.getContent() != null && baos.size() == 0) {
 			baos.write(file.getContent());
 		}
@@ -285,20 +285,20 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Descàrrega de l'arxiu associat a un camp del recurs")
 	@PreAuthorize("this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('FIELDDOWNLOAD'))")
 	public ResponseEntity<InputStreamResource> fieldDownload(
-		@PathVariable
-		@Parameter(description = "Identificador del recurs")
-		final ID id,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName) throws IOException {
+			@PathVariable
+			@Parameter(description = "Identificador del recurs")
+			final ID id,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName) throws IOException {
 		log.debug("Descàrrega de l'arxiu associat al camp del recurs (id={}, fieldName={})",
-			id,
-			fieldName);
+				id,
+				fieldName);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DownloadableFile file = getReadonlyResourceService().fieldDownload(
-			id,
-			fieldName,
-			baos);
+				id,
+				fieldName,
+				baos);
 		if (file.getContent() != null && baos.size() == 0) {
 			baos.write(file.getContent());
 		}
@@ -314,12 +314,12 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		log.debug("Consulta dels artefactes disponibles pel recurs");
 		List<ResourceArtifact> artifacts = getReadonlyResourceService().artifactFindAll(null);
 		List<EntityModel<ResourceArtifact>> artifactsAsEntities = artifacts.stream().
-			map(a -> EntityModel.of(a, buildSingleArtifactLinks(a))).
-			collect(Collectors.toList());
+				map(a -> EntityModel.of(a, buildSingleArtifactLinks(a))).
+				collect(Collectors.toList());
 		return ResponseEntity.ok(
-			CollectionModel.of(
-				artifactsAsEntities,
-				buildArtifactsLinks(artifacts)));
+				CollectionModel.of(
+						artifactsAsEntities,
+						buildArtifactsLinks(artifacts)));
 	}
 
 	@Override
@@ -327,16 +327,16 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Informació d'un artefacte")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ARTIFACT'))")
 	public ResponseEntity<EntityModel<ResourceArtifact>> artifactGetOne(
-		@PathVariable
-		@Parameter(description = "Tipus de l'artefacte")
-		ResourceArtifactType type,
-		@PathVariable
-		@Parameter(description = "Codi de l'artefacte")
-		String code) {
+			@PathVariable
+			@Parameter(description = "Tipus de l'artefacte")
+			ResourceArtifactType type,
+			@PathVariable
+			@Parameter(description = "Codi de l'artefacte")
+			String code) {
 		log.debug("Detalls d'un artefacte del recurs (type={}, code={})", type, code);
 		ResourceArtifact artifact = getReadonlyResourceService().artifactGetOne(type, code);
 		return ResponseEntity.ok(
-			EntityModel.of(artifact, buildSingleArtifactLinks(artifact)));
+				EntityModel.of(artifact, buildSingleArtifactLinks(artifact)));
 	}
 
 	@Override
@@ -344,27 +344,27 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Processa els canvis en els camps del formulari d'un artefacte")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ARTIFACT'))")
 	public ResponseEntity<String> artifactFormOnChange(
-		@PathVariable
-		@Parameter(description = "Tipus de l'artefacte")
-		final ResourceArtifactType type,
-		@PathVariable
-		@Parameter(description = "Codi de l'artefacte")
-		final String code,
-		@RequestBody @Valid
-		final OnChangeEvent onChangeEvent) throws ArtifactNotFoundException, JsonProcessingException {
+			@PathVariable
+			@Parameter(description = "Tipus de l'artefacte")
+			final ResourceArtifactType type,
+			@PathVariable
+			@Parameter(description = "Codi de l'artefacte")
+			final String code,
+			@RequestBody @Valid
+			final OnChangeEvent onChangeEvent) throws ArtifactNotFoundException, JsonProcessingException {
 		log.debug("Validació del formulari d'un artefacte (type={}, code={}, onChangeEvent={})", type, code, onChangeEvent);
 		Class<? extends Serializable> artifactFormClass = getArtifactFormClass(type, code);
 		Serializable previous = getOnChangePrevious(onChangeEvent, artifactFormClass);
 		Object fieldValue = getOnChangeFieldValue(onChangeEvent, artifactFormClass);
 		Map<String, AnswerRequiredException.AnswerValue> answers = getAnswersFromHeaderOrRequest(onChangeEvent.getAnswers());
 		Map<String, Object> processat = getReadonlyResourceService().artifactOnChange(
-			type,
-			code,
-			onChangeEvent.getId(),
-			previous,
-			onChangeEvent.getFieldName(),
-			fieldValue,
-			answers);
+				type,
+				code,
+				onChangeEvent.getId(),
+				previous,
+				onChangeEvent.getFieldName(),
+				fieldValue,
+				answers);
 		if (processat != null) {
 			String serialized = objectMapper.writeValueAsString(new BaseMutableResourceController.OnChangeForSerialization(processat));
 			String response = serialized.substring(serialized.indexOf("\":{") + 2, serialized.length() - 1);
@@ -379,21 +379,21 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Validació del formulari d'un artefacte")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ARTIFACT'))")
 	public ResponseEntity<?> artifactFormValidate(
-		@PathVariable
-		@Parameter(description = "Tipus de l'artefacte")
-		final ResourceArtifactType type,
-		@PathVariable
-		@Parameter(description = "Codi de l'artefacte")
-		final String code,
-		@RequestBody
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException {
+			@PathVariable
+			@Parameter(description = "Tipus de l'artefacte")
+			final ResourceArtifactType type,
+			@PathVariable
+			@Parameter(description = "Codi de l'artefacte")
+			final String code,
+			@RequestBody
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException {
 		log.debug("Validació del formulari d'un artefacte (type={}, code={}, params={})", type, code, params);
 		Class<?> formClass = getArtifactFormClass(type, code);
 		getArtifactParamsAsObjectWithFormClass(
-			formClass,
-			params,
-			bindingResult);
+				formClass,
+				params,
+				bindingResult);
 		return ResponseEntity.ok().build();
 	}
 
@@ -402,33 +402,34 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta les opcions disponibles per a emplenar un camp enumerat que pertany al formulari d'un artefacte.")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
 	public ResponseEntity<CollectionModel<EntityModel<FieldOption>>> artifactFieldEnumOptionsFind(
-		@PathVariable
-		@Parameter(description = "Tipus de l'artefacte")
-		final ResourceArtifactType type,
-		@PathVariable
-		@Parameter(description = "Codi de l'artefacte")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName) {
+			@PathVariable
+			@Parameter(description = "Tipus de l'artefacte")
+			final ResourceArtifactType type,
+			@PathVariable
+			@Parameter(description = "Codi de l'artefacte")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName) {
 		log.debug("Consultant possibles valors pel camp enumerat d'un artefacte (type={}, code={}, fieldName={})",
-			type,
-			code,
-			fieldName);
+				type,
+				code,
+				fieldName);
 		List<FieldOption> fieldOptions = getReadonlyResourceService().artifactFieldEnumOptions(
-			type,
-			code,
-			fieldName);
+				type,
+				code,
+				fieldName,
+				HttpRequestUtil.getCurrentHttpRequest().get().getParameterMap());
 		Link selfLink = linkTo(methodOn(getClass()).artifactFieldEnumOptionsFind(type, code, fieldName)).withSelfRel();
 		if (fieldOptions != null) {
 			return ResponseEntity.ok(
-				CollectionModel.of(
-					fieldOptions.stream().
-						map(fo -> EntityModel.of(
-							fo,
-							linkTo(methodOn(getClass()).artifactFieldEnumOptionsGetOne(type, code, fieldName, fo.getValue())).withSelfRel())).
-						collect(Collectors.toList()),
-					selfLink));
+					CollectionModel.of(
+							fieldOptions.stream().
+									map(fo -> EntityModel.of(
+											fo,
+											linkTo(methodOn(getClass()).artifactFieldEnumOptionsGetOne(type, code, fieldName, fo.getValue())).withSelfRel())).
+									collect(Collectors.toList()),
+							selfLink));
 		} else {
 			return ResponseEntity.ok(CollectionModel.empty(selfLink));
 		}
@@ -439,38 +440,39 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta una de les opcions disponibles per a emplenar un camp enumerat que pertany al formulari d'un artefacte.")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
 	public ResponseEntity<EntityModel<FieldOption>> artifactFieldEnumOptionsGetOne(
-		@PathVariable
-		@Parameter(description = "Tipus de l'artefacte")
-		final ResourceArtifactType type,
-		@PathVariable
-		@Parameter(description = "Codi de l'artefacte")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName,
-		@PathVariable
-		@Parameter(description = "Valor de l'opció")
-		final String value) {
+			@PathVariable
+			@Parameter(description = "Tipus de l'artefacte")
+			final ResourceArtifactType type,
+			@PathVariable
+			@Parameter(description = "Codi de l'artefacte")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@PathVariable
+			@Parameter(description = "Valor de l'opció")
+			final String value) {
 		log.debug("Consultant un únic valor pel camp enumerat d'un artefacte (type={}, code={}, fieldName={}, value={})",
-			type,
-			code,
-			fieldName,
-			value);
+				type,
+				code,
+				fieldName,
+				value);
 		List<FieldOption> fieldOptions = getReadonlyResourceService().artifactFieldEnumOptions(
-			type,
-			code,
-			fieldName);
+				type,
+				code,
+				fieldName,
+				HttpRequestUtil.getCurrentHttpRequest().get().getParameterMap());
 		FieldOption found = null;
 		if (fieldOptions != null) {
 			found = fieldOptions.stream().
-				filter(fo -> fo.getValue().equals(value)).
-				findFirst().orElse(null);
+					filter(fo -> fo.getValue().equals(value)).
+					findFirst().orElse(null);
 		}
 		if (found != null) {
 			return ResponseEntity.ok(
-				EntityModel.of(
-					found,
-					linkTo(methodOn(getClass()).artifactFieldEnumOptionsGetOne(type, code, fieldName, found.getValue())).withSelfRel()));
+					EntityModel.of(
+							found,
+							linkTo(methodOn(getClass()).artifactFieldEnumOptionsGetOne(type, code, fieldName, found.getValue())).withSelfRel()));
 		} else {
 			return ResponseEntity.notFound().build();
 		}
@@ -479,110 +481,110 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Override
 	@GetMapping(value = "/artifacts/{type}/{code}/fields/{fieldName}/options")
 	@Operation(summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference " +
-		"que pertany al formulari d'un artefacte.")
+			"que pertany al formulari d'un artefacte.")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ARTIFACT'))")
 	public <RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFieldOptionsFind(
-		@PathVariable
-		@Parameter(description = "Tipus de l'artefacte")
-		final ResourceArtifactType type,
-		@PathVariable
-		@Parameter(description = "Codi de l'artefacte")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName,
-		@RequestParam(value = "quickFilter", required = false)
-		@Parameter(description = "Filtre ràpid (text)")
-		final String quickFilter,
-		@RequestParam(value = "filter", required = false)
-		@Parameter(description = "Consulta en format Spring Filter")
-		final String filter,
-		@RequestParam(value = "namedQuery", required = false)
-		@Parameter(description = "Consultes predefinides")
-		final String[] namedQueries,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives,
-		@Parameter(description = "Paginació dels resultats")
-		final Pageable pageable) {
+			@PathVariable
+			@Parameter(description = "Tipus de l'artefacte")
+			final ResourceArtifactType type,
+			@PathVariable
+			@Parameter(description = "Codi de l'artefacte")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@RequestParam(value = "quickFilter", required = false)
+			@Parameter(description = "Filtre ràpid (text)")
+			final String quickFilter,
+			@RequestParam(value = "filter", required = false)
+			@Parameter(description = "Consulta en format Spring Filter")
+			final String filter,
+			@RequestParam(value = "namedQuery", required = false)
+			@Parameter(description = "Consultes predefinides")
+			final String[] namedQueries,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives,
+			@Parameter(description = "Paginació dels resultats")
+			final Pageable pageable) {
 		log.debug("Consultant possibles valors del camp de formulari de l'artefacte amb filtre i paginació (" +
-				"type={}, code={}, fieldName={}, quickFilter={}, filter={}, namedQueries={}, perspectives={}, pageable={})",
-			type,
-			code,
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable);
+						"type={}, code={}, fieldName={}, quickFilter={}, filter={}, namedQueries={}, perspectives={}, pageable={})",
+				type,
+				code,
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable);
 		Link resourceCollectionBaseSelfLink = linkTo(methodOn(getClass()).artifactFieldOptionsFind(
-			type,
-			code,
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable)).withSelfRel();
+				type,
+				code,
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable)).withSelfRel();
 		Link singleResourceBaseSelfLink = linkTo(methodOn(getClass()).artifactFieldOptionsGetOne(
-			type,
-			code,
-			fieldName,
-			SELF_RESOURCE_ID_TOKEN,
-			null)).withSelfRel();
+				type,
+				code,
+				fieldName,
+				SELF_RESOURCE_ID_TOKEN,
+				null)).withSelfRel();
 		return fieldOptionsFind(
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable,
-			type,
-			code,
-			resourceCollectionBaseSelfLink,
-			singleResourceBaseSelfLink);
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable,
+				type,
+				code,
+				resourceCollectionBaseSelfLink,
+				singleResourceBaseSelfLink);
 	}
 
 	@Override
 	@GetMapping(value = "/artifacts/{type}/{code}/fields/{fieldName}/options/{id}")
 	@Operation(summary = "Consulta una de les opcions disponibles per a emplenar un camp de tipus ResourceReference " +
-		"que pertany al formulari d'un artefacte")
+            "que pertany al formulari d'un artefacte")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ARTIFACT'))")
 	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactFieldOptionsGetOne(
-		@PathVariable
-		@Parameter(description = "Tipus de l'artefacte")
-		final ResourceArtifactType type,
-		@PathVariable
-		@Parameter(description = "Codi de l'artefacte")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName,
-		@PathVariable
-		@Parameter(description = "Id de l'element")
-		final RID id,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives) {
+			@PathVariable
+			@Parameter(description = "Tipus de l'artefacte")
+			final ResourceArtifactType type,
+			@PathVariable
+			@Parameter(description = "Codi de l'artefacte")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@PathVariable
+			@Parameter(description = "Id de l'element")
+			final RID id,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives) {
 		log.debug("Consultant un dels possibles valors del camp (type={}, code={}, fieldName={}, id={}, perspectives={})",
-			type,
-			code,
-			fieldName,
-			id,
-			perspectives);
+				type,
+				code,
+				fieldName,
+				id,
+				perspectives);
 		Link singleResourceBaseSelfLink = linkTo(methodOn(getClass()).artifactFieldOptionsGetOne(
-			type,
-			code,
-			fieldName,
-			SELF_RESOURCE_ID_TOKEN,
-			null)).withSelfRel();
+				type,
+				code,
+				fieldName,
+				SELF_RESOURCE_ID_TOKEN,
+				null)).withSelfRel();
 		return fieldOptionsGetOne(
-			fieldName,
-			id,
-			perspectives,
-			type,
-			code,
-			singleResourceBaseSelfLink);
+				fieldName,
+				id,
+				perspectives,
+				type,
+				code,
+				singleResourceBaseSelfLink);
 	}
 
 	@Override
@@ -590,15 +592,15 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Generació de l'informe associat a un recurs")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
 	public ResponseEntity<InputStreamResource> artifactReportGenerate(
-		@PathVariable
-		@Parameter(description = "Codi de l'informe")
-		final String code,
-		@RequestParam(value = "fileType", required = false)
-		@Parameter(description = "Tipus d'arxiu generat")
-		final ReportFileType fileType,
-		@RequestBody(required = false)
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException {
+			@PathVariable
+			@Parameter(description = "Codi de l'informe")
+			final String code,
+			@RequestParam(value = "fileType", required = false)
+			@Parameter(description = "Tipus d'arxiu generat")
+			final ReportFileType fileType,
+			@RequestBody(required = false)
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException {
 		return artifactReportGenerate(null, code, fileType, params, bindingResult);
 	}
 
@@ -607,33 +609,33 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Generació de l'informe associat a un recurs amb id")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
 	public ResponseEntity<InputStreamResource> artifactReportGenerate(
-		@PathVariable(required = false)
-		@Parameter(description = "Identificador del recurs")
-		final ID id,
-		@PathVariable
-		@Parameter(description = "Codi de l'informe")
-		final String code,
-		@RequestParam(value = "fileType", required = false)
-		@Parameter(description = "Tipus d'arxiu generat")
-		final ReportFileType fileType,
-		@RequestBody(required = false)
-		final JsonNode params,
-		BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException {
+			@PathVariable(required = false)
+			@Parameter(description = "Identificador del recurs")
+			final ID id,
+			@PathVariable
+			@Parameter(description = "Codi de l'informe")
+			final String code,
+			@RequestParam(value = "fileType", required = false)
+			@Parameter(description = "Tipus d'arxiu generat")
+			final ReportFileType fileType,
+			@RequestBody(required = false)
+			final JsonNode params,
+			BindingResult bindingResult) throws ArtifactNotFoundException, IOException, MethodArgumentNotValidException {
 		log.debug("Generació de l'informe associat al recurs (id={}, code={}, fileType={}, params={})",
-			id,
-			code,
-			fileType,
-			params);
+				id,
+				code,
+				fileType,
+				params);
 		Class<?> formClass = getArtifactFormClass(ResourceArtifactType.REPORT, code);
 		Serializable paramsObject = getArtifactParamsAsObjectWithFormClass(
-			formClass,
-			params,
-			bindingResult);
+				formClass,
+				params,
+				bindingResult);
 		List<?> items = getReadonlyResourceService().artifactReportGenerateData(id, code, paramsObject);
 		if (fileType == null) {
 			List<EntityModel<?>> itemsAsEntities = items.stream().
-				map(i -> EntityModel.of(i, buildReportItemLink(code, items.indexOf(i)))).
-				collect(Collectors.toList());
+					map(i -> EntityModel.of(i, buildReportItemLink(code, items.indexOf(i)))).
+					collect(Collectors.toList());
 			Link reportLink;
 			if (id != null) {
 				reportLink = linkTo(methodOn(getClass()).artifactReportGenerate(id, code, null, null, null)).withSelfRel();
@@ -641,8 +643,8 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				reportLink = linkTo(methodOn(getClass()).artifactReportGenerate(code, null, null, null)).withSelfRel();
 			}
 			CollectionModel<EntityModel<?>> responseCollection = CollectionModel.of(
-				itemsAsEntities,
-				Link.of(reportLink.toUri().toString()).withSelfRel());
+					itemsAsEntities,
+					Link.of(reportLink.toUri().toString()).withSelfRel());
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			objectMapper.writeValue(baos, responseCollection);
 			ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.ok();
@@ -652,10 +654,10 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		} else {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			DownloadableFile file = getReadonlyResourceService().artifactReportGenerateFile(
-				code,
-				items,
-				fileType,
-				baos);
+					code,
+					items,
+					fileType,
+					baos);
 			if (file.getContent() != null && baos.size() == 0) {
 				baos.write(file.getContent());
 			}
@@ -669,59 +671,59 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari de l'informe")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
 	public <RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactReportFieldOptionsFind(
-		@PathVariable
-		@Parameter(description = "Codi de l'informe")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName,
-		@RequestParam(value = "quickFilter", required = false)
-		@Parameter(description = "Filtre ràpid (text)")
-		final String quickFilter,
-		@RequestParam(value = "filter", required = false)
-		@Parameter(description = "Consulta en format Spring Filter")
-		final String filter,
-		@RequestParam(value = "namedQuery", required = false)
-		@Parameter(description = "Consultes predefinides")
-		final String[] namedQueries,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives,
-		@Parameter(description = "Paginació dels resultats")
-		final Pageable pageable) {
+			@PathVariable
+			@Parameter(description = "Codi de l'informe")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@RequestParam(value = "quickFilter", required = false)
+			@Parameter(description = "Filtre ràpid (text)")
+			final String quickFilter,
+			@RequestParam(value = "filter", required = false)
+			@Parameter(description = "Consulta en format Spring Filter")
+			final String filter,
+			@RequestParam(value = "namedQuery", required = false)
+			@Parameter(description = "Consultes predefinides")
+			final String[] namedQueries,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives,
+			@Parameter(description = "Paginació dels resultats")
+			final Pageable pageable) {
 		log.debug("Consultant possibles valors del camp del formulari de l'informe (" +
-				"code={}, fieldName={}, quickFilter={}, filter={}, namedQueries={}, perspectives={}, pageable={})",
-			code,
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable);
+						"code={}, fieldName={}, quickFilter={}, filter={}, namedQueries={}, perspectives={}, pageable={})",
+				code,
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable);
 		Link resourceCollectionBaseSelfLink = linkTo(methodOn(getClass()).artifactReportFieldOptionsFind(
-			code,
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable)).withSelfRel();
+				code,
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable)).withSelfRel();
 		Link singleResourceBaseSelfLink = linkTo(methodOn(getClass()).artifactReportFieldOptionsGetOne(
-			code,
-			fieldName,
-			SELF_RESOURCE_ID_TOKEN,
-			null)).withSelfRel();
+				code,
+				fieldName,
+				SELF_RESOURCE_ID_TOKEN,
+				null)).withSelfRel();
 		return fieldOptionsFind(
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable,
-			ResourceArtifactType.REPORT,
-			code,
-			resourceCollectionBaseSelfLink,
-			singleResourceBaseSelfLink);
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable,
+				ResourceArtifactType.REPORT,
+				code,
+				resourceCollectionBaseSelfLink,
+				singleResourceBaseSelfLink);
 	}
 
 	@Override
@@ -729,36 +731,36 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta d'una de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari de l'informe")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('REPORT'))")
 	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactReportFieldOptionsGetOne(
-		@PathVariable
-		@Parameter(description = "Codi de l'informe")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName,
-		@PathVariable
-		@Parameter(description = "Id de l'element")
-		final RID id,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives) {
+			@PathVariable
+			@Parameter(description = "Codi de l'informe")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@PathVariable
+			@Parameter(description = "Id de l'element")
+			final RID id,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives) {
 		log.debug("Consultant un dels possibles valors del camp del formulari de l'informe (" +
-				"code={}, fieldName={}, id={}, perspectives={})",
-			code,
-			fieldName,
-			id,
-			perspectives);
+						"code={}, fieldName={}, id={}, perspectives={})",
+				code,
+				fieldName,
+				id,
+				perspectives);
 		Link singleResourceBaseSelfLink = linkTo(methodOn(getClass()).artifactReportFieldOptionsGetOne(
-			code,
-			fieldName,
-			SELF_RESOURCE_ID_TOKEN,
-			null)).withSelfRel();
+				code,
+				fieldName,
+				SELF_RESOURCE_ID_TOKEN,
+				null)).withSelfRel();
 		return fieldOptionsGetOne(
-			fieldName,
-			id,
-			perspectives,
-			ResourceArtifactType.REPORT,
-			code,
-			singleResourceBaseSelfLink);
+				fieldName,
+				id,
+				perspectives,
+				ResourceArtifactType.REPORT,
+				code,
+				singleResourceBaseSelfLink);
 	}
 
 	@Override
@@ -766,59 +768,59 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari del filtre")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('FIND'))")
 	public <RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFilterFieldOptionsFind(
-		@PathVariable
-		@Parameter(description = "Codi de l'informe")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName,
-		@RequestParam(value = "quickFilter", required = false)
-		@Parameter(description = "Filtre ràpid (text)")
-		final String quickFilter,
-		@RequestParam(value = "filter", required = false)
-		@Parameter(description = "Consulta en format Spring Filter")
-		final String filter,
-		@RequestParam(value = "namedQuery", required = false)
-		@Parameter(description = "Consultes predefinides")
-		final String[] namedQueries,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives,
-		@Parameter(description = "Paginació dels resultats")
-		final Pageable pageable) {
+			@PathVariable
+			@Parameter(description = "Codi de l'informe")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@RequestParam(value = "quickFilter", required = false)
+			@Parameter(description = "Filtre ràpid (text)")
+			final String quickFilter,
+			@RequestParam(value = "filter", required = false)
+			@Parameter(description = "Consulta en format Spring Filter")
+			final String filter,
+			@RequestParam(value = "namedQuery", required = false)
+			@Parameter(description = "Consultes predefinides")
+			final String[] namedQueries,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives,
+			@Parameter(description = "Paginació dels resultats")
+			final Pageable pageable) {
 		log.debug("Consultant possibles valors del camp del formulari del filtre (" +
-				"code={}, fieldName={}, quickFilter={}, filter={}, namedQueries={}, perspectives={}, pageable={})",
-			code,
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable);
+						"code={}, fieldName={}, quickFilter={}, filter={}, namedQueries={}, perspectives={}, pageable={})",
+				code,
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable);
 		Link resourceCollectionBaseSelfLink = linkTo(methodOn(getClass()).artifactFilterFieldOptionsFind(
-			code,
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable)).withSelfRel();
+				code,
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable)).withSelfRel();
 		Link singleResourceBaseSelfLink = linkTo(methodOn(getClass()).artifactFilterFieldOptionsGetOne(
-			code,
-			fieldName,
-			SELF_RESOURCE_ID_TOKEN,
-			null)).withSelfRel();
+				code,
+				fieldName,
+				SELF_RESOURCE_ID_TOKEN,
+				null)).withSelfRel();
 		return fieldOptionsFind(
-			fieldName,
-			quickFilter,
-			filter,
-			namedQueries,
-			perspectives,
-			pageable,
-			ResourceArtifactType.FILTER,
-			code,
-			resourceCollectionBaseSelfLink,
-			singleResourceBaseSelfLink);
+				fieldName,
+				quickFilter,
+				filter,
+				namedQueries,
+				perspectives,
+				pageable,
+				ResourceArtifactType.FILTER,
+				code,
+				resourceCollectionBaseSelfLink,
+				singleResourceBaseSelfLink);
 	}
 
 	@Override
@@ -826,54 +828,52 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Operation(summary = "Consulta d'una de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari del filtre")
 	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('FIND'))")
 	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactFilterFieldOptionsGetOne(
-		@PathVariable
-		@Parameter(description = "Codi de l'informe")
-		final String code,
-		@PathVariable
-		@Parameter(description = "Nom del camp")
-		final String fieldName,
-		@PathVariable
-		@Parameter(description = "Id de l'element")
-		final RID id,
-		@RequestParam(value = "perspective", required = false)
-		@Parameter(description = "Perspectives de la consulta")
-		final String[] perspectives) {
+			@PathVariable
+			@Parameter(description = "Codi de l'informe")
+			final String code,
+			@PathVariable
+			@Parameter(description = "Nom del camp")
+			final String fieldName,
+			@PathVariable
+			@Parameter(description = "Id de l'element")
+			final RID id,
+			@RequestParam(value = "perspective", required = false)
+			@Parameter(description = "Perspectives de la consulta")
+			final String[] perspectives) {
 		log.debug("Consultant un dels possibles valors del camp del formulari del filtre (" +
-				"code={}, fieldName={}, id={}, perspectives={})",
-			code,
-			fieldName,
-			id,
-			perspectives);
+						"code={}, fieldName={}, id={}, perspectives={})",
+				code,
+				fieldName,
+				id,
+				perspectives);
 		Link singleResourceBaseSelfLink = linkTo(methodOn(getClass()).artifactFilterFieldOptionsGetOne(
-			code,
-			fieldName,
-			SELF_RESOURCE_ID_TOKEN,
-			null)).withSelfRel();
+				code,
+				fieldName,
+				SELF_RESOURCE_ID_TOKEN,
+				null)).withSelfRel();
 		return fieldOptionsGetOne(
-			fieldName,
-			id,
-			perspectives,
-			ResourceArtifactType.FILTER,
-			code,
-			singleResourceBaseSelfLink);
+				fieldName,
+				id,
+				perspectives,
+				ResourceArtifactType.FILTER,
+				code,
+				singleResourceBaseSelfLink);
 	}
 
 	public Class<R> getResourceClass() {
 		if (resourceClass == null) {
 			resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-				getClass(),
-				BaseReadonlyResourceController.class,
-				0);
+					getClass(),
+					BaseReadonlyResourceController.class,
+					0);
 		}
 		return resourceClass;
 	}
 
-	public boolean isPublic() {
-		return false;
-	}
-
-	public PermissionEvaluatorService.RestApiOperation getOperation(String operationName) {
-		return operationName != null ? PermissionEvaluatorService.RestApiOperation.valueOf(operationName) : null;
+	@Override
+	protected Link getIndexLink() {
+		String rel = StringUtil.decapitalize(getResourceClass().getSimpleName());
+		return linkTo(getClass()).withRel(rel);
 	}
 
 	protected ReadonlyResourceService<R, ID> getReadonlyResourceService() {
@@ -881,109 +881,109 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	protected <RR extends Resource<?>> EntityModel<RR> toEntityModel(
-		RR resource,
-		Link... links) {
+			RR resource,
+			Link... links) {
 		return EntityModel.of(
-			resource,
-			links);
+				resource,
+				links);
 	}
 
 	protected <RR extends Resource<?>> PagedModel<EntityModel<RR>> toPagedModel(
-		Page<RR> page,
-		String[] perspectives,
-		boolean withDownloadLink,
-		Link singleResourceSelfLink,
-		ResourcePermissions resourcePermissions,
-		Link... links) {
+			Page<RR> page,
+			String[] perspectives,
+			boolean withDownloadLink,
+			Link singleResourceSelfLink,
+			ResourcePermissions resourcePermissions,
+			Link... links) {
 		return PagedModel.of(
-			page.getContent().stream().map(resource -> {
-				Link[] resourceLinks = resource != null ? buildSingleResourceLinks(
-					resource.getId(),
-					perspectives,
-					withDownloadLink,
-					singleResourceSelfLink,
-					resourcePermissions).toArray(new Link[0]) : new Link[0];
-				return toEntityModel(resource, resourceLinks);
-			}).collect(Collectors.toList()),
-			new PagedModel.PageMetadata(
-				page.getNumberOfElements(),
-				page.getNumber(),
-				page.getTotalElements(),
-				page.getTotalPages()),
-			links);
+				page.getContent().stream().map(resource -> {
+					Link[] resourceLinks = resource != null ? buildSingleResourceLinks(
+							resource.getId(),
+							perspectives,
+							withDownloadLink,
+							singleResourceSelfLink,
+							resourcePermissions).toArray(new Link[0]) : new Link[0];
+					return toEntityModel(resource, resourceLinks);
+				}).collect(Collectors.toList()),
+				new PagedModel.PageMetadata(
+						page.getNumberOfElements(),
+						page.getNumber(),
+						page.getTotalElements(),
+						page.getTotalPages()),
+				links);
 	}
 
 	protected Class<? extends Serializable> getArtifactFormClass(
-		ResourceArtifactType artifactType,
-		String code) {
+			ResourceArtifactType artifactType,
+			String code) {
 		ResourceArtifact artifact = getReadonlyResourceService().artifactGetOne(
-			artifactType,
-			code);
+				artifactType,
+				code);
 		return artifact.isFormClassActive() ? artifact.getFormClass() : null;
 	}
 
 	protected Serializable getArtifactParamsAsObjectWithFormClass(
-		Class<?> formClass,
-		JsonNode params,
-		BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException {
+			Class<?> formClass,
+			JsonNode params,
+			BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException {
 		Serializable paramsObject = null;
 		if (formClass != null) {
-			paramsObject = (Serializable)JsonUtil.getInstance().fromJsonToObjectWithType(
-				params,
-				formClass);
+			paramsObject = (Serializable) JsonUtil.getInstance().fromJsonToObjectWithType(
+					params,
+					formClass);
 			validateResource(paramsObject, 1, bindingResult);
 		}
 		return paramsObject;
 	}
 
 	protected <P extends Serializable> P getOnChangePrevious(
-		OnChangeEvent onChangeEvent,
-		Class<P> resourceClass) throws JsonProcessingException {
+			OnChangeEvent onChangeEvent,
+			Class<P> resourceClass) throws JsonProcessingException {
 		P previous = null;
 		if (onChangeEvent.getPrevious() != null && resourceClass != null) {
 			previous = (P) ReflectUtils.newInstance(resourceClass);
 			JsonUtil.getInstance().fillResourceWithFieldsMap(
-				previous,
-				JsonUtil.getInstance().fromJsonToMap(onChangeEvent.getPrevious(), resourceClass),
-				null,
-				null);
+					previous,
+					JsonUtil.getInstance().fromJsonToMap(onChangeEvent.getPrevious(), resourceClass),
+					null,
+					null);
 		}
 		return previous;
 	}
 
 	protected <P extends Serializable> Object getOnChangeFieldValue(
-		OnChangeEvent onChangeEvent,
-		Class<P> resourceClass) {
+			OnChangeEvent onChangeEvent,
+			Class<P> resourceClass) {
 		if (onChangeEvent.getFieldName() != null) {
 			return JsonUtil.getInstance().fillResourceWithFieldsMap(
-				ReflectUtils.newInstance(resourceClass),
-				null,
-				onChangeEvent.getFieldName(),
-				onChangeEvent.getFieldValue());
+					ReflectUtils.newInstance(resourceClass),
+					null,
+					onChangeEvent.getFieldName(),
+					onChangeEvent.getFieldValue());
 		} else {
 			return null;
 		}
 	}
 
 	protected Map<String, AnswerRequiredException.AnswerValue> getAnswersFromHeaderOrRequest(
-		Map<String, Object> requestAnswers) {
+			Map<String, Object> requestAnswers) {
 		RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 		if (requestAttributes instanceof ServletRequestAttributes) {
 			HttpServletRequest request = ((ServletRequestAttributes)requestAttributes).getRequest();
 			Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 			if (requestAnswers != null) {
 				Map<String, AnswerRequiredException.AnswerValue> answersFromRequest = requestAnswers.entrySet().stream().
-					collect(Collectors.toMap(
-						Map.Entry::getKey,
-						e -> {
-							if (e.getValue() == null) {
-								return new AnswerRequiredException.AnswerValue();
-							} else if (e.getValue() instanceof Boolean) {
-								return new AnswerRequiredException.AnswerValue((Boolean)e.getValue());
-							} else {
-								return new AnswerRequiredException.AnswerValue(e.getValue().toString());
-							}
-						}));
+						collect(Collectors.toMap(
+								Map.Entry::getKey,
+								e -> {
+									if (e.getValue() == null) {
+										return new AnswerRequiredException.AnswerValue();
+									} else if (e.getValue() instanceof Boolean) {
+										return new AnswerRequiredException.AnswerValue((Boolean)e.getValue());
+									} else {
+										return new AnswerRequiredException.AnswerValue(e.getValue().toString());
+									}
+								}));
 				answers = new HashMap<>(answersFromRequest);
 			}
 			String headerAnswers = request.getHeader(httpHeaderAnswers);
@@ -991,20 +991,20 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				try {
 					JsonNode headerAnswersJson = objectMapper.readTree(headerAnswers);
 					Map<String, Object> headerAnswersMap = objectMapper.convertValue(
-						headerAnswersJson,
-						new TypeReference<>(){});
+							headerAnswersJson,
+							new TypeReference<>(){});
 					Map<String, AnswerRequiredException.AnswerValue> answersFromHeader = headerAnswersMap.entrySet().stream().
-						collect(Collectors.toMap(
-							Map.Entry::getKey,
-							e -> {
-								if (e.getValue() == null) {
-									return new AnswerRequiredException.AnswerValue();
-								} else if (e.getValue() instanceof Boolean) {
-									return new AnswerRequiredException.AnswerValue((Boolean)e.getValue());
-								} else {
-									return new AnswerRequiredException.AnswerValue(e.getValue().toString());
-								}
-							}));
+							collect(Collectors.toMap(
+									Map.Entry::getKey,
+									e -> {
+										if (e.getValue() == null) {
+											return new AnswerRequiredException.AnswerValue();
+										} else if (e.getValue() instanceof Boolean) {
+											return new AnswerRequiredException.AnswerValue((Boolean)e.getValue());
+										} else {
+											return new AnswerRequiredException.AnswerValue(e.getValue().toString());
+										}
+									}));
 					answers.putAll(answersFromHeader);
 				} catch (JsonProcessingException ex) {
 					log.warn("Error al parsejar la capçalera {}", httpHeaderAnswers, ex);
@@ -1018,69 +1018,69 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	protected <RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
-		String fieldName,
-		String quickFilter,
-		String filter,
-		String[] namedQueries,
-		String[] perspectives,
-		Pageable pageable,
-		ResourceArtifactType artifactType,
-		String artifactCode,
-		Link resourceCollectionBaseSelfLink,
-		Link singleResourceBaseSelfLink) {
+			String fieldName,
+			String quickFilter,
+			String filter,
+			String[] namedQueries,
+			String[] perspectives,
+			Pageable pageable,
+			ResourceArtifactType artifactType,
+			String artifactCode,
+			Link resourceCollectionBaseSelfLink,
+			Link singleResourceBaseSelfLink) {
 		Optional<FieldAndClass> referencedResourceFieldAndClass = findReferenceFieldAndClass(
-			getArtifactAwareResourceClass(artifactType, artifactCode),
-			fieldName);
+				getArtifactAwareResourceClass(artifactType, artifactCode),
+				fieldName);
 		if (referencedResourceFieldAndClass.isPresent()) {
 			if (pageable != null) {
 				// Només es fa la consulta de recursos si la petició conté informació de paginació.
 				Class<?> referencedResourceClass = referencedResourceFieldAndClass.get().getClazz();
 				ReadonlyResourceService<RR, ?> resourceService = (ReadonlyResourceService<RR, ?>) ResourceServiceLocator.getInstance().
-					getReadOnlyEntityResourceServiceForResourceClass(referencedResourceClass);
+						getReadOnlyEntityResourceServiceForResourceClass(referencedResourceClass);
 				Page<RR> page = resourceService.findPage(
-					quickFilter,
-					fieldOptionsProcessedFilterWithFieldAnnotation(
-						referencedResourceFieldAndClass.get().getField(),
-						filter),
-					fieldOptionsProcessedNamedQueriesWithFieldAnnotation(
-						referencedResourceFieldAndClass.get().getField(),
-						namedQueries),
-					perspectives,
-					fieldOptionsProcessedPageableWithResourceAnnotation(
-						pageable,
-						referencedResourceClass));
-				return ResponseEntity.ok(
-					toPagedModel(
-						page,
+						quickFilter,
+						fieldOptionsProcessedFilterWithFieldAnnotation(
+								referencedResourceFieldAndClass.get().getField(),
+								filter),
+						fieldOptionsProcessedNamedQueriesWithFieldAnnotation(
+								referencedResourceFieldAndClass.get().getField(),
+								namedQueries),
 						perspectives,
-						false,
-						singleResourceBaseSelfLink,
-						ResourcePermissions.readOnly(),
-						buildOptionsLinks(
-							referencedResourceFieldAndClass.get().getClazz(),
-							quickFilter,
-							filter,
-							namedQueries,
-							perspectives,
-							pageable,
-							page,
-							resourceCollectionBaseSelfLink,
-							ResourcePermissions.readOnly()).toArray(new Link[0])));
+						fieldOptionsProcessedPageableWithResourceAnnotation(
+								pageable,
+								referencedResourceClass));
+				return ResponseEntity.ok(
+						toPagedModel(
+								page,
+								perspectives,
+								false,
+								singleResourceBaseSelfLink,
+								ResourcePermissions.readOnly(),
+								buildOptionsLinks(
+										referencedResourceFieldAndClass.get().getClazz(),
+										quickFilter,
+										filter,
+										namedQueries,
+										perspectives,
+										pageable,
+										page,
+										resourceCollectionBaseSelfLink,
+										ResourcePermissions.readOnly()).toArray(new Link[0])));
 			} else {
 				// Si la petició no conté informació de paginació únicament es retornen els ellaços
 				// a les possibles accions sobre aquest recurs.
 				return ResponseEntity.ok(
-					PagedModel.empty(
-						buildOptionsLinks(
-							referencedResourceFieldAndClass.get().getClazz(),
-							quickFilter,
-							filter,
-							namedQueries,
-							perspectives,
-							null,
-							null,
-							resourceCollectionBaseSelfLink,
-							ResourcePermissions.readOnly())));
+						PagedModel.empty(
+								buildOptionsLinks(
+										referencedResourceFieldAndClass.get().getClazz(),
+										quickFilter,
+										filter,
+										namedQueries,
+										perspectives,
+										null,
+										null,
+										resourceCollectionBaseSelfLink,
+										ResourcePermissions.readOnly())));
 			}
 		} else {
 			throw new ResourceFieldNotFoundException(resourceClass, fieldName);
@@ -1088,28 +1088,28 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	protected <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> fieldOptionsGetOne(
-		final String fieldName,
-		final RID id,
-		final String[] perspectives,
-		ResourceArtifactType artifactType,
-		String artifactCode,
-		Link singleResourceBaseSelfLink) {
+			final String fieldName,
+			final RID id,
+			final String[] perspectives,
+			ResourceArtifactType artifactType,
+			String artifactCode,
+			Link singleResourceBaseSelfLink) {
 		Optional<FieldAndClass> referencedResourceFieldAndClass = findReferenceFieldAndClass(
-			getArtifactAwareResourceClass(artifactType, artifactCode),
-			fieldName);
+				getArtifactAwareResourceClass(artifactType, artifactCode),
+				fieldName);
 		if (referencedResourceFieldAndClass.isPresent()) {
 			Class<?> referencedResourceClass = referencedResourceFieldAndClass.get().getClazz();
 			ReadonlyResourceService<RR, RID> resourceService = (ReadonlyResourceService<RR, RID>)ResourceServiceLocator.getInstance().
-				getReadOnlyEntityResourceServiceForResourceClass(referencedResourceClass);
+					getReadOnlyEntityResourceServiceForResourceClass(referencedResourceClass);
 			RR resource = resourceService.getOne(id, perspectives);
 			EntityModel<RR> entityModel = toEntityModel(
-				resource,
-				buildSingleResourceLinks(
-					resource.getId(),
-					perspectives,
-					false,
-					singleResourceBaseSelfLink,
-					ResourcePermissions.readOnly()).toArray(new Link[0]));
+					resource,
+					buildSingleResourceLinks(
+							resource.getId(),
+							perspectives,
+							false,
+							singleResourceBaseSelfLink,
+							ResourcePermissions.readOnly()).toArray(new Link[0]));
 			return ResponseEntity.ok(entityModel);
 		} else {
 			throw new ResourceFieldNotFoundException(resourceClass, fieldName);
@@ -1118,11 +1118,11 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 
 	protected static final String SELF_RESOURCE_ID_TOKEN = "#resourceId#";
 	protected List<Link> buildSingleResourceLinks(
-		Serializable id,
-		String[] perspective,
-		boolean withDownloadLink,
-		Link singleResourceBaseSelfLink,
-		ResourcePermissions resourcePermissions) {
+			Serializable id,
+			String[] perspective,
+			boolean withDownloadLink,
+			Link singleResourceBaseSelfLink,
+			ResourcePermissions resourcePermissions) {
 		List<Link> ls = new ArrayList<>();
 		Link selfLink;
 		if (singleResourceBaseSelfLink != null) {
@@ -1145,24 +1145,18 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 
 	@SneakyThrows
 	protected List<Link> buildResourceCollectionLinks(
-		String quickFilter,
-		String filter,
-		String[] namedQuery,
-		String[] perspective,
-		Pageable pageable,
-		Page<?> page,
-		Link resourceCollectionBaseSelfLink,
-		ResourcePermissions resourcePermissions) {
+			String quickFilter,
+			String filter,
+			String[] namedQuery,
+			String[] perspective,
+			Pageable pageable,
+			Page<?> page,
+			Link resourceCollectionBaseSelfLink,
+			ResourcePermissions resourcePermissions) {
 		List<Link> ls = new ArrayList<>();
 		if (pageable == null) {
 			// Enllaços que es retornen quan no es fa cap consulta
-			Link selfLink = buildFindLinkWithParams(
-				resourceCollectionBaseSelfLink != null ? resourceCollectionBaseSelfLink : linkTo(getClass()).withSelfRel(),
-				null,
-				null,
-				null,
-				null,
-				null);
+			Link selfLink = linkTo(getClass()).withSelfRel();
 			if (resourcePermissions.isReadGranted()) {
 				ls.add(selfLinkWithDefaultProperties(selfLink, true));
 				// Els enllaços de les accions find, getOne i create només es
@@ -1173,22 +1167,22 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				ls.add(Link.of(UriTemplate.of(getOneLinkHref), "getOne"));
 				ls.add(buildFindLink(resourceCollectionBaseSelfLink));
 				Link exportLink = linkTo(methodOn(getClass()).export(
-					null,
-					null,
-					null,
-					null,
-					null,
-					null,
-					null)).withRel("export");
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null)).withRel("export");
 				ls.add(buildFindLinkWithParams(
-					exportLink,
-					null,
-					null,
-					null,
-					null,
-					null,
-					TemplateVariable.requestParameter("field").composite(),
-					TemplateVariable.requestParameter("fileType")));
+						exportLink,
+						null,
+						null,
+						null,
+						null,
+						null,
+						TemplateVariable.requestParameter("field").composite(),
+						TemplateVariable.requestParameter("fileType")));
 				ls.add(linkTo(methodOn(getClass()).artifacts()).withRel("artifacts"));
 				ls.addAll(buildResourceCollectionArtifactLinks());
 			} else {
@@ -1198,73 +1192,73 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			// Enllaços que es retornen amb els resultats de la consulta
 			Link baseLink = resourceCollectionBaseSelfLink != null ? resourceCollectionBaseSelfLink : linkTo(getClass()).withSelfRel();
 			Link selfLink = buildFindLinkWithParams(
-				baseLink,
-				quickFilter,
-				filter,
-				namedQuery,
-				perspective,
-				pageable);
+					baseLink,
+					quickFilter,
+					filter,
+					namedQuery,
+					perspective,
+					pageable);
 			if (resourcePermissions.isReadGranted()) {
 				ls.add(selfLinkWithDefaultProperties(selfLink, false));
 				if (resourcePermissions.isReadGranted() && pageable.isPaged()) {
 					if (pageable.getPageNumber() < page.getTotalPages()) {
 						if (!page.isFirst()) {
 							ls.add(
-								buildFindLinkWithParams(
-									baseLink.withRel("first"),
-									quickFilter,
-									filter,
-									namedQuery,
-									perspective,
-									pageable.first()));
+									buildFindLinkWithParams(
+											baseLink.withRel("first"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.first()));
 						}
 						if (page.hasPrevious()) {
 							ls.add(
-								buildFindLinkWithParams(
-									baseLink.withRel("previous"),
-									quickFilter,
-									filter,
-									namedQuery,
-									perspective,
-									pageable.previousOrFirst()));
+									buildFindLinkWithParams(
+											baseLink.withRel("previous"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.previousOrFirst()));
 						}
 						if (page.hasNext()) {
 							ls.add(
-								buildFindLinkWithParams(
-									baseLink.withRel("next"),
-									quickFilter,
-									filter,
-									namedQuery,
-									perspective,
-									pageable.next()));
+									buildFindLinkWithParams(
+											baseLink.withRel("next"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											pageable.next()));
 						}
 						if (!page.isLast()) {
 							ls.add(
-								buildFindLinkWithParams(
-									baseLink.withRel("last"),
+									buildFindLinkWithParams(
+											baseLink.withRel("last"),
+											quickFilter,
+											filter,
+											namedQuery,
+											perspective,
+											PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
+						}
+						if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
+							Link findLink = buildFindLinkWithParams(
+									baseLink.withRel("toPageNumber"),
 									quickFilter,
 									filter,
 									namedQuery,
 									perspective,
-									PageRequest.of(page.getTotalPages() - 1, pageable.getPageSize())));
-						}
-						if (page.getTotalElements() > 0 && page.getTotalPages() > 1) {
-							Link findLink = buildFindLinkWithParams(
-								baseLink.withRel("toPageNumber"),
-								quickFilter,
-								filter,
-								namedQuery,
-								perspective,
-								PageRequest.of(0, pageable.getPageSize()));
+									PageRequest.of(0, pageable.getPageSize()));
 							// Al link generat li eliminam la variable page amb el valor 0
 							String findLinkHref = findLink.getHref().replace("page=0&", "").replace("page=0", "");
 							TemplateVariables findTemplateVariables = new TemplateVariables(
-								new TemplateVariable("page", VariableType.REQUEST_PARAM));
+									new TemplateVariable("page", VariableType.REQUEST_PARAM));
 							// I a més hi afegim la variable page
 							ls.add(
-								Link.of(
-									UriTemplate.of(findLinkHref).with(findTemplateVariables),
-									"toPageNumber"));
+									Link.of(
+											UriTemplate.of(findLinkHref).with(findTemplateVariables),
+											"toPageNumber"));
 						}
 					}
 				}
@@ -1283,45 +1277,45 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		// properties.
 		if (withProperties) {
 			return Affordances.of(selfLink).
-				afford(HttpMethod.GET).
-				withInputAndOutput(getResourceClass()).
-				withName("default").
-				toLink();
+					afford(HttpMethod.GET).
+					withInputAndOutput(getResourceClass()).
+					withName("default").
+					toLink();
 		} else {
 			return Affordances.of(selfLink).
-				afford(FAKE_DEFAULT_TEMPLATE_HTTP_METHOD).
-				withName("default").
-				toLink();
+					afford(FAKE_DEFAULT_TEMPLATE_HTTP_METHOD).
+					withName("default").
+					toLink();
 		}
 	}
 
 	protected Link buildFindLink(
-		Link baseLink) {
+			Link baseLink) {
 		String rel = "find";
 		Link findLink = baseLink != null ? baseLink : linkTo(methodOn(getClass()).find(null, null, null, null, null)).withRel(rel);
 		// Al link generat li canviam les variables namedQuery i
 		// perspective perquè no les posa com a múltiples.
 		String findLinkHref = findLink.getHref().
-			replace("namedQuery", "namedQuery*").
-			replace("perspective", "perspective*")/*.
+				replace("namedQuery", "namedQuery*").
+				replace("perspective", "perspective*")/*.
 				replace("field", "field*")*/;
 		// I a més hi afegim les variables page, size i sort que no les
 		// detecta a partir de la classe de tipus Pageable
 		TemplateVariables findTemplateVariables = new TemplateVariables(
-			new TemplateVariable("page", VariableType.REQUEST_PARAM),
-			new TemplateVariable("size", VariableType.REQUEST_PARAM),
-			new TemplateVariable("sort", VariableType.REQUEST_PARAM).composite());
+				new TemplateVariable("page", VariableType.REQUEST_PARAM),
+				new TemplateVariable("size", VariableType.REQUEST_PARAM),
+				new TemplateVariable("sort", VariableType.REQUEST_PARAM).composite());
 		return Link.of(UriTemplate.of(findLinkHref).with(findTemplateVariables), rel);
 	}
 
 	protected Link buildFindLinkWithParams(
-		Link baseLink,
-		String quickFilter,
-		String filter,
-		String[] namedQuery,
-		String[] perspective,
-		Pageable pageable,
-		TemplateVariable... additionalTemplateVariables) {
+			Link baseLink,
+			String quickFilter,
+			String filter,
+			String[] namedQuery,
+			String[] perspective,
+			Pageable pageable,
+			TemplateVariable... additionalTemplateVariables) {
 		Map<String, Object> expandMap = new HashMap<>();
 		if (pageable != null) {
 			if (pageable.isPaged()) {
@@ -1333,10 +1327,10 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		}
 		if (pageable != null) {
 			expandMap.put(
-				"sort",
-				pageable.getSort().stream().
-					map(o -> o.getProperty() + "," + o.getDirection().name().toLowerCase()).
-					collect(Collectors.toList()));
+					"sort",
+					pageable.getSort().stream().
+							map(o -> o.getProperty() + "," + o.getDirection().name().toLowerCase()).
+							collect(Collectors.toList()));
 		}
 		if (quickFilter != null) {
 			expandMap.put("quickFilter", quickFilter);
@@ -1356,37 +1350,37 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			linkTemplate = baseLink.getHref().substring(0, linkTemplateGroupIndex);
 		}
 		List<TemplateVariable> mergedTemplateVariables = new ArrayList<>(Arrays.asList(
-			TemplateVariable.requestParameter("page"),
-			TemplateVariable.requestParameter("size"),
-			TemplateVariable.requestParameter("sort").composite(),
-			TemplateVariable.requestParameter("quickFilter"),
-			TemplateVariable.requestParameter("filter"),
-			TemplateVariable.requestParameter("namedQuery").composite(),
-			TemplateVariable.requestParameter("perspective").composite()
+				TemplateVariable.requestParameter("page"),
+				TemplateVariable.requestParameter("size"),
+				TemplateVariable.requestParameter("sort").composite(),
+				TemplateVariable.requestParameter("quickFilter"),
+				TemplateVariable.requestParameter("filter"),
+				TemplateVariable.requestParameter("namedQuery").composite(),
+				TemplateVariable.requestParameter("perspective").composite()
 		));
 		if (additionalTemplateVariables != null) {
 			mergedTemplateVariables.addAll(Arrays.asList(additionalTemplateVariables));
 		}
 		Link link = Link.of(
-			UriTemplate.of(linkTemplate, new TemplateVariables(mergedTemplateVariables)),
-			baseLink.getRel());
+				UriTemplate.of(linkTemplate, new TemplateVariables(mergedTemplateVariables)),
+				baseLink.getRel());
 		return expandMap.isEmpty() ? link : link.expand(expandMap);
 	}
 
 	protected List<Link> buildSingleResourceArtifactLinks(Serializable id) {
 		List<ResourceArtifact> artifacts = getReadonlyResourceService().artifactFindAll(null);
 		return artifacts.stream().
-			filter(a -> a.getType() == ResourceArtifactType.REPORT && a.getRequiresId() != null && a.getRequiresId()).
-			map(a -> buildReportLinkWithAffordances(a, id)).
-			collect(Collectors.toList());
+				filter(a -> a.getType() == ResourceArtifactType.REPORT && a.getRequiresId() != null && a.getRequiresId()).
+				map(a -> buildReportLinkWithAffordances(a, id)).
+				collect(Collectors.toList());
 	}
 
 	protected List<Link> buildResourceCollectionArtifactLinks() {
 		List<ResourceArtifact> artifacts = getReadonlyResourceService().artifactFindAll(null);
 		return artifacts.stream().
-			filter(a -> a.getType() == ResourceArtifactType.REPORT && (a.getRequiresId() == null || !a.getRequiresId())).
-			map(a -> buildReportLinkWithAffordances(a, null)).
-			collect(Collectors.toList());
+				filter(a -> a.getType() == ResourceArtifactType.REPORT && (a.getRequiresId() == null || !a.getRequiresId())).
+				map(a -> buildReportLinkWithAffordances(a, null)).
+				collect(Collectors.toList());
 	}
 
 	protected Link[] buildArtifactsLinks(List<ResourceArtifact> artifacts) {
@@ -1403,34 +1397,34 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		links.add(selfLink);
 		if (artifact.getFormClass() != null) {
 			Link artifactFieldOptionsFind = linkTo(methodOn(getClass()).artifactFieldOptionsFind(
-				artifact.getType(),
-				artifact.getCode(),
-				null,
-				null,
-				null,
-				null,
-				null,
-				null)).withRel("artifactFieldOptionsFind");
+					artifact.getType(),
+					artifact.getCode(),
+					null,
+					null,
+					null,
+					null,
+					null,
+					null)).withRel("artifactFieldOptionsFind");
 			links.add(buildFindLinkWithParams(
-				artifactFieldOptionsFind,
-				null,
-				null,
-				null,
-				null,
-				null));
+					artifactFieldOptionsFind,
+					null,
+					null,
+					null,
+					null,
+					null));
 			Link formValidateLink = Affordances.
-				of(linkTo(methodOn(getClass()).artifactFormValidate(artifact.getType(), artifact.getCode(), null, null)).withRel("formValidate")).
-				afford(HttpMethod.POST).
-				withInputAndOutput(artifact.getFormClass()).
-				withName("formValidate").
-				toLink();
+					of(linkTo(methodOn(getClass()).artifactFormValidate(artifact.getType(), artifact.getCode(), null, null)).withRel("formValidate")).
+					afford(HttpMethod.POST).
+					withInputAndOutput(artifact.getFormClass()).
+					withName("formValidate").
+					toLink();
 			links.add(formValidateLink);
 			Link onChangeLink = Affordances.
-				of(linkTo(methodOn(getClass()).artifactFormOnChange(artifact.getType(), artifact.getCode(), null)).withRel("formOnChange")).
-				afford(HttpMethod.PATCH).
-				withInputAndOutput(artifact.getFormClass()).
-				withName("formOnChange").
-				toLink();
+					of(linkTo(methodOn(getClass()).artifactFormOnChange(artifact.getType(), artifact.getCode(), null)).withRel("formOnChange")).
+					afford(HttpMethod.PATCH).
+					withInputAndOutput(artifact.getFormClass()).
+					withName("formOnChange").
+					toLink();
 			links.add(onChangeLink);
 		}
 		if (artifact.getType() == ResourceArtifactType.FILTER) {
@@ -1449,15 +1443,15 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		Link findLink = buildFindLink(null).withRel(rel);
 		if (artifact.getFormClass() != null) {
 			return Affordances.of(findLink).
-				afford(HttpMethod.GET).
-				withInputAndOutput(artifact.getFormClass()).
-				withName(findLink.getRel().value()).
-				toLink();
+					afford(HttpMethod.GET).
+					withInputAndOutput(artifact.getFormClass()).
+					withName(findLink.getRel().value()).
+					toLink();
 		} else {
 			return Affordances.of(findLink).
-				afford(HttpMethod.GET).
-				withName(findLink.getRel().value()).
-				toLink();
+					afford(HttpMethod.GET).
+					withName(findLink.getRel().value()).
+					toLink();
 		}
 	}
 
@@ -1479,15 +1473,15 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		Link reportLink = buildReportLink(artifact, id);
 		if (artifact.getFormClass() != null) {
 			return Affordances.of(reportLink).
-				afford(HttpMethod.POST).
-				withInputAndOutput(artifact.getFormClass()).
-				withName(reportLink.getRel().value()).
-				toLink();
+					afford(HttpMethod.POST).
+					withInputAndOutput(artifact.getFormClass()).
+					withName(reportLink.getRel().value()).
+					toLink();
 		} else {
 			return Affordances.of(reportLink).
-				afford(HttpMethod.POST).
-				withName(reportLink.getRel().value()).
-				toLink();
+					afford(HttpMethod.POST).
+					withName(reportLink.getRel().value()).
+					toLink();
 		}
 	}
 	@SneakyThrows
@@ -1497,34 +1491,34 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	private List<Link> buildOptionsLinks(
-		Class<?> artifactFormClass,
-		String quickFilter,
-		String filter,
-		String[] namedQuery,
-		String[] perspective,
-		Pageable pageable,
-		Page<?> page,
-		Link resourceCollectionBaseSelfLink,
-		ResourcePermissions resourcePermissions) {
+			Class<?> artifactFormClass,
+			String quickFilter,
+			String filter,
+			String[] namedQuery,
+			String[] perspective,
+			Pageable pageable,
+			Page<?> page,
+			Link resourceCollectionBaseSelfLink,
+			ResourcePermissions resourcePermissions) {
 		if (page != null) {
 			return buildResourceCollectionLinks(
-				quickFilter,
-				filter,
-				namedQuery,
-				perspective,
-				pageable,
-				page,
-				resourceCollectionBaseSelfLink,
-				resourcePermissions).stream().
-				filter(l -> !l.getRel().value().equals("getOne")).
-				collect(Collectors.toList());
+					quickFilter,
+					filter,
+					namedQuery,
+					perspective,
+					pageable,
+					page,
+					resourceCollectionBaseSelfLink,
+					resourcePermissions).stream().
+					filter(l -> !l.getRel().value().equals("getOne")).
+					collect(Collectors.toList());
 		} else {
 			return Collections.singletonList(
-				Affordances.of(resourceCollectionBaseSelfLink).
-					afford(HttpMethod.GET).
-					withInputAndOutput(artifactFormClass).
-					withName(resourceCollectionBaseSelfLink.getRel().value()).
-					toLink());
+					Affordances.of(resourceCollectionBaseSelfLink).
+							afford(HttpMethod.GET).
+							withInputAndOutput(artifactFormClass).
+							withName(resourceCollectionBaseSelfLink.getRel().value()).
+							toLink());
 		}
 	}
 
@@ -1547,9 +1541,9 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 				}
 			});
 			String[] springFilterParts = filterResourceFields.stream().
-				map(p -> requestParamResourceFieldToSpringFilter(resourceClass, p, request.get())).
-				filter(Objects::nonNull).
-				toArray(String[]::new);
+					map(p -> requestParamResourceFieldToSpringFilter(resourceClass, p, request.get())).
+					filter(Objects::nonNull).
+					toArray(String[]::new);
 			if (springFilterParts.length > 0) {
 				String requestParamsFilter = String.join(" and ", springFilterParts);
 				if (filter != null && !filter.isBlank()) {
@@ -1566,21 +1560,21 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	private String requestParamResourceFieldToSpringFilter(
-		Class<?> resourceClass,
-		String requestParamResource,
-		HttpServletRequest request) {
+			Class<?> resourceClass,
+			String requestParamResource,
+			HttpServletRequest request) {
 		Field field = ReflectionUtils.findField(resourceClass, requestParamResource);
 		if (field != null) {
 			boolean isFieldReferenceType = field.getType().isAssignableFrom(ResourceReference.class);
 			boolean isFieldTextType = field.isEnumConstant() ||
-				field.getType().isAssignableFrom(String.class) ||
-				field.getType().isAssignableFrom(Date.class) ||
-				field.getType().isAssignableFrom(LocalDate.class) ||
-				field.getType().isAssignableFrom(LocalDateTime.class) ||
-				field.getType().isAssignableFrom(ZonedDateTime.class) ||
-				field.getType().isAssignableFrom(Instant.class) ||
-				field.getType().isAssignableFrom(YearMonth.class) ||
-				field.getType().isAssignableFrom(MonthDay.class);
+					field.getType().isAssignableFrom(String.class) ||
+					field.getType().isAssignableFrom(Date.class) ||
+					field.getType().isAssignableFrom(LocalDate.class) ||
+					field.getType().isAssignableFrom(LocalDateTime.class) ||
+					field.getType().isAssignableFrom(ZonedDateTime.class) ||
+					field.getType().isAssignableFrom(Instant.class) ||
+					field.getType().isAssignableFrom(YearMonth.class) ||
+					field.getType().isAssignableFrom(MonthDay.class);
 			if (isFieldReferenceType) {
 				String value = request.getParameter(requestParamResource);
 				return "(" + requestParamResource + ".id:" + value + ")";
@@ -1608,10 +1602,10 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	private <T> void validateResource(
-		T resource,
-		int paramIndex,
-		BindingResult bindingResult,
-		Object... validationHints) throws MethodArgumentNotValidException {
+			T resource,
+			int paramIndex,
+			BindingResult bindingResult,
+			Object... validationHints) throws MethodArgumentNotValidException {
 		BindingResult resourceBindingResult = new BeanPropertyBindingResult(resource, bindingResult.getObjectName());
 		Object[] finalValidationHints;
 		if (validationHints == null || validationHints.length == 0) {
@@ -1620,29 +1614,29 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			finalValidationHints = validationHints;
 		}
 		validator.validate(
-			resource,
-			resourceBindingResult,
-			finalValidationHints);
+				resource,
+				resourceBindingResult,
+				finalValidationHints);
 		if (resourceBindingResult.hasErrors()) {
 			bindingResult.addAllErrors(resourceBindingResult);
 			throw new MethodArgumentNotValidException(
-				new MethodParameter(
-					new Object() {}.getClass().getEnclosingMethod(),
-					paramIndex),
-				bindingResult);
+					new MethodParameter(
+							new Object() {}.getClass().getEnclosingMethod(),
+							paramIndex),
+					bindingResult);
 		}
 	}
 
 	private Class<?> getArtifactAwareResourceClass(
-		ResourceArtifactType artifactType,
-		String artifactCode) throws ArtifactFormNotFoundException {
+			ResourceArtifactType artifactType,
+			String artifactCode) throws ArtifactFormNotFoundException {
 		Class<?> resourceClass;
 		if (artifactType == null && artifactCode == null) {
 			resourceClass = getResourceClass();
 		} else {
 			ResourceArtifact artifact = getReadonlyResourceService().artifactGetOne(
-				artifactType,
-				artifactCode);
+					artifactType,
+					artifactCode);
 			if (artifact.isFormClassActive()) {
 				resourceClass = artifact.getFormClass();
 			} else {
@@ -1653,8 +1647,8 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	private Optional<FieldAndClass> findReferenceFieldAndClass(
-		Class<?> resourceClass,
-		String fieldName) {
+			Class<?> resourceClass,
+			String fieldName) {
 		if (!fieldName.isBlank()) {
 			String currentFieldName;
 			if (fieldName.contains(".")) {
@@ -1670,11 +1664,11 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					Class<?> referencedResourceClass = TypeUtil.getReferencedResourceClass(currentField);
 					if (fieldName.contains(".")) {
 						return findReferenceFieldAndClass(
-							referencedResourceClass,
-							fieldName.substring(currentFieldName.length() + 1));
+								referencedResourceClass,
+								fieldName.substring(currentFieldName.length() + 1));
 					} else {
 						return Optional.of(
-							new FieldAndClass(currentField, referencedResourceClass));
+								new FieldAndClass(currentField, referencedResourceClass));
 					}
 				}
 			}
@@ -1690,10 +1684,10 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 			if (springFilter.startsWith("#{") && springFilter.endsWith("}")) {
 				String expressionToParse = springFilter.substring(2, springFilter.length() - 1);
 				StandardEvaluationContext context = new StandardEvaluationContext(
-					new BaseMutableResourceController.ProcessedOptionsQueryExpressionContext(RequestSessionUtil.getRequestSession()));
+						new BaseMutableResourceController.ProcessedOptionsQueryExpressionContext(RequestSessionUtil.getRequestSession()));
 				String parsedSpringFilter = getExpressionParser().
-					parseExpression(expressionToParse).
-					getValue(context, String.class);
+						parseExpression(expressionToParse).
+						getValue(context, String.class);
 				processedFilter = parsedSpringFilter + (filterFromRequest != null ? " and (" + filterFromRequest + ")" : "");
 			} else {
 				processedFilter = springFilter + (filterFromRequest != null ? " and (" + filterFromRequest + ")" : "");
@@ -1712,8 +1706,8 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	}
 
 	private Pageable fieldOptionsProcessedPageableWithResourceAnnotation(
-		Pageable pageable,
-		Class<?> resourceClass) {
+			Pageable pageable,
+			Class<?> resourceClass) {
 		if (pageable != null) {
 			ResourceConfig resourceConfigAnotation = resourceClass.getAnnotation(ResourceConfig.class);
 			if (resourceConfigAnotation != null) {
@@ -1745,23 +1739,23 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		if (fields == null) {
 			List<String> fs = new ArrayList<>();
 			ReflectionUtils.doWithFields(
-				resourceClass,
-				f -> fs.add(f.getName()),
-				f -> !Modifier.isStatic(f.getModifiers()));
+					resourceClass,
+					f -> fs.add(f.getName()),
+					f -> !Modifier.isStatic(f.getModifiers()));
 			ReflectionUtils.doWithMethods(
-				resourceClass,
-				m -> fs.add(StringUtil.decapitalize(m.getName().substring(3))),
-				m -> m.getName().startsWith("get") && !Modifier.isStatic(m.getModifiers()));
+					resourceClass,
+					m -> fs.add(StringUtil.decapitalize(m.getName().substring(3))),
+					m -> m.getName().startsWith("get") && !Modifier.isStatic(m.getModifiers()));
 			fieldNames = fs.toArray(new String[0]);
 		} else {
 			fieldNames = fields;
 		}
 		Link linkWithAffordances = Affordances.
-			of(linkTo(methodOn(getClass()).getOne(null, null)).withSelfRel()).
-			afford(HttpMethod.POST).
-			withInputAndOutput(getResourceClass()).
-			withName("default").
-			toLink();
+				of(linkTo(methodOn(getClass()).getOne(null, null)).withSelfRel()).
+				afford(HttpMethod.POST).
+				withInputAndOutput(getResourceClass()).
+				withName("default").
+				toLink();
 		AffordanceModel halFormsModel = linkWithAffordances.getAffordances().get(1).getAffordanceModel(MediaTypes.HAL_FORMS_JSON);
 		Object halFormsTemplatePropertyWriter = applicationContext.getBean("halFormsTemplatePropertyWriter");
 		Field builderField = ReflectionUtils.findField(halFormsTemplatePropertyWriter.getClass(), "builder");
@@ -1772,20 +1766,20 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		ReflectionUtils.makeAccessible(createPropertiesMethod);
 		List<?> properties = (List<?>)ReflectionUtils.invokeMethod(createPropertiesMethod, halFormsPropertyFactory, halFormsModel);
 		return Arrays.stream(fieldNames).
-			map(name -> properties != null ? properties.stream().
-				filter(p -> name.equals(TypeUtil.getFieldValue(p, "name"))).
-				findFirst().
-				map(p -> new ExportField(
-					TypeUtil.getFieldValue(p, "name"),
-					TypeUtil.getFieldValue(p, "prompt"))).
-				orElse(null) : null).
-			filter(Objects::nonNull).
-			toArray(ExportField[]::new);
+				map(name -> properties != null ? properties.stream().
+						filter(p -> name.equals(TypeUtil.getFieldValue(p, "name"))).
+						findFirst().
+						map(p -> new ExportField(
+								TypeUtil.getFieldValue(p, "name"),
+								TypeUtil.getFieldValue(p, "prompt"))).
+						orElse(null) : null).
+				filter(Objects::nonNull).
+				toArray(ExportField[]::new);
 	}
 
 	private ResponseEntity<InputStreamResource> writeDownloadableFileToResponse(
-		DownloadableFile file,
-		InputStreamResource resource) throws IOException {
+			DownloadableFile file,
+			InputStreamResource resource) throws IOException {
 		ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.ok();
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Content-Disposition", "attachment; filename=" + file.getName());

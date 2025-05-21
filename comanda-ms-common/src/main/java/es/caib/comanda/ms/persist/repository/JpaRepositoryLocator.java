@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * Localitzador de repositoris de tipus EmbeddableRepository donat una entitat.
- *
+ * 
  * @author Límit Tecnologies
  */
 @Component
@@ -23,7 +23,7 @@ public class JpaRepositoryLocator implements ApplicationContextAware {
 	protected List<JpaRepository<?, ?>> repositories;
 
 	public JpaRepository<?, ?> getEmbeddableRepositoryForEmbeddableEntityClass(
-		Class<? extends Persistable<?>> embeddableEntityClass) {
+			Class<? extends Persistable<?>> embeddableEntityClass) {
 		JpaRepository<?, ?> foundRepository = null;
 		for (JpaRepository<?, ?> repository: repositories) {
 			Class<?> repositoryEntityClass = GenericTypeResolver.resolveTypeArguments(repository.getClass(), JpaRepository.class)[0];
@@ -40,7 +40,7 @@ public class JpaRepositoryLocator implements ApplicationContextAware {
 	}
 
 	public JpaRepository<?, ?> getEmbeddableRepositoryForResourceClass(
-		Class<? extends Persistable<?>> resourceClass) {
+			Class<? extends Persistable<?>> resourceClass) {
 		JpaRepository<?, ?> foundRepository = null;
 		for (JpaRepository<?, ?> repository: repositories) {
 			Class<?> repositoryEntityClass = GenericTypeResolver.resolveTypeArguments(repository.getClass(), JpaRepository.class)[0];
