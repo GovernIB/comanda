@@ -4,6 +4,7 @@ import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig.ResourceSort;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.springframework.data.domain.Sort;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -53,6 +55,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @ResourceConfig(
     quickFilterFields = { "operacio", "codiUsuari" },
+    defaultSortFields = { @ResourceSort(field = "data", direction = Sort.Direction.DESC) } ,
     artifacts = {@ResourceArtifact(type = ResourceArtifactType.FILTER, code = Monitor.FILTER_MONITOR, formClass = Monitor.FrontFilter.class),}
 )
 public class Monitor extends BaseResource<Long> {
