@@ -83,6 +83,7 @@ const translationCa = {
         },
         appsEntorns: {
             title: "Entorns",
+            resourceTitle: "entorn",
         },
         monitors: {
             title: "Monitors",

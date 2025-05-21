@@ -105,9 +105,7 @@ const UpdownGaugeChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
                 fill: theme.palette.error.main,
             },
         })}
-        text={({ value }) => salutLastItems?.length ?
-        `${(value ?? 0) * salutLastItems?.length / 100} / ${salutLastItems?.length}` :
-        `${(value ?? 0)} ` } />;
+        text={({ value }) => `${(value ?? 0) * salutLastItems.length / 100} / ${salutLastItems.length}`} />;
 }
 
 const ItemStateChip: React.FC<any> = (props: { up: boolean, date: string }) => {

@@ -10,9 +10,6 @@ const AppEntornForm: React.FC = () => {
 
     return (
         <Grid container spacing={2}>
-            {/*<Grid size={8}> TODO afegir com a initialData */}
-            {/*    <FormField name="app" />*/}
-            {/*</Grid>*/}
             <Grid size={12}>
                 <FormField name="entorn" disabled={data?.id != null} />
             </Grid>
@@ -76,6 +73,10 @@ const AppsEntorns: React.FC = () => {
                 paginationActive
                 popupEditActive
                 popupEditFormContent={<AppEntornForm />}
+                popupEditFormDialogResourceTitle={t('page.appsEntorns.resourceTitle')}
+                formAdditionalData={{
+                    app: { id: appId },
+                }}
             />
         </GridPage>
     );

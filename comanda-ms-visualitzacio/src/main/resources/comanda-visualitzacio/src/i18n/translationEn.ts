@@ -83,6 +83,7 @@ const translationEs = {
         },
         appsEntorns: {
             title: "Environments",
+            resourceTitle: "environment",
         },
         monitors: {
             title: "Monitors",
