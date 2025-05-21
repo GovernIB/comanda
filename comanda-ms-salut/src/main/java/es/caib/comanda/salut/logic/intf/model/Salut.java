@@ -35,8 +35,7 @@ public class Salut extends BaseResource<Long> {
 	public final static String SALUT_REPORT_LATENCIA = "latencia";
 
 	@NotNull
-	@Size(max = 16)
-	private String codi;
+	private Long entornAppId;
 	@NotNull
 	private LocalDateTime data;
 	@NotNull
