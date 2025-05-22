@@ -40,18 +40,46 @@ public class AppInfoHelper {
 	private final KeycloakHelper keycloakHelper;
 	private final MonitorServiceClient monitorServiceClient;
 
-	@Transactional
 	public void refreshAppInfo(Long entornAppId) {
 		log.debug("Refrescant informació de l'entornApp {}", entornAppId);
 		EntornAppEntity entornApp = entornAppRepository.findById(entornAppId)
 				.orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, entornAppId.toString()));
+		fetchAndStoreAppInfo(entornApp);
+	}
 
+	public void refreshAppInfo() {
+		List<EntornAppEntity> entornAppEntities = entornAppRepository.findByActivaTrueAndAppActivaTrue();
+		entornAppEntities.forEach(entornApp -> {
+			try {
+				fetchAndStoreAppInfo(entornApp);
+			} catch (Exception ex) {
+				log.warn("No s'ha pogut actualitzar info per entorn {}: {}", entornApp.getId(), ex.getMessage());
+			}
+		});
+	}
+
+	/**
+	 * Actualitza la informació de l'aplicació associada a un entorn concret.
+	 * <p>
+	 * Aquesta actualització es realitza mitjançant una crida HTTP al servei monitoritzat
+	 * de l'aplicació, obtenint la seva versió, data de desplegament i integracions/subsistemes.
+	 * La informació obtinguda es desa a la base de dades per mantenir actualitzat l'estat
+	 * de les aplicacions en cada entorn.
+	 * </p>
+	 * <p>
+	 * En cas d'error en la comunicació, es registra un avís i es continua l'execució sense interrompre el procés global.
+	 * </p>
+	 *
+	 * @param entornApp L'entorn-aplicació per al qual s'ha d'actualitzar la informació.
+	 */
+	@Transactional
+	private void fetchAndStoreAppInfo(EntornAppEntity entornApp) {
 		RestTemplate restTemplate = new RestTemplate();
 		MonitorApp monitorApp = new MonitorApp(
-				entornApp.getId(),
-				entornApp.getInfoUrl(),
-				monitorServiceClient,
-				keycloakHelper.getAuthorizationHeader());
+			entornApp.getId(),
+			entornApp.getInfoUrl(),
+			monitorServiceClient,
+			keycloakHelper.getAuthorizationHeader());
 
 		try {
 			// Obtenim informació de l'app
@@ -61,18 +89,18 @@ public class AppInfoHelper {
 			// Guardar la informació de l'app a la base de dades
 			if (appInfo != null) {
 				entornApp.setInfoData(
-						appInfo.getData().toInstant().
-								atZone(ZoneId.systemDefault()).
-								toLocalDateTime());
+					appInfo.getData().toInstant().
+						atZone(ZoneId.systemDefault()).
+						toLocalDateTime());
 				entornApp.setVersio(appInfo.getVersio());
 				refreshIntegracions(entornApp, appInfo.getIntegracions());
 				refreshSubsistemes(entornApp, appInfo.getSubsistemes());
 			}
 		} catch (RestClientException ex) {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
-					entornApp.getApp().getNom(),
-					entornApp.getEntorn().getNom(),
-					ex.getLocalizedMessage());
+				entornApp.getApp().getNom(),
+				entornApp.getEntorn().getNom(),
+				ex.getLocalizedMessage());
 			if (!monitorApp.isFinishedAction()) {
 				monitorApp.endAction(ex);
 			}

@@ -29,6 +29,7 @@ import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -144,15 +145,24 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Transactional
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, EntornAppParamAction params) throws ActionExecutionException {
-
-            try {
-                log.info("Executant procés per l'entornApp {}",params.getEntornAppId());
-
-                // Refrescar informació de entorn-app
-                appInfoHelper.refreshAppInfo(params.getEntornAppId());
-
-            } catch (Exception e) {
-                log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", params.getEntornAppId(), e);
+            Long entornAppId = Objects.nonNull(params) ? params.getEntornAppId() : null;
+            if (Objects.nonNull(entornAppId)) {
+                try {
+                    log.info("Executant procés per l'entornApp {}", entornAppId);
+                    // Refrescar informació per a un únic entorn-app
+                    appInfoHelper.refreshAppInfo(params.getEntornAppId());
+                } catch (Exception e) {
+                    log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornAppId, e);
+                }
+            } else {
+                try {
+                    log.info("Executant procés per a tots els entorns-app");
+                    // Refrescar informació de TOTS els entorns-app.
+                    // Si una d'elles falla, es captura i es continua (cada entorn ja gestiona el seu propi error internament).
+                    appInfoHelper.refreshAppInfo();
+                } catch (Exception e) {
+                    log.error("Error inesperat durant l'execució global del refresc d'informació d'entorns-app", e);
+                }
             }
             return null;
         }
