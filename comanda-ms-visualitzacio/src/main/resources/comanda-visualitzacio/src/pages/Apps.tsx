@@ -2,16 +2,18 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid2';
-import { GridPage, FormPage, MuiGrid, MuiForm, FormField, MuiFormTabContent, useFormContext } from 'reactlib';
+import { GridPage, FormPage, MuiGrid, MuiForm, FormField, MuiFormTabContent, useFormContext, springFilterBuilder } from 'reactlib';
 import { Box, Tab, Tabs } from '@mui/material';
 
 const AppEntornForm: React.FC = () => {
     const { data } = useFormContext();
+    const { id: appId } = useParams();
+    const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
 
     return (
         <Grid container spacing={2}>
             <Grid size={12}>
-                <FormField name="entorn" disabled={data?.id != null} />
+                <FormField name="entorn" disabled={data?.id != null} filter={entornFilter}/>
             </Grid>
             <Grid size={12}>
                 <FormField name="infoUrl" />

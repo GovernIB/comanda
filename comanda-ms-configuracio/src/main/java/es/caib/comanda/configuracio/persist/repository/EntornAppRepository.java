@@ -16,4 +16,6 @@ public interface EntornAppRepository extends BaseRepository<EntornAppEntity, Lon
 	@EntityGraph(attributePaths = {"app.codi", "entorn.codi"}, type = EntityGraph.EntityGraphType.LOAD)
 	List<EntornAppEntity> findByActivaTrueAndAppActivaTrue();
 
+	boolean existsByEntornIdAndAppId(Long entornId, Long appId);
+
 }

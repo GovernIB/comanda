@@ -7,10 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -27,5 +25,8 @@ public class EntornEntity extends BaseEntity<Entorn> {
     private String codi;
     @Column(name = "nom", length = 255)
     private String nom;
+
+    @OneToMany(mappedBy= "entorn", cascade = CascadeType.REMOVE)
+    private Set<EntornAppEntity> entornAppEntities;
 
 }

@@ -45,6 +45,10 @@ export const exists = (value: string): string => {
     return value.length > 0 ? `exists(${value})` : '';
 }
 
+export const not = (value: string): string => {
+    return value.length > 0 ? `not(${value})` : '';
+}
+
 export const greaterThan = (option: string, value: any): string => {
     return `${option}>${value}`;
 }

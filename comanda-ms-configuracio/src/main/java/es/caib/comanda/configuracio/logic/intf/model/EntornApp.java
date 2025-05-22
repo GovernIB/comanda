@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
+import es.caib.comanda.configuracio.logic.intf.validation.EntornAppExists;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
@@ -11,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.hateoas.InputType;
 
 import javax.persistence.Transient;
@@ -37,6 +39,8 @@ import java.util.List;
 		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),
 	}
 )
+@EntornAppExists
+@FieldNameConstants
 public class EntornApp extends BaseResource<Long> {
 
 	public final static String ENTORN_APP_ACTION_REFRESH = "refresh";
