@@ -25,7 +25,8 @@ public interface FetService extends ReadonlyResourceService<Fet, Long> {
      *
      * @param entornAppId identificador de l'entorn de l'aplicació del qual es desitja migrar les dades.
      */
-    void migrarDades(Long entornAppId);
+    void obtenirFets(Long entornAppId);
+    void obtenirFets(Long entornAppId, int dies);
 
     /**
      * Obté les estadístiques d'un entornAppId en un període.

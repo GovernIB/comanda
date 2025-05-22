@@ -3,9 +3,11 @@ package es.caib.comanda.salut.logic.service;
 import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.hateoas.EntityModel;
@@ -31,6 +33,9 @@ public class SalutSchedulerService {
     private final EntornAppServiceClient entornAppServiceClient;
     private final SalutInfoHelper salutInfoHelper;
     private final KeycloakHelper keycloakHelper;
+
+    @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{false}}")
+    private Boolean schedulerLeader;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
 
@@ -83,14 +88,16 @@ public class SalutSchedulerService {
     }
 
     private void executarProces(EntornApp entornApp) {
-        try {
-            log.info("Executant procés per l'entornApp {}", entornApp.getId());
+        if (isLeader()) {
+            try {
+                log.info("Executant procés per l'entornApp {}", entornApp.getId());
 
-            // Obtenció de informació de salut per entorn-app
-            salutInfoHelper.getSalutInfo(entornApp);
+                // Obtenció de informació de salut per entorn-app
+                salutInfoHelper.getSalutInfo(entornApp);
 
-        } catch (Exception e) {
-            log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornApp.getId(), e);
+            } catch (Exception e) {
+                log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornApp.getId(), e);
+            }
         }
     }
 
@@ -101,6 +108,11 @@ public class SalutSchedulerService {
             tasquesActives.remove(entornAppId);
             log.info("Tasca de obtenció de informació de salut cancel·lada per l'entornAppId: {}", entornAppId);
         }
+    }
+
+    private boolean isLeader() {
+        // TODO: Implementar per microserveis
+        return schedulerLeader;
     }
 
 

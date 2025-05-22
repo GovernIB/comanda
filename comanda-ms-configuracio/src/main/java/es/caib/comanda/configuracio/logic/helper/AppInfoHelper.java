@@ -40,6 +40,7 @@ public class AppInfoHelper {
 	private final KeycloakHelper keycloakHelper;
 	private final MonitorServiceClient monitorServiceClient;
 
+	@Transactional
 	public void refreshAppInfo(Long entornAppId) {
 		log.debug("Refrescant informació de l'entornApp {}", entornAppId);
 		EntornAppEntity entornApp = entornAppRepository.findById(entornAppId)
@@ -47,6 +48,7 @@ public class AppInfoHelper {
 		fetchAndStoreAppInfo(entornApp);
 	}
 
+	@Transactional
 	public void refreshAppInfo() {
 		List<EntornAppEntity> entornAppEntities = entornAppRepository.findByActivaTrueAndAppActivaTrue();
 		entornAppEntities.forEach(entornApp -> {
@@ -72,7 +74,6 @@ public class AppInfoHelper {
 	 *
 	 * @param entornApp L'entorn-aplicació per al qual s'ha d'actualitzar la informació.
 	 */
-	@Transactional
 	private void fetchAndStoreAppInfo(EntornAppEntity entornApp) {
 		RestTemplate restTemplate = new RestTemplate();
 		MonitorApp monitorApp = new MonitorApp(

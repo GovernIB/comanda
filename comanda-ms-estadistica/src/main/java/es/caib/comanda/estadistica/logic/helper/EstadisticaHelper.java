@@ -29,6 +29,8 @@ import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,47 +75,89 @@ public class EstadisticaHelper {
      */
     @Transactional
     public void getEstadisticaInfoDades(EntornApp entornApp) {
+        getEstadisticaInfoDades(entornApp, null);
+    }
+    @Transactional
+    public void getEstadisticaInfoDades(EntornApp entornApp, Integer dies) {
         log.debug("Obtenint informació i dades estadístiques de l'app {}, entorn {}",
                 entornApp.getApp().getNom(),
                 entornApp.getEntorn().getNom());
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().set(0, getConverter());
-        MonitorEstadistica monitorEstadistica = new MonitorEstadistica(
-                entornApp.getId(),
-                entornApp.getEstadisticaInfoUrl(),
-                entornApp.getEstadisticaUrl(),
-                monitorServiceClient,
-                keycloakHelper.getAuthorizationHeader());
+        RestTemplate restTemplate = initializeRestTemplate();
+        String estadisticaUrl = buildEstadisticaUrl(entornApp, dies);
+
+        MonitorEstadistica monitorEstadistica = initializeMonitor(entornApp, estadisticaUrl);
 
         try {
-            // Obtenir informació estadística de l'app i dimensions
-            monitorEstadistica.startInfoAction();
-            EstadistiquesInfo estadistiquesInfo = restTemplate.getForObject(entornApp.getEstadisticaInfoUrl(), EstadistiquesInfo.class);
-            monitorEstadistica.endInfoAction();
-            // Guardar la inforció de l'estructura de les dades estadístiques
-            crearIndicadorsIDimensions(estadistiquesInfo, entornApp.getId());
+            processEstadisticaInfo(entornApp, restTemplate, monitorEstadistica);
+            processEstadisticaDades(entornApp, estadisticaUrl, restTemplate, monitorEstadistica, dies != null);
+        } catch (RestClientException ex) {
+            handleEstadisticaException(entornApp, monitorEstadistica, ex);
+        }
+    }
 
-            // Obtenir les dades estadístiques
-            monitorEstadistica.startDadesAction();
-            RegistresEstadistics registresEstadistics = restTemplate.getForObject(entornApp.getEstadisticaUrl(), RegistresEstadistics.class);
+    private RestTemplate initializeRestTemplate() {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().set(0, getConverter());
+        return restTemplate;
+    }
+
+    private String buildEstadisticaUrl(EntornApp entornApp, Integer dies) {
+        return dies != null ? entornApp.getEstadisticaUrl() + "/" + dies : entornApp.getEstadisticaUrl();
+    }
+
+    private MonitorEstadistica initializeMonitor(EntornApp entornApp, String estadisticaUrl) {
+        return new MonitorEstadistica(
+                entornApp.getId(),
+                entornApp.getEstadisticaInfoUrl(),
+                estadisticaUrl,
+                monitorServiceClient,
+                keycloakHelper.getAuthorizationHeader());
+    }
+
+    // Obtenir informació estadística de l'app i dimensions
+    private void processEstadisticaInfo(EntornApp entornApp, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica) throws RestClientException {
+        monitorEstadistica.startInfoAction();
+        EstadistiquesInfo estadistiquesInfo = restTemplate.getForObject(entornApp.getEstadisticaInfoUrl(), EstadistiquesInfo.class);
+        monitorEstadistica.endInfoAction();
+        // Guardar la inforció de l'estructura de les dades estadístiques
+        crearIndicadorsIDimensions(estadistiquesInfo, entornApp.getId());
+    }
+
+    // Obtenir les dades estadístiques
+    private void processEstadisticaDades(EntornApp entornApp, String estadisticaUrl, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica, boolean multiplesDies) throws RestClientException {
+        monitorEstadistica.startDadesAction();
+        if (multiplesDies) {
+            List<RegistresEstadistics> registresEstadistics = restTemplate.exchange(
+                    estadisticaUrl,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<RegistresEstadistics>>() {}).getBody();
+            monitorEstadistica.endDadesAction();
+            // Guardar les dades estadístiques
+            registresEstadistics.forEach(r -> crearEstadistiques(r, entornApp.getId()));
+        } else {
+            RegistresEstadistics registresEstadistics = restTemplate.getForObject(estadisticaUrl, RegistresEstadistics.class);
             monitorEstadistica.endDadesAction();
             // Guardar les dades estadístiques
             crearEstadistiques(registresEstadistics, entornApp.getId());
-        } catch (RestClientException ex) {
-            String warnMsg = monitorEstadistica.isFinishedInfoAction()
-                    ? "No s'han pogut obtenir dades estadístiques "
-                    : "No s'ha pogut obtenir informació estadística ";
-            log.warn(warnMsg + "de l'app {}, entorn {}: {}",
-                    entornApp.getApp().getNom(),
-                    entornApp.getEntorn().getNom(),
-                    ex.getLocalizedMessage());
-            if (!monitorEstadistica.isFinishedInfoAction()) {
-                monitorEstadistica.endInfoAction(ex);
-            } else if (!monitorEstadistica.isFinishedDadesAction()) {
-                monitorEstadistica.endDadesAction(ex);
-            }
         }
     }
+
+    private void handleEstadisticaException(EntornApp entornApp, MonitorEstadistica monitorEstadistica, RestClientException ex) {
+        String warnMsg = monitorEstadistica.isFinishedInfoAction()
+                ? "No s'han pogut obtenir dades estadístiques "
+                : "No s'ha pogut obtenir informació estadística ";
+        log.warn(warnMsg + "de l'app {}, entorn {}: {}",
+                entornApp.getApp().getNom(),
+                entornApp.getEntorn().getNom(),
+                ex.getLocalizedMessage());
+        if (!monitorEstadistica.isFinishedInfoAction()) {
+            monitorEstadistica.endInfoAction(ex);
+        } else if (!monitorEstadistica.isFinishedDadesAction()) {
+            monitorEstadistica.endDadesAction(ex);
+        }
+    }
+
 
     /**
      * Configura i retorna un {@link MappingJackson2HttpMessageConverter} personalitzat amb un {@link ObjectMapper}

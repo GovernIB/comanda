@@ -66,11 +66,23 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
     }
 
     @Override
-    public void migrarDades(Long entornAppId) { //, LocalDate data) {
+    public void obtenirFets(Long entornAppId) { //, LocalDate data) {
         try {
             log.info("Migració de dades manual de ahir per entornAppId: {}", entornAppId);
             EntornApp entornApp = entornAppFindById(entornAppId);
             estadisticaHelper.getEstadisticaInfoDades(entornApp);
+        } catch (Exception e) {
+            log.error("Error en la migració de dades", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void obtenirFets(Long entornAppId, int dies) {
+        try {
+            log.info("Migració de dades manual de ahir per entornAppId: {}", entornAppId);
+            EntornApp entornApp = entornAppFindById(entornAppId);
+            estadisticaHelper.getEstadisticaInfoDades(entornApp, dies);
         } catch (Exception e) {
             log.error("Error en la migració de dades", e);
             throw e;

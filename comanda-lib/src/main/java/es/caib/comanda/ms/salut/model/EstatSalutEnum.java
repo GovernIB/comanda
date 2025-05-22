@@ -2,7 +2,9 @@ package es.caib.comanda.ms.salut.model;
 
 public enum EstatSalutEnum {
     UP,
+    WARN,
+    DEGRADED,
     DOWN,
-    OUT_OF_SERVICE,
+    MAINTENANCE,
     UNKNOWN;
 }

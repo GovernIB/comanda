@@ -4,8 +4,10 @@ import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.hateoas.EntityModel;
@@ -29,6 +31,9 @@ public class EstadisticaSchedulerService {
     private final EntornAppServiceClient entornAppServiceClient;
     private final EstadisticaHelper estadisticaHelper;
     private final KeycloakHelper keycloakHelper;
+
+    @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{false}}")
+    private Boolean schedulerLeader;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
 
@@ -77,14 +82,16 @@ public class EstadisticaSchedulerService {
     }
 
     private void executarProces(EntornApp entornApp) {
-        try {
-            log.info("Executant procés per l'entornApp {}", entornApp.getId());
+        if (isLeader()) {
+            try {
+                log.info("Executant procés per l'entornApp {}", entornApp.getId());
 
-            // Refrescar informació estadística de entorn-app
-            estadisticaHelper.getEstadisticaInfoDades(entornApp);
+                // Refrescar informació estadística de entorn-app
+                estadisticaHelper.getEstadisticaInfoDades(entornApp);
 
-        } catch (Exception e) {
-            log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornApp.getId(), e);
+            } catch (Exception e) {
+                log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornApp.getId(), e);
+            }
         }
     }
 
@@ -95,6 +102,11 @@ public class EstadisticaSchedulerService {
             tasquesActives.remove(entornAppId);
             log.info("Tasca de obtenció d'informació estadística cancel·lada per l'entornAppId: {}", entornAppId);
         }
+    }
+
+    private boolean isLeader() {
+        // TODO: Implementar per microserveis
+        return schedulerLeader;
     }
 
 

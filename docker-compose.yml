@@ -39,9 +39,10 @@ services:
       - es.caib.comanda.client.app.url=${CLIENT_APP_URL}
       - es.caib.comanda.client.entorn.url=${CLIENT_ENTORN_URL}
       - es.caib.comanda.client.entorn.app.url=${CLIENT_ENTORN_APP_URL}
-      - es.caib.comanda.scheduler.app.info.cron=${APP_INFO_CRON:-0 */1 * * * *}
-      - es.caib.comanda.scheduler.salut.info.cron=${SALUT_INFO_CRON:-0 */1 * * * *}
-      - es.caib.comanda.scheduler.estadistica.info.cron=${SALUT_EST_CRON:-1 0 * * * *}
+      - es.caib.comanda.client.monitor.url=${CLIENT_MONITOR_URL}
+      - es.caib.comanda.client.salut.url=${CLIENT_SALUT_URL}
+      - es.caib.comanda.client.estadistica.url=${CLIENT_ESTADISTICA_URL}
+      - es.caib.comanda.scheduler.leader=${SCHEDULER_LEADER:-true}
       - es.caib.comanda.keycloak.base.url=${AUTH_URL}
       - es.caib.comanda.keycloak.realm=${AUTH_REALM}
       - es.caib.comanda.keycloak.client.id=${AUTH_CLIENTID}

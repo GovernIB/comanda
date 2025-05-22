@@ -3,8 +3,10 @@ package es.caib.comanda.configuracio.logic.service;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
@@ -26,6 +28,9 @@ public class ConfiguracioSchedulerService {
     private final TaskScheduler taskScheduler;
     private final EntornAppRepository entornAppRepository;
     private final AppInfoHelper appInfoHelper;
+
+    @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{false}}")
+    private Boolean schedulerLeader;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
 
@@ -76,14 +81,16 @@ public class ConfiguracioSchedulerService {
     }
 
     private void executarProces(Long entornAppId) {
-        try {
-            log.info("Executant procés per l'entornApp {}", entornAppId);
+        if (isLeader()) {
+            try {
+                log.info("Executant procés per l'entornApp {}", entornAppId);
 
-            // Refrescar informació de entorn-app
-            appInfoHelper.refreshAppInfo(entornAppId);
+                // Refrescar informació de entorn-app
+                appInfoHelper.refreshAppInfo(entornAppId);
 
-        } catch (Exception e) {
-            log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornAppId, e);
+            } catch (Exception e) {
+                log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornAppId, e);
+            }
         }
     }
 
@@ -94,6 +101,11 @@ public class ConfiguracioSchedulerService {
             tasquesActives.remove(entornAppId);
             log.info("Tasca de refresc de la informació cancel·lada per l'entornAppId: {}", entornAppId);
         }
+    }
+
+    private boolean isLeader() {
+        // TODO: Implementar per microserveis
+        return schedulerLeader;
     }
 
 

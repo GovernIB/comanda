@@ -126,6 +126,8 @@ public class SalutInfoHelper {
 				salutSubsistema.setCodi(s.getCodi());
 				salutSubsistema.setEstat(toSalutEstat(s.getEstat()));
 				salutSubsistema.setLatencia(s.getLatencia());
+				salutSubsistema.setTotalOk(s.getTotalOk() != null ? s.getTotalOk() : 0L);
+				salutSubsistema.setTotalError(s.getTotalError() != null ? s.getTotalError() : 0L);
 				salutSubsistema.setSalut(salut);
 				salutSubsistemaRepository.save(salutSubsistema);
 			});
