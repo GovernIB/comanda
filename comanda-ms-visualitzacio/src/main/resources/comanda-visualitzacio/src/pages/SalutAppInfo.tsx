@@ -23,6 +23,7 @@ import {
     useMuiContentDialog,
     useResourceApiService,
     dateFormatLocale,
+    useBaseAppContext,
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
@@ -31,50 +32,76 @@ import {
     toXAxisDataGroups
 } from '../util/dataGroup';
 
+interface AppDataState {
+    loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
+    entornApp: any;
+    estats: Record<string, any>;
+    latencies: Record<string, any>;
+    salutCurrentApp: any;
+    reportParams: any;
+}
+
+const appDataStateInitialValue = {
+    loading: null,
+    entornApp: null,
+    estats: {},
+    latencies: {},
+    salutCurrentApp: null,
+    reportParams: null,
+};
+
 const useAppData = (id: any) => {
     const {
-        isReady: appApiIsReady,
-        getOne: appGetOne,
-    } = useResourceApiService('app');
+        isReady: entornAppApiIsReady,
+        getOne: entornAppGetOne,
+    } = useResourceApiService('entornApp');
     const {
         isReady: salutApiIsReady,
         find: salutApiFind,
-        report: salutApiReport,
+        artifactReport: salutApiReport,
     } = useResourceApiService('salut');
-    const [loading, setLoading] = React.useState<boolean>();
-    const [app, setApp] = React.useState<any>();
-    const [estats, setEstats] = React.useState<Record<string, any>>({});
-    const [latencies, setLatencies] = React.useState<Record<string, any>>({});
-    const [salutCurrentApp, setSalutCurrentApp] = React.useState<any>();
-    const [reportParams, setReportParams] = React.useState<any>();
+    const [appDataState, setAppDataState] = React.useState<AppDataState>(appDataStateInitialValue);
+    const ready = entornAppApiIsReady && salutApiIsReady;
     const refresh = (dataInici: string, dataFi: string, agrupacio: string) => {
         const reportParams = {
             dataInici,
             dataFi,
             agrupacio,
         };
-        setReportParams(reportParams);
-        if (appApiIsReady && salutApiIsReady) {
-            setLoading(true);
-            let appCodi: any;
-            appGetOne(id).then((app) => {
-                setApp(app);
-                appCodi = app.codi;
+        if (ready) {
+            setAppDataState({
+                ...appDataStateInitialValue,
+                loading: true,
+                reportParams,
+            });
+            let entornAppId: any;
+            entornAppGetOne(id).then((entornApp) => {
+                setAppDataState((state) => ({
+                    ...state,
+                    entornApp,
+                }))
+                entornAppId = entornApp.id;
             }).then(() => {
                 const reportData = {
                     ...reportParams,
-                    appCodi
+                    entornAppId,
                 };
-                return salutApiReport({ code: 'estat', data: reportData })
+                return salutApiReport(null, { code: 'estat', data: reportData })
             }).then((items) => {
-                setEstats({ [appCodi]: items });
+                setAppDataState((state) => ({
+                    ...state,
+                    estats: { [entornAppId]: items },
+                }))
                 const reportData = {
                     ...reportParams,
-                    appCodi
+                    entornAppId
                 };
-                return salutApiReport({ code: 'latencia', data: reportData });
+                return salutApiReport(null, { code: 'latencia', data: reportData });
             }).then((items) => {
-                setLatencies(items);
+                setAppDataState((state) => ({
+                    ...state,
+                    latencies: items,
+                }))
                 const findArgs = {
                     page: 0,
                     size: 1,
@@ -84,21 +111,22 @@ const useAppData = (id: any) => {
                 return salutApiFind(findArgs);
             }).then(({ rows }) => {
                 const salutCurrentApp = rows?.[0];
-                setSalutCurrentApp(salutCurrentApp);
+                setAppDataState((state) => ({
+                    ...state,
+                    salutCurrentApp,
+                }))
             }).finally(() => {
-                setLoading(false);
+                setAppDataState((state) => ({
+                    ...state,
+                    loading: false,
+                }))
             });
         }
     }
     return {
-        ready: appApiIsReady && salutApiIsReady,
-        loading,
+        ready,
         refresh,
-        app,
-        estats,
-        latencies,
-        salutCurrentApp,
-        reportParams,
+        ...appDataState,
     };
 }
 
@@ -179,6 +207,13 @@ const Integracions: React.FC<any> = (props) => {
     const { salutCurrentApp } = props;
     const { t } = useTranslation();
     const integracions = salutCurrentApp?.integracions;
+    const getEstatColor = (estat: string) => {
+        switch (estat) {
+            case 'UP': return 'success';
+            case 'DOWN': return 'error';
+            case 'UNKNOWN': return 'warning';
+        }
+    }
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.integracions.title')}</Typography>
@@ -197,7 +232,7 @@ const Integracions: React.FC<any> = (props) => {
                         <TableCell>{i.codi}</TableCell>
                         <TableCell>{i.nom}</TableCell>
                         <TableCell>
-                            <Chip label={i.estat} size="small" color={i.estat === 'UP' ? 'success' : 'error'} />
+                            <Chip label={i.estat} size="small" color={getEstatColor(i.estat)} />
                         </TableCell>
                         <TableCell>{i.latencia != null ? i.latencia + ' ms' : t('page.salut.nd')}</TableCell>
                         <TableCell>{i.latencia} ms</TableCell>
@@ -264,13 +299,18 @@ const SalutAppInfo: React.FC = () => {
     const {
         ready,
         loading,
-        refresh: appDataRefresh,
-        app,
+        refresh: entornAppDataRefresh,
+        entornApp,
         estats,
         latencies,
         salutCurrentApp,
         reportParams,
     } = useAppData(id);
+    const { setMarginsDisabled } = useBaseAppContext();
+    React.useEffect(() => {
+        setMarginsDisabled(true);
+        return () => setMarginsDisabled(false);
+    }, []);
     const dataLoaded = ready && loading != null && !loading;
     const toolbarState = salutCurrentApp?.appEstat ? <Chip
         label={salutCurrentApp.appEstat}
@@ -278,11 +318,11 @@ const SalutAppInfo: React.FC = () => {
         color={salutCurrentApp.appEstat === 'UP' ? 'success' : 'error'}
         sx={{ ml: 1 }} /> : undefined;
     const toolbar = <SalutToolbar
-        title={app?.nom}
-        subtitle={app?.versio ? 'v' + app?.versio : undefined}
+        title={entornApp != null ? `${entornApp.app.description} - ${entornApp.entorn.description}` : ""}
+        subtitle={entornApp?.versio ? 'v' + entornApp?.versio : undefined}
         state={toolbarState}
         ready={ready}
-        onRefresh={appDataRefresh}
+        onRefresh={entornAppDataRefresh}
         goBackActive />;
     const loadingComponent = loading ? <Box
         sx={{
@@ -303,8 +343,8 @@ const SalutAppInfo: React.FC = () => {
         </Grid>
         <Grid size={6}>
             {dataLoaded && <LatenciaBarChart
-                dataInici={reportParams?.dataInici}
-                agrupacio={reportParams?.agrupacio}
+                dataInici={reportParams.dataInici}
+                agrupacio={reportParams.agrupacio}
                 latencies={latencies} />}
         </Grid>
         <Grid size={6}>
@@ -315,8 +355,8 @@ const SalutAppInfo: React.FC = () => {
         </Grid>
         <Grid size={12}>
             {dataLoaded && <Estats
-                dataInici={reportParams?.dataInici}
-                agrupacio={reportParams?.agrupacio}
+                dataInici={reportParams.dataInici}
+                agrupacio={reportParams.agrupacio}
                 estats={estats} />}
         </Grid>
     </Grid>;

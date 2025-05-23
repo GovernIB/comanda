@@ -58,8 +58,8 @@ const useReportInterval = (intervalMinutes?: number) => {
     }
 }
 
-const RefreshTimeoutSelect: React.FC<any> = (props: { onChange: (minutes: number) => void }) => {
-    const { onChange } = props;
+const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void }) => {
+    const { onChange, disabled } = props;
     const { t } = useTranslation();
     const [duration, setDuration] = React.useState<string>('PT1M');
     const callOnChange = (duration: string) => {
@@ -82,6 +82,7 @@ const RefreshTimeoutSelect: React.FC<any> = (props: { onChange: (minutes: number
             id="range-select"
             value={duration}
             size="small"
+            disabled={disabled}
             onChange={handleChange}
             startAdornment={<InputAdornment position="start"><Icon>update</Icon></InputAdornment>}
             sx={{ mr: 1, width: '10em' }}>
@@ -93,8 +94,8 @@ const RefreshTimeoutSelect: React.FC<any> = (props: { onChange: (minutes: number
     </FormControl>;
 }
 
-const AppDataRangeSelect: React.FC<any> = (props: { onChange: (minutes: number) => void }) => {
-    const { onChange } = props;
+const AppDataRangeSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void }) => {
+    const { onChange, disabled } = props;
     const { t } = useTranslation();
     const [duration, setDuration] = React.useState<string>('PT15M');
     const callOnChange = (duration: string) => {
@@ -117,6 +118,7 @@ const AppDataRangeSelect: React.FC<any> = (props: { onChange: (minutes: number) 
             id="range-select"
             value={duration}
             size="small"
+            disabled={disabled}
             onChange={handleChange}
             startAdornment={<InputAdornment position="start"><Icon>date_range</Icon></InputAdornment>}
             sx={{ mr: 1, width: '20em' }}>
@@ -169,18 +171,28 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             }
         }
     }, [refreshTimeoutMinutes, dataInici, dataFi, agrupacio]);
-    const toolbarElementsWithPositions = [{
-        position: 2,
-        element: <RefreshTimeoutSelect onChange={setRefreshTimeoutMinutes} />
-    }, {
-        position: 2,
-        element: <AppDataRangeSelect onChange={setAppDataRangeMinutes} />
-    }, {
-        position: 2,
-        element: <IconButton onClick={() => refresh(true)} title={t('page.salut.refrescar')}>
-            <Icon>refresh</Icon>
-        </IconButton>
-    }];
+    const toolbarElementsWithPositions = [
+        {
+            position: 2,
+            element: <RefreshTimeoutSelect onChange={setRefreshTimeoutMinutes} disabled={!ready} />,
+        },
+        {
+            position: 2,
+            element: <AppDataRangeSelect onChange={setAppDataRangeMinutes} disabled={!ready} />,
+        },
+        {
+            position: 2,
+            element: (
+                <IconButton
+                    onClick={() => refresh(true)}
+                    title={t('page.salut.refrescar')}
+                    disabled={!ready}
+                >
+                    <Icon>refresh</Icon>
+                </IconButton>
+            ),
+        },
+    ];
     state != null && toolbarElementsWithPositions.unshift({
         position: 1,
         element: state
