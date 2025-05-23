@@ -24,62 +24,72 @@ import UpdownBarChart from '../components/UpdownBarChart';
 
 const useAppData = () => {
     const {
-        isReady: appApiIsReady,
-        find: appApiFind,
-        artifactAction: appApiAction,
-    } = useResourceApiService('app');
-    const {
-        isReady: salutApiIsReady,
-        artifactReport: salutApiReport,
-    } = useResourceApiService('salut');
+        isReady: appEntornApiIsReady,
+        find: appEntornApiFind,
+        artifactAction: appEntornApiAction,
+    } = useResourceApiService('entornApp');
+    const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
+        useResourceApiService('salut');
     const [loading, setLoading] = React.useState<boolean>();
-    const [apps, setApps] = React.useState<any[]>();
+    const [appEntorns, setAppEntorns] = React.useState<any[]>();
     const [estats, setEstats] = React.useState<Record<string, any>>({});
     const [salutLastItems, setSalutLastItems] = React.useState<any[]>();
     const [reportParams, setReportParams] = React.useState<any>();
-    const refresh = (dataInici: string, dataFi: string, agrupacio: string, actionExec?: boolean) => {
+    const refresh = (
+        dataInici: string,
+        dataFi: string,
+        agrupacio: string,
+        actionExec?: boolean
+    ) => {
         const reportParams = {
             dataInici,
             dataFi,
             agrupacio,
         };
         setReportParams(reportParams);
-        if (appApiIsReady && salutApiIsReady) {
+        if (appEntornApiIsReady && salutApiIsReady) {
             setLoading(true);
             new Promise((resolve, reject) => {
                 if (actionExec) {
-                    appApiAction(null, { code: 'refresh' }).then(resolve).catch(reject);
+                    appEntornApiAction(null, { code: 'refresh' }).then(resolve).catch(reject);
                 } else {
                     resolve(null);
                 }
-            }).then(() => {
-                return appApiFind({ unpaged: true });
-            }).then((response) => {
-                setApps(response.rows);
-                return salutApiReport(null, { code: 'salut_last' });
-            }).then(salutLastItems => {
-                setSalutLastItems(salutLastItems as any[]);
-                const ps: Promise<any>[] = (salutLastItems as any[])?.map((i: any) => {
-                    const reportData = {
-                        ...reportParams,
-                        appCodi: i.codi
-                    };
-                    return new Promise((resolve, reject) => {
-                        salutApiReport(null, { code: 'estat', data: reportData }).then(ii => {
-                            setEstats(e => ({ ...e, [i.codi]: ii }))
-                            resolve(null);
-                        }).catch(reject);
+            })
+                .then(() => {
+                    return appEntornApiFind({ unpaged: true, filter: "activa : true AND app.activa : true" });
+                })
+                .then((response) => {
+                    setAppEntorns(response.rows);
+                    return salutApiReport(null, { code: 'salut_last' });
+                })
+                .then((apiResponse) => {
+                    const salutLastItems = apiResponse as any[];
+                    setSalutLastItems(salutLastItems);
+                    const ps: Promise<any>[] = salutLastItems?.map((i) => {
+                        const reportData = {
+                            ...reportParams,
+                            entornAppId: i.entornAppId,
+                        };
+                        return new Promise((resolve, reject) => {
+                            salutApiReport(null, { code: 'estat', data: reportData })
+                                .then((ii) => {
+                                    setEstats((e) => ({ ...e, [i.entornAppId]: ii }));
+                                    resolve(null);
+                                })
+                                .catch(reject);
+                        });
                     });
-                });
-                return Promise.all(ps);
-            }).finally(() => setLoading(false));
+                    return Promise.all(ps);
+                })
+                .finally(() => setLoading(false));
         }
-    }
+    };
     return {
-        ready: appApiIsReady && salutApiIsReady,
+        ready: appEntornApiIsReady && salutApiIsReady,
         loading,
         refresh,
-        apps,
+        appEntorns,
         salutLastItems,
         estats,
         reportParams,
@@ -89,36 +99,47 @@ const useAppData = () => {
 const UpdownGaugeChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
     const { salutLastItems } = props;
     const theme = useTheme();
-    const upCount = salutLastItems?.filter(i => i.appUp).length;
+    const upCount = salutLastItems?.filter((i) => i.appUp).length;
     const upPercent = salutLastItems?.length ? (upCount / salutLastItems.length) * 100 : 0;
-    return <Gauge
-        value={upPercent}
-        sx={() => ({
-            [`& .${gaugeClasses.valueText}`]: {
-                fontSize: 30,
-                transform: 'translate(0px, 0px)',
-            },
-            [`& .${gaugeClasses.valueArc}`]: {
-                fill: theme.palette.success.main,
-            },
-            [`& .${gaugeClasses.referenceArc}`]: {
-                fill: theme.palette.error.main,
-            },
-        })}
-        text={({ value }) => `${(value ?? 0) * salutLastItems.length / 100} / ${salutLastItems.length}`} />;
-}
+    return (
+        <Gauge
+            value={upPercent}
+            sx={() => ({
+                [`& .${gaugeClasses.valueText}`]: {
+                    fontSize: 30,
+                    transform: 'translate(0px, 0px)',
+                },
+                [`& .${gaugeClasses.valueArc}`]: {
+                    fill: theme.palette.success.main,
+                },
+                [`& .${gaugeClasses.referenceArc}`]: {
+                    fill: theme.palette.error.main,
+                },
+            })}
+            text={({ value }) =>
+                `${((value ?? 0) * salutLastItems.length) / 100} / ${salutLastItems.length}`
+            }
+        />
+    );
+};
 
-const ItemStateChip: React.FC<any> = (props: { up: boolean, date: string }) => {
+const ItemStateChip: React.FC<any> = (props: { up: boolean; date: string }) => {
     const { up, date } = props;
-    return <>
-        {up ? <Chip label="UP" size="small" color="success" /> : <Chip label="DOWN" size="small" color="error" />}
-        <br />
-        <Typography variant="caption">{date}</Typography>
-    </>;
-}
+    return (
+        <>
+            {up ? (
+                <Chip label="UP" size="small" color="success" />
+            ) : (
+                <Chip label="DOWN" size="small" color="error" />
+            )}
+            <br />
+            <Typography variant="caption">{date}</Typography>
+        </>
+    );
+};
 
-const AppDataTable: React.FC<any> = (props: { apps: any[], salutLastItems: any[] }) => {
-    const { apps, salutLastItems } = props;
+const AppDataTable: React.FC<any> = (props: { appEntorns: any[]; salutLastItems: any[] }) => {
+    const { appEntorns, salutLastItems } = props;
     const { t } = useTranslation();
     const { getLinkComponent } = useBaseAppContext();
     return <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -186,7 +207,7 @@ const Salut: React.FC = () => {
         ready,
         loading,
         refresh: appDataRefresh,
-        apps,
+        appEntorns,
         salutLastItems,
         estats,
         reportParams,
@@ -197,41 +218,56 @@ const Salut: React.FC = () => {
         return () => setMarginsDisabled(false);
     }, []);
     const dataLoaded = ready && loading != null && !loading;
-    const toolbar = <SalutToolbar
-        title={t('page.salut.title')}
-        ready={ready}
-        onRefresh={appDataRefresh} />;
-    return <BasePage toolbar={toolbar}>
-        {loading ?
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: 'calc(100vh - 80px)',
-                }}>
-                <CircularProgress size={100} />
-            </Box> : <Grid container spacing={2}>
-                <Grid size={3}>
-                    {/* TODO Sense un height, el UpdownGaugeChart podia creixer infinitament cap avall. */}
-                    <Box sx={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {dataLoaded && <UpdownGaugeChart salutLastItems={salutLastItems} />}
-                    </Box>
+    const toolbar = (
+        <SalutToolbar title={t('page.salut.title')} ready={ready} onRefresh={appDataRefresh} />
+    );
+    return (
+        <BasePage toolbar={toolbar}>
+            {loading ? (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 'calc(100vh - 80px)',
+                    }}
+                >
+                    <CircularProgress size={100} />
+                </Box>
+            ) : (
+                <Grid container spacing={2}>
+                    <Grid size={3}>
+                        {/* TODO Sense un height, el UpdownGaugeChart podia creixer infinitament cap avall. */}
+                        <Box
+                            sx={{
+                                height: 220,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {dataLoaded && <UpdownGaugeChart salutLastItems={salutLastItems} />}
+                        </Box>
+                    </Grid>
+                    <Grid size={9} style={{ height: '200px' }}>
+                        {dataLoaded && (
+                            <UpdownBarChart
+                                dataInici={reportParams?.dataInici}
+                                agrupacio={reportParams?.agrupacio}
+                                estats={estats}
+                            />
+                        )}
+                    </Grid>
+                    <Grid size={12}>
+                        {dataLoaded && (
+                            <AppDataTable apps={appEntorns} salutLastItems={salutLastItems} />
+                        )}
+                    </Grid>
                 </Grid>
-                <Grid size={9} style={{ height: '200px' }}>
-                    {dataLoaded && <UpdownBarChart
-                        dataInici={reportParams?.dataInici}
-                        agrupacio={reportParams?.agrupacio}
-                        estats={estats} />}
-                </Grid>
-                <Grid size={12}>
-                    {dataLoaded && <AppDataTable
-                        apps={apps}
-                        salutLastItems={salutLastItems} />}
-                </Grid>
-            </Grid>}
-    </BasePage>;
-}
+            )}
+        </BasePage>
+    );
+};
 
 export default Salut;
