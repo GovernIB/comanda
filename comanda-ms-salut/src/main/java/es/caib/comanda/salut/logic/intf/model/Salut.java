@@ -26,6 +26,10 @@ import java.util.List;
 		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST),
 		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTAT, formClass = SalutInformeParams.class),
 		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
+		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_INTEGRACIONS),
+		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_SUBSISTEMES),
+		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_MISSATGES),
+		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_DETALLS),
 	}
 )
 public class Salut extends BaseResource<Long> {
@@ -33,6 +37,10 @@ public class Salut extends BaseResource<Long> {
 	public final static String SALUT_REPORT_LAST = "salut_last";
 	public final static String SALUT_REPORT_ESTAT = "estat";
 	public final static String SALUT_REPORT_LATENCIA = "latencia";
+	public static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
+	public static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
+	public static final String PERSP_MISSATGES = "SAL_MISSATGES";
+	public static final String PERSP_DETALLS = "SAL_DETALLS";
 
 	@NotNull
 	private Long entornAppId;

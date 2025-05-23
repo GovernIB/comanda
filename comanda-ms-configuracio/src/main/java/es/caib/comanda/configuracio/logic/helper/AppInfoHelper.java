@@ -40,6 +40,7 @@ public class AppInfoHelper {
 	private final KeycloakHelper keycloakHelper;
 	private final MonitorServiceClient monitorServiceClient;
 
+	@Transactional
 	public void refreshAppInfo(Long entornAppId) {
 		log.debug("Refrescant informació de l'entornApp {}", entornAppId);
 		EntornAppEntity entornApp = entornAppRepository.findById(entornAppId)
