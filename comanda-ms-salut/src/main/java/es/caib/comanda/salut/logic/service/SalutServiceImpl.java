@@ -4,6 +4,7 @@ import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.intf.model.Salut;
@@ -34,7 +35,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,11 +48,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, SalutEntity> implements SalutService {
-
-	private static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
-	private static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
-	private static final String PERSP_MISSATGES = "SAL_MISSATGES";
-	private static final String PERSP_DETALLS = "SAL_DETALLS";
 
 	@Autowired
 	private SalutIntegracioRepository salutIntegracioRepository;
@@ -72,76 +67,83 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.SALUT_REPORT_LAST, new InformeSalutLast());
 		register(Salut.SALUT_REPORT_ESTAT, new InformeEstat());
 		register(Salut.SALUT_REPORT_LATENCIA, new InformeLatencia());
+		register(Salut.PERSP_INTEGRACIONS, new PerspectiveIntegracions());
+		register(Salut.PERSP_SUBSISTEMES, new PerspectiveSubsistemes());
+		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
+		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
 	}
 
-	protected void applyPerspectives(
-			SalutEntity entity,
-			Salut resource,
-			String[] perspectives) {
-		boolean integracionsActive = Arrays.asList(perspectives).contains(PERSP_INTEGRACIONS);
-		boolean subsistemesActive = Arrays.asList(perspectives).contains(PERSP_SUBSISTEMES);
-		EntornApp entornAppForEntity = null;
-		if (integracionsActive) {
-			entornAppForEntity = entornAppFindById(entity.getEntornAppId());
+	public class PerspectiveIntegracions implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+			EntornApp entornAppForEntity = entornAppFindById(entity.getEntornAppId());
 			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalut(entity);
 			resource.setIntegracions(
-					salutIntegracions.stream().
-							map(i -> objectMappingHelper.newInstanceMap(
-									i,
-									SalutIntegracio.class,
-									"salut")).
-							collect(Collectors.toList()));
+				salutIntegracions.stream().
+					map(i -> objectMappingHelper.newInstanceMap(
+						i,
+						SalutIntegracio.class,
+						"salut")).
+					collect(Collectors.toList()));
 			if (entornAppForEntity != null) {
 				entornAppForEntity.getIntegracions().forEach(i -> {
 					Optional<SalutIntegracio> salutIntegracio = resource.getIntegracions().stream().
-							filter(si -> si.getCodi().equals(i.getCodi())).
-							findFirst();
+						filter(si -> si.getCodi().equals(i.getCodi())).
+						findFirst();
 					salutIntegracio.ifPresent(integracio -> integracio.setNom(i.getNom()));
 				});
 			}
 		}
-		if (subsistemesActive) {
-			if (entornAppForEntity == null) {
-				entornAppForEntity = entornAppFindById(entity.getEntornAppId());
-			}
+	}
+
+	public class PerspectiveSubsistemes implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+			EntornApp entornAppForEntity = entornAppFindById(entity.getEntornAppId());
 			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalut(entity);
 			resource.setSubsistemes(
-					salutSubsistemes.stream().
-							map(s -> objectMappingHelper.newInstanceMap(
-									s,
-									SalutSubsistema.class,
-									"salut")).
-							collect(Collectors.toList()));
+				salutSubsistemes.stream().
+					map(s -> objectMappingHelper.newInstanceMap(
+						s,
+						SalutSubsistema.class,
+						"salut")).
+					collect(Collectors.toList()));
 			if (entornAppForEntity != null) {
 				entornAppForEntity.getSubsistemes().forEach(s -> {
 					Optional<SalutSubsistema> salutSubsistema = resource.getSubsistemes().stream().
-							filter(ss -> ss.getCodi().equals(s.getCodi())).
-							findFirst();
+						filter(ss -> ss.getCodi().equals(s.getCodi())).
+						findFirst();
 					salutSubsistema.ifPresent(subsistema -> subsistema.setNom(s.getNom()));
 				});
 			}
 		}
-		boolean missatgesActive = Arrays.asList(perspectives).contains(PERSP_MISSATGES);
-		if (missatgesActive) {
+	}
+
+	public class PerspectiveMissatges implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
 			List<SalutMissatgeEntity> salutMissatges = salutMissatgeRepository.findBySalut(entity);
 			resource.setMissatges(
-					salutMissatges.stream().
-							map(s -> objectMappingHelper.newInstanceMap(
-									s,
-									SalutMissatge.class,
-									"salut")).
-							collect(Collectors.toList()));
+				salutMissatges.stream().
+					map(s -> objectMappingHelper.newInstanceMap(
+						s,
+						SalutMissatge.class,
+						"salut")).
+					collect(Collectors.toList()));
 		}
-		boolean detallsActive = Arrays.asList(perspectives).contains(PERSP_DETALLS);
-		if (detallsActive) {
+	}
+
+	public class PerspectiveDetalls implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
 			List<SalutDetallEntity> salutDetalls = salutDetallRepository.findBySalut(entity);
 			resource.setDetalls(
-					salutDetalls.stream().
-							map(s -> objectMappingHelper.newInstanceMap(
-									s,
-									SalutDetall.class,
-									"salut")).
-							collect(Collectors.toList()));
+				salutDetalls.stream().
+					map(s -> objectMappingHelper.newInstanceMap(
+						s,
+						SalutDetall.class,
+						"salut")).
+					collect(Collectors.toList()));
 		}
 	}
 
