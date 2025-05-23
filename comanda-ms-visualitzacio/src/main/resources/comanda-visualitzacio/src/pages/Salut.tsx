@@ -138,8 +138,8 @@ const ItemStateChip: React.FC<any> = (props: { up: boolean; date: string }) => {
     );
 };
 
-const AppDataTable: React.FC<any> = (props: { appEntorns: any[]; salutLastItems: any[] }) => {
-    const { appEntorns, salutLastItems } = props;
+const AppDataTable: React.FC<any> = (props: { apps: any[]; salutLastItems: any[] }) => {
+    const { apps, salutLastItems } = props;
     const { t } = useTranslation();
     const { getLinkComponent } = useBaseAppContext();
     return <Table sx={{ minWidth: 650 }} aria-label="simple table">
