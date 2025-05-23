@@ -1,5 +1,7 @@
 const translationEs = {
     menu: {
+        configuracio: "Configuración",
+        estadistiques: "Estadísticas",
         salut: "Salud",
         app: "Aplicaciones",
         entorn: "Entornos",

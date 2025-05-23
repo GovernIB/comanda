@@ -1,65 +1,100 @@
 import React from 'react';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
 import { useBaseAppContext } from 'reactlib';
 
-/*const allLanguages = [{
-    locale: 'ca',
-    name: 'Català'
-}, {
-    locale: 'es',
-    name: 'Castellà'
-}];*/
-
-export type LanguageItem = {
+type LanguageOptionProps = {
     locale: string;
-    name: string;
-    flag?: string;
+    label: string;
+    isActive: boolean;
+    onClick: () => void;
+    sx?: any;
+};
+
+const LanguageOption: React.FC<LanguageOptionProps> = ({ label, isActive, onClick, sx }) => {
+
+    return (
+        <Typography
+            sx={{
+                fontWeight: isActive ? 'bold' : 'normal',
+                fontSize: '18px',
+                '&:hover': {
+                    cursor: isActive ? 'default' : 'pointer',
+                    textDecoration: isActive ? 'none' : 'underline',
+                },
+                ...sx
+            }}
+            onClick={isActive ? undefined : onClick}
+        >
+            {label}
+        </Typography>
+    );
 };
 
 type HeaderLanguageSelectorProps = {
     languages?: string[];
     onLanguageChange?: (language?: string) => void;
-} & any;
+    sx?: any;
+    optionSx?: any;
+};
 
 const HeaderLanguageSelector: React.FC<HeaderLanguageSelectorProps> = (props) => {
     const {
         languages,
         onLanguageChange,
+        sx,
+        optionSx,
         ...otherProps
     } = props;
+
     const { currentLanguage, setCurrentLanguage } = useBaseAppContext();
+
     React.useEffect(() => {
         onLanguageChange?.(currentLanguage);
-    }, [currentLanguage]);
-    const handleOnChange = (event: SelectChangeEvent) => {
-        const value = event.target.value;
-        setCurrentLanguage(value);
+    }, [currentLanguage, onLanguageChange]);
+
+    const changeLanguage = (locale: string) => {
+        setCurrentLanguage(locale);
+    };
+
+    // Get the two-character language code
+    const currentLanguageTwoChars = currentLanguage?.substring(0, 2).toLowerCase();
+
+    if (!languages || languages.length === 0) {
+        return null;
     }
-    const {
-        size: otherSize,
-        sx: otherSx,
-        ...otherOtherProps
-    } = otherProps;
-    const size = otherSize ?? 'small';
-    return languages ? <Select
-        value={currentLanguage ?? ''}
-        onChange={handleOnChange}
-        renderValue={() => {
-            const currentLanguageItem = languages?.find((l: LanguageItem) => l.locale === currentLanguage);
-            return currentLanguageItem ? <Typography variant="body2" sx={{ textAlign: 'center' }}>
-                {currentLanguageItem.name}
-            </Typography> : null;
-        }}
-        size={size}
-        sx={{ backgroundColor: 'white', ...otherSx }}
-        {...otherOtherProps}>
-        {languages?.map((l: LanguageItem, i: number) => <MenuItem key={i} value={l.locale}>
-            <ListItemText>{l.name}</ListItemText>
-        </MenuItem>)}
-    </Select> : null;
-}
+
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                gap: 1,
+                mr: 4,
+                color: "black",
+                ...sx
+            }}
+            {...otherProps}
+        >
+            {languages.map((language: string, index: number) => {
+                const languageTwoChars = language.substring(0, 2).toLowerCase();
+                const isLast = index === languages.length - 1;
+
+                return (
+                    <React.Fragment key={language}>
+                        <LanguageOption
+                            locale={language}
+                            label={languageTwoChars.toUpperCase()}
+                            isActive={currentLanguageTwoChars === languageTwoChars}
+                            onClick={() => changeLanguage(language)}
+                            sx={optionSx}
+                        />
+                        {!isLast && <Divider orientation="vertical" flexItem />}
+                    </React.Fragment>
+                );
+            })}
+        </Box>
+    );
+};
 
 export default HeaderLanguageSelector;

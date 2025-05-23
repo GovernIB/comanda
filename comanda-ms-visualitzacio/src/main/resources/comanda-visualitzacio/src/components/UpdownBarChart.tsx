@@ -34,33 +34,34 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const theme = useTheme();
     const estatsMaxData = getEstatsMaxData(estats);
     const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
-    const seriesUp = baseDataGroups.map(g => {
-        let up = 0;
-        const estatApps = Object.keys(estats);
-        estatApps?.forEach((a: any) => {
-            const estatForGroup = estats[a].find((ea: any) => isDataInGroup(ea.data, g, agrupacio));
-            up = up + (estatForGroup?.alwaysUp ? 1 : 0);
+
+    const calculateSeries = (
+        baseDataGroups: string[],
+        estats: Record<string, any[]>,
+        agrupacio: string,
+        percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "mantenancePercent" | "downPercent"
+    ): number[] => {
+        return baseDataGroups.map((group) => {
+            let valueSum = 0.0;
+            let valueCount = 0;
+
+            const estatApps = Object.keys(estats);
+            estatApps.forEach((appKey) => {
+                const estatForGroup = estats[appKey].find((estat) => isDataInGroup(estat.data, group, agrupacio));
+                valueSum += estatForGroup != null ? estatForGroup[percentKey] || 0 : 0;
+                valueCount += estatForGroup != null ? 1 : 0;
+            });
+
+            return valueCount !== 0 ? valueSum / valueCount : 0.0;
         });
-        return up;
-    });
-    const seriesUpDown = baseDataGroups.map(g => {
-        let upDown = 0;
-        const estatApps = Object.keys(estats);
-        estatApps?.forEach((a: any) => {
-            const estatForGroup = estats[a].find((ea: any) => isDataInGroup(ea.data, g, agrupacio));
-            upDown = upDown + (estatForGroup != null && !estatForGroup?.alwaysUp && !estatForGroup?.alwaysDown ? 1 : 0);
-        });
-        return upDown;
-    });
-    const seriesDown = baseDataGroups.map(g => {
-        let down = 0;
-        const estatApps = Object.keys(estats);
-        estatApps?.forEach((a: any) => {
-            const estatForGroup = estats[a].find((ea: any) => isDataInGroup(ea.data, g, agrupacio));
-            down = down + (estatForGroup?.alwaysDown ? 1 : 0);
-        });
-        return down;
-    });
+    };
+
+    const seriesUp = calculateSeries(baseDataGroups, estats, agrupacio, "upPercent");
+    const seriesWarn = calculateSeries(baseDataGroups, estats, agrupacio, "warnPercent");
+    const seriesDegraded = calculateSeries(baseDataGroups, estats, agrupacio, "degradedPercent");
+    const seriesMantenance = calculateSeries(baseDataGroups, estats, agrupacio, "mantenancePercent");
+    const seriesDown = calculateSeries(baseDataGroups, estats, agrupacio, "downPercent");
+
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
     const series = [{
         data: seriesUp,
@@ -68,13 +69,23 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         stack: 'total',
         color: theme.palette.success.main
     }, {
-        data: seriesUpDown,
-        label: 'up/down',
+        data: seriesWarn,
+        label: 'warn',
         stack: 'total',
-        color: theme.palette.warning.main
+        color: theme.palette.warning.light
+    }, {
+        data: seriesDegraded,
+        label: 'degraded',
+        stack: 'total',
+        color: theme.palette.warning.dark
+    }, {
+        data: seriesMantenance,
+        label: 'down',
+        stack: 'total',
+        color: theme.palette.primary.main
     }, {
         data: seriesDown,
-        label: 'down',
+        label: 'mantenance',
         stack: 'total',
         color: theme.palette.error.main
     }];

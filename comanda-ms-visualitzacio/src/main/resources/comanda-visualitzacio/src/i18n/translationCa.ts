@@ -1,9 +1,11 @@
 const translationCa = {
     menu: {
+        configuracio: "Configuració",
+        estadistiques: "Estadístiques",
         salut: "Salut",
+        monitor: "Monitor",
         app: "Aplicacions",
         entorn: "Entorns",
-        monitor: "Monitor",
     },
     page: {
         salut: {

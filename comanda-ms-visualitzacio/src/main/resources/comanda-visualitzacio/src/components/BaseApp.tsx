@@ -11,12 +11,14 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
-import AuthLanguageSelector from './AuthLanguageSelector';
+import HeaderLanguageSelector from "./HeaderLanguageSelector";
+import Button from '@mui/material/Button';
+import AppMenu from "./AppMenu";
+
 import {
     MuiBaseApp,
     MenuEntry,
     useBaseAppContext,
-    useResourceApiContext,
 } from 'reactlib';
 
 export type MenuEntryWithResource = MenuEntry & {
@@ -36,32 +38,15 @@ export type BaseAppProps = React.PropsWithChildren & {
     version: string;
     availableLanguages?: string[];
     menuEntries?: MenuEntryWithResource[];
+    appMenuEntries?: MenuEntryWithResource[];
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
+    appbarStyle?: any;
 };
 
 const Link = React.forwardRef<HTMLAnchorElement, RouterLinkProps>((itemProps, ref) => {
     return <RouterLink ref={ref} {...itemProps} role={undefined} />;
 });
-
-const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
-    const [processedMenuEntries, setprocessedMenuEntries] = React.useState<MenuEntry[]>();
-    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
-    React.useEffect(() => {
-        if (apiIsReady) {
-            const apiLinks = apiIndex?.links.getAll();
-            const resourceNames = apiLinks?.map((l: any) => l.rel);
-            const processedMenuEntries = menuEntries?.
-                filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
-                map(e => {
-                    const { resourceName, ...otherProps } = e;
-                    return otherProps;
-                });
-            setprocessedMenuEntries(processedMenuEntries);
-        }
-    }, [apiIsReady, apiIndex]);
-    return processedMenuEntries;
-}
 
 const useLocationPath = () => {
     const location = useLocation();
@@ -87,6 +72,41 @@ const CustomLocalizationProvider = ({ children }: React.PropsWithChildren) => {
     </LocalizationProvider>;
 }
 
+// Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
+const generateMenuItems = (appMenuEntries: MenuEntry[] | undefined) => {
+    return appMenuEntries?.length
+        ? appMenuEntries.map((entry) => (
+            <Button
+                className="appMenuItem"
+                key={entry.id}
+                color="inherit"
+                component={Link}
+                to={entry.to} // Navegació amb React Router
+            >
+                {entry.title}
+            </Button>
+        ))
+        : [];
+}
+// Selector d'idioma (només si hi ha idiomes disponibles)
+const generateLanguageItems = (availableLanguages: string[] | undefined) => {
+    return availableLanguages?.length
+        ? [
+            <HeaderLanguageSelector
+                sx={{ml: '42px'}}
+                key="sel_lang"
+                languages={availableLanguages}
+            />,
+        ]
+        : [];
+}
+// Menú general
+const generateAppMenu = (menuEntries: MenuEntry[] | undefined) => {
+    return menuEntries?.length
+        ? [<AppMenu menuEntries={menuEntries} />]
+        : [];
+}
+
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {
         code,
@@ -96,13 +116,14 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         version,
         availableLanguages,
         menuEntries,
+        appMenuEntries,
         appbarBackgroundColor,
         appbarBackgroundImg,
+        appbarStyle,
         children
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
-    const baseAppMenuEntries = useBaseAppMenuEntries(menuEntries);
     const i18nHandleLanguageChange = (language?: string) => {
         i18n.changeLanguage(language);
     }
@@ -127,18 +148,12 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerLogoStyle={logoStyle}
         headerAppbarBackgroundColor={appbarBackgroundColor}
         headerAppbarBackgroundImg={appbarBackgroundImg}
-        /*headerAdditionalComponents={availableLanguages?.length ? [
-            <HeaderLanguageSelector
-                key="sel_lang"
-                languages={availableLanguages}
-                sx={{ mr: 2 }} />
-        ] : undefined}*/
-        headerAdditionalAuthComponents={availableLanguages?.length ? [
-            <AuthLanguageSelector
-                key="sel_lang"
-                languages={availableLanguages}
-                sx={{ mr: 2 }} />
-        ] : undefined}
+        headerAppbarStyle={appbarStyle}
+        headerAdditionalComponents={[
+            ...generateMenuItems(appMenuEntries), // Menú
+            ...generateLanguageItems(availableLanguages), // Idioma
+            ...generateAppMenu(menuEntries) // Menú lateral
+        ]}
         persistentSession
         persistentLanguage
         i18nUseTranslation={useTranslation}
@@ -150,7 +165,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerUseLocationPath={useLocationPath}
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
-        menuEntries={baseAppMenuEntries}>
+    >
         <CustomLocalizationProvider>
             {children}
         </CustomLocalizationProvider>

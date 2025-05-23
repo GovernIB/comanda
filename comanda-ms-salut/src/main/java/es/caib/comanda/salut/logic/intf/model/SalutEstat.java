@@ -7,7 +7,9 @@ package es.caib.comanda.salut.logic.intf.model;
  */
 public enum SalutEstat {
 	UP,
+	WARN,
+	DEGRADED,
 	DOWN,
-	OUT_OF_SERVICE,
+	MAINTENANCE,
 	UNKNOWN
 }

@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class SalutInformeParams implements Serializable {
 
-	@NotNull
+//	@NotNull
 	private Long entornAppId;
 	@NotNull
 	private LocalDateTime dataInici;

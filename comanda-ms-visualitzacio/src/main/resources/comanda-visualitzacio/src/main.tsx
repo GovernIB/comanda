@@ -7,6 +7,9 @@ import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { LicenseInfo } from '@mui/x-license';
 import theme from './theme';
+import "@fontsource/noto-sans/400.css";
+import "@fontsource/noto-sans/500.css";
+import "@fontsource/noto-sans/700.css";
 import App from './App.tsx'
 import {
     envVar,
