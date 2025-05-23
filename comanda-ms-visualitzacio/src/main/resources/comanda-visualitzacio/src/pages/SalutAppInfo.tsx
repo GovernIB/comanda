@@ -31,6 +31,17 @@ import {
     generateDataGroups,
     toXAxisDataGroups
 } from '../util/dataGroup';
+import { ErrorBoundary } from 'react-error-boundary';
+
+const ErrorBoundaryFallback = () => {
+    return <Typography sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+    }} color="error">Hi ha hagut un error al mostrar el gràfic</Typography>
+}
 
 interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
@@ -335,31 +346,41 @@ const SalutAppInfo: React.FC = () => {
         <CircularProgress size={100} />
     </Box> : null;
     const [detailsDialogShow, detailsDialogComponent] = useMuiContentDialog();
-    const detailsComponent = <Grid container spacing={2}>
-        <Grid size={6}>
-            <AppInfo
-                salutCurrentApp={salutCurrentApp}
-                detailsDialogShow={detailsDialogShow} />
+    const detailsComponent = (
+        <Grid container spacing={2}>
+            <Grid size={6}>
+                <AppInfo salutCurrentApp={salutCurrentApp} detailsDialogShow={detailsDialogShow} />
+            </Grid>
+            <Grid size={6}>
+                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                    {dataLoaded && (
+                        <LatenciaBarChart
+                            dataInici={reportParams.dataInici}
+                            agrupacio={reportParams.agrupacio}
+                            latencies={latencies}
+                        />
+                    )}
+                </ErrorBoundary>
+            </Grid>
+            <Grid size={6}>
+                <Integracions salutCurrentApp={salutCurrentApp} />
+            </Grid>
+            <Grid size={6}>
+                <Subsistemes salutCurrentApp={salutCurrentApp} />
+            </Grid>
+            <Grid size={12}>
+                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                    {dataLoaded && (
+                        <Estats
+                            dataInici={reportParams.dataInici}
+                            agrupacio={reportParams.agrupacio}
+                            estats={estats}
+                        />
+                    )}
+                </ErrorBoundary>
+            </Grid>
         </Grid>
-        <Grid size={6}>
-            {dataLoaded && <LatenciaBarChart
-                dataInici={reportParams.dataInici}
-                agrupacio={reportParams.agrupacio}
-                latencies={latencies} />}
-        </Grid>
-        <Grid size={6}>
-            <Integracions salutCurrentApp={salutCurrentApp} />
-        </Grid>
-        <Grid size={6}>
-            <Subsistemes salutCurrentApp={salutCurrentApp} />
-        </Grid>
-        <Grid size={12}>
-            {dataLoaded && <Estats
-                dataInici={reportParams.dataInici}
-                agrupacio={reportParams.agrupacio}
-                estats={estats} />}
-        </Grid>
-    </Grid>;
+    );
     return <BasePage toolbar={toolbar}>
         {loading ? loadingComponent : detailsComponent}
         {detailsDialogComponent}
