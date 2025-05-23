@@ -98,7 +98,7 @@ const theme = createTheme({
         MuiTypography: {
             styleOverrides: {
                 h6: {
-                    fontSize: '1.5rem',     // Mida de la font
+                    fontSize: '1.4rem',     // Mida de la font
                 },
             },
         },
