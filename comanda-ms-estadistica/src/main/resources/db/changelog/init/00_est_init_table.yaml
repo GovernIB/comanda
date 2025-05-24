@@ -206,17 +206,50 @@ databaseChangeLog:
                 constraints:
                     nullable: false
             - column:
-                name: inici_unitat
-                type: varchar(16 ${varcharUnit})
+                  name: periode_mode
+                  type: varchar2(32 ${varcharUnit})
             - column:
-                name: inici
-                type: int
+                name: preset_periode
+                type: varchar2(32 ${varcharUnit})
             - column:
-                name: duracio_unitat
-                type: varchar(16 ${varcharUnit})
+                name: preset_count
+                type: number
             - column:
-                name: duracio
-                type: int
+                name: relatiu_punt_referencia
+                type: varchar2(32 ${varcharUnit})
+            - column:
+                name: relatiu_count
+                type: number
+            - column:
+                name: relatiu_unitat
+                type: varchar2(32 ${varcharUnit})
+            - column:
+                name: relatiu_alineacio
+                type: varchar2(32 ${varcharUnit})
+            - column:
+                name: absolut_tipus
+                type: varchar2(32 ${varcharUnit})
+            - column:
+                name: data_inici
+                type: date
+            - column:
+                name: data_fi
+                type: date
+            - column:
+                name: absolut_any_referencia
+                type: varchar2(32 ${varcharUnit})
+            - column:
+                name: absolut_any_valor
+                type: number
+            - column:
+                name: absolut_periode_unitat
+                type: varchar2(32 ${varcharUnit})
+            - column:
+                name: absolut_periode_inici
+                type: number
+            - column:
+                name: absolut_periode_fi
+                type: number
             - column:
                 name: indicador_id
                 type: bigint

@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
-import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeBaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -65,7 +65,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EstadisticaGraficWidget extends BaseResource<Long> {
+public class EstadisticaGraficWidget extends PeriodeBaseResource<Long> {
 
     @NotNull
     @Size(max = 64)
@@ -80,13 +80,6 @@ public class EstadisticaGraficWidget extends BaseResource<Long> {
     // Dimensions per les que filtrar
     @NotEmpty
     private List<DimensioValor> dimensionsValor;
-
-    // Periode de temps que es vol mostrar
-    private UnitatTempsEnum iniciUnitat;
-    // Número de unitats a retrocedir per iniciar el període de la vista
-    private Integer inici;
-    private UnitatTempsEnum duracioUnitat;
-    private Integer duracio;
 
     @NotNull
     private ResourceReference<Indicador, Long> indicador;
