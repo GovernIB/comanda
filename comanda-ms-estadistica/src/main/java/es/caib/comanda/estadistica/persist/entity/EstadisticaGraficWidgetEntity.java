@@ -3,11 +3,11 @@ package es.caib.comanda.estadistica.persist.entity;
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaGraficWidget;
 import es.caib.comanda.estadistica.logic.intf.model.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.TipusGraficEnum;
-import es.caib.comanda.estadistica.logic.intf.model.UnitatTempsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 
-import javax.persistence.Entity;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
@@ -54,7 +54,7 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     // hora, dia, setmana, mes, trimestre, any, o dia de la setmana (DL, DM, ...)
     @Column(name = "temps_agrupacio", length = 16)
     @Enumerated(EnumType.STRING)
-    private UnitatTempsEnum tempsAgrupacio;
+    private PeriodeUnitat tempsAgrupacio;
 
     @Column(name = "llegenda_x", length = 64, nullable = false)
     private String llegendaX;

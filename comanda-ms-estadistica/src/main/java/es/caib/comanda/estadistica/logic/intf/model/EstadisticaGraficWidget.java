@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeBaseResource;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -92,7 +93,7 @@ public class EstadisticaGraficWidget extends PeriodeBaseResource<Long> {
 
     // En cas de gràfic, quina agrupació de temps utilitzar
     @NotNull
-    private UnitatTempsEnum tempsAgrupacio;
+    private PeriodeUnitat tempsAgrupacio;
 
     private String llegendaX;
     private String llegendaY;
