@@ -3,6 +3,8 @@ package es.caib.comanda.client.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * Informació d'una integració.
  *
@@ -10,7 +12,7 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @NoArgsConstructor
-public class AppIntegracio {
+public class AppIntegracio implements Serializable {
 
 	private Long id;
 	private String codi;

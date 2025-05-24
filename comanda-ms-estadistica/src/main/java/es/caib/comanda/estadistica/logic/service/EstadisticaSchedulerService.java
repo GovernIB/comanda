@@ -1,17 +1,14 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronTrigger;
@@ -21,16 +18,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class EstadisticaSchedulerService {
 
     private final TaskScheduler taskScheduler;
-    private final EntornAppServiceClient entornAppServiceClient;
     private final EstadisticaHelper estadisticaHelper;
-    private final KeycloakHelper keycloakHelper;
+    private final EstadisticaClientHelper estadisticaClientHelper;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{false}}")
     private Boolean schedulerLeader;
@@ -39,18 +34,16 @@ public class EstadisticaSchedulerService {
 
     public EstadisticaSchedulerService(
             @Qualifier("estadisticaTaskScheduler") TaskScheduler taskScheduler,
-            EntornAppServiceClient entornAppServiceClient,
             EstadisticaHelper estadisticaHelper,
-            KeycloakHelper keycloakHelper) {
+            EstadisticaClientHelper estadisticaClientHelper) {
         this.taskScheduler = taskScheduler;
-        this.entornAppServiceClient = entornAppServiceClient;
         this.estadisticaHelper = estadisticaHelper;
-        this.keycloakHelper = keycloakHelper;
+        this.estadisticaClientHelper = estadisticaClientHelper;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
-        List<EntornApp> entornAppsActives = entornAppFindByActivaTrue();
+        List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(this::programarTasca);
     }
 
@@ -110,26 +103,11 @@ public class EstadisticaSchedulerService {
     }
 
 
-    private List<EntornApp> entornAppFindByActivaTrue() {
-        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
-                null,
-                "activa:true and app.activa:true",
-                null,
-                null,
-                "UNPAGED",
-                null,
-                keycloakHelper.getAuthorizationHeader());
-        return entornApps.getContent().stream().
-                map(EntityModel::getContent).
-                collect(Collectors.toList());
-    }
-
-
     // Cada hora comprovarem que no hi hagi cap aplicacio-entorn que no s'estigui actualitzant
     @Scheduled(cron = "0 10 */1 * * *")
     public void comprovarRefrescInfo() {
         log.debug("Comprovant refresc periòdic dels entorn-app - Estadístiques");
-        List<EntornApp> entornAppsActives = entornAppFindByActivaTrue();
+        List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(ea -> {
             ScheduledFuture<?> tasca = tasquesActives.get(ea.getId());
             if (tasca == null) {

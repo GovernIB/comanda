@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.Temps;
@@ -25,7 +24,6 @@ import es.caib.comanda.ms.estadistica.model.GenericFet;
 import es.caib.comanda.ms.estadistica.model.IndicadorDesc;
 import es.caib.comanda.ms.estadistica.model.RegistreEstadistic;
 import es.caib.comanda.ms.estadistica.model.RegistresEstadistics;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -61,8 +59,7 @@ public class EstadisticaHelper {
     private final TempsRepository tempsRepository;
     private final FetRepository fetRepository;
 
-    private final KeycloakHelper keycloakHelper;
-    private final MonitorServiceClient monitorServiceClient;
+    private final EstadisticaClientHelper estadisticaClientHelper;
 
     // OBTENCIÓ i DESAT D'ESTADISTIQUES
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,8 +107,7 @@ public class EstadisticaHelper {
                 entornApp.getId(),
                 entornApp.getEstadisticaInfoUrl(),
                 estadisticaUrl,
-                monitorServiceClient,
-                keycloakHelper.getAuthorizationHeader());
+                estadisticaClientHelper);
     }
 
     // Obtenir informació estadística de l'app i dimensions

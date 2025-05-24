@@ -4,6 +4,7 @@ import es.caib.comanda.estadistica.logic.intf.model.EstadisticaGraficWidget;
 import es.caib.comanda.estadistica.logic.intf.model.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import lombok.Getter;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
@@ -28,6 +29,7 @@ import javax.persistence.ManyToOne;
  *
  * @author Límit Tecnologies
  */
+@Getter
 @Entity
 @DiscriminatorValue("GRAFIC") // Valor específic al discriminador
 public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<EstadisticaGraficWidget> {

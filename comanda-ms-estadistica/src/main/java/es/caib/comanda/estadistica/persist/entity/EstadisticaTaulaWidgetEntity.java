@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity;
 
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaTaulaWidget;
+import lombok.Getter;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -36,6 +37,7 @@ import java.util.List;
  *
  * Autor: Límit Tecnologies
  */
+@Getter
 @Entity
 @DiscriminatorValue("TAULA") // Valor específic al discriminador
 public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<EstadisticaTaulaWidget> {

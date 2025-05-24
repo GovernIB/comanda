@@ -1,6 +1,5 @@
 package es.caib.comanda.estadistica.logic.helper;
 
-import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
@@ -27,7 +26,7 @@ public class MonitorEstadistica {
     private static final String ESTADISTICA_INFO_ERROR = "S'ha produït un error obtenint la informació de l'estructura de les estadístiques";
     private static final String ESTADISTICA_DADES_ERROR = "S'ha produït un error obtenint les dades estadístiques";
 
-    private MonitorServiceClient monitorServiceClient;
+    private EstadisticaClientHelper estadisticaClientHelper;
 
     private Long startInfoTime;
     private Long startDadesTime;
@@ -35,19 +34,16 @@ public class MonitorEstadistica {
     private Monitor monitorDades;
     private boolean finishedInfoAction;
     private boolean finishedDadesAction;
-    private String authorizationHeader;
 
     public MonitorEstadistica(
             Long entornAppId,
             String estadisticaInfoUrl,
             String estadisticaDadesUrl,
-            MonitorServiceClient monitorServiceClient,
-            String authorizationHeader) {
+            EstadisticaClientHelper estadisticaClientHelper) {
         String usuariCodi = getAuthenticatedUserCode();
         this.monitorInfo = createMonitor(entornAppId, estadisticaInfoUrl, ESTADISTICA_INFO_ACCIO, usuariCodi);
         this.monitorDades = createMonitor(entornAppId, estadisticaDadesUrl, ESTADISTICA_DADES_ACCIO, usuariCodi);
-        this.monitorServiceClient = monitorServiceClient;
-        this.authorizationHeader = authorizationHeader;
+        this.estadisticaClientHelper = estadisticaClientHelper;
     }
 
     private Monitor createMonitor(Long entornAppId, String url, String operacio, String codiUsuari) {
@@ -76,7 +72,7 @@ public class MonitorEstadistica {
         monitorInfo.setEstat(EstatEnum.OK);
         monitorInfo.setTempsResposta(System.currentTimeMillis() - this.startInfoTime);
         this.finishedInfoAction = true;
-        saveMonitor(monitorInfo);
+        estadisticaClientHelper.monitorCreate(monitorInfo);
     }
 
     public void endInfoAction(Throwable t) {
@@ -85,14 +81,14 @@ public class MonitorEstadistica {
         monitorInfo.setErrorDescripcio(ESTADISTICA_INFO_ERROR);
         monitorInfo.setExcepcioMessage(ExceptionUtils.getMessage(t));
         monitorInfo.setExcepcioStacktrace(ExceptionUtils.getStackTrace(t));
-        saveMonitor(monitorInfo);
+        estadisticaClientHelper.monitorCreate(monitorInfo);
     }
 
     public void endDadesAction() {
         monitorDades.setEstat(EstatEnum.OK);
         monitorDades.setTempsResposta(System.currentTimeMillis() - this.startDadesTime);
         this.finishedDadesAction = true;
-        saveMonitor(monitorDades);
+        estadisticaClientHelper.monitorCreate(monitorDades);
     }
 
     public void endDadesAction(Throwable t) {
@@ -101,16 +97,9 @@ public class MonitorEstadistica {
         monitorDades.setErrorDescripcio(ESTADISTICA_DADES_ERROR);
         monitorDades.setExcepcioMessage(ExceptionUtils.getMessage(t));
         monitorDades.setExcepcioStacktrace(ExceptionUtils.getStackTrace(t));
-        saveMonitor(monitorDades);
+        estadisticaClientHelper.monitorCreate(monitorDades);
     }
 
-    private void saveMonitor(Monitor monitor) {
-        try {
-            monitorServiceClient.create(monitor, authorizationHeader);
-        } catch (Exception e) {
-            log.error("Error al guardar el monitor: " + monitor, e);
-        }
-    }
 
     /**
      * Obté el codi de l'usuari autenticat o retorna "SCHEDULER" si no hi ha cap usuari autenticat o és anònim

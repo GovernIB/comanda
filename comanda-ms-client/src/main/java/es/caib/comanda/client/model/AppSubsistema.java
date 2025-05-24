@@ -3,6 +3,8 @@ package es.caib.comanda.client.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * Informació d'un subsistema.
  *
@@ -10,7 +12,7 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @NoArgsConstructor
-public class AppSubsistema {
+public class AppSubsistema implements Serializable {
 
 	private Long id;
 	private String codi;

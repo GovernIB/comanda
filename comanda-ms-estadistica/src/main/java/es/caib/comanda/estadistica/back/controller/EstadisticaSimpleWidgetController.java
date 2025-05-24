@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.back.controller;
 
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaSimpleWidget;
-import es.caib.comanda.ms.back.controller.BaseReadonlyResourceController;
+import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Límit Tecnologies
  */
 @RestController("estadisticaSimpleWidgetController")
-@RequestMapping(BaseConfig.API_PATH + "/widgets/simples")
+@RequestMapping(BaseConfig.API_PATH + "/widgetsSimple")
 @Tag(name = "Dimensio", description = "Servei de consulta de widgets simples")
-public class EstadisticaSimpleWidgetController extends BaseReadonlyResourceController<EstadisticaSimpleWidget, Long> {
+public class EstadisticaSimpleWidgetController extends BaseMutableResourceController<EstadisticaSimpleWidget, Long> {
 
 }

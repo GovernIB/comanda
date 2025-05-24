@@ -1,6 +1,5 @@
 package es.caib.comanda.salut.logic.helper;
 
-import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
@@ -25,22 +24,19 @@ public class MonitorSalut {
     private static final String SALUT_DADES_ACCIO = "Obtenir dades de salut de l'aplicació";
     private static final String SALUT_DADES_ERROR = "S'ha produït un error obtenint les dades de salut";
 
-    private MonitorServiceClient monitorServiceClient;
+    private SalutClientHelper salutClientHelper;
 
     private Long startTime;
     private Monitor monitor;
     private boolean finishedAction;
-    private String authorizationHeader;
 
     public MonitorSalut(
             Long entornAppId,
             String salutDadesUrl,
-            MonitorServiceClient monitorServiceClient,
-            String authorizationHeader) {
+            SalutClientHelper salutClientHelper) {
         String usuariCodi = getAuthenticatedUserCode();
         this.monitor = createMonitor(entornAppId, salutDadesUrl, SALUT_DADES_ACCIO, usuariCodi);
-        this.monitorServiceClient = monitorServiceClient;
-        this.authorizationHeader = authorizationHeader;
+        this.salutClientHelper = salutClientHelper;
     }
 
     private Monitor createMonitor(Long entornAppId, String url, String operacio, String codiUsuari) {
@@ -64,7 +60,7 @@ public class MonitorSalut {
         monitor.setEstat(EstatEnum.OK);
         monitor.setTempsResposta(System.currentTimeMillis() - this.startTime);
         this.finishedAction = true;
-        saveMonitor(monitor);
+        salutClientHelper.monitorCreate(monitor);
     }
 
     public void endAction(Throwable t) {
@@ -73,16 +69,9 @@ public class MonitorSalut {
         monitor.setErrorDescripcio(SALUT_DADES_ERROR);
         monitor.setExcepcioMessage(ExceptionUtils.getMessage(t));
         monitor.setExcepcioStacktrace(ExceptionUtils.getStackTrace(t));
-        saveMonitor(monitor);
+        salutClientHelper.monitorCreate(monitor);
     }
 
-    private void saveMonitor(Monitor monitor) {
-        try {
-            monitorServiceClient.create(monitor, authorizationHeader);
-        } catch (Exception e) {
-            log.error("Error al guardar el monitor: " + monitor, e);
-        }
-    }
 
     /**
      * Obté el codi de l'usuari autenticat o retorna "SCHEDULER" si no hi ha cap usuari autenticat o és anònim

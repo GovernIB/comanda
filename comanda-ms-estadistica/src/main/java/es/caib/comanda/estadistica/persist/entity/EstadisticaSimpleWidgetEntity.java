@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity;
 
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaSimpleWidget;
+import lombok.Getter;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
@@ -42,6 +43,7 @@ import javax.persistence.ManyToOne;
  *
  * @author Límit Tecnologies
  */
+@Getter
 @Entity
 @DiscriminatorValue("SIMPLE") // Valor específic al discriminador
 public class EstadisticaSimpleWidgetEntity extends EstadisticaWidgetEntity<EstadisticaSimpleWidget> {

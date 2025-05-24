@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
 import es.caib.comanda.estadistica.logic.intf.model.periode.WidgetBaseResource;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,6 +51,9 @@ import javax.validation.constraints.Size;
 @Getter
 @Setter
 @NoArgsConstructor
+@ResourceConfig(
+        quickFilterFields = { "titol", "descripcio" },
+        descriptionField = "titol")
 public class EstadisticaSimpleWidget extends WidgetBaseResource<Long> {
 
     // Text a mostrar després del valor. Ex 20 "dies"

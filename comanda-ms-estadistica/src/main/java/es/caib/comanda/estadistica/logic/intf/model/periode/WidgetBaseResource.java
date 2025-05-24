@@ -27,6 +27,10 @@ public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID
     @NotNull
     protected Long entornAppId;
 
+    // Dades a emplenar durant la conversió
+    protected String aplicacioNom;
+    protected String entornNom;
+
     // Dimensions per les que filtrar
     @NotEmpty
     protected List<DimensioValor> dimensionsValor;

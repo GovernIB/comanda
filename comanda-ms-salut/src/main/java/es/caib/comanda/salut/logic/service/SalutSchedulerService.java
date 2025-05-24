@@ -1,17 +1,15 @@
 package es.caib.comanda.salut.logic.service;
 
-import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.PeriodicTrigger;
@@ -23,16 +21,14 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class SalutSchedulerService {
 
     private final TaskScheduler taskScheduler;
-    private final EntornAppServiceClient entornAppServiceClient;
+    private final SalutClientHelper salutClientHelper;
     private final SalutInfoHelper salutInfoHelper;
-    private final KeycloakHelper keycloakHelper;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{false}}")
     private Boolean schedulerLeader;
@@ -41,18 +37,17 @@ public class SalutSchedulerService {
 
     public SalutSchedulerService(
             @Qualifier("salutTaskScheduler") TaskScheduler taskScheduler,
-            EntornAppServiceClient entornAppServiceClient,
+            SalutClientHelper salutClientHelper,
             SalutInfoHelper salutInfoHelper,
             KeycloakHelper keycloakHelper) {
         this.taskScheduler = taskScheduler;
-        this.entornAppServiceClient = entornAppServiceClient;
+        this.salutClientHelper = salutClientHelper;
         this.salutInfoHelper = salutInfoHelper;
-        this.keycloakHelper = keycloakHelper;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
-        List<EntornApp> entornAppsActives = entornAppFindByActivaTrue();
+        List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(this::programarTasca);
     }
 
@@ -116,26 +111,12 @@ public class SalutSchedulerService {
     }
 
 
-    private List<EntornApp> entornAppFindByActivaTrue() {
-        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
-                null,
-                "activa:true and app.activa:true",
-                null,
-                null,
-                "UNPAGED",
-                null,
-                keycloakHelper.getAuthorizationHeader());
-        return entornApps.getContent().stream().
-                map(EntityModel::getContent).
-                collect(Collectors.toList());
-    }
-
 
     // Cada hora comprovarem que no hi hagi cap aplicacio-entorn que no s'estigui actualitzant
     @Scheduled(cron = "0 5 */1 * * *")
     public void comprovarRefrescInfo() {
         log.debug("Comprovant refresc periòdic dels entorn-app - Salut");
-        List<EntornApp> entornAppsActives = entornAppFindByActivaTrue();
+        List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(ea -> {
             ScheduledFuture<?> tasca = tasquesActives.get(ea.getId());
             if (tasca == null) {

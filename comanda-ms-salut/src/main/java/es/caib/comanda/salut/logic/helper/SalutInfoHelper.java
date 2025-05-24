@@ -1,8 +1,6 @@
 package es.caib.comanda.salut.logic.helper;
 
-import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.salut.model.DetallSalut;
 import es.caib.comanda.ms.salut.model.EstatSalutEnum;
 import es.caib.comanda.ms.salut.model.IntegracioSalut;
@@ -49,8 +47,7 @@ public class SalutInfoHelper {
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
 
-	private final KeycloakHelper keycloakHelper;
-	private final MonitorServiceClient monitorServiceClient;
+	private final SalutClientHelper salutClientHelper;
 
 	@Transactional
 	public void getSalutInfo(EntornApp entornApp) {
@@ -61,8 +58,7 @@ public class SalutInfoHelper {
 		MonitorSalut monitorSalut = new MonitorSalut(
 				entornApp.getId(),
 				entornApp.getSalutUrl(),
-				monitorServiceClient,
-				keycloakHelper.getAuthorizationHeader());
+				salutClientHelper);
 
 		try {
 			// Obtenir dades de salut de l'aplicació

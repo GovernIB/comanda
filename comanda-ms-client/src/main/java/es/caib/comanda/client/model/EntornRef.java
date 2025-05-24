@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EntornRef {
+public class EntornRef implements Serializable {
 
 	private Long id;
 	@JsonProperty("description")

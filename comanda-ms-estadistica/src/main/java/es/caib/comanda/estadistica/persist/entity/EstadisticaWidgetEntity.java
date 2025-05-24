@@ -9,6 +9,7 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import lombok.Getter;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
@@ -53,6 +54,7 @@ import java.util.List;
  *
  * Autor: Límit Tecnologies
  */
+@Getter
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "widget_type", discriminatorType = DiscriminatorType.STRING) // Identifica el tipus d'entitat
@@ -64,12 +66,12 @@ import java.util.List;
 public abstract  class EstadisticaWidgetEntity<E> extends BaseAuditableEntity<E> {
 
     @Column(name = "titol", length = 64, nullable = false)
-    private String titol;
+    protected String titol;
     @Column(name = "descripcio", length = 1024)
-    private String descripcio;
+    protected String descripcio;
 
     @Column(name = "entorn_app_id", nullable = false)
-    private Long entornAppId;
+    protected Long entornAppId;
 
     @ManyToMany
     @JoinTable(
@@ -77,20 +79,20 @@ public abstract  class EstadisticaWidgetEntity<E> extends BaseAuditableEntity<E>
             joinColumns = @JoinColumn(name = "widget_id"),
             inverseJoinColumns = @JoinColumn(name = "dimensio_valor_id")
     )
-    private List<DimensioValorEntity> dimensionsValor;
+    protected List<DimensioValorEntity> dimensionsValor;
 
     // Periode de temps que es vol mostrar
     // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Column(name = "periode_mode")
     @Enumerated(EnumType.STRING)
-    private PeriodeMode periodeMode;
+    protected PeriodeMode periodeMode;
 
     // Camps per mode PRESET
     @Column(name = "preset_periode")
     @Enumerated(EnumType.STRING)
-    private PresetPeriode presetPeriode;
+    protected PresetPeriode presetPeriode;
     @Column(name = "preset_count")
-    private Integer presetCount;
+    protected Integer presetCount;
 
     //    // --- Si mode = "RELATIVE" (relatiu a una data de referència, normalment avui) ---
     //    "relative_settings": {
@@ -108,15 +110,15 @@ public abstract  class EstadisticaWidgetEntity<E> extends BaseAuditableEntity<E>
     // Camps per mode RELATIVE
     @Column(name = "relatiu_punt_referencia")
     @Enumerated(EnumType.STRING)
-    private PeriodeAnchor relatiuPuntReferencia;
+    protected PeriodeAnchor relatiuPuntReferencia;
     @Column(name = "relatiu_count")
-    private Integer relatiuCount;
+    protected Integer relatiuCount;
     @Column(name = "relatiu_unitat")
     @Enumerated(EnumType.STRING)
-    private PeriodeUnitat relatiueUnitat;
+    protected PeriodeUnitat relatiueUnitat;
     @Column(name = "relatiu_alineacio")
     @Enumerated(EnumType.STRING)
-    private PeriodeAlineacio relatiuAlineacio;
+    protected PeriodeAlineacio relatiuAlineacio;
 
 
     //    --- Si mode = "ABSOLUTE" ---
@@ -137,25 +139,25 @@ public abstract  class EstadisticaWidgetEntity<E> extends BaseAuditableEntity<E>
     // Camps per mode ABSOLUT
     @Column(name = "absolut_tipus")
     @Enumerated(EnumType.STRING)
-    private PeriodeAbsolutTipus absolutTipus;
+    protected PeriodeAbsolutTipus absolutTipus;
     // Si absolutTipus = DATE_RANGE (Rang de dates)
     @Column(name = "absolut_data_inici")
-    private LocalDate absolutDataInici;
+    protected LocalDate absolutDataInici;
     @Column(name = "absolut_data_fi")
-    private LocalDate absolutDataFi;
+    protected LocalDate absolutDataFi;
     // Si absolutTipus = SPECIFIC_PERIOD_OF_YEAR (Periode de temps)
     @Column(name = "absolut_any_referencia")
     @Enumerated(EnumType.STRING)
-    private PeriodeEspecificAny absolutAnyReferencia;
+    protected PeriodeEspecificAny absolutAnyReferencia;
     @Column(name = "absolut_any_valor")
-    private Integer absolutAnyValor;
+    protected Integer absolutAnyValor;
     @Column(name = "absolut_periode_unitat")
     @Enumerated(EnumType.STRING)
-    private PeriodeUnitat absolutPeriodeUnitat;
+    protected PeriodeUnitat absolutPeriodeUnitat;
     @Column(name = "absolut_periode_inici")
-    private Integer absolutPeriodeInici;
+    protected Integer absolutPeriodeInici;
     @Column(name = "absolut_periode_fi")
-    private Integer absolutPeriodeFi;
+    protected Integer absolutPeriodeFi;
 
 
 }

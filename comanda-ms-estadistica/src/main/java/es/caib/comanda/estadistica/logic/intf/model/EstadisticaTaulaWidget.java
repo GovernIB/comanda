@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
 import es.caib.comanda.estadistica.logic.intf.model.periode.WidgetBaseResource;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,6 +51,9 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@ResourceConfig(
+        quickFilterFields = { "titol", "descripcio" },
+        descriptionField = "titol")
 public class EstadisticaTaulaWidget extends WidgetBaseResource<Long> {
 
     // Camps en cas de vist tipus TABLE
