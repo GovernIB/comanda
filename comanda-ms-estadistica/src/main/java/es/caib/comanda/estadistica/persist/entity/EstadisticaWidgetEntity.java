@@ -77,7 +77,7 @@ public abstract  class EstadisticaWidgetEntity<E> extends BaseAuditableEntity<E>
             joinColumns = @JoinColumn(name = "widget_id"),
             inverseJoinColumns = @JoinColumn(name = "dimensio_valor_id")
     )
-    private List<DimensioValorEntity> valorDimensions;
+    private List<DimensioValorEntity> dimensionsValor;
 
     // Periode de temps que es vol mostrar
     // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

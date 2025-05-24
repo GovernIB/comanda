@@ -52,6 +52,15 @@ public class FetController extends BaseReadonlyResourceController<Fet, Long> {
         return ResponseEntity.ok().build();
     }
 
+
+
+
+
+
+
+    // Consultes de TEST
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     //    GET /api/fets/estadistiques/periode/dimensions
     //    ?entornAppId=1
     //            &dataInici=2024-01-01

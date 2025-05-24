@@ -263,6 +263,9 @@ databaseChangeLog:
                 name: temps_agrupacio
                 type: varchar(16 ${varcharUnit})
             - column:
+                name: dimensio_descomposicio_id
+                type: BIGINT
+            - column:
                 name: llegenda_x
                 type: varchar(64 ${varcharUnit})
             - column:
@@ -339,7 +342,7 @@ databaseChangeLog:
                 constraints:
                     nullable: false
             - column:
-                name: tipus
+                name: agregacio
                 type: varchar(16 ${varcharUnit})
             - column:
                 name: titol

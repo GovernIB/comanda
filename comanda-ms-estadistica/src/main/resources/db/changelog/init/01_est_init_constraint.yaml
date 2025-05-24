@@ -59,12 +59,22 @@ databaseChangeLog:
     id: est-init-constraint-10
     author: limit
     changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_widget
+        baseColumnNames: dimensio_descomposicio_id
+        constraintName: view_descomposicio_fk
+        referencedTableName: ${db_prefix}est_dimensio_valor
+        referencedColumnNames: id
+- changeSet:
+    id: est-init-constraint-11
+    author: limit
+    changes:
     - addUniqueConstraint:
         tableName: ${db_prefix}est_widget
         columnNames: titol, entorn_app_id
         constraintName: ${db_prefix}widget_titol_uk
 - changeSet:
-    id: est-init-constraint-11
+    id: est-init-constraint-12
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -74,7 +84,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}widget_dvalor_widget_fk
 - changeSet:
-    id: est-init-constraint-12
+    id: est-init-constraint-13
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -84,7 +94,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}widget_dvalor_dvalor_fk
 - changeSet:
-    id: est-init-constraint-13
+    id: est-init-constraint-14
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -94,7 +104,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}indtab_indicador_fk
 - changeSet:
-    id: est-init-constraint-14
+    id: est-init-constraint-15
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -104,7 +114,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}indtab_widget_fk
 - changeSet:
-    id: est-init-constraint-15
+    id: est-init-constraint-16
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -114,7 +124,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}dboard_item_dboard_fk
 - changeSet:
-    id: est-init-constraint-16
+    id: est-init-constraint-17
     author: limit
     changes:
     - addForeignKeyConstraint:
@@ -124,7 +134,7 @@ databaseChangeLog:
         referencedColumnNames: id
         constraintName: ${db_prefix}dboard_item_view_fk
 - changeSet:
-    id: est-init-constraint-17
+    id: est-init-constraint-18
     author: limit
     changes:
     - addUniqueConstraint:

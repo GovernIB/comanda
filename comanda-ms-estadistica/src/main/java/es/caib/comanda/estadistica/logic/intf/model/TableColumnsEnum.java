@@ -24,6 +24,7 @@ public enum TableColumnsEnum {
     TOTAL,
     PERCENTAGE,
     COUNT,
+    SUM,
     FIRST_SEEN,
     LAST_SEEN,
     AVG_INTERVAL,

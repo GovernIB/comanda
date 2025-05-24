@@ -1,15 +1,13 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
-import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeBaseResource;
+import es.caib.comanda.estadistica.logic.intf.model.periode.WidgetBaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.List;
 
 /**
  * Classe que representa un widget simple d'estadística.
@@ -52,27 +50,13 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EstadisticaSimpleWidget extends PeriodeBaseResource<Long> {
-
-    @NotNull
-    @Size(max = 64)
-    private String titol;
-    @Size(max = 1024)
-    private String descripcio;
-
-    @NotNull
-    @Size(max = 16)
-    private String aplicacioCodi;
-
-    // Dimensions per les que filtrar
-    @NotEmpty
-    private List<DimensioValor> dimensionsValor;
+public class EstadisticaSimpleWidget extends WidgetBaseResource<Long> {
 
     // Text a mostrar després del valor. Ex 20 "dies"
     @Size(max = 64)
     private String unitat;
 
     @NotNull
-    private ResourceReference<Indicador, Long> indicador;
+    private ResourceReference<IndicadorTaula, Long> indicador;
 
 }

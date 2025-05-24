@@ -11,7 +11,7 @@ import java.time.temporal.ChronoField;
 
 public class PeriodeResolverHelper {
 
-    public static PeriodeDates resolvePeriod(PeriodeBaseResource<Long> widget) {
+    public static PeriodeDates resolvePeriod(WidgetBaseResource<Long> widget) {
         switch (widget.getPeriodeMode()) {
             case PRESET:
                 return resolvePresetPeriod(widget.getPresetPeriode(), widget.getPresetCount());
@@ -195,7 +195,7 @@ public class PeriodeResolverHelper {
         }
     }
 
-    private static PeriodeDates resolveAbsolutePeriod(PeriodeBaseResource<Long> widget) {
+    private static PeriodeDates resolveAbsolutePeriod(WidgetBaseResource<Long> widget) {
         switch (widget.getAbsolutTipus()) {
             case DATE_RANGE:
                 return PeriodeDates.builder()

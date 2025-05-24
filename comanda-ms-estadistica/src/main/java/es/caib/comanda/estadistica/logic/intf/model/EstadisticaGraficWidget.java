@@ -1,16 +1,13 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
-import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeBaseResource;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.estadistica.logic.intf.model.periode.WidgetBaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.List;
 
 /**
  * Classe que representa un widget gràfic estadístic dins del sistema.
@@ -35,6 +32,10 @@ import java.util.List;
  * - tipusGrafic: Tipus de gràfic a generar (ex. BAR_CHART, PIE_CHART).
  * - tipusValors: Tipus de valors a mostrar al gràfic (ex. NUMERIC, PERCENTAGE).
  * - tempsAgrupacio: Unitat temporal per agrupar les dades en el gràfic.
+ * - dimensioDescomposicio: Dimensió utilitzada per a descomposar el gràfic simple en un de compost.
+ *          A la gràfica es mostraràn els valors descomposats per la dimensió indicada
+ *          P. ex. si definim un gràfic de línies per expedients creats l'últim més agrupats per dies, si afegim la
+ *          dimensió usuari, la gràfica mostrarà una línia per a cada usuari, amb els expedients creats per l'usuari
  * - llegendaX: Text de la llegenda de l'eix X del gràfic.
  * - llegendaY: Text de la llegenda de l'eix Y del gràfic.
  *
@@ -48,6 +49,7 @@ import java.util.List;
  * - tipusGrafic: Obligatori.
  * - tipusValors: Obligatori.
  * - tempsAgrupacio: Obligatori.
+ * - dimensioDescomposicio: Opcional
  *
  * Ús:
  * Aquesta classe és útil per generar widgets gràfics personalitzats dins d'un sistema d'anàlisi i visualització
@@ -66,24 +68,10 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EstadisticaGraficWidget extends PeriodeBaseResource<Long> {
+public class EstadisticaGraficWidget extends WidgetBaseResource<Long> {
 
     @NotNull
-    @Size(max = 64)
-    private String titol;
-    @Size(max = 1024)
-    private String descripcio;
-
-    @NotNull
-    @Size(max = 16)
-    private String aplicacioCodi;
-
-    // Dimensions per les que filtrar
-    @NotEmpty
-    private List<DimensioValor> dimensionsValor;
-
-    @NotNull
-    private ResourceReference<Indicador, Long> indicador;
+    private ResourceReference<IndicadorTaula, Long> indicador;
 
     // Tipus de vista a generar
     @NotNull
@@ -94,6 +82,8 @@ public class EstadisticaGraficWidget extends PeriodeBaseResource<Long> {
     // En cas de gràfic, quina agrupació de temps utilitzar
     @NotNull
     private PeriodeUnitat tempsAgrupacio;
+
+    private ResourceReference<DimensioValor, Long> dimensioDescomposicio;
 
     private String llegendaX;
     private String llegendaY;

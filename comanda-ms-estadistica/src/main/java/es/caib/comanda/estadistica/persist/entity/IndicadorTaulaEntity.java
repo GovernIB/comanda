@@ -77,11 +77,11 @@ public class IndicadorTaulaEntity extends BaseAuditableEntity<IndicadorTaula> {
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = "indtab_widget_fk"),
             nullable = false)
-    private EstadisticaTaulaWidgetEntity widget;
+    private EstadisticaWidgetEntity widget;
     // first_seen, last_seen, avg_interval, average, etc.
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipus", length = 16)
-    private TableColumnsEnum tipus;
+    @Column(name = "agregacio", length = 16)
+    private TableColumnsEnum agregacio;
     @Column(name = "titol", length = 64)
     private String titol;
 }

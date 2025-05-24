@@ -38,7 +38,7 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = "view_indicador_fk"),
             nullable = false)
-    private IndicadorEntity indicador;
+    private IndicadorTaulaEntity indicador;
 
     // Tipus de vista a generar; numeric, bar_chart, pie_chart, etc.
     @Column(name = "tipus_grafic", length = 16, nullable = false)
@@ -55,6 +55,17 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     @Column(name = "temps_agrupacio", length = 16)
     @Enumerated(EnumType.STRING)
     private PeriodeUnitat tempsAgrupacio;
+
+    // Per crear gràfics compostos, on s'indicarà una dimensió per descomposar.
+    // A la gràfica es mostraràn els valors descomposats per la dimensió indicada
+    // P. ex. si definim un gràfic de línies per expedients creats l'últim més agrupats per dies,
+    // si afegim la dimensió usuari, la gràfica mostrarà una línia amb els expedients creats per a cada usuari
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "dimensio_descomposicio_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = "view_descomposicio_fk"))
+    private DimensioValorEntity dimensioDescomposicio;
 
     @Column(name = "llegenda_x", length = 64, nullable = false)
     private String llegendaX;

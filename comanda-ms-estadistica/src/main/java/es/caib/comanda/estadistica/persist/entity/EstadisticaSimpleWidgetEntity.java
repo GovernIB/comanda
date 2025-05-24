@@ -56,6 +56,6 @@ public class EstadisticaSimpleWidgetEntity extends EstadisticaWidgetEntity<Estad
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = "view_indicador_fk"),
             nullable = false)
-    private IndicadorEntity indicador;
+    private IndicadorTaulaEntity indicador;
 
 }
