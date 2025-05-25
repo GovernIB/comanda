@@ -42,7 +42,18 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     color: '#000',
+                    minHeight: '48px !important',
+                    '& input': {
+                        height: '1em',
+                    },
+                    '& .MuiSelect-select': {   // Específicament pels selects
+                        height: '1em',
+                        minHeight: '1em',
+                        padding: '5.5px 14px',
+                    },
+
                 },
+
             },
         },
         MuiAvatar: {

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { BarChart } from '@mui/x-charts/BarChart';
-import { useTheme } from '@mui/material/styles';
+import {BarChart} from '@mui/x-charts/BarChart';
+import {useTheme} from '@mui/material/styles';
 import {
     generateDataGroups,
     isDataInGroup,
@@ -39,7 +39,7 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         baseDataGroups: string[],
         estats: Record<string, any[]>,
         agrupacio: string,
-        percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "mantenancePercent" | "downPercent"
+        percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "maintenancePercent" | "downPercent"
     ): number[] => {
         return baseDataGroups.map((group) => {
             let valueSum = 0.0;
@@ -52,6 +52,9 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
                 valueCount += estatForGroup != null ? 1 : 0;
             });
 
+            if (percentKey === "degradedPercent" || percentKey === "maintenancePercent" || percentKey === "downPercent") {
+                valueSum = -valueSum;
+            }
             return valueCount !== 0 ? valueSum / valueCount : 0.0;
         });
     };
@@ -59,7 +62,7 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const seriesUp = calculateSeries(baseDataGroups, estats, agrupacio, "upPercent");
     const seriesWarn = calculateSeries(baseDataGroups, estats, agrupacio, "warnPercent");
     const seriesDegraded = calculateSeries(baseDataGroups, estats, agrupacio, "degradedPercent");
-    const seriesMantenance = calculateSeries(baseDataGroups, estats, agrupacio, "mantenancePercent");
+    const seriesMaintenance = calculateSeries(baseDataGroups, estats, agrupacio, "maintenancePercent");
     const seriesDown = calculateSeries(baseDataGroups, estats, agrupacio, "downPercent");
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
@@ -79,19 +82,22 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         stack: 'total',
         color: theme.palette.warning.dark
     }, {
-        data: seriesMantenance,
-        label: 'down',
+        data: seriesMaintenance,
+        label: 'maintenance',
         stack: 'total',
         color: theme.palette.primary.main
     }, {
         data: seriesDown,
-        label: 'mantenance',
+        label: 'down',
         stack: 'total',
         color: theme.palette.error.main
     }];
+
     return estats != null && <BarChart
         xAxis={[{ scaleType: 'band', data: dataGroups }]}
-        series={series} />;
+        series={series}
+        borderRadius={6}
+    />;
 }
 
 export default UpdownBarChart;

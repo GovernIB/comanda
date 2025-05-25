@@ -28,7 +28,7 @@ public class SalutInformeEstatItem implements Serializable {
 	@JsonIgnore
 	private long downCount;
 	@JsonIgnore
-	private long mantenanceCount;
+	private long maintenanceCount;
 	@JsonIgnore
 	private long unknownCount;
 
@@ -38,7 +38,7 @@ public class SalutInformeEstatItem implements Serializable {
 			long warnCount,
 			long degradedCount,
 			long downCount,
-			long mantenanceCount,
+			long maintenanceCount,
 			long unknownCount) {
 		this.data = dataAgrupacio.toInstant()
 				.atZone(ZoneId.systemDefault())
@@ -47,17 +47,17 @@ public class SalutInformeEstatItem implements Serializable {
 		this.warnCount = warnCount;
 		this.degradedCount = degradedCount;
 		this.downCount = downCount;
-		this.mantenanceCount = mantenanceCount;
+		this.maintenanceCount = maintenanceCount;
 		this.unknownCount = unknownCount;
 	}
 
 	@JsonIgnore
 	public long getNotUpCount() {
-		return downCount + mantenanceCount + unknownCount;
+		return downCount + maintenanceCount + unknownCount;
 	}
 
 	public long getTotalCount() {
-		return upCount + warnCount + degradedCount + downCount + mantenanceCount + unknownCount;
+		return upCount + warnCount + degradedCount + downCount + maintenanceCount + unknownCount;
 	}
 
 	public boolean isAlwaysUp() {
@@ -76,19 +76,19 @@ public class SalutInformeEstatItem implements Serializable {
 		return Math.round(((double) warnCount / getTotalCount()) * 10000.0) / 100.0;
 	}
 
-	public double getDegradedPercentatge() {
+	public double getDegradedPercent() {
 		return Math.round(((double) degradedCount / getTotalCount()) * 10000.0) / 100.0;
 	}
 
-	public double getDownPercentatge() {
+	public double getDownPercent() {
 		return Math.round(((double) downCount / getTotalCount()) * 10000.0) / 100.0;
 	}
 
-	public double getMantenancePercentatge() {
-		return Math.round(((double) mantenanceCount / getTotalCount()) * 10000.0) / 100.0;
+	public double getMaintenancePercent() {
+		return Math.round(((double) maintenanceCount / getTotalCount()) * 10000.0) / 100.0;
 	}
 
-	public double getUnknownPercentatge() {
+	public double getUnknownPercent() {
 		return Math.round(((double) unknownCount / getTotalCount()) * 10000.0) / 100.0;
 	}
 

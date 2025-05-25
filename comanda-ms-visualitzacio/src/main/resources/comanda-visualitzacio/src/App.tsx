@@ -76,6 +76,7 @@ export const App: React.FC = () => {
             menuEntries={menuEntries}
             appMenuEntries={appMenuEntries}
             appbarBackgroundColor="#fff"
+            appbarStyle={{ cssText: 'min-height: 64px !important; background-color: #fff !important;' }}
             // appbarBackgroundImg={headerBackground}
         >
             <AppRoutes />

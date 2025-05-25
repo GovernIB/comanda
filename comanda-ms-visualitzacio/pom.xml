@@ -42,6 +42,25 @@
 				</resources>
 				<plugins>
 					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>generate-resources</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<echo file="${frontend.resources.path}/public/build-info.json">
+											{ "buildTimestamp": "${maven.build.timestamp}", "scmRevision": "${buildNumber}", "comandaVersion": "${project.version}" }
+										</echo>
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
 						<groupId>com.github.eirslett</groupId>
 						<artifactId>frontend-maven-plugin</artifactId>
 						<version>1.15.1</version>

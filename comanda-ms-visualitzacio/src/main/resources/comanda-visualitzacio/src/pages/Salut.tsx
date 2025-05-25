@@ -2,11 +2,6 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
@@ -106,9 +101,10 @@ const UpdownGaugeChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
     return (
         <Gauge
             value={upPercent}
+            innerRadius='75%'
             sx={() => ({
                 [`& .${gaugeClasses.valueText}`]: {
-                    fontSize: 30,
+                    fontSize: 24,
                     transform: 'translate(0px, 0px)',
                 },
                 [`& .${gaugeClasses.valueArc}`]: {
@@ -365,7 +361,8 @@ const Salut: React.FC = () => {
                         {/* TODO Sense un height, el UpdownGaugeChart podia creixer infinitament cap avall. */}
                         <Box
                             sx={{
-                                height: 220,
+                                mt: 2,
+                                height: 160,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',

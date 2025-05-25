@@ -14,12 +14,14 @@ import 'dayjs/locale/es';
 import HeaderLanguageSelector from "./HeaderLanguageSelector";
 import Button from '@mui/material/Button';
 import AppMenu from "./AppMenu";
+import drassana from '../assets/drassana.png';
 
 import {
     MuiBaseApp,
     MenuEntry,
     useBaseAppContext,
 } from 'reactlib';
+import Footer from "./Footer.tsx";
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -103,8 +105,18 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
 // Menú general
 const generateAppMenu = (menuEntries: MenuEntry[] | undefined) => {
     return menuEntries?.length
-        ? [<AppMenu menuEntries={menuEntries} />]
+        ? [<AppMenu key="app_menu" menuEntries={menuEntries} />]
         : [];
+}
+
+const generateFooter = () => {
+    return <Footer
+        title="COMANDA"
+        backgroundColor="#5F5D5D"
+        logos={[drassana]}
+        style={{position: 'fixed', height: '36px', bottom: 0, width: '100%'}}
+        // style={{display: 'flex', flexDirection: 'row', flexShrink: 0, position: 'sticky', height: '36px', bottom: 0, width: '100%'}}
+    />
 }
 
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
@@ -154,6 +166,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ...generateLanguageItems(availableLanguages), // Idioma
             ...generateAppMenu(menuEntries) // Menú lateral
         ]}
+        footer={generateFooter()}
         persistentSession
         persistentLanguage
         i18nUseTranslation={useTranslation}
