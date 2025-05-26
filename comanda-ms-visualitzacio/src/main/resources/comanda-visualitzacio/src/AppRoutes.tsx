@@ -6,6 +6,7 @@ import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
+import EstadisticaWidget from './pages/EstadisticaWidget';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -24,11 +25,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="monitor">
                 <Route index element={<Monitors />} />
-                {/* <Route path=":id" element={<MonitorForm />} />
-                <Route path="form">
-                    <Route index element={<MonitorForm />} />
-                    <Route path=":id" element={<MonitorForm />} />
-                </Route> */}
+            </Route>
+            <Route path="estadisticaWidget">
+                <Route index element={<EstadisticaWidget />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
