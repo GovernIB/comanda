@@ -1,13 +1,10 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid2';
 import {
     GridPage,
-    FormPage,
     MuiGrid,
     MuiFilter,
-    MuiForm,
     FormField,
     dateFormatLocale,
     useMuiContentDialog,
@@ -131,33 +128,6 @@ const MonitorDetails: React.FC<any> = (props) => {
     return <ContentDetail title={""} elements={elementsDetail} />;
 }
 
-export const MonitorForm: React.FC = () => {
-    const { t } = useTranslation();
-    const { id } = useParams();
-    return <FormPage>
-        <MuiForm
-            id={id}
-            title={id ? t('page.monitors.update') : t('page.monitors.create')}
-            resourceName="monitor"
-            goBackLink="/monitor"
-            createLink="form/{{id}}">
-            <Grid container spacing={2}>
-                <Grid size={4}><FormField name="data" /></Grid>
-                <Grid size={4}><FormField name="tipus" /></Grid>
-                <Grid size={4}><FormField name="modul" /></Grid>
-                <Grid size={12}><FormField name="operacio" type="textarea" /></Grid>
-                <Grid size={12}><FormField name="url" /></Grid>
-                <Grid size={4}><FormField name="tempsResposta" /></Grid>
-                <Grid size={4}><FormField name="estat" /></Grid>
-                <Grid size={4}><FormField name="codiUsuari" /></Grid>
-                <Grid size={6}><FormField name="errorDescripcio" type="textarea" /></Grid>
-                <Grid size={6}><FormField name="excepcioMessage" type="textarea" /></Grid>
-                <Grid size={6}><FormField name="excepcioStacktrace" type="textarea" /></Grid>
-            </Grid>
-        </MuiForm>
-    </FormPage>;
-}
-
 const MonitorFilter: React.FC<any> = () => {
     const { t } = useTranslation();
     const filterRef = useFilterApiRef();
@@ -180,7 +150,7 @@ const MonitorFilter: React.FC<any> = () => {
         apiRef={filterRef}
         buttonControlled
         commonFieldComponentProps={{ size: 'small' }}
-        // componentProps={{ sx: { my: 2 } }}
+        componentProps={{ sx: { my: 2 } }}
         >
         <Grid container columnSpacing={1} rowSpacing={1}>
             <Grid size={{xs: 12, sm: 4}}><FormField name="codi" /></Grid>
@@ -235,9 +205,6 @@ const Monitors: React.FC = () => {
             readOnly
             onRowClick={(params: any) => showDetail(params.row)}
             staticFilter={`modul:'${selectedModule}'`}
-        // rowDetailLink="/monitor/{{id}}"
-        // toolbarCreateLink="form"
-        // rowUpdateLink="form/{{id}}"
         />
         {detailDialogComponent}
     </GridPage>;

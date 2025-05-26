@@ -15,7 +15,8 @@ public class HateoasMessageResolverConfig extends BaseHateoasMessageResolverConf
 	protected String[] getBasenames() {
 		return new String[] {
 			"comanda.configuracio-rest-messages",
-			"comanda.monitor-rest-messages"
+			"comanda.estadistica-rest-messages",
+			"comanda.monitor-rest-messages",
 		};
 	}
 
