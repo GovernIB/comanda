@@ -193,12 +193,29 @@ const AppInfo: React.FC<any> = (props) => {
 }
 
 const LatenciaBarChart: React.FC<any> = (props) => {
-    const {
-        dataInici,
-        agrupacio,
-        latencies
-    } = props;
+    const { dataInici, agrupacio, latencies } = props;
     const { t } = useTranslation();
+
+    if (latencies.length === 0)
+        return (
+            <Card variant="outlined" sx={{ height: '300px' }}>
+                <CardContent sx={{ height: '100%' }}>
+                    <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>
+                    <Typography
+                        sx={{
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        No hi ha dades per mostrar
+                    </Typography>
+                </CardContent>
+            </Card>
+        );
+
     const latenciesMaxData = latencies[latencies.length - 1].data;
     const baseDataGroups = generateDataGroups(dataInici, latenciesMaxData, agrupacio);
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
