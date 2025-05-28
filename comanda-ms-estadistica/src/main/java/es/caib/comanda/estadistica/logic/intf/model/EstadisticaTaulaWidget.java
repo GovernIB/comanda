@@ -64,14 +64,6 @@ public class EstadisticaTaulaWidget extends EstadisticaWidget { // WidgetBaseRes
     private String titolAgrupament;
 
     // Atributs per a la configuració visual de la taula
-
-    // Configuració general de la taula
-    private Boolean mostrarCapcalera;     // Indica si s'ha de mostrar la capçalera de la taula
-    private Boolean mostrarBordes;        // Indica si s'han de mostrar els bordes de la taula
-    private Boolean mostrarAlternancia;   // Indica si s'han d'alternar els colors de les files
-    private String colorAlternancia;      // Color per a les files alternes
-
-    // Configuració de columnes
     private AtributsVisualsTaula atributsVisuals;
 
 }
