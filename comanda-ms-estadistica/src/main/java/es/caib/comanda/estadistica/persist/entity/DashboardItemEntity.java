@@ -34,15 +34,6 @@ import javax.persistence.Table;
 @NoArgsConstructor
 public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
 
-    @Column(name = "pos_x", nullable = false)
-    private int posX;
-    @Column(name = "pos_y", nullable = false)
-    private int posY;
-    @Column(name = "width", nullable = false)
-    private int width;
-    @Column(name = "height", nullable = false)
-    private int height;
-
     @ManyToOne
     @JoinColumn(
             name = "dashboard_id",
@@ -53,10 +44,26 @@ public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
 
     @ManyToOne
     @JoinColumn(
-            name = "view_id",
+            name = "widget_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dboard_item_view_fk"),
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dboard_item_widget_fk"),
             nullable = false)
-    private EstadisticaWidgetEntity view;
+    private EstadisticaWidgetEntity widget;
+
+    @Column(name = "entorn_id", nullable = false)
+    private Long entornId;
+
+    @Column(name = "pos_x", nullable = false)
+    private int posX;
+    @Column(name = "pos_y", nullable = false)
+    private int posY;
+    @Column(name = "width", nullable = false)
+    private int width;
+    @Column(name = "height", nullable = false)
+    private int height;
+
+    // Estils del widget sobreescrits al dashboard (opcionals)
+    @Column(name = "atributs_visuals", length = 4000)
+    protected String atributsVisuals;
 
 }

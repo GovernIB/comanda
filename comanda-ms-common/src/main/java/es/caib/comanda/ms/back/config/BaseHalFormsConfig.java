@@ -259,6 +259,18 @@ public abstract class BaseHalFormsConfig {
 		} else {
 			enumConstants = field.getType().getEnumConstants();
 		}
+
+		// Comprova i obté les constants només si és de tipus Enum
+		if (field.getType().isEnum()) {
+			enumConstants = field.getType().getEnumConstants();
+		} else if (field.getType().isArray() && field.getType().getComponentType().isEnum()) {
+			enumConstants = field.getType().getComponentType().getEnumConstants();
+		} else {
+			// Llença una excepció o retorna un valor per defecte
+			log.warn("El camp no és un tipus enum: {}", field.getName());
+			return new FieldOption[0];
+		}
+
 		return Arrays.stream(enumConstants).
 				map(e -> new FieldOption(
 						e.toString(),

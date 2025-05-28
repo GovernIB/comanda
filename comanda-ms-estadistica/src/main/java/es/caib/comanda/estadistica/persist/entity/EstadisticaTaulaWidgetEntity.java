@@ -54,4 +54,5 @@ public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<Estadi
     private DimensioEntity dimensioAgrupacio;
     @Column(name = "agrupament_dimensio_titol", length = 64)
     private String titolAgrupament;
+
 }

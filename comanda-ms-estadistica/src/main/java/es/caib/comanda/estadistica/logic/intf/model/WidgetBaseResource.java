@@ -1,6 +1,12 @@
-package es.caib.comanda.estadistica.logic.intf.model.periode;
+package es.caib.comanda.estadistica.logic.intf.model;
 
-import es.caib.comanda.estadistica.logic.intf.model.DimensioValor;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAbsolutTipus;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAlineacio;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAnchor;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeEspecificAny;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,11 +31,10 @@ public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID
     protected String descripcio;
 
     @NotNull
-    protected Long entornAppId;
+    protected Long appId;
 
     // Dades a emplenar durant la conversió
     protected String aplicacioNom;
-    protected String entornNom;
 
     // Dimensions per les que filtrar
     @NotEmpty
@@ -59,4 +64,24 @@ public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID
     protected PeriodeUnitat absolutPeriodeUnitat;
     protected Integer absolutPeriodeInici;
     protected Integer absolutPeriodeFi;
+
+    public Periode getPeriode() {
+        return Periode.builder()
+                .periodeMode(this.periodeMode)
+                .presetPeriode(this.presetPeriode)
+                .presetCount(this.presetCount)
+                .relatiuPuntReferencia(this.relatiuPuntReferencia)
+                .relatiuCount(this.relatiuCount)
+                .relatiueUnitat(this.relatiueUnitat)
+                .relatiuAlineacio(this.relatiuAlineacio)
+                .absolutTipus(this.absolutTipus)
+                .absolutDataInici(this.absolutDataInici)
+                .absolutDataFi(this.absolutDataFi)
+                .absolutAnyReferencia(this.absolutAnyReferencia)
+                .absolutAnyValor(this.absolutAnyValor)
+                .absolutPeriodeUnitat(this.absolutPeriodeUnitat)
+                .absolutPeriodeInici(this.absolutPeriodeInici)
+                .absolutPeriodeFi(this.absolutPeriodeFi)
+                .build();
+    }
 }

@@ -1,7 +1,13 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 
@@ -24,7 +30,26 @@ import javax.validation.constraints.NotNull;
  *
  * @author Límit Tecnologies
  */
+@Getter
+@Setter
+@NoArgsConstructor
+@ResourceConfig(
+//        descriptionField = "titol",
+        artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT),
+        }
+)
 public class DashboardItem extends BaseResource<Long> {
+
+    public final static String WIDGET_REPORT = "widget_data";
+
+
+    @NotNull
+    private ResourceReference<Dashboard, Long> dashboard;
+    @NotNull
+    private ResourceReference<EstadisticaSimpleWidget, Long> widget;
+    @NotNull
+    private Long entornId;
 
     @NotNull
     private int posX;
@@ -35,9 +60,6 @@ public class DashboardItem extends BaseResource<Long> {
     @NotNull
     private int height;
 
-    @NotNull
-    private ResourceReference<Dashboard, Long> dashboard;
-    @NotNull
-    private ResourceReference<EstadisticaSimpleWidget, Long> view;
+    private AtributsVisuals atributsVisuals;
 
 }

@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.entity;
 
+import es.caib.comanda.estadistica.logic.intf.model.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAbsolutTipus;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAlineacio;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAnchor;
@@ -10,6 +11,7 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
@@ -55,23 +57,24 @@ import java.util.List;
  * Autor: Límit Tecnologies
  */
 @Getter
+@Setter
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "widget_type", discriminatorType = DiscriminatorType.STRING) // Identifica el tipus d'entitat
 @Table(
         name = BaseConfig.DB_PREFIX + "est_widget",
         uniqueConstraints = {
-                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "widget_titol_uk", columnNames = { "titol", "entorn_app_id" })
+                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "widget_titol_uk", columnNames = { "titol", "APP_ID"})
         })
-public abstract  class EstadisticaWidgetEntity<E> extends BaseAuditableEntity<E> {
+public abstract class EstadisticaWidgetEntity<R> extends BaseAuditableEntity<R> {
 
     @Column(name = "titol", length = 64, nullable = false)
     protected String titol;
     @Column(name = "descripcio", length = 1024)
     protected String descripcio;
 
-    @Column(name = "entorn_app_id", nullable = false)
-    protected Long entornAppId;
+    @Column(name = "app_id", nullable = false)
+    protected Long appId;
 
     @ManyToMany
     @JoinTable(
@@ -159,5 +162,28 @@ public abstract  class EstadisticaWidgetEntity<E> extends BaseAuditableEntity<E>
     @Column(name = "absolut_periode_fi")
     protected Integer absolutPeriodeFi;
 
+    // Atributs visuals en format JSON
+    @Column(name = "atributs_visuals", length = 4000)
+    protected String atributsVisuals;
+
+    public Periode getPeriode() {
+        return Periode.builder()
+                .periodeMode(this.periodeMode)
+                .presetPeriode(this.presetPeriode)
+                .presetCount(this.presetCount)
+                .relatiuPuntReferencia(this.relatiuPuntReferencia)
+                .relatiuCount(this.relatiuCount)
+                .relatiueUnitat(this.relatiueUnitat)
+                .relatiuAlineacio(this.relatiuAlineacio)
+                .absolutTipus(this.absolutTipus)
+                .absolutDataInici(this.absolutDataInici)
+                .absolutDataFi(this.absolutDataFi)
+                .absolutAnyReferencia(this.absolutAnyReferencia)
+                .absolutAnyValor(this.absolutAnyValor)
+                .absolutPeriodeUnitat(this.absolutPeriodeUnitat)
+                .absolutPeriodeInici(this.absolutPeriodeInici)
+                .absolutPeriodeFi(this.absolutPeriodeFi)
+                .build();
+    }
 
 }

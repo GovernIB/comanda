@@ -1,7 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
-import es.caib.comanda.estadistica.logic.intf.model.periode.WidgetBaseResource;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
@@ -71,8 +70,9 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @ResourceConfig(
         quickFilterFields = { "titol", "descripcio" },
-        descriptionField = "titol")
-public class EstadisticaGraficWidget extends WidgetBaseResource<Long> {
+        descriptionField = "titol"
+)
+public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
 
     @NotNull
     private ResourceReference<IndicadorTaula, Long> indicador;
@@ -87,9 +87,11 @@ public class EstadisticaGraficWidget extends WidgetBaseResource<Long> {
     @NotNull
     private PeriodeUnitat tempsAgrupacio;
 
-    private ResourceReference<DimensioValor, Long> dimensioDescomposicio;
+    private ResourceReference<Dimensio, Long> descomposicioDimensio;
 
     private String llegendaX;
     private String llegendaY;
 
+    // Atributs per a la configuració visual del gràfic
+    private AtributsVisualsGrafic atributsVisuals;
 }

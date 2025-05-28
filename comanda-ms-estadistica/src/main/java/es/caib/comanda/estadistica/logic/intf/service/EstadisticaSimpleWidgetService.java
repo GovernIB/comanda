@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaSimpleWidget;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**
  * Servei per gestionar widgets simples d'estadístiques.
@@ -22,5 +22,5 @@ import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
  * Propietats i dependències:
  * - Estén l'interfície ReadonlyResourceService, proporcionant així mecanismes generals per a la manipulació en mode
  **/
-public interface EstadisticaSimpleWidgetService extends ReadonlyResourceService<EstadisticaSimpleWidget, Long> {
+public interface EstadisticaSimpleWidgetService extends MutableResourceService<EstadisticaSimpleWidget, Long> {
 }

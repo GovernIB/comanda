@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,9 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@ResourceConfig(
+        quickFilterFields = { "nom", "descripcio" },
+        descriptionField = "nom")
 public class Dimensio extends BaseResource<Long> {
 
     @NotNull

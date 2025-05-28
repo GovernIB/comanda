@@ -4,7 +4,7 @@ import es.caib.comanda.estadistica.logic.intf.model.EstadisticaTaulaWidget;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**
  * Defineix els serveis associats a la gestió dels widgets estadístics de tipus taula.
@@ -29,14 +29,11 @@ import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
  * Pot ser implementada per un servei concret que utilitzi la persistència via una base de dades
  * o altra font de dades per proporcionar informació sobre widgets.
  *
- * @param <EstadisticaTaulaWidget> la classe del recurs que defineix el widget d'estadística tipus taula.
- * @param <Long> el tipus de la clau primària del recurs.
- *
  * @throws ResourceNotFoundException si l'element sol·licitat no existeix o no es troba disponible.
  * @throws ArtifactNotFoundException si l'artefacte associat no és accessible.
  * @throws ReportGenerationException si es produeix un error durant la generació d'algun informe.
  *
  * @author Límit Tecnologies
  */
-public interface EstadisticaTaulaWidgetService extends ReadonlyResourceService<EstadisticaTaulaWidget, Long> {
+public interface EstadisticaTaulaWidgetService extends MutableResourceService<EstadisticaTaulaWidget, Long> {
 }

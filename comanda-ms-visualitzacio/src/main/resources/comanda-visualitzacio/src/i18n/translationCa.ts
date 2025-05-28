@@ -6,6 +6,8 @@ const translationCa = {
         monitor: "Monitor",
         app: "Aplicacions",
         entorn: "Entorns",
+        widget: "Widgets estadístics",
+        dashboard: "Taulers de control",
     },
     page: {
         salut: {
@@ -103,6 +105,30 @@ const translationCa = {
             modulEnum: {
                 salut: "Salut",
                 estadistica: "Estadística",
+            },
+        },
+        widget: {
+            title: "Widgets estadístics",
+            simple: {
+                tab: {
+                    title: "Simples",
+                },
+                title: "Widgets estadístics simples",
+                resourceTitle: "widget simple",
+            },
+            grafic: {
+                tab: {
+                    title: "Gràfics",
+                },
+                title: "Widgets estadístics gràfics",
+                resourceTitle: "widget gràfic",
+            },
+            taula: {
+                tab: {
+                    title: "Taula",
+                },
+                title: "Widgets estadístics tipus taula",
+                resourceTitle: "widget tipus taula",
             },
         },
         notFound: "No trobat",

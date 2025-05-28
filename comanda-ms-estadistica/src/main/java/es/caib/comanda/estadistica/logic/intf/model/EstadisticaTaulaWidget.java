@@ -1,6 +1,5 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
-import es.caib.comanda.estadistica.logic.intf.model.periode.WidgetBaseResource;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
@@ -53,14 +52,26 @@ import java.util.List;
 @NoArgsConstructor
 @ResourceConfig(
         quickFilterFields = { "titol", "descripcio" },
-        descriptionField = "titol")
-public class EstadisticaTaulaWidget extends WidgetBaseResource<Long> {
+        descriptionField = "titol"
+)
+public class EstadisticaTaulaWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
 
     // Camps en cas de vist tipus TABLE
-    private List<TableColumnsEnum> columnes;
+    private List<IndicadorTaula> columnes;
 
     @NotNull
     private ResourceReference<Indicador, Long> dimensioAgrupacio;
     private String titolAgrupament;
+
+    // Atributs per a la configuració visual de la taula
+
+    // Configuració general de la taula
+    private Boolean mostrarCapcalera;     // Indica si s'ha de mostrar la capçalera de la taula
+    private Boolean mostrarBordes;        // Indica si s'han de mostrar els bordes de la taula
+    private Boolean mostrarAlternancia;   // Indica si s'han d'alternar els colors de les files
+    private String colorAlternancia;      // Color per a les files alternes
+
+    // Configuració de columnes
+    private AtributsVisualsTaula atributsVisuals;
 
 }

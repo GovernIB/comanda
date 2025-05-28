@@ -1,5 +1,8 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+
 import java.util.List;
 import java.util.Map;
 
@@ -46,4 +49,17 @@ public interface FetRepositoryDialect {
      */
     String getFindByEntornAppIdAndTempsDataBetweenAndDimensionQuery(Map<String, List<String>> dimensionsFiltre);
 
+    /**
+     * Genera una consulta SQL per obtenir un valor agregat d'un indicador específic basat en l'entornAppId, 
+     * un rang de dates específic, valors dimensionals i un tipus d'agregació.
+     * Aquesta consulta aplica l'agregació directament a la base de dades, optimitzant el rendiment.
+     *
+     * @param dimensionsFiltre Un mapa on cada clau representa el codi d'una dimensió i el valor és una llista de valors
+     *                         a filtrar. Si el mapa és null o buit, es generen només les condicions per entornAppId i rang
+     *                         de dates.
+     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
+     * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
+     * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
+     */
+    String getAggregatedValueQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
 }

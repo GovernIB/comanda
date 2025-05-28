@@ -6,6 +6,8 @@ const translationEs = {
         app: "Aplicaciones",
         entorn: "Entornos",
         monitor: "Monitor",
+        widget: "Widgets estadísticos",
+        dashboard: "Cuadros de control",
     },
     page: {
         salut: {
@@ -104,6 +106,30 @@ const translationEs = {
                 salut: "Health",
                 estadistica: "Statistics",
             },
+        },
+        widget: {
+            title: "Widgets estadísticos",
+            simple: {
+                tab: {
+                    title: "Simples",
+                },
+                title: "Widgets estadísticos simples",
+                resourceTitle: "widget simple",
+            },
+            grafic: {
+                tab: {
+                    title: "Gráficos",
+                },
+                title: "Widgets estadísticos gráficos",
+                resourceTitle: "widget gráfico",
+            },
+            taula: {
+                tab: {
+                    title: "Tabla",
+                },
+                title: "Widgets estadísticos tipo tabla",
+                resourceTitle: "widget tipo tabla",
+            }
         },
         notFound: "No encontrado",
     },

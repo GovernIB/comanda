@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaGraficWidget;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**
  * Interface per a la gestió de recursos del tipus EstadisticaGraficWidget.
@@ -28,5 +28,5 @@ import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
  * @param <ID> Tipus de la clau primària (Long) associada al recurs.
  * @author Límit Tecnologies
  */
-public interface EstadisticaGraficWidgetService extends ReadonlyResourceService<EstadisticaGraficWidget, Long> {
+public interface EstadisticaGraficWidgetService extends MutableResourceService<EstadisticaGraficWidget, Long> {
 }

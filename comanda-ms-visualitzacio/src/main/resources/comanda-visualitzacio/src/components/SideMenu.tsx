@@ -19,7 +19,7 @@ import { useBaseAppContext } from '../../lib/components/BaseAppContext';
 import { useSmallScreen, useSmallHeader } from '../../lib/util/useSmallScreen';
 import logo from '../assets/goib_escut_logo.png';
 import Typography from "@mui/material/Typography";
-import SideWrapper from "./SideWrapper.tsx";
+import SideWrapper from "./SideWrapper";
 
 
 type ListMenuContentProps = MenuProps & {

@@ -1,7 +1,9 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
+import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
@@ -23,6 +25,22 @@ public class EstadisticaClientHelper {
     private final KeycloakHelper keycloakHelper;
     private final MonitorServiceClient monitorServiceClient;
     private final EntornAppServiceClient entornAppServiceClient;
+    private final AppServiceClient appServiceClient;
+
+    // Client App
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Cacheable(value = "appCache", key = "#appId")
+    public App appFindById(Long appId) {
+        EntityModel<App> app = appServiceClient.getOne(
+                appId,
+                null,
+                keycloakHelper.getAuthorizationHeader());
+        if (app != null) {
+            return app.getContent();
+        }
+        return null;
+    }
 
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

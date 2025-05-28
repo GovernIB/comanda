@@ -48,16 +48,20 @@ import javax.persistence.ManyToOne;
 @DiscriminatorValue("SIMPLE") // Valor específic al discriminador
 public class EstadisticaSimpleWidgetEntity extends EstadisticaWidgetEntity<EstadisticaSimpleWidget> {
 
-    // Text a mostrar després del valor. Ex 20 "dies"
-    @Column(name = "unitat", length = 64)
-    private String unitat;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "indicador_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = "view_indicador_fk"),
             nullable = false)
-    private IndicadorTaulaEntity indicador;
+    private IndicadorTaulaEntity indicadorInfo;
+
+    // Text a mostrar després del valor. Ex 20 "dies"
+    @Column(name = "unitat", length = 64)
+    private String unitat;
+
+    // Mostrar la diferència percentual amb el període anterior (opcional)
+    @Column(name = "comparar_periode_anterior")
+    private boolean compararPeriodeAnterior;
 
 }

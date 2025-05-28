@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.persist.entity;
 
 import es.caib.comanda.estadistica.logic.intf.model.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.model.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
@@ -58,7 +59,7 @@ import javax.persistence.Table;
  * @author Límit Tecnologies
  */
 @Entity
-@Table(name = BaseConfig.DB_PREFIX + "indicador_table")
+@Table(name = BaseConfig.DB_PREFIX + "est_indicador_table")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -79,9 +80,12 @@ public class IndicadorTaulaEntity extends BaseAuditableEntity<IndicadorTaula> {
             nullable = false)
     private EstadisticaWidgetEntity widget;
     // first_seen, last_seen, avg_interval, average, etc.
-    @Enumerated(EnumType.STRING)
     @Column(name = "agregacio", length = 16)
+    @Enumerated(EnumType.STRING)
     private TableColumnsEnum agregacio;
+    @Column(name = "unitat_agregacio", length = 16)
+    @Enumerated(EnumType.STRING)
+    private PeriodeUnitat unitatAgregacio;
     @Column(name = "titol", length = 64)
     private String titol;
 }

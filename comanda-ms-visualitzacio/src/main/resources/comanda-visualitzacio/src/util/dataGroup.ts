@@ -1,9 +1,32 @@
-import dayjs from 'dayjs';
+import dayjs, {OpUnitType} from 'dayjs';
 
 export const generateDataGroups = (dataInici: string, dataFi: string, agrupacio: string) => {
     const dataGroups: string[] = [];
-    let djs = dayjs(dataInici);
-    const dataFiJs = dayjs(dataFi);
+    let truncateUnit: OpUnitType = 'minute';
+    switch (agrupacio) {
+        case 'ANY':
+            truncateUnit = 'year';
+            break;
+        case 'MES':
+            truncateUnit = 'month';
+            break;
+        case 'DIA':
+            truncateUnit = 'day';
+            break;
+        case 'HORA':
+            truncateUnit = 'hour';
+            break;
+        }
+    let djs = dayjs(dataInici).startOf(truncateUnit);
+    const dataFiJs = dayjs(dataFi).startOf(truncateUnit).add(1, truncateUnit);
+
+    console.log("DI", dataInici);
+    console.log("DF", dataFi);
+    console.log("AG", agrupacio);
+    console.log("TU", truncateUnit);
+    console.log("DGI", djs.format('YYYY-MM-DDTHH:mm:ss'));
+    console.log("DGF", dataFiJs.format('YYYY-MM-DDTHH:mm:ss'));
+
     do {
         dataGroups.push(djs.format('YYYY-MM-DDTHH:mm:ss'));
         if (agrupacio === 'ANY') {

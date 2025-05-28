@@ -28,7 +28,7 @@ databaseChangeLog:
                 name: descripcio
                 type: varchar(1024 ${varcharUnit})
             - column:
-                name: entorn_app_id
+                name: app_id
                 type: bigint
                 constraints:
                     nullable: false
@@ -263,7 +263,7 @@ databaseChangeLog:
                 name: temps_agrupacio
                 type: varchar(16 ${varcharUnit})
             - column:
-                name: dimensio_descomposicio_id
+                name: descomposicio_dimensio_id
                 type: BIGINT
             - column:
                 name: llegenda_x
@@ -280,6 +280,13 @@ databaseChangeLog:
             - column:
                 name: agrupament_dimensio_titol
                 type: varchar(64 ${varcharUnit})
+            - column:
+                name: comparar_periode_anterior
+                type: BOOLEAN
+                defaultValueBoolean: false
+            - column:
+                name: atributs_visuals
+                type: VARCHAR(4000 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false
@@ -321,7 +328,7 @@ databaseChangeLog:
     author: limit
     changes:
     - createTable:
-        tableName: ${db_prefix}indicador_table
+        tableName: ${db_prefix}_est_indicador_table
         columns:
             - column:
                 name: id
@@ -343,6 +350,9 @@ databaseChangeLog:
                     nullable: false
             - column:
                 name: agregacio
+                type: varchar(16 ${varcharUnit})
+            - column:
+                name: unitat_agregacio
                 type: varchar(16 ${varcharUnit})
             - column:
                 name: titol
@@ -449,10 +459,18 @@ databaseChangeLog:
                 constraints:
                     nullable: false
             - column:
-                name: view_id
+                name: widget_id
                 type: bigint
                 constraints:
                     nullable: false
+            - column:
+                name: entorn_id
+                type: bigint
+                constraints:
+                    nullable: false
+            - column:
+                name: atributs_visuals
+                type: VARCHAR(4000 ${varcharUnit})
             - column:
                 constraints:
                     nullable: false

@@ -1,4 +1,4 @@
-const translationEs = {
+const translationEn = {
     menu: {
         configuracio: "Configuration",
         estadistiques: "Statistics",
@@ -6,6 +6,8 @@ const translationEs = {
         app: "Applications",
         entorn: "Environments",
         monitor: "Monitor",
+        widget: "Statistic widgets",
+        dashboard: "Dashboards",
     },
     page: {
         salut: {
@@ -105,6 +107,30 @@ const translationEs = {
                 estadistica: "Estadística",
             },
         },
+        widget: {
+            title: "Statistic widgets",
+            simple: {
+                tab: {
+                    title: "Simple",
+                },
+                title: "Simple statistic Widgets",
+                resourceTitle: "simple widget",
+            },
+            grafic: {
+                tab: {
+                    title: "Chart",
+                },
+                title: "Statistic chart widgets",
+                resourceTitle: "chart widget",
+            },
+            taula: {
+                tab: {
+                    title: "Table",
+                },
+                title: "Statistic table widgets",
+                resourceTitle: "table widget",
+            }
+        },
         notFound: "Not found",
     },
     components: {
@@ -116,4 +142,4 @@ const translationEs = {
     },
 };
 
-export default translationEs;
+export default translationEn;

@@ -10,14 +10,13 @@ import org.springframework.context.annotation.Profile;
 @Profile("!back")
 @Configuration
 @EnableCaching
-public class BackHazelCastCacheConfig {
+public class HazelCastCacheConfig {
 
     @Bean
     public Config hazelcastConfig() {
         Config config = new Config();
-        config.addMapConfig(new MapConfig()
-                .setName("entornAppCache") // Nom de la memòria cau
-                .setTimeToLiveSeconds(3600)); // Expiració a 1 hora (3600 segons)
+        config.addMapConfig(new MapConfig().setName("entornAppCache").setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName("appCache").setTimeToLiveSeconds(3600));
         return config;
     }
 

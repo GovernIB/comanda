@@ -219,6 +219,7 @@ const LatenciaBarChart: React.FC<any> = (props) => {
     const latenciesMaxData = latencies[latencies.length - 1].data;
     const baseDataGroups = generateDataGroups(dataInici, latenciesMaxData, agrupacio);
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
+
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>

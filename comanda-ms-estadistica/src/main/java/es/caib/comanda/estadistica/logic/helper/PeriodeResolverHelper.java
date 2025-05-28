@@ -1,6 +1,12 @@
 package es.caib.comanda.estadistica.logic.helper;
 
-import es.caib.comanda.estadistica.logic.intf.model.periode.*;
+import es.caib.comanda.estadistica.logic.intf.model.Periode;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAlineacio;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAnchor;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeEspecificAny;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,18 +17,18 @@ import java.time.temporal.ChronoField;
 
 public class PeriodeResolverHelper {
 
-    public static PeriodeDates resolvePeriod(WidgetBaseResource<Long> widget) {
-        switch (widget.getPeriodeMode()) {
+    public static PeriodeDates resolvePeriod(Periode periode) {
+        switch (periode.getPeriodeMode()) {
             case PRESET:
-                return resolvePresetPeriod(widget.getPresetPeriode(), widget.getPresetCount());
+                return resolvePresetPeriod(periode.getPresetPeriode(), periode.getPresetCount());
             case RELATIU:
                 return resolveRelativePeriod(
-                        widget.getRelatiuPuntReferencia(),
-                        widget.getRelatiuCount(),
-                        widget.getRelatiueUnitat(),
-                        widget.getRelatiuAlineacio());
+                        periode.getRelatiuPuntReferencia(),
+                        periode.getRelatiuCount(),
+                        periode.getRelatiueUnitat(),
+                        periode.getRelatiuAlineacio());
             case ABSOLUT:
-                return resolveAbsolutePeriod(widget);
+                return resolveAbsolutePeriod(periode);
             default:
                 throw new IllegalArgumentException("Invalid period mode");
         }
@@ -195,24 +201,24 @@ public class PeriodeResolverHelper {
         }
     }
 
-    private static PeriodeDates resolveAbsolutePeriod(WidgetBaseResource<Long> widget) {
-        switch (widget.getAbsolutTipus()) {
+    private static PeriodeDates resolveAbsolutePeriod(Periode periode) {
+        switch (periode.getAbsolutTipus()) {
             case DATE_RANGE:
                 return PeriodeDates.builder()
-                        .start(widget.getAbsolutDataInici())
-                        .end(widget.getAbsolutDataFi())
+                        .start(periode.getAbsolutDataInici())
+                        .end(periode.getAbsolutDataFi())
                         .build();
             case SPECIFIC_PERIOD_OF_YEAR:
-                int year = calculateYear(widget.getAbsolutAnyReferencia(), widget.getAbsolutAnyValor());
-                int firstPeriod = widget.getAbsolutPeriodeInici() != null
-                        ? widget.getAbsolutPeriodeInici()
+                int year = calculateYear(periode.getAbsolutAnyReferencia(), periode.getAbsolutAnyValor());
+                int firstPeriod = periode.getAbsolutPeriodeInici() != null
+                        ? periode.getAbsolutPeriodeInici()
                         : 1;
-                int lastPeriod = widget.getAbsolutPeriodeFi() != null
-                        ? widget.getAbsolutPeriodeFi()
+                int lastPeriod = periode.getAbsolutPeriodeFi() != null
+                        ? periode.getAbsolutPeriodeFi()
                         : firstPeriod;
 
                 LocalDate startDate, endDate;
-                switch (widget.getAbsolutPeriodeUnitat()) {
+                switch (periode.getAbsolutPeriodeUnitat()) {
                     case SETMANA:
                         startDate = LocalDate.of(year, 1, 1)
                                 .plusWeeks(firstPeriod - 1)
@@ -260,7 +266,113 @@ public class PeriodeResolverHelper {
                 throw new IllegalArgumentException("Invalid year reference");
         }
     }
-    
+
+    /**
+     * Calcula el període previ basat on el període actual.
+     * 
+     * @param periode Període actual
+     * @param currentPeriod Dates del període actual
+     * @return The previous period dates
+     */
+    public static PeriodeDates resolvePreviousPeriod(Periode periode, PeriodeDates currentPeriod) {
+        LocalDate currentStart = currentPeriod.getStart();
+        LocalDate currentEnd = currentPeriod.getEnd();
+
+        // Calculate the duration of the current period
+        long days = java.time.temporal.ChronoUnit.DAYS.between(currentStart, currentEnd) + 1;
+
+        switch (periode.getPeriodeMode()) {
+            case PRESET:
+                // For preset periods, we shift the period back by its duration
+                return PeriodeDates.builder()
+                        .start(currentStart.minusDays(days))
+                        .end(currentEnd.minusDays(days))
+                        .build();
+            case RELATIU:
+                // For relative periods, we double the count
+                Periode previousPeriode = Periode.builder()
+                        .periodeMode(periode.getPeriodeMode())
+                        .relatiuPuntReferencia(periode.getRelatiuPuntReferencia())
+                        .relatiuCount(periode.getRelatiuCount() * 2)
+                        .relatiueUnitat(periode.getRelatiueUnitat())
+                        .relatiuAlineacio(periode.getRelatiuAlineacio())
+                        .build();
+                PeriodeDates extendedPeriod = resolvePeriod(previousPeriode);
+                return PeriodeDates.builder()
+                        .start(extendedPeriod.getStart())
+                        .end(currentStart.minusDays(1))
+                        .build();
+            case ABSOLUT:
+                switch (periode.getAbsolutTipus()) {
+                    case DATE_RANGE:
+                        // For date ranges, we shift the period back by its duration
+                        return PeriodeDates.builder()
+                                .start(currentStart.minusDays(days))
+                                .end(currentEnd.minusDays(days))
+                                .build();
+                    case SPECIFIC_PERIOD_OF_YEAR:
+                        // For specific periods of a year, we go back one period in the same year
+                        // or to the last period of the previous year
+                        int year = calculateYear(periode.getAbsolutAnyReferencia(), periode.getAbsolutAnyValor());
+                        int firstPeriod = periode.getAbsolutPeriodeInici() != null
+                                ? periode.getAbsolutPeriodeInici()
+                                : 1;
+                        int lastPeriod = periode.getAbsolutPeriodeFi() != null
+                                ? periode.getAbsolutPeriodeFi()
+                                : firstPeriod;
+
+                        // If we're at the first period, go to the last period of the previous year
+                        if (firstPeriod == 1) {
+                            int previousYear = year - 1;
+                            int maxPeriod;
+                            switch (periode.getAbsolutPeriodeUnitat()) {
+                                case SETMANA:
+                                    maxPeriod = 52; // Approximate, could be 53 in some years
+                                    break;
+                                case MES:
+                                    maxPeriod = 12;
+                                    break;
+                                case TRIMESTRE:
+                                    maxPeriod = 4;
+                                    break;
+                                default:
+                                    throw new IllegalArgumentException("Unsupported period unit for specific year period");
+                            }
+
+                            Periode previousYearPeriode = Periode.builder()
+                                    .periodeMode(PeriodeMode.ABSOLUT)
+                                    .absolutTipus(periode.getAbsolutTipus())
+                                    .absolutAnyReferencia(PeriodeEspecificAny.SPECIFIC_YEAR)
+                                    .absolutAnyValor(previousYear)
+                                    .absolutPeriodeUnitat(periode.getAbsolutPeriodeUnitat())
+                                    .absolutPeriodeInici(maxPeriod - (lastPeriod - firstPeriod))
+                                    .absolutPeriodeFi(maxPeriod)
+                                    .build();
+                            return resolvePeriod(previousYearPeriode);
+                        } else {
+                            // Otherwise, go to the previous period in the same year
+                            int previousFirstPeriod = firstPeriod - 1;
+                            int previousLastPeriod = lastPeriod - 1;
+
+                            Periode previousPeriodePeriode = Periode.builder()
+                                    .periodeMode(PeriodeMode.ABSOLUT)
+                                    .absolutTipus(periode.getAbsolutTipus())
+                                    .absolutAnyReferencia(periode.getAbsolutAnyReferencia())
+                                    .absolutAnyValor(periode.getAbsolutAnyValor())
+                                    .absolutPeriodeUnitat(periode.getAbsolutPeriodeUnitat())
+                                    .absolutPeriodeInici(previousFirstPeriod)
+                                    .absolutPeriodeFi(previousLastPeriod)
+                                    .build();
+                            return resolvePeriod(previousPeriodePeriode);
+                        }
+                    default:
+                        throw new IllegalArgumentException("Unsupported absolute period type");
+                }
+            default:
+                throw new IllegalArgumentException("Invalid period mode");
+        }
+    }
+
     @Builder
     @Getter
     @NoArgsConstructor

@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BaseApp } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
-// import headerBackground from './assets/background.jpg';
 import AppRoutes from './AppRoutes';
 
 export const App: React.FC = () => {
@@ -30,7 +29,7 @@ export const App: React.FC = () => {
                 id: 'app',
                 title: t('menu.app'),
                 to: '/app',
-                icon: 'widgets',
+                icon: 'apps',
                 resourceName: 'app',
             },
             {
@@ -38,6 +37,20 @@ export const App: React.FC = () => {
                 title: t('menu.entorn'),
                 to: '/entorn',
                 icon: 'domain',
+                resourceName: 'entorn',
+            },
+            {
+                id: 'estadisticaWidget',
+                title: t('menu.widget'),
+                to: '/estadisticaWidget',
+                icon: 'widgets',
+                resourceName: 'entorn',
+            },
+            {
+                id: 'dashboard',
+                title: t('menu.dashboard'),
+                to: '/dashboard',
+                icon: 'dashboardCustomize',
                 resourceName: 'entorn',
             },
         ]

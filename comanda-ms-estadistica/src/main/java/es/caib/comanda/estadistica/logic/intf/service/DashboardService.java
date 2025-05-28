@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
 import es.caib.comanda.estadistica.logic.intf.model.Dashboard;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**
  * Servei de gestió i consulta per a quadres de comandament (Dashboard).
@@ -20,10 +20,7 @@ import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
  * Les implementacions d'aquesta interfície han de respectar els requisits de només consulta establerts per l'especificació
  * base de ReadonlyResourceService.
  *
- * @param <Dashboard> El tipus de recurs que representa un quadre de comandament.
- * @param <Long> El tipus de la clau primària per identificar un quadre de comandament.
- *
  * @author Límit Tecnologies
  */
-public interface DashboardService extends ReadonlyResourceService<Dashboard, Long> {
+public interface DashboardService extends MutableResourceService<Dashboard, Long> {
 }

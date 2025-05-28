@@ -1,5 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -99,6 +101,32 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     /**
+     * Genera una consulta SQL per obtenir un valor agregat d'un indicador específic basat en l'entornAppId, 
+     * un rang de dates específic, valors dimensionals i un tipus d'agregació.
+     * Aquesta consulta aplica l'agregació directament a la base de dades, optimitzant el rendiment.
+     *
+     * @param dimensionsFiltre Un mapa on cada clau representa el codi d'una dimensió i el valor és una llista de valors
+     *                         a filtrar. Si el mapa és null o buit, es generen només les condicions per entornAppId i rang
+     *                         de dates.
+     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
+     * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
+     * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
+     */
+    @Override
+    public String getAggregatedValueQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+        String aggregationFunction = getAggregationFunction(agregacio, indicadorCodi, unitatAgregacio);
+
+        String query = "SELECT " + aggregationFunction + " FROM cmd_est_fet f " +
+                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                "WHERE f.entorn_app_id = :entornAppId " +
+                "AND t.data BETWEEN :dataInici AND :dataFi ";
+
+        String conditions = generateDimensionConditions(dimensionsFiltre);
+        String aggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
+        return query + conditions + aggregationConditions;
+    }
+
+    /**
      * Genera la condició SQL per filtrar resultats segons valors de dimensions especificats.
      * Construeix una condició SQL que inclou els valors de filtre proporcionats per a cada dimensió.
      *
@@ -127,4 +155,67 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 .collect(Collectors.joining(" "));
     }
 
+    /**
+     * Retorna la funció d'agregació SQL corresponent al tipus d'agregació especificat.
+     *
+     * @param agregacio El tipus d'agregació a aplicar.
+     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
+     * @return La funció d'agregació SQL corresponent.
+     */
+    private String getAggregationFunction(TableColumnsEnum agregacio, String indicadorCodi, PeriodeUnitat unitatAgregacio) {
+        switch (agregacio) {
+            case AVERAGE:
+                return "AVG(sum_fets) FROM (SELECT " + getGrupping(unitatAgregacio) + " SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) AS sum_fets ";
+            case FIRST_SEEN:
+                return "(SELECT t2.data FROM cmd_est_fet f2 " +
+                       "JOIN cmd_est_temps t2 ON f2.temps_id = t2.id " +
+                       "WHERE f2.entorn_app_id = f.entorn_app_id " +
+                       "ORDER BY t2.data ASC FETCH FIRST 1 ROW ONLY)";
+            case LAST_SEEN:
+                return "(SELECT t2.data FROM cmd_est_fet f2 " +
+                       "JOIN cmd_est_temps t2 ON f2.temps_id = t2.id " +
+                       "WHERE f2.entorn_app_id = f.entorn_app_id " +
+                       "ORDER BY t2.data DESC FETCH FIRST 1 ROW ONLY)";
+            case PERCENTAGE:
+            case COUNT:
+            case SUM:
+            default:
+                return "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"')))";
+        }
+    }
+
+    private String generateAggregationConditions(String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+
+        switch (agregacio) {
+            case AVERAGE:
+                return "GROUP BY " + getGrupping(unitatAgregacio) + ")";
+            case FIRST_SEEN:
+            case LAST_SEEN:
+            case COUNT:
+            case SUM:
+            default:
+                return "";
+        }
+    }
+
+    private static String getGrupping(PeriodeUnitat unitatAgregacio) {
+        String grupping = "t.data";
+        if (unitatAgregacio != null) {
+            switch (unitatAgregacio) {
+                case SETMANA:
+                    grupping = "t.anualitat, t.setmana";
+                    break;
+                case MES:
+                    grupping = "t.anualitat, t.mes";
+                    break;
+                case TRIMESTRE:
+                    grupping = "t.anualitat, t.trimestre";
+                    break;
+                case ANY:
+                    grupping = "t.anualitat";
+                    break;
+            }
+        }
+        return grupping;
+    }
 }

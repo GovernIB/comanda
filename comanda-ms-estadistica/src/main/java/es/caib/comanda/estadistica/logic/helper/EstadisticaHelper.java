@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.Temps;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.FetEntity;
@@ -420,6 +422,40 @@ public class EstadisticaHelper {
 
         // Convert to DTOs
         return toFets(fets);
+    }
+
+    /**
+     * Obté un valor agregat d'un indicador específic basat en l'entornAppId, un rang de dates específic, 
+     * valors dimensionals i un tipus d'agregació.
+     * Aquesta consulta aplica l'agregació directament a la base de dades, optimitzant el rendiment.
+     *
+     * @param entornAppId Identificador de l'entorn d'aplicació pel qual es vol fer la cerca.
+     * @param dataInici Data inicial del rang de dates per a la cerca.
+     * @param dataFi Data final del rang de dates per a la cerca.
+     * @param dimensionsFiltre Un mapa que conté les dimensions a filtrar, on la clau és el nom de la dimensió i el valor és
+     *                         una llista de valors que s'han de considerar per aquesta dimensió.
+     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
+     * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
+     * @return El valor agregat calculat directament a la base de dades.
+     */
+    @Transactional(readOnly = true)
+    public Object getValorAgregatPeriodeAmbDimensions(
+            Long entornAppId,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            Map<String, List<String>> dimensionsFiltre,
+            String indicadorCodi,
+            TableColumnsEnum agregacio,
+            PeriodeUnitat unitatAgregacio) {
+
+        return fetRepository.getAggregatedValue(
+                entornAppId,
+                dataInici,
+                dataFi,
+                dimensionsFiltre,
+                indicadorCodi,
+                agregacio,
+                unitatAgregacio);
     }
 
     protected Fet toFet(FetEntity fetEntity) {

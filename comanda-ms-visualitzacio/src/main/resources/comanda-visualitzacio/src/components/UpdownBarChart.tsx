@@ -97,6 +97,7 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         xAxis={[{ scaleType: 'band', data: dataGroups }]}
         series={series}
         borderRadius={6}
+        grid={{ horizontal: true, vertical: true }}
     />;
 }
 

@@ -64,15 +64,16 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     // si afegim la dimensió usuari, la gràfica mostrarà una línia amb els expedients creats per a cada usuari
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "dimensio_descomposicio_id",
+            name = "descomposicio_dimensio_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = "view_descomposicio_fk"))
-    private DimensioValorEntity dimensioDescomposicio;
+    private DimensioEntity descomposicioDimensio;
 
     @Column(name = "llegenda_x", length = 64, nullable = false)
     private String llegendaX;
 
     @Column(name = "llegenda_y", length = 64, nullable = false)
     private String llegendaY;
+
 
 }

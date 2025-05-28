@@ -44,7 +44,7 @@ databaseChangeLog:
         baseColumnNames: indicador_id
         referencedTableName: ${db_prefix}est_indicador
         referencedColumnNames: id
-        constraintName: ${db_prefix}view_indicador_fk
+        constraintName: ${db_prefix}widget_indicador_fk
 - changeSet:
     id: est-init-constraint-9
     author: limit
@@ -54,17 +54,17 @@ databaseChangeLog:
         baseColumnNames: agrupament_dimensio_id
         referencedTableName: ${db_prefix}est_dimensio
         referencedColumnNames: id
-        constraintName: ${db_prefix}view_taula_dimensio_fk
+        constraintName: ${db_prefix}widget_taula_dimensio_fk
 - changeSet:
     id: est-init-constraint-10
     author: limit
     changes:
     - addForeignKeyConstraint:
         baseTableName: ${db_prefix}est_widget
-        baseColumnNames: dimensio_descomposicio_id
-        constraintName: view_descomposicio_fk
-        referencedTableName: ${db_prefix}est_dimensio_valor
+        baseColumnNames: descomposicio_dimensio_id
+        referencedTableName: ${db_prefix}est_dimensio
         referencedColumnNames: id
+        constraintName: ${db_prefix}widget_descomposicio_fk
 - changeSet:
     id: est-init-constraint-11
     author: limit
@@ -129,10 +129,10 @@ databaseChangeLog:
     changes:
     - addForeignKeyConstraint:
         baseTableName: ${db_prefix}est_dashboard_item
-        baseColumnNames: view_id
+        baseColumnNames: widget_id
         referencedTableName: ${db_prefix}est_widget
         referencedColumnNames: id
-        constraintName: ${db_prefix}dboard_item_view_fk
+        constraintName: ${db_prefix}dboard_item_widget_fk
 - changeSet:
     id: est-init-constraint-18
     author: limit

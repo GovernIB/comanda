@@ -58,21 +58,33 @@ const useReportInterval = (intervalMinutes?: number) => {
     }
 }
 
-const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void }) => {
-    const { onChange, disabled } = props;
+const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void; initialValue?: string }) => {
+    const { onChange, disabled, initialValue = 'PT1M' } = props;
     const { t } = useTranslation();
-    const [duration, setDuration] = React.useState<string>('PT1M');
+
+    // Get the stored value from localStorage or use initialValue
+    const getInitialDuration = () => {
+        const storedValue = localStorage.getItem('refreshTimeoutSelect');
+        return storedValue || initialValue;
+    };
+
+    const [duration, setDuration] = React.useState<string>(getInitialDuration());
+
     const callOnChange = (duration: string) => {
         if (onChange != null) {
             const minutes = dayjs.duration(duration).asMinutes()
             onChange?.(minutes);
         }
     }
+
     const handleChange = (event: SelectChangeEvent) => {
         const value = event.target.value as string;
         setDuration(value);
+        // Store the selected value in localStorage
+        localStorage.setItem('refreshTimeoutSelect', value);
         callOnChange(value);
     }
+
     React.useEffect(() => {
         callOnChange(duration);
     }, []);
@@ -94,21 +106,33 @@ const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChan
     </FormControl>;
 }
 
-const AppDataRangeSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void }) => {
-    const { onChange, disabled } = props;
+const AppDataRangeSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void; initialValue?: string }) => {
+    const { onChange, disabled, initialValue = 'PT15M' } = props;
     const { t } = useTranslation();
-    const [duration, setDuration] = React.useState<string>('PT15M');
+
+    // Get the stored value from localStorage or use initialValue
+    const getInitialDuration = () => {
+        const storedValue = localStorage.getItem('appDataRangeSelect');
+        return storedValue || initialValue;
+    };
+
+    const [duration, setDuration] = React.useState<string>(getInitialDuration());
+
     const callOnChange = (duration: string) => {
         if (onChange != null) {
             const minutes = dayjs.duration(duration).asMinutes();
             onChange?.(minutes);
         }
     }
+
     const handleChange = (event: SelectChangeEvent) => {
         const value = event.target.value as string;
         setDuration(value);
+        // Store the selected value in localStorage
+        localStorage.setItem('appDataRangeSelect', value);
         callOnChange(value);
     }
+
     React.useEffect(() => {
         callOnChange(duration);
     }, []);
