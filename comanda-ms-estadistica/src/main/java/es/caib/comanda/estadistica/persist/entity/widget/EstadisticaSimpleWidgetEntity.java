@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity.widget;
 
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
-import es.caib.comanda.estadistica.persist.entity.estadistiues.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
 

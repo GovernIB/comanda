@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.persist.entity.estadistiues.TempsEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
 import java.time.LocalDate;

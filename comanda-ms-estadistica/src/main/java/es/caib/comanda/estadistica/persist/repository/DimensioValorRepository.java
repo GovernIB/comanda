@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.persist.entity.estadistiues.DimensioEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiues.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
 import java.util.List;

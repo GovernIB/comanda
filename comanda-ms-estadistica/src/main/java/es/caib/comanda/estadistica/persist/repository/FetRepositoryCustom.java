@@ -2,7 +2,7 @@ package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
-import es.caib.comanda.estadistica.persist.entity.estadistiues.FetEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 
 import java.time.LocalDate;
 import java.util.List;

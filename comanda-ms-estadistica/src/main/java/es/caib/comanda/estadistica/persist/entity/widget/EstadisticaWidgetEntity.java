@@ -8,7 +8,7 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeEspecificAny;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
-import es.caib.comanda.estadistica.persist.entity.estadistiues.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;

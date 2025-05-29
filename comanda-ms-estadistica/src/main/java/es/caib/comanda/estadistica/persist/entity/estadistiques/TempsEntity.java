@@ -1,4 +1,4 @@
-package es.caib.comanda.estadistica.persist.entity.estadistiues;
+package es.caib.comanda.estadistica.persist.entity.estadistiques;
 
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DiaSetmanaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
