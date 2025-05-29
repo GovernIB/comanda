@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity;
 
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaTaulaWidget;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
 
 import javax.persistence.CascadeType;
@@ -49,7 +50,7 @@ public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<Estadi
     @JoinColumn(
             name = "agrupament_dimensio_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "view_taula_dimensio_fk")
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_taula_dimensio_fk")
     )
     private DimensioEntity dimensioAgrupacio;
     @Column(name = "agrupament_dimensio_titol", length = 64)

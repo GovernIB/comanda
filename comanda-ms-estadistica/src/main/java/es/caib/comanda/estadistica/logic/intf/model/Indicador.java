@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model;
 
 import es.caib.comanda.ms.estadistica.model.Format;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,9 @@ import javax.validation.constraints.Size;
 @Getter
 @Setter
 @NoArgsConstructor
+@ResourceConfig(
+    quickFilterFields = { "codi", "nom" },
+    descriptionField = "codi")
 public class Indicador extends BaseResource<Long> {
 
     @NotNull

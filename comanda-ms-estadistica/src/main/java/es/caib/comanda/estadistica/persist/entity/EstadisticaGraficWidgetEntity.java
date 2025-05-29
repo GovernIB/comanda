@@ -4,6 +4,7 @@ import es.caib.comanda.estadistica.logic.intf.model.EstadisticaGraficWidget;
 import es.caib.comanda.estadistica.logic.intf.model.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
 
 import javax.persistence.Column;
@@ -38,7 +39,7 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     @JoinColumn(
             name = "indicador_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "view_indicador_fk"),
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_indicador_fk"),
             nullable = false)
     private IndicadorTaulaEntity indicador;
 
@@ -66,7 +67,7 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     @JoinColumn(
             name = "descomposicio_dimensio_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "view_descomposicio_fk"))
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_descomposicio_fk"))
     private DimensioEntity descomposicioDimensio;
 
     @Column(name = "llegenda_x", length = 64, nullable = false)

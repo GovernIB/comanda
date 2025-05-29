@@ -60,7 +60,7 @@ public class EstadisticaTaulaWidget extends EstadisticaWidget { // WidgetBaseRes
     private List<IndicadorTaula> columnes;
 
     @NotNull
-    private ResourceReference<Indicador, Long> dimensioAgrupacio;
+    private ResourceReference<Dimensio, Long> dimensioAgrupacio;
     private String titolAgrupament;
 
     // Atributs per a la configuració visual de la taula

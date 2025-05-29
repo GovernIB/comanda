@@ -46,8 +46,10 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String ENTORN_APP_ACTION_REFRESH = "refresh";
 	public final static String ENTORN_APP_ACTION_REPROGRAMAR = "reprogramar";
 
+	@NotNull
 	@Transient
 	private ResourceReference<App, Long> app;
+	@NotNull
 	@Transient
 	private ResourceReference<Entorn, Long> entorn;
 

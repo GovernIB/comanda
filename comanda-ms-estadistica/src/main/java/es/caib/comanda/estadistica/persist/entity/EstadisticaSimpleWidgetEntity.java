@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity;
 
 import es.caib.comanda.estadistica.logic.intf.model.EstadisticaSimpleWidget;
+import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
 
 import javax.persistence.Column;
@@ -52,7 +53,7 @@ public class EstadisticaSimpleWidgetEntity extends EstadisticaWidgetEntity<Estad
     @JoinColumn(
             name = "indicador_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "view_indicador_fk"),
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_indicador_fk"),
             nullable = false)
     private IndicadorTaulaEntity indicadorInfo;
 

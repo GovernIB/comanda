@@ -27,9 +27,15 @@ public class EntornAppExistsValidator implements ConstraintValidator<EntornAppEx
 
 	@Override
 	public boolean isValid(final EntornApp entornApp, final ConstraintValidatorContext context) {
-		boolean valid = Objects.isNull(entornApp) || Objects.isNull(entornApp.getEntorn()) || Objects.isNull(entornApp.getApp()) ||
-			!entornAppRepository.existsByEntornIdAndAppId(entornApp.getEntorn().getId(), entornApp.getApp().getId());
-		if (!valid) {
+		boolean valid = Objects.isNull(entornApp) || Objects.isNull(entornApp.getEntorn()) || Objects.isNull(entornApp.getApp());
+		if (!valid) { // Si l'objecte i els camps entorn i app no són nuls, es verifica si la combinació és única
+			Long idEntornApp = entornAppRepository.getIdByEntornIdAndAppId(entornApp.getEntorn().getId(), entornApp.getApp().getId());
+			valid = Objects.isNull(idEntornApp); // És vàlid si no existeix cap altra entitat amb aquesta combinació
+			if (!valid && Objects.nonNull(entornApp.getId())) { // O si existeix, però és el mateix registre (edició)
+				valid = Objects.equals(idEntornApp, entornApp.getId());
+			}
+		}
+		if (!valid) {// Si no és vàlid, s'afegeixen errors als camps implicats
 			context.
 				buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate()).
 				addPropertyNode(EntornApp.Fields.app).

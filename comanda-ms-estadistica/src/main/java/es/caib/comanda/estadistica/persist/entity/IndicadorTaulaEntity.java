@@ -69,14 +69,14 @@ public class IndicadorTaulaEntity extends BaseAuditableEntity<IndicadorTaula> {
     @JoinColumn(
             name = "indicador_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "indtab_indicador_fk"),
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "indtab_indicador_fk"),
             nullable = false)
     private IndicadorEntity indicador;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "widget_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "indtab_widget_fk"),
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "indtab_widget_fk"),
             nullable = false)
     private EstadisticaWidgetEntity widget;
     // first_seen, last_seen, avg_interval, average, etc.
