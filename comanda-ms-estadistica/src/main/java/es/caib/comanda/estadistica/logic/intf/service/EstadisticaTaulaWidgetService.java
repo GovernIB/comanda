@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
-import es.caib.comanda.estadistica.logic.intf.model.EstadisticaTaulaWidget;
+import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;

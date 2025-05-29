@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.back.controller;
 
-import es.caib.comanda.estadistica.logic.intf.model.DashboardItem;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import io.swagger.v3.oas.annotations.tags.Tag;

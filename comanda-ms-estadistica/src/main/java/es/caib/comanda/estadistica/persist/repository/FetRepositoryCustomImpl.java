@@ -1,8 +1,8 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.logic.intf.model.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
-import es.caib.comanda.estadistica.persist.entity.FetEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiues.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.dialect.FetRepositoryDialectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;

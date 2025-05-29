@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.persist.entity.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiues.IndicadorTaulaEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
 /**

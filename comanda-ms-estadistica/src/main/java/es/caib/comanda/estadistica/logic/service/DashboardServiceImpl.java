@@ -1,8 +1,8 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.estadistica.logic.intf.model.Dashboard;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
-import es.caib.comanda.estadistica.persist.entity.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

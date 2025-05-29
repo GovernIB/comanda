@@ -1,8 +1,8 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.estadistica.logic.intf.model.IndicadorTaula;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.service.IndicadorTaulaService;
-import es.caib.comanda.estadistica.persist.entity.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiues.IndicadorTaulaEntity;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

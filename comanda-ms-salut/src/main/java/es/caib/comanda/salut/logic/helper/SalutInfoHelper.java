@@ -85,10 +85,15 @@ public class SalutInfoHelper {
 
 	private void crearSalut(SalutInfo info, Long entornAppId) {
 		if (info != null) {
+			// Si es desconeix l'estat de l'aplicació, entenem que està DOWN
+			SalutEstat appEstat = toSalutEstat(info.getEstat().getEstat());
+			if (appEstat == null || SalutEstat.UNKNOWN.equals(appEstat)) {
+				appEstat = SalutEstat.DOWN;
+			}
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornAppId);
 			salut.setData(toLocalDateTime(info.getData()));
-			salut.setAppEstat(toSalutEstat(info.getEstat().getEstat()));
+			salut.setAppEstat(appEstat);
 			salut.setAppLatencia(info.getEstat().getLatencia());
 			salut.setBdEstat(toSalutEstat(info.getBd().getEstat()));
 			salut.setBdLatencia(info.getBd().getLatencia());

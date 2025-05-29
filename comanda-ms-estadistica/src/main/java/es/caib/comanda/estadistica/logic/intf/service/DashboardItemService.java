@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
-import es.caib.comanda.estadistica.logic.intf.model.DashboardItem;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**

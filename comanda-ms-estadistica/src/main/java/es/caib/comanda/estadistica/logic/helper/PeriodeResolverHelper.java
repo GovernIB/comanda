@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.logic.helper;
 
-import es.caib.comanda.estadistica.logic.intf.model.Periode;
+import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAlineacio;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAnchor;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeEspecificAny;

@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
-import es.caib.comanda.estadistica.logic.intf.model.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 
 import java.util.List;

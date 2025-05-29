@@ -1,8 +1,8 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.estadistica.logic.intf.model.Dimensio;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
-import es.caib.comanda.estadistica.persist.entity.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiues.DimensioEntity;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

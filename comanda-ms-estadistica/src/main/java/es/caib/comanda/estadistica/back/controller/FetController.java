@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.back.controller;
 
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.estadistica.logic.intf.model.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.service.FetService;
 import es.caib.comanda.estadistica.logic.service.EstadisticaSchedulerService;
 import es.caib.comanda.ms.back.controller.BaseReadonlyResourceController;

@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.persist.entity.EstadisticaGraficWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
 /**
