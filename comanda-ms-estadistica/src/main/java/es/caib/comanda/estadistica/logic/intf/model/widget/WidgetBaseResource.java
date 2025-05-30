@@ -10,6 +10,7 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -40,7 +41,7 @@ public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID
 
     // Dimensions per les que filtrar
     @NotEmpty
-    protected List<DimensioValor> dimensionsValor;
+    protected List<ResourceReference<DimensioValor, Long>> dimensionsValor;
 
     @NotNull
     protected PeriodeMode periodeMode;

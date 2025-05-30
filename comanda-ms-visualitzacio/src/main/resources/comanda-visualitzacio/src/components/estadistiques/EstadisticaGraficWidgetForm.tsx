@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
 import GraficWidgetVisualization from "./GraficWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
+import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 
 const EstadisticaGraficWidgetForm: React.FC = () => {
     const { data } = useFormContext();
@@ -57,15 +58,13 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         <Box sx={{ display: 'flex', width: '100%' }}>
             <Box sx={{ flex: '1 1 auto' }}>
                 <EstadisticaWidgetFormFields>
-                    <Grid container spacing={2} >
-                        <Grid size={12}><FormField name="indicador" /></Grid>
+                        <Grid size={12}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
                         <Grid size={4}><FormField name="tipusGrafic" /></Grid>
                         <Grid size={4}><FormField name="tipusValors" /></Grid>
                         <Grid size={4}><FormField name="tempsAgrupacio" /></Grid>
-                        <Grid size={12}><FormField name="dimensioDescomposicio" /></Grid>
+                        <Grid size={12}><FormField name="descomposicioDimensio" /></Grid>
                         <Grid size={6}><FormField name="llegendaX" /></Grid>
                         <Grid size={6}><FormField name="llegendaY" /></Grid>
-                    </Grid>
                 </EstadisticaWidgetFormFields>
             </Box>
 

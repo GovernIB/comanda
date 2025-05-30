@@ -2,7 +2,7 @@ import {FormField, useFormContext} from "reactlib";
 import Grid from "@mui/material/Grid2";
 import * as React from "react";
 import Divider from "@mui/material/Divider";
-import Chip from "@mui/material/Chip";
+import { columnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchColumns';
 
 const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data } = useFormContext();
@@ -37,8 +37,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
             <Grid size={12}><FormField name="titol" /></Grid>
             <Grid size={12}><FormField name="descripcio" type="textarea"/></Grid>
 
-            {/* Lista de dimensiones, Convertir en llista de relacions o en tab apart.
-            <Grid size={12}><FormField name="dimensionsValor" type="multiselect" /></Grid>*/}
+            <Grid size={12}><FormField name="dimensionsValor" multiple advancedSearchColumns={columnesDimensioValor} /></Grid>
 
             <Grid size={12}><Divider sx={{ my: 1 }} /></Grid>
 

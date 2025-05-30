@@ -1,11 +1,12 @@
 import Grid from "@mui/material/Grid2";
-import {Divider, Box} from "@mui/material";
+import {Box} from "@mui/material";
 import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
 import { useState, useEffect } from "react";
 import EstadisticaWidgetFormFields from './EstadisticaWidgetFormFields';
 import TaulaWidgetVisualization from "./TaulaWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
+import { columnesDimensio } from '../sharedAdvancedSearch/advancedSearchColumns';
 
 const EstadisticaTaulaWidgetForm: React.FC = () => {
     const { data } = useFormContext();
@@ -38,12 +39,9 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
         <Box sx={{ display: 'flex', width: '100%' }}>
             <Box sx={{ flex: '1 1 auto' }}>
                 <EstadisticaWidgetFormFields>
-                    <Grid container spacing={2}>
-                        <Grid size={12}><Divider sx={{ my: 1 }} /></Grid>
-                        <Grid size={12}><FormField name="dimensioAgrupacio" /></Grid>
+                        <Grid size={12}><FormField name="dimensioAgrupacio" advancedSearchColumns={columnesDimensio} /></Grid>
                         <Grid size={12}><FormField name="titolAgrupament" /></Grid>
-                        <Grid size={12}><FormField name="columnes" type="multiselect" /></Grid>
-                    </Grid>
+                        <Grid size={12}><FormField name="columnes" multiple  /></Grid> {/** Canviar a un component per a crear els IndicadorTaula com objecte, que es procesara després */}
                 </EstadisticaWidgetFormFields>
             </Box>
 

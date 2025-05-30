@@ -1,11 +1,11 @@
 import Grid from "@mui/material/Grid2";
-import {Divider, Box} from "@mui/material";
 import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
 import { useState, useEffect } from "react";
 import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
 import SimpleWidgetVisualization from "./SimpleWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
+import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 
 const EstadisticaSimpleWidgetForm: React.FC = () => {
     const { data } = useFormContext();
@@ -47,32 +47,33 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
     }, [data]);
 
     return (
-        <Box sx={{ display: 'flex', width: '100%' }}>
-            <Box sx={{ flex: '1 1 auto' }}>
+        <Grid container spacing={2}>
+            <Grid size={{xs: 12, sm:6}}>
                 <EstadisticaWidgetFormFields>
-                    <Grid size={6}><FormField name="indicador" /></Grid>
+                    <Grid size={12}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
                     <Grid size={6}><FormField name="unitat" /></Grid>
+                    <Grid size={6}><FormField name="compararPeriodeAnterior" /></Grid>
                 </EstadisticaWidgetFormFields>
-            </Box>
+            </Grid>
 
-            <Box sx={{ width: '400px', ml: 2, display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{xs: 12, sm:6}}>
                 {/* Preview */}
-                <Box sx={{ mb: 2, height: '250px' }}>
+                <Grid size={12}>
                     <SimpleWidgetVisualization
                         preview={true}
                         {...previewData}
                     />
-                </Box>
+                </Grid>
 
                 {/* Visual attributes panel */}
-                <Box sx={{ flex: 1 }}>
+                <Grid size={12}>
                     <VisualAttributesPanel
                         widgetType="simple"
                         title="Configuració visual"
                     />
-                </Box>
-            </Box>
-        </Box>
+                </Grid>
+            </Grid> 
+        </Grid>
     );
 }
 

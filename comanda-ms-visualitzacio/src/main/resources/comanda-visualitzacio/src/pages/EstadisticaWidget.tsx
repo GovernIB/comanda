@@ -11,6 +11,10 @@ import EstadisticaTaulaWidgetForm  from "../components/estadistiques/Estadistica
 
 const columns = [
     {
+        field: 'aplicacioNom',
+        flex: 1,
+    },
+    {
         field: 'titol',
         flex: 1,
     },
@@ -19,6 +23,8 @@ const columns = [
         flex: 3,
     },
 ];
+
+const defaultPopupEditFormDialogComponentProps = { fullWidth: true, maxWidth: 'xl' };
 
 const EstadisticaSimpleWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
@@ -31,6 +37,7 @@ const EstadisticaSimpleWidgetGrid: React.FC = () => {
         popupEditActive
         popupEditFormContent={<EstadisticaSimpleWidgetForm />}
         popupEditFormDialogResourceTitle={t('page.widget.simple.resourceTitle')}
+        popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
     />;
 };
 
@@ -45,6 +52,7 @@ const EstadisticaGraficWidgetGrid: React.FC = () => {
             popupEditActive
             popupEditFormContent={<EstadisticaGraficWidgetForm/>}
             popupEditFormDialogResourceTitle={t('page.widget.grafic.resourceTitle')}
+            popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
         />;
 }
 
@@ -59,6 +67,7 @@ const EstadisticaTaulaWidgetGrid: React.FC = () => {
         popupEditActive
         popupEditFormContent={<EstadisticaTaulaWidgetForm />}
         popupEditFormDialogResourceTitle={t('page.widget.taula.resourceTitle')}
+        popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
     />;
 };
 
