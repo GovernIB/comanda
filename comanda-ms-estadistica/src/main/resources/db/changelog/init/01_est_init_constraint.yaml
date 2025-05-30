@@ -71,7 +71,7 @@ databaseChangeLog:
     changes:
     - addUniqueConstraint:
         tableName: ${db_prefix}est_widget
-        columnNames: titol, entorn_app_id
+        columnNames: titol, app_id
         constraintName: ${db_prefix}widget_titol_uk
 - changeSet:
     id: est-init-constraint-12
@@ -98,7 +98,7 @@ databaseChangeLog:
     author: limit
     changes:
     - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}indicador_table
+        baseTableName: ${db_prefix}est_indicador_table
         baseColumnNames: indicador_id
         referencedTableName: ${db_prefix}est_indicador
         referencedColumnNames: id
@@ -108,7 +108,7 @@ databaseChangeLog:
     author: limit
     changes:
     - addForeignKeyConstraint:
-        baseTableName: ${db_prefix}indicador_table
+        baseTableName: ${db_prefix}est_indicador_table
         baseColumnNames: widget_id
         referencedTableName: ${db_prefix}est_widget
         referencedColumnNames: id
