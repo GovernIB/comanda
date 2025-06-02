@@ -2,16 +2,10 @@ package es.caib.comanda.estadistica.persist.entity.widget;
 
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
+import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 /**
  * Entitat que representa un widget simple d'estadística dins de la base de dades.
@@ -46,16 +40,12 @@ import javax.persistence.ManyToOne;
  * @author Límit Tecnologies
  */
 @Getter
+@Setter
 @Entity
 @DiscriminatorValue("SIMPLE") // Valor específic al discriminador
 public class EstadisticaSimpleWidgetEntity extends EstadisticaWidgetEntity<EstadisticaSimpleWidget> {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "indicador_id",
-            referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_indicador_fk"),
-            nullable = false)
+    @OneToOne(mappedBy = "widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private IndicadorTaulaEntity indicadorInfo;
 
     // Text a mostrar després del valor. Ex 20 "dies"

@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
@@ -52,7 +53,9 @@ public class IndicadorTaula extends BaseResource<Long> {
     @NotNull
     private ResourceReference<EstadisticaTaulaWidget, Long> widget;
     @NotNull
-    private TableColumnsEnum tipus;
+    private TableColumnsEnum agregacio;
+    @NotNull
+    private PeriodeUnitat unitatAgregacio;
     @NotNull
     @Size(max = 64)
     private String titol;

@@ -14,8 +14,12 @@ import org.springframework.context.annotation.Profile;
 public class MessageSourceConfig extends BaseMessageSourceConfig {
 
 	@Override
-	protected String getBasename() {
-		return "comanda.estadistica-messages";
+	protected String[] getBasenames() {
+		return new String[] {
+			getBasename(),
+			"comanda.estadistica-messages",
+			"comanda.client-messages",
+		};
 	}
 
 }

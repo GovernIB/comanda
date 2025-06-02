@@ -1,5 +1,5 @@
 import Grid from "@mui/material/Grid2";
-import {FormField, useFormContext} from "reactlib";
+import {FormField, useFormContext, springFilterBuilder as builder } from "reactlib";
 import * as React from "react";
 import { useState, useEffect } from "react";
 import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
@@ -50,9 +50,12 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
         <Grid container spacing={2}>
             <Grid size={{xs: 12, sm:6}}>
                 <EstadisticaWidgetFormFields>
-                    <Grid size={12}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
                     <Grid size={6}><FormField name="unitat" /></Grid>
                     <Grid size={6}><FormField name="compararPeriodeAnterior" /></Grid>
+                    <Grid size={12}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
+                    <Grid size={12}><FormField name="titolIndicador" /></Grid>
+                    <Grid size={6}><FormField name="tipusIndicador" /></Grid>
+                    <Grid size={6}><FormField name="periodeIndicador" /></Grid>
                 </EstadisticaWidgetFormFields>
             </Grid>
 

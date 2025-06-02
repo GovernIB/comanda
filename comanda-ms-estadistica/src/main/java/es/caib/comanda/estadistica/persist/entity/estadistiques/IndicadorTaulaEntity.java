@@ -73,6 +73,8 @@ public class IndicadorTaulaEntity extends BaseAuditableEntity<IndicadorTaula> {
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "indtab_indicador_fk"),
             nullable = false)
     private IndicadorEntity indicador;
+    @Column(name = "indicador_id", updatable = false, insertable = false)
+    private Long indicadorId;//Sols per filtrar i visualitzar
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "widget_id",

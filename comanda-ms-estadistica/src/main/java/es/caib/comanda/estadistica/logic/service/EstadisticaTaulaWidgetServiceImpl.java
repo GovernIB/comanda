@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
 import es.caib.comanda.estadistica.logic.intf.service.EstadisticaTaulaWidgetService;
@@ -31,8 +32,8 @@ import java.util.Map;
 @Service
 public class EstadisticaTaulaWidgetServiceImpl extends BaseMutableResourceService<EstadisticaTaulaWidget, Long, EstadisticaTaulaWidgetEntity> implements EstadisticaTaulaWidgetService {
 
-    @Autowired
-    private EstadisticaClientHelper estadisticaClientHelper;
+    @Autowired private EstadisticaClientHelper estadisticaClientHelper;
+    @Autowired private EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -68,23 +69,15 @@ public class EstadisticaTaulaWidgetServiceImpl extends BaseMutableResourceServic
 
     @Override
     protected void afterConversion(EstadisticaTaulaWidgetEntity entity, EstadisticaTaulaWidget resource) {
-        try {
-            var app = estadisticaClientHelper.appFindById(entity.getAppId());
-            if (app != null) {
-                resource.setAplicacioNom(app.getNom());
+        estadisticaWidgetHelper.afterConversionGetAppNom(entity, resource);
+        // Convertir el JSON d'atributs visuals a objectes i assignar-los al recurs
+        if (entity.getAtributsVisuals() != null && !entity.getAtributsVisuals().isEmpty()) {
+            try {
+                AtributsVisualsTaula atributsVisuals = objectMapper.readValue(entity.getAtributsVisuals(), AtributsVisualsTaula.class);
+                resource.setAtributsVisuals(atributsVisuals);
+            } catch (JsonProcessingException e) {
+                log.error("Error convertint JSON a atributs visuals", e);
             }
-
-            // Convertir el JSON d'atributs visuals a objectes i assignar-los al recurs
-            if (entity.getAtributsVisuals() != null && !entity.getAtributsVisuals().isEmpty()) {
-                try {
-                    AtributsVisualsTaula atributsVisuals = objectMapper.readValue(entity.getAtributsVisuals(), AtributsVisualsTaula.class);
-                    resource.setAtributsVisuals(atributsVisuals);
-                } catch (JsonProcessingException e) {
-                    log.error("Error convertint JSON a atributs visuals", e);
-                }
-            }
-        } catch (Exception e) {
-            log.error("Error obtenint el nom de l'aplicació amb id=" + entity.getAppId(), e);
         }
     }
 }

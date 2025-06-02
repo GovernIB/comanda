@@ -1,13 +1,17 @@
 package es.caib.comanda.estadistica.logic.intf.model.widget;
 
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -58,8 +62,22 @@ import javax.validation.constraints.Size;
 )
 public class EstadisticaSimpleWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
 
+    //    @NotNull
+    private ResourceReference<IndicadorTaula, Long> indicadorInfo;
+
     @NotNull
-    private ResourceReference<IndicadorTaula, Long> indicador;
+    @Transient
+    private ResourceReference<Indicador, Long> indicador;
+    @NotNull
+    @Size(max = 64)
+    @Transient
+    private String titolIndicador;
+    @NotNull
+    @Transient
+    private TableColumnsEnum tipusIndicador;
+    @NotNull
+    @Transient
+    private PeriodeUnitat periodeIndicador;
 
     // Text a mostrar després del valor. Ex 20 "dies"
     @Size(max = 64)

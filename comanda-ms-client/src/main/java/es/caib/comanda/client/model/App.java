@@ -3,12 +3,12 @@ package es.caib.comanda.client.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
 @NoArgsConstructor
-public class App {
+public class App implements Serializable {
 
 	private Long id;
 	private String codi;
