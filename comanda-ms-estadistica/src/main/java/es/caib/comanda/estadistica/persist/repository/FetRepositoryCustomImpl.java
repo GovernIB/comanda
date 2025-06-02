@@ -4,13 +4,20 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.dialect.FetRepositoryDialectFactory;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -105,7 +112,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
-    public Double getAggregatedValue(
+    public AggregateResult getAggregatedValue(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,
@@ -114,6 +121,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             TableColumnsEnum agregacio,
             PeriodeUnitat unitatAgregacio) {
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String sql = dialectFactory.getDialect().getAggregatedValueQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
@@ -121,12 +129,36 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         query.setParameter("dataInici", dataInici);
         query.setParameter("dataFi", dataFi);
 
-        Object result = query.getSingleResult();
+        switch (agregacio) {
+            case FIRST_SEEN:
+            case LAST_SEEN:
+                Object dateResult = query.getSingleResult();
+                LocalDate result = dateResult != null ? ((Timestamp) dateResult).toLocalDateTime().toLocalDate() : null;
+                return new AggregateResult(result);
+            default:
+                BigDecimal numberResult = (BigDecimal) query.getSingleResult();
+                return new AggregateResult(numberResult != null ? numberResult.doubleValue() : 0.0);
+        }
+    }
 
-        if (result == null) {
-            return null;
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AggregateResult {
+        private Double doubleResult;
+        private LocalDate dateResult;
+
+        public AggregateResult(Double doubleResult) {
+            this.doubleResult = doubleResult;
         }
 
-        return Double.valueOf(result.toString());
+        public AggregateResult(LocalDate dateResult) {
+            this.dateResult = dateResult;
+        }
+
+        public Object getResult() {
+            return doubleResult != null ? doubleResult : dateResult;
+        }
     }
 }

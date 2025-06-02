@@ -114,16 +114,29 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
      */
     @Override
     public String getAggregatedValueQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
-        String aggregationFunction = getAggregationFunction(agregacio, indicadorCodi, unitatAgregacio);
 
-        String query = "SELECT " + aggregationFunction + " FROM cmd_est_fet f " +
-                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+        String querySelect = "";
+        switch (agregacio) {
+            case AVERAGE:
+                querySelect = "SELECT AVG(sum_fets) as result FROM (SELECT " + getGrupping(unitatAgregacio) + ", SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) as sum_fets";
+                break;
+            case FIRST_SEEN:
+                querySelect = "SELECT MIN(t.data) as result";
+                break;
+            case LAST_SEEN:
+                querySelect = "SELECT MAX(t.data) as result";
+                break;
+            default:
+                querySelect = "SELECT SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) as result";
+        }
+
+        querySelect += "  FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                 "WHERE f.entorn_app_id = :entornAppId " +
                 "AND t.data BETWEEN :dataInici AND :dataFi ";
 
-        String conditions = generateDimensionConditions(dimensionsFiltre);
-        String aggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
-        return query + conditions + aggregationConditions;
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryAggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
+        return querySelect + queryConditions + queryAggregationConditions + " FETCH FIRST 1 ROW ONLY";
     }
 
     /**
@@ -153,35 +166,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                     }
                 })
                 .collect(Collectors.joining(" "));
-    }
-
-    /**
-     * Retorna la funció d'agregació SQL corresponent al tipus d'agregació especificat.
-     *
-     * @param agregacio El tipus d'agregació a aplicar.
-     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
-     * @return La funció d'agregació SQL corresponent.
-     */
-    private String getAggregationFunction(TableColumnsEnum agregacio, String indicadorCodi, PeriodeUnitat unitatAgregacio) {
-        switch (agregacio) {
-            case AVERAGE:
-                return "AVG(sum_fets) FROM (SELECT " + getGrupping(unitatAgregacio) + " SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) AS sum_fets ";
-            case FIRST_SEEN:
-                return "(SELECT t2.data FROM cmd_est_fet f2 " +
-                       "JOIN cmd_est_temps t2 ON f2.temps_id = t2.id " +
-                       "WHERE f2.entorn_app_id = f.entorn_app_id " +
-                       "ORDER BY t2.data ASC FETCH FIRST 1 ROW ONLY)";
-            case LAST_SEEN:
-                return "(SELECT t2.data FROM cmd_est_fet f2 " +
-                       "JOIN cmd_est_temps t2 ON f2.temps_id = t2.id " +
-                       "WHERE f2.entorn_app_id = f.entorn_app_id " +
-                       "ORDER BY t2.data DESC FETCH FIRST 1 ROW ONLY)";
-            case PERCENTAGE:
-            case COUNT:
-            case SUM:
-            default:
-                return "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"')))";
-        }
     }
 
     private String generateAggregationConditions(String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {

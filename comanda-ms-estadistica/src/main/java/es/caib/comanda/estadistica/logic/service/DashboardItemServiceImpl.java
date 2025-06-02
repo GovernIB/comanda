@@ -135,8 +135,11 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
             Object valorConsulta = calculateValorSimple(widget, entornId, periodeConsulta);
             String valorConsultaFormat = valorConsulta != null ? formatValorSimple(valorConsulta, widget.getIndicadorInfo()) : "";
-            Double valorConsultaPrevia = calculateCanviPercentual(widget, entornId, valorConsulta, periodePrevi);
-            String valorConsultaPreviaFormat = valorConsulta != null ? formatPercent(valorConsultaPrevia) : null;
+            String valorConsultaPreviaFormat = null;
+            if (valorConsulta != null && widget.isCompararPeriodeAnterior() && valorConsulta instanceof Number) {
+                Double valorConsultaPrevia = calculateCanviPercentual(widget, entornId, valorConsulta, periodePrevi);
+                valorConsultaPreviaFormat = valorConsulta != null ? formatPercent(valorConsultaPrevia) : null;
+            }
 
             InformeWidgetSimpleItem item = InformeWidgetSimpleItem.builder()
                     .tipus(WidgetTipus.SIMPLE)
@@ -270,6 +273,9 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             }
 
             Format format = indicadorInfo.getIndicador().getFormat();
+            if (valor instanceof LocalDate) {
+                format = Format.DATE;
+            }
             if (format == null) {
                 return String.valueOf(valor);
             }

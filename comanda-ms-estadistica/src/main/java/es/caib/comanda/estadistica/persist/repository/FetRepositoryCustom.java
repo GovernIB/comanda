@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.persist.repository;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
+import es.caib.comanda.estadistica.persist.repository.FetRepositoryCustomImpl.AggregateResult;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -99,7 +100,7 @@ public interface FetRepositoryCustom {
      * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
      * @return El valor agregat calculat directament a la base de dades.
      */
-    Double getAggregatedValue(
+    AggregateResult getAggregatedValue(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,

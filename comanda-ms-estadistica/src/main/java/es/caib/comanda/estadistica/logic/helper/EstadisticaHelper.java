@@ -455,7 +455,7 @@ public class EstadisticaHelper {
                 dimensionsFiltre,
                 indicadorCodi,
                 agregacio,
-                unitatAgregacio);
+                unitatAgregacio).getResult();
     }
 
     protected Fet toFet(FetEntity fetEntity) {

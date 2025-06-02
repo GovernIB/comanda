@@ -112,16 +112,28 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      */
     @Override
     public String getAggregatedValueQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
-        String aggregationFunction = getAggregationFunction(agregacio, indicadorCodi, unitatAgregacio);
+        String querySelect = "";
+        switch (agregacio) {
+            case AVERAGE:
+                querySelect = "SELECT AVG(sum_fets) as result FROM (SELECT " + getGrupping(unitatAgregacio) + "  SUM((f.indicadors_json->>'" + indicadorCodi + "')::numeric) as sum_fets";
+                break;
+            case FIRST_SEEN:
+                querySelect = "SELECT MIN(t.data) as result";
+                break;
+            case LAST_SEEN:
+                querySelect = "SELECT MAX(t.data) as result";
+                break;
+            default:
+                querySelect = "SELECT SUM((f.indicadors_json->>'" + indicadorCodi + "')::numeric) as result";
+        }
 
-        String query = "SELECT " + aggregationFunction + " FROM cmd_est_fet f " +
-                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+        querySelect += " FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                 "WHERE f.entorn_app_id = :entornAppId " +
                 "AND t.data BETWEEN :dataInici AND :dataFi ";
 
-        String conditions = generateDimensionConditions(dimensionsFiltre);
-        String aggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
-        return query + conditions + aggregationConditions;
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryAggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
+        return querySelect + queryConditions + queryAggregationConditions + " LIMIT 1";
     }
 
     /**
