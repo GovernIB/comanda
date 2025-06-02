@@ -49,12 +49,14 @@ public class SalutInfoHelper {
 
 	private final SalutClientHelper salutClientHelper;
 
+	private final RestTemplate restTemplate;
+
 	@Transactional
 	public void getSalutInfo(EntornApp entornApp) {
 		log.debug("Obtenint dades de salut de l'app {}, entorn {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom());
-		RestTemplate restTemplate = new RestTemplate();
+//		RestTemplate restTemplate = new RestTemplate();
 		MonitorSalut monitorSalut = new MonitorSalut(
 				entornApp.getId(),
 				entornApp.getSalutUrl(),

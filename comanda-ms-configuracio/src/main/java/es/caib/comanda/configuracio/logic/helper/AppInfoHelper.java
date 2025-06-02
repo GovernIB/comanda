@@ -18,6 +18,7 @@ import es.caib.comanda.ms.salut.model.AppInfo;
 import es.caib.comanda.ms.salut.model.IntegracioInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -41,10 +42,14 @@ public class AppInfoHelper {
 	private final IntegracioRepository integracioRepository;
 	private final SubsistemaRepository subsistemaRepository;
 
+	@Lazy
 	private final KeycloakHelper keycloakHelper;
 	private final SalutServiceClient salutServiceClient;
 	private final EstadisticaServiceClient estadisticaServiceClient;
 	private final MonitorServiceClient monitorServiceClient;
+
+	@Lazy
+	private final RestTemplate restTemplate;
 
 	@Transactional
 	public void refreshAppInfo(Long entornAppId) {
@@ -111,7 +116,7 @@ public class AppInfoHelper {
 	 * @param entornApp L'entorn-aplicació per al qual s'ha d'actualitzar la informació.
 	 */
 	private void fetchAndStoreAppInfo(EntornAppEntity entornApp) {
-		RestTemplate restTemplate = new RestTemplate();
+//		RestTemplate restTemplate = new RestTemplate();
 		MonitorApp monitorApp = new MonitorApp(
 			entornApp.getId(),
 			entornApp.getInfoUrl(),

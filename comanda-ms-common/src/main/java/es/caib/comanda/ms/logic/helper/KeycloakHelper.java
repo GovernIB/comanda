@@ -1,15 +1,20 @@
 package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.*;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import java.util.*;
+
+import java.util.Map;
 
 /**
  * Helper per a la comunicació amb Keycloak.
@@ -17,6 +22,7 @@ import java.util.*;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class KeycloakHelper {
 
@@ -31,7 +37,8 @@ public class KeycloakHelper {
 	@Value("${" + BaseConfig.PROP_KEYCLOAK_PASSWORD + ":#{null}}")
 	private String keycloakPassword;
 
-	private RestTemplate restTemplate;
+	@Lazy
+	private final RestTemplate restTemplate;
 
 	public String getAccessTokenWithClientCredentials(String clientSecret) {
 		if (isKeycloakConfigured()) {
@@ -84,7 +91,8 @@ public class KeycloakHelper {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
-		ResponseEntity<Map> response = getRestTemplate().postForEntity(getAuthUrl(), entity, Map.class);
+//		ResponseEntity<Map> response = getRestTemplate().postForEntity(getAuthUrl(), entity, Map.class);
+		ResponseEntity<Map> response = restTemplate.postForEntity(getAuthUrl(), entity, Map.class);
 		return response.getBody() != null ? (String)response.getBody().get("access_token") : null;
 	}
 
@@ -92,12 +100,12 @@ public class KeycloakHelper {
 		return keycloakBaseUrl + "/realms/" + keycloakRealm + "/protocol/openid-connect/token";
 	}
 
-	private RestTemplate getRestTemplate() {
-		if (restTemplate == null) {
-			restTemplate = new RestTemplateBuilder().build();
-		}
-		return restTemplate;
-	}
+//	private RestTemplate getRestTemplate() {
+//		if (restTemplate == null) {
+//			restTemplate = new RestTemplateBuilder().build();
+//		}
+//		return restTemplate;
+//	}
 
 	public String getAuthorizationHeader() {
 		String accessToken = getAccessTokenWithUsernamePassword(

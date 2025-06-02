@@ -3,6 +3,7 @@ package es.caib.comanda.ms.back.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.mediatype.hal.forms.CustomHalFormsTemplateBuilder;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsConfiguration;
@@ -22,6 +23,7 @@ public class HalFormsTemplateBuilderConfig {
 	@Autowired
 	private ApplicationContext applicationContext;
 	@Autowired(required = false)
+	@Lazy
 	private HalFormsConfiguration halFormsConfiguration;
 
 	@PostConstruct

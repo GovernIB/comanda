@@ -18,7 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.hateoas.*;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.TemplateVariable;
+import org.springframework.hateoas.TemplateVariables;
+import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsConfiguration;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsOptions;
@@ -44,9 +49,11 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public abstract class BaseHalFormsConfig {
 
 	@Autowired(required = false)
+	@Lazy
 	private Set<ReadonlyResourceController> resourceControllers;
 
 	@Bean
+	@Lazy
 	HalFormsConfiguration halFormsConfiguration() {
 		return createHalFormsConfiguration(
 			TypeUtil.findAssignableClasses(

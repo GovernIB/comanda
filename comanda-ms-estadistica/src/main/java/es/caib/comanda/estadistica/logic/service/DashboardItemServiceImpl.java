@@ -112,17 +112,17 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             EstadisticaWidgetEntity widget = dashboardItem.getWidget();
             switch (tipus) {
                 case SIMPLE:
-                    return generateDataWidgetSimple(dashboardItem, entornId);
+                    return generateDataWidgetSimple(dashboardItem);
                 case GRAFIC:
-                    return generateDataWidgetGrafic(dashboardItem, entornId);
+                    return generateDataWidgetGrafic(dashboardItem);
                 case TAULA:
-                    return generateDataWidgetTaula(dashboardItem, entornId);
+                    return generateDataWidgetTaula(dashboardItem);
                 default:
                     return List.of();
             }
         }
 
-        public List<InformeWidgetItem> generateDataWidgetSimple(DashboardItemEntity dashboardItem, Long entornId) {
+        public List<InformeWidgetItem> generateDataWidgetSimple(DashboardItemEntity dashboardItem) {
 
             EstadisticaSimpleWidgetEntity widget = (EstadisticaSimpleWidgetEntity)dashboardItem.getWidget();
 
@@ -133,11 +133,11 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                     : null;
             AtributsVisualsSimple atributsVisuals = resolveAtributsVisualsSimple(dashboardItem, widget);
 
-            Object valorConsulta = calculateValorSimple(widget, entornId, periodeConsulta);
+            Object valorConsulta = calculateValorSimple(widget, periodeConsulta);
             String valorConsultaFormat = valorConsulta != null ? formatValorSimple(valorConsulta, widget.getIndicadorInfo()) : "";
             String valorConsultaPreviaFormat = null;
             if (valorConsulta != null && widget.isCompararPeriodeAnterior() && valorConsulta instanceof Number) {
-                Double valorConsultaPrevia = calculateCanviPercentual(widget, entornId, valorConsulta, periodePrevi);
+                Double valorConsultaPrevia = calculateCanviPercentual(widget, valorConsulta, periodePrevi);
                 valorConsultaPreviaFormat = valorConsulta != null ? formatPercent(valorConsultaPrevia) : null;
             }
 
@@ -164,7 +164,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
         }
 
 
-        private Object calculateValorSimple(EstadisticaSimpleWidgetEntity widget, Long entornId, PeriodeDates periodeConsulta) {
+        private Object calculateValorSimple(EstadisticaSimpleWidgetEntity widget, PeriodeDates periodeConsulta) {
             if (periodeConsulta == null || periodeConsulta.start == null || periodeConsulta.end == null) {
                 return null;
             }
@@ -190,53 +190,6 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 }
             }
 
-//            // Get the statistics for the period and dimensions
-//            List<Fet> fets = estadisticaHelper.getEstadistiquesPeriodeAmbDimensions(
-//                    widget.getAppId(),
-//                    periodeConsulta.start,
-//                    periodeConsulta.end,
-//                    dimensionsFiltre);
-//
-//            if (fets == null || fets.isEmpty()) {
-//                return null;
-//            }
-//
-//            // Calculate the value based on the aggregation type
-//            switch (agregacio) {
-//                case COUNT:
-//                    return (double) fets.size();
-//                case SUM:
-//                    return fets.stream()
-//                            .filter(fet -> fet.getIndicadorsJson().containsKey(indicadorCodi))
-//                            .mapToDouble(fet -> fet.getIndicadorsJson().get(indicadorCodi))
-//                            .sum();
-//                case AVERAGE:
-//                    return fets.stream()
-//                            .filter(fet -> fet.getIndicadorsJson().containsKey(indicadorCodi))
-//                            .mapToDouble(fet -> fet.getIndicadorsJson().get(indicadorCodi))
-//                            .average()
-//                            .orElse(0.0);
-//                case FIRST_SEEN:
-//                    return fets.stream()
-//                            .filter(fet -> fet.getIndicadorsJson().containsKey(indicadorCodi))
-//                            .min(Comparator.comparing(fet -> fet.getTemps().getData()))
-//                            .map(fet -> fet.getIndicadorsJson().get(indicadorCodi))
-//                            .orElse(null);
-//                case LAST_SEEN:
-//                    return fets.stream()
-//                            .filter(fet -> fet.getIndicadorsJson().containsKey(indicadorCodi))
-//                            .max(Comparator.comparing(fet -> fet.getTemps().getData()))
-//                            .map(fet -> fet.getIndicadorsJson().get(indicadorCodi))
-//                            .orElse(null);
-//                case PERCENTAGE:
-//                default:
-//                    // For other aggregation types, return the sum as a default
-//                    return fets.stream()
-//                            .filter(fet -> fet.getIndicadorsJson().containsKey(indicadorCodi))
-//                            .mapToDouble(fet -> fet.getIndicadorsJson().get(indicadorCodi))
-//                            .sum();
-//            }
-
             // Get the aggregated value directly from the database
             return estadisticaHelper.getValorAgregatPeriodeAmbDimensions(
                     widget.getAppId(),
@@ -248,7 +201,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                     unitatAgregacio);
         }
 
-        private Double calculateCanviPercentual(EstadisticaSimpleWidgetEntity widget, Long entornId, Object valorConsulta, PeriodeDates periodePrevi) {
+        private Double calculateCanviPercentual(EstadisticaSimpleWidgetEntity widget, Object valorConsulta, PeriodeDates periodePrevi) {
             if (!widget.isCompararPeriodeAnterior()
                     || periodePrevi == null || periodePrevi.start == null || periodePrevi.end == null
                     || valorConsulta == null || !(valorConsulta instanceof Number)) {
@@ -257,7 +210,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
             Number valorActual = (Number) valorConsulta;
             // Calculate the value for the previous period
-            Number valorPrevi = (Number) calculateValorSimple(widget, entornId, periodePrevi);
+            Number valorPrevi = (Number) calculateValorSimple(widget, periodePrevi);
 
             if (valorPrevi == null || valorPrevi.doubleValue() == 0) {
                 return null;
@@ -310,7 +263,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             return df.format(percent);
         }
 
-        public List<InformeWidgetItem> generateDataWidgetGrafic(DashboardItemEntity dashboardItem, Long entornId) {
+        public List<InformeWidgetItem> generateDataWidgetGrafic(DashboardItemEntity dashboardItem) {
 
             EstadisticaGraficWidgetEntity widget = (EstadisticaGraficWidgetEntity)dashboardItem.getWidget();
 
@@ -514,7 +467,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             }
         }
 
-        public List<InformeWidgetItem> generateDataWidgetTaula(DashboardItemEntity dashboardItem, Long entornId) {
+        public List<InformeWidgetItem> generateDataWidgetTaula(DashboardItemEntity dashboardItem) {
 
             EstadisticaTaulaWidgetEntity widget = (EstadisticaTaulaWidgetEntity)dashboardItem.getWidget();
 

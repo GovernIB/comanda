@@ -1,12 +1,8 @@
 package es.caib.comanda.estadistica.logic.helper;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
@@ -21,8 +17,6 @@ import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import es.caib.comanda.estadistica.persist.repository.TempsRepository;
 import es.caib.comanda.ms.estadistica.model.DimensioDesc;
 import es.caib.comanda.ms.estadistica.model.EstadistiquesInfo;
-import es.caib.comanda.ms.estadistica.model.GenericDimensio;
-import es.caib.comanda.ms.estadistica.model.GenericFet;
 import es.caib.comanda.ms.estadistica.model.IndicadorDesc;
 import es.caib.comanda.ms.estadistica.model.RegistreEstadistic;
 import es.caib.comanda.ms.estadistica.model.RegistresEstadistics;
@@ -31,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -63,6 +56,8 @@ public class EstadisticaHelper {
 
     private final EstadisticaClientHelper estadisticaClientHelper;
 
+    private final RestTemplate restTemplate;
+
     // OBTENCIÓ i DESAT D'ESTADISTIQUES
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +76,6 @@ public class EstadisticaHelper {
         log.debug("Obtenint informació i dades estadístiques de l'app {}, entorn {}",
                 entornApp.getApp().getNom(),
                 entornApp.getEntorn().getNom());
-        RestTemplate restTemplate = initializeRestTemplate();
         String estadisticaUrl = buildEstadisticaUrl(entornApp, dies);
 
         MonitorEstadistica monitorEstadistica = initializeMonitor(entornApp, estadisticaUrl);
@@ -92,12 +86,6 @@ public class EstadisticaHelper {
         } catch (RestClientException ex) {
             handleEstadisticaException(entornApp, monitorEstadistica, ex);
         }
-    }
-
-    private RestTemplate initializeRestTemplate() {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().set(0, getConverter());
-        return restTemplate;
     }
 
     private String buildEstadisticaUrl(EntornApp entornApp, Integer dies) {
@@ -156,27 +144,6 @@ public class EstadisticaHelper {
         }
     }
 
-
-    /**
-     * Configura i retorna un {@link MappingJackson2HttpMessageConverter} personalitzat amb un {@link ObjectMapper}
-     * per gestionar la serialització i deserialització de dades JSON. El mapejador afegeix configuracions específiques com la desactivació
-     * d'errors en subtipus i en objectes buits, i registra un mòdul que mapeja tipus abstractes a implementacions concretes.
-     *
-     * @return una instància de {@link MappingJackson2HttpMessageConverter} configurada amb ajustos personalitzats.
-     */
-    private static MappingJackson2HttpMessageConverter getConverter() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-
-        SimpleModule module = new SimpleModule();
-        module.addAbstractTypeMapping(es.caib.comanda.ms.estadistica.model.Dimensio.class, GenericDimensio.class);
-        module.addAbstractTypeMapping(es.caib.comanda.ms.estadistica.model.Fet.class, GenericFet.class);
-        objectMapper.registerModule(module);
-
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
-        return converter;
-    }
 
     /**
      * Crea indicadors i dimensions associats a un entorn d'aplicació especificat a partir de la informació proporcionada
