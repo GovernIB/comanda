@@ -77,13 +77,13 @@ public class EstadisticaSchedulerService {
     private void executarProces(EntornApp entornApp) {
         if (isLeader()) {
             try {
-                log.info("Executant procés per l'entornApp {}", entornApp.getId());
+                log.info("Executant procés d'obtenció de dades estadístiques per l'entornApp {}", entornApp.getId());
 
                 // Refrescar informació estadística de entorn-app
                 estadisticaHelper.getEstadisticaInfoDades(entornApp);
 
             } catch (Exception e) {
-                log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornApp.getId(), e);
+                log.error("Error en l'execució del procés d'obtenció de dades estadístiques per l'entornApp {}", entornApp.getId(), e);
             }
         }
     }

@@ -2,8 +2,6 @@ package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
-import es.caib.comanda.client.model.AppRef;
-import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
@@ -91,44 +89,14 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     protected void afterCreateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterCreateSave(entity, resource, answers, anyOrderChanged);
         schedulerService.programarTasca(entity);
-        programarTasquesSalutEstadistica(entity);
+        appInfoHelper.programarTasquesSalutEstadistica(entity);
     }
 
     @Override
     protected void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         schedulerService.programarTasca(entity);
-        programarTasquesSalutEstadistica(entity);
-    }
-
-    private void programarTasquesSalutEstadistica(EntornAppEntity entity) {
-        es.caib.comanda.client.model.EntornApp clientEntornApp = toClientEntornApp(entity);
-        try {
-            salutServiceClient.programar(clientEntornApp, keycloakHelper.getAuthorizationHeader());
-        } catch (Exception e) {
-            log.error("Error al programar l'actualització d'informació de salut per l'entornApp {}", entity.getId(), e);
-        }
-        try {
-            estadisticaServiceClient.programar(clientEntornApp, keycloakHelper.getAuthorizationHeader());
-        } catch (Exception e) {
-            log.error("Error al programar l'actualització d'informació estadística per l'entornApp {}", entity.getId(), e);
-        }
-    }
-
-    private es.caib.comanda.client.model.EntornApp toClientEntornApp(EntornAppEntity entity) {
-        return es.caib.comanda.client.model.EntornApp.builder()
-                .id(entity.getId())
-                .entorn(EntornRef.builder().id(entity.getEntorn().getId()).nom(entity.getEntorn().getNom()).build())
-                .app(AppRef.builder().id(entity.getApp().getId()).nom(entity.getApp().getNom()).build())
-                .infoUrl(entity.getInfoUrl())
-                .infoInterval(entity.getInfoInterval())
-                .salutUrl(entity.getSalutUrl())
-                .salutInterval(entity.getSalutInterval())
-                .estadisticaUrl(entity.getEstadisticaUrl())
-                .estadisticaUrl(entity.getEstadisticaUrl())
-                .estadisticaCron(entity.getEstadisticaCron())
-                .activa(entity.isActiva())
-                .build();
+        appInfoHelper.programarTasquesSalutEstadistica(entity);
     }
 
     // ACCIONS

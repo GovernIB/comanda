@@ -6,7 +6,7 @@ import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.intf.service.AppService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.repository.AppRepository;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -27,8 +28,9 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 
 	@Autowired
 	private AppInfoHelper appInfoHelper;
+
 	@Autowired
-	private AppRepository appRepository;
+	private ConfiguracioSchedulerService schedulerService;
 
 	@Override
 	protected void afterConversion(AppEntity entity, App resource) {
@@ -53,6 +55,19 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 						return entornApp;
 					}).collect(Collectors.toList())
 			);
+		}
+	}
+
+	@Override
+	protected void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+		super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+
+		// Per assegurar que s'executin les tasques programades correctament, es programen de nou.
+		if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {
+			entity.getEntornApps().forEach(e -> {
+				schedulerService.programarTasca(e);
+				appInfoHelper.programarTasquesSalutEstadistica(e);
+			});
 		}
 	}
 

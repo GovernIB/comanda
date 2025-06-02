@@ -83,7 +83,7 @@ public class ConfiguracioSchedulerService {
     private void executarProces(Long entornAppId) {
         if (isLeader()) {
             try {
-                log.info("Executant procés per l'entornApp {}", entornAppId);
+                log.info("Executant procés de refresc de la informació per l'entornApp {}", entornAppId);
 
                 // Refrescar informació de entorn-app
                 appInfoHelper.refreshAppInfo(entornAppId);

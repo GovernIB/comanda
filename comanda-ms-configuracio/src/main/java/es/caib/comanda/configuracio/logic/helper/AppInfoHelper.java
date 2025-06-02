@@ -1,6 +1,10 @@
 package es.caib.comanda.configuracio.logic.helper;
 
+import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
+import es.caib.comanda.client.SalutServiceClient;
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
@@ -38,6 +42,8 @@ public class AppInfoHelper {
 	private final SubsistemaRepository subsistemaRepository;
 
 	private final KeycloakHelper keycloakHelper;
+	private final SalutServiceClient salutServiceClient;
+	private final EstadisticaServiceClient estadisticaServiceClient;
 	private final MonitorServiceClient monitorServiceClient;
 
 	@Transactional
@@ -58,6 +64,36 @@ public class AppInfoHelper {
 				log.warn("No s'ha pogut actualitzar info per entorn {}: {}", entornApp.getId(), ex.getMessage());
 			}
 		});
+	}
+
+	public void programarTasquesSalutEstadistica(EntornAppEntity entity) {
+		es.caib.comanda.client.model.EntornApp clientEntornApp = toClientEntornApp(entity);
+		try {
+			salutServiceClient.programar(clientEntornApp, keycloakHelper.getAuthorizationHeader());
+		} catch (Exception e) {
+			log.error("Error al programar l'actualització d'informació de salut per l'entornApp {}", entity.getId(), e);
+		}
+		try {
+			estadisticaServiceClient.programar(clientEntornApp, keycloakHelper.getAuthorizationHeader());
+		} catch (Exception e) {
+			log.error("Error al programar l'actualització d'informació estadística per l'entornApp {}", entity.getId(), e);
+		}
+	}
+
+	private es.caib.comanda.client.model.EntornApp toClientEntornApp(EntornAppEntity entity) {
+		return es.caib.comanda.client.model.EntornApp.builder()
+				.id(entity.getId())
+				.entorn(EntornRef.builder().id(entity.getEntorn().getId()).nom(entity.getEntorn().getNom()).build())
+				.app(AppRef.builder().id(entity.getApp().getId()).nom(entity.getApp().getNom()).build())
+				.infoUrl(entity.getInfoUrl())
+				.infoInterval(entity.getInfoInterval())
+				.salutUrl(entity.getSalutUrl())
+				.salutInterval(entity.getSalutInterval())
+				.estadisticaUrl(entity.getEstadisticaUrl())
+				.estadisticaUrl(entity.getEstadisticaUrl())
+				.estadisticaCron(entity.getEstadisticaCron())
+				.activa(entity.isActiva())
+				.build();
 	}
 
 	/**

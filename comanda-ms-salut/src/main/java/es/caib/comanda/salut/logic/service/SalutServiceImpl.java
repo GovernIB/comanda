@@ -85,7 +85,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						SalutIntegracio.class,
 						"salut")).
 					collect(Collectors.toList()));
-			if (entornAppForEntity != null) {
+			if (entornAppForEntity != null && entornAppForEntity.getIntegracions() != null) {
 				entornAppForEntity.getIntegracions().forEach(i -> {
 					Optional<SalutIntegracio> salutIntegracio = resource.getIntegracions().stream().
 						filter(si -> si.getCodi().equals(i.getCodi())).
@@ -108,7 +108,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						SalutSubsistema.class,
 						"salut")).
 					collect(Collectors.toList()));
-			if (entornAppForEntity != null) {
+			if (entornAppForEntity != null && entornAppForEntity.getSubsistemes() != null) {
 				entornAppForEntity.getSubsistemes().forEach(s -> {
 					Optional<SalutSubsistema> salutSubsistema = resource.getSubsistemes().stream().
 						filter(ss -> ss.getCodi().equals(s.getCodi())).
@@ -123,6 +123,9 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
 			List<SalutMissatgeEntity> salutMissatges = salutMissatgeRepository.findBySalut(entity);
+			if (salutMissatges == null)
+				return;
+
 			resource.setMissatges(
 				salutMissatges.stream().
 					map(s -> objectMappingHelper.newInstanceMap(
@@ -137,6 +140,9 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
 			List<SalutDetallEntity> salutDetalls = salutDetallRepository.findBySalut(entity);
+			if (salutDetalls == null)
+				return;
+
 			resource.setDetalls(
 				salutDetalls.stream().
 					map(s -> objectMappingHelper.newInstanceMap(
@@ -156,6 +162,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			List<SalutEntity> saluts = ((SalutRepository)entityRepository).informeSalutLast(
 				null,
 				LocalDateTime.now());
+			if (saluts == null)
+				return List.of();
 			return entitiesToResources(saluts);
 		}
 

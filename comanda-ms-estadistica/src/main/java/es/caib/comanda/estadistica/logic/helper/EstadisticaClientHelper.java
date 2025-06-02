@@ -66,6 +66,9 @@ public class EstadisticaClientHelper {
                 "UNPAGED",
                 null,
                 keycloakHelper.getAuthorizationHeader());
+        if (entornApps == null) {
+            return List.of();
+        }
         return entornApps.getContent().stream().
                 map(EntityModel::getContent).
                 collect(Collectors.toList());

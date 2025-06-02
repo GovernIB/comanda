@@ -91,7 +91,7 @@ public class SalutSchedulerService {
                 salutInfoHelper.getSalutInfo(entornApp);
 
             } catch (Exception e) {
-                log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornApp.getId(), e);
+                log.error("Error en l'execució del procés d'obtenció de informació de salut per l'entornApp {}", entornApp.getId(), e);
             }
         }
     }
