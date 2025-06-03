@@ -40,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
@@ -143,7 +142,6 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	@Autowired
 	private ApplicationContext applicationContext;
 	@Autowired
-	@Lazy
 	protected ReadonlyResourceService<R, ID> readonlyResourceService;
 	@Autowired
 	protected ResourceApiService resourceApiService;
