@@ -30,7 +30,7 @@ public class EstadisticaWidgetHelper {
     private final DimensioValorRepository dimensioValorRepository;
 
     /** Sincronitza els valors de dimensió d'un widget estadístic entre el recurs rebut i l'entitat persistida.
-     Afegeix noves associacions i elimina les que ja no hi són presents, modificant la relació. */
+        Afegeix noves associacions i elimina les que ja no hi són presents, modificant la relació. */
     public <E extends EstadisticaWidgetEntity, R extends EstadisticaWidget> void upsertDimensionsValors(E entity, R resource) {
         List<DimensioValorEntity> dimensionsValorsEntities = entity.getDimensionsValor();
         List<ResourceReference<DimensioValor, Long>> dimensionsValors = resource.getDimensionsValor();
@@ -52,6 +52,7 @@ public class EstadisticaWidgetHelper {
         dimensionsValorsEntities.addAll(persistValues);
     }
 
+    /** Assigna el nom de l'aplicació a partir de l'appId **/
     public <E extends EstadisticaWidgetEntity, R extends EstadisticaWidget> void afterConversionGetAppNom(E entity, R resource) {
         try {
             App app = estadisticaClientHelper.appFindById(entity.getAppId());
@@ -63,6 +64,7 @@ public class EstadisticaWidgetHelper {
         }
     }
 
+    /** Assigna la llista de referències a {@link DimensioValor} dins del {@link EstadisticaWidget} **/
     public <E extends EstadisticaWidgetEntity, R extends EstadisticaWidget> void afterConversionGetDimensions(E entity, R resource) {
         List<DimensioValorEntity> dimensionsValorsEntities = entity.getDimensionsValor();
         List<ResourceReference<DimensioValor, Long>> dimensionsValors = new ArrayList<>();

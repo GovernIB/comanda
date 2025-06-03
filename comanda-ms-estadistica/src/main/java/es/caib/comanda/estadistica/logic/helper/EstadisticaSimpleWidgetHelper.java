@@ -25,6 +25,7 @@ public class EstadisticaSimpleWidgetHelper {
     private final IndicadorRepository indicadorRepository;
     private final IndicadorTaulaRepository indicadorTaulaRepository;
 
+    /** Crea o actualitza l'entitat {@link IndicadorTaulaEntity} amb les dades del widget **/
     public void upsertIndicadorTaula(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource) {
         IndicadorTaulaEntity indicadorTaulaEntity = entity.getIndicadorInfo();
         if (indicadorTaulaEntity == null) {
@@ -45,6 +46,7 @@ public class EstadisticaSimpleWidgetHelper {
         entity.setIndicadorInfo(indicadorTaulaEntity);
     }
 
+    /** Assigna al widget els atributs provinents de {@link IndicadorTaulaEntity} **/
     public void afterCoversionGetIndicadorTaulaAtributes(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource) {
         if (Objects.nonNull(entity.getIndicadorInfo()) && Objects.nonNull(entity.getIndicadorInfo().getIndicador())) {
             IndicadorTaulaEntity indicadorTaula = entity.getIndicadorInfo();
