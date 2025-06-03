@@ -41,7 +41,7 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     @JoinColumn(
             name = "indicador_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_indicador_fk"),
+            //foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_indicador_fk"),
             nullable = false)
     private IndicadorTaulaEntity indicador;
 

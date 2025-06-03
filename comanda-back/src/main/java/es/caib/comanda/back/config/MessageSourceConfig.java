@@ -15,6 +15,8 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 	@Override
 	protected String[] getBasenames() {
 		return new String[] {
+			getBasename(),
+			"comanda.client-messages",
 			"comanda.estadistica-messages",
 		};
 	}

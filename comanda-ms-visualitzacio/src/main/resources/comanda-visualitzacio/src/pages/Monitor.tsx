@@ -153,12 +153,12 @@ const MonitorFilter: React.FC<any> = () => {
         componentProps={{ sx: { my: 2 } }}
         >
         <Grid container columnSpacing={1} rowSpacing={1}>
-            <Grid size={{xs: 12, sm: 4}}><FormField name="codi" /></Grid>
-            <Grid size={{xs: 12, sm: 4}}><FormField name="dataDesde" /></Grid>
-            <Grid size={{xs: 12, sm: 4}}><FormField name="dataFins" /></Grid>
-            <Grid size={{xs: 12, sm: 4}}><FormField name="descripcio" /></Grid>
-            <Grid size={{xs: 12, sm: 4}}><FormField name="tipus" /></Grid>
-            <Grid size={{xs: 12, sm: 4}}><FormField name="estat" /></Grid>
+            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="codi" /></Grid>
+            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="dataDesde" /></Grid>
+            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="dataFins" /></Grid>
+            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="descripcio" /></Grid>
+            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="tipus" /></Grid>
+            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="estat" /></Grid>
             <Grid size={12} sx={{ display: 'flex', justifyContent: 'end' }}>
                 <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }} >
                     <Button variant="outlined" onClick={clear} sx={{ flexBasis: { xs: 'calc(50% - 0.5rem)', sm: 'auto' }, flexGrow: 0, flex: '1 1 auto', minWidth: 'fit-content', borderRadius: 1 }} >
