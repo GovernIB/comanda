@@ -3,9 +3,11 @@ import Grid from "@mui/material/Grid2";
 import * as React from "react";
 import Divider from "@mui/material/Divider";
 import { columnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchColumns';
+import { useTranslation } from "react-i18next";
 
 const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data } = useFormContext();
+    const { t } = useTranslation();
 
     // Get the current values for conditional rendering
     const periodeMode = data?.periodeMode;
@@ -39,11 +41,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
 
             <Grid size={12}><FormField name="dimensionsValor" multiple advancedSearchColumns={columnesDimensioValor} /></Grid>
 
-            <Grid size={12}><Divider sx={{ my: 1 }} /></Grid>
-
-            { children }
-
-            <Grid size={12}><Divider sx={{ my: 1 }} /></Grid>
+            <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.periode')}</Divider></Grid>
 
             {/* Periodo base, depenent des tipus apareixeran o no els camps de abaix */}
             <Grid size={12}><FormField name="periodeMode" /></Grid>
@@ -83,6 +81,8 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                     <Grid size={6}><FormField name="absolutPeriodeFi" /></Grid>
                 </>
             )}
+
+            { children }
         </Grid>
     </>;
 }

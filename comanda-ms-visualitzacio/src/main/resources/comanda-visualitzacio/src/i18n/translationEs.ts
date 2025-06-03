@@ -109,6 +109,10 @@ const translationEs = {
         },
         widget: {
             title: "Widgets estadísticos",
+            form: {
+                periode: "Period",
+                simple: "Widget simple",
+            },
             simple: {
                 tab: {
                     title: "Simples",

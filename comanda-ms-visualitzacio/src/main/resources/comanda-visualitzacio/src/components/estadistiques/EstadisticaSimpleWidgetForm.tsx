@@ -6,9 +6,13 @@ import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
 import SimpleWidgetVisualization from "./SimpleWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
+import { Divider} from "@mui/material";
+import { useTranslation } from "react-i18next";
+
 
 const EstadisticaSimpleWidgetForm: React.FC = () => {
     const { data } = useFormContext();
+    const { t } = useTranslation();
     const [previewData, setPreviewData] = useState({
         title: 'Títol del widget',
         value: 1234,
@@ -50,6 +54,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
         <Grid container spacing={2}>
             <Grid size={{xs: 12, sm:6}}>
                 <EstadisticaWidgetFormFields>
+                    <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.simple')}</Divider></Grid>
                     <Grid size={6}><FormField name="unitat" /></Grid>
                     <Grid size={6}><FormField name="compararPeriodeAnterior" /></Grid>
                     <Grid size={12}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>

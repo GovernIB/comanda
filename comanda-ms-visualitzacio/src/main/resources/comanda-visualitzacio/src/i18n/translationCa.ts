@@ -109,6 +109,10 @@ const translationCa = {
         },
         widget: {
             title: "Widgets estadístics",
+            form: {
+                periode: "Període",
+                simple: "Widget simple",
+            },
             simple: {
                 tab: {
                     title: "Simples",
