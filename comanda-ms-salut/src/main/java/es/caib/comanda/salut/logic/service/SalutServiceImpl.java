@@ -30,6 +30,7 @@ import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -37,6 +38,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -159,8 +161,22 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class InformeSalutLast implements ReportGenerator<SalutEntity, Serializable, Salut> {
 		@Override
 		public List<Salut> generateData(String code, SalutEntity entity, Serializable params) throws ReportGenerationException {
+			PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+					null,
+					"activa:true and app.activa:true",
+					null,
+					null,
+					"UNPAGED",
+					null,
+					keycloakHelper.getAuthorizationHeader());
+			List<Long> entornAppIds = entornApps.getContent().stream().
+					map(EntityModel::getContent).
+					filter(Objects::nonNull).
+					map(EntornApp::getId).
+					collect(Collectors.toList());
+
 			List<SalutEntity> saluts = ((SalutRepository)entityRepository).informeSalutLast(
-				null,
+					entornAppIds,
 				LocalDateTime.now());
 			if (saluts == null)
 				return List.of();
