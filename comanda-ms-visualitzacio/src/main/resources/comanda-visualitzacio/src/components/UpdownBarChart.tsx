@@ -13,7 +13,7 @@ export type UpdownBarChartProps = {
     estats?: any;
 }
 
-const getEstatsMaxData = (estats: any) => {
+export const getEstatsMaxData = (estats: any) => {
     let estatsMaxData = estats?.[estats.length - 1]?.data;
     const estatApps = Object.keys(estats);
     estatApps?.forEach((a: any) => {
@@ -25,6 +25,31 @@ const getEstatsMaxData = (estats: any) => {
     return estatsMaxData;
 }
 
+export const calculateEstatsSeries = (
+    baseDataGroups: string[],
+    estats: Record<string, any[]>,
+    agrupacio: string,
+    percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "maintenancePercent" | "downPercent"
+): number[] => {
+    return baseDataGroups.map((group) => {
+        let valueSum = 0.0;
+        let valueCount = 0;
+
+        const estatApps = Object.keys(estats);
+        estatApps.forEach((appKey) => {
+            const estatForGroup = estats[appKey].find((estat) => isDataInGroup(estat.data, group, agrupacio));
+            valueSum += estatForGroup != null ? estatForGroup[percentKey] || 0 : 0;
+            valueCount += estatForGroup != null ? 1 : 0;
+        });
+
+        if (percentKey === "degradedPercent" || percentKey === "maintenancePercent" || percentKey === "downPercent") {
+            valueSum = -valueSum;
+        }
+        return valueCount !== 0 ? valueSum / valueCount : 0.0;
+    });
+};
+
+
 const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const {
         dataInici,
@@ -35,35 +60,11 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const estatsMaxData = getEstatsMaxData(estats);
     const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
 
-    const calculateSeries = (
-        baseDataGroups: string[],
-        estats: Record<string, any[]>,
-        agrupacio: string,
-        percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "maintenancePercent" | "downPercent"
-    ): number[] => {
-        return baseDataGroups.map((group) => {
-            let valueSum = 0.0;
-            let valueCount = 0;
-
-            const estatApps = Object.keys(estats);
-            estatApps.forEach((appKey) => {
-                const estatForGroup = estats[appKey].find((estat) => isDataInGroup(estat.data, group, agrupacio));
-                valueSum += estatForGroup != null ? estatForGroup[percentKey] || 0 : 0;
-                valueCount += estatForGroup != null ? 1 : 0;
-            });
-
-            if (percentKey === "degradedPercent" || percentKey === "maintenancePercent" || percentKey === "downPercent") {
-                valueSum = -valueSum;
-            }
-            return valueCount !== 0 ? valueSum / valueCount : 0.0;
-        });
-    };
-
-    const seriesUp = calculateSeries(baseDataGroups, estats, agrupacio, "upPercent");
-    const seriesWarn = calculateSeries(baseDataGroups, estats, agrupacio, "warnPercent");
-    const seriesDegraded = calculateSeries(baseDataGroups, estats, agrupacio, "degradedPercent");
-    const seriesMaintenance = calculateSeries(baseDataGroups, estats, agrupacio, "maintenancePercent");
-    const seriesDown = calculateSeries(baseDataGroups, estats, agrupacio, "downPercent");
+    const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "upPercent");
+    const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "warnPercent");
+    const seriesDegraded = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "degradedPercent");
+    const seriesMaintenance = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "maintenancePercent");
+    const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent");
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
     const series = [{

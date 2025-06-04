@@ -52,6 +52,9 @@ const translationEs = {
             latencia: {
                 title: "Latencia",
             },
+            estatLatencia: {
+                title: "Estado y latencia",
+            },
             integracions: {
                 title: "Integraciones",
                 column: {

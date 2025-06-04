@@ -20,12 +20,12 @@ export const generateDataGroups = (dataInici: string, dataFi: string, agrupacio:
     let djs = dayjs(dataInici).startOf(truncateUnit);
     const dataFiJs = dayjs(dataFi).startOf(truncateUnit).add(1, truncateUnit);
 
-    console.log("DI", dataInici);
-    console.log("DF", dataFi);
-    console.log("AG", agrupacio);
-    console.log("TU", truncateUnit);
-    console.log("DGI", djs.format('YYYY-MM-DDTHH:mm:ss'));
-    console.log("DGF", dataFiJs.format('YYYY-MM-DDTHH:mm:ss'));
+    // console.log("DI", dataInici);
+    // console.log("DF", dataFi);
+    // console.log("AG", agrupacio);
+    // console.log("TU", truncateUnit);
+    // console.log("DGI", djs.format('YYYY-MM-DDTHH:mm:ss'));
+    // console.log("DGF", dataFiJs.format('YYYY-MM-DDTHH:mm:ss'));
 
     do {
         dataGroups.push(djs.format('YYYY-MM-DDTHH:mm:ss'));
