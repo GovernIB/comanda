@@ -3,10 +3,7 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import Icon from '@mui/material/Icon';
-import Collapse from '@mui/material/Collapse';
-import { useTheme } from '@mui/material/styles';
+import {styled, useTheme} from '@mui/material/styles';
 import {FormField, useFormContext} from 'reactlib';
 
 // Define the props for the VisualAttributesPanel component
@@ -172,6 +169,7 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
           position: 'relative', // Ensure proper stacking context
           m: 0, // No margin
           p: 0, // No padding
+          backgroundColor: '#f8f8f8',
         }}
       >
         {/* Header */}
@@ -181,7 +179,7 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
             alignItems: 'center',
             justifyContent: 'space-between',
             p: 2,
-            backgroundColor: theme.palette.background.default,
+            // backgroundColor: theme.palette.background.default,
           }}
         >
           <Typography variant="subtitle1">{title}</Typography>

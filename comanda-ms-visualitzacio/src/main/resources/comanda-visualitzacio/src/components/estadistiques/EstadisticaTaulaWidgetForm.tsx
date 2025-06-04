@@ -74,7 +74,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                 <Grid size={6}><FormField name="atributsVisuals.mostrarCapcalera" label="Mostrar capçalera" type="checkbox" /></Grid>
                 <Grid size={6}><FormField name="atributsVisuals.mostrarBordes" label="Mostrar vores" type="checkbox" /></Grid>
                 <Grid size={6}><FormField name="atributsVisuals.mostrarAlternancia" label="Mostrar alternança de files" type="checkbox" /></Grid>
-                <Grid size={6}><FormField name="atributsVisuals.colorAlternancia" label="Color d'alternança" type="color" value={data?.atributsVisuals?.colorAlternancia || '#f5f5f5'} required={false} disabled={!data?.atributsVisuals?.mostrarAlternancia}
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorAlternancia" label="Color d'alternança" type="color" value={data?.atributsVisuals?.colorAlternancia || '#f5f5f5'} required={false} disabled={!data?.atributsVisuals?.mostrarAlternancia}
                 /></Grid>
 
                 <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Estils de columnes</Typography></Grid>

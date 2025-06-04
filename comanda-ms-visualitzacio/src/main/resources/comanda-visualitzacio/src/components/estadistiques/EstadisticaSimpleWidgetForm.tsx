@@ -8,23 +8,24 @@ import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { Divider, Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import IconAutocompleteSelect from "../IconAutocompleteSelect.tsx";
 
 
 const EstadisticaSimpleWidgetForm: React.FC = () => {
     const { data } = useFormContext();
     const { t } = useTranslation();
     const [previewData, setPreviewData] = useState({
-        title: 'Títol del widget',
-        value: 1234,
-        unit: 'unitat',
+        titol: 'Títol del widget',
+        valor: 1234,
+        unitat: 'unitat',
+        descripcio: 'descripcio del widget',
+        canviPercentual: '12.34%',
         icona: 'trending_up',
         colorText: undefined,
         colorFons: undefined,
         colorIcona: undefined,
         colorFonsIcona: undefined,
-        destacat: false,
         colorTextDestacat: undefined,
-        colorFonsDestacat: undefined,
         borde: false,
         colorBorde: undefined,
     });
@@ -33,19 +34,19 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
     useEffect(() => {
         if (data) {
             setPreviewData({
-                title: data.titol || 'Títol del widget',
-                value: 1234, // Sample value for preview
-                unit: data.unitat || 'unitat',
-                icona: data.atributsVisuals?.icona || 'trending_up',
-                colorText: data.atributsVisuals?.colorText,
-                colorFons: data.atributsVisuals?.colorFons,
-                colorIcona: data.atributsVisuals?.colorIcona,
-                colorFonsIcona: data.atributsVisuals?.colorFonsIcona,
-                destacat: data.atributsVisuals?.destacat || false,
-                colorTextDestacat: data.atributsVisuals?.colorTextDestacat,
-                colorFonsDestacat: data.atributsVisuals?.colorFonsDestacat,
-                borde: data.atributsVisuals?.borde || false,
-                colorBorde: data.atributsVisuals?.colorBorde,
+                titol: data.titol || 'Títol del widget',
+                valor: 1234, // Sample value for preview
+                unitat: data.unitat || 'unitat',
+                descripcio: data.descripcio || 'descripcio del widget',
+                canviPercentual: data.canviPercentual || '12.34%',
+                icona: data["atributsVisuals.icona"] || 'trending_up',
+                colorText: data["atributsVisuals.colorText"],
+                colorFons: data["atributsVisuals.colorFons"],
+                colorIcona: data["atributsVisuals.colorIcona"],
+                colorFonsIcona: data["atributsVisuals.colorFonsIcona"],
+                colorTextDestacat: data["atributsVisuals.colorTextDestacat"],
+                borde: data["atributsVisuals.borde"] || false,
+                colorBorde: data["atributsVisuals.colorBorde"],
             });
         }
     }, [data]);
@@ -65,7 +66,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                 </EstadisticaWidgetFormFields>
             </Grid>
 
-            <Grid id={'cv'} size={{xs: 12, sm: 4}}>
+            <Grid id={'cv'} size={{xs: 12, sm: 4}} sx={{backgroundColor: '#f5f5f5'}}>
                 <VisualAttributesPanel widgetType="simple" title="Configuració visual">
                     {/* Preview inside the panel */}
                     <Box sx={{ p: 2 }}>
@@ -88,43 +89,22 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
         return (
             <Grid container spacing={2}>
                 <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració general</Typography></Grid>
-                <Grid size={12}><FormField name="atributsVisuals.icona" label="Icona" /></Grid>
+                {/*<Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.icona" label="Icona" /></Grid>*/}
+                {/*<Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><IconSelect/></Grid>*/}
+                <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><IconAutocompleteSelect name="atributsVisuals.icona" label={"Icona"}/></Grid>
 
                 {/*<Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Colors</Typography></Grid>*/}
-                <Grid size={6}><FormField name="atributsVisuals.colorText" label="Color del text" type="color" value={data?.atributsVisuals?.colorText || '#000000'} required={false} /></Grid>
-                <Grid size={6}><FormField name="atributsVisuals.colorFons" label="Color de fons" type="color" value={data?.atributsVisuals?.colorFons || '#FFFFFF'} required={false} /></Grid>
-                <Grid size={6}><FormField name="atributsVisuals.colorIcona" label="Color de la icona" type="color" value={data?.atributsVisuals?.colorIcona || '#000000'} required={false} /></Grid>
-                <Grid size={6}><FormField name="atributsVisuals.colorFonsIcona" label="Color de fons de la icona" type="color" value={data?.atributsVisuals?.colorFonsIcona || '#FFFFFF'} required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorText" label="Color del text" type="color" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFons" label="Color de fons" type="color" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorIcona" label="Color de la icona" type="color" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFonsIcona" label="Color de fons de la icona" type="color" required={false} /></Grid>
 
                 {/*<Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Destacat</Typography></Grid>*/}
-                <Grid size={12}><FormField name="atributsVisuals.destacat" label="Destacat" type="checkbox" /></Grid>
-                <Grid size={6}><FormField
-                    name="atributsVisuals.colorTextDestacat"
-                    label="Color del text destacat"
-                    type="color"
-                    value={data?.atributsVisuals?.colorTextDestacat || '#FFFFFF'}
-                    required={false}
-                    disabled={!data?.atributsVisuals?.destacat}
-                /></Grid>
-                    <Grid size={6}><FormField
-                    name="atributsVisuals.colorFonsDestacat"
-                    label="Color de fons destacat"
-                    type="color"
-                    value={data?.atributsVisuals?.colorFonsDestacat || '#000000'}
-                    required={false}
-                    disabled={!data?.atributsVisuals?.destacat}
-                /></Grid>
-
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorTextDestacat" label="Color del text destacat" type="color" required={false} /></Grid>
+                <Grid size={6} />
                 {/*<Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Vora</Typography></Grid>*/}
-                <Grid size={12}><FormField name="atributsVisuals.borde" label="Mostrar vora" type="checkbox" /></Grid>
-                <Grid size={6}><FormField
-                    name="atributsVisuals.colorBorde"
-                    label="Color de la vora"
-                    type="color"
-                    value={data?.atributsVisuals?.colorBorde || '#CCCCCC'}
-                    required={false}
-                    disabled={!data?.atributsVisuals?.borde}
-                /></Grid>
+                <Grid size={6}><FormField name="atributsVisuals.borde" label="Mostrar vora" type="checkbox" /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorBorde" label="Color de la vora" type="color" required={false} /></Grid>
             </Grid>
         );
     }

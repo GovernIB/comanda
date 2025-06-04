@@ -103,7 +103,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         return (
             <Grid container spacing={2}>
                 <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració general</Typography></Grid>
-                <Grid size={12}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" /></Grid>
+                <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" /></Grid>
                 <Grid size={12}><FormField name="atributsVisuals.mostrarReticula" label="Mostrar retícula" type="checkbox" /></Grid>
 
                 {isBarTypeVisible && (
@@ -119,7 +119,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                         <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de línies</Typography></Grid>
                         <Grid size={6}><FormField name="atributsVisuals.lineShowPoints" label="Mostrar punts" type="checkbox" /></Grid>
                         <Grid size={6}><FormField name="atributsVisuals.lineSmooth" label="Línies suaus" type="checkbox" /></Grid>
-                        <Grid size={12}><FormField name="atributsVisuals.lineWidth" label="Amplada de línia" type="number" required={false} /></Grid>
+                        <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.lineWidth" label="Amplada de línia" type="number" required={false} /></Grid>
                     </>
                 )}
 
@@ -134,10 +134,10 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                 {isGaugeTypeVisible && (
                     <>
                         <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de gauge</Typography></Grid>
-                        <Grid size={6}><FormField name="atributsVisuals.gaugeMin" label="Valor mínim" type="number" required={false} /></Grid>
-                        <Grid size={6}><FormField name="atributsVisuals.gaugeMax" label="Valor màxim" type="number" required={false} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.gaugeMin" label="Valor mínim" type="number" required={false} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.gaugeMax" label="Valor màxim" type="number" required={false} /></Grid>
                         {/*<Grid size={12}><FormField name="atributsVisuals.gaugeColors" label="Colors (separats per comes)" /></Grid>*/}
-                        <Grid size={12}><FormField name="atributsVisuals.gaugeRangs" label="Rangs (separats per comes)" /></Grid>
+                        <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.gaugeRangs" label="Rangs (separats per comes)" /></Grid>
                     </>
                 )}
 
@@ -145,8 +145,8 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                     <>
                         <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de heatmap</Typography></Grid>
                         {/*<Grid size={12}><FormField name="atributsVisuals.heatmapColors" label="Colors (separats per comes)" /></Grid>*/}
-                        <Grid size={6}><FormField name="atributsVisuals.heatmapMinValue" label="Valor mínim" type="number" required={false} /></Grid>
-                        <Grid size={6}><FormField name="atributsVisuals.heatmapMaxValue" label="Valor màxim" type="number" required={false} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.heatmapMinValue" label="Valor mínim" type="number" required={false} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.heatmapMaxValue" label="Valor màxim" type="number" required={false} /></Grid>
                     </>
                 )}
             </Grid>

@@ -1,0 +1,9918 @@
+{
+  "Abc": [
+    "abc"
+  ],
+  "AcUnit": [
+    "ac",
+    "unit"
+  ],
+  "AccessAlarm": [
+    "access",
+    "alarm",
+    "alarma",
+    "avís",
+    "recordatori"
+  ],
+  "AccessAlarms": [
+    "access",
+    "alarms"
+  ],
+  "AccessTime": [
+    "access",
+    "time"
+  ],
+  "AccessTimeFilled": [
+    "access",
+    "filled",
+    "time"
+  ],
+  "Accessibility": [
+    "accessibility"
+  ],
+  "AccessibilityNew": [
+    "accessibility",
+    "new"
+  ],
+  "Accessible": [
+    "accessible"
+  ],
+  "AccessibleForward": [
+    "accessible",
+    "forward"
+  ],
+  "AccountBalance": [
+    "account",
+    "balance",
+    "compte",
+    "cuenta",
+    "usuari",
+    "usuario"
+  ],
+  "AccountBalanceWallet": [
+    "account",
+    "balance",
+    "compte",
+    "cuenta",
+    "usuari",
+    "usuario",
+    "wallet"
+  ],
+  "AccountBox": [
+    "account",
+    "box",
+    "compte",
+    "cuenta",
+    "usuari",
+    "usuario"
+  ],
+  "AccountCircle": [
+    "account",
+    "circle",
+    "compte",
+    "cuenta",
+    "usuari",
+    "usuario"
+  ],
+  "AccountTree": [
+    "account",
+    "compte",
+    "cuenta",
+    "tree",
+    "usuari",
+    "usuario"
+  ],
+  "AdUnits": [
+    "ad",
+    "units"
+  ],
+  "Adb": [
+    "adb"
+  ],
+  "Add": [
+    "add",
+    "afegir",
+    "añadir",
+    "sumar"
+  ],
+  "AddAPhoto": [
+    "a",
+    "add",
+    "afegir",
+    "añadir",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo",
+    "sumar"
+  ],
+  "AddAlarm": [
+    "add",
+    "afegir",
+    "alarm",
+    "alarma",
+    "avís",
+    "añadir",
+    "recordatori",
+    "sumar"
+  ],
+  "AddAlert": [
+    "add",
+    "advertencia",
+    "advertència",
+    "afegir",
+    "alert",
+    "avís",
+    "añadir",
+    "sumar"
+  ],
+  "AddBox": [
+    "add",
+    "afegir",
+    "añadir",
+    "box",
+    "sumar"
+  ],
+  "AddBusiness": [
+    "add",
+    "afegir",
+    "añadir",
+    "business",
+    "sumar"
+  ],
+  "AddCard": [
+    "add",
+    "afegir",
+    "añadir",
+    "card",
+    "sumar"
+  ],
+  "AddCircle": [
+    "add",
+    "afegir",
+    "añadir",
+    "circle",
+    "sumar"
+  ],
+  "AddCircleOutline": [
+    "add",
+    "afegir",
+    "añadir",
+    "circle",
+    "outline",
+    "sumar"
+  ],
+  "AddComment": [
+    "add",
+    "afegir",
+    "añadir",
+    "comentari",
+    "comentario",
+    "comment",
+    "opinió",
+    "sumar"
+  ],
+  "AddHome": [
+    "add",
+    "afegir",
+    "añadir",
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "sumar"
+  ],
+  "AddHomeWork": [
+    "add",
+    "afegir",
+    "añadir",
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "sumar",
+    "work"
+  ],
+  "AddIcCall": [
+    "add",
+    "afegir",
+    "añadir",
+    "call",
+    "cridar",
+    "ic",
+    "llamada",
+    "sumar",
+    "telefonar",
+    "trucada"
+  ],
+  "AddLink": [
+    "add",
+    "afegir",
+    "añadir",
+    "enlace",
+    "enllaç",
+    "link",
+    "sumar"
+  ],
+  "AddLocation": [
+    "add",
+    "afegir",
+    "añadir",
+    "location",
+    "sumar"
+  ],
+  "AddLocationAlt": [
+    "add",
+    "afegir",
+    "alt",
+    "añadir",
+    "location",
+    "sumar"
+  ],
+  "AddModerator": [
+    "add",
+    "afegir",
+    "añadir",
+    "moderator",
+    "sumar"
+  ],
+  "AddPhotoAlternate": [
+    "add",
+    "afegir",
+    "alternate",
+    "añadir",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo",
+    "sumar"
+  ],
+  "AddReaction": [
+    "add",
+    "afegir",
+    "añadir",
+    "reaction",
+    "sumar"
+  ],
+  "AddRoad": [
+    "add",
+    "afegir",
+    "añadir",
+    "road",
+    "sumar"
+  ],
+  "AddShoppingCart": [
+    "add",
+    "afegir",
+    "añadir",
+    "cart",
+    "shopping",
+    "sumar"
+  ],
+  "AddTask": [
+    "add",
+    "afegir",
+    "añadir",
+    "sumar",
+    "task"
+  ],
+  "AddToDrive": [
+    "add",
+    "afegir",
+    "añadir",
+    "drive",
+    "sumar",
+    "to"
+  ],
+  "AddToHomeScreen": [
+    "add",
+    "afegir",
+    "añadir",
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "screen",
+    "sumar",
+    "to"
+  ],
+  "AddToPhotos": [
+    "add",
+    "afegir",
+    "añadir",
+    "photos",
+    "sumar",
+    "to"
+  ],
+  "AddToQueue": [
+    "add",
+    "afegir",
+    "añadir",
+    "queue",
+    "sumar",
+    "to"
+  ],
+  "Addchart": [
+    "addchart"
+  ],
+  "AdfScanner": [
+    "adf",
+    "scanner"
+  ],
+  "Adjust": [
+    "adjust"
+  ],
+  "AdminPanelSettings": [
+    "admin",
+    "ajustos",
+    "configuració",
+    "panel",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "AdsClick": [
+    "ads",
+    "click"
+  ],
+  "Agriculture": [
+    "agriculture"
+  ],
+  "Air": [
+    "air"
+  ],
+  "AirlineSeatFlat": [
+    "airline",
+    "flat",
+    "seat"
+  ],
+  "AirlineSeatFlatAngled": [
+    "airline",
+    "angled",
+    "flat",
+    "seat"
+  ],
+  "AirlineSeatIndividualSuite": [
+    "airline",
+    "individual",
+    "seat",
+    "suite"
+  ],
+  "AirlineSeatLegroomExtra": [
+    "airline",
+    "extra",
+    "legroom",
+    "seat"
+  ],
+  "AirlineSeatLegroomNormal": [
+    "airline",
+    "legroom",
+    "normal",
+    "seat"
+  ],
+  "AirlineSeatLegroomReduced": [
+    "airline",
+    "legroom",
+    "reduced",
+    "seat"
+  ],
+  "AirlineSeatReclineExtra": [
+    "airline",
+    "extra",
+    "recline",
+    "seat"
+  ],
+  "AirlineSeatReclineNormal": [
+    "airline",
+    "normal",
+    "recline",
+    "seat"
+  ],
+  "AirlineStops": [
+    "airline",
+    "stops"
+  ],
+  "Airlines": [
+    "airlines"
+  ],
+  "AirplaneTicket": [
+    "airplane",
+    "ticket"
+  ],
+  "AirplanemodeActive": [
+    "active",
+    "airplanemode"
+  ],
+  "AirplanemodeInactive": [
+    "airplanemode",
+    "inactive"
+  ],
+  "Airplay": [
+    "airplay"
+  ],
+  "AirportShuttle": [
+    "airport",
+    "shuttle"
+  ],
+  "Alarm": [
+    "alarm",
+    "alarma",
+    "avís",
+    "recordatori"
+  ],
+  "AlarmAdd": [
+    "add",
+    "afegir",
+    "alarm",
+    "alarma",
+    "avís",
+    "añadir",
+    "recordatori",
+    "sumar"
+  ],
+  "AlarmOff": [
+    "alarm",
+    "alarma",
+    "avís",
+    "off",
+    "recordatori"
+  ],
+  "AlarmOn": [
+    "alarm",
+    "alarma",
+    "avís",
+    "on",
+    "recordatori"
+  ],
+  "Album": [
+    "album"
+  ],
+  "AlignHorizontalCenter": [
+    "align",
+    "center",
+    "horizontal"
+  ],
+  "AlignHorizontalLeft": [
+    "align",
+    "horizontal",
+    "left"
+  ],
+  "AlignHorizontalRight": [
+    "align",
+    "horizontal",
+    "right"
+  ],
+  "AlignVerticalBottom": [
+    "align",
+    "bottom",
+    "vertical"
+  ],
+  "AlignVerticalCenter": [
+    "align",
+    "center",
+    "vertical"
+  ],
+  "AlignVerticalTop": [
+    "align",
+    "top",
+    "vertical"
+  ],
+  "AllInbox": [
+    "all",
+    "inbox"
+  ],
+  "AllInclusive": [
+    "all",
+    "inclusive"
+  ],
+  "AllOut": [
+    "all",
+    "out"
+  ],
+  "AltRoute": [
+    "alt",
+    "route"
+  ],
+  "AlternateEmail": [
+    "alternate",
+    "correo",
+    "correu",
+    "electrònic",
+    "electrónico",
+    "email"
+  ],
+  "Analytics": [
+    "analytics"
+  ],
+  "Anchor": [
+    "anchor"
+  ],
+  "Android": [
+    "android"
+  ],
+  "Animation": [
+    "animation"
+  ],
+  "Announcement": [
+    "announcement"
+  ],
+  "Aod": [
+    "aod"
+  ],
+  "Apartment": [
+    "apartment"
+  ],
+  "Api": [
+    "api"
+  ],
+  "AppBlocking": [
+    "app",
+    "blocking"
+  ],
+  "AppRegistration": [
+    "app",
+    "registration"
+  ],
+  "AppSettingsAlt": [
+    "ajustos",
+    "alt",
+    "app",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "AppShortcut": [
+    "app",
+    "shortcut"
+  ],
+  "Apple": [
+    "apple"
+  ],
+  "Approval": [
+    "approval"
+  ],
+  "Apps": [
+    "apps"
+  ],
+  "AppsOutage": [
+    "apps",
+    "outage"
+  ],
+  "Architecture": [
+    "architecture"
+  ],
+  "Archive": [
+    "archive"
+  ],
+  "ArrowBack": [
+    "arrow",
+    "back"
+  ],
+  "ArrowBackIos": [
+    "arrow",
+    "back",
+    "ios"
+  ],
+  "ArrowBackIosNew": [
+    "arrow",
+    "back",
+    "ios",
+    "new"
+  ],
+  "ArrowCircleDown": [
+    "arrow",
+    "circle",
+    "down"
+  ],
+  "ArrowCircleLeft": [
+    "arrow",
+    "circle",
+    "left"
+  ],
+  "ArrowCircleRight": [
+    "arrow",
+    "circle",
+    "right"
+  ],
+  "ArrowCircleUp": [
+    "arrow",
+    "circle",
+    "up"
+  ],
+  "ArrowDownward": [
+    "arrow",
+    "downward"
+  ],
+  "ArrowDropDown": [
+    "arrow",
+    "down",
+    "drop"
+  ],
+  "ArrowDropDownCircle": [
+    "arrow",
+    "circle",
+    "down",
+    "drop"
+  ],
+  "ArrowDropUp": [
+    "arrow",
+    "drop",
+    "up"
+  ],
+  "ArrowForward": [
+    "arrow",
+    "forward"
+  ],
+  "ArrowForwardIos": [
+    "arrow",
+    "forward",
+    "ios"
+  ],
+  "ArrowLeft": [
+    "arrow",
+    "left"
+  ],
+  "ArrowOutward": [
+    "arrow",
+    "outward"
+  ],
+  "ArrowRight": [
+    "arrow",
+    "right"
+  ],
+  "ArrowRightAlt": [
+    "alt",
+    "arrow",
+    "right"
+  ],
+  "ArrowUpward": [
+    "arrow",
+    "upward"
+  ],
+  "ArtTrack": [
+    "art",
+    "track"
+  ],
+  "Article": [
+    "article"
+  ],
+  "AspectRatio": [
+    "aspect",
+    "ratio"
+  ],
+  "Assessment": [
+    "assessment"
+  ],
+  "Assignment": [
+    "assignment"
+  ],
+  "AssignmentInd": [
+    "assignment",
+    "ind"
+  ],
+  "AssignmentLate": [
+    "assignment",
+    "late"
+  ],
+  "AssignmentReturn": [
+    "assignment",
+    "return"
+  ],
+  "AssignmentReturned": [
+    "assignment",
+    "returned"
+  ],
+  "AssignmentTurnedIn": [
+    "assignment",
+    "in",
+    "turned"
+  ],
+  "AssistWalker": [
+    "assist",
+    "walker"
+  ],
+  "Assistant": [
+    "assistant"
+  ],
+  "AssistantDirection": [
+    "assistant",
+    "direction"
+  ],
+  "AssistantPhoto": [
+    "assistant",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo"
+  ],
+  "AssuredWorkload": [
+    "assured",
+    "workload"
+  ],
+  "Atm": [
+    "atm"
+  ],
+  "AttachEmail": [
+    "attach",
+    "correo",
+    "correu",
+    "electrònic",
+    "electrónico",
+    "email"
+  ],
+  "AttachFile": [
+    "archivo",
+    "attach",
+    "document",
+    "file",
+    "fitxer"
+  ],
+  "AttachMoney": [
+    "attach",
+    "money"
+  ],
+  "Attachment": [
+    "attachment"
+  ],
+  "Attractions": [
+    "attractions"
+  ],
+  "Attribution": [
+    "attribution"
+  ],
+  "AudioFile": [
+    "archivo",
+    "audio",
+    "document",
+    "file",
+    "fitxer"
+  ],
+  "Audiotrack": [
+    "audiotrack"
+  ],
+  "AutoAwesome": [
+    "auto",
+    "awesome"
+  ],
+  "AutoAwesomeMosaic": [
+    "auto",
+    "awesome",
+    "mosaic"
+  ],
+  "AutoAwesomeMotion": [
+    "auto",
+    "awesome",
+    "motion"
+  ],
+  "AutoDelete": [
+    "auto",
+    "borrar",
+    "delete",
+    "eliminar",
+    "suprimir"
+  ],
+  "AutoFixHigh": [
+    "auto",
+    "fix",
+    "high"
+  ],
+  "AutoFixNormal": [
+    "auto",
+    "fix",
+    "normal"
+  ],
+  "AutoFixOff": [
+    "auto",
+    "fix",
+    "off"
+  ],
+  "AutoGraph": [
+    "auto",
+    "graph"
+  ],
+  "AutoMode": [
+    "auto",
+    "mode"
+  ],
+  "AutoStories": [
+    "auto",
+    "stories"
+  ],
+  "AutofpsSelect": [
+    "autofps",
+    "select"
+  ],
+  "Autorenew": [
+    "autorenew"
+  ],
+  "AvTimer": [
+    "av",
+    "timer"
+  ],
+  "BabyChangingStation": [
+    "baby",
+    "changing",
+    "station"
+  ],
+  "BackHand": [
+    "back",
+    "hand"
+  ],
+  "Backpack": [
+    "backpack"
+  ],
+  "Backspace": [
+    "backspace"
+  ],
+  "Backup": [
+    "backup"
+  ],
+  "BackupTable": [
+    "backup",
+    "table"
+  ],
+  "Badge": [
+    "badge"
+  ],
+  "BakeryDining": [
+    "bakery",
+    "dining"
+  ],
+  "Balance": [
+    "balance"
+  ],
+  "Balcony": [
+    "balcony"
+  ],
+  "Ballot": [
+    "ballot"
+  ],
+  "BarChart": [
+    "bar",
+    "chart"
+  ],
+  "BatchPrediction": [
+    "batch",
+    "prediction"
+  ],
+  "Bathroom": [
+    "bathroom"
+  ],
+  "Bathtub": [
+    "bathtub"
+  ],
+  "Battery0Bar": [
+    "bar",
+    "battery"
+  ],
+  "Battery1Bar": [
+    "bar",
+    "battery"
+  ],
+  "Battery20": [
+    "battery"
+  ],
+  "Battery2Bar": [
+    "bar",
+    "battery"
+  ],
+  "Battery30": [
+    "battery"
+  ],
+  "Battery3Bar": [
+    "bar",
+    "battery"
+  ],
+  "Battery4Bar": [
+    "bar",
+    "battery"
+  ],
+  "Battery50": [
+    "battery"
+  ],
+  "Battery5Bar": [
+    "bar",
+    "battery"
+  ],
+  "Battery60": [
+    "battery"
+  ],
+  "Battery6Bar": [
+    "bar",
+    "battery"
+  ],
+  "Battery80": [
+    "battery"
+  ],
+  "Battery90": [
+    "battery"
+  ],
+  "BatteryAlert": [
+    "advertencia",
+    "advertència",
+    "alert",
+    "avís",
+    "battery"
+  ],
+  "BatteryCharging20": [
+    "battery",
+    "charging"
+  ],
+  "BatteryCharging30": [
+    "battery",
+    "charging"
+  ],
+  "BatteryCharging50": [
+    "battery",
+    "charging"
+  ],
+  "BatteryCharging60": [
+    "battery",
+    "charging"
+  ],
+  "BatteryCharging80": [
+    "battery",
+    "charging"
+  ],
+  "BatteryCharging90": [
+    "battery",
+    "charging"
+  ],
+  "BatteryChargingFull": [
+    "battery",
+    "charging",
+    "full"
+  ],
+  "BatteryFull": [
+    "battery",
+    "full"
+  ],
+  "BatterySaver": [
+    "battery",
+    "saver"
+  ],
+  "BatteryStd": [
+    "battery",
+    "std"
+  ],
+  "BatteryUnknown": [
+    "battery",
+    "unknown"
+  ],
+  "BeachAccess": [
+    "access",
+    "beach"
+  ],
+  "Bed": [
+    "bed"
+  ],
+  "BedroomBaby": [
+    "baby",
+    "bedroom"
+  ],
+  "BedroomChild": [
+    "bedroom",
+    "child"
+  ],
+  "BedroomParent": [
+    "bedroom",
+    "parent"
+  ],
+  "Bedtime": [
+    "bedtime"
+  ],
+  "BedtimeOff": [
+    "bedtime",
+    "off"
+  ],
+  "Beenhere": [
+    "beenhere"
+  ],
+  "Bento": [
+    "bento"
+  ],
+  "BikeScooter": [
+    "bike",
+    "scooter"
+  ],
+  "Biotech": [
+    "biotech"
+  ],
+  "Blender": [
+    "blender"
+  ],
+  "Blind": [
+    "blind"
+  ],
+  "Blinds": [
+    "blinds"
+  ],
+  "BlindsClosed": [
+    "blinds",
+    "closed"
+  ],
+  "Block": [
+    "block"
+  ],
+  "Bloodtype": [
+    "bloodtype"
+  ],
+  "Bluetooth": [
+    "bluetooth"
+  ],
+  "BluetoothAudio": [
+    "audio",
+    "bluetooth"
+  ],
+  "BluetoothConnected": [
+    "bluetooth",
+    "connected"
+  ],
+  "BluetoothDisabled": [
+    "bluetooth",
+    "disabled"
+  ],
+  "BluetoothDrive": [
+    "bluetooth",
+    "drive"
+  ],
+  "BluetoothSearching": [
+    "bluetooth",
+    "searching"
+  ],
+  "BlurCircular": [
+    "blur",
+    "circular"
+  ],
+  "BlurLinear": [
+    "blur",
+    "linear"
+  ],
+  "BlurOff": [
+    "blur",
+    "off"
+  ],
+  "BlurOn": [
+    "blur",
+    "on"
+  ],
+  "Bolt": [
+    "bolt"
+  ],
+  "Book": [
+    "book"
+  ],
+  "BookOnline": [
+    "book",
+    "online"
+  ],
+  "Bookmark": [
+    "bookmark"
+  ],
+  "BookmarkAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "bookmark",
+    "sumar"
+  ],
+  "BookmarkAdded": [
+    "added",
+    "bookmark"
+  ],
+  "BookmarkBorder": [
+    "bookmark",
+    "border"
+  ],
+  "BookmarkRemove": [
+    "bookmark",
+    "remove"
+  ],
+  "Bookmarks": [
+    "bookmarks"
+  ],
+  "BorderAll": [
+    "all",
+    "border"
+  ],
+  "BorderBottom": [
+    "border",
+    "bottom"
+  ],
+  "BorderClear": [
+    "border",
+    "clear"
+  ],
+  "BorderColor": [
+    "border",
+    "color"
+  ],
+  "BorderHorizontal": [
+    "border",
+    "horizontal"
+  ],
+  "BorderInner": [
+    "border",
+    "inner"
+  ],
+  "BorderLeft": [
+    "border",
+    "left"
+  ],
+  "BorderOuter": [
+    "border",
+    "outer"
+  ],
+  "BorderRight": [
+    "border",
+    "right"
+  ],
+  "BorderStyle": [
+    "border",
+    "style"
+  ],
+  "BorderTop": [
+    "border",
+    "top"
+  ],
+  "BorderVertical": [
+    "border",
+    "vertical"
+  ],
+  "Boy": [
+    "boy"
+  ],
+  "BrandingWatermark": [
+    "branding",
+    "watermark"
+  ],
+  "BreakfastDining": [
+    "breakfast",
+    "dining"
+  ],
+  "Brightness1": [
+    "brightness"
+  ],
+  "Brightness2": [
+    "brightness"
+  ],
+  "Brightness3": [
+    "brightness"
+  ],
+  "Brightness4": [
+    "brightness"
+  ],
+  "Brightness5": [
+    "brightness"
+  ],
+  "Brightness6": [
+    "brightness"
+  ],
+  "Brightness7": [
+    "brightness"
+  ],
+  "BrightnessAuto": [
+    "auto",
+    "brightness"
+  ],
+  "BrightnessHigh": [
+    "brightness",
+    "high"
+  ],
+  "BrightnessLow": [
+    "brightness",
+    "low"
+  ],
+  "BrightnessMedium": [
+    "brightness",
+    "medium"
+  ],
+  "BroadcastOnHome": [
+    "broadcast",
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "on"
+  ],
+  "BroadcastOnPersonal": [
+    "broadcast",
+    "on",
+    "personal"
+  ],
+  "BrokenImage": [
+    "broken",
+    "foto",
+    "image",
+    "imagen",
+    "imatge"
+  ],
+  "BrowseGallery": [
+    "browse",
+    "gallery"
+  ],
+  "BrowserNotSupported": [
+    "browser",
+    "not",
+    "supported"
+  ],
+  "BrowserUpdated": [
+    "browser",
+    "updated"
+  ],
+  "BrunchDining": [
+    "brunch",
+    "dining"
+  ],
+  "Brush": [
+    "brush"
+  ],
+  "BubbleChart": [
+    "bubble",
+    "chart"
+  ],
+  "BugReport": [
+    "bug",
+    "report"
+  ],
+  "Build": [
+    "build"
+  ],
+  "BuildCircle": [
+    "build",
+    "circle"
+  ],
+  "Bungalow": [
+    "bungalow"
+  ],
+  "BurstMode": [
+    "burst",
+    "mode"
+  ],
+  "BusAlert": [
+    "advertencia",
+    "advertència",
+    "alert",
+    "avís",
+    "bus"
+  ],
+  "Business": [
+    "business"
+  ],
+  "BusinessCenter": [
+    "business",
+    "center"
+  ],
+  "Cabin": [
+    "cabin"
+  ],
+  "Cable": [
+    "cable"
+  ],
+  "Cached": [
+    "cached"
+  ],
+  "Cake": [
+    "cake"
+  ],
+  "Calculate": [
+    "calculate"
+  ],
+  "CalendarMonth": [
+    "calendar",
+    "calendari",
+    "calendario",
+    "month"
+  ],
+  "CalendarToday": [
+    "calendar",
+    "calendari",
+    "calendario",
+    "today"
+  ],
+  "CalendarViewDay": [
+    "calendar",
+    "calendari",
+    "calendario",
+    "day",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "CalendarViewMonth": [
+    "calendar",
+    "calendari",
+    "calendario",
+    "month",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "CalendarViewWeek": [
+    "calendar",
+    "calendari",
+    "calendario",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar",
+    "week"
+  ],
+  "Call": [
+    "call",
+    "cridar",
+    "llamada",
+    "telefonar",
+    "trucada"
+  ],
+  "CallEnd": [
+    "call",
+    "cridar",
+    "end",
+    "llamada",
+    "telefonar",
+    "trucada"
+  ],
+  "CallMade": [
+    "call",
+    "cridar",
+    "llamada",
+    "made",
+    "telefonar",
+    "trucada"
+  ],
+  "CallMerge": [
+    "call",
+    "cridar",
+    "llamada",
+    "merge",
+    "telefonar",
+    "trucada"
+  ],
+  "CallMissed": [
+    "call",
+    "cridar",
+    "llamada",
+    "missed",
+    "telefonar",
+    "trucada"
+  ],
+  "CallMissedOutgoing": [
+    "call",
+    "cridar",
+    "llamada",
+    "missed",
+    "outgoing",
+    "telefonar",
+    "trucada"
+  ],
+  "CallReceived": [
+    "call",
+    "cridar",
+    "llamada",
+    "received",
+    "telefonar",
+    "trucada"
+  ],
+  "CallSplit": [
+    "call",
+    "cridar",
+    "llamada",
+    "split",
+    "telefonar",
+    "trucada"
+  ],
+  "CallToAction": [
+    "action",
+    "call",
+    "cridar",
+    "llamada",
+    "telefonar",
+    "to",
+    "trucada"
+  ],
+  "Camera": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia"
+  ],
+  "CameraAlt": [
+    "alt",
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia"
+  ],
+  "CameraEnhance": [
+    "camera",
+    "càmera",
+    "cámara",
+    "enhance",
+    "foto",
+    "fotografia"
+  ],
+  "CameraFront": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "front"
+  ],
+  "CameraIndoor": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "indoor"
+  ],
+  "CameraOutdoor": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "outdoor"
+  ],
+  "CameraRear": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "rear"
+  ],
+  "CameraRoll": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "roll"
+  ],
+  "Cameraswitch": [
+    "cameraswitch"
+  ],
+  "Campaign": [
+    "campaign"
+  ],
+  "Cancel": [
+    "cancel"
+  ],
+  "CancelPresentation": [
+    "cancel",
+    "presentation"
+  ],
+  "CancelScheduleSend": [
+    "cancel",
+    "enviar",
+    "mandar",
+    "schedule",
+    "send",
+    "trametre"
+  ],
+  "CandlestickChart": [
+    "candlestick",
+    "chart"
+  ],
+  "CarCrash": [
+    "car",
+    "crash"
+  ],
+  "CarRental": [
+    "car",
+    "rental"
+  ],
+  "CarRepair": [
+    "car",
+    "repair"
+  ],
+  "CardGiftcard": [
+    "card",
+    "giftcard"
+  ],
+  "CardMembership": [
+    "card",
+    "membership"
+  ],
+  "CardTravel": [
+    "card",
+    "travel"
+  ],
+  "Carpenter": [
+    "carpenter"
+  ],
+  "Cases": [
+    "cases"
+  ],
+  "Casino": [
+    "casino"
+  ],
+  "Cast": [
+    "cast"
+  ],
+  "CastConnected": [
+    "cast",
+    "connected"
+  ],
+  "CastForEducation": [
+    "cast",
+    "education",
+    "for"
+  ],
+  "Castle": [
+    "castle"
+  ],
+  "CatchingPokemon": [
+    "catching",
+    "pokemon"
+  ],
+  "Category": [
+    "category"
+  ],
+  "Celebration": [
+    "celebration"
+  ],
+  "CellTower": [
+    "cell",
+    "tower"
+  ],
+  "CellWifi": [
+    "cell",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "CenterFocusStrong": [
+    "center",
+    "focus",
+    "strong"
+  ],
+  "CenterFocusWeak": [
+    "center",
+    "focus",
+    "weak"
+  ],
+  "Chair": [
+    "chair"
+  ],
+  "ChairAlt": [
+    "alt",
+    "chair"
+  ],
+  "Chalet": [
+    "chalet"
+  ],
+  "ChangeCircle": [
+    "change",
+    "circle"
+  ],
+  "ChangeHistory": [
+    "change",
+    "history"
+  ],
+  "ChargingStation": [
+    "charging",
+    "station"
+  ],
+  "Chat": [
+    "chat"
+  ],
+  "ChatBubble": [
+    "bubble",
+    "chat"
+  ],
+  "ChatBubbleOutline": [
+    "bubble",
+    "chat",
+    "outline"
+  ],
+  "Check": [
+    "check",
+    "comprovar",
+    "marcar",
+    "validar",
+    "verificar"
+  ],
+  "CheckBox": [
+    "box",
+    "check",
+    "comprovar",
+    "marcar",
+    "validar",
+    "verificar"
+  ],
+  "CheckBoxOutlineBlank": [
+    "blank",
+    "box",
+    "check",
+    "comprovar",
+    "marcar",
+    "outline",
+    "validar",
+    "verificar"
+  ],
+  "CheckCircle": [
+    "check",
+    "circle",
+    "comprovar",
+    "marcar",
+    "validar",
+    "verificar"
+  ],
+  "CheckCircleOutline": [
+    "check",
+    "circle",
+    "comprovar",
+    "marcar",
+    "outline",
+    "validar",
+    "verificar"
+  ],
+  "Checklist": [
+    "checklist"
+  ],
+  "ChecklistRtl": [
+    "checklist",
+    "rtl"
+  ],
+  "Checkroom": [
+    "checkroom"
+  ],
+  "ChevronLeft": [
+    "chevron",
+    "left"
+  ],
+  "ChevronRight": [
+    "chevron",
+    "right"
+  ],
+  "ChildCare": [
+    "care",
+    "child"
+  ],
+  "ChildFriendly": [
+    "child",
+    "friendly"
+  ],
+  "ChromeReaderMode": [
+    "chrome",
+    "mode",
+    "reader"
+  ],
+  "Church": [
+    "church"
+  ],
+  "Circle": [
+    "circle"
+  ],
+  "CircleNotifications": [
+    "circle",
+    "notifications"
+  ],
+  "Class": [
+    "class"
+  ],
+  "CleanHands": [
+    "clean",
+    "hands"
+  ],
+  "CleaningServices": [
+    "cleaning",
+    "services"
+  ],
+  "Clear": [
+    "clear"
+  ],
+  "ClearAll": [
+    "all",
+    "clear"
+  ],
+  "Close": [
+    "close"
+  ],
+  "CloseFullscreen": [
+    "close",
+    "fullscreen"
+  ],
+  "ClosedCaption": [
+    "caption",
+    "closed"
+  ],
+  "ClosedCaptionDisabled": [
+    "caption",
+    "closed",
+    "disabled"
+  ],
+  "ClosedCaptionOff": [
+    "caption",
+    "closed",
+    "off"
+  ],
+  "Cloud": [
+    "cloud",
+    "nube",
+    "núvol"
+  ],
+  "CloudCircle": [
+    "circle",
+    "cloud",
+    "nube",
+    "núvol"
+  ],
+  "CloudDone": [
+    "cloud",
+    "done",
+    "nube",
+    "núvol"
+  ],
+  "CloudDownload": [
+    "baixar",
+    "cloud",
+    "descargar",
+    "descarregar",
+    "download",
+    "nube",
+    "núvol"
+  ],
+  "CloudOff": [
+    "cloud",
+    "nube",
+    "núvol",
+    "off"
+  ],
+  "CloudQueue": [
+    "cloud",
+    "nube",
+    "núvol",
+    "queue"
+  ],
+  "CloudSync": [
+    "cloud",
+    "nube",
+    "núvol",
+    "sincronitzar",
+    "sincronizar",
+    "sync"
+  ],
+  "CloudUpload": [
+    "cloud",
+    "nube",
+    "núvol",
+    "pujar",
+    "subir",
+    "upload"
+  ],
+  "Co2": [
+    "co"
+  ],
+  "CoPresent": [
+    "co",
+    "present"
+  ],
+  "Code": [
+    "code"
+  ],
+  "CodeOff": [
+    "code",
+    "off"
+  ],
+  "Coffee": [
+    "coffee"
+  ],
+  "CoffeeMaker": [
+    "coffee",
+    "maker"
+  ],
+  "Collections": [
+    "collections"
+  ],
+  "CollectionsBookmark": [
+    "bookmark",
+    "collections"
+  ],
+  "ColorLens": [
+    "color",
+    "lens"
+  ],
+  "Colorize": [
+    "colorize"
+  ],
+  "Comment": [
+    "comentari",
+    "comentario",
+    "comment",
+    "opinió"
+  ],
+  "CommentBank": [
+    "bank",
+    "comentari",
+    "comentario",
+    "comment",
+    "opinió"
+  ],
+  "CommentsDisabled": [
+    "comments",
+    "disabled"
+  ],
+  "Commit": [
+    "commit"
+  ],
+  "Commute": [
+    "commute"
+  ],
+  "Compare": [
+    "compare"
+  ],
+  "CompareArrows": [
+    "arrows",
+    "compare"
+  ],
+  "CompassCalibration": [
+    "calibration",
+    "compass"
+  ],
+  "Compress": [
+    "compress"
+  ],
+  "Computer": [
+    "computer"
+  ],
+  "ConfirmationNumber": [
+    "confirmation",
+    "number"
+  ],
+  "ConnectWithoutContact": [
+    "connect",
+    "contact",
+    "contacte",
+    "contacto",
+    "without"
+  ],
+  "ConnectedTv": [
+    "connected",
+    "tv"
+  ],
+  "ConnectingAirports": [
+    "airports",
+    "connecting"
+  ],
+  "Construction": [
+    "construction"
+  ],
+  "ContactEmergency": [
+    "contact",
+    "contacte",
+    "contacto",
+    "emergency"
+  ],
+  "ContactMail": [
+    "contact",
+    "contacte",
+    "contacto",
+    "mail"
+  ],
+  "ContactPage": [
+    "contact",
+    "contacte",
+    "contacto",
+    "page"
+  ],
+  "ContactPhone": [
+    "contact",
+    "contacte",
+    "contacto",
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "ContactSupport": [
+    "contact",
+    "contacte",
+    "contacto",
+    "support"
+  ],
+  "Contactless": [
+    "contactless"
+  ],
+  "Contacts": [
+    "contacts"
+  ],
+  "ContentCopy": [
+    "content",
+    "copiar",
+    "copy",
+    "duplicar"
+  ],
+  "ContentCut": [
+    "content",
+    "cut"
+  ],
+  "ContentPaste": [
+    "content",
+    "paste"
+  ],
+  "ContentPasteGo": [
+    "content",
+    "go",
+    "paste"
+  ],
+  "ContentPasteOff": [
+    "content",
+    "off",
+    "paste"
+  ],
+  "ContentPasteSearch": [
+    "buscar",
+    "cerca",
+    "content",
+    "paste",
+    "search"
+  ],
+  "Contrast": [
+    "contrast"
+  ],
+  "ControlCamera": [
+    "camera",
+    "control",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia"
+  ],
+  "ControlPoint": [
+    "control",
+    "point"
+  ],
+  "ControlPointDuplicate": [
+    "control",
+    "duplicate",
+    "point"
+  ],
+  "Cookie": [
+    "cookie"
+  ],
+  "CopyAll": [
+    "all",
+    "copiar",
+    "copy",
+    "duplicar"
+  ],
+  "Copyright": [
+    "copyright"
+  ],
+  "Coronavirus": [
+    "coronavirus"
+  ],
+  "CorporateFare": [
+    "corporate",
+    "fare"
+  ],
+  "Cottage": [
+    "cottage"
+  ],
+  "Countertops": [
+    "countertops"
+  ],
+  "Create": [
+    "crear",
+    "create",
+    "nou",
+    "nuevo"
+  ],
+  "CreateNewFolder": [
+    "carpeta",
+    "crear",
+    "create",
+    "directori",
+    "directorio",
+    "folder",
+    "new",
+    "nou",
+    "nuevo"
+  ],
+  "CreditCard": [
+    "card",
+    "credit"
+  ],
+  "CreditCardOff": [
+    "card",
+    "credit",
+    "off"
+  ],
+  "CreditScore": [
+    "credit",
+    "score"
+  ],
+  "Crib": [
+    "crib"
+  ],
+  "CrisisAlert": [
+    "advertencia",
+    "advertència",
+    "alert",
+    "avís",
+    "crisis"
+  ],
+  "Crop": [
+    "crop"
+  ],
+  "Crop169": [
+    "crop"
+  ],
+  "Crop32": [
+    "crop"
+  ],
+  "Crop54": [
+    "crop"
+  ],
+  "Crop75": [
+    "crop"
+  ],
+  "CropDin": [
+    "crop",
+    "din"
+  ],
+  "CropFree": [
+    "crop",
+    "free"
+  ],
+  "CropLandscape": [
+    "crop",
+    "landscape"
+  ],
+  "CropOriginal": [
+    "crop",
+    "original"
+  ],
+  "CropPortrait": [
+    "crop",
+    "portrait"
+  ],
+  "CropRotate": [
+    "crop",
+    "rotate"
+  ],
+  "CropSquare": [
+    "crop",
+    "square"
+  ],
+  "Css": [
+    "css"
+  ],
+  "CurrencyBitcoin": [
+    "bitcoin",
+    "currency"
+  ],
+  "CurrencyExchange": [
+    "currency",
+    "exchange"
+  ],
+  "CurrencyFranc": [
+    "currency",
+    "franc"
+  ],
+  "CurrencyLira": [
+    "currency",
+    "lira"
+  ],
+  "CurrencyPound": [
+    "currency",
+    "pound"
+  ],
+  "CurrencyRuble": [
+    "currency",
+    "ruble"
+  ],
+  "CurrencyRupee": [
+    "currency",
+    "rupee"
+  ],
+  "CurrencyYen": [
+    "currency",
+    "yen"
+  ],
+  "CurrencyYuan": [
+    "currency",
+    "yuan"
+  ],
+  "Curtains": [
+    "curtains"
+  ],
+  "CurtainsClosed": [
+    "closed",
+    "curtains"
+  ],
+  "Cyclone": [
+    "cyclone"
+  ],
+  "Dangerous": [
+    "dangerous"
+  ],
+  "DarkMode": [
+    "dark",
+    "mode"
+  ],
+  "Dashboard": [
+    "dashboard"
+  ],
+  "DashboardCustomize": [
+    "customize",
+    "dashboard"
+  ],
+  "DataArray": [
+    "array",
+    "data"
+  ],
+  "DataObject": [
+    "data",
+    "object"
+  ],
+  "DataSaverOff": [
+    "data",
+    "off",
+    "saver"
+  ],
+  "DataSaverOn": [
+    "data",
+    "on",
+    "saver"
+  ],
+  "DataThresholding": [
+    "data",
+    "thresholding"
+  ],
+  "DataUsage": [
+    "data",
+    "usage"
+  ],
+  "Dataset": [
+    "dataset"
+  ],
+  "DatasetLinked": [
+    "dataset",
+    "linked"
+  ],
+  "DateRange": [
+    "date",
+    "range"
+  ],
+  "Deblur": [
+    "deblur"
+  ],
+  "Deck": [
+    "deck"
+  ],
+  "Dehaze": [
+    "dehaze"
+  ],
+  "Delete": [
+    "borrar",
+    "delete",
+    "eliminar",
+    "suprimir"
+  ],
+  "DeleteForever": [
+    "borrar",
+    "delete",
+    "eliminar",
+    "forever",
+    "suprimir"
+  ],
+  "DeleteOutline": [
+    "borrar",
+    "delete",
+    "eliminar",
+    "outline",
+    "suprimir"
+  ],
+  "DeleteSweep": [
+    "borrar",
+    "delete",
+    "eliminar",
+    "suprimir",
+    "sweep"
+  ],
+  "DeliveryDining": [
+    "delivery",
+    "dining"
+  ],
+  "DensityLarge": [
+    "density",
+    "large"
+  ],
+  "DensityMedium": [
+    "density",
+    "medium"
+  ],
+  "DensitySmall": [
+    "density",
+    "small"
+  ],
+  "DepartureBoard": [
+    "board",
+    "departure"
+  ],
+  "Description": [
+    "description"
+  ],
+  "Deselect": [
+    "deselect"
+  ],
+  "DesignServices": [
+    "design",
+    "services"
+  ],
+  "Desk": [
+    "desk"
+  ],
+  "DesktopAccessDisabled": [
+    "access",
+    "desktop",
+    "disabled"
+  ],
+  "DesktopMac": [
+    "desktop",
+    "mac"
+  ],
+  "DesktopWindows": [
+    "desktop",
+    "windows"
+  ],
+  "Details": [
+    "details"
+  ],
+  "DeveloperBoard": [
+    "board",
+    "developer"
+  ],
+  "DeveloperBoardOff": [
+    "board",
+    "developer",
+    "off"
+  ],
+  "DeveloperMode": [
+    "developer",
+    "mode"
+  ],
+  "DeviceHub": [
+    "device",
+    "hub"
+  ],
+  "DeviceThermostat": [
+    "device",
+    "thermostat"
+  ],
+  "DeviceUnknown": [
+    "device",
+    "unknown"
+  ],
+  "Devices": [
+    "devices"
+  ],
+  "DevicesFold": [
+    "devices",
+    "fold"
+  ],
+  "DevicesOther": [
+    "devices",
+    "other"
+  ],
+  "DialerSip": [
+    "dialer",
+    "sip"
+  ],
+  "Dialpad": [
+    "dialpad"
+  ],
+  "Diamond": [
+    "diamond"
+  ],
+  "Difference": [
+    "difference"
+  ],
+  "Dining": [
+    "dining"
+  ],
+  "DinnerDining": [
+    "dining",
+    "dinner"
+  ],
+  "Directions": [
+    "directions"
+  ],
+  "DirectionsBike": [
+    "bike",
+    "directions"
+  ],
+  "DirectionsBoat": [
+    "boat",
+    "directions"
+  ],
+  "DirectionsBoatFilled": [
+    "boat",
+    "directions",
+    "filled"
+  ],
+  "DirectionsBus": [
+    "bus",
+    "directions"
+  ],
+  "DirectionsBusFilled": [
+    "bus",
+    "directions",
+    "filled"
+  ],
+  "DirectionsCar": [
+    "car",
+    "directions"
+  ],
+  "DirectionsCarFilled": [
+    "car",
+    "directions",
+    "filled"
+  ],
+  "DirectionsOff": [
+    "directions",
+    "off"
+  ],
+  "DirectionsRailway": [
+    "directions",
+    "railway"
+  ],
+  "DirectionsRailwayFilled": [
+    "directions",
+    "filled",
+    "railway"
+  ],
+  "DirectionsRun": [
+    "directions",
+    "run"
+  ],
+  "DirectionsSubway": [
+    "directions",
+    "subway"
+  ],
+  "DirectionsSubwayFilled": [
+    "directions",
+    "filled",
+    "subway"
+  ],
+  "DirectionsTransit": [
+    "directions",
+    "transit"
+  ],
+  "DirectionsTransitFilled": [
+    "directions",
+    "filled",
+    "transit"
+  ],
+  "DirectionsWalk": [
+    "directions",
+    "walk"
+  ],
+  "DirtyLens": [
+    "dirty",
+    "lens"
+  ],
+  "DisabledByDefault": [
+    "by",
+    "default",
+    "disabled"
+  ],
+  "DiscFull": [
+    "disc",
+    "full"
+  ],
+  "Discount": [
+    "discount"
+  ],
+  "DisplaySettings": [
+    "ajustos",
+    "configuració",
+    "display",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "Diversity1": [
+    "diversity"
+  ],
+  "Diversity2": [
+    "diversity"
+  ],
+  "Diversity3": [
+    "diversity"
+  ],
+  "Dns": [
+    "dns"
+  ],
+  "DoDisturb": [
+    "disturb",
+    "do"
+  ],
+  "DoDisturbAlt": [
+    "alt",
+    "disturb",
+    "do"
+  ],
+  "DoDisturbOff": [
+    "disturb",
+    "do",
+    "off"
+  ],
+  "DoDisturbOn": [
+    "disturb",
+    "do",
+    "on"
+  ],
+  "DoNotDisturb": [
+    "disturb",
+    "do",
+    "not"
+  ],
+  "DoNotDisturbAlt": [
+    "alt",
+    "disturb",
+    "do",
+    "not"
+  ],
+  "DoNotDisturbOff": [
+    "disturb",
+    "do",
+    "not",
+    "off"
+  ],
+  "DoNotDisturbOn": [
+    "disturb",
+    "do",
+    "not",
+    "on"
+  ],
+  "DoNotDisturbOnTotalSilence": [
+    "disturb",
+    "do",
+    "not",
+    "on",
+    "silence",
+    "total"
+  ],
+  "DoNotStep": [
+    "do",
+    "not",
+    "step"
+  ],
+  "DoNotTouch": [
+    "do",
+    "not",
+    "touch"
+  ],
+  "Dock": [
+    "dock"
+  ],
+  "DocumentScanner": [
+    "document",
+    "scanner"
+  ],
+  "Domain": [
+    "domain"
+  ],
+  "DomainAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "domain",
+    "sumar"
+  ],
+  "DomainDisabled": [
+    "disabled",
+    "domain"
+  ],
+  "DomainVerification": [
+    "domain",
+    "verification"
+  ],
+  "Done": [
+    "done"
+  ],
+  "DoneAll": [
+    "all",
+    "done"
+  ],
+  "DoneOutline": [
+    "done",
+    "outline"
+  ],
+  "DonutLarge": [
+    "donut",
+    "large"
+  ],
+  "DonutSmall": [
+    "donut",
+    "small"
+  ],
+  "DoorBack": [
+    "back",
+    "door"
+  ],
+  "DoorFront": [
+    "door",
+    "front"
+  ],
+  "DoorSliding": [
+    "door",
+    "sliding"
+  ],
+  "Doorbell": [
+    "doorbell"
+  ],
+  "DoubleArrow": [
+    "arrow",
+    "double"
+  ],
+  "DownhillSkiing": [
+    "downhill",
+    "skiing"
+  ],
+  "Download": [
+    "baixar",
+    "descargar",
+    "descarregar",
+    "download"
+  ],
+  "DownloadDone": [
+    "baixar",
+    "descargar",
+    "descarregar",
+    "done",
+    "download"
+  ],
+  "DownloadForOffline": [
+    "baixar",
+    "descargar",
+    "descarregar",
+    "download",
+    "for",
+    "offline"
+  ],
+  "Downloading": [
+    "downloading"
+  ],
+  "Drafts": [
+    "drafts"
+  ],
+  "DragHandle": [
+    "drag",
+    "handle"
+  ],
+  "DragIndicator": [
+    "drag",
+    "indicator"
+  ],
+  "Draw": [
+    "draw"
+  ],
+  "DriveEta": [
+    "drive",
+    "eta"
+  ],
+  "DriveFileMove": [
+    "archivo",
+    "document",
+    "drive",
+    "file",
+    "fitxer",
+    "move"
+  ],
+  "DriveFileRenameOutline": [
+    "archivo",
+    "document",
+    "drive",
+    "file",
+    "fitxer",
+    "outline",
+    "rename"
+  ],
+  "DriveFolderUpload": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "drive",
+    "folder",
+    "pujar",
+    "subir",
+    "upload"
+  ],
+  "Dry": [
+    "dry"
+  ],
+  "DryCleaning": [
+    "cleaning",
+    "dry"
+  ],
+  "Duo": [
+    "duo"
+  ],
+  "Dvr": [
+    "dvr"
+  ],
+  "DynamicFeed": [
+    "dynamic",
+    "feed"
+  ],
+  "DynamicForm": [
+    "dynamic",
+    "form"
+  ],
+  "EMobiledata": [
+    "e",
+    "mobiledata"
+  ],
+  "Earbuds": [
+    "earbuds"
+  ],
+  "EarbudsBattery": [
+    "battery",
+    "earbuds"
+  ],
+  "East": [
+    "east"
+  ],
+  "EdgesensorHigh": [
+    "edgesensor",
+    "high"
+  ],
+  "EdgesensorLow": [
+    "edgesensor",
+    "low"
+  ],
+  "Edit": [
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "modificar"
+  ],
+  "EditAttributes": [
+    "attributes",
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "modificar"
+  ],
+  "EditCalendar": [
+    "calendar",
+    "calendari",
+    "calendario",
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "modificar"
+  ],
+  "EditLocation": [
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "location",
+    "modificar"
+  ],
+  "EditLocationAlt": [
+    "alt",
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "location",
+    "modificar"
+  ],
+  "EditNote": [
+    "anotació",
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "modificar",
+    "nota",
+    "note"
+  ],
+  "EditNotifications": [
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "modificar",
+    "notifications"
+  ],
+  "EditOff": [
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "modificar",
+    "off"
+  ],
+  "EditRoad": [
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "modificar",
+    "road"
+  ],
+  "Egg": [
+    "egg"
+  ],
+  "EggAlt": [
+    "alt",
+    "egg"
+  ],
+  "EightK": [
+    "eight",
+    "k"
+  ],
+  "EightKPlus": [
+    "eight",
+    "k",
+    "plus"
+  ],
+  "EightMp": [
+    "eight",
+    "mp"
+  ],
+  "EighteenMp": [
+    "eighteen",
+    "mp"
+  ],
+  "EighteenUpRating": [
+    "eighteen",
+    "rating",
+    "up"
+  ],
+  "EightteenMp": [
+    "eightteen",
+    "mp"
+  ],
+  "Eject": [
+    "eject"
+  ],
+  "Elderly": [
+    "elderly"
+  ],
+  "ElderlyWoman": [
+    "elderly",
+    "woman"
+  ],
+  "ElectricBike": [
+    "bike",
+    "electric"
+  ],
+  "ElectricBolt": [
+    "bolt",
+    "electric"
+  ],
+  "ElectricCar": [
+    "car",
+    "electric"
+  ],
+  "ElectricMeter": [
+    "electric",
+    "meter"
+  ],
+  "ElectricMoped": [
+    "electric",
+    "moped"
+  ],
+  "ElectricRickshaw": [
+    "electric",
+    "rickshaw"
+  ],
+  "ElectricScooter": [
+    "electric",
+    "scooter"
+  ],
+  "ElectricalServices": [
+    "electrical",
+    "services"
+  ],
+  "Elevator": [
+    "elevator"
+  ],
+  "ElevenMp": [
+    "eleven",
+    "mp"
+  ],
+  "Email": [
+    "correo",
+    "correu",
+    "electrònic",
+    "electrónico",
+    "email"
+  ],
+  "Emergency": [
+    "emergency"
+  ],
+  "EmergencyRecording": [
+    "emergency",
+    "recording"
+  ],
+  "EmergencyShare": [
+    "compartir",
+    "emergency",
+    "enviar",
+    "share"
+  ],
+  "EmojiEmotions": [
+    "emoji",
+    "emotions"
+  ],
+  "EmojiEvents": [
+    "emoji",
+    "events"
+  ],
+  "EmojiFlags": [
+    "emoji",
+    "flags"
+  ],
+  "EmojiFoodBeverage": [
+    "beverage",
+    "emoji",
+    "food"
+  ],
+  "EmojiNature": [
+    "emoji",
+    "nature"
+  ],
+  "EmojiObjects": [
+    "emoji",
+    "objects"
+  ],
+  "EmojiPeople": [
+    "emoji",
+    "people"
+  ],
+  "EmojiSymbols": [
+    "emoji",
+    "symbols"
+  ],
+  "EmojiTransportation": [
+    "emoji",
+    "transportation"
+  ],
+  "EnergySavingsLeaf": [
+    "energy",
+    "leaf",
+    "savings"
+  ],
+  "Engineering": [
+    "engineering"
+  ],
+  "EnhancedEncryption": [
+    "encryption",
+    "enhanced"
+  ],
+  "Equalizer": [
+    "equalizer"
+  ],
+  "Error": [
+    "error",
+    "falla",
+    "problema"
+  ],
+  "ErrorOutline": [
+    "error",
+    "falla",
+    "outline",
+    "problema"
+  ],
+  "Escalator": [
+    "escalator"
+  ],
+  "EscalatorWarning": [
+    "advertencia",
+    "advertència",
+    "avís",
+    "escalator",
+    "warning"
+  ],
+  "Euro": [
+    "euro"
+  ],
+  "EuroSymbol": [
+    "euro",
+    "symbol"
+  ],
+  "EvStation": [
+    "ev",
+    "station"
+  ],
+  "Event": [
+    "event"
+  ],
+  "EventAvailable": [
+    "available",
+    "event"
+  ],
+  "EventBusy": [
+    "busy",
+    "event"
+  ],
+  "EventNote": [
+    "anotació",
+    "event",
+    "nota",
+    "note"
+  ],
+  "EventRepeat": [
+    "event",
+    "repeat"
+  ],
+  "EventSeat": [
+    "event",
+    "seat"
+  ],
+  "ExitToApp": [
+    "app",
+    "exit",
+    "to"
+  ],
+  "Expand": [
+    "expand"
+  ],
+  "ExpandCircleDown": [
+    "circle",
+    "down",
+    "expand"
+  ],
+  "ExpandLess": [
+    "expand",
+    "less"
+  ],
+  "ExpandMore": [
+    "expand",
+    "more",
+    "más",
+    "més"
+  ],
+  "Explicit": [
+    "explicit"
+  ],
+  "Explore": [
+    "explore"
+  ],
+  "ExploreOff": [
+    "explore",
+    "off"
+  ],
+  "Exposure": [
+    "exposure"
+  ],
+  "Extension": [
+    "extension"
+  ],
+  "ExtensionOff": [
+    "extension",
+    "off"
+  ],
+  "Face": [
+    "face"
+  ],
+  "Face2": [
+    "face"
+  ],
+  "Face3": [
+    "face"
+  ],
+  "Face4": [
+    "face"
+  ],
+  "Face5": [
+    "face"
+  ],
+  "Face6": [
+    "face"
+  ],
+  "FaceRetouchingNatural": [
+    "face",
+    "natural",
+    "retouching"
+  ],
+  "FaceRetouchingOff": [
+    "face",
+    "off",
+    "retouching"
+  ],
+  "Facebook": [
+    "facebook"
+  ],
+  "FactCheck": [
+    "check",
+    "comprovar",
+    "fact",
+    "marcar",
+    "validar",
+    "verificar"
+  ],
+  "Factory": [
+    "factory"
+  ],
+  "FamilyRestroom": [
+    "family",
+    "restroom"
+  ],
+  "FastForward": [
+    "fast",
+    "forward"
+  ],
+  "FastRewind": [
+    "fast",
+    "rewind"
+  ],
+  "Fastfood": [
+    "fastfood"
+  ],
+  "Favorite": [
+    "favorit",
+    "favorite",
+    "favorito",
+    "preferit"
+  ],
+  "FavoriteBorder": [
+    "border",
+    "favorit",
+    "favorite",
+    "favorito",
+    "preferit"
+  ],
+  "Fax": [
+    "fax"
+  ],
+  "FeaturedPlayList": [
+    "featured",
+    "list",
+    "lista",
+    "llista",
+    "play"
+  ],
+  "FeaturedVideo": [
+    "featured",
+    "video",
+    "vídeo"
+  ],
+  "Feed": [
+    "feed"
+  ],
+  "Feedback": [
+    "feedback"
+  ],
+  "Female": [
+    "female"
+  ],
+  "Fence": [
+    "fence"
+  ],
+  "Festival": [
+    "festival"
+  ],
+  "FiberDvr": [
+    "dvr",
+    "fiber"
+  ],
+  "FiberManualRecord": [
+    "fiber",
+    "manual",
+    "record"
+  ],
+  "FiberNew": [
+    "fiber",
+    "new"
+  ],
+  "FiberPin": [
+    "fiber",
+    "pin"
+  ],
+  "FiberSmartRecord": [
+    "fiber",
+    "record",
+    "smart"
+  ],
+  "FifteenMp": [
+    "fifteen",
+    "mp"
+  ],
+  "FileCopy": [
+    "archivo",
+    "copiar",
+    "copy",
+    "document",
+    "duplicar",
+    "file",
+    "fitxer"
+  ],
+  "FileDownload": [
+    "archivo",
+    "baixar",
+    "descargar",
+    "descarregar",
+    "document",
+    "download",
+    "file",
+    "fitxer"
+  ],
+  "FileDownloadDone": [
+    "archivo",
+    "baixar",
+    "descargar",
+    "descarregar",
+    "document",
+    "done",
+    "download",
+    "file",
+    "fitxer"
+  ],
+  "FileDownloadOff": [
+    "archivo",
+    "baixar",
+    "descargar",
+    "descarregar",
+    "document",
+    "download",
+    "file",
+    "fitxer",
+    "off"
+  ],
+  "FileOpen": [
+    "archivo",
+    "document",
+    "file",
+    "fitxer",
+    "open"
+  ],
+  "FilePresent": [
+    "archivo",
+    "document",
+    "file",
+    "fitxer",
+    "present"
+  ],
+  "FileUpload": [
+    "archivo",
+    "document",
+    "file",
+    "fitxer",
+    "pujar",
+    "subir",
+    "upload"
+  ],
+  "Filter": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter1": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter2": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter3": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter4": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter5": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter6": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter7": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter8": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter9": [
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "Filter9Plus": [
+    "filter",
+    "filtre",
+    "filtro",
+    "plus"
+  ],
+  "FilterAlt": [
+    "alt",
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "FilterAltOff": [
+    "alt",
+    "filter",
+    "filtre",
+    "filtro",
+    "off"
+  ],
+  "FilterBAndW": [
+    "and",
+    "b",
+    "filter",
+    "filtre",
+    "filtro",
+    "w"
+  ],
+  "FilterCenterFocus": [
+    "center",
+    "filter",
+    "filtre",
+    "filtro",
+    "focus"
+  ],
+  "FilterDrama": [
+    "drama",
+    "filter",
+    "filtre",
+    "filtro"
+  ],
+  "FilterFrames": [
+    "filter",
+    "filtre",
+    "filtro",
+    "frames"
+  ],
+  "FilterHdr": [
+    "filter",
+    "filtre",
+    "filtro",
+    "hdr"
+  ],
+  "FilterList": [
+    "filter",
+    "filtre",
+    "filtro",
+    "list",
+    "lista",
+    "llista"
+  ],
+  "FilterListOff": [
+    "filter",
+    "filtre",
+    "filtro",
+    "list",
+    "lista",
+    "llista",
+    "off"
+  ],
+  "FilterNone": [
+    "filter",
+    "filtre",
+    "filtro",
+    "none"
+  ],
+  "FilterTiltShift": [
+    "filter",
+    "filtre",
+    "filtro",
+    "shift",
+    "tilt"
+  ],
+  "FilterVintage": [
+    "filter",
+    "filtre",
+    "filtro",
+    "vintage"
+  ],
+  "FindInPage": [
+    "find",
+    "in",
+    "page"
+  ],
+  "FindReplace": [
+    "find",
+    "replace"
+  ],
+  "Fingerprint": [
+    "fingerprint"
+  ],
+  "FireExtinguisher": [
+    "extinguisher",
+    "fire"
+  ],
+  "FireHydrantAlt": [
+    "alt",
+    "fire",
+    "hydrant"
+  ],
+  "FireTruck": [
+    "fire",
+    "truck"
+  ],
+  "Fireplace": [
+    "fireplace"
+  ],
+  "FirstPage": [
+    "first",
+    "page"
+  ],
+  "FitScreen": [
+    "fit",
+    "screen"
+  ],
+  "Fitbit": [
+    "fitbit"
+  ],
+  "FitnessCenter": [
+    "center",
+    "fitness"
+  ],
+  "FiveG": [
+    "five",
+    "g"
+  ],
+  "FiveK": [
+    "five",
+    "k"
+  ],
+  "FiveKPlus": [
+    "five",
+    "k",
+    "plus"
+  ],
+  "FiveMp": [
+    "five",
+    "mp"
+  ],
+  "FivteenMp": [
+    "fivteen",
+    "mp"
+  ],
+  "Flag": [
+    "flag"
+  ],
+  "FlagCircle": [
+    "circle",
+    "flag"
+  ],
+  "Flaky": [
+    "flaky"
+  ],
+  "Flare": [
+    "flare"
+  ],
+  "FlashAuto": [
+    "auto",
+    "flash"
+  ],
+  "FlashOff": [
+    "flash",
+    "off"
+  ],
+  "FlashOn": [
+    "flash",
+    "on"
+  ],
+  "FlashlightOff": [
+    "flashlight",
+    "off"
+  ],
+  "FlashlightOn": [
+    "flashlight",
+    "on"
+  ],
+  "Flatware": [
+    "flatware"
+  ],
+  "Flight": [
+    "flight"
+  ],
+  "FlightClass": [
+    "class",
+    "flight"
+  ],
+  "FlightLand": [
+    "flight",
+    "land"
+  ],
+  "FlightTakeoff": [
+    "flight",
+    "takeoff"
+  ],
+  "Flip": [
+    "flip"
+  ],
+  "FlipCameraAndroid": [
+    "android",
+    "camera",
+    "càmera",
+    "cámara",
+    "flip",
+    "foto",
+    "fotografia"
+  ],
+  "FlipCameraIos": [
+    "camera",
+    "càmera",
+    "cámara",
+    "flip",
+    "foto",
+    "fotografia",
+    "ios"
+  ],
+  "FlipToBack": [
+    "back",
+    "flip",
+    "to"
+  ],
+  "FlipToFront": [
+    "flip",
+    "front",
+    "to"
+  ],
+  "Flood": [
+    "flood"
+  ],
+  "Fluorescent": [
+    "fluorescent"
+  ],
+  "FlutterDash": [
+    "dash",
+    "flutter"
+  ],
+  "FmdBad": [
+    "bad",
+    "fmd"
+  ],
+  "FmdGood": [
+    "fmd",
+    "good"
+  ],
+  "Folder": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder"
+  ],
+  "FolderCopy": [
+    "carpeta",
+    "copiar",
+    "copy",
+    "directori",
+    "directorio",
+    "duplicar",
+    "folder"
+  ],
+  "FolderDelete": [
+    "borrar",
+    "carpeta",
+    "delete",
+    "directori",
+    "directorio",
+    "eliminar",
+    "folder",
+    "suprimir"
+  ],
+  "FolderOff": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder",
+    "off"
+  ],
+  "FolderOpen": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder",
+    "open"
+  ],
+  "FolderShared": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder",
+    "shared"
+  ],
+  "FolderSpecial": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder",
+    "special"
+  ],
+  "FolderZip": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder",
+    "zip"
+  ],
+  "FollowTheSigns": [
+    "follow",
+    "signs",
+    "the"
+  ],
+  "FontDownload": [
+    "baixar",
+    "descargar",
+    "descarregar",
+    "download",
+    "font"
+  ],
+  "FontDownloadOff": [
+    "baixar",
+    "descargar",
+    "descarregar",
+    "download",
+    "font",
+    "off"
+  ],
+  "FoodBank": [
+    "bank",
+    "food"
+  ],
+  "Forest": [
+    "forest"
+  ],
+  "ForkLeft": [
+    "fork",
+    "left"
+  ],
+  "ForkRight": [
+    "fork",
+    "right"
+  ],
+  "FormatAlignCenter": [
+    "align",
+    "center",
+    "format"
+  ],
+  "FormatAlignJustify": [
+    "align",
+    "format",
+    "justify"
+  ],
+  "FormatAlignLeft": [
+    "align",
+    "format",
+    "left"
+  ],
+  "FormatAlignRight": [
+    "align",
+    "format",
+    "right"
+  ],
+  "FormatBold": [
+    "bold",
+    "format"
+  ],
+  "FormatClear": [
+    "clear",
+    "format"
+  ],
+  "FormatColorFill": [
+    "color",
+    "fill",
+    "format"
+  ],
+  "FormatColorReset": [
+    "color",
+    "format",
+    "reset"
+  ],
+  "FormatColorText": [
+    "color",
+    "format",
+    "text"
+  ],
+  "FormatIndentDecrease": [
+    "decrease",
+    "format",
+    "indent"
+  ],
+  "FormatIndentIncrease": [
+    "format",
+    "increase",
+    "indent"
+  ],
+  "FormatItalic": [
+    "format",
+    "italic"
+  ],
+  "FormatLineSpacing": [
+    "format",
+    "line",
+    "spacing"
+  ],
+  "FormatListBulleted": [
+    "bulleted",
+    "format",
+    "list",
+    "lista",
+    "llista"
+  ],
+  "FormatListNumbered": [
+    "format",
+    "list",
+    "lista",
+    "llista",
+    "numbered"
+  ],
+  "FormatListNumberedRtl": [
+    "format",
+    "list",
+    "lista",
+    "llista",
+    "numbered",
+    "rtl"
+  ],
+  "FormatOverline": [
+    "format",
+    "overline"
+  ],
+  "FormatPaint": [
+    "format",
+    "paint"
+  ],
+  "FormatQuote": [
+    "format",
+    "quote"
+  ],
+  "FormatShapes": [
+    "format",
+    "shapes"
+  ],
+  "FormatSize": [
+    "format",
+    "size"
+  ],
+  "FormatStrikethrough": [
+    "format",
+    "strikethrough"
+  ],
+  "FormatTextdirectionLToR": [
+    "format",
+    "l",
+    "r",
+    "textdirection",
+    "to"
+  ],
+  "FormatTextdirectionRToL": [
+    "format",
+    "l",
+    "r",
+    "textdirection",
+    "to"
+  ],
+  "FormatUnderlined": [
+    "format",
+    "underlined"
+  ],
+  "Fort": [
+    "fort"
+  ],
+  "Forum": [
+    "forum"
+  ],
+  "Forward": [
+    "forward"
+  ],
+  "Forward10": [
+    "forward"
+  ],
+  "Forward30": [
+    "forward"
+  ],
+  "Forward5": [
+    "forward"
+  ],
+  "ForwardToInbox": [
+    "forward",
+    "inbox",
+    "to"
+  ],
+  "Foundation": [
+    "foundation"
+  ],
+  "FourGMobiledata": [
+    "four",
+    "g",
+    "mobiledata"
+  ],
+  "FourGPlusMobiledata": [
+    "four",
+    "g",
+    "mobiledata",
+    "plus"
+  ],
+  "FourK": [
+    "four",
+    "k"
+  ],
+  "FourKPlus": [
+    "four",
+    "k",
+    "plus"
+  ],
+  "FourMp": [
+    "four",
+    "mp"
+  ],
+  "FourteenMp": [
+    "fourteen",
+    "mp"
+  ],
+  "FreeBreakfast": [
+    "breakfast",
+    "free"
+  ],
+  "Fullscreen": [
+    "fullscreen"
+  ],
+  "FullscreenExit": [
+    "exit",
+    "fullscreen"
+  ],
+  "Functions": [
+    "functions"
+  ],
+  "GMobiledata": [
+    "g",
+    "mobiledata"
+  ],
+  "GTranslate": [
+    "g",
+    "translate"
+  ],
+  "Gamepad": [
+    "gamepad"
+  ],
+  "Games": [
+    "games"
+  ],
+  "Garage": [
+    "garage"
+  ],
+  "GasMeter": [
+    "gas",
+    "meter"
+  ],
+  "Gavel": [
+    "gavel"
+  ],
+  "Gesture": [
+    "gesture"
+  ],
+  "GetApp": [
+    "app",
+    "get"
+  ],
+  "Gif": [
+    "gif"
+  ],
+  "GifBox": [
+    "box",
+    "gif"
+  ],
+  "Girl": [
+    "girl"
+  ],
+  "GitHub": [
+    "git",
+    "hub"
+  ],
+  "Gite": [
+    "gite"
+  ],
+  "GolfCourse": [
+    "course",
+    "golf"
+  ],
+  "Google": [
+    "google"
+  ],
+  "GppBad": [
+    "bad",
+    "gpp"
+  ],
+  "GppGood": [
+    "good",
+    "gpp"
+  ],
+  "GppMaybe": [
+    "gpp",
+    "maybe"
+  ],
+  "GpsFixed": [
+    "fixed",
+    "gps"
+  ],
+  "GpsNotFixed": [
+    "fixed",
+    "gps",
+    "not"
+  ],
+  "GpsOff": [
+    "gps",
+    "off"
+  ],
+  "Grade": [
+    "grade"
+  ],
+  "Gradient": [
+    "gradient"
+  ],
+  "Grading": [
+    "grading"
+  ],
+  "Grain": [
+    "grain"
+  ],
+  "GraphicEq": [
+    "eq",
+    "graphic"
+  ],
+  "Grass": [
+    "grass"
+  ],
+  "Grid3x3": [
+    "grid",
+    "x"
+  ],
+  "Grid4x4": [
+    "grid",
+    "x"
+  ],
+  "GridGoldenratio": [
+    "goldenratio",
+    "grid"
+  ],
+  "GridOff": [
+    "grid",
+    "off"
+  ],
+  "GridOn": [
+    "grid",
+    "on"
+  ],
+  "GridView": [
+    "grid",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "Group": [
+    "group"
+  ],
+  "GroupAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "group",
+    "sumar"
+  ],
+  "GroupRemove": [
+    "group",
+    "remove"
+  ],
+  "GroupWork": [
+    "group",
+    "work"
+  ],
+  "Groups": [
+    "groups"
+  ],
+  "Groups2": [
+    "groups"
+  ],
+  "Groups3": [
+    "groups"
+  ],
+  "HMobiledata": [
+    "h",
+    "mobiledata"
+  ],
+  "HPlusMobiledata": [
+    "h",
+    "mobiledata",
+    "plus"
+  ],
+  "Hail": [
+    "hail"
+  ],
+  "Handshake": [
+    "handshake"
+  ],
+  "Handyman": [
+    "handyman"
+  ],
+  "Hardware": [
+    "hardware"
+  ],
+  "Hd": [
+    "hd"
+  ],
+  "HdrAuto": [
+    "auto",
+    "hdr"
+  ],
+  "HdrAutoSelect": [
+    "auto",
+    "hdr",
+    "select"
+  ],
+  "HdrEnhancedSelect": [
+    "enhanced",
+    "hdr",
+    "select"
+  ],
+  "HdrOff": [
+    "hdr",
+    "off"
+  ],
+  "HdrOffSelect": [
+    "hdr",
+    "off",
+    "select"
+  ],
+  "HdrOn": [
+    "hdr",
+    "on"
+  ],
+  "HdrOnSelect": [
+    "hdr",
+    "on",
+    "select"
+  ],
+  "HdrPlus": [
+    "hdr",
+    "plus"
+  ],
+  "HdrStrong": [
+    "hdr",
+    "strong"
+  ],
+  "HdrWeak": [
+    "hdr",
+    "weak"
+  ],
+  "Headphones": [
+    "headphones"
+  ],
+  "HeadphonesBattery": [
+    "battery",
+    "headphones"
+  ],
+  "Headset": [
+    "headset"
+  ],
+  "HeadsetMic": [
+    "headset",
+    "mic",
+    "micròfon",
+    "micrófono"
+  ],
+  "HeadsetOff": [
+    "headset",
+    "off"
+  ],
+  "Healing": [
+    "healing"
+  ],
+  "HealthAndSafety": [
+    "and",
+    "health",
+    "safety"
+  ],
+  "Hearing": [
+    "hearing"
+  ],
+  "HearingDisabled": [
+    "disabled",
+    "hearing"
+  ],
+  "HeartBroken": [
+    "broken",
+    "heart"
+  ],
+  "HeatPump": [
+    "heat",
+    "pump"
+  ],
+  "Height": [
+    "height"
+  ],
+  "Help": [
+    "help"
+  ],
+  "HelpCenter": [
+    "center",
+    "help"
+  ],
+  "HelpOutline": [
+    "help",
+    "outline"
+  ],
+  "Hevc": [
+    "hevc"
+  ],
+  "Hexagon": [
+    "hexagon"
+  ],
+  "HideImage": [
+    "foto",
+    "hide",
+    "image",
+    "imagen",
+    "imatge"
+  ],
+  "HideSource": [
+    "hide",
+    "source"
+  ],
+  "HighQuality": [
+    "high",
+    "quality"
+  ],
+  "Highlight": [
+    "highlight"
+  ],
+  "HighlightAlt": [
+    "alt",
+    "highlight"
+  ],
+  "HighlightOff": [
+    "highlight",
+    "off"
+  ],
+  "Hiking": [
+    "hiking"
+  ],
+  "History": [
+    "history"
+  ],
+  "HistoryEdu": [
+    "edu",
+    "history"
+  ],
+  "HistoryToggleOff": [
+    "history",
+    "off",
+    "toggle"
+  ],
+  "Hive": [
+    "hive"
+  ],
+  "Hls": [
+    "hls"
+  ],
+  "HlsOff": [
+    "hls",
+    "off"
+  ],
+  "HolidayVillage": [
+    "holiday",
+    "village"
+  ],
+  "Home": [
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar"
+  ],
+  "HomeMax": [
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "max"
+  ],
+  "HomeMini": [
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "mini"
+  ],
+  "HomeRepairService": [
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "repair",
+    "service"
+  ],
+  "HomeWork": [
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "work"
+  ],
+  "HorizontalRule": [
+    "horizontal",
+    "rule"
+  ],
+  "HorizontalSplit": [
+    "horizontal",
+    "split"
+  ],
+  "HotTub": [
+    "hot",
+    "tub"
+  ],
+  "Hotel": [
+    "hotel"
+  ],
+  "HourglassBottom": [
+    "bottom",
+    "hourglass"
+  ],
+  "HourglassDisabled": [
+    "disabled",
+    "hourglass"
+  ],
+  "HourglassEmpty": [
+    "empty",
+    "hourglass"
+  ],
+  "HourglassFull": [
+    "full",
+    "hourglass"
+  ],
+  "HourglassTop": [
+    "hourglass",
+    "top"
+  ],
+  "House": [
+    "house"
+  ],
+  "HouseSiding": [
+    "house",
+    "siding"
+  ],
+  "Houseboat": [
+    "houseboat"
+  ],
+  "HowToReg": [
+    "how",
+    "reg",
+    "to"
+  ],
+  "HowToVote": [
+    "how",
+    "to",
+    "vote"
+  ],
+  "Html": [
+    "html"
+  ],
+  "Http": [
+    "http"
+  ],
+  "Https": [
+    "https"
+  ],
+  "Hub": [
+    "hub"
+  ],
+  "Hvac": [
+    "hvac"
+  ],
+  "IceSkating": [
+    "ice",
+    "skating"
+  ],
+  "Icecream": [
+    "icecream"
+  ],
+  "Image": [
+    "foto",
+    "image",
+    "imagen",
+    "imatge"
+  ],
+  "ImageAspectRatio": [
+    "aspect",
+    "foto",
+    "image",
+    "imagen",
+    "imatge",
+    "ratio"
+  ],
+  "ImageNotSupported": [
+    "foto",
+    "image",
+    "imagen",
+    "imatge",
+    "not",
+    "supported"
+  ],
+  "ImageSearch": [
+    "buscar",
+    "cerca",
+    "foto",
+    "image",
+    "imagen",
+    "imatge",
+    "search"
+  ],
+  "ImagesearchRoller": [
+    "imagesearch",
+    "roller"
+  ],
+  "ImportContacts": [
+    "contacts",
+    "import"
+  ],
+  "ImportExport": [
+    "export",
+    "import"
+  ],
+  "ImportantDevices": [
+    "devices",
+    "important"
+  ],
+  "Inbox": [
+    "inbox"
+  ],
+  "IndeterminateCheckBox": [
+    "box",
+    "check",
+    "comprovar",
+    "indeterminate",
+    "marcar",
+    "validar",
+    "verificar"
+  ],
+  "Info": [
+    "detalles",
+    "detalls",
+    "info",
+    "informació",
+    "información"
+  ],
+  "Input": [
+    "input"
+  ],
+  "InsertChart": [
+    "chart",
+    "insert"
+  ],
+  "InsertChartOutlinedOutlined": [
+    "chart",
+    "insert",
+    "outlined"
+  ],
+  "InsertComment": [
+    "comentari",
+    "comentario",
+    "comment",
+    "insert",
+    "opinió"
+  ],
+  "InsertDriveFile": [
+    "archivo",
+    "document",
+    "drive",
+    "file",
+    "fitxer",
+    "insert"
+  ],
+  "InsertEmoticon": [
+    "emoticon",
+    "insert"
+  ],
+  "InsertInvitation": [
+    "insert",
+    "invitation"
+  ],
+  "InsertLink": [
+    "enlace",
+    "enllaç",
+    "insert",
+    "link"
+  ],
+  "InsertPageBreak": [
+    "break",
+    "insert",
+    "page"
+  ],
+  "InsertPhoto": [
+    "foto",
+    "fotografia",
+    "imagen",
+    "insert",
+    "photo"
+  ],
+  "Insights": [
+    "insights"
+  ],
+  "Instagram": [
+    "instagram"
+  ],
+  "InstallDesktop": [
+    "desktop",
+    "install"
+  ],
+  "InstallMobile": [
+    "install",
+    "mobile"
+  ],
+  "IntegrationInstructions": [
+    "instructions",
+    "integration"
+  ],
+  "Interests": [
+    "interests"
+  ],
+  "InterpreterMode": [
+    "interpreter",
+    "mode"
+  ],
+  "Inventory": [
+    "inventory"
+  ],
+  "Inventory2": [
+    "inventory"
+  ],
+  "InvertColors": [
+    "colors",
+    "invert"
+  ],
+  "InvertColorsOff": [
+    "colors",
+    "invert",
+    "off"
+  ],
+  "IosShare": [
+    "compartir",
+    "enviar",
+    "ios",
+    "share"
+  ],
+  "Iron": [
+    "iron"
+  ],
+  "Iso": [
+    "iso"
+  ],
+  "Javascript": [
+    "javascript"
+  ],
+  "JoinFull": [
+    "full",
+    "join"
+  ],
+  "JoinInner": [
+    "inner",
+    "join"
+  ],
+  "JoinLeft": [
+    "join",
+    "left"
+  ],
+  "JoinRight": [
+    "join",
+    "right"
+  ],
+  "Kayaking": [
+    "kayaking"
+  ],
+  "KebabDining": [
+    "dining",
+    "kebab"
+  ],
+  "Key": [
+    "key"
+  ],
+  "KeyOff": [
+    "key",
+    "off"
+  ],
+  "Keyboard": [
+    "keyboard"
+  ],
+  "KeyboardAlt": [
+    "alt",
+    "keyboard"
+  ],
+  "KeyboardArrowDown": [
+    "arrow",
+    "down",
+    "keyboard"
+  ],
+  "KeyboardArrowLeft": [
+    "arrow",
+    "keyboard",
+    "left"
+  ],
+  "KeyboardArrowRight": [
+    "arrow",
+    "keyboard",
+    "right"
+  ],
+  "KeyboardArrowUp": [
+    "arrow",
+    "keyboard",
+    "up"
+  ],
+  "KeyboardBackspace": [
+    "backspace",
+    "keyboard"
+  ],
+  "KeyboardCapslock": [
+    "capslock",
+    "keyboard"
+  ],
+  "KeyboardCommandKey": [
+    "command",
+    "key",
+    "keyboard"
+  ],
+  "KeyboardControlKey": [
+    "control",
+    "key",
+    "keyboard"
+  ],
+  "KeyboardDoubleArrowDown": [
+    "arrow",
+    "double",
+    "down",
+    "keyboard"
+  ],
+  "KeyboardDoubleArrowLeft": [
+    "arrow",
+    "double",
+    "keyboard",
+    "left"
+  ],
+  "KeyboardDoubleArrowRight": [
+    "arrow",
+    "double",
+    "keyboard",
+    "right"
+  ],
+  "KeyboardDoubleArrowUp": [
+    "arrow",
+    "double",
+    "keyboard",
+    "up"
+  ],
+  "KeyboardHide": [
+    "hide",
+    "keyboard"
+  ],
+  "KeyboardOptionKey": [
+    "key",
+    "keyboard",
+    "option"
+  ],
+  "KeyboardReturn": [
+    "keyboard",
+    "return"
+  ],
+  "KeyboardTab": [
+    "keyboard",
+    "tab"
+  ],
+  "KeyboardVoice": [
+    "keyboard",
+    "voice"
+  ],
+  "KingBed": [
+    "bed",
+    "king"
+  ],
+  "Kitchen": [
+    "kitchen"
+  ],
+  "Kitesurfing": [
+    "kitesurfing"
+  ],
+  "Label": [
+    "label"
+  ],
+  "LabelImportant": [
+    "important",
+    "label"
+  ],
+  "LabelOff": [
+    "label",
+    "off"
+  ],
+  "Lan": [
+    "lan"
+  ],
+  "Landscape": [
+    "landscape"
+  ],
+  "Landslide": [
+    "landslide"
+  ],
+  "Language": [
+    "language"
+  ],
+  "Laptop": [
+    "laptop"
+  ],
+  "LaptopChromebook": [
+    "chromebook",
+    "laptop"
+  ],
+  "LaptopMac": [
+    "laptop",
+    "mac"
+  ],
+  "LaptopWindows": [
+    "laptop",
+    "windows"
+  ],
+  "LastPage": [
+    "last",
+    "page"
+  ],
+  "Launch": [
+    "launch"
+  ],
+  "Layers": [
+    "layers"
+  ],
+  "LayersClear": [
+    "clear",
+    "layers"
+  ],
+  "Leaderboard": [
+    "leaderboard"
+  ],
+  "LeakAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "leak",
+    "sumar"
+  ],
+  "LeakRemove": [
+    "leak",
+    "remove"
+  ],
+  "LegendToggle": [
+    "legend",
+    "toggle"
+  ],
+  "Lens": [
+    "lens"
+  ],
+  "LensBlur": [
+    "blur",
+    "lens"
+  ],
+  "LibraryAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "library",
+    "sumar"
+  ],
+  "LibraryAddCheck": [
+    "add",
+    "afegir",
+    "añadir",
+    "check",
+    "comprovar",
+    "library",
+    "marcar",
+    "sumar",
+    "validar",
+    "verificar"
+  ],
+  "LibraryBooks": [
+    "books",
+    "library"
+  ],
+  "LibraryMusic": [
+    "library",
+    "music"
+  ],
+  "Light": [
+    "light"
+  ],
+  "LightMode": [
+    "light",
+    "mode"
+  ],
+  "Lightbulb": [
+    "lightbulb"
+  ],
+  "LightbulbCircle": [
+    "circle",
+    "lightbulb"
+  ],
+  "LineAxis": [
+    "axis",
+    "line"
+  ],
+  "LineStyle": [
+    "line",
+    "style"
+  ],
+  "LineWeight": [
+    "line",
+    "weight"
+  ],
+  "LinearScale": [
+    "linear",
+    "scale"
+  ],
+  "Link": [
+    "enlace",
+    "enllaç",
+    "link"
+  ],
+  "LinkOff": [
+    "enlace",
+    "enllaç",
+    "link",
+    "off"
+  ],
+  "LinkedCamera": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "linked"
+  ],
+  "LinkedIn": [
+    "in",
+    "linked"
+  ],
+  "Liquor": [
+    "liquor"
+  ],
+  "List": [
+    "list",
+    "lista",
+    "llista"
+  ],
+  "ListAlt": [
+    "alt",
+    "list",
+    "lista",
+    "llista"
+  ],
+  "LiveHelp": [
+    "help",
+    "live"
+  ],
+  "LiveTv": [
+    "live",
+    "tv"
+  ],
+  "Living": [
+    "living"
+  ],
+  "LocalActivity": [
+    "activity",
+    "local"
+  ],
+  "LocalAirport": [
+    "airport",
+    "local"
+  ],
+  "LocalAtm": [
+    "atm",
+    "local"
+  ],
+  "LocalBar": [
+    "bar",
+    "local"
+  ],
+  "LocalCafe": [
+    "cafe",
+    "local"
+  ],
+  "LocalCarWash": [
+    "car",
+    "local",
+    "wash"
+  ],
+  "LocalConvenienceStore": [
+    "convenience",
+    "local",
+    "store"
+  ],
+  "LocalDining": [
+    "dining",
+    "local"
+  ],
+  "LocalDrink": [
+    "drink",
+    "local"
+  ],
+  "LocalFireDepartment": [
+    "department",
+    "fire",
+    "local"
+  ],
+  "LocalFlorist": [
+    "florist",
+    "local"
+  ],
+  "LocalGasStation": [
+    "gas",
+    "local",
+    "station"
+  ],
+  "LocalGroceryStore": [
+    "grocery",
+    "local",
+    "store"
+  ],
+  "LocalHospital": [
+    "hospital",
+    "local"
+  ],
+  "LocalHotel": [
+    "hotel",
+    "local"
+  ],
+  "LocalLaundryService": [
+    "laundry",
+    "local",
+    "service"
+  ],
+  "LocalLibrary": [
+    "library",
+    "local"
+  ],
+  "LocalMall": [
+    "local",
+    "mall"
+  ],
+  "LocalMovies": [
+    "local",
+    "movies"
+  ],
+  "LocalOffer": [
+    "local",
+    "offer"
+  ],
+  "LocalParking": [
+    "local",
+    "parking"
+  ],
+  "LocalPharmacy": [
+    "local",
+    "pharmacy"
+  ],
+  "LocalPhone": [
+    "llamada",
+    "local",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "LocalPizza": [
+    "local",
+    "pizza"
+  ],
+  "LocalPlay": [
+    "local",
+    "play"
+  ],
+  "LocalPolice": [
+    "local",
+    "police"
+  ],
+  "LocalPostOffice": [
+    "local",
+    "office",
+    "post"
+  ],
+  "LocalPrintshop": [
+    "local",
+    "printshop"
+  ],
+  "LocalSee": [
+    "local",
+    "see"
+  ],
+  "LocalShipping": [
+    "local",
+    "shipping"
+  ],
+  "LocalTaxi": [
+    "local",
+    "taxi"
+  ],
+  "LocationCity": [
+    "city",
+    "location"
+  ],
+  "LocationDisabled": [
+    "disabled",
+    "location"
+  ],
+  "LocationOff": [
+    "location",
+    "off"
+  ],
+  "LocationOn": [
+    "location",
+    "on"
+  ],
+  "LocationSearching": [
+    "location",
+    "searching"
+  ],
+  "Lock": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "seguretat",
+    "seguridad"
+  ],
+  "LockClock": [
+    "bloqueig",
+    "bloqueo",
+    "clock",
+    "hora",
+    "lock",
+    "rellotge",
+    "reloj",
+    "seguretat",
+    "seguridad"
+  ],
+  "LockOpen": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "open",
+    "seguretat",
+    "seguridad"
+  ],
+  "LockPerson": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "person",
+    "persona",
+    "seguretat",
+    "seguridad",
+    "usuari",
+    "usuario"
+  ],
+  "LockReset": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "reset",
+    "seguretat",
+    "seguridad"
+  ],
+  "Login": [
+    "login"
+  ],
+  "LogoDev": [
+    "dev",
+    "logo"
+  ],
+  "Logout": [
+    "logout"
+  ],
+  "Looks": [
+    "looks"
+  ],
+  "Looks3": [
+    "looks"
+  ],
+  "Looks4": [
+    "looks"
+  ],
+  "Looks5": [
+    "looks"
+  ],
+  "Looks6": [
+    "looks"
+  ],
+  "LooksOne": [
+    "looks",
+    "one"
+  ],
+  "LooksTwo": [
+    "looks",
+    "two"
+  ],
+  "Loop": [
+    "loop"
+  ],
+  "Loupe": [
+    "loupe"
+  ],
+  "LowPriority": [
+    "low",
+    "priority"
+  ],
+  "Loyalty": [
+    "loyalty"
+  ],
+  "LteMobiledata": [
+    "lte",
+    "mobiledata"
+  ],
+  "LtePlusMobiledata": [
+    "lte",
+    "mobiledata",
+    "plus"
+  ],
+  "Luggage": [
+    "luggage"
+  ],
+  "LunchDining": [
+    "dining",
+    "lunch"
+  ],
+  "Lyrics": [
+    "lyrics"
+  ],
+  "MacroOff": [
+    "macro",
+    "off"
+  ],
+  "Mail": [
+    "mail"
+  ],
+  "MailLock": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "mail",
+    "seguretat",
+    "seguridad"
+  ],
+  "MailOutline": [
+    "mail",
+    "outline"
+  ],
+  "Male": [
+    "male"
+  ],
+  "Man": [
+    "man"
+  ],
+  "Man2": [
+    "man"
+  ],
+  "Man3": [
+    "man"
+  ],
+  "Man4": [
+    "man"
+  ],
+  "ManageAccounts": [
+    "accounts",
+    "manage"
+  ],
+  "ManageHistory": [
+    "history",
+    "manage"
+  ],
+  "ManageSearch": [
+    "buscar",
+    "cerca",
+    "manage",
+    "search"
+  ],
+  "Map": [
+    "map",
+    "mapa",
+    "plano",
+    "plànol"
+  ],
+  "MapsHomeWork": [
+    "casa",
+    "hogar",
+    "home",
+    "inici",
+    "llar",
+    "maps",
+    "work"
+  ],
+  "MapsUgc": [
+    "maps",
+    "ugc"
+  ],
+  "Margin": [
+    "margin"
+  ],
+  "MarkAsUnread": [
+    "as",
+    "mark",
+    "unread"
+  ],
+  "MarkChatRead": [
+    "chat",
+    "mark",
+    "read"
+  ],
+  "MarkChatUnread": [
+    "chat",
+    "mark",
+    "unread"
+  ],
+  "MarkEmailRead": [
+    "correo",
+    "correu",
+    "electrònic",
+    "electrónico",
+    "email",
+    "mark",
+    "read"
+  ],
+  "MarkEmailUnread": [
+    "correo",
+    "correu",
+    "electrònic",
+    "electrónico",
+    "email",
+    "mark",
+    "unread"
+  ],
+  "MarkUnreadChatAlt": [
+    "alt",
+    "chat",
+    "mark",
+    "unread"
+  ],
+  "Markunread": [
+    "markunread"
+  ],
+  "MarkunreadMailbox": [
+    "mailbox",
+    "markunread"
+  ],
+  "Masks": [
+    "masks"
+  ],
+  "Maximize": [
+    "maximize"
+  ],
+  "MediaBluetoothOff": [
+    "bluetooth",
+    "media",
+    "off"
+  ],
+  "MediaBluetoothOn": [
+    "bluetooth",
+    "media",
+    "on"
+  ],
+  "Mediation": [
+    "mediation"
+  ],
+  "MedicalInformation": [
+    "information",
+    "medical"
+  ],
+  "MedicalServices": [
+    "medical",
+    "services"
+  ],
+  "Medication": [
+    "medication"
+  ],
+  "MedicationLiquid": [
+    "liquid",
+    "medication"
+  ],
+  "MeetingRoom": [
+    "meeting",
+    "room"
+  ],
+  "Memory": [
+    "memory"
+  ],
+  "Menu": [
+    "menu",
+    "menú",
+    "opciones",
+    "opcions"
+  ],
+  "MenuBook": [
+    "book",
+    "menu",
+    "menú",
+    "opciones",
+    "opcions"
+  ],
+  "MenuOpen": [
+    "menu",
+    "menú",
+    "opciones",
+    "opcions",
+    "open"
+  ],
+  "Merge": [
+    "merge"
+  ],
+  "MergeType": [
+    "merge",
+    "type"
+  ],
+  "Message": [
+    "mensaje",
+    "message",
+    "missatge"
+  ],
+  "Mic": [
+    "mic",
+    "micròfon",
+    "micrófono"
+  ],
+  "MicExternalOff": [
+    "external",
+    "mic",
+    "micròfon",
+    "micrófono",
+    "off"
+  ],
+  "MicExternalOn": [
+    "external",
+    "mic",
+    "micròfon",
+    "micrófono",
+    "on"
+  ],
+  "MicNone": [
+    "mic",
+    "micròfon",
+    "micrófono",
+    "none"
+  ],
+  "MicOff": [
+    "mic",
+    "micròfon",
+    "micrófono",
+    "off"
+  ],
+  "Microsoft": [
+    "microsoft"
+  ],
+  "Microwave": [
+    "microwave"
+  ],
+  "MilitaryTech": [
+    "military",
+    "tech"
+  ],
+  "Minimize": [
+    "minimize"
+  ],
+  "MinorCrash": [
+    "crash",
+    "minor"
+  ],
+  "MiscellaneousServices": [
+    "miscellaneous",
+    "services"
+  ],
+  "MissedVideoCall": [
+    "call",
+    "cridar",
+    "llamada",
+    "missed",
+    "telefonar",
+    "trucada",
+    "video",
+    "vídeo"
+  ],
+  "Mms": [
+    "mms"
+  ],
+  "MobileFriendly": [
+    "friendly",
+    "mobile"
+  ],
+  "MobileOff": [
+    "mobile",
+    "off"
+  ],
+  "MobileScreenShare": [
+    "compartir",
+    "enviar",
+    "mobile",
+    "screen",
+    "share"
+  ],
+  "MobiledataOff": [
+    "mobiledata",
+    "off"
+  ],
+  "Mode": [
+    "mode"
+  ],
+  "ModeComment": [
+    "comentari",
+    "comentario",
+    "comment",
+    "mode",
+    "opinió"
+  ],
+  "ModeEdit": [
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "mode",
+    "modificar"
+  ],
+  "ModeEditOutline": [
+    "cambiar",
+    "canviar",
+    "edit",
+    "editar",
+    "mode",
+    "modificar",
+    "outline"
+  ],
+  "ModeFanOff": [
+    "fan",
+    "mode",
+    "off"
+  ],
+  "ModeNight": [
+    "mode",
+    "night"
+  ],
+  "ModeOfTravel": [
+    "mode",
+    "of",
+    "travel"
+  ],
+  "ModeStandby": [
+    "mode",
+    "standby"
+  ],
+  "ModelTraining": [
+    "model",
+    "training"
+  ],
+  "MonetizationOn": [
+    "monetization",
+    "on"
+  ],
+  "Money": [
+    "money"
+  ],
+  "MoneyOff": [
+    "money",
+    "off"
+  ],
+  "MoneyOffCsred": [
+    "csred",
+    "money",
+    "off"
+  ],
+  "Monitor": [
+    "monitor"
+  ],
+  "MonitorHeart": [
+    "heart",
+    "monitor"
+  ],
+  "MonitorWeight": [
+    "monitor",
+    "weight"
+  ],
+  "MonochromePhotos": [
+    "monochrome",
+    "photos"
+  ],
+  "Mood": [
+    "mood"
+  ],
+  "MoodBad": [
+    "bad",
+    "mood"
+  ],
+  "Moped": [
+    "moped"
+  ],
+  "More": [
+    "more",
+    "más",
+    "més"
+  ],
+  "MoreHoriz": [
+    "horiz",
+    "more",
+    "más",
+    "més"
+  ],
+  "MoreTime": [
+    "more",
+    "más",
+    "més",
+    "time"
+  ],
+  "MoreVert": [
+    "more",
+    "más",
+    "més",
+    "vert"
+  ],
+  "Mosque": [
+    "mosque"
+  ],
+  "MotionPhotosAuto": [
+    "auto",
+    "motion",
+    "photos"
+  ],
+  "MotionPhotosOff": [
+    "motion",
+    "off",
+    "photos"
+  ],
+  "Mouse": [
+    "mouse"
+  ],
+  "MoveDown": [
+    "down",
+    "move"
+  ],
+  "MoveToInbox": [
+    "inbox",
+    "move",
+    "to"
+  ],
+  "MoveUp": [
+    "move",
+    "up"
+  ],
+  "Movie": [
+    "movie"
+  ],
+  "MovieCreation": [
+    "creation",
+    "movie"
+  ],
+  "MovieFilter": [
+    "filter",
+    "filtre",
+    "filtro",
+    "movie"
+  ],
+  "Moving": [
+    "moving"
+  ],
+  "Mp": [
+    "mp"
+  ],
+  "MultilineChart": [
+    "chart",
+    "multiline"
+  ],
+  "MultipleStop": [
+    "multiple",
+    "stop"
+  ],
+  "Museum": [
+    "museum"
+  ],
+  "MusicNote": [
+    "anotació",
+    "music",
+    "nota",
+    "note"
+  ],
+  "MusicOff": [
+    "music",
+    "off"
+  ],
+  "MusicVideo": [
+    "music",
+    "video",
+    "vídeo"
+  ],
+  "MyLocation": [
+    "location",
+    "my"
+  ],
+  "Nat": [
+    "nat"
+  ],
+  "Nature": [
+    "nature"
+  ],
+  "NaturePeople": [
+    "nature",
+    "people"
+  ],
+  "NavigateBefore": [
+    "before",
+    "navigate"
+  ],
+  "NavigateNext": [
+    "navigate",
+    "next"
+  ],
+  "Navigation": [
+    "navigation"
+  ],
+  "NearMe": [
+    "me",
+    "near"
+  ],
+  "NearMeDisabled": [
+    "disabled",
+    "me",
+    "near"
+  ],
+  "NearbyError": [
+    "error",
+    "falla",
+    "nearby",
+    "problema"
+  ],
+  "NearbyOff": [
+    "nearby",
+    "off"
+  ],
+  "NestCamWiredStand": [
+    "cam",
+    "nest",
+    "stand",
+    "wired"
+  ],
+  "NetworkCell": [
+    "cell",
+    "network"
+  ],
+  "NetworkCheck": [
+    "check",
+    "comprovar",
+    "marcar",
+    "network",
+    "validar",
+    "verificar"
+  ],
+  "NetworkLocked": [
+    "locked",
+    "network"
+  ],
+  "NetworkPing": [
+    "network",
+    "ping"
+  ],
+  "NetworkWifi": [
+    "network",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "NetworkWifi1Bar": [
+    "bar",
+    "network",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "NetworkWifi2Bar": [
+    "bar",
+    "network",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "NetworkWifi3Bar": [
+    "bar",
+    "network",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "NewReleases": [
+    "new",
+    "releases"
+  ],
+  "Newspaper": [
+    "newspaper"
+  ],
+  "NextPlan": [
+    "next",
+    "plan"
+  ],
+  "NextWeek": [
+    "next",
+    "week"
+  ],
+  "Nfc": [
+    "nfc"
+  ],
+  "NightShelter": [
+    "night",
+    "shelter"
+  ],
+  "Nightlife": [
+    "nightlife"
+  ],
+  "Nightlight": [
+    "nightlight"
+  ],
+  "NightlightRound": [
+    "nightlight",
+    "round"
+  ],
+  "NightsStay": [
+    "nights",
+    "stay"
+  ],
+  "NineK": [
+    "k",
+    "nine"
+  ],
+  "NineKPlus": [
+    "k",
+    "nine",
+    "plus"
+  ],
+  "NineMp": [
+    "mp",
+    "nine"
+  ],
+  "NineteenMp": [
+    "mp",
+    "nineteen"
+  ],
+  "NoAccounts": [
+    "accounts",
+    "no"
+  ],
+  "NoAdultContent": [
+    "adult",
+    "content",
+    "no"
+  ],
+  "NoBackpack": [
+    "backpack",
+    "no"
+  ],
+  "NoCell": [
+    "cell",
+    "no"
+  ],
+  "NoCrash": [
+    "crash",
+    "no"
+  ],
+  "NoDrinks": [
+    "drinks",
+    "no"
+  ],
+  "NoEncryption": [
+    "encryption",
+    "no"
+  ],
+  "NoEncryptionGmailerrorred": [
+    "encryption",
+    "gmailerrorred",
+    "no"
+  ],
+  "NoFlash": [
+    "flash",
+    "no"
+  ],
+  "NoFood": [
+    "food",
+    "no"
+  ],
+  "NoLuggage": [
+    "luggage",
+    "no"
+  ],
+  "NoMeals": [
+    "meals",
+    "no"
+  ],
+  "NoMeetingRoom": [
+    "meeting",
+    "no",
+    "room"
+  ],
+  "NoPhotography": [
+    "no",
+    "photography"
+  ],
+  "NoSim": [
+    "no",
+    "sim"
+  ],
+  "NoStroller": [
+    "no",
+    "stroller"
+  ],
+  "NoTransfer": [
+    "no",
+    "transfer"
+  ],
+  "NoiseAware": [
+    "aware",
+    "noise"
+  ],
+  "NoiseControlOff": [
+    "control",
+    "noise",
+    "off"
+  ],
+  "NordicWalking": [
+    "nordic",
+    "walking"
+  ],
+  "North": [
+    "north"
+  ],
+  "NorthEast": [
+    "east",
+    "north"
+  ],
+  "NorthWest": [
+    "north",
+    "west"
+  ],
+  "NotAccessible": [
+    "accessible",
+    "not"
+  ],
+  "NotInterested": [
+    "interested",
+    "not"
+  ],
+  "NotListedLocation": [
+    "listed",
+    "location",
+    "not"
+  ],
+  "NotStarted": [
+    "not",
+    "started"
+  ],
+  "Note": [
+    "anotació",
+    "nota",
+    "note"
+  ],
+  "NoteAdd": [
+    "add",
+    "afegir",
+    "anotació",
+    "añadir",
+    "nota",
+    "note",
+    "sumar"
+  ],
+  "NoteAlt": [
+    "alt",
+    "anotació",
+    "nota",
+    "note"
+  ],
+  "Notes": [
+    "notes"
+  ],
+  "NotificationAdd": [
+    "add",
+    "afegir",
+    "alerta",
+    "avís",
+    "añadir",
+    "notificació",
+    "notification",
+    "sumar"
+  ],
+  "NotificationImportant": [
+    "alerta",
+    "avís",
+    "important",
+    "notificació",
+    "notification"
+  ],
+  "Notifications": [
+    "notifications"
+  ],
+  "NotificationsActive": [
+    "active",
+    "notifications"
+  ],
+  "NotificationsNone": [
+    "none",
+    "notifications"
+  ],
+  "NotificationsOff": [
+    "notifications",
+    "off"
+  ],
+  "NotificationsPaused": [
+    "notifications",
+    "paused"
+  ],
+  "Numbers": [
+    "numbers"
+  ],
+  "OfflineBolt": [
+    "bolt",
+    "offline"
+  ],
+  "OfflinePin": [
+    "offline",
+    "pin"
+  ],
+  "OfflineShare": [
+    "compartir",
+    "enviar",
+    "offline",
+    "share"
+  ],
+  "OilBarrel": [
+    "barrel",
+    "oil"
+  ],
+  "OnDeviceTraining": [
+    "device",
+    "on",
+    "training"
+  ],
+  "OndemandVideo": [
+    "ondemand",
+    "video",
+    "vídeo"
+  ],
+  "OneK": [
+    "k",
+    "one"
+  ],
+  "OneKPlus": [
+    "k",
+    "one",
+    "plus"
+  ],
+  "OneKk": [
+    "kk",
+    "one"
+  ],
+  "OnlinePrediction": [
+    "online",
+    "prediction"
+  ],
+  "Opacity": [
+    "opacity"
+  ],
+  "OpenInBrowser": [
+    "browser",
+    "in",
+    "open"
+  ],
+  "OpenInFull": [
+    "full",
+    "in",
+    "open"
+  ],
+  "OpenInNew": [
+    "in",
+    "new",
+    "open"
+  ],
+  "OpenInNewOff": [
+    "in",
+    "new",
+    "off",
+    "open"
+  ],
+  "OpenWith": [
+    "open",
+    "with"
+  ],
+  "OtherHouses": [
+    "houses",
+    "other"
+  ],
+  "Outbound": [
+    "outbound"
+  ],
+  "Outbox": [
+    "outbox"
+  ],
+  "OutdoorGrill": [
+    "grill",
+    "outdoor"
+  ],
+  "Outlet": [
+    "outlet"
+  ],
+  "OutlinedFlag": [
+    "flag",
+    "outlined"
+  ],
+  "Output": [
+    "output"
+  ],
+  "Padding": [
+    "padding"
+  ],
+  "Pages": [
+    "pages"
+  ],
+  "Pageview": [
+    "pageview"
+  ],
+  "Paid": [
+    "paid"
+  ],
+  "Palette": [
+    "palette"
+  ],
+  "PanTool": [
+    "pan",
+    "tool"
+  ],
+  "PanToolAlt": [
+    "alt",
+    "pan",
+    "tool"
+  ],
+  "Panorama": [
+    "panorama"
+  ],
+  "PanoramaFishEye": [
+    "eye",
+    "fish",
+    "panorama"
+  ],
+  "PanoramaHorizontal": [
+    "horizontal",
+    "panorama"
+  ],
+  "PanoramaHorizontalSelect": [
+    "horizontal",
+    "panorama",
+    "select"
+  ],
+  "PanoramaPhotosphere": [
+    "panorama",
+    "photosphere"
+  ],
+  "PanoramaPhotosphereSelect": [
+    "panorama",
+    "photosphere",
+    "select"
+  ],
+  "PanoramaVertical": [
+    "panorama",
+    "vertical"
+  ],
+  "PanoramaVerticalSelect": [
+    "panorama",
+    "select",
+    "vertical"
+  ],
+  "PanoramaWideAngle": [
+    "angle",
+    "panorama",
+    "wide"
+  ],
+  "PanoramaWideAngleSelect": [
+    "angle",
+    "panorama",
+    "select",
+    "wide"
+  ],
+  "Paragliding": [
+    "paragliding"
+  ],
+  "Park": [
+    "park"
+  ],
+  "PartyMode": [
+    "mode",
+    "party"
+  ],
+  "Password": [
+    "contrasenya",
+    "contraseña",
+    "password"
+  ],
+  "Pattern": [
+    "pattern"
+  ],
+  "Pause": [
+    "pause"
+  ],
+  "PauseCircle": [
+    "circle",
+    "pause"
+  ],
+  "PauseCircleFilled": [
+    "circle",
+    "filled",
+    "pause"
+  ],
+  "PauseCircleOutline": [
+    "circle",
+    "outline",
+    "pause"
+  ],
+  "PausePresentation": [
+    "pause",
+    "presentation"
+  ],
+  "Payment": [
+    "payment"
+  ],
+  "Payments": [
+    "payments"
+  ],
+  "PedalBike": [
+    "bike",
+    "pedal"
+  ],
+  "Pending": [
+    "pending"
+  ],
+  "PendingActions": [
+    "actions",
+    "pending"
+  ],
+  "Pentagon": [
+    "pentagon"
+  ],
+  "People": [
+    "people"
+  ],
+  "PeopleAlt": [
+    "alt",
+    "people"
+  ],
+  "PeopleOutline": [
+    "outline",
+    "people"
+  ],
+  "Percent": [
+    "percent"
+  ],
+  "PermCameraMic": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "mic",
+    "micròfon",
+    "micrófono",
+    "perm"
+  ],
+  "PermContactCalendar": [
+    "calendar",
+    "calendari",
+    "calendario",
+    "contact",
+    "contacte",
+    "contacto",
+    "perm"
+  ],
+  "PermDataSetting": [
+    "data",
+    "perm",
+    "setting"
+  ],
+  "PermDeviceInformation": [
+    "device",
+    "information",
+    "perm"
+  ],
+  "PermIdentity": [
+    "identity",
+    "perm"
+  ],
+  "PermMedia": [
+    "media",
+    "perm"
+  ],
+  "PermPhoneMsg": [
+    "llamada",
+    "msg",
+    "perm",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PermScanWifi": [
+    "perm",
+    "red",
+    "scan",
+    "wifi",
+    "xarxa"
+  ],
+  "Person": [
+    "person",
+    "persona",
+    "usuari",
+    "usuario"
+  ],
+  "Person2": [
+    "person",
+    "persona",
+    "usuari",
+    "usuario"
+  ],
+  "Person3": [
+    "person",
+    "persona",
+    "usuari",
+    "usuario"
+  ],
+  "Person4": [
+    "person",
+    "persona",
+    "usuari",
+    "usuario"
+  ],
+  "PersonAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "person",
+    "persona",
+    "sumar",
+    "usuari",
+    "usuario"
+  ],
+  "PersonAddAlt": [
+    "add",
+    "afegir",
+    "alt",
+    "añadir",
+    "person",
+    "persona",
+    "sumar",
+    "usuari",
+    "usuario"
+  ],
+  "PersonAddAlt1": [
+    "add",
+    "afegir",
+    "alt",
+    "añadir",
+    "person",
+    "persona",
+    "sumar",
+    "usuari",
+    "usuario"
+  ],
+  "PersonAddDisabled": [
+    "add",
+    "afegir",
+    "añadir",
+    "disabled",
+    "person",
+    "persona",
+    "sumar",
+    "usuari",
+    "usuario"
+  ],
+  "PersonOff": [
+    "off",
+    "person",
+    "persona",
+    "usuari",
+    "usuario"
+  ],
+  "PersonOutline": [
+    "outline",
+    "person",
+    "persona",
+    "usuari",
+    "usuario"
+  ],
+  "PersonPin": [
+    "person",
+    "persona",
+    "pin",
+    "usuari",
+    "usuario"
+  ],
+  "PersonPinCircle": [
+    "circle",
+    "person",
+    "persona",
+    "pin",
+    "usuari",
+    "usuario"
+  ],
+  "PersonRemove": [
+    "person",
+    "persona",
+    "remove",
+    "usuari",
+    "usuario"
+  ],
+  "PersonRemoveAlt1": [
+    "alt",
+    "person",
+    "persona",
+    "remove",
+    "usuari",
+    "usuario"
+  ],
+  "PersonSearch": [
+    "buscar",
+    "cerca",
+    "person",
+    "persona",
+    "search",
+    "usuari",
+    "usuario"
+  ],
+  "PersonalVideo": [
+    "personal",
+    "video",
+    "vídeo"
+  ],
+  "PestControl": [
+    "control",
+    "pest"
+  ],
+  "PestControlRodent": [
+    "control",
+    "pest",
+    "rodent"
+  ],
+  "Pets": [
+    "pets"
+  ],
+  "Phishing": [
+    "phishing"
+  ],
+  "Phone": [
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneAndroid": [
+    "android",
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneBluetoothSpeaker": [
+    "bluetooth",
+    "llamada",
+    "phone",
+    "speaker",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneCallback": [
+    "callback",
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneDisabled": [
+    "disabled",
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneEnabled": [
+    "enabled",
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneForwarded": [
+    "forwarded",
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneInTalk": [
+    "in",
+    "llamada",
+    "phone",
+    "talk",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneIphone": [
+    "iphone",
+    "llamada",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneLocked": [
+    "llamada",
+    "locked",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhoneMissed": [
+    "llamada",
+    "missed",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "PhonePaused": [
+    "llamada",
+    "paused",
+    "phone",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "Phonelink": [
+    "phonelink"
+  ],
+  "PhonelinkErase": [
+    "erase",
+    "phonelink"
+  ],
+  "PhonelinkLock": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "phonelink",
+    "seguretat",
+    "seguridad"
+  ],
+  "PhonelinkOff": [
+    "off",
+    "phonelink"
+  ],
+  "PhonelinkRing": [
+    "phonelink",
+    "ring"
+  ],
+  "PhonelinkSetup": [
+    "phonelink",
+    "setup"
+  ],
+  "Photo": [
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo"
+  ],
+  "PhotoAlbum": [
+    "album",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo"
+  ],
+  "PhotoCamera": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo"
+  ],
+  "PhotoCameraBack": [
+    "back",
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo"
+  ],
+  "PhotoCameraFront": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "front",
+    "imagen",
+    "photo"
+  ],
+  "PhotoFilter": [
+    "filter",
+    "filtre",
+    "filtro",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo"
+  ],
+  "PhotoLibrary": [
+    "foto",
+    "fotografia",
+    "imagen",
+    "library",
+    "photo"
+  ],
+  "PhotoSizeSelectActual": [
+    "actual",
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo",
+    "select",
+    "size"
+  ],
+  "PhotoSizeSelectLarge": [
+    "foto",
+    "fotografia",
+    "imagen",
+    "large",
+    "photo",
+    "select",
+    "size"
+  ],
+  "PhotoSizeSelectSmall": [
+    "foto",
+    "fotografia",
+    "imagen",
+    "photo",
+    "select",
+    "size",
+    "small"
+  ],
+  "Php": [
+    "php"
+  ],
+  "Piano": [
+    "piano"
+  ],
+  "PianoOff": [
+    "off",
+    "piano"
+  ],
+  "PictureAsPdf": [
+    "as",
+    "pdf",
+    "picture"
+  ],
+  "PictureInPicture": [
+    "in",
+    "picture"
+  ],
+  "PictureInPictureAlt": [
+    "alt",
+    "in",
+    "picture"
+  ],
+  "PieChart": [
+    "chart",
+    "pie"
+  ],
+  "PieChartOutline": [
+    "chart",
+    "outline",
+    "pie"
+  ],
+  "Pin": [
+    "pin"
+  ],
+  "PinDrop": [
+    "drop",
+    "pin"
+  ],
+  "Pinch": [
+    "pinch"
+  ],
+  "Pinterest": [
+    "pinterest"
+  ],
+  "PivotTableChart": [
+    "chart",
+    "pivot",
+    "table"
+  ],
+  "Pix": [
+    "pix"
+  ],
+  "Place": [
+    "lloc",
+    "lugar",
+    "place",
+    "ubicació",
+    "ubicación"
+  ],
+  "Plagiarism": [
+    "plagiarism"
+  ],
+  "PlayArrow": [
+    "arrow",
+    "play"
+  ],
+  "PlayCircle": [
+    "circle",
+    "play"
+  ],
+  "PlayCircleFilled": [
+    "circle",
+    "filled",
+    "play"
+  ],
+  "PlayCircleFilledWhite": [
+    "circle",
+    "filled",
+    "play",
+    "white"
+  ],
+  "PlayCircleOutline": [
+    "circle",
+    "outline",
+    "play"
+  ],
+  "PlayDisabled": [
+    "disabled",
+    "play"
+  ],
+  "PlayForWork": [
+    "for",
+    "play",
+    "work"
+  ],
+  "PlayLesson": [
+    "lesson",
+    "play"
+  ],
+  "PlaylistAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "playlist",
+    "sumar"
+  ],
+  "PlaylistAddCheck": [
+    "add",
+    "afegir",
+    "añadir",
+    "check",
+    "comprovar",
+    "marcar",
+    "playlist",
+    "sumar",
+    "validar",
+    "verificar"
+  ],
+  "PlaylistAddCheckCircle": [
+    "add",
+    "afegir",
+    "añadir",
+    "check",
+    "circle",
+    "comprovar",
+    "marcar",
+    "playlist",
+    "sumar",
+    "validar",
+    "verificar"
+  ],
+  "PlaylistAddCircle": [
+    "add",
+    "afegir",
+    "añadir",
+    "circle",
+    "playlist",
+    "sumar"
+  ],
+  "PlaylistPlay": [
+    "play",
+    "playlist"
+  ],
+  "PlaylistRemove": [
+    "playlist",
+    "remove"
+  ],
+  "Plumbing": [
+    "plumbing"
+  ],
+  "PlusOne": [
+    "one",
+    "plus"
+  ],
+  "Podcasts": [
+    "podcasts"
+  ],
+  "PointOfSale": [
+    "of",
+    "point",
+    "sale"
+  ],
+  "Policy": [
+    "policy"
+  ],
+  "Poll": [
+    "poll"
+  ],
+  "Polyline": [
+    "polyline"
+  ],
+  "Pool": [
+    "pool"
+  ],
+  "PortableWifiOff": [
+    "off",
+    "portable",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "Portrait": [
+    "portrait"
+  ],
+  "PostAdd": [
+    "add",
+    "afegir",
+    "añadir",
+    "post",
+    "sumar"
+  ],
+  "Power": [
+    "power"
+  ],
+  "PowerInput": [
+    "input",
+    "power"
+  ],
+  "PowerOff": [
+    "off",
+    "power"
+  ],
+  "PowerSettingsNew": [
+    "ajustos",
+    "configuració",
+    "new",
+    "power",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "PrecisionManufacturing": [
+    "manufacturing",
+    "precision"
+  ],
+  "PregnantWoman": [
+    "pregnant",
+    "woman"
+  ],
+  "PresentToAll": [
+    "all",
+    "present",
+    "to"
+  ],
+  "Preview": [
+    "preview"
+  ],
+  "PriceChange": [
+    "change",
+    "price"
+  ],
+  "PriceCheck": [
+    "check",
+    "comprovar",
+    "marcar",
+    "price",
+    "validar",
+    "verificar"
+  ],
+  "Print": [
+    "impresora",
+    "imprimir",
+    "print"
+  ],
+  "PrintDisabled": [
+    "disabled",
+    "impresora",
+    "imprimir",
+    "print"
+  ],
+  "PriorityHigh": [
+    "high",
+    "priority"
+  ],
+  "PrivacyTip": [
+    "privacy",
+    "tip"
+  ],
+  "ProductionQuantityLimits": [
+    "limits",
+    "production",
+    "quantity"
+  ],
+  "Propane": [
+    "propane"
+  ],
+  "PropaneTank": [
+    "propane",
+    "tank"
+  ],
+  "Psychology": [
+    "psychology"
+  ],
+  "PsychologyAlt": [
+    "alt",
+    "psychology"
+  ],
+  "Public": [
+    "public"
+  ],
+  "PublicOff": [
+    "off",
+    "public"
+  ],
+  "Publish": [
+    "publish"
+  ],
+  "PublishedWithChanges": [
+    "changes",
+    "published",
+    "with"
+  ],
+  "PunchClock": [
+    "clock",
+    "hora",
+    "punch",
+    "rellotge",
+    "reloj"
+  ],
+  "PushPin": [
+    "pin",
+    "push"
+  ],
+  "QrCode": [
+    "code",
+    "qr"
+  ],
+  "QrCode2": [
+    "code",
+    "qr"
+  ],
+  "QrCodeScanner": [
+    "code",
+    "qr",
+    "scanner"
+  ],
+  "QueryBuilder": [
+    "builder",
+    "query"
+  ],
+  "QueryStats": [
+    "query",
+    "stats"
+  ],
+  "QuestionAnswer": [
+    "answer",
+    "question"
+  ],
+  "QuestionMark": [
+    "mark",
+    "question"
+  ],
+  "Queue": [
+    "queue"
+  ],
+  "QueueMusic": [
+    "music",
+    "queue"
+  ],
+  "QueuePlayNext": [
+    "next",
+    "play",
+    "queue"
+  ],
+  "Quickreply": [
+    "quickreply"
+  ],
+  "Quiz": [
+    "quiz"
+  ],
+  "RMobiledata": [
+    "mobiledata",
+    "r"
+  ],
+  "Radar": [
+    "radar"
+  ],
+  "Radio": [
+    "radio"
+  ],
+  "RadioButtonChecked": [
+    "button",
+    "checked",
+    "radio"
+  ],
+  "RadioButtonUnchecked": [
+    "button",
+    "radio",
+    "unchecked"
+  ],
+  "RailwayAlert": [
+    "advertencia",
+    "advertència",
+    "alert",
+    "avís",
+    "railway"
+  ],
+  "RamenDining": [
+    "dining",
+    "ramen"
+  ],
+  "RampLeft": [
+    "left",
+    "ramp"
+  ],
+  "RampRight": [
+    "ramp",
+    "right"
+  ],
+  "RateReview": [
+    "rate",
+    "review"
+  ],
+  "RawOff": [
+    "off",
+    "raw"
+  ],
+  "RawOn": [
+    "on",
+    "raw"
+  ],
+  "ReadMore": [
+    "more",
+    "más",
+    "més",
+    "read"
+  ],
+  "Receipt": [
+    "receipt"
+  ],
+  "ReceiptLong": [
+    "long",
+    "receipt"
+  ],
+  "RecentActors": [
+    "actors",
+    "recent"
+  ],
+  "Recommend": [
+    "recommend"
+  ],
+  "RecordVoiceOver": [
+    "over",
+    "record",
+    "voice"
+  ],
+  "Rectangle": [
+    "rectangle"
+  ],
+  "Recycling": [
+    "recycling"
+  ],
+  "Reddit": [
+    "reddit"
+  ],
+  "Redeem": [
+    "redeem"
+  ],
+  "Redo": [
+    "redo"
+  ],
+  "ReduceCapacity": [
+    "capacity",
+    "reduce"
+  ],
+  "Refresh": [
+    "refresh"
+  ],
+  "RememberMe": [
+    "me",
+    "remember"
+  ],
+  "Remove": [
+    "remove"
+  ],
+  "RemoveCircle": [
+    "circle",
+    "remove"
+  ],
+  "RemoveCircleOutline": [
+    "circle",
+    "outline",
+    "remove"
+  ],
+  "RemoveDone": [
+    "done",
+    "remove"
+  ],
+  "RemoveFromQueue": [
+    "from",
+    "queue",
+    "remove"
+  ],
+  "RemoveModerator": [
+    "moderator",
+    "remove"
+  ],
+  "RemoveRedEye": [
+    "eye",
+    "red",
+    "remove"
+  ],
+  "RemoveRoad": [
+    "remove",
+    "road"
+  ],
+  "RemoveShoppingCart": [
+    "cart",
+    "remove",
+    "shopping"
+  ],
+  "Reorder": [
+    "reorder"
+  ],
+  "Repartition": [
+    "repartition"
+  ],
+  "Repeat": [
+    "repeat"
+  ],
+  "RepeatOn": [
+    "on",
+    "repeat"
+  ],
+  "RepeatOne": [
+    "one",
+    "repeat"
+  ],
+  "RepeatOneOn": [
+    "on",
+    "one",
+    "repeat"
+  ],
+  "Replay": [
+    "replay"
+  ],
+  "Replay10": [
+    "replay"
+  ],
+  "Replay30": [
+    "replay"
+  ],
+  "Replay5": [
+    "replay"
+  ],
+  "ReplayCircleFilled": [
+    "circle",
+    "filled",
+    "replay"
+  ],
+  "Reply": [
+    "reply"
+  ],
+  "ReplyAll": [
+    "all",
+    "reply"
+  ],
+  "Report": [
+    "report"
+  ],
+  "ReportGmailerrorred": [
+    "gmailerrorred",
+    "report"
+  ],
+  "ReportOff": [
+    "off",
+    "report"
+  ],
+  "ReportProblem": [
+    "problem",
+    "report"
+  ],
+  "RequestPage": [
+    "page",
+    "request"
+  ],
+  "RequestQuote": [
+    "quote",
+    "request"
+  ],
+  "ResetTv": [
+    "reset",
+    "tv"
+  ],
+  "RestartAlt": [
+    "alt",
+    "restart"
+  ],
+  "Restaurant": [
+    "restaurant"
+  ],
+  "RestaurantMenu": [
+    "menu",
+    "menú",
+    "opciones",
+    "opcions",
+    "restaurant"
+  ],
+  "Restore": [
+    "restore"
+  ],
+  "RestoreFromTrash": [
+    "basura",
+    "from",
+    "paperera",
+    "restore",
+    "trash"
+  ],
+  "RestorePage": [
+    "page",
+    "restore"
+  ],
+  "Reviews": [
+    "reviews"
+  ],
+  "RiceBowl": [
+    "bowl",
+    "rice"
+  ],
+  "RingVolume": [
+    "ring",
+    "sonido",
+    "volum",
+    "volume"
+  ],
+  "Rocket": [
+    "rocket"
+  ],
+  "RocketLaunch": [
+    "launch",
+    "rocket"
+  ],
+  "RollerShades": [
+    "roller",
+    "shades"
+  ],
+  "RollerShadesClosed": [
+    "closed",
+    "roller",
+    "shades"
+  ],
+  "RollerSkating": [
+    "roller",
+    "skating"
+  ],
+  "Roofing": [
+    "roofing"
+  ],
+  "Room": [
+    "room"
+  ],
+  "RoomPreferences": [
+    "preferences",
+    "room"
+  ],
+  "RoomService": [
+    "room",
+    "service"
+  ],
+  "Rotate90DegreesCcw": [
+    "ccw",
+    "degrees",
+    "rotate"
+  ],
+  "Rotate90DegreesCw": [
+    "cw",
+    "degrees",
+    "rotate"
+  ],
+  "RotateLeft": [
+    "left",
+    "rotate"
+  ],
+  "RotateRight": [
+    "right",
+    "rotate"
+  ],
+  "RoundaboutLeft": [
+    "left",
+    "roundabout"
+  ],
+  "RoundaboutRight": [
+    "right",
+    "roundabout"
+  ],
+  "RoundedCorner": [
+    "corner",
+    "rounded"
+  ],
+  "Route": [
+    "route"
+  ],
+  "Router": [
+    "router"
+  ],
+  "Rowing": [
+    "rowing"
+  ],
+  "RssFeed": [
+    "feed",
+    "rss"
+  ],
+  "Rsvp": [
+    "rsvp"
+  ],
+  "Rtt": [
+    "rtt"
+  ],
+  "Rule": [
+    "rule"
+  ],
+  "RuleFolder": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder",
+    "rule"
+  ],
+  "RunCircle": [
+    "circle",
+    "run"
+  ],
+  "RunningWithErrors": [
+    "errors",
+    "running",
+    "with"
+  ],
+  "RvHookup": [
+    "hookup",
+    "rv"
+  ],
+  "SafetyCheck": [
+    "check",
+    "comprovar",
+    "marcar",
+    "safety",
+    "validar",
+    "verificar"
+  ],
+  "SafetyDivider": [
+    "divider",
+    "safety"
+  ],
+  "Sailing": [
+    "sailing"
+  ],
+  "Sanitizer": [
+    "sanitizer"
+  ],
+  "Satellite": [
+    "satellite"
+  ],
+  "SatelliteAlt": [
+    "alt",
+    "satellite"
+  ],
+  "Save": [
+    "desar",
+    "guardar",
+    "save"
+  ],
+  "SaveAlt": [
+    "alt",
+    "desar",
+    "guardar",
+    "save"
+  ],
+  "SaveAs": [
+    "as",
+    "desar",
+    "guardar",
+    "save"
+  ],
+  "SavedSearch": [
+    "buscar",
+    "cerca",
+    "saved",
+    "search"
+  ],
+  "Savings": [
+    "savings"
+  ],
+  "Scale": [
+    "scale"
+  ],
+  "Scanner": [
+    "scanner"
+  ],
+  "ScatterPlot": [
+    "plot",
+    "scatter"
+  ],
+  "Schedule": [
+    "schedule"
+  ],
+  "ScheduleSend": [
+    "enviar",
+    "mandar",
+    "schedule",
+    "send",
+    "trametre"
+  ],
+  "Schema": [
+    "schema"
+  ],
+  "School": [
+    "school"
+  ],
+  "Science": [
+    "science"
+  ],
+  "Score": [
+    "score"
+  ],
+  "Scoreboard": [
+    "scoreboard"
+  ],
+  "ScreenLockLandscape": [
+    "bloqueig",
+    "bloqueo",
+    "landscape",
+    "lock",
+    "screen",
+    "seguretat",
+    "seguridad"
+  ],
+  "ScreenLockPortrait": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "portrait",
+    "screen",
+    "seguretat",
+    "seguridad"
+  ],
+  "ScreenLockRotation": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "rotation",
+    "screen",
+    "seguretat",
+    "seguridad"
+  ],
+  "ScreenRotation": [
+    "rotation",
+    "screen"
+  ],
+  "ScreenRotationAlt": [
+    "alt",
+    "rotation",
+    "screen"
+  ],
+  "ScreenSearchDesktop": [
+    "buscar",
+    "cerca",
+    "desktop",
+    "screen",
+    "search"
+  ],
+  "ScreenShare": [
+    "compartir",
+    "enviar",
+    "screen",
+    "share"
+  ],
+  "Screenshot": [
+    "screenshot"
+  ],
+  "ScreenshotMonitor": [
+    "monitor",
+    "screenshot"
+  ],
+  "ScubaDiving": [
+    "diving",
+    "scuba"
+  ],
+  "Sd": [
+    "sd"
+  ],
+  "SdCard": [
+    "card",
+    "sd"
+  ],
+  "SdCardAlert": [
+    "advertencia",
+    "advertència",
+    "alert",
+    "avís",
+    "card",
+    "sd"
+  ],
+  "SdStorage": [
+    "sd",
+    "storage"
+  ],
+  "Search": [
+    "buscar",
+    "cerca",
+    "search"
+  ],
+  "SearchOff": [
+    "buscar",
+    "cerca",
+    "off",
+    "search"
+  ],
+  "Security": [
+    "security"
+  ],
+  "SecurityUpdate": [
+    "security",
+    "update"
+  ],
+  "SecurityUpdateGood": [
+    "good",
+    "security",
+    "update"
+  ],
+  "SecurityUpdateWarning": [
+    "advertencia",
+    "advertència",
+    "avís",
+    "security",
+    "update",
+    "warning"
+  ],
+  "Segment": [
+    "segment"
+  ],
+  "SelectAll": [
+    "all",
+    "select"
+  ],
+  "SelfImprovement": [
+    "improvement",
+    "self"
+  ],
+  "Sell": [
+    "sell"
+  ],
+  "Send": [
+    "enviar",
+    "mandar",
+    "send",
+    "trametre"
+  ],
+  "SendAndArchive": [
+    "and",
+    "archive",
+    "enviar",
+    "mandar",
+    "send",
+    "trametre"
+  ],
+  "SendTimeExtension": [
+    "enviar",
+    "extension",
+    "mandar",
+    "send",
+    "time",
+    "trametre"
+  ],
+  "SendToMobile": [
+    "enviar",
+    "mandar",
+    "mobile",
+    "send",
+    "to",
+    "trametre"
+  ],
+  "SensorDoor": [
+    "door",
+    "sensor"
+  ],
+  "SensorOccupied": [
+    "occupied",
+    "sensor"
+  ],
+  "SensorWindow": [
+    "sensor",
+    "window"
+  ],
+  "Sensors": [
+    "sensors"
+  ],
+  "SensorsOff": [
+    "off",
+    "sensors"
+  ],
+  "SentimentDissatisfied": [
+    "dissatisfied",
+    "sentiment"
+  ],
+  "SentimentNeutral": [
+    "neutral",
+    "sentiment"
+  ],
+  "SentimentSatisfied": [
+    "satisfied",
+    "sentiment"
+  ],
+  "SentimentSatisfiedAlt": [
+    "alt",
+    "satisfied",
+    "sentiment"
+  ],
+  "SentimentVeryDissatisfied": [
+    "dissatisfied",
+    "sentiment",
+    "very"
+  ],
+  "SentimentVerySatisfied": [
+    "satisfied",
+    "sentiment",
+    "very"
+  ],
+  "SetMeal": [
+    "meal",
+    "set"
+  ],
+  "Settings": [
+    "ajustos",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsAccessibility": [
+    "accessibility",
+    "ajustos",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsApplications": [
+    "ajustos",
+    "applications",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsBackupRestore": [
+    "ajustos",
+    "backup",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "restore",
+    "settings"
+  ],
+  "SettingsBluetooth": [
+    "ajustos",
+    "bluetooth",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsBrightness": [
+    "ajustos",
+    "brightness",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsCell": [
+    "ajustos",
+    "cell",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsEthernet": [
+    "ajustos",
+    "configuració",
+    "ethernet",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsInputAntenna": [
+    "ajustos",
+    "antenna",
+    "configuració",
+    "input",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsInputComponent": [
+    "ajustos",
+    "component",
+    "configuració",
+    "input",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsInputComposite": [
+    "ajustos",
+    "composite",
+    "configuració",
+    "input",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsInputHdmi": [
+    "ajustos",
+    "configuració",
+    "hdmi",
+    "input",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsInputSvideo": [
+    "ajustos",
+    "configuració",
+    "input",
+    "preferencias",
+    "preferències",
+    "settings",
+    "svideo"
+  ],
+  "SettingsOverscan": [
+    "ajustos",
+    "configuració",
+    "overscan",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsPhone": [
+    "ajustos",
+    "configuració",
+    "llamada",
+    "phone",
+    "preferencias",
+    "preferències",
+    "settings",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "SettingsPower": [
+    "ajustos",
+    "configuració",
+    "power",
+    "preferencias",
+    "preferències",
+    "settings"
+  ],
+  "SettingsRemote": [
+    "ajustos",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "remote",
+    "settings"
+  ],
+  "SettingsSuggest": [
+    "ajustos",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings",
+    "suggest"
+  ],
+  "SettingsSystemDaydream": [
+    "ajustos",
+    "configuració",
+    "daydream",
+    "preferencias",
+    "preferències",
+    "settings",
+    "system"
+  ],
+  "SettingsVoice": [
+    "ajustos",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings",
+    "voice"
+  ],
+  "SevenK": [
+    "k",
+    "seven"
+  ],
+  "SevenKPlus": [
+    "k",
+    "plus",
+    "seven"
+  ],
+  "SevenMp": [
+    "mp",
+    "seven"
+  ],
+  "SeventeenMp": [
+    "mp",
+    "seventeen"
+  ],
+  "SevereCold": [
+    "cold",
+    "severe"
+  ],
+  "ShapeLine": [
+    "line",
+    "shape"
+  ],
+  "Share": [
+    "compartir",
+    "enviar",
+    "share"
+  ],
+  "ShareLocation": [
+    "compartir",
+    "enviar",
+    "location",
+    "share"
+  ],
+  "Shield": [
+    "shield"
+  ],
+  "ShieldMoon": [
+    "moon",
+    "shield"
+  ],
+  "Shop": [
+    "shop"
+  ],
+  "Shop2": [
+    "shop"
+  ],
+  "ShopTwo": [
+    "shop",
+    "two"
+  ],
+  "ShoppingBag": [
+    "bag",
+    "shopping"
+  ],
+  "ShoppingBasket": [
+    "basket",
+    "shopping"
+  ],
+  "ShoppingCart": [
+    "cart",
+    "shopping"
+  ],
+  "ShoppingCartCheckout": [
+    "cart",
+    "checkout",
+    "shopping"
+  ],
+  "ShortText": [
+    "short",
+    "text"
+  ],
+  "Shortcut": [
+    "shortcut"
+  ],
+  "ShowChart": [
+    "chart",
+    "show"
+  ],
+  "Shower": [
+    "shower"
+  ],
+  "Shuffle": [
+    "shuffle"
+  ],
+  "ShuffleOn": [
+    "on",
+    "shuffle"
+  ],
+  "ShutterSpeed": [
+    "shutter",
+    "speed"
+  ],
+  "Sick": [
+    "sick"
+  ],
+  "SignLanguage": [
+    "language",
+    "sign"
+  ],
+  "SignalCellular0Bar": [
+    "bar",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellular1Bar": [
+    "bar",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellular2Bar": [
+    "bar",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellular3Bar": [
+    "bar",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellular4Bar": [
+    "bar",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellularAlt": [
+    "alt",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellularAlt1Bar": [
+    "alt",
+    "bar",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellularAlt2Bar": [
+    "alt",
+    "bar",
+    "cellular",
+    "signal"
+  ],
+  "SignalCellularConnectedNoInternet0Bar": [
+    "bar",
+    "cellular",
+    "connected",
+    "internet",
+    "no",
+    "signal"
+  ],
+  "SignalCellularConnectedNoInternet1Bar": [
+    "bar",
+    "cellular",
+    "connected",
+    "internet",
+    "no",
+    "signal"
+  ],
+  "SignalCellularConnectedNoInternet2Bar": [
+    "bar",
+    "cellular",
+    "connected",
+    "internet",
+    "no",
+    "signal"
+  ],
+  "SignalCellularConnectedNoInternet3Bar": [
+    "bar",
+    "cellular",
+    "connected",
+    "internet",
+    "no",
+    "signal"
+  ],
+  "SignalCellularConnectedNoInternet4Bar": [
+    "bar",
+    "cellular",
+    "connected",
+    "internet",
+    "no",
+    "signal"
+  ],
+  "SignalCellularNoSim": [
+    "cellular",
+    "no",
+    "signal",
+    "sim"
+  ],
+  "SignalCellularNodata": [
+    "cellular",
+    "nodata",
+    "signal"
+  ],
+  "SignalCellularNull": [
+    "cellular",
+    "null",
+    "signal"
+  ],
+  "SignalCellularOff": [
+    "cellular",
+    "off",
+    "signal"
+  ],
+  "SignalWifi0Bar": [
+    "bar",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi1Bar": [
+    "bar",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi1BarLock": [
+    "bar",
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "red",
+    "seguretat",
+    "seguridad",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi2Bar": [
+    "bar",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi2BarLock": [
+    "bar",
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "red",
+    "seguretat",
+    "seguridad",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi3Bar": [
+    "bar",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi3BarLock": [
+    "bar",
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "red",
+    "seguretat",
+    "seguridad",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi4Bar": [
+    "bar",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifi4BarLock": [
+    "bar",
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "red",
+    "seguretat",
+    "seguridad",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifiBad": [
+    "bad",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifiConnectedNoInternet4": [
+    "connected",
+    "internet",
+    "no",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifiOff": [
+    "off",
+    "red",
+    "signal",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifiStatusbar4Bar": [
+    "bar",
+    "red",
+    "signal",
+    "statusbar",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifiStatusbarConnectedNoInternet4": [
+    "connected",
+    "internet",
+    "no",
+    "red",
+    "signal",
+    "statusbar",
+    "wifi",
+    "xarxa"
+  ],
+  "SignalWifiStatusbarNull": [
+    "null",
+    "red",
+    "signal",
+    "statusbar",
+    "wifi",
+    "xarxa"
+  ],
+  "Signpost": [
+    "signpost"
+  ],
+  "SimCard": [
+    "card",
+    "sim"
+  ],
+  "SimCardAlert": [
+    "advertencia",
+    "advertència",
+    "alert",
+    "avís",
+    "card",
+    "sim"
+  ],
+  "SimCardDownload": [
+    "baixar",
+    "card",
+    "descargar",
+    "descarregar",
+    "download",
+    "sim"
+  ],
+  "SingleBed": [
+    "bed",
+    "single"
+  ],
+  "Sip": [
+    "sip"
+  ],
+  "SixK": [
+    "k",
+    "six"
+  ],
+  "SixKPlus": [
+    "k",
+    "plus",
+    "six"
+  ],
+  "SixMp": [
+    "mp",
+    "six"
+  ],
+  "SixteenMp": [
+    "mp",
+    "sixteen"
+  ],
+  "SixtyFps": [
+    "fps",
+    "sixty"
+  ],
+  "SixtyFpsSelect": [
+    "fps",
+    "select",
+    "sixty"
+  ],
+  "Skateboarding": [
+    "skateboarding"
+  ],
+  "SkipNext": [
+    "next",
+    "skip"
+  ],
+  "SkipPrevious": [
+    "previous",
+    "skip"
+  ],
+  "Sledding": [
+    "sledding"
+  ],
+  "Slideshow": [
+    "slideshow"
+  ],
+  "SlowMotionVideo": [
+    "motion",
+    "slow",
+    "video",
+    "vídeo"
+  ],
+  "SmartButton": [
+    "button",
+    "smart"
+  ],
+  "SmartDisplay": [
+    "display",
+    "smart"
+  ],
+  "SmartScreen": [
+    "screen",
+    "smart"
+  ],
+  "SmartToy": [
+    "smart",
+    "toy"
+  ],
+  "Smartphone": [
+    "smartphone"
+  ],
+  "SmokeFree": [
+    "free",
+    "smoke"
+  ],
+  "SmokingRooms": [
+    "rooms",
+    "smoking"
+  ],
+  "Sms": [
+    "sms"
+  ],
+  "SmsFailed": [
+    "failed",
+    "sms"
+  ],
+  "SnippetFolder": [
+    "carpeta",
+    "directori",
+    "directorio",
+    "folder",
+    "snippet"
+  ],
+  "Snooze": [
+    "snooze"
+  ],
+  "Snowboarding": [
+    "snowboarding"
+  ],
+  "Snowmobile": [
+    "snowmobile"
+  ],
+  "Snowshoeing": [
+    "snowshoeing"
+  ],
+  "Soap": [
+    "soap"
+  ],
+  "SocialDistance": [
+    "distance",
+    "social"
+  ],
+  "SolarPower": [
+    "power",
+    "solar"
+  ],
+  "Sort": [
+    "sort"
+  ],
+  "SortByAlpha": [
+    "alpha",
+    "by",
+    "sort"
+  ],
+  "Sos": [
+    "sos"
+  ],
+  "SoupKitchen": [
+    "kitchen",
+    "soup"
+  ],
+  "Source": [
+    "source"
+  ],
+  "South": [
+    "south"
+  ],
+  "SouthAmerica": [
+    "america",
+    "south"
+  ],
+  "SouthEast": [
+    "east",
+    "south"
+  ],
+  "SouthWest": [
+    "south",
+    "west"
+  ],
+  "Spa": [
+    "spa"
+  ],
+  "SpaceBar": [
+    "bar",
+    "space"
+  ],
+  "SpaceDashboard": [
+    "dashboard",
+    "space"
+  ],
+  "SpatialAudio": [
+    "audio",
+    "spatial"
+  ],
+  "SpatialAudioOff": [
+    "audio",
+    "off",
+    "spatial"
+  ],
+  "SpatialTracking": [
+    "spatial",
+    "tracking"
+  ],
+  "Speaker": [
+    "speaker"
+  ],
+  "SpeakerGroup": [
+    "group",
+    "speaker"
+  ],
+  "SpeakerNotes": [
+    "notes",
+    "speaker"
+  ],
+  "SpeakerNotesOff": [
+    "notes",
+    "off",
+    "speaker"
+  ],
+  "SpeakerPhone": [
+    "llamada",
+    "phone",
+    "speaker",
+    "telèfon",
+    "teléfono",
+    "trucar"
+  ],
+  "Speed": [
+    "speed"
+  ],
+  "Spellcheck": [
+    "spellcheck"
+  ],
+  "Splitscreen": [
+    "splitscreen"
+  ],
+  "Spoke": [
+    "spoke"
+  ],
+  "Sports": [
+    "sports"
+  ],
+  "SportsBar": [
+    "bar",
+    "sports"
+  ],
+  "SportsBaseball": [
+    "baseball",
+    "sports"
+  ],
+  "SportsBasketball": [
+    "basketball",
+    "sports"
+  ],
+  "SportsCricket": [
+    "cricket",
+    "sports"
+  ],
+  "SportsEsports": [
+    "esports",
+    "sports"
+  ],
+  "SportsFootball": [
+    "football",
+    "sports"
+  ],
+  "SportsGolf": [
+    "golf",
+    "sports"
+  ],
+  "SportsGymnastics": [
+    "gymnastics",
+    "sports"
+  ],
+  "SportsHandball": [
+    "handball",
+    "sports"
+  ],
+  "SportsHockey": [
+    "hockey",
+    "sports"
+  ],
+  "SportsKabaddi": [
+    "kabaddi",
+    "sports"
+  ],
+  "SportsMartialArts": [
+    "arts",
+    "martial",
+    "sports"
+  ],
+  "SportsMma": [
+    "mma",
+    "sports"
+  ],
+  "SportsMotorsports": [
+    "motorsports",
+    "sports"
+  ],
+  "SportsRugby": [
+    "rugby",
+    "sports"
+  ],
+  "SportsScore": [
+    "score",
+    "sports"
+  ],
+  "SportsSoccer": [
+    "soccer",
+    "sports"
+  ],
+  "SportsTennis": [
+    "sports",
+    "tennis"
+  ],
+  "SportsVolleyball": [
+    "sports",
+    "volleyball"
+  ],
+  "Square": [
+    "square"
+  ],
+  "SquareFoot": [
+    "foot",
+    "square"
+  ],
+  "SsidChart": [
+    "chart",
+    "ssid"
+  ],
+  "StackedBarChart": [
+    "bar",
+    "chart",
+    "stacked"
+  ],
+  "StackedLineChart": [
+    "chart",
+    "line",
+    "stacked"
+  ],
+  "Stadium": [
+    "stadium"
+  ],
+  "Stairs": [
+    "stairs"
+  ],
+  "Star": [
+    "estrella",
+    "favorit",
+    "favorito",
+    "star"
+  ],
+  "StarBorder": [
+    "border",
+    "estrella",
+    "favorit",
+    "favorito",
+    "star"
+  ],
+  "StarBorderPurple500": [
+    "border",
+    "estrella",
+    "favorit",
+    "favorito",
+    "purple",
+    "star"
+  ],
+  "StarHalf": [
+    "estrella",
+    "favorit",
+    "favorito",
+    "half",
+    "star"
+  ],
+  "StarOutline": [
+    "estrella",
+    "favorit",
+    "favorito",
+    "outline",
+    "star"
+  ],
+  "StarPurple500": [
+    "estrella",
+    "favorit",
+    "favorito",
+    "purple",
+    "star"
+  ],
+  "StarRate": [
+    "estrella",
+    "favorit",
+    "favorito",
+    "rate",
+    "star"
+  ],
+  "Stars": [
+    "stars"
+  ],
+  "Start": [
+    "start"
+  ],
+  "StayCurrentLandscape": [
+    "current",
+    "landscape",
+    "stay"
+  ],
+  "StayCurrentPortrait": [
+    "current",
+    "portrait",
+    "stay"
+  ],
+  "StayPrimaryLandscape": [
+    "landscape",
+    "primary",
+    "stay"
+  ],
+  "StayPrimaryPortrait": [
+    "portrait",
+    "primary",
+    "stay"
+  ],
+  "StickyNote2": [
+    "anotació",
+    "nota",
+    "note",
+    "sticky"
+  ],
+  "Stop": [
+    "stop"
+  ],
+  "StopCircle": [
+    "circle",
+    "stop"
+  ],
+  "StopScreenShare": [
+    "compartir",
+    "enviar",
+    "screen",
+    "share",
+    "stop"
+  ],
+  "Storage": [
+    "storage"
+  ],
+  "Store": [
+    "store"
+  ],
+  "StoreMallDirectory": [
+    "directory",
+    "mall",
+    "store"
+  ],
+  "Storefront": [
+    "storefront"
+  ],
+  "Storm": [
+    "storm"
+  ],
+  "Straight": [
+    "straight"
+  ],
+  "Straighten": [
+    "straighten"
+  ],
+  "Stream": [
+    "stream"
+  ],
+  "Streetview": [
+    "streetview"
+  ],
+  "StrikethroughS": [
+    "s",
+    "strikethrough"
+  ],
+  "Stroller": [
+    "stroller"
+  ],
+  "Style": [
+    "style"
+  ],
+  "SubdirectoryArrowLeft": [
+    "arrow",
+    "left",
+    "subdirectory"
+  ],
+  "SubdirectoryArrowRight": [
+    "arrow",
+    "right",
+    "subdirectory"
+  ],
+  "Subject": [
+    "subject"
+  ],
+  "Subscript": [
+    "subscript"
+  ],
+  "Subscriptions": [
+    "subscriptions"
+  ],
+  "Subtitles": [
+    "subtitles"
+  ],
+  "SubtitlesOff": [
+    "off",
+    "subtitles"
+  ],
+  "Subway": [
+    "subway"
+  ],
+  "Summarize": [
+    "summarize"
+  ],
+  "Superscript": [
+    "superscript"
+  ],
+  "SupervisedUserCircle": [
+    "circle",
+    "supervised",
+    "user",
+    "usuari",
+    "usuario"
+  ],
+  "SupervisorAccount": [
+    "account",
+    "compte",
+    "cuenta",
+    "supervisor",
+    "usuari",
+    "usuario"
+  ],
+  "Support": [
+    "support"
+  ],
+  "SupportAgent": [
+    "agent",
+    "support"
+  ],
+  "Surfing": [
+    "surfing"
+  ],
+  "SurroundSound": [
+    "sound",
+    "surround"
+  ],
+  "SwapCalls": [
+    "calls",
+    "swap"
+  ],
+  "SwapHoriz": [
+    "horiz",
+    "swap"
+  ],
+  "SwapHorizontalCircle": [
+    "circle",
+    "horizontal",
+    "swap"
+  ],
+  "SwapVert": [
+    "swap",
+    "vert"
+  ],
+  "SwapVerticalCircle": [
+    "circle",
+    "swap",
+    "vertical"
+  ],
+  "Swipe": [
+    "swipe"
+  ],
+  "SwipeDown": [
+    "down",
+    "swipe"
+  ],
+  "SwipeDownAlt": [
+    "alt",
+    "down",
+    "swipe"
+  ],
+  "SwipeLeft": [
+    "left",
+    "swipe"
+  ],
+  "SwipeLeftAlt": [
+    "alt",
+    "left",
+    "swipe"
+  ],
+  "SwipeRight": [
+    "right",
+    "swipe"
+  ],
+  "SwipeRightAlt": [
+    "alt",
+    "right",
+    "swipe"
+  ],
+  "SwipeUp": [
+    "swipe",
+    "up"
+  ],
+  "SwipeUpAlt": [
+    "alt",
+    "swipe",
+    "up"
+  ],
+  "SwipeVertical": [
+    "swipe",
+    "vertical"
+  ],
+  "SwitchAccessShortcut": [
+    "access",
+    "shortcut",
+    "switch"
+  ],
+  "SwitchAccessShortcutAdd": [
+    "access",
+    "add",
+    "afegir",
+    "añadir",
+    "shortcut",
+    "sumar",
+    "switch"
+  ],
+  "SwitchAccount": [
+    "account",
+    "compte",
+    "cuenta",
+    "switch",
+    "usuari",
+    "usuario"
+  ],
+  "SwitchCamera": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "switch"
+  ],
+  "SwitchLeft": [
+    "left",
+    "switch"
+  ],
+  "SwitchRight": [
+    "right",
+    "switch"
+  ],
+  "SwitchVideo": [
+    "switch",
+    "video",
+    "vídeo"
+  ],
+  "Synagogue": [
+    "synagogue"
+  ],
+  "Sync": [
+    "sincronitzar",
+    "sincronizar",
+    "sync"
+  ],
+  "SyncAlt": [
+    "alt",
+    "sincronitzar",
+    "sincronizar",
+    "sync"
+  ],
+  "SyncDisabled": [
+    "disabled",
+    "sincronitzar",
+    "sincronizar",
+    "sync"
+  ],
+  "SyncLock": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "seguretat",
+    "seguridad",
+    "sincronitzar",
+    "sincronizar",
+    "sync"
+  ],
+  "SyncProblem": [
+    "problem",
+    "sincronitzar",
+    "sincronizar",
+    "sync"
+  ],
+  "SystemSecurityUpdate": [
+    "security",
+    "system",
+    "update"
+  ],
+  "SystemSecurityUpdateGood": [
+    "good",
+    "security",
+    "system",
+    "update"
+  ],
+  "SystemSecurityUpdateWarning": [
+    "advertencia",
+    "advertència",
+    "avís",
+    "security",
+    "system",
+    "update",
+    "warning"
+  ],
+  "SystemUpdate": [
+    "system",
+    "update"
+  ],
+  "SystemUpdateAlt": [
+    "alt",
+    "system",
+    "update"
+  ],
+  "Tab": [
+    "tab"
+  ],
+  "TabUnselected": [
+    "tab",
+    "unselected"
+  ],
+  "TableBar": [
+    "bar",
+    "table"
+  ],
+  "TableChart": [
+    "chart",
+    "table"
+  ],
+  "TableRestaurant": [
+    "restaurant",
+    "table"
+  ],
+  "TableRows": [
+    "rows",
+    "table"
+  ],
+  "TableView": [
+    "table",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "Tablet": [
+    "tablet"
+  ],
+  "TabletAndroid": [
+    "android",
+    "tablet"
+  ],
+  "TabletMac": [
+    "mac",
+    "tablet"
+  ],
+  "Tag": [
+    "tag"
+  ],
+  "TagFaces": [
+    "faces",
+    "tag"
+  ],
+  "TakeoutDining": [
+    "dining",
+    "takeout"
+  ],
+  "TapAndPlay": [
+    "and",
+    "play",
+    "tap"
+  ],
+  "Tapas": [
+    "tapas"
+  ],
+  "Task": [
+    "task"
+  ],
+  "TaskAlt": [
+    "alt",
+    "task"
+  ],
+  "TaxiAlert": [
+    "advertencia",
+    "advertència",
+    "alert",
+    "avís",
+    "taxi"
+  ],
+  "Telegram": [
+    "telegram"
+  ],
+  "TempleBuddhist": [
+    "buddhist",
+    "temple"
+  ],
+  "TempleHindu": [
+    "hindu",
+    "temple"
+  ],
+  "TenMp": [
+    "mp",
+    "ten"
+  ],
+  "Terminal": [
+    "terminal"
+  ],
+  "Terrain": [
+    "terrain"
+  ],
+  "TextDecrease": [
+    "decrease",
+    "text"
+  ],
+  "TextFields": [
+    "fields",
+    "text"
+  ],
+  "TextFormat": [
+    "format",
+    "text"
+  ],
+  "TextIncrease": [
+    "increase",
+    "text"
+  ],
+  "TextRotateUp": [
+    "rotate",
+    "text",
+    "up"
+  ],
+  "TextRotateVertical": [
+    "rotate",
+    "text",
+    "vertical"
+  ],
+  "TextRotationAngledown": [
+    "angledown",
+    "rotation",
+    "text"
+  ],
+  "TextRotationAngleup": [
+    "angleup",
+    "rotation",
+    "text"
+  ],
+  "TextRotationDown": [
+    "down",
+    "rotation",
+    "text"
+  ],
+  "TextRotationNone": [
+    "none",
+    "rotation",
+    "text"
+  ],
+  "TextSnippet": [
+    "snippet",
+    "text"
+  ],
+  "Textsms": [
+    "textsms"
+  ],
+  "Texture": [
+    "texture"
+  ],
+  "TheaterComedy": [
+    "comedy",
+    "theater"
+  ],
+  "Theaters": [
+    "theaters"
+  ],
+  "Thermostat": [
+    "thermostat"
+  ],
+  "ThermostatAuto": [
+    "auto",
+    "thermostat"
+  ],
+  "ThirteenMp": [
+    "mp",
+    "thirteen"
+  ],
+  "ThirtyFps": [
+    "fps",
+    "thirty"
+  ],
+  "ThirtyFpsSelect": [
+    "fps",
+    "select",
+    "thirty"
+  ],
+  "ThreeDRotation": [
+    "d",
+    "rotation",
+    "three"
+  ],
+  "ThreeGMobiledata": [
+    "g",
+    "mobiledata",
+    "three"
+  ],
+  "ThreeK": [
+    "k",
+    "three"
+  ],
+  "ThreeKPlus": [
+    "k",
+    "plus",
+    "three"
+  ],
+  "ThreeMp": [
+    "mp",
+    "three"
+  ],
+  "ThreeP": [
+    "p",
+    "three"
+  ],
+  "ThreeSixty": [
+    "sixty",
+    "three"
+  ],
+  "ThumbDown": [
+    "down",
+    "thumb"
+  ],
+  "ThumbDownAlt": [
+    "alt",
+    "down",
+    "thumb"
+  ],
+  "ThumbDownOffAlt": [
+    "alt",
+    "down",
+    "off",
+    "thumb"
+  ],
+  "ThumbUp": [
+    "thumb",
+    "up"
+  ],
+  "ThumbUpAlt": [
+    "alt",
+    "thumb",
+    "up"
+  ],
+  "ThumbUpOffAlt": [
+    "alt",
+    "off",
+    "thumb",
+    "up"
+  ],
+  "ThumbsUpDown": [
+    "down",
+    "thumbs",
+    "up"
+  ],
+  "Thunderstorm": [
+    "thunderstorm"
+  ],
+  "TimeToLeave": [
+    "leave",
+    "time",
+    "to"
+  ],
+  "Timelapse": [
+    "timelapse"
+  ],
+  "Timeline": [
+    "timeline"
+  ],
+  "Timer": [
+    "timer"
+  ],
+  "Timer10": [
+    "timer"
+  ],
+  "Timer10Select": [
+    "select",
+    "timer"
+  ],
+  "Timer3": [
+    "timer"
+  ],
+  "Timer3Select": [
+    "select",
+    "timer"
+  ],
+  "TimerOff": [
+    "off",
+    "timer"
+  ],
+  "TimesOneMobiledata": [
+    "mobiledata",
+    "one",
+    "times"
+  ],
+  "TipsAndUpdates": [
+    "and",
+    "tips",
+    "updates"
+  ],
+  "TireRepair": [
+    "repair",
+    "tire"
+  ],
+  "Title": [
+    "title"
+  ],
+  "Toc": [
+    "toc"
+  ],
+  "Today": [
+    "today"
+  ],
+  "ToggleOff": [
+    "off",
+    "toggle"
+  ],
+  "ToggleOn": [
+    "on",
+    "toggle"
+  ],
+  "Token": [
+    "token"
+  ],
+  "Toll": [
+    "toll"
+  ],
+  "Tonality": [
+    "tonality"
+  ],
+  "Topic": [
+    "topic"
+  ],
+  "Tornado": [
+    "tornado"
+  ],
+  "TouchApp": [
+    "app",
+    "touch"
+  ],
+  "Tour": [
+    "tour"
+  ],
+  "Toys": [
+    "toys"
+  ],
+  "TrackChanges": [
+    "changes",
+    "track"
+  ],
+  "Traffic": [
+    "traffic"
+  ],
+  "Train": [
+    "train"
+  ],
+  "Tram": [
+    "tram"
+  ],
+  "Transcribe": [
+    "transcribe"
+  ],
+  "TransferWithinAStation": [
+    "a",
+    "station",
+    "transfer",
+    "within"
+  ],
+  "Transform": [
+    "transform"
+  ],
+  "Transgender": [
+    "transgender"
+  ],
+  "TransitEnterexit": [
+    "enterexit",
+    "transit"
+  ],
+  "Translate": [
+    "translate"
+  ],
+  "TravelExplore": [
+    "explore",
+    "travel"
+  ],
+  "TrendingDown": [
+    "down",
+    "trending"
+  ],
+  "TrendingFlat": [
+    "flat",
+    "trending"
+  ],
+  "TrendingUp": [
+    "trending",
+    "up"
+  ],
+  "TripOrigin": [
+    "origin",
+    "trip"
+  ],
+  "Troubleshoot": [
+    "troubleshoot"
+  ],
+  "Try": [
+    "try"
+  ],
+  "Tsunami": [
+    "tsunami"
+  ],
+  "Tty": [
+    "tty"
+  ],
+  "Tune": [
+    "tune"
+  ],
+  "Tungsten": [
+    "tungsten"
+  ],
+  "TurnLeft": [
+    "left",
+    "turn"
+  ],
+  "TurnRight": [
+    "right",
+    "turn"
+  ],
+  "TurnSharpLeft": [
+    "left",
+    "sharp",
+    "turn"
+  ],
+  "TurnSharpRight": [
+    "right",
+    "sharp",
+    "turn"
+  ],
+  "TurnSlightLeft": [
+    "left",
+    "slight",
+    "turn"
+  ],
+  "TurnSlightRight": [
+    "right",
+    "slight",
+    "turn"
+  ],
+  "TurnedIn": [
+    "in",
+    "turned"
+  ],
+  "TurnedInNot": [
+    "in",
+    "not",
+    "turned"
+  ],
+  "Tv": [
+    "tv"
+  ],
+  "TvOff": [
+    "off",
+    "tv"
+  ],
+  "TwelveMp": [
+    "mp",
+    "twelve"
+  ],
+  "TwentyFourMp": [
+    "four",
+    "mp",
+    "twenty"
+  ],
+  "TwentyOneMp": [
+    "mp",
+    "one",
+    "twenty"
+  ],
+  "TwentyThreeMp": [
+    "mp",
+    "three",
+    "twenty"
+  ],
+  "TwentyTwoMp": [
+    "mp",
+    "twenty",
+    "two"
+  ],
+  "TwentyZeroMp": [
+    "mp",
+    "twenty",
+    "zero"
+  ],
+  "Twitter": [
+    "twitter"
+  ],
+  "TwoK": [
+    "k",
+    "two"
+  ],
+  "TwoKPlus": [
+    "k",
+    "plus",
+    "two"
+  ],
+  "TwoMp": [
+    "mp",
+    "two"
+  ],
+  "TwoWheeler": [
+    "two",
+    "wheeler"
+  ],
+  "TypeSpecimen": [
+    "specimen",
+    "type"
+  ],
+  "UTurnLeft": [
+    "left",
+    "turn",
+    "u"
+  ],
+  "UTurnRight": [
+    "right",
+    "turn",
+    "u"
+  ],
+  "Umbrella": [
+    "umbrella"
+  ],
+  "Unarchive": [
+    "unarchive"
+  ],
+  "Undo": [
+    "undo"
+  ],
+  "UnfoldLess": [
+    "less",
+    "unfold"
+  ],
+  "UnfoldLessDouble": [
+    "double",
+    "less",
+    "unfold"
+  ],
+  "UnfoldMore": [
+    "more",
+    "más",
+    "més",
+    "unfold"
+  ],
+  "UnfoldMoreDouble": [
+    "double",
+    "more",
+    "más",
+    "més",
+    "unfold"
+  ],
+  "Unpublished": [
+    "unpublished"
+  ],
+  "Unsubscribe": [
+    "unsubscribe"
+  ],
+  "Upcoming": [
+    "upcoming"
+  ],
+  "Update": [
+    "update"
+  ],
+  "UpdateDisabled": [
+    "disabled",
+    "update"
+  ],
+  "Upgrade": [
+    "upgrade"
+  ],
+  "Upload": [
+    "pujar",
+    "subir",
+    "upload"
+  ],
+  "UploadFile": [
+    "archivo",
+    "document",
+    "file",
+    "fitxer",
+    "pujar",
+    "subir",
+    "upload"
+  ],
+  "Usb": [
+    "usb"
+  ],
+  "UsbOff": [
+    "off",
+    "usb"
+  ],
+  "Vaccines": [
+    "vaccines"
+  ],
+  "VapeFree": [
+    "free",
+    "vape"
+  ],
+  "VapingRooms": [
+    "rooms",
+    "vaping"
+  ],
+  "Verified": [
+    "verified"
+  ],
+  "VerifiedUser": [
+    "user",
+    "usuari",
+    "usuario",
+    "verified"
+  ],
+  "VerticalAlignBottom": [
+    "align",
+    "bottom",
+    "vertical"
+  ],
+  "VerticalAlignCenter": [
+    "align",
+    "center",
+    "vertical"
+  ],
+  "VerticalAlignTop": [
+    "align",
+    "top",
+    "vertical"
+  ],
+  "VerticalShades": [
+    "shades",
+    "vertical"
+  ],
+  "VerticalShadesClosed": [
+    "closed",
+    "shades",
+    "vertical"
+  ],
+  "VerticalSplit": [
+    "split",
+    "vertical"
+  ],
+  "Vibration": [
+    "vibration"
+  ],
+  "VideoCall": [
+    "call",
+    "cridar",
+    "llamada",
+    "telefonar",
+    "trucada",
+    "video",
+    "vídeo"
+  ],
+  "VideoCameraBack": [
+    "back",
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "video",
+    "vídeo"
+  ],
+  "VideoCameraFront": [
+    "camera",
+    "càmera",
+    "cámara",
+    "foto",
+    "fotografia",
+    "front",
+    "video",
+    "vídeo"
+  ],
+  "VideoChat": [
+    "chat",
+    "video",
+    "vídeo"
+  ],
+  "VideoFile": [
+    "archivo",
+    "document",
+    "file",
+    "fitxer",
+    "video",
+    "vídeo"
+  ],
+  "VideoLabel": [
+    "label",
+    "video",
+    "vídeo"
+  ],
+  "VideoLibrary": [
+    "library",
+    "video",
+    "vídeo"
+  ],
+  "VideoSettings": [
+    "ajustos",
+    "configuració",
+    "preferencias",
+    "preferències",
+    "settings",
+    "video",
+    "vídeo"
+  ],
+  "VideoStable": [
+    "stable",
+    "video",
+    "vídeo"
+  ],
+  "Videocam": [
+    "videocam"
+  ],
+  "VideocamOff": [
+    "off",
+    "videocam"
+  ],
+  "VideogameAsset": [
+    "asset",
+    "videogame"
+  ],
+  "VideogameAssetOff": [
+    "asset",
+    "off",
+    "videogame"
+  ],
+  "ViewAgenda": [
+    "agenda",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewArray": [
+    "array",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewCarousel": [
+    "carousel",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewColumn": [
+    "column",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewComfy": [
+    "comfy",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewComfyAlt": [
+    "alt",
+    "comfy",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewCompact": [
+    "compact",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewCompactAlt": [
+    "alt",
+    "compact",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewCozy": [
+    "cozy",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewDay": [
+    "day",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewHeadline": [
+    "headline",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewInAr": [
+    "ar",
+    "in",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewKanban": [
+    "kanban",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewList": [
+    "list",
+    "lista",
+    "llista",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewModule": [
+    "module",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewQuilt": [
+    "quilt",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewSidebar": [
+    "sidebar",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewStream": [
+    "stream",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewTimeline": [
+    "timeline",
+    "ver",
+    "veure",
+    "view",
+    "visualitzar"
+  ],
+  "ViewWeek": [
+    "ver",
+    "veure",
+    "view",
+    "visualitzar",
+    "week"
+  ],
+  "Vignette": [
+    "vignette"
+  ],
+  "Villa": [
+    "villa"
+  ],
+  "Visibility": [
+    "mostrar",
+    "ver",
+    "visibilitat",
+    "visibility"
+  ],
+  "VisibilityOff": [
+    "mostrar",
+    "off",
+    "ver",
+    "visibilitat",
+    "visibility"
+  ],
+  "VoiceChat": [
+    "chat",
+    "voice"
+  ],
+  "VoiceOverOff": [
+    "off",
+    "over",
+    "voice"
+  ],
+  "Voicemail": [
+    "voicemail"
+  ],
+  "Volcano": [
+    "volcano"
+  ],
+  "VolumeDown": [
+    "down",
+    "sonido",
+    "volum",
+    "volume"
+  ],
+  "VolumeMute": [
+    "mute",
+    "sonido",
+    "volum",
+    "volume"
+  ],
+  "VolumeOff": [
+    "off",
+    "sonido",
+    "volum",
+    "volume"
+  ],
+  "VolumeUp": [
+    "sonido",
+    "up",
+    "volum",
+    "volume"
+  ],
+  "VolunteerActivism": [
+    "activism",
+    "volunteer"
+  ],
+  "VpnKey": [
+    "key",
+    "vpn"
+  ],
+  "VpnKeyOff": [
+    "key",
+    "off",
+    "vpn"
+  ],
+  "VpnLock": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "seguretat",
+    "seguridad",
+    "vpn"
+  ],
+  "Vrpano": [
+    "vrpano"
+  ],
+  "Wallet": [
+    "wallet"
+  ],
+  "Wallpaper": [
+    "wallpaper"
+  ],
+  "Warehouse": [
+    "warehouse"
+  ],
+  "Warning": [
+    "advertencia",
+    "advertència",
+    "avís",
+    "warning"
+  ],
+  "WarningAmber": [
+    "advertencia",
+    "advertència",
+    "amber",
+    "avís",
+    "warning"
+  ],
+  "Wash": [
+    "wash"
+  ],
+  "Watch": [
+    "watch"
+  ],
+  "WatchLater": [
+    "later",
+    "watch"
+  ],
+  "WatchOff": [
+    "off",
+    "watch"
+  ],
+  "Water": [
+    "water"
+  ],
+  "WaterDamage": [
+    "damage",
+    "water"
+  ],
+  "WaterDrop": [
+    "drop",
+    "water"
+  ],
+  "WaterfallChart": [
+    "chart",
+    "waterfall"
+  ],
+  "Waves": [
+    "waves"
+  ],
+  "WavingHand": [
+    "hand",
+    "waving"
+  ],
+  "WbAuto": [
+    "auto",
+    "wb"
+  ],
+  "WbCloudy": [
+    "cloudy",
+    "wb"
+  ],
+  "WbIncandescent": [
+    "incandescent",
+    "wb"
+  ],
+  "WbIridescent": [
+    "iridescent",
+    "wb"
+  ],
+  "WbShade": [
+    "shade",
+    "wb"
+  ],
+  "WbSunny": [
+    "sunny",
+    "wb"
+  ],
+  "WbTwilight": [
+    "twilight",
+    "wb"
+  ],
+  "Wc": [
+    "wc"
+  ],
+  "Web": [
+    "web"
+  ],
+  "WebAsset": [
+    "asset",
+    "web"
+  ],
+  "WebAssetOff": [
+    "asset",
+    "off",
+    "web"
+  ],
+  "WebStories": [
+    "stories",
+    "web"
+  ],
+  "Webhook": [
+    "webhook"
+  ],
+  "Weekend": [
+    "weekend"
+  ],
+  "West": [
+    "west"
+  ],
+  "WhatsApp": [
+    "app",
+    "whats"
+  ],
+  "Whatshot": [
+    "whatshot"
+  ],
+  "WheelchairPickup": [
+    "pickup",
+    "wheelchair"
+  ],
+  "WhereToVote": [
+    "to",
+    "vote",
+    "where"
+  ],
+  "Widgets": [
+    "widgets"
+  ],
+  "WidthFull": [
+    "full",
+    "width"
+  ],
+  "WidthNormal": [
+    "normal",
+    "width"
+  ],
+  "WidthWide": [
+    "wide",
+    "width"
+  ],
+  "Wifi": [
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "Wifi1Bar": [
+    "bar",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "Wifi2Bar": [
+    "bar",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiCalling": [
+    "calling",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiCalling3": [
+    "calling",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiChannel": [
+    "channel",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiFind": [
+    "find",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiLock": [
+    "bloqueig",
+    "bloqueo",
+    "lock",
+    "red",
+    "seguretat",
+    "seguridad",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiOff": [
+    "off",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiPassword": [
+    "contrasenya",
+    "contraseña",
+    "password",
+    "red",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiProtectedSetup": [
+    "protected",
+    "red",
+    "setup",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiTethering": [
+    "red",
+    "tethering",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiTetheringError": [
+    "error",
+    "falla",
+    "problema",
+    "red",
+    "tethering",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiTetheringErrorRoundedOutlined": [
+    "error",
+    "falla",
+    "outlined",
+    "problema",
+    "red",
+    "rounded",
+    "tethering",
+    "wifi",
+    "xarxa"
+  ],
+  "WifiTetheringOff": [
+    "off",
+    "red",
+    "tethering",
+    "wifi",
+    "xarxa"
+  ],
+  "WindPower": [
+    "power",
+    "wind"
+  ],
+  "Window": [
+    "window"
+  ],
+  "WineBar": [
+    "bar",
+    "wine"
+  ],
+  "Woman": [
+    "woman"
+  ],
+  "Woman2": [
+    "woman"
+  ],
+  "Work": [
+    "work"
+  ],
+  "WorkHistory": [
+    "history",
+    "work"
+  ],
+  "WorkOff": [
+    "off",
+    "work"
+  ],
+  "WorkOutline": [
+    "outline",
+    "work"
+  ],
+  "WorkspacePremium": [
+    "premium",
+    "workspace"
+  ],
+  "Workspaces": [
+    "workspaces"
+  ],
+  "WrapText": [
+    "text",
+    "wrap"
+  ],
+  "WrongLocation": [
+    "location",
+    "wrong"
+  ],
+  "Wysiwyg": [
+    "wysiwyg"
+  ],
+  "X": [
+    "x"
+  ],
+  "Yard": [
+    "yard"
+  ],
+  "YouTube": [
+    "tube",
+    "you"
+  ],
+  "YoutubeSearchedFor": [
+    "for",
+    "searched",
+    "youtube"
+  ],
+  "ZoomIn": [
+    "in",
+    "zoom"
+  ],
+  "ZoomInMap": [
+    "in",
+    "map",
+    "mapa",
+    "plano",
+    "plànol",
+    "zoom"
+  ],
+  "ZoomOut": [
+    "out",
+    "zoom"
+  ],
+  "ZoomOutMap": [
+    "map",
+    "mapa",
+    "out",
+    "plano",
+    "plànol",
+    "zoom"
+  ],
+  "index": [
+    "index"
+  ]
+}

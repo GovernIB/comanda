@@ -39,11 +39,8 @@ public class AtributsVisualsSimple implements AtributsVisuals {
     private String colorIcona;
     @Size(max = 8)
     private String colorFonsIcona;
-    private Boolean destacat;
     @Size(max = 8)
     private String colorTextDestacat;
-    @Size(max = 8)
-    private String colorFonsDestacat;
     private Boolean borde;
     @Size(max = 8)
     private String colorBorde;
@@ -86,9 +83,7 @@ public class AtributsVisualsSimple implements AtributsVisuals {
         this.colorFons = mergeField(this.colorFons, other.getColorFons());
         this.colorIcona = mergeField(this.colorIcona, other.getColorIcona());
         this.colorFonsIcona = mergeField(this.colorFonsIcona, other.getColorFonsIcona());
-        this.destacat = mergeField(this.destacat, other.getDestacat());
         this.colorTextDestacat = mergeField(this.colorTextDestacat, other.getColorTextDestacat());
-        this.colorFonsDestacat = mergeField(this.colorFonsDestacat, other.getColorFonsDestacat());
         this.borde = mergeField(this.borde, other.getBorde());
         this.colorBorde = mergeField(this.colorBorde, other.getColorBorde());
 
