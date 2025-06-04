@@ -17,7 +17,7 @@ import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
-import { LineChart } from '@mui/x-charts/LineChart';
+import { MarkPlot } from '@mui/x-charts/LineChart';
 import {
     BasePage,
     useMuiContentDialog,
@@ -26,12 +26,20 @@ import {
     useBaseAppContext,
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
-import UpdownBarChart from '../components/UpdownBarChart';
-import {
-    generateDataGroups,
-    toXAxisDataGroups
-} from '../util/dataGroup';
+import { calculateEstatsSeries, getEstatsMaxData } from '../components/UpdownBarChart';
+import { generateDataGroups, isDataInGroup, toXAxisDataGroups } from '../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
+import {
+    BarPlot,
+    BarSeriesType,
+    ChartsLegend,
+    ChartsXAxis,
+    ChartsYAxis,
+    LinePlot,
+    LineSeriesType,
+    ResponsiveChartContainer,
+} from '@mui/x-charts';
+import { useTheme } from '@mui/material/styles';
 
 const ErrorBoundaryFallback = () => {
     return <Typography sx={{
@@ -192,15 +200,16 @@ const AppInfo: React.FC<any> = (props) => {
     </Card>;
 }
 
-const LatenciaBarChart: React.FC<any> = (props) => {
-    const { dataInici, agrupacio, latencies } = props;
+const LatenciaEstatsChart: React.FC<any> = (props) => {
+    const { dataInici, agrupacio, latencies, estats } = props;
     const { t } = useTranslation();
+    const theme = useTheme();
 
     if (latencies.length === 0)
         return (
             <Card variant="outlined" sx={{ height: '300px' }}>
                 <CardContent sx={{ height: '100%' }}>
-                    <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>
+                    <Typography gutterBottom variant="h5" component="div">{t('page.salut.estatLatencia.title')}</Typography>
                     <Typography
                         sx={{
                             height: '100%',
@@ -216,20 +225,91 @@ const LatenciaBarChart: React.FC<any> = (props) => {
             </Card>
         );
 
-    const latenciesMaxData = latencies[latencies.length - 1].data;
-    const baseDataGroups = generateDataGroups(dataInici, latenciesMaxData, agrupacio);
+    const latenciaMaxValue = latencies.map((latencia: any) => latencia.latenciaMitja).reduce((accumulator: any, currentValue: any) => {
+        return Math.max(accumulator, currentValue);
+    }, latencies[0].latenciaMitja);
+
+    const mapPercentToLatenciaMaxValue = (percent: number) => (percent / 100) * latenciaMaxValue*1.5;
+
+    const estatsMaxData = getEstatsMaxData(estats);
+    const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
+    const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "upPercent").map(mapPercentToLatenciaMaxValue);
+    const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "warnPercent").map(mapPercentToLatenciaMaxValue);
+    const seriesDegraded = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "degradedPercent").map(mapPercentToLatenciaMaxValue);
+    const seriesMaintenance = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "maintenancePercent").map(mapPercentToLatenciaMaxValue);
+    const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent").map(mapPercentToLatenciaMaxValue);
+
+    const seriesDataLatencia = baseDataGroups.map((group) => {
+        return latencies.find((latenciaData: any) => {
+            if (!latenciaData || !latenciaData.data) return false;
+            return isDataInGroup(latenciaData.data, group, agrupacio);
+        })?.latenciaMitja;
+    });
+
+    const barSeries: BarSeriesType[] = [
+        {
+            data: seriesUp,
+            label: 'up',
+            stack: 'total',
+            color: theme.palette.success.main,
+            type: 'bar',
+        },
+        {
+            data: seriesWarn,
+            label: 'warn',
+            stack: 'total',
+            color: theme.palette.warning.light,
+            type: 'bar',
+        },
+        {
+            data: seriesDegraded,
+            label: 'degraded',
+            stack: 'total',
+            color: theme.palette.warning.dark,
+            type: 'bar',
+        },
+        {
+            data: seriesMaintenance,
+            label: 'maintenance',
+            stack: 'total',
+            color: theme.palette.primary.main,
+            type: 'bar',
+        },
+        {
+            data: seriesDown,
+            label: 'down',
+            stack: 'total',
+            color: theme.palette.error.main,
+            type: 'bar',
+        },
+    ];
+    const lineSeries: LineSeriesType[] = [
+        { data: seriesDataLatencia, type: 'line', showMark: true },
+    ];
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
 
-    return <Card variant="outlined" sx={{ height: '300px' }}>
-        <CardContent sx={{ height: '100%' }}>
-            <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>
-            <LineChart
-                dataset={latencies}
-                series={[{ dataKey: 'latenciaMitja' }]}
-                xAxis={[{ scaleType: 'band', data: dataGroups }]}
-                yAxis={[{ label: ' ms' }]} />
-        </CardContent>
-    </Card>;
+    // TODO Añadir efecto "hover" para ver el número exacto de ms para la latencia
+    return (
+        <Card variant="outlined" sx={{ height: '300px' }}>
+            <CardContent sx={{ height: '100%' }}>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t('page.salut.estatLatencia.title')}
+                </Typography>
+                <ResponsiveChartContainer
+                    series={[...lineSeries, ...barSeries]}
+                    xAxis={[{ scaleType: 'band', data: dataGroups, id: 'latenciaEstat-x-axis-id', }]}
+                    yAxis={[{ label: ' ms', id: 'latenciaEstat-y-axis-id', }]}
+                >
+                    <ChartsLegend />
+                    <BarPlot />
+                    <LinePlot />
+                    <MarkPlot />
+                    <ChartsYAxis axisId="latenciaEstat-y-axis-id" />
+                    <ChartsXAxis position="bottom" axisId="latenciaEstat-x-axis-id" />
+                </ResponsiveChartContainer>
+            </CardContent>
+        </Card>
+    );
 }
 
 const Integracions: React.FC<any> = (props) => {
@@ -303,26 +383,6 @@ const Subsistemes: React.FC<any> = (props) => {
     </Card>;
 }
 
-const Estats: React.FC<any> = (props) => {
-    const {
-        dataInici,
-        agrupacio,
-        estats
-    } = props;
-    const { t } = useTranslation();
-    return <Card variant="outlined">
-        <CardContent>
-            <Typography gutterBottom variant="h5" component="div">{t('page.salut.estats.title')}</Typography>
-            <Box sx={{ height: '200px' }}>
-                <UpdownBarChart
-                    dataInici={dataInici}
-                    agrupacio={agrupacio}
-                    estats={estats} />
-            </Box>
-        </CardContent>
-    </Card>;
-}
-
 const SalutAppInfo: React.FC = () => {
     const { id } = useParams();
     const {
@@ -366,16 +426,17 @@ const SalutAppInfo: React.FC = () => {
     const [detailsDialogShow, detailsDialogComponent] = useMuiContentDialog();
     const detailsComponent = (
         <Grid container spacing={2}>
-            <Grid size={6}>
+            <Grid size={3}>
                 <AppInfo salutCurrentApp={salutCurrentApp} detailsDialogShow={detailsDialogShow} />
             </Grid>
-            <Grid size={6}>
+            <Grid size={9}>
                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
                     {dataLoaded && (
-                        <LatenciaBarChart
+                        <LatenciaEstatsChart
                             dataInici={reportParams.dataInici}
                             agrupacio={reportParams.agrupacio}
                             latencies={latencies}
+                            estats={estats}
                         />
                     )}
                 </ErrorBoundary>
@@ -385,17 +446,6 @@ const SalutAppInfo: React.FC = () => {
             </Grid>
             <Grid size={6}>
                 <Subsistemes salutCurrentApp={salutCurrentApp} />
-            </Grid>
-            <Grid size={12}>
-                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                    {dataLoaded && (
-                        <Estats
-                            dataInici={reportParams.dataInici}
-                            agrupacio={reportParams.agrupacio}
-                            estats={estats}
-                        />
-                    )}
-                </ErrorBoundary>
             </Grid>
         </Grid>
     );
