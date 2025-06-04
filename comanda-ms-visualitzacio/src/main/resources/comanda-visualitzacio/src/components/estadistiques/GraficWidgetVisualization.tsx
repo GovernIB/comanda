@@ -3,14 +3,14 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
-import { 
-  BarChart, 
-  LineChart, 
-  PieChart, 
-  ChartsTooltip, 
-  ChartsLegend, 
-  ChartsXAxis, 
-  ChartsYAxis, 
+import {
+  BarChart,
+  LineChart,
+  PieChart,
+  ChartsTooltip,
+  ChartsLegend,
+  ChartsXAxis,
+  ChartsYAxis,
   ChartsGrid,
   BarPlot,
   LinePlot,
@@ -24,7 +24,7 @@ export interface GraficWidgetVisualizationProps {
   // Widget data
   title?: string;
   data?: any[];
-  tipusGrafic?: 'BAR_CHART' | 'LINE_CHART' | 'PIE_CHART' | 'GAUGE_CHART' | 'HEATMAP_CHART';
+  tipusGrafic?: 'BAR_CHART' | 'LINE_CHART' | 'PIE_CHART' | 'GAUGE_CHART' | 'HEATMAP_CHART' | 'SCATTER_CHART' | 'SPARK_LINE_CHART';
   llegendaX?: string;
   llegendaY?: string;
 
@@ -140,7 +140,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
   const renderBarChart = () => {
     // Extract data keys (excluding 'name')
     console.log('data', data);
-    const dataKeys = data.length > 0 
+    const dataKeys = data.length > 0
       ? Object.keys(data[0]).filter(key => key !== 'name')  // Exclou 'name', ja que es fa servir per al `xAxis`.
         : [];
     console.log('dataKeys', dataKeys);
@@ -201,8 +201,8 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
   // Render a line chart
   const renderLineChart = () => {
     // Extract data keys (excluding 'name')
-    const dataKeys = data.length > 0 
-      ? Object.keys(data[0]).filter(key => key !== 'name') 
+    const dataKeys = data.length > 0
+      ? Object.keys(data[0]).filter(key => key !== 'name')
       : [];
 
     // Prepare series for MUI X-Charts
@@ -291,9 +291,9 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
   const renderGaugeChart = () => {
     // For preview, just show a placeholder
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
         alignItems: 'center',
         height: chartHeight,
         color: theme.palette.text.secondary
@@ -309,9 +309,9 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
   const renderHeatmapChart = () => {
     // For preview, just show a placeholder
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
         alignItems: 'center',
         height: chartHeight,
         color: theme.palette.text.secondary

@@ -13,8 +13,6 @@ import {FormField, useFormContext} from 'reactlib';
 export interface VisualAttributesPanelProps {
   title?: string;
   widgetType: 'simple' | 'grafic' | 'taula';
-  expanded?: boolean;
-  onToggle?: () => void;
   children?: React.ReactNode;
 }
 
@@ -26,39 +24,10 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
   const {
     title = 'Atributs visuals',
     widgetType,
-    expanded: externalExpanded,
-    onToggle: externalOnToggle,
     children,
   } = props;
 
   const { data } = useFormContext();
-
-  // Use internal state if no external control is provided
-  const [internalExpanded, setInternalExpanded] = useState(false);
-  const [internalVisible, setInternalVisible] = useState(false);
-
-  // Determine if the component is controlled externally or internally
-  const isControlled = externalExpanded !== undefined && externalOnToggle !== undefined;
-  const expanded = isControlled ? externalExpanded : internalExpanded;
-  const visible = isControlled ? expanded : internalVisible;
-
-  // Handle content expansion toggle
-  const handleToggle = () => {
-    if (isControlled) {
-      externalOnToggle!();
-    } else {
-      setInternalExpanded(!internalExpanded);
-    }
-  };
-
-  // Handle panel visibility toggle
-  const handleVisibilityToggle = () => {
-    setInternalVisible(!internalVisible);
-    // If we're making the panel visible and it's not expanded, expand it
-    if (!internalVisible && !internalExpanded) {
-      setInternalExpanded(true);
-    }
-  };
 
   const theme = useTheme();
 
@@ -189,34 +158,7 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
   };
 
   return (
-    <Box sx={{ position: 'relative', height: '100%', display: 'flex' }}>
-      {/* Toggle button for panel visibility */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          right: visible ? 'auto' : 0,
-          left: visible ? 0 : 'auto',
-          transform: 'translateY(-50%)',
-          zIndex: 10,
-        }}
-      >
-        <IconButton
-          onClick={handleVisibilityToggle}
-          size="small"
-          sx={{
-            backgroundColor: theme.palette.background.paper,
-            boxShadow: 1,
-            borderRadius: '50%',
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-            },
-          }}
-        >
-          <Icon>{visible ? 'chevron_left' : 'chevron_right'}</Icon>
-        </IconButton>
-      </Box>
-
+    <Box sx={{ position: 'relative', height: '100%', display: 'flex', minWidth: '40px', minHeight: '100px' }}>
       {/* Main panel */}
       <Paper
         elevation={1}
@@ -225,9 +167,11 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
           flexDirection: 'column',
           height: '100%',
           overflow: 'hidden',
-          width: visible ? '100%' : 0,
-          opacity: visible ? 1 : 0,
-          transition: 'width 0.3s ease-in-out, opacity 0.3s ease-in-out',
+          width: '100%',
+          border: `1px solid ${theme.palette.divider}`,
+          position: 'relative', // Ensure proper stacking context
+          m: 0, // No margin
+          p: 0, // No padding
         }}
       >
         {/* Header */}
@@ -241,17 +185,14 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
           }}
         >
           <Typography variant="subtitle1">{title}</Typography>
-          <IconButton onClick={handleToggle} size="small">
-            <Icon>{expanded ? 'expand_less' : 'expand_more'}</Icon>
-          </IconButton>
         </Box>
 
         <Divider />
 
-        {/* Content */}
-        <Collapse in={expanded} sx={{ overflow: 'auto' }}>
+        {/* Content - always expanded */}
+        <Box sx={{ overflow: 'auto' }}>
           {children || renderFormFields()}
-        </Collapse>
+        </Box>
       </Paper>
     </Box>
   );

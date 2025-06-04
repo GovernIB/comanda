@@ -1,5 +1,5 @@
 import Grid from "@mui/material/Grid2";
-import {Divider, Box} from "@mui/material";
+import {Divider, Box, Typography} from "@mui/material";
 import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
 import { useState, useEffect } from "react";
@@ -7,9 +7,11 @@ import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
 import GraficWidgetVisualization from "./GraficWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
+import { useTranslation } from "react-i18next";
 
 const EstadisticaGraficWidgetForm: React.FC = () => {
     const { data } = useFormContext();
+    const { t } = useTranslation();
     const [previewData, setPreviewData] = useState({
         title: 'Títol del gràfic',
         tipusGrafic: 'BAR_CHART',
@@ -25,6 +27,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         pieDonut: false,
         pieShowLabels: true,
     });
+
 
     // Watch for changes in form data to update preview
     useEffect(() => {
@@ -54,9 +57,17 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         }
     }, [data]);
 
+    // Get current graphic type (BAR_CHART, LINE_CHART, PIE_CHART, SCATTER_CHART, SPARK_LINE_CHART, GAUGE_CHART, HEATMAP_CHART)
+    const chartType = data?.tipusGrafic;
+    const isBarTypeVisible = chartType === 'BAR_CHART';
+    const isLineTypeVisible = chartType === 'LINE_CHART' || chartType === 'SPARK_LINE_CHART';
+    const isPieTypeVisible = chartType === 'PIE_CHART';
+    const isGaugeTypeVisible = chartType === 'GAUGE_CHART';
+    const isHeatTypeVisible = chartType === 'HEATMAP_CHART';
+
     return (
-        <Box sx={{ display: 'flex', width: '100%' }}>
-            <Box sx={{ flex: '1 1 auto' }}>
+        <Grid container spacing={2}>
+            <Grid size={{xs: 12, sm: 8}}>
                 <EstadisticaWidgetFormFields>
                         <Grid size={12}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
                         <Grid size={4}><FormField name="tipusGrafic" /></Grid>
@@ -66,27 +77,81 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                         <Grid size={6}><FormField name="llegendaX" /></Grid>
                         <Grid size={6}><FormField name="llegendaY" /></Grid>
                 </EstadisticaWidgetFormFields>
-            </Box>
+            </Grid>
 
-            <Box sx={{ width: '500px', ml: 2, display: 'flex', flexDirection: 'column' }}>
-                 Preview
-                <Box sx={{ mb: 2, height: '300px' }}>
-                    <GraficWidgetVisualization
-                        preview={true}
-                        {...previewData}
-                    />
-                </Box>
-
-                {/* Visual attributes panel */}
-                <Box sx={{ flex: 1 }}>
-                    <VisualAttributesPanel 
-                        widgetType="grafic"
-                        title="Configuració visual"
-                    />
-                </Box>
-            </Box>
-        </Box>
+            <Grid id={'cv'} size={{xs: 12, sm: 4}}>
+                <VisualAttributesPanel widgetType="grafic" title="Configuració visual">
+                    {/* Preview inside the panel */}
+                    <Box sx={{ p: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 2 }}>Previsualització</Typography>
+                        <Box sx={{ height: '240px' }}>
+                            <GraficWidgetVisualization
+                                preview={true}
+                                tipusGrafic={chartType}
+                                {...previewData}
+                            />
+                        </Box>
+                        {renderGraficFormFields()}
+                    </Box>
+                </VisualAttributesPanel>
+            </Grid>
+        </Grid>
     );
+
+    // Render form fields for grafic widget
+    function renderGraficFormFields() {
+        return (
+            <Grid container spacing={2}>
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració general</Typography></Grid>
+                <Grid size={12}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" /></Grid>
+                <Grid size={12}><FormField name="atributsVisuals.mostrarReticula" label="Mostrar retícula" type="checkbox" /></Grid>
+
+                {isBarTypeVisible && (
+                    <>
+                        <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de barres</Typography></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.barStacked" label="Barres apilades" type="checkbox" /></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.barHorizontal" label="Barres horitzontals" type="checkbox" /></Grid>
+                    </>
+                )}
+
+                {isLineTypeVisible && (
+                    <>
+                        <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de línies</Typography></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.lineShowPoints" label="Mostrar punts" type="checkbox" /></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.lineSmooth" label="Línies suaus" type="checkbox" /></Grid>
+                        <Grid size={12}><FormField name="atributsVisuals.lineWidth" label="Amplada de línia" type="number" required={false} /></Grid>
+                    </>
+                )}
+
+                {isPieTypeVisible && (
+                    <>
+                        <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de pastís</Typography></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.pieDonut" label="Tipus donut" type="checkbox" /></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.pieShowLabels" label="Mostrar etiquetes" type="checkbox" /></Grid>
+                    </>
+                )}
+
+                {isGaugeTypeVisible && (
+                    <>
+                        <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de gauge</Typography></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.gaugeMin" label="Valor mínim" type="number" required={false} /></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.gaugeMax" label="Valor màxim" type="number" required={false} /></Grid>
+                        {/*<Grid size={12}><FormField name="atributsVisuals.gaugeColors" label="Colors (separats per comes)" /></Grid>*/}
+                        <Grid size={12}><FormField name="atributsVisuals.gaugeRangs" label="Rangs (separats per comes)" /></Grid>
+                    </>
+                )}
+
+                {isHeatTypeVisible && (
+                    <>
+                        <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de heatmap</Typography></Grid>
+                        {/*<Grid size={12}><FormField name="atributsVisuals.heatmapColors" label="Colors (separats per comes)" /></Grid>*/}
+                        <Grid size={6}><FormField name="atributsVisuals.heatmapMinValue" label="Valor mínim" type="number" required={false} /></Grid>
+                        <Grid size={6}><FormField name="atributsVisuals.heatmapMaxValue" label="Valor màxim" type="number" required={false} /></Grid>
+                    </>
+                )}
+            </Grid>
+        );
+    }
 }
 
 export default EstadisticaGraficWidgetForm;

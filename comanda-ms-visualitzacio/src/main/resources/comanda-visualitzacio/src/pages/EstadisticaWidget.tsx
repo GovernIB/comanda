@@ -44,16 +44,16 @@ const EstadisticaSimpleWidgetGrid: React.FC = () => {
 const EstadisticaGraficWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
     return <MuiGrid
-            title={t('page.widget.grafic.title')}
-            resourceName="estadisticaGraficWidget"
-            columns={columns}
-            toolbarType="upper"
-            paginationActive
-            popupEditActive
-            popupEditFormContent={<EstadisticaGraficWidgetForm/>}
-            popupEditFormDialogResourceTitle={t('page.widget.grafic.resourceTitle')}
+        title={t('page.widget.grafic.title')}
+        resourceName="estadisticaGraficWidget"
+        columns={columns}
+        toolbarType="upper"
+        paginationActive
+        popupEditActive
+        popupEditFormContent={<EstadisticaGraficWidgetForm/>}
+        popupEditFormDialogResourceTitle={t('page.widget.grafic.resourceTitle')}
             popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
-        />;
+    />;
 }
 
 const EstadisticaTaulaWidgetGrid: React.FC = () => {
