@@ -1,12 +1,11 @@
 package es.caib.comanda.salut.logic.service;
 
-import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
+import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutDetall;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeAgrupacio;
@@ -29,8 +28,6 @@ import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -59,10 +56,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private SalutMissatgeRepository salutMissatgeRepository;
 	@Autowired
 	private SalutDetallRepository salutDetallRepository;
-	@Autowired
-	private EntornAppServiceClient entornAppServiceClient;
-	@Autowired
-	private KeycloakHelper keycloakHelper;
+    @Autowired
+    private SalutClientHelper salutClientHelper;
 
 	@PostConstruct
 	public void init() {
@@ -78,7 +73,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class PerspectiveIntegracions implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-			EntornApp entornAppForEntity = entornAppFindById(entity.getEntornAppId());
+			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
 			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalut(entity);
 			resource.setIntegracions(
 				salutIntegracions.stream().
@@ -101,7 +96,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class PerspectiveSubsistemes implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-			EntornApp entornAppForEntity = entornAppFindById(entity.getEntornAppId());
+			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
 			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalut(entity);
 			resource.setSubsistemes(
 				salutSubsistemes.stream().
@@ -161,23 +156,15 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class InformeSalutLast implements ReportGenerator<SalutEntity, Serializable, Salut> {
 		@Override
 		public List<Salut> generateData(String code, SalutEntity entity, Serializable params) throws ReportGenerationException {
-			PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
-					null,
-					"activa:true and app.activa:true",
-					null,
-					null,
-					"UNPAGED",
-					null,
-					keycloakHelper.getAuthorizationHeader());
-			List<Long> entornAppIds = entornApps.getContent().stream().
-					map(EntityModel::getContent).
-					filter(Objects::nonNull).
-					map(EntornApp::getId).
-					collect(Collectors.toList());
+			List<EntornApp> entornApps = salutClientHelper.entornAppFindByActivaTrue();
+			List<Long> entornAppIds = entornApps.stream()
+					.filter(Objects::nonNull)
+					.map(EntornApp::getId)
+					.collect(Collectors.toList());
 
 			List<SalutEntity> saluts = ((SalutRepository)entityRepository).informeSalutLast(
 					entornAppIds,
-				LocalDateTime.now());
+					LocalDateTime.now());
 			if (saluts == null)
 				return List.of();
 			return entitiesToResources(saluts);
@@ -186,17 +173,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		@Override
 		public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
 		}
-	}
-
-	private EntornApp entornAppFindById(Long entornAppId) {
-		EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
-				entornAppId,
-				null,
-				keycloakHelper.getAuthorizationHeader());
-		if (entornApp != null) {
-			return entornApp.getContent();
-		}
-		return null;
 	}
 
 	/**

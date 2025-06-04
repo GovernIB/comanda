@@ -39,7 +39,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
 	@Query( " FROM SalutEntity s1 " +
 			"WHERE s1.data in (SELECT MAX(s2.data) from SalutEntity s2 where s1.entornAppId = s2.entornAppId AND s2.data < :data) " +
-			"  AND s1.entornAppId in :entornAppIds " +
+			"  AND s1.entornAppId in (:entornAppIds) " +
 			"ORDER BY s1.entornAppId ASC")
 	List<SalutEntity> informeSalutLast(
 			@Param("entornAppIds") List<Long> entornAppIds,
