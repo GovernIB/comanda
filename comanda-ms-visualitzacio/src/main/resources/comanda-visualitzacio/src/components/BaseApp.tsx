@@ -110,14 +110,19 @@ const generateAppMenu = (menuEntries: MenuEntry[] | undefined) => {
 }
 
 const generateFooter = () => {
-    return <Footer
-        title="COMANDA"
-        backgroundColor="#5F5D5D"
-        logos={[drassana]}
-        style={{position: 'fixed', height: '36px', bottom: 0, width: '100%'}}
-        // style={{display: 'flex', flexDirection: 'row', flexShrink: 0, position: 'sticky', height: '36px', bottom: 0, width: '100%'}}
-    />
-}
+    return (
+        <>
+            <div style={{ height: '36px', width: '100%' }} />
+            <Footer
+                title="COMANDA"
+                backgroundColor="#5F5D5D"
+                logos={[drassana]}
+                style={{ position: 'fixed', height: '36px', bottom: 0, width: '100%' }}
+                // style={{display: 'flex', flexDirection: 'row', flexShrink: 0, position: 'sticky', height: '36px', bottom: 0, width: '100%'}}
+            />
+        </>
+    );
+};
 
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {

@@ -39,10 +39,10 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
 	@Query( " FROM SalutEntity s1 " +
 			"WHERE s1.data in (SELECT MAX(s2.data) from SalutEntity s2 where s1.entornAppId = s2.entornAppId AND s2.data < :data) " +
-			"  AND (:entornAppId IS NULL or s1.entornAppId = :entornAppId) " +
+			"  AND s1.entornAppId in :entornAppIds " +
 			"ORDER BY s1.entornAppId ASC")
 	List<SalutEntity> informeSalutLast(
-			@Param("entornAppId") Long entornAppId,
+			@Param("entornAppIds") List<Long> entornAppIds,
 			@Param("data") LocalDateTime data);
 
 	// Consultes per a informes d'estat (agrupat per períodes)

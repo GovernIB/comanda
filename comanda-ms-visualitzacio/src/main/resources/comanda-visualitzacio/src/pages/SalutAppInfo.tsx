@@ -238,6 +238,7 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
     const seriesDegraded = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "degradedPercent").map(mapPercentToLatenciaMaxValue);
     const seriesMaintenance = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "maintenancePercent").map(mapPercentToLatenciaMaxValue);
     const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent").map(mapPercentToLatenciaMaxValue);
+    const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent").map(mapPercentToLatenciaMaxValue);
 
     const seriesDataLatencia = baseDataGroups.map((group) => {
         return latencies.find((latenciaData: any) => {
@@ -282,6 +283,13 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
             color: theme.palette.error.main,
             type: 'bar',
         },
+        {
+            data: seriesUnknown,
+            label: 'unknown',
+            stack: 'total',
+            color: theme.palette.grey[600],
+            type: 'bar',
+        }
     ];
     const lineSeries: LineSeriesType[] = [
         { data: seriesDataLatencia, type: 'line', showMark: true },

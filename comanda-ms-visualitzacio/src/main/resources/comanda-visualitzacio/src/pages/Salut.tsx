@@ -113,6 +113,9 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
     const maintenanceValue = salutLastItems.filter(
         (salutItem) => salutItem.appEstat === 'MAINTENANCE',
     ).length;
+    const unknownValue = salutLastItems.filter(
+        (salutItem) => salutItem.appEstat === 'UNKNOWN',
+    ).length;
 
     return (
         <PieChart
@@ -157,6 +160,12 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
                             value: maintenanceValue,
                             color: theme.palette.primary.main,
                         },
+                        {
+                            id: 'UNKNOWN',
+                            label: `Unknown (${unknownValue})`,
+                            value: unknownValue,
+                            color: theme.palette.grey[600],
+                        }
                     ],
                 },
             ]}

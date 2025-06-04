@@ -29,7 +29,7 @@ export const calculateEstatsSeries = (
     baseDataGroups: string[],
     estats: Record<string, any[]>,
     agrupacio: string,
-    percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "maintenancePercent" | "downPercent"
+    percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "maintenancePercent" | "downPercent" | "unknownPercent"
 ): number[] => {
     return baseDataGroups.map((group) => {
         let valueSum = 0.0;
@@ -65,34 +65,47 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const seriesDegraded = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "degradedPercent");
     const seriesMaintenance = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "maintenancePercent");
     const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent");
+    const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent");
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
-    const series = [{
-        data: seriesUp,
-        label: 'up',
-        stack: 'total',
-        color: theme.palette.success.main
-    }, {
-        data: seriesWarn,
-        label: 'warn',
-        stack: 'total',
-        color: theme.palette.warning.light
-    }, {
-        data: seriesDegraded,
-        label: 'degraded',
-        stack: 'total',
-        color: theme.palette.warning.dark
-    }, {
-        data: seriesMaintenance,
-        label: 'maintenance',
-        stack: 'total',
-        color: theme.palette.primary.main
-    }, {
-        data: seriesDown,
-        label: 'down',
-        stack: 'total',
-        color: theme.palette.error.main
-    }];
+    const series = [
+        {
+            data: seriesUp,
+            label: 'up',
+            stack: 'total',
+            color: theme.palette.success.main,
+        },
+        {
+            data: seriesWarn,
+            label: 'warn',
+            stack: 'total',
+            color: theme.palette.warning.light,
+        },
+        {
+            data: seriesDegraded,
+            label: 'degraded',
+            stack: 'total',
+            color: theme.palette.warning.dark,
+        },
+        {
+            data: seriesMaintenance,
+            label: 'maintenance',
+            stack: 'total',
+            color: theme.palette.primary.main,
+        },
+        {
+            data: seriesDown,
+            label: 'down',
+            stack: 'total',
+            color: theme.palette.error.main,
+        },
+        {
+            data: seriesUnknown,
+            label: 'unknown',
+            stack: 'total',
+            color: theme.palette.grey[600],
+        }
+    ];
 
     return estats != null && <BarChart
         xAxis={[{ scaleType: 'band', data: dataGroups }]}
