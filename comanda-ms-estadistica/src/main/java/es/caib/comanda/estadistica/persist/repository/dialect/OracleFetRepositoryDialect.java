@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
@@ -112,8 +113,25 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
      * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
+    // -- Consulta SQL d'exemple per a widget simple
+    // SELECT
+    //    SUM(sum_fets) AS total_sum,
+    //    CASE WHEN SUM(sum_fets) > 0 THEN MIN(data) ELSE NULL END AS first_seen,
+    //    CASE WHEN SUM(sum_fets) > 0 THEN MAX(data) ELSE NULL END AS last_seen,
+    //    AVG(sum_fets) AS average_result
+    // FROM (
+    //     -- Subconsulta per calcular les sumes per data
+    //    SELECT
+    //        t.data as data,
+    //        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets
+    //    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
+    //    WHERE f.entorn_app_id = 1
+    //    AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
+    //    AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
+    //    GROUP BY t.data
+    // );
     @Override
-    public String getAggregatedValueQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+    public String getValorSimpleAgregatQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
 
         String querySelect = "";
         switch (agregacio) {
@@ -138,6 +156,34 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         String queryAggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
         return querySelect + queryConditions + queryAggregationConditions + " FETCH FIRST 1 ROW ONLY";
     }
+
+    // -- Consulta SQL d'exemple per a widget taula
+    // SELECT
+    //    agrupacio,
+    //    SUM(sum_fets_per_data) AS total_sum,
+    //    CASE WHEN SUM(sum_fets_per_data) > 0 THEN MIN(data) ELSE NULL END AS first_seen,
+    //    CASE WHEN SUM(sum_fets_per_data) > 0 THEN MAX(data) ELSE NULL END AS last_seen,
+    //    AVG(sum_fets_per_data) AS average_result,
+    //    SUM(sum_pnd_per_data) AS total_pnd
+    // FROM (
+    //         -- Subconsulta per calcular les sumes per data
+    //         SELECT
+    //             t.data as data,
+    //             JSON_VALUE(f.dimensions_json, '$."ORG"') AS agrupacio,
+    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data,
+    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."PND"'))) AS sum_pnd_per_data
+    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
+    //         WHERE f.entorn_app_id = 1
+    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
+    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
+    //         GROUP BY t.data, JSON_VALUE(f.dimensions_json, '$."ORG"')
+    //     )
+    // GROUP BY agrupacio;
+    @Override
+    public String getValorTaulaAgregatQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio) {
+        return "";
+    }
+
 
     /**
      * Genera la condició SQL per filtrar resultats segons valors de dimensions especificats.

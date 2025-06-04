@@ -1,13 +1,11 @@
 package es.caib.comanda.estadistica.persist.repository;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.ResultatSimpleAgregat;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.dialect.FetRepositoryDialectFactory;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -17,7 +15,6 @@ import javax.persistence.Query;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -112,17 +109,18 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
-    public AggregateResult getAggregatedValue(
+    public ResultatSimpleAgregat getValorSimpleAgregat(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
-            String indicadorCodi,
-            TableColumnsEnum agregacio,
-            PeriodeUnitat unitatAgregacio) {
+            IndicadorAgregacio indicadorAgregacio) {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String sql = dialectFactory.getDialect().getAggregatedValueQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio);
+        String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
+        TableColumnsEnum agregacio = indicadorAgregacio.getAgregacio();
+        PeriodeUnitat unitatAgregacio = indicadorAgregacio.getUnitatAgregacio();
+
+        String sql = dialectFactory.getDialect().getValorSimpleAgregatQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -134,31 +132,11 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             case LAST_SEEN:
                 Object dateResult = query.getSingleResult();
                 LocalDate result = dateResult != null ? ((Timestamp) dateResult).toLocalDateTime().toLocalDate() : null;
-                return new AggregateResult(result);
+                return new ResultatSimpleAgregat(result);
             default:
                 BigDecimal numberResult = (BigDecimal) query.getSingleResult();
-                return new AggregateResult(numberResult != null ? numberResult.doubleValue() : 0.0);
+                return new ResultatSimpleAgregat(numberResult != null ? numberResult.doubleValue() : 0.0);
         }
     }
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AggregateResult {
-        private Double doubleResult;
-        private LocalDate dateResult;
-
-        public AggregateResult(Double doubleResult) {
-            this.doubleResult = doubleResult;
-        }
-
-        public AggregateResult(LocalDate dateResult) {
-            this.dateResult = dateResult;
-        }
-
-        public Object getResult() {
-            return doubleResult != null ? doubleResult : dateResult;
-        }
-    }
 }

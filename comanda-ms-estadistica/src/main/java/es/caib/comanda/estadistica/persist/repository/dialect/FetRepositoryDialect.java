@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 
@@ -61,5 +62,6 @@ public interface FetRepositoryDialect {
      * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
-    String getAggregatedValueQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
+    String getValorSimpleAgregatQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
+    String getValorTaulaAgregatQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio);
 }

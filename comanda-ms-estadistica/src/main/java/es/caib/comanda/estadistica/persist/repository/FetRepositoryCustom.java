@@ -1,9 +1,8 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
-import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
-import es.caib.comanda.estadistica.persist.repository.FetRepositoryCustomImpl.AggregateResult;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.ResultatSimpleAgregat;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -96,16 +95,13 @@ public interface FetRepositoryCustom {
      * @param dataFi Data final del rang de dates per a la cerca.
      * @param dimensionsFiltre Map que conté com a clau el codi de cada dimensió i com a valor la llista de valors associats
      *                         a aquesta dimensió per aplicar com a criteri de filtre.
-     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
-     * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
+     * @param indicadorAgregacio Informació de l'indicador sobre el qual s'aplicarà l'agregació.
      * @return El valor agregat calculat directament a la base de dades.
      */
-    AggregateResult getAggregatedValue(
+    ResultatSimpleAgregat getValorSimpleAgregat(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
-            String indicadorCodi,
-            TableColumnsEnum agregacio,
-            PeriodeUnitat unitatAgregacio);
+            IndicadorAgregacio indicadorAgregacio);
 }

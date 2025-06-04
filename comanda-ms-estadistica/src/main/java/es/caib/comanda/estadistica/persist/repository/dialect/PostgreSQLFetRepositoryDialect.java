@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
@@ -111,7 +112,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
     @Override
-    public String getAggregatedValueQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+    public String getValorSimpleAgregatQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
         String querySelect = "";
         switch (agregacio) {
             case AVERAGE:
@@ -134,6 +135,11 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String queryConditions = generateDimensionConditions(dimensionsFiltre);
         String queryAggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
         return querySelect + queryConditions + queryAggregationConditions + " LIMIT 1";
+    }
+
+    @Override
+    public String getValorTaulaAgregatQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio) {
+        return "";
     }
 
     /**

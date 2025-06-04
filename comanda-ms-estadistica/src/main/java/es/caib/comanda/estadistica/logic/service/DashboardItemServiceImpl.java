@@ -7,6 +7,7 @@ import es.caib.comanda.estadistica.logic.helper.PeriodeResolverHelper.PeriodeDat
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
@@ -176,6 +177,12 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             TableColumnsEnum agregacio = widget.getIndicadorInfo().getAgregacio();
             PeriodeUnitat unitatAgregacio = widget.getIndicadorInfo().getUnitatAgregacio();
 
+            IndicadorAgregacio indicadorAgregacio = IndicadorAgregacio.builder()
+                    .indicadorCodi(indicadorCodi)
+                    .agregacio(agregacio)
+                    .unitatAgregacio(unitatAgregacio)
+                    .build();
+
             // Mapa de dimensions per filtrar la consulta
             Map<String, List<String>> dimensionsFiltre = new HashMap<>();
             if (widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()) {
@@ -191,14 +198,12 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             }
 
             // Get the aggregated value directly from the database
-            return estadisticaHelper.getValorAgregatPeriodeAmbDimensions(
+            return estadisticaHelper.getValorSimplePerPeriodeAmbDimensions(
                     widget.getAppId(),
                     periodeConsulta.start,
                     periodeConsulta.end,
                     dimensionsFiltre,
-                    indicadorCodi,
-                    agregacio,
-                    unitatAgregacio);
+                    indicadorAgregacio);
         }
 
         private Double calculateCanviPercentual(EstadisticaSimpleWidgetEntity widget, Object valorConsulta, PeriodeDates periodePrevi) {

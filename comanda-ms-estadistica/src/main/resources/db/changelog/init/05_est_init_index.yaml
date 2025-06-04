@@ -10,6 +10,18 @@ databaseChangeLog:
             - column:
                 name: temps_id
     - createIndex:
+        tableName: ${db_prefix}est_fet
+        indexName: ${db_prefix}est_fet_entornapp_i
+        columns:
+            - column:
+                name: entorn_app_id
+    - createIndex:
+        tableName: ${db_prefix}est_temps
+        indexName: ${db_prefix}est_temps_data_i
+        columns:
+            - column:
+                name: data
+    - createIndex:
         tableName: ${db_prefix}est_dimensio_valor
         indexName: ${db_prefix}est_dimensio_valor_dim_i
         columns:
