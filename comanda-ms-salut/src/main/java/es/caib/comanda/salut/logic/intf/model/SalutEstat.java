@@ -11,5 +11,6 @@ public enum SalutEstat {
 	DEGRADED,
 	DOWN,
 	MAINTENANCE,
-	UNKNOWN
+	UNKNOWN,
+	ERROR
 }

@@ -73,7 +73,7 @@ public class SalutInfoHelper {
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornApp.getId());
 			salut.setData(LocalDateTime.now());
-			salut.setAppEstat(SalutEstat.UNKNOWN);
+			salut.setAppEstat(SalutEstat.ERROR);
 			salutRepository.save(salut);
 			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
 					entornApp.getApp().getNom(),
@@ -89,8 +89,8 @@ public class SalutInfoHelper {
 		if (info != null) {
 			// Si es desconeix l'estat de l'aplicació, entenem que està DOWN
 			SalutEstat appEstat = toSalutEstat(info.getEstat().getEstat());
-			if (appEstat == null || SalutEstat.UNKNOWN.equals(appEstat)) {
-				appEstat = SalutEstat.DOWN;
+			if (appEstat == null) {
+				appEstat = SalutEstat.UNKNOWN;
 			}
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornAppId);
