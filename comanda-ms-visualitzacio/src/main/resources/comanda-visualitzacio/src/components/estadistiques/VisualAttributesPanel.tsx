@@ -5,6 +5,8 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import {styled, useTheme} from '@mui/material/styles';
 import {FormField, useFormContext} from 'reactlib';
+import Grid from "@mui/material/Grid2";
+import IconAutocompleteSelect from "../IconAutocompleteSelect.tsx";
 
 // Define the props for the VisualAttributesPanel component
 export interface VisualAttributesPanelProps {
@@ -45,46 +47,22 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
   // Render form fields for simple widget
   const renderSimpleFormFields = () => {
     return (
-      <Box sx={{ p: 2 }}>
-        <Typography variant="subtitle2" sx={{ mb: 2 }}>Configuració general</Typography>
-        <FormField name="atributsVisuals.icona" label="Icona" />
+      <Grid container spacing={2}>
+          <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració general</Typography></Grid>
+          <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><IconAutocompleteSelect name="atributsVisuals.icona" label={"Icona"}/></Grid>
 
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Colors</Typography>
-        <FormField name="atributsVisuals.colorText" label="Color del text" type="color" value={data?.atributsVisuals?.colorText || '#000000'} required={false} />
-        <FormField name="atributsVisuals.colorFons" label="Color de fons" type="color" value={data?.atributsVisuals?.colorText || '#FFFFFF'} required={false} />
-        <FormField name="atributsVisuals.colorIcona" label="Color de la icona" type="color" value={data?.atributsVisuals?.colorText || '#000000'} required={false} />
-        <FormField name="atributsVisuals.colorFonsIcona" label="Color de fons de la icona" type="color" value={data?.atributsVisuals?.colorText || '#FFFFFF'} required={false} />
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorText" label="Color del text" type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFons" label="Color de fons" type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorIcona" label="Color de la icona" type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFonsIcona" label="Color de fons de la icona" type="color" required={false} /></Grid>
 
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Destacat</Typography>
-        <FormField name="atributsVisuals.destacat" label="Destacat" type="checkbox" />
-        <FormField
-          name="atributsVisuals.colorTextDestacat"
-          label="Color del text destacat"
-          type="color"
-          value={data?.atributsVisuals?.colorText || '#FFFFFF'}
-          required={false}
-          disabled={!data?.atributsVisuals?.destacat}
-        />
-        <FormField
-          name="atributsVisuals.colorFonsDestacat"
-          label="Color de fons destacat"
-          type="color"
-          value={data?.atributsVisuals?.colorText || '#000000'}
-          required={false}
-          disabled={!data?.atributsVisuals?.destacat}
-        />
-
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Vora</Typography>
-        <FormField name="atributsVisuals.borde" label="Mostrar vora" type="checkbox" />
-        <FormField
-          name="atributsVisuals.colorBorde"
-          label="Color de la vora"
-          type="color"
-          value={data?.atributsVisuals?.colorText || '#CCCCCC'}
-          required={false}
-          disabled={!data?.atributsVisuals?.borde}
-        />
-      </Box>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorTextDestacat" label="Color del text destacat" type="color" required={false} /></Grid>
+          <Grid size={6} />
+          <Grid size={6}><FormField name="atributsVisuals.vora" label="Mostrar vora" type="checkbox" /></Grid>
+          <Grid size={6} />
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorVora" label="Color de la vora" type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.ampleVora" label="Ample de la vora" type="number" required={false} /></Grid>
+      </Grid>
     );
   };
 

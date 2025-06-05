@@ -5,7 +5,6 @@ import Typography from '@mui/material/Typography';
 import Icon from '@mui/material/Icon';
 import { useTheme } from '@mui/material/styles';
 import { numberFormat, useBaseAppContext } from 'reactlib';
-import * as Icons from "@mui/icons-material";
 
 // Define the props for the SimpleWidgetVisualization component
 export interface SimpleWidgetVisualizationProps {
@@ -23,8 +22,9 @@ export interface SimpleWidgetVisualizationProps {
   colorIcona?: string;
   colorFonsIcona?: string;
   colorTextDestacat?: string;
-  borde?: boolean;
-  colorBorde?: string;
+  vora?: boolean;
+  colorVora?: string;
+  ampleVora?: number | undefined;
 
   // Additional props
   loading?: boolean;
@@ -91,34 +91,43 @@ const styles = {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        flexGrow: 0,
+        flexShrink: 0,
+        flexBasis: 'auto',
         pt: 2,
         px: 2,
-    },
-    titleText: {
-        letterSpacing: '0.025em',
-        fontWeight: '600',
-        fontSize: '1.4rem',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        width: '100%',
     },
     contentContainer: {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        flex: 1,
+        flexGrow: 1,
+        flexShrink: 1,
+        flexBasis: 'auto',
         p: 2,
-        py: 0,
+        pt: 1,
+        pb: 0,
     },
     footerContainer: {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        flexGrow: 0,
+        flexShrink: 0,
+        flexBasis: 'auto',
         p: 2,
         py: 1,
+    },
+    titleText: {
+        letterSpacing: '0.025em',
+        fontWeight: '600',
+        fontSize: '1.4em',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        width: '100%',
     },
     contentText: (preview: boolean) => ({
         height: preview ? '80px' : '120px', // Altura fixa del contenidor
@@ -130,13 +139,13 @@ const styles = {
         mb: 0, // Margin bottom
     }),
     valueText: (preview: boolean) => ({
-        fontSize: preview ? '4rem' : '4rem',
-        fontWeight: '600',
+        fontSize: preview ? '5em' : '5em',
+        fontWeight: '500',
         textAlign: 'center',
         lineHeight: '1',
     }),
     unitText: (preview: boolean) => ({
-        fontSize: preview ? '1rem' : '1rem',
+        fontSize: preview ? '1em' : '1em',
         textAlign: 'center',
         lineHeight: '1',
     }),
@@ -144,7 +153,7 @@ const styles = {
         flexGrow: 1,
         flexShrink: 1,
         fontWeight: '500',
-        fontSize: '1.0rem',
+        fontSize: '1.0em',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
@@ -154,7 +163,7 @@ const styles = {
     percText: (textColor: string) => ({
         flexShrink: 0,
         fontWeight: '600',
-        fontSize: '1.2rem',
+        fontSize: '1.2em',
         overflow: 'visible',
         textAlign: 'right',
         whiteSpace: 'nowrap',
@@ -165,13 +174,15 @@ const styles = {
     },
     icon: (preview: boolean, color: string, bgColor: string) => ({
         color,
-        width: preview ? '2.5rem' : '2.5rem',
-        height: preview ? '2.5rem' : '2.5rem',
-        fontSize: preview ? '1.8rem' : '1.8rem',
+        width: preview ? '1em' : '1.4em',
+        height: preview ? '1em' : '1.4em',
+        fontSize: preview ? '1.8em' : '1.8em',
         backgroundColor: bgColor,
         borderRadius: '50%',
-        padding: bgColor !== 'transparent' ? '0.2rem' : '0.2rem',
+        padding: '0.1em',
         border: 'solid',
+        borderWidth: '0.1em',
+        boxSizing: 'content-box',
     }),
 };
 
@@ -209,7 +220,7 @@ const useWidgetColors = (props: SimpleWidgetVisualizationProps, theme: any) => {
         colorIcona,
         colorFonsIcona,
         colorTextDestacat,
-        colorBorde,
+        colorVora,
     } = props;
 
     const colors = {
@@ -218,7 +229,7 @@ const useWidgetColors = (props: SimpleWidgetVisualizationProps, theme: any) => {
         icon: colorIcona || '#888888',
         iconBackground: colorFonsIcona || 'transparent',
         highlightText: colorTextDestacat || '#004B99',
-        border: colorBorde || theme.palette.divider,
+        border: colorVora || theme.palette.divider,
     };
 
     return {
@@ -226,7 +237,7 @@ const useWidgetColors = (props: SimpleWidgetVisualizationProps, theme: any) => {
         backgroundColor: colors.background,
         iconColor: colors.icon,
         iconBgColor: colors.iconBackground,
-        borderColor: colors.border,
+        voraColor: colors.border,
         highlightTextColor: colors.highlightText,
         isWhiteBackground: !colorFons || isWhiteColor(colors.background),
     };
@@ -240,13 +251,8 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
         descripcio = props.descripcio || 'Descripcio...',
         canviPercentual = props.canviPercentual || '',
         icona,
-        colorText,
-        colorFons,
-        colorIcona,
-        colorFonsIcona,
-        colorTextDestacat,
-        borde = false,
-        loading = false,
+        vora = false,
+        ampleVora,
         preview = false,
         onClick,
     } = props;
@@ -255,15 +261,16 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
 
     const theme = useTheme();
     const {currentLanguage} = useBaseAppContext();
-    const {textColor, backgroundColor, iconColor, iconBgColor, borderColor, highlightTextColor, isWhiteBackground} = useWidgetColors(props, theme);
+    const {textColor, backgroundColor, iconColor, iconBgColor, voraColor, highlightTextColor, isWhiteBackground} = useWidgetColors(props, theme);
     const formattedValue = typeof valor === 'number' ? numberFormat(valor, {}, currentLanguage) : valor;
 
     const bgColor = isWhiteBackground ? backgroundColor + ' !important' : 'transparent';
     const bg = isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${backgroundColor}, ${createTransparentColor(backgroundColor, 0.75)})`;
+    const voraAmple = ampleVora || (vora ? 1 : 0);
 
     return (
         <Paper
-            elevation={preview ? 1 : 2}
+            elevation= {2}
             onClick={onClick}
             sx={{
                 position: 'relative',
@@ -274,10 +281,10 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
                 backgroundColor: bgColor,
                 background: bg,
                 color: textColor,
-                border: borde ? `1px solid ${borderColor}` : 'none',
+                border: vora ? `${voraAmple}px solid ${voraColor}` : 'none',
                 cursor: onClick ? 'pointer' : 'default',
-                height: '100%',
-                minHeight: preview ? '150px' : '200px',
+                // height: '15vh',
+                minHeight: '150px',
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                     boxShadow: onClick ? theme.shadows[4] : undefined,

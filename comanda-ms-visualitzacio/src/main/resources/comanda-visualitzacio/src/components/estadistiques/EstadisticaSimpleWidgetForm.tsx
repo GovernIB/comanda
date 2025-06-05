@@ -26,8 +26,9 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
         colorIcona: undefined,
         colorFonsIcona: undefined,
         colorTextDestacat: undefined,
-        borde: false,
-        colorBorde: undefined,
+        vora: false,
+        colorVora: undefined,
+        ampleVora: undefined,
     });
 
     // Watch for changes in form data to update preview
@@ -39,14 +40,15 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                 unitat: data.unitat || 'unitat',
                 descripcio: data.descripcio || 'descripcio del widget',
                 canviPercentual: data.canviPercentual || '12.34%',
-                icona: data["atributsVisuals.icona"] || 'trending_up',
+                icona: data["atributsVisuals.icona"],
                 colorText: data["atributsVisuals.colorText"],
                 colorFons: data["atributsVisuals.colorFons"],
                 colorIcona: data["atributsVisuals.colorIcona"],
                 colorFonsIcona: data["atributsVisuals.colorFonsIcona"],
                 colorTextDestacat: data["atributsVisuals.colorTextDestacat"],
-                borde: data["atributsVisuals.borde"] || false,
-                colorBorde: data["atributsVisuals.colorBorde"],
+                vora: data["atributsVisuals.vora"] || false,
+                colorVora: data["atributsVisuals.colorVora"],
+                ampleVora: data["atributsVisuals.ampleVora"],
             });
         }
     }, [data]);
@@ -103,8 +105,10 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                 <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorTextDestacat" label="Color del text destacat" type="color" required={false} /></Grid>
                 <Grid size={6} />
                 {/*<Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Vora</Typography></Grid>*/}
-                <Grid size={6}><FormField name="atributsVisuals.borde" label="Mostrar vora" type="checkbox" /></Grid>
-                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorBorde" label="Color de la vora" type="color" required={false} /></Grid>
+                <Grid size={6}><FormField name="atributsVisuals.vora" label="Mostrar vora" type="checkbox" /></Grid>
+                <Grid size={6} />
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorVora" label="Color de la vora" type="color" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.ampleVora" label="Ample de la vora" type="number" required={false} /></Grid>
             </Grid>
         );
     }
