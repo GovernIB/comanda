@@ -4,8 +4,8 @@ import { GridRowSelectionModel } from '@mui/x-data-grid-pro';
 export type MuiDataGridApi = {
     refresh: () => void;
     export: () => void;
-    showCreateDialog: (row?: any) => void;
-    showUpdateDialog: (id: any, row?: any) => void;
+    showCreateDialog: (row?: any, additionalData?: any) => void;
+    showUpdateDialog: (id: any, row?: any, additionalData?: any) => void;
     setFilter: (filter: string | undefined) => void;
 };
 
@@ -19,6 +19,11 @@ export type DataGridContextType = {
     selection: GridRowSelectionModel | undefined;
     apiRef: MuiDataGridApiRef;
 }
+
+export const DEFAULT_ROW_SELECTION: GridRowSelectionModel = {
+    type: 'include',
+    ids: new Set(),
+};
 
 export const DataGridContext = React.createContext<DataGridContextType | undefined>(undefined);
 export const useDataGridContext = () => {

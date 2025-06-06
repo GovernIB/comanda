@@ -16,7 +16,6 @@ import {
   LinePlot,
   PieArcPlot,
   PieArcLabel,
-  ResponsiveChartContainer
 } from '@mui/x-charts';
 
 // Define the props for the GraficWidgetVisualization component

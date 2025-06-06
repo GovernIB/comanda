@@ -1,4 +1,4 @@
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {FormField, useFormContext, springFilterBuilder as builder } from "reactlib";
 import * as React from "react";
 import { useState, useEffect } from "react";

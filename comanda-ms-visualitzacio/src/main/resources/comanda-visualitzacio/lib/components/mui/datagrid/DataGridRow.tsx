@@ -1,6 +1,6 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import { GridRow as MuiGridRow } from '@mui/x-data-grid';
+import { GridRow as MuiGridRow } from '@mui/x-data-grid-pro';
 import { useBaseAppContext } from '../../BaseAppContext';
 
 type DataGridRowProps = any & {

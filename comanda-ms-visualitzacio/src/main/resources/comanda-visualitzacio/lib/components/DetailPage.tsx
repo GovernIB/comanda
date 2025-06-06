@@ -2,20 +2,20 @@ import React from 'react';
 import { useBaseAppContext } from './BaseAppContext';
 
 /**
- * Propietats del component FormPage.
+ * Propietats del component DetailPage.
  */
-type FormPageProps = React.PropsWithChildren & {
+type DetailPageProps = React.PropsWithChildren & {
     /** Indica que s'han de desactivar els marges */
     disableMargins?: true;
 };
 
 /**
- * Pàgina que conté un element de formulari.
+ * Pàgina que conté un element de detall.
  *
  * @param props - Propietats del component.
  * @returns Element JSX de la pàgina.
  */
-export const FormPage: React.FC<FormPageProps> = (props) => {
+export const DetailPage: React.FC<DetailPageProps> = (props) => {
     const { disableMargins = true, children } = props;
     const { setMarginsDisabled } = useBaseAppContext();
     React.useEffect(() => {
@@ -25,4 +25,4 @@ export const FormPage: React.FC<FormPageProps> = (props) => {
     return children;
 };
 
-export default FormPage;
+export default DetailPage;

@@ -8,11 +8,12 @@ import {
     useGridSelector,
     gridPageSelector,
     gridPageSizeSelector,
-    selectedGridRowsCountSelector,
+    gridRowSelectionCountSelector,
     GridRowSelectionModel,
-} from '@mui/x-data-grid';
+} from '@mui/x-data-grid-pro';
 import Pagination from '@mui/material/Pagination';
 import { useBaseAppContext } from '../../BaseAppContext';
+import { DEFAULT_ROW_SELECTION } from './DataGridContext';
 
 type DataGridFooterSelectionProps = {
     setRowSelectionModel: (rowSelectionModel: GridRowSelectionModel) => void;
@@ -33,9 +34,9 @@ const DataGridFooterSelection: React.FC<DataGridFooterSelectionProps> = (props) 
     const { setRowSelectionModel } = props;
     const { t } = useBaseAppContext();
     const apiRef = useGridApiContext();
-    const selectedRowCount = useGridSelector(apiRef, selectedGridRowsCountSelector);
+    const selectedRowCount = useGridSelector(apiRef, gridRowSelectionCountSelector);
     const handleClearClick = () => {
-        setRowSelectionModel([]);
+        setRowSelectionModel(DEFAULT_ROW_SELECTION);
     }
     const selectedMessage = selectedRowCount > 1 ? t('grid.selection.multiple', { count: selectedRowCount }) : t('grid.selection.one');
     return <Box sx={{ ml: 2 }}>

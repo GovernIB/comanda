@@ -29,6 +29,7 @@ export type FormDialogShowArgs = {
     formComponentProps?: any;
 };
 export type FormDialogShowFn = (id: any, args?: FormDialogShowArgs) => Promise<any>;
+export type FormDialogCloseFn = () => void;
 export type UseFormDialogFn = (
     resourceName: string,
     resourceType?: ResourceType,
@@ -38,7 +39,8 @@ export type UseFormDialogFn = (
     customSubmitErrorMessage?: string,
     defaultFormContent?: React.ReactNode,
     defaultDialogComponentProps?: any,
-    defaultFormComponentProps?: any) => [FormDialogShowFn, React.ReactElement];
+    defaultFormComponentProps?: any,
+    closeFn?: (reason?: string) => boolean) => [FormDialogShowFn, React.ReactElement, FormDialogCloseFn];
 
 export const useFormDialog: UseFormDialogFn = (
     resourceName: string,
@@ -49,16 +51,18 @@ export const useFormDialog: UseFormDialogFn = (
     customSubmitErrorMessage?: string,
     defaultFormContent?: React.ReactNode,
     defaultDialogComponentProps?: any,
-    defaultFormComponentProps?: any) => {
+    defaultFormComponentProps?: any,
+    closeFn?: (reason?: string) => boolean) => {
     const formApiRef = React.useRef<FormApi | any>({});
     const formDialogButtons = useFormDialogButtons();
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string | null>();
     const [id, setId] = React.useState<any>();
     const [additionalData, setAdditionalData] = React.useState<any>();
-    const [initOnChangeRequest, setInitOnChangeRequest] = React.useState<boolean>();
     const [dialogComponentProps, setDialogComponentProps] = React.useState<any>(defaultDialogComponentProps);
-    const [formComponentProps, setFormComponentProps] = React.useState<any>(defaultFormComponentProps);
+    const {initOnChangeRequestProp, ...otherFormComponentProps} = defaultFormComponentProps ?? {};
+    const [initOnChangeRequest, setInitOnChangeRequest] = React.useState<boolean>(initOnChangeRequestProp);
+    const [formComponentProps, setFormComponentProps] = React.useState<any>(otherFormComponentProps);
     const [resolveFn, setResolveFn] = React.useState<(value?: any) => void>();
     const [rejectFn, setRejectFn] = React.useState<(value: any) => void>();
     const [formContent, setFormContent] = React.useState<React.ReactNode | undefined>(defaultFormContent);
@@ -110,11 +114,15 @@ export const useFormDialog: UseFormDialogFn = (
             setOpen(false);
         }
     }
-    const closeCallback = () => {
-        // S'ha tancat la modal amb la 'X' o s'ha fet click a fora de la finestra
-        rejectFn?.(undefined);
-        setOpen(false);
+    const closeCallback = (reason: string) => {
+        // S'ha tancat la modal amb la 'x' o s'ha fet click a fora de la finestra
+        const doClose = closeFn != null ? closeFn(reason) : true;
+        if (doClose) {
+            rejectFn?.(undefined);
+            setOpen(false);
+        }
     }
+    const close = () => setOpen(false);
     const dialogComponent = <FormDialog
         resourceName={resourceName}
         resourceType={resourceType}
@@ -133,7 +141,7 @@ export const useFormDialog: UseFormDialogFn = (
         noForm={submitReturnedContent != null}>
         {submitReturnedContent ?? formContent}
     </FormDialog>;
-    return [show, dialogComponent];
+    return [show, dialogComponent, close];
 }
 
 export const FormDialog: React.FC<FormDialogProps> = (props) => {

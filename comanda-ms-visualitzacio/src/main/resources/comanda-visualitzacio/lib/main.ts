@@ -1,5 +1,6 @@
 export { AuthContext, useAuthContext } from './components/AuthContext';
 export { AuthProvider as KeycloakAuthProvider } from './components/KeycloakAuthProvider';
+export { AuthProvider as OidcAuthProvider } from './components/OidcAuthProvider';
 export { ResourceApiContext, useResourceApiContext } from './components/ResourceApiContext';
 export { ResourceApiProvider, useResourceApiService } from './components/ResourceApiProvider';
 export { BaseAppContext, useBaseAppContext } from './components/BaseAppContext';
@@ -16,6 +17,7 @@ export { MuiBaseApp } from './components/mui/MuiBaseApp';
 export { BasePage } from './components/BasePage';
 export { GridPage } from './components/GridPage';
 export { FormPage } from './components/FormPage';
+export { DetailPage } from './components/DetailPage';
 
 export { MuiDataGrid, MuiDataGrid as MuiGrid, useMuiDataGridApiRef, useMuiDataGridApiContext } from './components/mui/datagrid/MuiDataGrid';
 export { MuiDataList } from './components/mui/datalist/MuiDataList';
@@ -34,6 +36,10 @@ export { useFormApiRef, useFormApiContext } from './components/form/Form';
 export { useFilterContext } from './components/form/FilterContext';
 export { useFilterApiRef, useFilterApiContext } from './components/form/Filter';
 
+export { MuiDetail } from './components/mui/detail/MuiDetail';
+export { DetailField } from './components/detail/DetailField';
+export { useDetailContext } from './components/detail/DetailContext';
+
 export { Toolbar } from './components/mui/Toolbar';
 export { TextAvatar, IconAvatar } from './components/mui/Avatars';
 
@@ -42,6 +48,8 @@ export { numberFormat, numberFormatCurrency } from './util/numberFormat';
 export { dateFormatLocale, timeFormatLocale, isoDateToDate, isoDateTimeToDate } from './util/dateFormat';
 export { parseIsoDuration } from './util/durationFormat';
 export { toolbarBackgroundStyle } from './util/toolbar';
+export { toAbsolutePath } from './util/url';
+export { toBase64 } from './util/files';
 export * as springFilterBuilder from './util/springFilterBuilder';
 
 export type { MenuEntry } from './components/mui/Menu';

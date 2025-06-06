@@ -1,19 +1,32 @@
 import React from 'react';
 import { useBaseAppContext } from './BaseAppContext';
 
+/**
+ * Propietats del component GridPage.
+ */
 type GridPageProps = React.PropsWithChildren & {
+    /** Indica que s'han de desactivar els marges */
     disableMargins?: true;
+    /** Estils addicionals per l'element contenidor */
     style?: React.CSSProperties;
 };
 
+/**
+ * Pàgina que conté un element de graella de dades.
+ *
+ * @param props - Propietats del component.
+ * @returns Element JSX de la pàgina.
+ */
 export const GridPage: React.FC<GridPageProps> = (props) => {
     const { disableMargins = false, style, children } = props;
     const {
         setMarginsDisabled,
         contentExpandsToAvailableHeight,
-        setContentExpandsToAvailableHeight
+        setContentExpandsToAvailableHeight,
     } = useBaseAppContext();
-    const [proceed, setProceed] = React.useState<boolean>(contentExpandsToAvailableHeight);
+    const [proceed, setProceed] = React.useState<boolean>(
+        contentExpandsToAvailableHeight
+    );
     React.useEffect(() => {
         if (!proceed && contentExpandsToAvailableHeight) {
             setProceed(true);
@@ -27,14 +40,17 @@ export const GridPage: React.FC<GridPageProps> = (props) => {
         setContentExpandsToAvailableHeight(true);
         return () => setContentExpandsToAvailableHeight(false);
     }, []);
-    return <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        ...style
-    }}>
-        {proceed && children}
-    </div>;
-}
+    return (
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                ...style,
+            }}>
+            {proceed && children}
+        </div>
+    );
+};
 
 export default GridPage;

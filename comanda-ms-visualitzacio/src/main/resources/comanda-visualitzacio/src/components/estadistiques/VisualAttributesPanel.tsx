@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import {styled, useTheme} from '@mui/material/styles';
 import {FormField, useFormContext} from 'reactlib';
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import IconAutocompleteSelect from "../IconAutocompleteSelect.tsx";
 
 // Define the props for the VisualAttributesPanel component

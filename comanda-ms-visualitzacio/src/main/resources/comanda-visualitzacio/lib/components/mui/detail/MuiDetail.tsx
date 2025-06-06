@@ -1,52 +1,38 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import { Form, FormProps, useFormApiContext } from '../../form/Form';
+import { Detail, DetailProps } from '../../detail/Detail';
 import { useBaseAppContext } from '../../BaseAppContext';
-import { useFormContext } from '../../form/FormContext';
 import { ReactElementWithPosition } from '../../../util/reactNodePosition';
 import { toToolbarIcon } from '../ToolbarIcon';
 import { Toolbar } from '../Toolbar';
 
 /**
- * Propietats del component MuiForm (també conté les propietats del component Form).
+ * Propietats del component MuiDetail (també conté les propietats del component Detail).
  */
-export type MuiFormProps = FormProps & {
+export type MuiDetailProps = DetailProps & {
     /** Elements addicionals (amb la seva posició) per a la barra d'eines */
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     /** Indica si la barra d'eines està oculta */
     hiddenToolbar?: true;
     /** Indica si el botó de retrocedir ha d'estar ocult */
     hiddenBackButton?: true;
-    /** Indica si el botó de restablir els valors ha d'estar ocult */
-    hiddenRevertButton?: true;
-    /** Indica si el botó de desar ha d'estar ocult */
-    hiddenSaveButton?: true;
-    /** Indica si el botó d'esborrar ha d'estar ocult */
-    hiddenDeleteButton?: true;
-    /** Propietats del component del formulari */
+    /** Propietats del component del detall */
     componentProps?: any;
 };
 
-const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
+const MuiDetailContent: React.FC<React.PropsWithChildren | any> = (props) => {
     const {
-        id,
         title,
         resourceName,
         toolbarElementsWithPositions,
         goBackLink,
         hiddenToolbar,
         hiddenBackButton,
-        hiddenRevertButton,
-        hiddenSaveButton,
-        hiddenDeleteButton,
         componentProps,
         children,
     } = props;
-    const formApiRef = useFormApiContext();
     const { t, goBack, anyHistoryEntryExist, contentExpandsToAvailableHeight } =
         useBaseAppContext();
-    const { modified, isSaveActionPresent, isDeleteActionPresent } =
-        useFormContext();
     const backButtonDisabled = !anyHistoryEntryExist() && !goBackLink;
     const toolbarNodes: ReactElementWithPosition[] = [];
     !hiddenBackButton &&
@@ -60,36 +46,6 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
             }),
         });
     toolbarNodes.push(...(toolbarElementsWithPositions ?? []));
-    !hiddenRevertButton &&
-        isSaveActionPresent &&
-        toolbarNodes.push({
-            position: 2,
-            element: toToolbarIcon('undo', {
-                title: t('form.revert.title'),
-                onClick: () => formApiRef.current?.revert(),
-                disabled: !modified,
-            }),
-        });
-    !hiddenSaveButton &&
-        isSaveActionPresent &&
-        toolbarNodes.push({
-            position: 2,
-            element: toToolbarIcon('save', {
-                title: t(
-                    id != null ? 'form.update.title' : 'form.create.title'
-                ),
-                onClick: () => formApiRef.current?.save(),
-            }),
-        });
-    !hiddenDeleteButton &&
-        isDeleteActionPresent &&
-        toolbarNodes.push({
-            position: 2,
-            element: toToolbarIcon('delete', {
-                title: t('form.delete.title'),
-                onClick: () => formApiRef.current?.delete(),
-            }),
-        });
     const outerBoxStyles = contentExpandsToAvailableHeight
         ? { display: 'flex', flexDirection: 'column', height: '100%' }
         : undefined;
@@ -119,43 +75,35 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
 };
 
 /**
- * Component de formulari per a la llibreria MUI.
+ * Component de detall per a la llibreria MUI.
  *
  * @param props - Propietats del component.
- * @returns Element JSX del formulari.
+ * @returns Element JSX del detall.
  */
-export const MuiForm: React.FC<MuiFormProps> = (props) => {
+export const MuiDetail: React.FC<MuiDetailProps> = (props) => {
     const {
-        id,
         title,
         resourceName,
         toolbarElementsWithPositions,
         goBackLink,
         hiddenToolbar,
         hiddenBackButton,
-        hiddenRevertButton,
-        hiddenSaveButton,
-        hiddenDeleteButton,
         componentProps,
         children,
     } = props;
     return (
-        <Form {...props}>
-            <MuiFormContent
-                id={id}
+        <Detail {...props}>
+            <MuiDetailContent
                 title={title}
                 resourceName={resourceName}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 goBackLink={goBackLink}
                 hiddenToolbar={hiddenToolbar}
                 hiddenBackButton={hiddenBackButton}
-                hiddenRevertButton={hiddenRevertButton}
-                hiddenSaveButton={hiddenSaveButton}
-                hiddenDeleteButton={hiddenDeleteButton}
                 componentProps={componentProps}>
                 {children}
-            </MuiFormContent>
-        </Form>
+            </MuiDetailContent>
+        </Detail>
     );
 };
-export default MuiForm;
+export default MuiDetail;

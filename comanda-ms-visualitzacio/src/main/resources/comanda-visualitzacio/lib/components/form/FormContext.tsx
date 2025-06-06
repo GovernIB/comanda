@@ -12,7 +12,10 @@ export type FormApi = {
     save: () => Promise<any>;
     delete: () => void;
     setFieldValue: (name: string, value: any) => void;
-    handleSubmissionErrors: (error: ResourceApiError, temporalMessageTitle?: string) => void;
+    handleSubmissionErrors: (
+        error: ResourceApiError,
+        temporalMessageTitle?: string
+    ) => void;
 };
 
 export type FormApiRef = React.MutableRefObject<FormApi | undefined>;
@@ -20,7 +23,7 @@ export type FormApiRef = React.MutableRefObject<FormApi | undefined>;
 export enum FormFieldDataActionType {
     RESET = 'RESET',
     FIELD_CHANGE = 'FIELD_CHANGE',
-};
+}
 
 export type FormFieldDataActionPayload = {
     field: any;
@@ -47,7 +50,7 @@ export type FormContextType = {
     fields?: any[];
     fieldErrors?: FormFieldError[];
     fieldTypeMap?: Map<string, string>;
-    inline?: boolean;
+    inline?: true;
     data?: any;
     modified: boolean;
     apiRef: FormApiRef;
@@ -62,7 +65,9 @@ export type FormFieldError = {
     message: string;
 };
 
-export const FormContext = React.createContext<FormContextType | undefined>(undefined);
+export const FormContext = React.createContext<FormContextType | undefined>(
+    undefined
+);
 
 export const useFormContext = () => {
     const context = React.useContext(FormContext);
@@ -70,10 +75,10 @@ export const useFormContext = () => {
         throw new Error('useFormContext must be used within a FormProvider');
     }
     return context;
-}
+};
 
 export const useOptionalFormContext = (): FormContextType | undefined => {
     return React.useContext(FormContext);
-}
+};
 
 export default FormContext;

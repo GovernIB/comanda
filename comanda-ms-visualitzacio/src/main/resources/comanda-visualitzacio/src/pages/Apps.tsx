@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { GridPage, FormPage, MuiGrid, MuiForm, FormField, MuiFormTabContent, useFormContext, springFilterBuilder } from 'reactlib';
 import { Box, Tab, Tabs } from '@mui/material';
 

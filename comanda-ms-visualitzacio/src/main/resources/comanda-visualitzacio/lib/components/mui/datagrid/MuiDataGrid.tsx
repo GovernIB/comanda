@@ -22,11 +22,18 @@ import useLogConsole from '../../../util/useLogConsole';
 import { formattedFieldValue, isFieldNumericType } from '../../../util/fields';
 import {
     ReactElementWithPosition,
-    joinReactElementsWithPositionWithReactElementsWithPositions
+    joinReactElementsWithPositionWithReactElementsWithPositions,
 } from '../../../util/reactNodePosition';
-import { useResourceApiContext, ResourceType, ExportFileType } from '../../ResourceApiContext';
+import {
+    useResourceApiContext,
+    ResourceType,
+    ExportFileType,
+} from '../../ResourceApiContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
-import { toDataGridActionItem, DataGridActionItemOnClickFn } from './DataGridActionItem';
+import {
+    toDataGridActionItem,
+    DataGridActionItemOnClickFn,
+} from './DataGridActionItem';
 import {
     useApiDataCommon,
     useDataCommonEditable,
@@ -40,95 +47,193 @@ import DataGridRow from './DataGridRow';
 import DataGridFooter from './DataGridFooter';
 import DataGridNoRowsOverlay from './DataGridNoRowsOverlay';
 import DataGridCustomStyle from './DataGridCustomStyle';
-import DataGridContext, { MuiDataGridApi, MuiDataGridApiRef, useDataGridContext } from './DataGridContext';
+import DataGridContext, {
+    MuiDataGridApi,
+    MuiDataGridApiRef,
+    useDataGridContext,
+    DEFAULT_ROW_SELECTION,
+} from './DataGridContext';
 
 export const LOG_PREFIX = 'GRID';
 
+/**
+ * Propietats de les columnes del component MuiDataGrid (també conté totes les propietats de les columnes del DataGrid de MUI).
+ */
 export type MuiDataGridColDef = GridColDef & {
+    /** Nom del camp */
+    field: string;
+    /** Tipus del camp (sobreescriu el tipus del camp retornat pel backend) */
     fieldType?: string;
+    /** Indica si el camp és de tipus divisa */
     currencyType?: boolean;
+    /** Codi ISO per a mostrar el símbol de la moneda */
     currencyCode?: string | ((row: any) => string);
+    /** Indica el nombre de llocs decimals que s'han de mostrar (només per a tipus divisa) */
     currencyDecimalPlaces?: number | ((row: any) => number);
+    /** Indica el codi ISO del locale per a mostrar la divisa */
     currencyLocale?: string | ((row: any) => string);
+    /** Indica el nombre de llocs decimals que s'han de mostrar (només per a tipus numèrics) */
     decimalPlaces?: number | ((row: any) => number);
+    /** Indica que no s'ha de mostrar l'hora (només per a tipus data) */
     noTime?: boolean;
+    /** Indica que no s'ha de mostrar els segons (només per a tipus data) */
     noSeconds?: boolean;
+    /** Indica que aquesta columna no s'ha d'incloure a l'exportació */
     exportExcluded?: boolean;
-};
+} & Omit<GridColDef, 'field'>;
 
+/**
+ * Propietats del component MuiDataGrid (també conté totes les propietats del DataGrid de MUI).
+ */
 export type MuiDataGridProps = {
+    /** Títol que es mostrarà a la barra d'eines */
     title?: string;
+    /** Indica si s'ha de mostrar o no el títol a la barra d'eines */
     titleDisabled?: true;
+    /** Subtítol que es mostrarà a la barra d'eines */
     subtitle?: string;
+    /** Nom del recurs de l'API REST que es consultarà per a obtenir la informació que es mostrarà a la graella */
     resourceName: string;
+    /** Tipus de l'artefacte associat al recurs (aquest atribut només s'ha d'emplenar si volem consultar informació del camp associat al recurs d'un artefacte) */
     resourceType?: ResourceType;
+    /** Codi de l'artefacte associat al recurs (aquest atribut només s'ha d'emplenar si volem consultar informació del camp associat al recurs d'un artefacte) */
     resourceTypeCode?: string;
+    /** Nom del camp de l'artefacte associat al recurs (aquest atribut només s'ha d'emplenar si volem consultar informació del camp associat al recurs d'un artefacte) */
     resourceFieldName?: string;
+    /** Configuració de les columnes de la graella  */
     columns: MuiDataGridColDef[];
-    readOnly?: boolean;
-    findDisabled?: boolean;
-    paginationActive?: boolean;
-    selectionActive?: boolean;
+    /** Indica si la graella és de només lectura (no es permeten modificacions) */
+    readOnly?: true;
+    /** Desactiva les peticions automàtiques al backend per a obtenir la informació a mostrar a la graella */
+    findDisabled?: true;
+    /** Activa la paginació */
+    paginationActive?: true;
+    /** Activa la selecció de files */
+    selectionActive?: true;
+    /** Ordenació que s'ha d'aplicar al consulta la informació al backend */
     sortModel?: GridSortModel;
+    /** Ordenació que s'aplicarà sempre en les consultes d'informació al backend (deshabilita sortModel) */
     staticSortModel?: GridSortModel;
+    /** Valor inicial pel filtre ràpid */
     quickFilterInitialValue?: string;
+    /** Indica si el camp de filtre ràpid ha de tenir el focus quan es crei el component */
     quickFilterSetFocus?: true;
+    /** Indica si el camp de filtre ràpid ha d'ocupar el 100% de l'espai horitzontal disponible */
     quickFilterFullWidth?: true;
+    /** Filtre en format Spring Filter que s'enviarà en les consultes d'informació al backend */
     filter?: string;
+    /** Filtre en format Spring Filter  que s'aplicarà sempre en les consultes d'informació al backend (deshabilita filter) */
     staticFilter?: string;
+    /** Consultes per nom que s'enviaran en les consultes d'informació al backend */
     namedQueries?: string[];
+    /** Perspectives que s'enviaran en les consultes d'informació al backend */
     perspectives?: string[];
+    /** Format de fitxer que s'enviarà com a paràmetre al fer la petició d'exportació d'informació al backend */
     exportFileType?: ExportFileType;
+    /** Dades addicionals pel formulari de creació o modificació d'una fila de la graella */
     formAdditionalData?: ((row: any, action: string) => any) | any;
+    /** Files addicionals per a la vista en arbre (si la vista d'arbre no està activa aquest atribut s'ignorarà) */
     treeDataAdditionalRows?: any[] | ((rows: any[]) => any[]);
+    /** Tipus de barra d'eines que es mostrarà a la part superior */
     toolbarType?: DataToolbarType;
+    /** Oculta la barra d'eines de la part superior */
     toolbarHide?: true;
+    /** Oculta el botó d'exportació de la barra d'eines */
     toolbarHideExport?: false;
+    /** Oculta el botó de creació de la barra d'eines */
     toolbarHideCreate?: true;
+    /** Oculta el botó de refresc de la barra d'eines */
     toolbarHideRefresh?: true;
+    /** Oculta el camp de filtre ràpid de la barra d'eines */
     toolbarHideQuickFilter?: true;
+    /** Adreça que s'ha de mostrar al fer clic sobre el botó de crear una nova fila */
     toolbarCreateLink?: string;
+    /** Elements addicionals (amb la seva posició) per a la barra d'eines */
     toolbarElementsWithPositions?: ReactElementWithPosition[];
+    /** Element que es col·locarà just a davall la barra d'eines */
     toolbarAdditionalRow?: React.ReactElement;
+    /** Adreça que s'ha de mostrar al fer clic sobre una fila de la graella (només es permet fer clic sobre les files si s'especifica algun valor) */
     rowLink?: string;
+    /** Adreça que s'ha de mostrar al fer clic sobre el botó per a mostrar els detalls d'una fila (només en mode només lectura) */
     rowDetailLink?: string;
+    /** Adreça que s'ha de mostrar al fer clic sobre el botó de modificar una fila */
     rowUpdateLink?: string;
+    /** Deshabilita el botó d'actualització de cada fila (por ser també una funció que reb la fila i retorna true/false) */
     rowDisableUpdateButton?: boolean | ((row: any) => boolean);
+    /** Deshabilita el botó d'esborrar de cada fila (por ser també una funció que reb la fila i retorna true/false) */
     rowDisableDeleteButton?: boolean | ((row: any) => boolean);
+    /** Deshabilita el botó de detalls de cada fila (por ser també una funció que reb la fila i retorna true/false) */
     rowDisableDetailsButton?: boolean | ((row: any) => boolean);
+    /** Oculta el botó de modificació de cada fila (por ser també una funció que reb la fila i retorna true/false) */
     rowHideUpdateButton?: boolean | ((row: any) => boolean);
+    /** Oculta el botó d'esborrar de cada fila (por ser també una funció que reb la fila i retorna true/false) */
     rowHideDeleteButton?: boolean | ((row: any) => boolean);
+    /** Oculta el botó de detalls de cada fila (por ser també una funció que reb la fila i retorna true/false) */
     rowHideDetailsButton?: boolean | ((row: any) => boolean);
+    /** Propietats addicionals per a la columna d'accions de la graella */
     rowActionsColumnProps?: any;
+    /** Accions addicionals per a cada fila */
     rowAdditionalActions?: DataCommonAdditionalAction[];
-    rowSelectionModel?: GridRowSelectionModel,
+    /** Model amb les files seleccionades */
+    rowSelectionModel?: GridRowSelectionModel;
+    /** Indica que la creació i modificació amb finestra emergent està activa */
     popupEditActive?: boolean;
+    /** Indica que només la creació amb finestra emergent està activa */
     popupEditCreateActive?: boolean;
+    /** Indica que només la modificació amb finestra emergent està activa */
     popupEditUpdateActive?: boolean;
+    /** Contingut (camps) del formulari de creació / modificació */
     popupEditFormContent?: React.ReactElement;
+    /** Títol per la finestra emergent */
     popupEditFormDialogTitle?: string;
+    /** Nom del recurs per la finestra emergent (s'afegeix al títol per defecte) */
     popupEditFormDialogResourceTitle?: string;
+    /** Propietats pel component Dialog de la finestra emergent */
     popupEditFormDialogComponentProps?: any;
+    /** Propietats pel component Form de la finestra emergent */
+    popupEditFormComponentProps?: any;
+    /** Event que es llença quan hi ha canvis en les files que mostra la graella */
     onRowsChange?: (rows: GridRowsProp, pageInfo: any) => void;
-    onRowOrderChange?: GridEventListener<"rowOrderChange">;
-    onRowSelectionModelChange?: (rowSelectionModel: GridRowSelectionModel, details: GridCallbackDetails) => void;
+    /** Event que es llença quan hi ha canvis en l'ordenació de la graella */
+    onRowOrderChange?: GridEventListener<'rowOrderChange'>;
+    /** Event que es llença quan hi ha canvis en les files seleccionades de la graella */
+    onRowSelectionModelChange?: (
+        rowSelectionModel: GridRowSelectionModel,
+        details: GridCallbackDetails
+    ) => void;
+    /** Referència a l'api del component */
     apiRef?: MuiDataGridApiRef;
+    /** Referència a l'api interna del component DataGrid de MUI */
     datagridApiRef?: React.MutableRefObject<GridApiPro>;
+    /** Alçada del component en píxels */
     height?: number;
+    /** Indica si l'alçada del component s'ha d'ajustar al nombre de files que s'han de mostrar */
     autoHeight?: true;
+    /** Indica que les files parells s'han de mostrar d'un color més oscur per a facilitar la seva lectura */
     striped?: true;
+    /** Indica que només s'han de mostrar les vores horitzontals de la graella */
     semiBordered?: true;
+    /** Estils addicionals pel contenidor de la graella */
     sx?: any;
-    debug?: boolean;
+    /** Indica si s'han d'imprimir a la consola missatges de depuració */
+    debug?: true;
 } & Omit<DataGridProps, 'apiRef'>;
 
-const rowLinkFind = (rowLink: string | undefined, rowLinks: any[] | undefined) => {
+const rowLinkFind = (
+    rowLink: string | undefined,
+    rowLinks: any[] | undefined
+) => {
     if (rowLink != null) {
         const isNegative = rowLink != null && rowLink.startsWith('!');
-        return isNegative ? rowLinks?.[(rowLink.substring(1) as any)] : rowLinks?.[(rowLink as any)];
+        return isNegative
+            ? rowLinks?.[rowLink.substring(1) as any]
+            : rowLinks?.[rowLink as any];
     }
-}
-const rowLinkShowCheck = (rowLink: string | undefined, rowLinks: any[] | undefined) => {
+};
+const rowLinkShowCheck = (
+    rowLink: string | undefined,
+    rowLinks: any[] | undefined
+) => {
     const found = rowLinkFind(rowLink, rowLinks);
     if (found) {
         const isNegative = rowLink != null && rowLink.startsWith('!');
@@ -136,21 +241,32 @@ const rowLinkShowCheck = (rowLink: string | undefined, rowLinks: any[] | undefin
     } else {
         return true;
     }
-}
-const rowArtifactShowCheck = (action: string | undefined, report: string | undefined, artifacts: any[] | undefined) => {
+};
+const rowArtifactShowCheck = (
+    action: string | undefined,
+    report: string | undefined,
+    artifacts: any[] | undefined
+) => {
     if (action != null) {
-        return artifacts?.find(a => a.type === 'ACTION' && a.code === action) != null;
+        return (
+            artifacts?.find((a) => a.type === 'ACTION' && a.code === action) !=
+            null
+        );
     } else if (report != null) {
-        return artifacts?.find(a => a.type === 'REPORT' && a.code === report) != null;
+        return (
+            artifacts?.find((a) => a.type === 'REPORT' && a.code === report) !=
+            null
+        );
     } else {
         return true;
     }
-}
+};
 const getRowActionOnClick = (
     rowAction: DataCommonAdditionalAction,
     showCreateDialog: DataCommonShowCreateDialogFn,
     showUpdateDialog: DataCommonShowUpdateDialogFn,
-    triggerDelete: DataCommonTriggerDeleteFn): DataGridActionItemOnClickFn | undefined => {
+    triggerDelete: DataCommonTriggerDeleteFn
+): DataGridActionItemOnClickFn | undefined => {
     if (rowAction.clickShowCreateDialog) {
         return (_id, row) => showCreateDialog(row);
     } else if (rowAction.clickShowUpdateDialog) {
@@ -160,7 +276,7 @@ const getRowActionOnClick = (
     } else {
         return rowAction.onClick;
     }
-}
+};
 
 const rowActionsToGridActionsCellItems = (
     rowActions: DataCommonAdditionalAction[],
@@ -169,32 +285,67 @@ const rowActionsToGridActionsCellItems = (
     showUpdateDialog: DataCommonShowUpdateDialogFn,
     triggerDelete: DataCommonTriggerDeleteFn,
     artifacts: any[] | undefined,
-    forceDisabled?: boolean): React.ReactElement[] => {
+    forceDisabled?: boolean
+): React.ReactElement[] => {
     const actions: React.ReactElement[] = [];
     rowActions.forEach((rowAction: DataCommonAdditionalAction) => {
         const rowLink = rowLinkFind(rowAction.rowLink, params.row['_actions']);
-        const rowLinkShow = rowLinkShowCheck(rowAction.rowLink, params.row['_actions']);
-        const rowArtifactShow = rowArtifactShowCheck(rowAction.action, rowAction.report, artifacts);
-        const rowActionLinkTo = (typeof rowAction.linkTo === 'function') ? rowAction.linkTo?.(params.row) : rowAction.linkTo?.replace('{{id}}', '' + params.id);
-        const rowActionLinkState = (typeof rowAction.linkState === 'function') ? rowAction.linkState?.(params.row) : rowAction.linkState;
-        const rowActionOnClick = getRowActionOnClick(rowAction, showCreateDialog, showUpdateDialog, triggerDelete);
-        const showInMenu = (typeof rowAction.showInMenu === 'function') ? rowAction.showInMenu(params.row) : rowAction.showInMenu;
-        const disabled = forceDisabled || ((typeof rowAction.disabled === 'function') ? rowAction.disabled(params.row) : rowAction.disabled);
-        const hidden = (typeof rowAction.hidden === 'function') ? rowAction.hidden(params.row) : rowAction.hidden;
-        rowLinkShow && rowArtifactShow && !hidden && actions.push(
-            toDataGridActionItem(
-                params.id,
-                rowAction.title ?? (rowLink != null ? rowLink?.title : rowAction),
-                params.row,
-                rowAction.icon,
-                rowActionLinkTo,
-                rowActionLinkState,
-                rowActionOnClick,
-                showInMenu,
-                disabled));
+        const rowLinkShow = rowLinkShowCheck(
+            rowAction.rowLink,
+            params.row['_actions']
+        );
+        const rowArtifactShow = rowArtifactShowCheck(
+            rowAction.action,
+            rowAction.report,
+            artifacts
+        );
+        const rowActionLinkTo =
+            typeof rowAction.linkTo === 'function'
+                ? rowAction.linkTo?.(params.row)
+                : rowAction.linkTo?.replace('{{id}}', '' + params.id);
+        const rowActionLinkState =
+            typeof rowAction.linkState === 'function'
+                ? rowAction.linkState?.(params.row)
+                : rowAction.linkState;
+        const rowActionOnClick = getRowActionOnClick(
+            rowAction,
+            showCreateDialog,
+            showUpdateDialog,
+            triggerDelete
+        );
+        const showInMenu =
+            typeof rowAction.showInMenu === 'function'
+                ? rowAction.showInMenu(params.row)
+                : rowAction.showInMenu;
+        const disabled =
+            forceDisabled ||
+            (typeof rowAction.disabled === 'function'
+                ? rowAction.disabled(params.row)
+                : rowAction.disabled);
+        const hidden =
+            typeof rowAction.hidden === 'function'
+                ? rowAction.hidden(params.row)
+                : rowAction.hidden;
+        rowLinkShow &&
+            rowArtifactShow &&
+            !hidden &&
+            actions.push(
+                toDataGridActionItem(
+                    params.id,
+                    rowAction.title ??
+                        (rowLink != null ? rowLink?.title : rowAction),
+                    params.row,
+                    rowAction.icon,
+                    rowActionLinkTo,
+                    rowActionLinkState,
+                    rowActionOnClick,
+                    showInMenu,
+                    disabled
+                )
+            );
     });
     return actions;
-}
+};
 
 const useGridColumns = (
     columns: MuiDataGridColDef[],
@@ -206,17 +357,26 @@ const useGridColumns = (
     showUpdateDialog: DataCommonShowUpdateDialogFn,
     triggerDelete: DataCommonTriggerDeleteFn,
     artifacts: any[] | undefined,
-    rowModesModel?: GridRowModesModel) => {
+    rowModesModel?: GridRowModesModel
+) => {
     const { currentLanguage } = useResourceApiContext();
     const processedColumns = React.useMemo(() => {
-        const processedColumns: MuiDataGridColDef[] = columns.map(c => {
-            const field = fields?.find(f => f.name === c.field);
+        const processedColumns: MuiDataGridColDef[] = columns.map((c) => {
+            const field = fields?.find((f) => f.name === c.field);
             const isNumericType = isFieldNumericType(field, c.fieldType);
             const isCurrencyType = c.currencyType;
             return {
                 valueGetter: (value: any, row: any, column: GridColDef) => {
                     if (column.field?.includes('.')) {
-                        const value = column.field.split('.').reduce((o: any, x: string) => (typeof o == 'undefined' || o === null) ? o : o[x], row);
+                        const value = column.field
+                            .split('.')
+                            .reduce(
+                                (o: any, x: string) =>
+                                    typeof o == 'undefined' || o === null
+                                        ? o
+                                        : o[x],
+                                row
+                            );
                         return value;
                     } else {
                         return value;
@@ -224,9 +384,7 @@ const useGridColumns = (
                 },
                 valueFormatter: (value: never, row: any) => {
                     const cany: any = c;
-                    const formattedValue = formattedFieldValue(
-                        value,
-                        field, {
+                    const formattedValue = formattedFieldValue(value, field, {
                         type: isCurrencyType ? 'currency' : c.fieldType,
                         currentLanguage,
                         currencyCode: cany['currencyCode'],
@@ -252,8 +410,14 @@ const useGridColumns = (
                 field: ' ',
                 type: 'actions',
                 getActions: (params: GridRowParams) => {
-                    const anyRowInEditMode = rowModesModel && Object.keys(rowModesModel).filter(m => rowModesModel[m].mode === GridRowModes.Edit).length > 0;
-                    const isEditMode = rowModesModel && rowModesModel[params.id]?.mode === GridRowModes.Edit;
+                    const anyRowInEditMode =
+                        rowModesModel &&
+                        Object.keys(rowModesModel).filter(
+                            (m) => rowModesModel[m].mode === GridRowModes.Edit
+                        ).length > 0;
+                    const isEditMode =
+                        rowModesModel &&
+                        rowModesModel[params.id]?.mode === GridRowModes.Edit;
                     return rowActionsToGridActionsCellItems(
                         isEditMode ? rowEditActions : rowActions,
                         params,
@@ -261,7 +425,8 @@ const useGridColumns = (
                         showUpdateDialog,
                         triggerDelete,
                         artifacts,
-                        anyRowInEditMode && !isEditMode);
+                        anyRowInEditMode && !isEditMode
+                    );
                 },
                 ...rowActionsColumnProps,
             });
@@ -269,18 +434,35 @@ const useGridColumns = (
         return processedColumns;
     }, [columns, fields, rowModesModel, artifacts]);
     return processedColumns;
-}
-
-export const useMuiDataGridApiRef: () => React.MutableRefObject<MuiDataGridApi> = () => {
-    const gridApiRef = React.useRef<MuiDataGridApi | any>({});
-    return gridApiRef;
 };
 
+/**
+ * Hook per a accedir a l'API de MuiDataGrid des de fora del context del component.
+ *
+ * @returns referència a l'API del component MuiDataGrid.
+ */
+export const useMuiDataGridApiRef: () => React.MutableRefObject<MuiDataGridApi> =
+    () => {
+        const gridApiRef = React.useRef<MuiDataGridApi | any>({});
+        return gridApiRef;
+    };
+
+/**
+ * Hook per a accedir a l'API de MuiDataGrid des de dins el context del component.
+ *
+ * @returns referència a l'API del component MuiDataGrid.
+ */
 export const useMuiDataGridApiContext: () => MuiDataGridApiRef = () => {
     const gridContext = useDataGridContext();
     return gridContext.apiRef;
 };
 
+/**
+ * Graella per a visualitzar dades provinents d'una API REST basada en Base-Boot.
+ *
+ * @param props - Propietats del component.
+ * @returns Element JSX de la graella.
+ */
 export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
     const {
         title,
@@ -327,7 +509,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         rowHideDetailsButton,
         rowActionsColumnProps,
         rowAdditionalActions = [],
-        rowSelectionModel: rowSelectionModelProp = [],
+        rowSelectionModel: rowSelectionModelProp = DEFAULT_ROW_SELECTION,
         popupEditActive,
         popupEditCreateActive,
         popupEditUpdateActive,
@@ -335,6 +517,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
         popupEditFormDialogComponentProps,
+        popupEditFormComponentProps,
         onRowClick,
         onRowsChange,
         onRowOrderChange,
@@ -351,13 +534,27 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
     } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
     const datagridApiRef = useMuiDatagridApiRef();
-    const anyArtifactRowAction = rowAdditionalActions?.find(a => a.action != null || a.report != null) != null;
-    const treeDataAdditionalRowsIsFunction = treeDataAdditionalRows ? typeof treeDataAdditionalRows === 'function' : false;
-    const [internalSortModel, setInternalSortModel] = React.useState<GridSortModel>(sortModel ?? []);
-    const [internalFilter, setInternalFilter] = React.useState<string | undefined>(filterProp);
-    const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel>();
-    const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>(rowSelectionModelProp);
-    const [additionalRows, setAdditionalRows] = React.useState<any[]>(!treeDataAdditionalRowsIsFunction ? [] : treeDataAdditionalRows as any[]);
+    const anyArtifactRowAction =
+        rowAdditionalActions?.find(
+            (a) => a.action != null || a.report != null
+        ) != null;
+    const treeDataAdditionalRowsIsFunction = treeDataAdditionalRows
+        ? typeof treeDataAdditionalRows === 'function'
+        : false;
+    const [internalSortModel, setInternalSortModel] =
+        React.useState<GridSortModel>(sortModel ?? []);
+    const [internalFilter, setInternalFilter] = React.useState<
+        string | undefined
+    >(filterProp);
+    const [paginationModel, setPaginationModel] =
+        React.useState<GridPaginationModel>();
+    const [rowSelectionModel, setRowSelectionModel] =
+        React.useState<GridRowSelectionModel>(rowSelectionModelProp);
+    const [additionalRows, setAdditionalRows] = React.useState<any[]>(
+        !treeDataAdditionalRowsIsFunction
+            ? []
+            : (treeDataAdditionalRows as any[])
+    );
     const {
         currentActions: apiCurrentActions,
         currentError: apiCurrentError,
@@ -367,19 +564,28 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         datagridApiRefProp.current = datagridApiRef.current as any;
     }
     const findArgs = React.useMemo(() => {
-        const filter = staticFilter ? (internalFilter ? '(' + staticFilter + ') and (' + internalFilter + ')' : staticFilter) : internalFilter;
+        const filter = staticFilter
+            ? internalFilter
+                ? '(' + staticFilter + ') and (' + internalFilter + ')'
+                : staticFilter
+            : internalFilter;
         const findSortModel = staticSortModel ?? internalSortModel;
-        const sorts = findSortModel && findSortModel.length ? findSortModel.map(sm => sm.field + ',' + sm.sort) : undefined;
-        const paginationArgs = paginationActive ? {
-            page: paginationModel?.page,
-            size: paginationModel?.pageSize,
-        } : { unpaged: true }
+        const sorts =
+            findSortModel && findSortModel.length
+                ? findSortModel.map((sm) => sm.field + ',' + sm.sort)
+                : undefined;
+        const paginationArgs = paginationActive
+            ? {
+                  page: paginationModel?.page,
+                  size: paginationModel?.pageSize,
+              }
+            : { unpaged: true };
         return {
             ...paginationArgs,
             sorts,
             filter,
             namedQueries,
-            perspectives
+            perspectives,
         };
     }, [
         paginationActive,
@@ -389,7 +595,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         internalFilter,
         staticFilter,
         namedQueries,
-        perspectives
+        perspectives,
     ]);
     const {
         loading,
@@ -399,7 +605,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         artifacts,
         refresh,
         export: exportt,
-        quickFilterComponent
+        quickFilterComponent,
     } = useApiDataCommon(
         resourceName,
         resourceType,
@@ -409,14 +615,20 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         findArgs,
         quickFilterInitialValue,
         quickFilterSetFocus,
-        { fullWidth: quickFilterFullWidth, sx: { ml: quickFilterFullWidth ? 0 : 1 } },
-        anyArtifactRowAction);
+        {
+            fullWidth: quickFilterFullWidth,
+            sx: { ml: quickFilterFullWidth ? 0 : 1 },
+        },
+        anyArtifactRowAction
+    );
     const isUpperToolbarType = toolbarType === 'upper';
     const gridMargins = isUpperToolbarType ? { m: 2 } : null;
     React.useEffect(() => {
         onRowsChange?.(rows, pageInfo);
         if (treeDataAdditionalRowsIsFunction) {
-            setAdditionalRows((treeDataAdditionalRows as ((rows: any[]) => any[]))(rows));
+            setAdditionalRows(
+                (treeDataAdditionalRows as (rows: any[]) => any[])(rows)
+            );
         }
     }, [rows]);
     React.useEffect(() => {
@@ -449,27 +661,38 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
         popupEditFormDialogComponentProps,
+        popupEditFormComponentProps,
         apiCurrentActions,
         apiDelete,
-        refresh);
+        refresh
+    );
     const toolbarNodesPosition = 2;
     const toolbarGridElementsWithPositions: ReactElementWithPosition[] = [];
-    toolbarAddElement != null && toolbarGridElementsWithPositions.push({
-        position: toolbarNodesPosition,
-        element: !toolbarHideCreate ? toolbarAddElement : <span/>,
-    });
-    const toolbarNumElements = toolbarNodesPosition + (toolbarHideExport ? 0 : 1) + (toolbarHideRefresh ? 0 : 1) + (toolbarHideQuickFilter ? 0 : 1);
-    const joinedToolbarElementsWithPositions = joinReactElementsWithPositionWithReactElementsWithPositions(
-        toolbarNumElements,
-        toolbarGridElementsWithPositions,
-        toolbarElementsWithPositions);
+    toolbarAddElement != null &&
+        toolbarGridElementsWithPositions.push({
+            position: toolbarNodesPosition,
+            element: !toolbarHideCreate ? toolbarAddElement : <span />,
+        });
+    const toolbarNumElements =
+        toolbarNodesPosition +
+        (toolbarHideExport ? 0 : 1) +
+        (toolbarHideRefresh ? 0 : 1) +
+        (toolbarHideQuickFilter ? 0 : 1);
+    const joinedToolbarElementsWithPositions =
+        joinReactElementsWithPositionWithReactElementsWithPositions(
+            toolbarNumElements,
+            toolbarGridElementsWithPositions,
+            toolbarElementsWithPositions
+        );
     const gridExport = () => {
-        const exportFields: string[] = columns.filter(c => {
-            const field = fields?.find(f => f.name === c.field);
-            return field != null;
-        }).map(c => c.field);
+        const exportFields: string[] = columns
+            .filter((c) => {
+                const field = fields?.find((f) => f.name === c.field);
+                return field != null;
+            })
+            .map((c) => c.field);
         exportt(exportFields, exportFileType, true);
-    }
+    };
     const toolbar = useDataToolbar(
         title ?? capitalize(resourceName) ?? '<unknown>',
         titleDisabled ?? false,
@@ -482,7 +705,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
-        joinedToolbarElementsWithPositions);
+        joinedToolbarElementsWithPositions
+    );
     const processedColumns = useGridColumns(
         columns,
         rowActionsColumnProps,
@@ -493,7 +717,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         showUpdateDialog,
         triggerDelete,
         artifacts,
-        otherProps.rowModesModel);
+        otherProps.rowModesModel
+    );
     const apiRef = React.useRef<MuiDataGridApi>({
         refresh,
         export: gridExport,
@@ -507,9 +732,12 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
             apiRefProp.current.export = gridExport;
             apiRefProp.current.showCreateDialog = showCreateDialog;
             apiRefProp.current.showUpdateDialog = showUpdateDialog;
-            apiRefProp.current.setFilter = (filter) => setInternalFilter(filter ?? undefined);
+            apiRefProp.current.setFilter = (filter) =>
+                setInternalFilter(filter ?? undefined);
         } else {
-            logConsole.warn('apiRef prop must be initialized with an empty object');
+            logConsole.warn(
+                'apiRef prop must be initialized with an empty object'
+            );
         }
     }
     const sortingProps: any = {
@@ -517,69 +745,89 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         sortModel: internalSortModel,
         onSortModelChange: setInternalSortModel,
     };
-    const paginationProps: any = paginationActive ? {
-        paginationMode: 'server',
-        pagination: true,
-        autoPageSize: !autoHeight,
-        paginationModel: paginationModel,
-        onPaginationModelChange: setPaginationModel,
-        rowCount: pageInfo?.totalElements ?? 0,
-    } : null;
-    const selectionProps: any = selectionActive ? {
-        checkboxSelection: true,
-        disableRowSelectionOnClick: true,
-        onRowSelectionModelChange: (rowSelectionModel: GridRowSelectionModel, details: GridCallbackDetails) => {
-            setRowSelectionModel(rowSelectionModel);
-            onRowSelectionModelChange?.(rowSelectionModel, details);
-        },
-        rowSelectionModel,
-        keepNonExistentRowsSelected: true,
-    } : {
-        disableRowSelectionOnClick: true
-    };
-    const stripedProps: any = striped ? {
-        getRowClassName: (params: GridRowClassNameParams) => params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
-    } : null;
+    const paginationProps: any = paginationActive
+        ? {
+              paginationMode: 'server',
+              pagination: true,
+              autoPageSize: !autoHeight,
+              paginationModel: paginationModel,
+              onPaginationModelChange: setPaginationModel,
+              rowCount: pageInfo?.totalElements ?? 0,
+          }
+        : null;
+    const selectionProps: any = selectionActive
+        ? {
+              checkboxSelection: true,
+              disableRowSelectionOnClick: true,
+              onRowSelectionModelChange: (
+                  rowSelectionModel: GridRowSelectionModel,
+                  details: GridCallbackDetails
+              ) => {
+                  setRowSelectionModel(rowSelectionModel);
+                  onRowSelectionModelChange?.(rowSelectionModel, details);
+              },
+              rowSelectionModel,
+              keepNonExistentRowsSelected: true,
+          }
+        : {
+              disableRowSelectionOnClick: true,
+          };
+    const stripedProps: any = striped
+        ? {
+              getRowClassName: (params: GridRowClassNameParams) =>
+                  params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd',
+          }
+        : null;
     const processedRows = [...additionalRows, ...rows];
-    const content = <>
-        {!toolbarHide && toolbar}
-        {toolbarAdditionalRow ? <Box sx={{ ...gridMargins, mb: 0 }}>{toolbarAdditionalRow}</Box> : null}
-        {formDialogComponent}
-        <DataGridCustomStyle
-            {...otherProps}
-            loading={loading}
-            rows={processedRows}
-            columns={processedColumns}
-            onRowClick={onRowClick}
-            onRowOrderChange={onRowOrderChange}
-            apiRef={datagridApiRef}
-            {...sortingProps}
-            {...paginationProps}
-            {...selectionProps}
-            {...stripedProps}
-            slots={{
-                row: DataGridRow as GridSlots['row'],
-                footer: DataGridFooter as GridSlots['footer'],
-                noRowsOverlay: DataGridNoRowsOverlay,
-            }}
-            slotProps={{
-                row: { linkTo: rowLink, cursorPointer: onRowClick != null },
-                footer: { paginationActive, selectionActive, pageInfo, setRowSelectionModel },
-                noRowsOverlay: { findDisabled },
-            }}
-            semiBordered={semiBordered}
-            autoHeight={autoHeight}
-            sx={{
-                height: autoHeight ? 'auto' : undefined,
-                ...gridMargins,
-                ...sx,
-            }} />
-    </>;
+    const content = (
+        <>
+            {!toolbarHide && toolbar}
+            {toolbarAdditionalRow ? (
+                <Box sx={{ ...gridMargins, mb: 0 }}>{toolbarAdditionalRow}</Box>
+            ) : null}
+            {formDialogComponent}
+            <DataGridCustomStyle
+                {...otherProps}
+                loading={loading}
+                rows={processedRows}
+                columns={processedColumns}
+                onRowClick={onRowClick}
+                onRowOrderChange={onRowOrderChange}
+                apiRef={datagridApiRef}
+                {...sortingProps}
+                {...paginationProps}
+                {...selectionProps}
+                {...stripedProps}
+                slots={{
+                    row: DataGridRow as GridSlots['row'],
+                    footer: DataGridFooter as GridSlots['footer'],
+                    noRowsOverlay: DataGridNoRowsOverlay,
+                }}
+                slotProps={{
+                    row: { linkTo: rowLink, cursorPointer: onRowClick != null },
+                    footer: {
+                        paginationActive,
+                        selectionActive,
+                        pageInfo,
+                        setRowSelectionModel,
+                    },
+                    noRowsOverlay: { findDisabled },
+                }}
+                semiBordered={semiBordered}
+                autoHeight={autoHeight}
+                sx={{
+                    height: autoHeight ? 'auto' : undefined,
+                    ...gridMargins,
+                    ...sx,
+                }}
+            />
+        </>
+    );
     // Workaround for bug in MUI-X v6 related to the DataGrid height https://github.com/mui/mui-x/issues/10520
     const virtualScrollerStyles = {
         [`& .MuiDataGrid-main`]: {
             flex: '1 1 0px',
-        }
+        },
     };
     const context = {
         resourceName,
@@ -589,11 +837,23 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         selection: rowSelectionModel,
         apiRef,
     };
-    return <DataGridContext.Provider value={context}>
-        {autoHeight ? content : <Box sx={{ display: 'flex', flexDirection: 'column', height: height ? height : '100%', ...virtualScrollerStyles }}>
-            {content}
-        </Box>}
-    </DataGridContext.Provider>;
-}
+    return (
+        <DataGridContext.Provider value={context}>
+            {autoHeight ? (
+                content
+            ) : (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: height ? height : '100%',
+                        ...virtualScrollerStyles,
+                    }}>
+                    {content}
+                </Box>
+            )}
+        </DataGridContext.Provider>
+    );
+};
 
 export default MuiDataGrid;

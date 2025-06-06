@@ -1,5 +1,5 @@
 import {FormField, useFormContext} from "reactlib";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import * as React from "react";
 import Divider from "@mui/material/Divider";
 import { columnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchColumns';

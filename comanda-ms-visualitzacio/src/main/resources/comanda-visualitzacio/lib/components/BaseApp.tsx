@@ -13,6 +13,7 @@ import {
     TemporalMessageSeverity,
     RouterNavigateFunction,
 } from './BaseAppContext';
+import { DetailFieldCustomProps } from './detail/DetailField';
 import { useResourceApiContext } from './ResourceApiContext';
 import { ResourceApiUserSessionValuePair } from './ResourceApiContext';
 
@@ -46,6 +47,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     linkComponent: React.ElementType;
     saveAs?: (data: Blob | string, filename?: string) => void;
     formFieldComponents?: FormFieldComponent[];
+    detailFieldComponent?: React.FC<DetailFieldCustomProps>;
     contentComponentSlots: ContentComponentSlots;
 };
 
@@ -265,6 +267,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         linkComponent,
         saveAs,
         formFieldComponents,
+        detailFieldComponent,
         contentComponentSlots,
         children,
     } = props;
@@ -281,6 +284,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         temporalMessageShow
     } = useTemporalMessage();
     const getFormFieldComponent = useFormFieldComponents(formFieldComponents);
+    const getDetailFieldComponent = (_type?: string) => detailFieldComponent;
     const {
         currentLanguage,
         setCurrentLanguage,
@@ -303,6 +307,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = useUserSession(code, persistentSession ?? false);
     const context = {
         getFormFieldComponent,
+        getDetailFieldComponent,
         setMarginsDisabled,
         contentExpandsToAvailableHeight,
         setContentExpandsToAvailableHeight,

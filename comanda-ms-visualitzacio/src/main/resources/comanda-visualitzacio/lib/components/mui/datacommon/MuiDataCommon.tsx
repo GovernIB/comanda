@@ -58,7 +58,7 @@ export const useApiDataCommon = (
         fieldOptionsFields: apiFieldOptionsFields,
         fieldOptionsFind: apiFieldOptionsFind,
     } = useResourceApiService(resourceName);
-    const [loading, setLoading] = React.useState<boolean>(false);
+    const [loading, setLoading] = React.useState<boolean>(true);
     const [fields, setFields] = React.useState<any[]>([]);
     const [rows, setRows] = React.useState<any[]>([]);
     const [pageInfo, setPageInfo] = React.useState<any>();
@@ -183,6 +183,7 @@ export const useDataCommonEditable = (
     popupEditFormDialogTitle: string | undefined,
     popupEditFormDialogResourceTitle: string | undefined,
     popupEditFormDialogComponentProps: any,
+    popupEditFormComponentProps: any,
     apiCurrentActions: any,
     apiDelete: (id: any) => Promise<any>,
     refresh: () => void) => {
@@ -191,15 +192,17 @@ export const useDataCommonEditable = (
         temporalMessageShow,
         messageDialogShow,
     } = useBaseAppContext();
-    const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>();
+    const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>(undefined);
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
     const isPopupEditCreate = popupEditActive || popupEditCreateActive;
     const isPopupEditUpdate = popupEditActive || popupEditUpdateActive;
-    const showCreateDialog: DataCommonShowCreateDialogFn = (row?: any) => {
-        dataDialogPopupApiRef.current?.show(
-            undefined,
-            (typeof formAdditionalData === 'function') ? formAdditionalData(row, 'create') : formAdditionalData).
+    const showCreateDialog: DataCommonShowCreateDialogFn = (row?: any, additionalData?: any) => {
+        const processedAdditionalData = {
+            ...((typeof formAdditionalData === 'function') ? formAdditionalData(row, 'create') : formAdditionalData),
+            ...additionalData
+        }
+        dataDialogPopupApiRef.current?.show(undefined, processedAdditionalData).
             then(() => {
                 refresh?.();
             }).
@@ -207,10 +210,12 @@ export const useDataCommonEditable = (
                 // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
             });
     }
-    const showUpdateDialog: DataCommonShowUpdateDialogFn = (id: any, row?: any) => {
-        dataDialogPopupApiRef.current?.show(
-            id,
-            (typeof formAdditionalData === 'function') ? formAdditionalData(row, 'update') : formAdditionalData).
+    const showUpdateDialog: DataCommonShowUpdateDialogFn = (id: any, row?: any, additionalData?: any) => {
+        const processedAdditionalData = {
+            ...((typeof formAdditionalData === 'function') ? formAdditionalData(row, 'update') : formAdditionalData),
+            ...additionalData
+        }
+        dataDialogPopupApiRef.current?.show(id, processedAdditionalData).
             then(() => {
                 refresh?.();
             }).
@@ -280,6 +285,7 @@ export const useDataCommonEditable = (
         title={popupEditFormDialogTitle}
         resourceTitle={popupEditFormDialogResourceTitle}
         dialogComponentProps={popupEditFormDialogComponentProps}
+        formComponentProps={popupEditFormComponentProps}
         apiRef={dataDialogPopupApiRef}>
         {popupEditFormContent}
     </DataFormDialog> : null;

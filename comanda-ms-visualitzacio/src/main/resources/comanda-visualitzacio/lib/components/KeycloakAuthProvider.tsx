@@ -5,7 +5,7 @@ import AuthContext from './AuthContext';
 
 const LOG_PREFIX = '[KAUTH]';
 
-type AuthProviderProps = React.PropsWithChildren & {
+type KeycloakAuthProviderProps = React.PropsWithChildren & {
     config: any;
     mandatory?: boolean;
     offlineToken?: boolean;
@@ -96,7 +96,7 @@ const kcNewInstance = (
     return keycloak;
 }
 
-export const AuthProvider = (props: AuthProviderProps) => {
+export const AuthProvider = (props: KeycloakAuthProviderProps) => {
     const {
         config,
         mandatory,

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
@@ -370,6 +370,7 @@ const AppDataTable: React.FC<any> = (props: {
 
     return (
         <DataGridPro
+            // showToolbar TODO Considerar añadirlo como funcionalidad extra
             apiRef={gridApiRef}
             columns={columns}
             rows={appEntorns}

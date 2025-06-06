@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import List from '@mui/material/List';
@@ -37,7 +37,7 @@ import {
     ChartsYAxis,
     LinePlot,
     LineSeriesType,
-    ResponsiveChartContainer,
+    ChartContainer,
 } from '@mui/x-charts';
 import { useTheme } from '@mui/material/styles';
 
@@ -303,7 +303,7 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
                 <Typography gutterBottom variant="h5" component="div">
                     {t('page.salut.estatLatencia.title')}
                 </Typography>
-                <ResponsiveChartContainer
+                <ChartContainer
                     series={[...lineSeries, ...barSeries]}
                     xAxis={[{ scaleType: 'band', data: dataGroups, id: 'latenciaEstat-x-axis-id', }]}
                     yAxis={[{ label: ' ms', id: 'latenciaEstat-y-axis-id', }]}
@@ -313,8 +313,8 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
                     <LinePlot />
                     <MarkPlot />
                     <ChartsYAxis axisId="latenciaEstat-y-axis-id" />
-                    <ChartsXAxis position="bottom" axisId="latenciaEstat-x-axis-id" />
-                </ResponsiveChartContainer>
+                    <ChartsXAxis axisId="latenciaEstat-x-axis-id" />
+                </ChartContainer>
             </CardContent>
         </Card>
     );
