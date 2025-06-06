@@ -46,7 +46,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @ResourceConfig(
     quickFilterFields = { "codi", "nom" },
-    descriptionField = "codi")
+    descriptionField = "nom")
 public class Indicador extends BaseResource<Long> {
 
     @NotNull

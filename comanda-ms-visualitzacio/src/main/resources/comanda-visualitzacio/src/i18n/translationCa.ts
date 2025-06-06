@@ -136,9 +136,27 @@ const translationCa = {
                 },
                 title: "Widgets estadístics tipus taula",
                 resourceTitle: "widget tipus taula",
+                columna: {
+                    indicador: "Indicador",
+                    titolIndicador: "Títol",
+                    tipusIndicador: "Tipus agrupació",
+                    periodeIndicador: "Període agr.",
+                    accions: "Accions",
+                    arrossega: "Arrossega per reordenar",
+                },
             },
         },
         notFound: "No trobat",
+
+    },
+    generic: {
+        tipus: "Tipus",
+        periode: "Període",
+    },
+    errors: {
+        camp: {
+            obligatori: "Camp obligatori",
+        },
     },
     components: {
         clear: "Netetjar",

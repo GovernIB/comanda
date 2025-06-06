@@ -1,9 +1,10 @@
 package es.caib.comanda.estadistica.persist.entity.widget;
 
-import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
@@ -78,5 +79,22 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     @Column(name = "llegenda_y", length = 64, nullable = false)
     private String llegendaY;
 
+    @Override
+    public Class getAtributsVisualsType() {
+        return AtributsVisualsGrafic.class;
+    }
+//    public AtributsVisualsGrafic getAtributsVisuals() {
+//        if (atributsVisualsJson == null) return null;
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+//            objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+//            AtributsVisualsGrafic atributsVisuals = objectMapper.readValue(atributsVisualsJson, AtributsVisualsGrafic.class);
+//            return atributsVisuals;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new RuntimeException("Error al deserialitzar la informació d'atributs visuals del widget gràfic: " + e.getMessage());
+//        }
+//    }
 
 }

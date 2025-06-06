@@ -1,8 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
@@ -29,50 +27,48 @@ import java.util.Map;
 @Service
 public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceService<EstadisticaGraficWidget, Long, EstadisticaGraficWidgetEntity> implements EstadisticaGraficWidgetService {
 
-    @Autowired private EstadisticaClientHelper estadisticaClientHelper;
     @Autowired private EstadisticaWidgetHelper estadisticaWidgetHelper;
+    @Autowired private AtributsVisualsHelper atributsVisualsHelper;
     
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     @Override
-    protected void beforeCreateEntity(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
-        // Convertir els atributs visuals a JSON i guardar-los a l'entitat
+    protected void beforeCreateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
         try {
-            convertAndSetAtributsVisuals(entity, resource);
-        } catch (JsonProcessingException e) {
+            String atributsVisualsJson = atributsVisualsHelper.getAtributsVisualsJson(resource.getAtributsVisuals());
+            entity.setAtributsVisualsJson(atributsVisualsJson);
+        } catch (Exception e) {
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotCreatedException(resource.getClass(), "Error convertint atributs visuals a JSON");
         }
     }
-    
+
     @Override
-    protected void beforeUpdateEntity(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+    protected void beforeUpdateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         try {
-            convertAndSetAtributsVisuals(entity, resource);
-        } catch (JsonProcessingException e) {
+            String atributsVisualsJson = atributsVisualsHelper.getAtributsVisualsJson(resource.getAtributsVisuals());
+            entity.setAtributsVisualsJson(atributsVisualsJson);
+        } catch (Exception e) {
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotUpdatedException(resource.getClass(), String.valueOf(entity.getId()), "Error convertint atributs visuals a JSON");
         }
+        estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
     }
 
-    private void convertAndSetAtributsVisuals(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource) throws JsonProcessingException {
-        AtributsVisualsGrafic atributsVisuals = resource.getAtributsVisuals();
-        if (atributsVisuals != null) {
-            entity.setAtributsVisuals(objectMapper.writeValueAsString(atributsVisuals));
-        }
+    @Override
+    protected void afterCreateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
+    }
+
+    @Override
+    protected void afterUpdateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
     }
 
     @Override
     protected void afterConversion(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource) {
+        estadisticaWidgetHelper.afterConversionGetDimensions(entity, resource);
         estadisticaWidgetHelper.afterConversionGetAppNom(entity, resource);
         // Convertir el JSON d'atributs visuals a objectes i assignar-los al recurs
-        if (entity.getAtributsVisuals() != null && !entity.getAtributsVisuals().isEmpty()) {
-            try {
-                AtributsVisualsGrafic atributsVisuals = objectMapper.readValue(entity.getAtributsVisuals(), AtributsVisualsGrafic.class);
-                resource.setAtributsVisuals(atributsVisuals);
-            } catch (JsonProcessingException e) {
-                log.error("Error convertint JSON a atributs visuals", e);
-            }
-        }
+        resource.setAtributsVisuals((AtributsVisualsGrafic) atributsVisualsHelper.getAtributsVisuals(entity));
     }
+
 }

@@ -22,9 +22,14 @@ const MAX_ITEMS_VISIBLE = 8;
 interface IconAutocompleteSelectProps {
     name?: string;
     label?: string;
+    onChange?: (value: any) => void;
 }
 
-const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({ name = "atributsVisuals.icona", label = "Icona" }) => {
+const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
+        name = "icona",
+        label = "Icona",
+        onChange
+}) => {
     const { data, dataDispatchAction, dataGetFieldValue } = useFormContext();
     const iconValue = dataGetFieldValue(name);
 
@@ -104,6 +109,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({ name = 
             payload: { fieldName: name, field: name, value: iconName || null }
         });
 
+        onChange?.(iconName);
         handleClose();
     };
 

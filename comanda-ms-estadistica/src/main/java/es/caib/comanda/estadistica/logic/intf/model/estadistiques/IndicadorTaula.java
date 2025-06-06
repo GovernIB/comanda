@@ -1,8 +1,10 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -53,8 +55,9 @@ public class IndicadorTaula extends BaseResource<Long> {
     @NotNull
     private ResourceReference<EstadisticaTaulaWidget, Long> widget;
     @NotNull
+    @JsonSetter(nulls = Nulls.SKIP)
     private TableColumnsEnum agregacio;
-    @NotNull
+    @JsonSetter(nulls = Nulls.SKIP)
     private PeriodeUnitat unitatAgregacio;
     @NotNull
     @Size(max = 64)

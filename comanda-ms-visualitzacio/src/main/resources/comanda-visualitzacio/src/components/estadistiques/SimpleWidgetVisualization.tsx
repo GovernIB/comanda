@@ -50,8 +50,6 @@ const WidgetTitle: React.FC<{
     };
 
     const snakeCaseIcona = camelToSnakeCase(icona);
-    console.log('Icona', icona);
-    console.log('SnakeCaseIcona', snakeCaseIcona);
     return (
         <Box sx={styles.titleContainer}>
             <Typography sx={styles.titleText}>{titol}</Typography>
@@ -256,8 +254,6 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
         preview = false,
         onClick,
     } = props;
-
-    console.log(props);
 
     const theme = useTheme();
     const {currentLanguage} = useBaseAppContext();

@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data } = useFormContext();
+    console.log("data", data)
     const { t } = useTranslation();
 
     // Get the current values for conditional rendering
@@ -34,6 +35,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
 
     return <>
         <Grid container spacing={2}>
+            {/*<Grid size={12}><FormField name="appId" optionsRequest={} /></Grid>*/}
             <Grid size={12}><FormField name="appId" /></Grid>
             <Grid size={12}><FormField name="aplicacioNom" disabled /></Grid>
             <Grid size={12}><FormField name="titol" /></Grid>

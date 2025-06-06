@@ -1,8 +1,5 @@
 package es.caib.comanda.estadistica.logic.intf.model.atributsvisuals;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.ms.logic.intf.exception.ObjectMappingException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,32 +43,6 @@ public class AtributsVisualsSimple implements AtributsVisuals {
     private String colorVora;
     private Integer ampleVora;
 
-
-    public String fromAtributsVisuals() {
-
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            log.error("Error convertint atributs visuals a JSON", e);
-            throw new ObjectMappingException(AtributsVisualsSimple.class, String.class, "Error convertint atributs visuals a JSON");
-        }
-    }
-    
-    public static AtributsVisualsSimple toAtributsVisuals(String json) {
-
-        if (json == null) {
-            return null;
-        }
-
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(json, AtributsVisualsSimple.class);
-        } catch (JsonProcessingException e) {
-            log.error("Error convertint JSON a atributs visuals", e);
-            throw new ObjectMappingException(String.class, AtributsVisualsSimple.class, "Error convertint JSON a atributs visuals");
-        }
-    }
 
     public AtributsVisuals merge(AtributsVisuals otherAtributsVisuals) {
         if (otherAtributsVisuals == null || !(otherAtributsVisuals instanceof AtributsVisualsSimple)) {

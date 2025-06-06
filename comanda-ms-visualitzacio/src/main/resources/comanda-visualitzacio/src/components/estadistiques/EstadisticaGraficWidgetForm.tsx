@@ -2,60 +2,39 @@ import Grid from "@mui/material/Grid";
 import {Divider, Box, Typography} from "@mui/material";
 import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
 import GraficWidgetVisualization from "./GraficWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from "react-i18next";
+import ColorPaletteSelector from "../ColorPaletteSelector";
 
 const EstadisticaGraficWidgetForm: React.FC = () => {
     const { data } = useFormContext();
     const { t } = useTranslation();
-    const [previewData, setPreviewData] = useState({
-        title: 'Títol del gràfic',
-        tipusGrafic: 'BAR_CHART',
-        llegendaX: 'Eix X',
-        llegendaY: 'Eix Y',
-        colorsPaleta: '#1f77b4,#ff7f0e,#2ca02c,#d62728,#9467bd,#8c564b',
-        mostrarReticula: true,
-        barStacked: false,
-        barHorizontal: false,
-        lineShowPoints: true,
-        lineSmooth: false,
-        lineWidth: 2,
-        pieDonut: false,
-        pieShowLabels: true,
-    });
-
-
-    // Watch for changes in form data to update preview
-    useEffect(() => {
-        if (data) {
-            setPreviewData({
-                title: data.titol || 'Títol del gràfic',
-                tipusGrafic: data.tipusGrafic || 'BAR_CHART',
-                llegendaX: data.llegendaX || 'Eix X',
-                llegendaY: data.llegendaY || 'Eix Y',
-                colorsPaleta: data.atributsVisuals?.colorsPaleta || '#1f77b4,#ff7f0e,#2ca02c,#d62728,#9467bd,#8c564b',
-                mostrarReticula: data.atributsVisuals?.mostrarReticula !== undefined ? data.atributsVisuals.mostrarReticula : true,
-                barStacked: data.atributsVisuals?.barStacked || false,
-                barHorizontal: data.atributsVisuals?.barHorizontal || false,
-                lineShowPoints: data.atributsVisuals?.lineShowPoints !== undefined ? data.atributsVisuals.lineShowPoints : true,
-                lineSmooth: data.atributsVisuals?.lineSmooth || false,
-                lineWidth: data.atributsVisuals?.lineWidth || 2,
-                pieDonut: data.atributsVisuals?.pieDonut || false,
-                pieShowLabels: data.atributsVisuals?.pieShowLabels !== undefined ? data.atributsVisuals.pieShowLabels : true,
-                gaugeMin: data.atributsVisuals?.gaugeMin,
-                gaugeMax: data.atributsVisuals?.gaugeMax,
-                gaugeColors: data.atributsVisuals?.gaugeColors,
-                gaugeRangs: data.atributsVisuals?.gaugeRangs,
-                heatmapColors: data.atributsVisuals?.heatmapColors,
-                heatmapMinValue: data.atributsVisuals?.heatmapMinValue,
-                heatmapMaxValue: data.atributsVisuals?.heatmapMaxValue,
-            });
-        }
-    }, [data]);
+    const previewData = useMemo(() =>({
+        title: data.titol || 'Títol del gràfic',
+        tipusGrafic: data.tipusGrafic || 'BAR_CHART',
+        llegendaX: data.llegendaX || 'Eix X',
+        llegendaY: data.llegendaY || 'Eix Y',
+        colorsPaleta: data.atributsVisuals?.colorsPaleta || '#1f77b4,#ff7f0e,#2ca02c,#d62728,#9467bd,#8c564b',
+        mostrarReticula: data.atributsVisuals?.mostrarReticula !== undefined ? data.atributsVisuals.mostrarReticula : true,
+        barStacked: data.atributsVisuals?.barStacked || false,
+        barHorizontal: data.atributsVisuals?.barHorizontal || false,
+        lineShowPoints: data.atributsVisuals?.lineShowPoints !== undefined ? data.atributsVisuals.lineShowPoints : true,
+        lineSmooth: data.atributsVisuals?.lineSmooth || false,
+        lineWidth: data.atributsVisuals?.lineWidth || 2,
+        pieDonut: data.atributsVisuals?.pieDonut || false,
+        pieShowLabels: data.atributsVisuals?.pieShowLabels !== undefined ? data.atributsVisuals.pieShowLabels : true,
+        gaugeMin: data.atributsVisuals?.gaugeMin,
+        gaugeMax: data.atributsVisuals?.gaugeMax,
+        gaugeColors: data.atributsVisuals?.gaugeColors,
+        gaugeRangs: data.atributsVisuals?.gaugeRangs,
+        heatmapColors: data.atributsVisuals?.heatmapColors,
+        heatmapMinValue: data.atributsVisuals?.heatmapMinValue,
+        heatmapMaxValue: data.atributsVisuals?.heatmapMaxValue,
+    }), [data])
 
     // Get current graphic type (BAR_CHART, LINE_CHART, PIE_CHART, SCATTER_CHART, SPARK_LINE_CHART, GAUGE_CHART, HEATMAP_CHART)
     const chartType = data?.tipusGrafic;
@@ -64,6 +43,14 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
     const isPieTypeVisible = chartType === 'PIE_CHART';
     const isGaugeTypeVisible = chartType === 'GAUGE_CHART';
     const isHeatTypeVisible = chartType === 'HEATMAP_CHART';
+
+    const [appPalette, setAppPalette] = useState([]);
+    const handlePaletteChange = (newPalette) => {
+        console.log('La paleta ha canviat:', newPalette);
+        setAppPalette(newPalette);
+        // Aquí pots fer qualsevol cosa amb la nova paleta,
+        // com desar-la en una base de dades, en l'estat global, etc.
+    };
 
     return (
         <Grid container spacing={2}>
@@ -103,7 +90,8 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         return (
             <Grid container spacing={2}>
                 <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració general</Typography></Grid>
-                <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" /></Grid>
+                {/*<Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" type="color" /></Grid>*/}
+                <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><ColorPaletteSelector initialColors={appPalette} onPaletteChange={handlePaletteChange} /></Grid>
                 <Grid size={12}><FormField name="atributsVisuals.mostrarReticula" label="Mostrar retícula" type="checkbox" /></Grid>
 
                 {isBarTypeVisible && (

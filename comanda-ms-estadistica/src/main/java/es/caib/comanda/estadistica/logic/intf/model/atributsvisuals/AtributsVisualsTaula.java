@@ -1,8 +1,5 @@
 package es.caib.comanda.estadistica.logic.intf.model.atributsvisuals;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.ms.logic.intf.exception.ObjectMappingException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,12 +24,48 @@ import java.util.List;
 @AllArgsConstructor
 public class AtributsVisualsTaula implements AtributsVisuals {
 
+    // Estils per defecte del widget (opcionals)
+    @Size(max = 8)
+    private String colorText;
+    @Size(max = 8)
+    private String colorFons;
+    private Boolean mostrarVora;
+    @Size(max = 8)
+    private String colorVora;
+    private Integer ampleVora;
+
     // Configuració general de la taula
+    @Size(max = 8)
+    private String colorTextTaula;        // Color del text de la taula (opcional)
+    @Size(max = 8)
+    private String colorFonsTaula;        // Color de fons per la taula (opcional)
+
     private Boolean mostrarCapcalera;     // Indica si s'ha de mostrar la capçalera de la taula
-    private Boolean mostrarBordes;        // Indica si s'han de mostrar els bordes de la taula
+    @Size(max = 8)
+    private String colorCapcalera;        // Color per la capçalera de la taula (opcional)
+    @Size(max = 8)
+    private String colorFonsCapcalera;    // Color de fons per la capçalera de la taula (opcional)
+
     private Boolean mostrarAlternancia;   // Indica si s'han d'alternar els colors de les files
     @Size(max = 8)
     private String colorAlternancia;      // Color per a les files alternes
+
+    private Boolean mostrarVoraTaula;        // Indica si s'han de mostrar els bordes de la taula
+    @Size(max = 8)
+    private String colorVoraTaula;
+    private Integer ampleVoraTaula;
+
+    private Boolean mostrarSeparadorHoritzontal;        // Indica si s'han de mostrar els bordes de la taula
+    @Size(max = 8)
+    private String colorSeparadorHoritzontal;
+    private Integer ampleSeparadorHoritzontal;
+
+    private Boolean mostrarSeparadorVertical;        // Indica si s'han de mostrar els bordes de la taula
+    @Size(max = 8)
+    private String colorSeparadorVertical;
+    private Integer ampleSeparadorVertical;
+
+    private Boolean paginada;
 
     // Configuració de columnes
     private List<ColumnaEstil> columnesEstils;        // Estils per a les columnes
@@ -41,42 +74,35 @@ public class AtributsVisualsTaula implements AtributsVisuals {
     private List<CellaDestacada> cellesDestacades;      // Configuració per a destacar cel·les específiques
 
 
-    public String fromAtributsVisuals() {
-
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            log.error("Error convertint atributs visuals a JSON", e);
-            throw new ObjectMappingException(AtributsVisualsTaula.class, String.class, "Error convertint atributs visuals a JSON");
-        }
-    }
-
-    public static AtributsVisualsTaula toAtributsVisuals(String json) {
-
-        if (json == null) {
-            return null;
-        }
-
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(json, AtributsVisualsTaula.class);
-        } catch (JsonProcessingException e) {
-            log.error("Error convertint JSON a atributs visuals", e);
-            throw new ObjectMappingException(String.class, AtributsVisualsTaula.class, "Error convertint JSON a atributs visuals");
-        }
-    }
-
     public AtributsVisuals merge(AtributsVisuals otherAtributsVisuals) {
         if (otherAtributsVisuals == null || !(otherAtributsVisuals instanceof AtributsVisualsTaula)) {
             return this;
         }
 
         AtributsVisualsTaula other = (AtributsVisualsTaula) otherAtributsVisuals;
+        this.colorText = mergeField(this.colorText, other.getColorText());
+        this.colorFons = mergeField(this.colorFons, other.getColorFons());
+        this.mostrarVora = mergeField(this.mostrarVora, other.getMostrarVora());
+        this.colorVora = mergeField(this.colorVora, other.getColorVora());
+        this.ampleVora = mergeField(this.ampleVora, other.getAmpleVora());
+        this.colorTextTaula = mergeField(this.colorTextTaula, other.getColorTextTaula());
+        this.colorFonsTaula = mergeField(this.colorFonsTaula, other.getColorFonsTaula());
         this.mostrarCapcalera = mergeField(this.mostrarCapcalera, other.getMostrarCapcalera());
-        this.mostrarBordes = mergeField(this.mostrarBordes, other.getMostrarBordes());
+        this.colorCapcalera = mergeField(this.colorCapcalera, other.getColorCapcalera());
+        this.colorFonsCapcalera = mergeField(this.colorFonsCapcalera, other.getColorFonsCapcalera());
         this.mostrarAlternancia = mergeField(this.mostrarAlternancia, other.getMostrarAlternancia());
         this.colorAlternancia = mergeField(this.colorAlternancia, other.getColorAlternancia());
+        this.mostrarVoraTaula = mergeField(this.mostrarVoraTaula, other.getMostrarVoraTaula());
+        this.colorVoraTaula = mergeField(this.colorVoraTaula, other.getColorVoraTaula());
+        this.ampleVoraTaula = mergeField(this.ampleVoraTaula, other.getAmpleVoraTaula());
+        this.mostrarSeparadorHoritzontal = mergeField(this.mostrarSeparadorHoritzontal, other.getMostrarSeparadorHoritzontal());
+        this.colorSeparadorHoritzontal = mergeField(this.colorSeparadorHoritzontal, other.getColorSeparadorHoritzontal());
+        this.ampleSeparadorHoritzontal = mergeField(this.ampleSeparadorHoritzontal, other.getAmpleSeparadorHoritzontal());
+        this.mostrarSeparadorVertical = mergeField(this.mostrarSeparadorVertical, other.getMostrarSeparadorVertical());
+        this.colorSeparadorVertical = mergeField(this.colorSeparadorVertical, other.getColorSeparadorVertical());
+        this.ampleSeparadorVertical = mergeField(this.ampleSeparadorVertical, other.getAmpleSeparadorVertical());
+        this.paginada = mergeField(this.paginada, other.getPaginada());
+
         this.columnesEstils = mergeField(this.columnesEstils, other.getColumnesEstils());
         this.cellesDestacades = mergeField(this.cellesDestacades, other.getCellesDestacades());
 

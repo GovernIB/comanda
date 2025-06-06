@@ -1,14 +1,21 @@
 package es.caib.comanda.estadistica.logic.intf.model.widget;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.Nulls;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -67,6 +74,16 @@ public class EstadisticaTaulaWidget extends EstadisticaWidget { // WidgetBaseRes
     private String titolAgrupament;
 
     // Atributs per a la configuració visual de la taula
+    @JsonUnwrapped
     private AtributsVisualsTaula atributsVisuals;
+
+    @Transient
+    private ResourceReference<Indicador, Long> indicador;
+    @Transient
+    @JsonSetter(nulls = Nulls.SKIP)
+    private TableColumnsEnum agregacio;
+    @Transient
+    @JsonSetter(nulls = Nulls.SKIP)
+    private PeriodeUnitat unitatAgregacio;
 
 }

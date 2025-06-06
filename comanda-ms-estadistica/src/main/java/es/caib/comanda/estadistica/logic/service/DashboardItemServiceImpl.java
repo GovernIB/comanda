@@ -1,36 +1,42 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.estadistica.logic.helper.PeriodeResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.PeriodeResolverHelper.PeriodeDates;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
-import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
-import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTaulaItem;
-import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
-import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardItemService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.ms.estadistica.model.Format;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,14 +75,91 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
     @Autowired
     private EstadisticaHelper estadisticaHelper;
+    @Autowired
+    private AtributsVisualsHelper atributsVisualsHelper;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    static {
+        objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     @PostConstruct
     public void init() {
         register(DashboardItem.WIDGET_REPORT, new InformeWidget());
     }
 
+    @Override
+    protected void beforeCreateSave(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
+//        convertAndSetAtributsVisuals(entity, resource);
+        try {
+            String atributsVisualsJson = atributsVisualsHelper.getAtributsVisualsJson(resource.getAtributsVisuals());
+            entity.setAtributsVisualsJson(atributsVisualsJson);
+        } catch (Exception e) {
+            log.error("Error convertint atributs visuals a JSON", e);
+            throw new ResourceNotCreatedException(resource.getClass(), "Error convertint atributs visuals a JSON");
+        }
+    }
+
+    @Override
+    protected void beforeUpdateSave(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+//        convertAndSetAtributsVisuals(entity, resource);
+        try {
+            String atributsVisualsJson = atributsVisualsHelper.getAtributsVisualsJson(resource.getAtributsVisuals());
+            entity.setAtributsVisualsJson(atributsVisualsJson);
+        } catch (Exception e) {
+            log.error("Error convertint atributs visuals a JSON", e);
+            throw new ResourceNotUpdatedException(resource.getClass(), String.valueOf(entity.getId()), "Error convertint atributs visuals a JSON");
+        }
+    }
+
+    @Override
+    protected void afterConversion(DashboardItemEntity entity, DashboardItem resource) {
+        // Convertir el JSON d'atributs visuals a objectes i assignar-los al recurs
+        resource.setAtributsVisuals(atributsVisualsHelper.getAtributsVisuals(entity));
+    }
+
+
+//    private void convertAndSetAtributsVisuals(DashboardItemEntity entity, DashboardItem resource) throws ResourceNotUpdatedException {
+//        try {
+//            AtributsVisuals atributsVisuals = resource.getAtributsVisuals();
+//                if (atributsVisuals != null) {
+//                entity.setAtributsVisualsJson(objectMapper.writeValueAsString(atributsVisuals));
+//            }
+//        } catch (Exception e) {
+//            log.error("Error convertint atributs visuals a JSON", e);
+//            throw new ResourceNotUpdatedException(resource.getClass(), String.valueOf(entity.getId()), "Error convertint atributs visuals a JSON");
+//        }
+//    }
+//
+//    private AtributsVisuals getAtributsVisuals(DashboardItemEntity entity) {
+//        if (entity == null || entity.getAtributsVisualsJson() == null) return null;
+//        try {
+//            Class<? extends AtributsVisuals> atributsVisualsType = entity.getWidget().getAtributsVisualsType();
+//
+//            AtributsVisuals atributsVisuals = objectMapper.readValue(
+//                    entity.getAtributsVisualsJson(),
+//                    new TypeReference<AtributsVisuals>() {
+//                        @Override
+//                        public Type getType() {
+//                            return atributsVisualsType;
+//                        }
+//                    }
+//            );
+//            return atributsVisuals;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new ObjectMappingException(
+//                    DashboardItemEntity.class,
+//                    DashboardItem.class,
+//                    "Error al deserialitzar la informació d'atributs visuals del dashboardItem: " + e.getMessage());
+//        }
+//    }
+
+
+    // REPORT PER OBTENIR EMPLENAR WIDGETS
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public class InformeWidget implements ReportGenerator<DashboardItemEntity, InformeWidgetParams, InformeWidgetItem> {
 
         @Override
@@ -132,7 +215,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             PeriodeDates periodePrevi = widget.isCompararPeriodeAnterior()
                     ? PeriodeResolverHelper.resolvePreviousPeriod(periode, periodeConsulta)
                     : null;
-            AtributsVisualsSimple atributsVisuals = resolveAtributsVisualsSimple(dashboardItem, widget);
+            AtributsVisualsSimple atributsVisuals = (AtributsVisualsSimple) resolveAtributsVisuals(dashboardItem);
 
             Object valorConsulta = calculateValorSimple(widget, periodeConsulta);
             String valorConsultaFormat = valorConsulta != null ? formatValorSimple(valorConsulta, widget.getIndicadorInfo()) : "";
@@ -155,14 +238,14 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             return List.of(item);
         }
 
-        private AtributsVisualsSimple resolveAtributsVisualsSimple(DashboardItemEntity dashboardItem, EstadisticaSimpleWidgetEntity widget) {
-            var atributsVisualsWidget = AtributsVisualsSimple.toAtributsVisuals(widget.getAtributsVisuals());
-            var atributsVisualsDash = AtributsVisualsSimple.toAtributsVisuals(dashboardItem.getAtributsVisuals());
-            if (atributsVisualsWidget != null && atributsVisualsDash != null) {
-                return (AtributsVisualsSimple) atributsVisualsDash.merge(atributsVisualsWidget);
-            }
-            return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
-        }
+//        private AtributsVisualsSimple resolveAtributsVisualsSimple(DashboardItemEntity dashboardItem) {
+//            var atributsVisualsWidget = (AtributsVisualsSimple) atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+//            var atributsVisualsDash = (AtributsVisualsSimple) atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+//            if (atributsVisualsWidget != null && atributsVisualsDash != null) {
+//                return (AtributsVisualsSimple) atributsVisualsDash.merge(atributsVisualsWidget);
+//            }
+//            return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
+//        }
 
 
         private Object calculateValorSimple(EstadisticaSimpleWidgetEntity widget, PeriodeDates periodeConsulta) {
@@ -426,7 +509,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 }
             }
 
-            AtributsVisualsGrafic atributsVisuals = resolveAtributsVisualsGrafic(dashboardItem, widget);
+            AtributsVisualsGrafic atributsVisuals = (AtributsVisualsGrafic) resolveAtributsVisuals(dashboardItem);
 
             // Create the chart item
             InformeWidgetGraficItem item = InformeWidgetGraficItem.builder()
@@ -445,14 +528,14 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             return List.of(item);
         }
 
-        private AtributsVisualsGrafic resolveAtributsVisualsGrafic(DashboardItemEntity dashboardItem, EstadisticaGraficWidgetEntity widget) {
-            var atributsVisualsWidget = AtributsVisualsGrafic.toAtributsVisuals(widget.getAtributsVisuals());
-            var atributsVisualsDash = AtributsVisualsGrafic.toAtributsVisuals(dashboardItem.getAtributsVisuals());
-            if (atributsVisualsWidget != null && atributsVisualsDash != null) {
-                return (AtributsVisualsGrafic) atributsVisualsDash.merge(atributsVisualsWidget);
-            }
-            return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
-        }
+//        private AtributsVisualsGrafic resolveAtributsVisualsGrafic(DashboardItemEntity dashboardItem) {
+//            var atributsVisualsWidget = (AtributsVisualsGrafic) atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+//            var atributsVisualsDash = (AtributsVisualsGrafic) atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+//            if (atributsVisualsWidget != null && atributsVisualsDash != null) {
+//                return (AtributsVisualsGrafic) atributsVisualsDash.merge(atributsVisualsWidget);
+//            }
+//            return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
+//        }
 
         private String formatTimeLabel(LocalDate date, PeriodeUnitat unit) {
             switch (unit) {
@@ -603,7 +686,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 }
             }
 
-            AtributsVisualsTaula atributsVisuals = resolveAtributsVisualsTaula(dashboardItem, widget);
+            AtributsVisualsTaula atributsVisuals = (AtributsVisualsTaula) resolveAtributsVisuals(dashboardItem);
 
             // Create the table item
             InformeWidgetTaulaItem item = InformeWidgetTaulaItem.builder()
@@ -619,11 +702,20 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             return List.of(item);
         }
 
-        private AtributsVisualsTaula resolveAtributsVisualsTaula(DashboardItemEntity dashboardItem, EstadisticaTaulaWidgetEntity widget) {
-            var atributsVisualsWidget = AtributsVisualsTaula.toAtributsVisuals(widget.getAtributsVisuals());
-            var atributsVisualsDash = AtributsVisualsTaula.toAtributsVisuals(dashboardItem.getAtributsVisuals());
+//        private AtributsVisualsTaula resolveAtributsVisualsTaula(DashboardItemEntity dashboardItem) {
+//            var atributsVisualsWidget = (AtributsVisualsTaula) atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+//            var atributsVisualsDash = (AtributsVisualsTaula) atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+//            if (atributsVisualsWidget != null && atributsVisualsDash != null) {
+//                return (AtributsVisualsTaula) atributsVisualsDash.merge(atributsVisualsWidget);
+//            }
+//            return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
+//        }
+
+        private AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem) {
+            var atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+            var atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
             if (atributsVisualsWidget != null && atributsVisualsDash != null) {
-                return (AtributsVisualsTaula) atributsVisualsDash.merge(atributsVisualsWidget);
+                return atributsVisualsDash.merge(atributsVisualsWidget);
             }
             return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
         }

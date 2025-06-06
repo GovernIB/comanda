@@ -1,15 +1,17 @@
 package es.caib.comanda.estadistica.persist.entity.widget;
 
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Entity;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
@@ -41,6 +43,7 @@ import java.util.List;
  * Autor: Límit Tecnologies
  */
 @Getter
+@Setter
 @Entity
 @DiscriminatorValue("TAULA") // Valor específic al discriminador
 public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<EstadisticaTaulaWidget> {
@@ -58,4 +61,21 @@ public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<Estadi
     @Column(name = "agrupament_dimensio_titol", length = 64)
     private String titolAgrupament;
 
+    @Override
+    public Class getAtributsVisualsType() {
+        return AtributsVisualsTaula.class;
+    }
+//    public AtributsVisualsTaula getAtributsVisuals() {
+//        if (atributsVisualsJson == null) return null;
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+//            objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+//            AtributsVisualsTaula atributsVisuals = objectMapper.readValue(atributsVisualsJson, AtributsVisualsTaula.class);
+//            return atributsVisuals;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new RuntimeException("Error al deserialitzar la informació d'atributs visuals del widget taula: " + e.getMessage());
+//        }
+//    }
 }

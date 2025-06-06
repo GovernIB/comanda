@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model.widget;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
@@ -86,5 +87,7 @@ public class EstadisticaSimpleWidget extends EstadisticaWidget { // WidgetBaseRe
     private boolean compararPeriodeAnterior;
 
     // Configuracions visuals
+    @JsonUnwrapped
     private AtributsVisualsSimple atributsVisuals;
+
 }

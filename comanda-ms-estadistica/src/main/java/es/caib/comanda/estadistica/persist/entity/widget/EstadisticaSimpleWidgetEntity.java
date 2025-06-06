@@ -1,11 +1,17 @@
 package es.caib.comanda.estadistica.persist.entity.widget;
 
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.OneToOne;
 
 /**
  * Entitat que representa un widget simple d'estadística dins de la base de dades.
@@ -56,4 +62,22 @@ public class EstadisticaSimpleWidgetEntity extends EstadisticaWidgetEntity<Estad
     @Column(name = "comparar_periode_anterior")
     private boolean compararPeriodeAnterior;
 
+    @Override
+    public Class getAtributsVisualsType() {
+        return AtributsVisualsSimple.class;
+    }
+
+    //    public AtributsVisualsSimple getAtributsVisuals() {
+//        if (atributsVisualsJson == null) return null;
+//            try {
+//                ObjectMapper objectMapper = new ObjectMapper();
+//                objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+//                objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+//                AtributsVisualsSimple atributsVisuals = objectMapper.readValue(atributsVisualsJson, AtributsVisualsSimple.class);
+//                return atributsVisuals;
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                throw new RuntimeException("Error al deserialitzar la informació d'atributs visuals del widget simple: " + e.getMessage());
+//            }
+//    }
 }

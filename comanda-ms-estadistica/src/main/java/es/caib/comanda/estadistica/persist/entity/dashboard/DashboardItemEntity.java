@@ -65,6 +65,6 @@ public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
 
     // Estils del widget sobreescrits al dashboard (opcionals)
     @Column(name = "atributs_visuals", length = 4000)
-    protected String atributsVisuals;
+    protected String atributsVisualsJson;
 
 }

@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model.widget;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
@@ -98,5 +99,6 @@ public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseRe
     private String llegendaY;
 
     // Atributs per a la configuració visual del gràfic
+    @JsonUnwrapped
     private AtributsVisualsGrafic atributsVisuals;
 }

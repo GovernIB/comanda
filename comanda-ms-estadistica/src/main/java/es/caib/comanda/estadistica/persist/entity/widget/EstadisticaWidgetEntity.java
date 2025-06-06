@@ -165,7 +165,7 @@ public abstract class EstadisticaWidgetEntity<R> extends BaseAuditableEntity<R> 
 
     // Atributs visuals en format JSON
     @Column(name = "atributs_visuals", length = 4000)
-    protected String atributsVisuals;
+    protected String atributsVisualsJson;
 
     public Periode getPeriode() {
         return Periode.builder()
@@ -186,5 +186,7 @@ public abstract class EstadisticaWidgetEntity<R> extends BaseAuditableEntity<R> 
                 .absolutPeriodeFi(this.absolutPeriodeFi)
                 .build();
     }
+
+    public abstract Class getAtributsVisualsType();
 
 }

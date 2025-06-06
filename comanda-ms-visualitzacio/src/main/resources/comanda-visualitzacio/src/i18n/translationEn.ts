@@ -136,9 +136,26 @@ const translationEn = {
                 },
                 title: "Statistic table widgets",
                 resourceTitle: "table widget",
+                columna: {
+                    indicador: "Indicator",
+                    titolIndicador: "Title",
+                    tipusIndicador: "Aggregation type",
+                    periodeIndicador: "Periode aggr.",
+                    accions: "Actions",
+                    arrossega: "Drag to reorder",
+                },
             }
         },
         notFound: "Not found",
+    },
+    generic: {
+        tipus: "Type",
+        periode: "Period",
+    },
+    errors: {
+        camp: {
+            obligatori: "Required field",
+        },
     },
     components: {
         clear: "Clear",

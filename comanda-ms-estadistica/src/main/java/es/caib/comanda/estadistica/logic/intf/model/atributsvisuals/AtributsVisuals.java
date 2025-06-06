@@ -7,7 +7,6 @@ package es.caib.comanda.estadistica.logic.intf.model.atributsvisuals;
  */
 public interface AtributsVisuals {
 
-    public String fromAtributsVisuals();
     public AtributsVisuals merge(AtributsVisuals other);
 
     default <T> T mergeField(T currentValue, T otherValue) {

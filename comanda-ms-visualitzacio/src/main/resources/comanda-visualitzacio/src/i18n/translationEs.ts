@@ -136,9 +136,26 @@ const translationEs = {
                 },
                 title: "Widgets estadísticos tipo tabla",
                 resourceTitle: "widget tipo tabla",
+                columna: {
+                    indicador: "Indicador",
+                    titolIndicador: "Título",
+                    tipusIndicador: "Tipo agrupación",
+                    periodeIndicador: "Período agr.",
+                    accions: "Acciones",
+                    arrossega: "Arrastra para reordenar",
+                },
             }
         },
         notFound: "No encontrado",
+    },
+    generic: {
+        tipus: "Tipo",
+        periode: "Periodo",
+    },
+    errors: {
+        camp: {
+            obligatori: "Campo obligatorio",
+        },
     },
     components: {
         clear: "Limpiar",
