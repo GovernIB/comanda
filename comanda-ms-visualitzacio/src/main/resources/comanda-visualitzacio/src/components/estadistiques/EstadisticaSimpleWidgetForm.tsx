@@ -3,7 +3,7 @@ import {FormField, useFormContext, springFilterBuilder as builder } from "reactl
 import * as React from "react";
 import {useState, useEffect, useMemo} from "react";
 import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
-import SimpleWidgetVisualization from "./SimpleWidgetVisualization";
+import SimpleWidgetVisualization, {SimpleWidgetVisualizationProps} from "./SimpleWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { Divider, Box, Typography } from "@mui/material";
@@ -15,7 +15,7 @@ import {FormFieldDataActionType} from "../../../lib/components/form/FormContext.
 const EstadisticaSimpleWidgetForm: React.FC = () => {
     const { data, dataDispatchAction, isReady } = useFormContext();
     const { t } = useTranslation();
-    const previewData = useMemo(() =>({
+    const previewData: SimpleWidgetVisualizationProps = useMemo((): SimpleWidgetVisualizationProps =>({
         titol: data.titol || 'Títol del widget',
         valor: 1234, // Sample value for preview
         unitat: data.unitat || 'unitat',

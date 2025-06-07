@@ -2,9 +2,9 @@ import Grid from "@mui/material/Grid";
 import {Box, Typography} from "@mui/material";
 import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import EstadisticaWidgetFormFields from './EstadisticaWidgetFormFields';
-import TaulaWidgetVisualization from "./TaulaWidgetVisualization";
+import TaulaWidgetVisualization, {TaulaWidgetVisualizationProps} from "./TaulaWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesDimensio } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from "react-i18next";
@@ -16,12 +16,36 @@ import ColumnesTable from './ColumnesTable';
 const EstadisticaTaulaWidgetForm: React.FC = () => {
     const { data, dataDispatchAction } = useFormContext();
     const { t } = useTranslation();
-    const previewData = useMemo(() =>({
-        title: data.titol || 'Títol de la taula',
-        mostrarCapcalera: data.mostrarCapcalera !== undefined ? data.mostrarCapcalera : true,
-        mostrarBordes: data.mostrarBordes !== undefined ? data.mostrarBordes : true,
-        mostrarAlternancia: data.mostrarAlternancia !== undefined ? data.mostrarAlternancia : true,
-        colorAlternancia: data.colorAlternancia || '#f5f5f5',
+    const previewData: TaulaWidgetVisualizationProps = useMemo((): TaulaWidgetVisualizationProps =>({
+        titol: data.titol,
+        descripcio: data.descripcio,
+        // columnes: [{}, {}, {}],
+        // files: [{}, {}, {}],
+        // Visual attributes
+        // Contenidor
+        colorText: data.colorText,
+        colorFons: data.colorFons,
+        mostrarVora: data.mostrarVora,
+        colorVora: data.colorVora,
+        ampleVora: data.ampleVora,
+        // Taula
+        colorTextTaula: data.colorTextTaula,
+        colorFonsTaula: data.colorFonsTaula,
+        mostrarCapcalera: data.mostrarCapcalera ?? true,
+        colorCapcalera: data.colorCapcalera,
+        colorFonsCapcalera: data.colorFonsCapcalera,
+        mostrarAlternancia: data.mostrarAlternancia,
+        colorAlternancia: data.colorAlternancia,
+        mostrarVoraTaula: data.mostrarVoraTaula,
+        colorVoraTaula: data.colorVoraTaula,
+        ampleVoraTaula: data.ampleVoraTaula,
+        mostrarSeparadorHoritzontal: data.mostrarSeparadorHoritzontal ?? true,
+        colorSeparadorHoritzontal: data.colorSeparadorHoritzontal,
+        ampleSeparadorHoritzontal: data.ampleSeparadorHoritzontal,
+        mostrarSeparadorVertical: data.mostrarSeparadorVertical,
+        colorSeparadorVertical: data.colorSeparadorVertical,
+        ampleSeparadorVertical: data.ampleSeparadorVertical,
+        paginada: data.paginada,
         columnesEstils: data.columnesEstils || [],
         cellesDestacades: data.cellesDestacades || [],
     }), [data]);
@@ -39,12 +63,32 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
 
     // Get the current values for conditional rendering
     const isMostrarVora: boolean = data?.mostrarVora;
-    const isMostrarCapcalera: boolean = data?.mostrarCapcalera;
+    const isMostrarCapcalera: boolean = data?.mostrarCapcalera ?? true;
     const isMostrarAlternancia: boolean = data?.mostrarAlternancia;
     const isMostrarVoraTaula: boolean = data?.mostrarVoraTaula;
-    const isMostrarSeparadorHoritzontal: boolean = data?.mostrarSeparadorHoritzontal;
+    const isMostrarSeparadorHoritzontal: boolean = data?.mostrarSeparadorHoritzontal ?? true;
     const isMostrarSeparadorVertical: boolean = data?.mostrarSeparadorVertical;
 
+    // TODO: Hi ha alguna altre manera per definir valors predefinits pels camps?
+    // Set default values for checkboxes when component mounts
+    const initializedRef = useRef(false);
+    useEffect(() => {
+        if (!initializedRef.current) {
+            if (data?.mostrarCapcalera === undefined) {
+                dataDispatchAction({
+                    type: FormFieldDataActionType.FIELD_CHANGE,
+                    payload: { fieldName: "mostrarCapcalera", value: true }
+                });
+            }
+            if (data?.mostrarSeparadorHoritzontal === undefined) {
+                dataDispatchAction({
+                    type: FormFieldDataActionType.FIELD_CHANGE,
+                    payload: { fieldName: "mostrarSeparadorHoritzontal", value: true }
+                });
+            }
+            initializedRef.current = true;
+        }
+    }, [data, dataDispatchAction]);
 
     return (
         <Grid container spacing={2}>
@@ -111,7 +155,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorAlternancia" label="Color d'alternança" type="color" required={false} onChange={generateOnChange("colorAlternancia", "atributsVisuals")} /></Grid>
                     </>
                 )}
-                <Grid size={12}><FormField name="mostrarVoraTaula" label="Mostrar vora" type="checkbox" onChange={generateOnChange("mostrarVoraTaula", "atributsVisuals")} /></Grid>
+                <Grid size={12}><FormField name="mostrarVoraTaula" label="Mostrar vora de taula" type="checkbox" onChange={generateOnChange("mostrarVoraTaula", "atributsVisuals")} /></Grid>
                 { isMostrarVoraTaula && (
                 <>
                     <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorVoraTaula" label="Color de la vora" type="color" required={false} onChange={generateOnChange("colorVoraTaula", "atributsVisuals")} /></Grid>
@@ -132,7 +176,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleSeparadorVertical" label="Ample del separador" type="number" required={false} onChange={generateOnChange("ampleSeparadorVertical", "atributsVisuals")} /></Grid>
                     </>
                 )}
-                <Grid size={12}><FormField name="paginada" label="Taula paginada" type="checkbox" onChange={generateOnChange("paginada", "atributsVisuals")} /></Grid>
+                {/*<Grid size={12}><FormField name="paginada" label="Taula paginada" type="checkbox" onChange={generateOnChange("paginada", "atributsVisuals")} /></Grid>*/}
 
                 <Grid size={12} sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
                     <Typography variant="subtitle2" sx={{ mt: 2, mb: 0 }}>Estils de columnes</Typography>
