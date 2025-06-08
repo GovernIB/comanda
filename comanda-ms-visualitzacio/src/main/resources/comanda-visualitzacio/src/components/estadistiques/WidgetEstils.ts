@@ -134,9 +134,6 @@ export const estils = {
         borderCollapse: 'separate',
         border: mostrarVora ? `${voraAmple}px solid ${voraColor}` : 'none',
         backgroundColor: taulaBgColor,
-        // '& th, & td': {
-        //     border: mostrarVora ? `1px solid ${theme.palette.divider}` : 'none',
-        // }
     }),
     tableHeader: (textColor: string, bgColor: string,
                   horDividerColor: string, horDividerAmple: number | undefined,

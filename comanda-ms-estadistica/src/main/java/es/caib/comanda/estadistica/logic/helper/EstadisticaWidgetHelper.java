@@ -57,7 +57,7 @@ public class EstadisticaWidgetHelper {
         try {
             App app = estadisticaClientHelper.appFindById(entity.getAppId());
             if (app != null) {
-                resource.setAplicacioNom(app.getNom());
+                resource.setAplicacio(ResourceReference.toResourceReference(app.getId(), app.getNom()));
             }
         } catch (Exception e) {
             log.error("Error obtenint el nom de l'aplicació amb id=" + entity.getAppId(), e);

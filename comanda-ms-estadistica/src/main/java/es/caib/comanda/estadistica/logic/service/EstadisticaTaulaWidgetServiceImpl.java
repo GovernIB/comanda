@@ -78,4 +78,10 @@ public class EstadisticaTaulaWidgetServiceImpl extends BaseMutableResourceServic
         resource.setAtributsVisuals((AtributsVisualsTaula) atributsVisualsHelper.getAtributsVisuals(entity));
     }
 
+    @Override
+    protected void completeResource(EstadisticaTaulaWidget resource) {
+        super.completeResource(resource);
+        resource.setAppId(resource.getAplicacio().getId());
+    }
+
 }

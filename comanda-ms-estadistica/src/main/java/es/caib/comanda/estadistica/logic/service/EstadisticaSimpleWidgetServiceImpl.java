@@ -76,4 +76,9 @@ public class EstadisticaSimpleWidgetServiceImpl extends BaseMutableResourceServi
         resource.setAtributsVisuals((AtributsVisualsSimple) atributsVisualsHelper.getAtributsVisuals(entity));
     }
 
+    @Override
+    protected void completeResource(EstadisticaSimpleWidget resource) {
+        super.completeResource(resource);
+        resource.setAppId(resource.getAplicacio().getId());
+    }
 }

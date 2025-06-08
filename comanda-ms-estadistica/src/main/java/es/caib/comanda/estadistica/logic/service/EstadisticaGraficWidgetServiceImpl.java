@@ -71,4 +71,10 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
         resource.setAtributsVisuals((AtributsVisualsGrafic) atributsVisualsHelper.getAtributsVisuals(entity));
     }
 
+    @Override
+    protected void completeResource(EstadisticaGraficWidget resource) {
+        super.completeResource(resource);
+        resource.setAppId(resource.getAplicacio().getId());
+    }
+
 }

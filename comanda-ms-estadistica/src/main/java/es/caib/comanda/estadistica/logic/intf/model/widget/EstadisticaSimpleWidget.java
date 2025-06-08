@@ -76,7 +76,6 @@ public class EstadisticaSimpleWidget extends EstadisticaWidget { // WidgetBaseRe
     @NotNull
     @Transient
     private TableColumnsEnum tipusIndicador;
-    @NotNull
     @Transient
     private PeriodeUnitat periodeIndicador;
 

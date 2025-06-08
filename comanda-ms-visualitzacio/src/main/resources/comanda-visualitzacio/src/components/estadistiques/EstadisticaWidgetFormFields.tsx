@@ -35,9 +35,23 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
 
     return <>
         <Grid container spacing={2}>
-            {/*<Grid size={12}><FormField name="appId" optionsRequest={} /></Grid>*/}
-            <Grid size={12}><FormField name="appId" /></Grid>
-            <Grid size={12}><FormField name="aplicacioNom" disabled /></Grid>
+            <Grid size={12}><FormField name="aplicacio" optionsRequest={(q) => {
+                const url = new URL(`${import.meta.env.VITE_API_URL}/apps`);
+                url.searchParams.append('filter', 'activa:true');
+                url.searchParams.append('page', 'UNPAGED');
+                if (q) {
+                    url.searchParams.append('q', q);
+                }
+                return fetch(url.toString())
+                    .then(response => response.json())
+                    .then(data => ({
+                        options: data._embedded?.appList?.map(app => ({
+                            id: app.id,
+                            description: app.nom,
+                        })) || [],
+                        page: data.page
+                    }));
+            }} /></Grid>
             <Grid size={12}><FormField name="titol" /></Grid>
             <Grid size={12}><FormField name="descripcio" type="textarea"/></Grid>
 

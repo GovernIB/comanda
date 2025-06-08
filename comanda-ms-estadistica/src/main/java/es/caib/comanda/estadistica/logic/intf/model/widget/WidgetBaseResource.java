@@ -33,11 +33,10 @@ public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID
     @Size(max = 1024)
     protected String descripcio;
 
-    @NotNull
-    protected Long appId;
 
-    // Dades a emplenar durant la conversió
-    protected String aplicacioNom;
+    @NotNull
+    protected ResourceReference<AppResource, Long> aplicacio;
+    protected Long appId;
 
     // Dimensions per les que filtrar
     @NotEmpty

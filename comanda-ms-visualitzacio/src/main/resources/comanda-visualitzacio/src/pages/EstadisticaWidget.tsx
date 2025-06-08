@@ -11,7 +11,7 @@ import EstadisticaTaulaWidgetForm  from "../components/estadistiques/Estadistica
 
 const columns = [
     {
-        field: 'aplicacioNom',
+        field: 'aplicacio',
         flex: 1,
     },
     {
