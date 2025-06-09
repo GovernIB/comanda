@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.logic.intf.model.consulta.ResultatSimpleAgregat;
+import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
@@ -14,9 +14,15 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Implementació de l'interfície personalitzada FetRepositoryCustom. Proporciona funcionalitats específiques per
@@ -35,6 +41,15 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
 
     @Autowired
     private FetRepositoryDialectFactory dialectFactory;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
+
+    static {
+        NUMBER_FORMAT.setMaximumFractionDigits(2);
+        NUMBER_FORMAT.setMinimumFractionDigits(0);
+    }
+
 
     @Override
     public List<FetEntity> findByEntornAppIdAndTempsDataBetweenAndDimensionValue(
@@ -109,7 +124,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
-    public ResultatSimpleAgregat getValorSimpleAgregat(
+    public String getValorSimpleAgregat(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,
@@ -120,23 +135,70 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         TableColumnsEnum agregacio = indicadorAgregacio.getAgregacio();
         PeriodeUnitat unitatAgregacio = indicadorAgregacio.getUnitatAgregacio();
 
-        String sql = dialectFactory.getDialect().getValorSimpleAgregatQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio);
+        String sql = dialectFactory.getDialect().getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
         query.setParameter("dataInici", dataInici);
         query.setParameter("dataFi", dataFi);
 
-        switch (agregacio) {
-            case FIRST_SEEN:
-            case LAST_SEEN:
-                Object dateResult = query.getSingleResult();
-                LocalDate result = dateResult != null ? ((Timestamp) dateResult).toLocalDateTime().toLocalDate() : null;
-                return new ResultatSimpleAgregat(result);
-            default:
-                BigDecimal numberResult = (BigDecimal) query.getSingleResult();
-                return new ResultatSimpleAgregat(numberResult != null ? numberResult.doubleValue() : 0.0);
+        return formatCellValue(query.getSingleResult(), agregacio);
+    }
+
+    @Override
+    public List<Map<String, String>> getValorsTaulaAgregat(
+            Long entornAppId,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            Map<String, List<String>> dimensionsFiltre,
+            List<IndicadorAgregacio> indicadorsAgregacio,
+            String dimensioAgrupacioCodi) {
+
+        String[] columnNames = ConsultaEstadisticaHelper.getColumnNames(indicadorsAgregacio);
+        String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi);
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("entornAppId", entornAppId);
+        query.setParameter("dataInici", dataInici);
+        query.setParameter("dataFi", dataFi);
+
+        List<Object[]> resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
         }
+
+        return resultList.stream()
+                .map(rowArray -> convertRowToMap(rowArray, columnNames, indicadorsAgregacio))
+                .collect(Collectors.toList());
+    }
+
+    // Helper per convertir una fila del resultat de la query en un map
+    private Map<String, String> convertRowToMap(Object[] rowArray, String[] columnNames, List<IndicadorAgregacio> indicadorsAgregacio) {
+        Map<String, String> fila = new HashMap<>();
+        for (int i = 0; i < columnNames.length; i++) {
+            String columnName = columnNames[i];
+            String value;
+
+            if (i == 0) {
+                value = Objects.toString(rowArray[i], null);
+            } else {
+                IndicadorAgregacio indicador = indicadorsAgregacio.get(i - 1);
+                value = formatCellValue(rowArray[i], indicador.getAgregacio());
+            }
+            fila.put(columnName, value);
+        }
+        return fila;
+    }
+
+    private String formatCellValue(Object cellValue, TableColumnsEnum agregacio) {
+        if (cellValue == null) {
+            return (TableColumnsEnum.FIRST_SEEN.equals(agregacio) || TableColumnsEnum.LAST_SEEN.equals(agregacio)) ? null : "0";
+        }
+        if (TableColumnsEnum.FIRST_SEEN.equals(agregacio) || TableColumnsEnum.LAST_SEEN.equals(agregacio)) {
+            LocalDate date = ((Timestamp) cellValue).toLocalDateTime().toLocalDate();
+            return date.format(DATE_FORMATTER);
+        }
+        return NUMBER_FORMAT.format(((BigDecimal) cellValue).doubleValue());
     }
 
 }

@@ -22,7 +22,6 @@ public class InformeWidgetSimpleItem extends InformeWidgetItem implements Serial
     private String unitat;
     private String descripcio;
     private String canviPercentual;
-    private String icona;
 
     // Configuracions visuals
     private AtributsVisualsSimple atributsVisuals;

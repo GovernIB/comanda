@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
@@ -46,6 +47,8 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
     @Autowired
     private EstadisticaHelper estadisticaHelper;
     @Autowired
+    private ConsultaEstadisticaHelper consultaEstadisticaHelper;
+    @Autowired
     private EstadisticaClientHelper estadisticaClientHelper;
 
     @Override
@@ -87,7 +90,7 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
             LocalDate dataFi) {
 //            NivellAgrupacio nivellAgrupacio) {
 
-        return estadisticaHelper.getEstadistiquesPeriode(
+        return consultaEstadisticaHelper.getEstadistiquesPeriode(
                 entornAppId,
                 dataInici,
                 dataFi);
@@ -110,7 +113,7 @@ public class FetServiceImpl extends BaseReadonlyResourceService<Fet, Long, FetEn
             Map<String, List<String>> dimensionsFiltre) {
 //            NivellAgrupacio nivellAgrupacio) {
 
-        return estadisticaHelper.getEstadistiquesPeriodeAmbDimensions(
+        return consultaEstadisticaHelper.getEstadistiquesPeriodeAmbDimensions(
                 entornAppId,
                 dataInici,
                 dataFi,

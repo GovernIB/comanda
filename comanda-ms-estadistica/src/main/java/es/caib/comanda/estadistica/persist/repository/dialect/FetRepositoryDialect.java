@@ -62,6 +62,7 @@ public interface FetRepositoryDialect {
      * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
-    String getValorSimpleAgregatQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
-    String getValorTaulaAgregatQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio);
+    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
+    String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCode);
+
 }

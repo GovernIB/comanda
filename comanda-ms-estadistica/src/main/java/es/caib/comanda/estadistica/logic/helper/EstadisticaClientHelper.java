@@ -7,6 +7,7 @@ import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -55,6 +56,22 @@ public class EstadisticaClientHelper {
             return entornApp.getContent();
         }
         return null;
+    }
+
+    public EntornApp entornAppFindByAppAndEntorn(Long appId, Long entornId) {
+        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                null,
+                "app.id:" + appId + " and entorn.id:" + entornId,
+                null,
+                null,
+                "UNPAGED",
+                null,
+                keycloakHelper.getAuthorizationHeader());
+        if (entornApps == null) {
+            return null;
+        }
+        return entornApps.getContent().stream().
+                findFirst().orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, "app:" + appId + ", entorn:" + entornId)).getContent();
     }
 
     public List<EntornApp> entornAppFindByActivaTrue() {

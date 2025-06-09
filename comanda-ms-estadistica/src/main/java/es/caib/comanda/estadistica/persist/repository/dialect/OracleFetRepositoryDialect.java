@@ -131,30 +131,23 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     //    GROUP BY t.data
     // );
     @Override
-    public String getValorSimpleAgregatQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
 
-        String querySelect = "";
-        switch (agregacio) {
-            case AVERAGE:
-                querySelect = "SELECT AVG(sum_fets) as result FROM (SELECT " + getGrupping(unitatAgregacio) + ", SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) as sum_fets";
-                break;
-            case FIRST_SEEN:
-                querySelect = "SELECT MIN(t.data) as result";
-                break;
-            case LAST_SEEN:
-                querySelect = "SELECT MAX(t.data) as result";
-                break;
-            default:
-                querySelect = "SELECT SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) as result";
-        }
-
-        querySelect += "  FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
-                "WHERE f.entorn_app_id = :entornAppId " +
-                "AND t.data BETWEEN :dataInici AND :dataFi ";
-
+        String querySelect = getSimpleQuerySelect(agregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre);
-        String queryAggregationConditions = generateAggregationConditions(indicadorCodi, agregacio, unitatAgregacio);
-        return querySelect + queryConditions + queryAggregationConditions + " FETCH FIRST 1 ROW ONLY";
+        String queryGrouping = generateGroupConditions(agregacio, unitatAgregacio);
+
+        return "SELECT " + querySelect +
+                " FROM ( " +
+                "    SELECT " +
+                (TableColumnsEnum.AVERAGE. equals(agregacio) ? "" : "t.data as data, ") +
+                "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) AS sum_fets " +
+                "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                "    WHERE f.entorn_app_id = :entornAppId " +
+                "    AND t.data BETWEEN :dataInici AND :dataFi " +
+                queryConditions +
+                queryGrouping +
+                ")";
     }
 
     // -- Consulta SQL d'exemple per a widget taula
@@ -180,12 +173,99 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     //     )
     // GROUP BY agrupacio;
     @Override
-    public String getValorTaulaAgregatQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio) {
-        return "";
+    public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi) {
+        boolean isAnyAverageQuery = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
+        boolean isAnyDataQuery = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
+        boolean isAverageAndDataQuery = isAnyAverageQuery && isAnyDataQuery;
+
+        if (isAverageAndDataQuery) {
+            // Dividim la consulta i fem UNION posteriorment
+            List<IndicadorAgregacio> indicadorsAverage = indicadorsAgregacio.stream().filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio())).collect(Collectors.toList());
+            List<IndicadorAgregacio> indicadorsNotAverage = indicadorsAgregacio.stream().filter(ind -> !TableColumnsEnum.AVERAGE.equals(ind.getAgregacio())).collect(Collectors.toList());
+
+            return getTaulaQuery(dimensionsFiltre, indicadorsAverage, dimensioAgrupacioCodi) + " UNION " + getTaulaQuery(dimensionsFiltre, indicadorsNotAverage, dimensioAgrupacioCodi);
+        }
+
+        if (isAnyAverageQuery) {
+            PeriodeUnitat primeraUnitat = indicadorsAgregacio.get(0).getUnitatAgregacio();
+            boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
+                    .skip(1) // Ignora el primer element
+                    .anyMatch(indicador -> !indicador.getUnitatAgregacio().equals(primeraUnitat));
+
+            // Si hi ha columnes tipus AVERAGE amb diferents períodes, les separam per unitatAgregacio i fem UNION
+            if (thereAreDifferentUnitatAgregacio) {
+                List<List<IndicadorAgregacio>> indicadorsAgregacioByPeriode = indicadorsAgregacio.stream()
+                        .collect(Collectors.groupingBy(IndicadorAgregacio::getUnitatAgregacio))
+                        .values()
+                        .stream()
+                        .collect(Collectors.toList());
+
+                return indicadorsAgregacioByPeriode.stream()
+                        .map(listaIndicadors -> getTaulaQuery(dimensionsFiltre, listaIndicadors, dimensioAgrupacioCodi))
+                        .collect(Collectors.joining(" UNION "));
+            }
+        }
+
+        IndicadorAgregacio primerIndicador = indicadorsAgregacio.get(0);
+        String querySelect = getTaulaQuerySelect(indicadorsAgregacio);
+        String subQuerySelects = getTaulaSubQuerySelects(indicadorsAgregacio);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryGrouping = generateGroupConditions(primerIndicador.getAgregacio(), primerIndicador.getUnitatAgregacio());
+        String queryAgrupacio = " JSON_VALUE(f.dimensions_json, '$.\"" + dimensioAgrupacioCodi + "\"') ";
+
+
+        return "SELECT agrupacio, " + querySelect +
+                " FROM ( " +
+                "    SELECT " +
+                (isAnyAverageQuery ? "" : "t.data as data, ") +
+                queryAgrupacio + " AS agrupacio," +
+                subQuerySelects +
+                "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                "    WHERE f.entorn_app_id = :entornAppId " +
+                "    AND t.data BETWEEN :dataInici AND :dataFi " +
+                queryConditions +
+                queryGrouping + "," + queryAgrupacio +
+                ") " +
+                "GROUP BY agrupacio";
     }
 
+    private String getTaulaSubQuerySelects(List<IndicadorAgregacio> indicadorsAgregacio) {
+        // Només volem un select per indicadorCodi
+        return indicadorsAgregacio.stream()
+                .map(IndicadorAgregacio::getIndicadorCodi)
+                .distinct()
+                .map(indicadorCodi -> "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"" + indicadorCodi + "\"'))) AS sum_fets" + getIndicadorSuffix(indicadorCodi))
+                .collect(Collectors.joining(", "));
+    }
 
-    /**
+    private String getTaulaQuerySelect(List<IndicadorAgregacio> indicadorsAgregacio) {
+        return indicadorsAgregacio.stream()
+                .map(ind -> getSimpleQuerySelect(ind.getAgregacio(), ind.getIndicadorCodi()) )
+                .collect(Collectors.joining(","));
+    }
+
+    public String getSimpleQuerySelect(TableColumnsEnum agregacio) {
+        return getSimpleQuerySelect(agregacio, null);
+    }
+    public String getSimpleQuerySelect(TableColumnsEnum agregacio, String indicadorCodi) {
+        String suffix = getIndicadorSuffix(indicadorCodi);
+        switch (agregacio) {
+            case AVERAGE:
+                return "AVG(sum_fets" + suffix + ") AS average_result" + suffix;
+            case FIRST_SEEN:
+                return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MIN(data) ELSE NULL END AS first_seen" + suffix;
+            case LAST_SEEN:
+                return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MAX(data) ELSE NULL END AS last_seen" + suffix;
+            default:
+                return "SUM(sum_fets" + suffix + ") AS total_sum" + suffix;
+        }
+    }
+
+    private static String getIndicadorSuffix(String indicadorCodi) {
+        return indicadorCodi != null ? "_" + indicadorCodi : "";
+    }
+
+    /*
      * Genera la condició SQL per filtrar resultats segons valors de dimensions especificats.
      * Construeix una condició SQL que inclou els valors de filtre proporcionats per a cada dimensió.
      *
@@ -205,47 +285,35 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                     List<String> valors = entry.getValue();
 
                     if (valors.size() == 1) {
-                        return "AND JSON_VALUE(f.dimensions_json, '$.\"" + codi + "\"') = '" + valors.get(0) + "'";
+                        return "AND JSON_VALUE(f.dimensions_json, '$.\"" + codi + "\"') = '" + valors.get(0) + "' ";
                     } else {
                         String valorsStr = valors.stream().map(valor -> "'" + valor + "'").collect(Collectors.joining(","));
-                        return "AND JSON_VALUE(f.dimensions_json, '$.\"" + codi + "\"') IN (" + valorsStr + ")";
+                        return "AND JSON_VALUE(f.dimensions_json, '$.\"" + codi + "\"') IN (" + valorsStr + ") ";
                     }
                 })
                 .collect(Collectors.joining(" "));
     }
 
-    private String generateAggregationConditions(String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+    private String generateGroupConditions(TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
 
         switch (agregacio) {
             case AVERAGE:
                 return "GROUP BY " + getGrupping(unitatAgregacio) + ")";
-            case FIRST_SEEN:
-            case LAST_SEEN:
-            case COUNT:
-            case SUM:
             default:
-                return "";
+                return "GROUP BY t.data ";
         }
     }
 
     private static String getGrupping(PeriodeUnitat unitatAgregacio) {
-        String grupping = "t.data";
         if (unitatAgregacio != null) {
             switch (unitatAgregacio) {
-                case SETMANA:
-                    grupping = "t.anualitat, t.setmana";
-                    break;
-                case MES:
-                    grupping = "t.anualitat, t.mes";
-                    break;
-                case TRIMESTRE:
-                    grupping = "t.anualitat, t.trimestre";
-                    break;
-                case ANY:
-                    grupping = "t.anualitat";
-                    break;
+                case SETMANA: return "t.anualitat, t.setmana";
+                case MES: return "t.anualitat, t.mes";
+                case TRIMESTRE: return "t.anualitat, t.trimestre";
+                case ANY: return "t.anualitat";
             }
         }
-        return grupping;
+        return "t.data";
     }
+
 }

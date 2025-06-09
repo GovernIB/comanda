@@ -22,21 +22,10 @@ public class InformeWidgetTaulaItem extends InformeWidgetItem implements Seriali
     private String titolAgrupament;
 
     // Column definitions
-    private List<Map<String, Object>> columns;
+    private List<Map<String, String>> columns;
 
     // Row data
-    private List<Map<String, Object>> rows;
-
-    // Dimension values for grouping
-    private List<String> dimensionValues;
-
-    // Atributs per a la configuració visual de la taula
-
-    // Configuració general de la taula
-    private Boolean mostrarCapcalera;     // Indica si s'ha de mostrar la capçalera de la taula
-    private Boolean mostrarBordes;        // Indica si s'han de mostrar els bordes de la taula
-    private Boolean mostrarAlternancia;   // Indica si s'han d'alternar els colors de les files
-    private String colorAlternancia;      // Color per a les files alternes
+    private List<Map<String, String>> rows;
 
     // Configuracions visuals
     private AtributsVisualsTaula atributsVisuals;

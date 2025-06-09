@@ -11,6 +11,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class InformeWidgetParams implements Serializable {
 
+    private Long dashboardId;
     private Long dashboardItemId;
 
 }

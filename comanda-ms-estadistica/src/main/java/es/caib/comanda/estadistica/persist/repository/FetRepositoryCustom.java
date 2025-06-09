@@ -2,7 +2,6 @@ package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.ResultatSimpleAgregat;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -98,10 +97,19 @@ public interface FetRepositoryCustom {
      * @param indicadorAgregacio Informació de l'indicador sobre el qual s'aplicarà l'agregació.
      * @return El valor agregat calculat directament a la base de dades.
      */
-    ResultatSimpleAgregat getValorSimpleAgregat(
+    String getValorSimpleAgregat(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             IndicadorAgregacio indicadorAgregacio);
+
+    List<Map<String, String>> getValorsTaulaAgregat(
+            Long entornAppId,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            Map<String, List<String>> dimensionsFiltre,
+            List<IndicadorAgregacio> indicadorsAgregacio,
+            String dimensioAgrupacioCodi);
+
 }
