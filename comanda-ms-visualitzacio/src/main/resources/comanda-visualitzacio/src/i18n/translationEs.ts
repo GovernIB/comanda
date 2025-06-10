@@ -115,6 +115,8 @@ const translationEs = {
             form: {
                 periode: "Period",
                 simple: "Widget simple",
+                grafic: "Widget gráfico",
+                taula: "Widget tabla",
             },
             simple: {
                 tab: {

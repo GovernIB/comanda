@@ -113,8 +113,10 @@ const translationEn = {
         widget: {
             title: "Statistic widgets",
             form: {
-                periode: "Periodo",
-                simple: "Widget simple",
+                periode: "Period",
+                simple: "Simple widget",
+                grafic: "Graphic widget",
+                taula: "Table widget",
             },
             simple: {
                 tab: {

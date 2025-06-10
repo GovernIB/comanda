@@ -12,6 +12,7 @@ import {FormFieldDataActionType} from "../../../lib/components/form/FormContext.
 import Button from "@mui/material/Button";
 import EditIcon from '@mui/icons-material/Edit';
 import ColumnesTable from './ColumnesTable';
+import Divider from "@mui/material/Divider";
 
 const EstadisticaTaulaWidgetForm: React.FC = () => {
     const { data, dataDispatchAction } = useFormContext();
@@ -94,16 +95,17 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
         <Grid container spacing={2}>
             <Grid size={{xs: 12, sm: 8}}>
                 <EstadisticaWidgetFormFields>
-                        <Grid size={6}><FormField name="dimensioAgrupacio" advancedSearchColumns={columnesDimensio} /></Grid>
-                        <Grid size={6}><FormField name="titolAgrupament" /></Grid>
-                        <Grid size={12}>
-                            <ColumnesTable name="columnes" label="Columnes de la taula" value={data.columnes} onChange={(value) => {
-                                dataDispatchAction({
-                                    type: FormFieldDataActionType.FIELD_CHANGE,
-                                    payload: { fieldName: "columnes", value }
-                                });
-                            }} />
-                        </Grid>
+                    <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.taula')}</Divider></Grid>
+                    <Grid size={6}><FormField name="dimensioAgrupacio" advancedSearchColumns={columnesDimensio} /></Grid>
+                    <Grid size={6}><FormField name="titolAgrupament" /></Grid>
+                    <Grid size={12}>
+                        <ColumnesTable name="columnes" label="Columnes de la taula" value={data.columnes} onChange={(value) => {
+                            dataDispatchAction({
+                                type: FormFieldDataActionType.FIELD_CHANGE,
+                                payload: { fieldName: "columnes", value }
+                            });
+                        }} />
+                    </Grid>
                 </EstadisticaWidgetFormFields>
             </Grid>
 

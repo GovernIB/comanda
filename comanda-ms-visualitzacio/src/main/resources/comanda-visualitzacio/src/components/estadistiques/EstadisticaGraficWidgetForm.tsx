@@ -109,6 +109,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         <Grid container spacing={2}>
             <Grid size={{xs: 12, sm: 8}}>
                 <EstadisticaWidgetFormFields>
+                    <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.grafic')}</Divider></Grid>
                     <Grid size={4}><FormField name="tipusGrafic" /></Grid>
                     { isChartTypeSelected && (
                         <>

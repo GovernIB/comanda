@@ -115,6 +115,8 @@ const translationCa = {
             form: {
                 periode: "Període",
                 simple: "Widget simple",
+                grafic: "Widget gràfic",
+                taula: "Widget taula",
             },
             simple: {
                 tab: {
