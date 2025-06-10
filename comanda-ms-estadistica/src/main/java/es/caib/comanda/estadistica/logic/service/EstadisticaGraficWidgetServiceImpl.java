@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaGraficWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
@@ -17,9 +18,12 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 /**
- * Implementació de la interfície EstadisticaGraficWidgetService per gestionar el servei associat als widgets gràfics d'estadístiques.
- * Aquesta classe estén BaseReadonlyResourceService per proporcionar operacions bàsiques de lectura sobre l'entitat
- * EstadisticaGraficWidgetEntity.
+ * Implementació del servei EstadisticaGraficWidgetService per gestionar les operacions sobre widgets de Grafic d'estadístiques.
+ * Aquesta classe extén BaseReadonlyResourceService, proporcionant funcionalitats estàndard de gestió de recursos de només lectura.
+ *
+ * Aquesta implementació utilitza Lombok per al registre del logger i es gestiona com un component de servei dins del context de Spring.
+ *
+ * L'objectiu d'aquest servei és facilitar les operacions associades amb els widgets de Grafic per estadístiques, basant-se en el model i l'entitat corresponent.
  *
  * @author Límit Tecnologies
  */
@@ -27,9 +31,10 @@ import java.util.Map;
 @Service
 public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceService<EstadisticaGraficWidget, Long, EstadisticaGraficWidgetEntity> implements EstadisticaGraficWidgetService {
 
+    @Autowired private EstadisticaGraficWidgetHelper estadisticaGraficWidgetHelper;
     @Autowired private EstadisticaWidgetHelper estadisticaWidgetHelper;
     @Autowired private AtributsVisualsHelper atributsVisualsHelper;
-    
+
     @Override
     protected void beforeCreateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
         try {
@@ -50,21 +55,23 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotUpdatedException(resource.getClass(), String.valueOf(entity.getId()), "Error convertint atributs visuals a JSON");
         }
-        estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
     }
 
     @Override
     protected void afterCreateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        estadisticaGraficWidgetHelper.upsertColumnes(entity, resource);
         estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
     }
 
     @Override
     protected void afterUpdateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        estadisticaGraficWidgetHelper.upsertColumnes(entity, resource);
         estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
     }
 
     @Override
     protected void afterConversion(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource) {
+        estadisticaGraficWidgetHelper.afterCoversionGetColumnes(entity, resource);
         estadisticaWidgetHelper.afterConversionGetDimensions(entity, resource);
         estadisticaWidgetHelper.afterConversionGetAppNom(entity, resource);
         // Convertir el JSON d'atributs visuals a objectes i assignar-los al recurs

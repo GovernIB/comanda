@@ -67,17 +67,4 @@ public class EstadisticaSimpleWidgetEntity extends EstadisticaWidgetEntity<Estad
         return AtributsVisualsSimple.class;
     }
 
-    //    public AtributsVisualsSimple getAtributsVisuals() {
-//        if (atributsVisualsJson == null) return null;
-//            try {
-//                ObjectMapper objectMapper = new ObjectMapper();
-//                objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-//                objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-//                AtributsVisualsSimple atributsVisuals = objectMapper.readValue(atributsVisualsJson, AtributsVisualsSimple.class);
-//                return atributsVisuals;
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                throw new RuntimeException("Error al deserialitzar la informació d'atributs visuals del widget simple: " + e.getMessage());
-//            }
-//    }
 }

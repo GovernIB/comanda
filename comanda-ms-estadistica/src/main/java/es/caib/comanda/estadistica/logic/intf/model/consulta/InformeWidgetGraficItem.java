@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.consulta;
 
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +24,8 @@ public class InformeWidgetGraficItem extends InformeWidgetItem implements Serial
     private String llegendaX;
     private String llegendaY;
     private TipusGraficEnum tipusGrafic;
-    private GraficValueTypeEnum tipusValors;
+    private TipusGraficDataEnum tipusDades;
+//    private GraficValueTypeEnum tipusValors;
 
     // Data for the chart
     private List<String> labels;

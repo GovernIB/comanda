@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity.widget;
 
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
@@ -9,7 +9,9 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
+import lombok.Setter;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -19,6 +21,9 @@ import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import java.util.List;
 
 
 /**
@@ -34,33 +39,30 @@ import javax.persistence.ManyToOne;
  * @author Límit Tecnologies
  */
 @Getter
+@Setter
 @Entity
 @DiscriminatorValue("GRAFIC") // Valor específic al discriminador
 public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<EstadisticaGraficWidget> {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "indicador_id",
-            referencedColumnName = "id",
-            //foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_indicador_fk"),
-            nullable = false)
-    private IndicadorTaulaEntity indicador;
 
     // Tipus de vista a generar; numeric, bar_chart, pie_chart, etc.
     @Column(name = "tipus_grafic", length = 16, nullable = false)
     @Enumerated(EnumType.STRING)
     private TipusGraficEnum tipusGrafic;
 
-    // Format dels valors a mostrar: NO_MOSTRAR, NUMERIC, PERCENTATGE
-    @Column(name = "tipus_valors", length = 16, nullable = false)
+    @Column(name = "tipus_dades", length = 32, nullable = false)
     @Enumerated(EnumType.STRING)
-    private GraficValueTypeEnum tipusValors;
+    private TipusGraficDataEnum tipusDades;
 
-    // Quina agrupació de temps utilitzar:
-    // hora, dia, setmana, mes, trimestre, any, o dia de la setmana (DL, DM, ...)
-    @Column(name = "temps_agrupacio", length = 16)
-    @Enumerated(EnumType.STRING)
-    private PeriodeUnitat tempsAgrupacio;
+    @OneToOne(mappedBy = "widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private IndicadorTaulaEntity indicadorInfo;
+
+//    // Format dels valors a mostrar: NO_MOSTRAR, NUMERIC, PERCENTATGE
+//    @Column(name = "tipus_valors", length = 16, nullable = false)
+//    @Enumerated(EnumType.STRING)
+//    private GraficValueTypeEnum tipusValors;
+
+    @OneToMany(mappedBy="widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<IndicadorTaulaEntity> indicadorsInfo;
 
     // Per crear gràfics compostos, on s'indicarà una dimensió per descomposar.
     // A la gràfica es mostraràn els valors descomposats per la dimensió indicada
@@ -73,6 +75,12 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_descomposicio_fk"))
     private DimensioEntity descomposicioDimensio;
 
+    // Quina agrupació de temps utilitzar:
+    // hora, dia, setmana, mes, trimestre, any, o dia de la setmana (DL, DM, ...)
+    @Column(name = "temps_agrupacio", length = 16)
+    @Enumerated(EnumType.STRING)
+    private PeriodeUnitat tempsAgrupacio;
+
     @Column(name = "llegenda_x", length = 64, nullable = false)
     private String llegendaX;
 
@@ -83,18 +91,5 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     public Class getAtributsVisualsType() {
         return AtributsVisualsGrafic.class;
     }
-//    public AtributsVisualsGrafic getAtributsVisuals() {
-//        if (atributsVisualsJson == null) return null;
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-//            objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-//            AtributsVisualsGrafic atributsVisuals = objectMapper.readValue(atributsVisualsJson, AtributsVisualsGrafic.class);
-//            return atributsVisuals;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            throw new RuntimeException("Error al deserialitzar la informació d'atributs visuals del widget gràfic: " + e.getMessage());
-//        }
-//    }
 
 }

@@ -2,10 +2,12 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.estadistica.logic.helper.PeriodeResolverHelper.PeriodeDates;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTaulaItem;
@@ -132,7 +134,7 @@ public class ConsultaEstadisticaHelper {
 
         switch (tipus) {
             case SIMPLE: return getDadesWidgetSimple(dashboardItem, dadesComunsConsulta);
-            case GRAFIC: return null;
+            case GRAFIC: return getDadesWidgetGrafic(dashboardItem, dadesComunsConsulta);
             case TAULA: return getDadesWidgetTaula(dashboardItem, dadesComunsConsulta);
         }
 
@@ -165,6 +167,27 @@ public class ConsultaEstadisticaHelper {
                 .build();
     }
 
+    private InformeWidgetItem getDadesWidgetGrafic(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) {
+
+        EstadisticaGraficWidgetEntity widget = (EstadisticaGraficWidgetEntity)dashboardItem.getWidget();
+
+        return InformeWidgetGraficItem.builder()
+                .dashboardItemId(dashboardItem.getId())
+                .tipus(WidgetTipus.GRAFIC)
+                .titol(widget.getTitol())
+                .llegendaX(widget.getLlegendaX())
+                .llegendaY(widget.getLlegendaY())
+                .tipusGrafic(widget.getTipusGrafic())
+                .tipusDades(widget.getTipusDades())
+                // TODO:
+                .labels(new ArrayList<>())
+                .series(new ArrayList<>())
+                .dimensionValues(new ArrayList<>())
+
+                .atributsVisuals((AtributsVisualsGrafic) dadesComunsConsulta.getAtributsVisuals())
+                .build();
+    }
+
     private InformeWidgetItem getDadesWidgetTaula(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) {
         EstadisticaTaulaWidgetEntity widget = (EstadisticaTaulaWidgetEntity)dashboardItem.getWidget();
         // Mapa de dimensions per filtrar la consulta
@@ -183,7 +206,7 @@ public class ConsultaEstadisticaHelper {
         String dimensioAgrupacioCodi = widget.getDimensioAgrupacio() != null ? widget.getDimensioAgrupacio().getCodi() : null;
 
         List<Map<String, String>> columnes = new ArrayList<>();
-        columnes.add(Map.of("id", "agrupacio", "label", widget.getDimensioAgrupacio().getDescripcio()));
+        columnes.add(Map.of("id", "agrupacio", "label", widget.getTitolAgrupament()));
         IntStream.range(0, widget.getColumnes().size()).forEach(index -> {
             var columna = widget.getColumnes().get(index);
             columnes.add(Map.of("id", "col" + index, "label", columna.getTitol()));
@@ -483,7 +506,7 @@ public class ConsultaEstadisticaHelper {
     }
 
     private DadesComunsWidgetConsulta getDadesComunsConsulta(DashboardItemEntity dashboardItem) {
-        EstadisticaSimpleWidgetEntity widget = (EstadisticaSimpleWidgetEntity)dashboardItem.getWidget();
+        EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         Long entornAppId = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId()).getId();
         PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(widget.getPeriode());
         AtributsVisuals atributsVisuals = resolveAtributsVisuals(dashboardItem);

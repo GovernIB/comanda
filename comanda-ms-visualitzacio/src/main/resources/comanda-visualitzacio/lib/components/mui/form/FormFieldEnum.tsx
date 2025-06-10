@@ -67,7 +67,7 @@ export const FormFieldEnum: React.FC<FormFieldEnumProps> = (props) => {
         } else {
             setFilteredOptions({});
         }
-    }, [field]);
+    }, [field, hiddenEnumValues, requestParams, requestHref]);
     return filteredOptions && <TextField
         select
         name={name}

@@ -257,6 +257,9 @@ databaseChangeLog:
                 name: tipus_grafic
                 type: varchar(16 ${varcharUnit})
             - column:
+                name: tipus_dades
+                type: varchar(32 ${varcharUnit})
+            - column:
                 name: tipus_valors
                 type: varchar(16 ${varcharUnit})
             - column:

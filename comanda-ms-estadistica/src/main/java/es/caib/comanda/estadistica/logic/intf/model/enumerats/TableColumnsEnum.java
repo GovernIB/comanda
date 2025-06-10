@@ -20,7 +20,7 @@ package es.caib.comanda.estadistica.logic.intf.model.enumerats;
  * @author Límit Tecnologies
  */
 public enum TableColumnsEnum {
-    COUNT,
+//    COUNT,
     SUM,
     AVERAGE,
     PERCENTAGE,

@@ -14,8 +14,8 @@ import InputAdornment from "@mui/material/InputAdornment";
 import Icon from "@mui/material/Icon";
 
 // ColorPaletteSelector.jsx
-const ColorPaletteSelector = ({ initialColors = [], onPaletteChange }) => {
-    const [colors, setColors] = useState(initialColors);
+const ColorPaletteSelector = ({ initialColors = "", onPaletteChange }) => {
+    const [colors, setColors] = useState(initialColors?.split(',') || []);
     const [newColor, setNewColor] = useState('#000000'); // Valor per defecte negre per al nou color
 
     // Maneja l'afegit d'un nou color a la paleta

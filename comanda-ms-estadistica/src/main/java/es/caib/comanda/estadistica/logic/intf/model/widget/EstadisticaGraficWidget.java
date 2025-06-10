@@ -1,10 +1,14 @@
 package es.caib.comanda.estadistica.logic.intf.model.widget;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
+import com.fasterxml.jackson.annotation.Nulls;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
@@ -13,7 +17,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.util.List;
 
 /**
  * Classe que representa un widget gràfic estadístic dins del sistema.
@@ -79,21 +86,21 @@ import javax.validation.constraints.NotNull;
         descriptionField = "titol"
 )
 public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
-
-    @NotNull
-    private ResourceReference<IndicadorTaula, Long> indicador;
-
+// TODO: Afegir validador
     // Tipus de vista a generar
     @NotNull
     private TipusGraficEnum tipusGrafic;
-    @NotNull
-    private GraficValueTypeEnum tipusValors;
+    private TipusGraficDataEnum tipusDades;
+    private ResourceReference<IndicadorTaula, Long> indicadorInfo;
+    private List<IndicadorTaula> indicadorsInfo;
+//    @NotNull
+//    private GraficValueTypeEnum tipusValors;
+    private ResourceReference<Dimensio, Long> descomposicioDimensio;
 
     // En cas de gràfic, quina agrupació de temps utilitzar
     @NotNull
     private PeriodeUnitat tempsAgrupacio;
 
-    private ResourceReference<Dimensio, Long> descomposicioDimensio;
 
     private String llegendaX;
     private String llegendaY;
@@ -101,4 +108,14 @@ public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseRe
     // Atributs per a la configuració visual del gràfic
     @JsonUnwrapped
     private AtributsVisualsGrafic atributsVisuals;
+
+    @Transient
+    private ResourceReference<Indicador, Long> indicador;
+    @Size(max = 64)
+    @Transient
+    private String titolIndicador;
+    @Transient
+    @JsonSetter(nulls = Nulls.SKIP)
+    private TableColumnsEnum agregacio;
+
 }

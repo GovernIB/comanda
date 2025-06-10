@@ -222,17 +222,17 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
     return (
       <Box sx={{ width: '100%', height: chartHeight }}>
-        <LineChart
-          series={series}
-          xAxis={[xAxisData]}
-          yAxis={[{ scaleType: 'linear' }]}
-          height={chartHeight}
-          margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
-        >
-          {mostrarReticula && <ChartsGrid />}
-          <ChartsTooltip />
-          <ChartsLegend />
-        </LineChart>
+        {/*<LineChart*/}
+        {/*  series={series}*/}
+        {/*  xAxis={[xAxisData]}*/}
+        {/*  yAxis={[{ scaleType: 'linear' }]}*/}
+        {/*  height={chartHeight}*/}
+        {/*  margin={{ top: 10, bottom: 30, left: 40, right: 10 }}*/}
+        {/*>*/}
+        {/*  {mostrarReticula && <ChartsGrid />}*/}
+        {/*  <ChartsTooltip />*/}
+        {/*  <ChartsLegend />*/}
+        {/*</LineChart>*/}
       </Box>
     );
   };

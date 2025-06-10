@@ -65,17 +65,5 @@ public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<Estadi
     public Class getAtributsVisualsType() {
         return AtributsVisualsTaula.class;
     }
-//    public AtributsVisualsTaula getAtributsVisuals() {
-//        if (atributsVisualsJson == null) return null;
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-//            objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-//            AtributsVisualsTaula atributsVisuals = objectMapper.readValue(atributsVisualsJson, AtributsVisualsTaula.class);
-//            return atributsVisuals;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            throw new RuntimeException("Error al deserialitzar la informació d'atributs visuals del widget taula: " + e.getMessage());
-//        }
-//    }
+
 }

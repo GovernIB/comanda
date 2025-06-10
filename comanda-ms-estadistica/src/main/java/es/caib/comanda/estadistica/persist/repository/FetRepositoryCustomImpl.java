@@ -154,8 +154,17 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             List<IndicadorAgregacio> indicadorsAgregacio,
             String dimensioAgrupacioCodi) {
 
+        // Filtrar indicadors tipus percentatge
+        List<IndicadorAgregacio> indicadorsPercentatge = filterIndicadorsPercentatge(indicadorsAgregacio);
+        // Filtrar indicadors per query (excloent percentatges que tinguin altres agregacions del mateix indicador)
+        List<IndicadorAgregacio> filteredIndicadors = filterIndicadorsQuery(indicadorsAgregacio);
+
+        // Tots els nom de les columnes
         String[] columnNames = ConsultaEstadisticaHelper.getColumnNames(indicadorsAgregacio);
-        String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi);
+        // Els noms de les columnes excloent les de percentatges que tinguin altres agregacions del mateix indicador
+        String[] columnNamesForQuery = createColumnNamesArray(columnNames, filteredIndicadors, indicadorsAgregacio);
+
+        String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, filteredIndicadors, dimensioAgrupacioCodi);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -167,10 +176,107 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
         }
 
-        return resultList.stream()
-                .map(rowArray -> convertRowToMap(rowArray, columnNames, indicadorsAgregacio))
+        List<Map<String, String>> result = resultList.stream()
+                .map(rowArray -> convertRowToMap(rowArray, columnNamesForQuery, indicadorsAgregacio))
+                .collect(Collectors.toList());
+
+        processPercentages(result, indicadorsPercentatge, filteredIndicadors, columnNames, indicadorsAgregacio);
+        return result;
+    }
+
+    private List<IndicadorAgregacio> filterIndicadorsPercentatge(List<IndicadorAgregacio> indicadorsAgregacio) {
+        return indicadorsAgregacio.stream()
+                .filter(i -> TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()))
                 .collect(Collectors.toList());
     }
+
+    private List<IndicadorAgregacio> filterIndicadorsQuery(List<IndicadorAgregacio> indicadorsAgregacio) {
+        return indicadorsAgregacio.stream()
+                .filter(i -> !TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()) ||
+                        indicadorsAgregacio.stream()
+                                .filter(j -> j.getIndicadorCodi().equals(i.getIndicadorCodi()))
+                                .allMatch(j -> TableColumnsEnum.PERCENTAGE.equals(j.getAgregacio())
+                                        || TableColumnsEnum.AVERAGE.equals(j.getAgregacio())))
+                .collect(Collectors.toList());
+    }
+
+    private String[] createColumnNamesArray(String[] columnNames, List<IndicadorAgregacio> filteredIndicadors, List<IndicadorAgregacio> allIndicadors) {
+        String[] columnNamesQuery = new String[filteredIndicadors.size() + 1];
+        columnNamesQuery[0] = columnNames[0];
+        int queryIndex = 1;
+        for (int i = 1; i < columnNames.length; i++) {
+            if (filteredIndicadors.contains(allIndicadors.get(i - 1))) {
+                columnNamesQuery[queryIndex++] = columnNames[i];
+            }
+        }
+        return columnNamesQuery;
+    }
+
+    private void processPercentages(List<Map<String, String>> result,
+                                    List<IndicadorAgregacio> indicadorsPercentatge,
+                                    List<IndicadorAgregacio> filteredIndicadors,
+                                    String[] columnNames,
+                                    List<IndicadorAgregacio> allIndicadors) {
+        for (IndicadorAgregacio indPerc : indicadorsPercentatge) {
+            int percIndex = allIndicadors.indexOf(indPerc);
+            String percColumnName = columnNames[percIndex + 1];
+            if (filteredIndicadors.contains(indPerc)) {
+                // Calcular percentatges per indicadors sense altres agregacions
+                calculatePercentages(result, percColumnName);
+            } else {
+                // Càlcul percentatges a partir d'altres agregacions
+                calculateDependentPercentages(result, indPerc, allIndicadors, columnNames);
+            }
+        }
+    }
+
+    private void calculatePercentages(List<Map<String, String>> result, String columnName) {
+        double total = result.stream()
+                .mapToDouble(row -> parseRowValue(row, columnName))
+                .sum();
+        if (total == 0) {
+            return;
+        }
+        for (Map<String, String> row : result) {
+            double value = parseRowValue(row, columnName);
+            row.put(columnName, NUMBER_FORMAT.format((value / total) * 100));
+        }
+    }
+
+    private void calculateDependentPercentages(List<Map<String, String>> result,
+                                               IndicadorAgregacio indPerc,
+                                               List<IndicadorAgregacio> allIndicadors,
+                                               String[] columnNames) {
+        int percIndex = allIndicadors.indexOf(indPerc);
+        int baseIndex = findBaseIndex(indPerc, allIndicadors);
+        if (baseIndex >= 0) {
+            String baseColumnName = columnNames[baseIndex + 1];
+            String percColumnName = columnNames[percIndex + 1];
+            double total = result.stream()
+                    .mapToDouble(row -> parseRowValue(row, baseColumnName))
+                    .sum();
+            for (Map<String, String> row : result) {
+                double baseValue = parseRowValue(row, baseColumnName);
+                String resultValue = total == 0 ? "0" : NUMBER_FORMAT.format((baseValue / total) * 100);
+                row.put(percColumnName, resultValue);
+            }
+        }
+    }
+
+    private int findBaseIndex(IndicadorAgregacio indPerc, List<IndicadorAgregacio> allIndicadors) {
+        for (int i = 0; i < allIndicadors.size(); i++) {
+            if (allIndicadors.get(i).getIndicadorCodi().equals(indPerc.getIndicadorCodi())
+                    && !TableColumnsEnum.PERCENTAGE.equals(allIndicadors.get(i).getAgregacio())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private double parseRowValue(Map<String, String> row, String columnName) {
+        return Double.parseDouble(row.get(columnName).replace(",", "."));
+    }
+
 
     // Helper per convertir una fila del resultat de la query en un map
     private Map<String, String> convertRowToMap(Object[] rowArray, String[] columnNames, List<IndicadorAgregacio> indicadorsAgregacio) {
