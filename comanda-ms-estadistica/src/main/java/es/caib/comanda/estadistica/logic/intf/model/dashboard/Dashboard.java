@@ -35,7 +35,7 @@ import java.util.List;
 @ResourceConfig(
         descriptionField = "titol",
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true),
         }
 )
 public class Dashboard extends BaseResource<Long> {

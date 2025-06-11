@@ -1504,7 +1504,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 	private Link buildReportLink(ResourceArtifact artifact, Serializable id) {
 		String rel = "generate_" + artifact.getCode();
 		if (artifact.getRequiresId() != null && artifact.getRequiresId()) {
-			return linkTo(methodOn(getClass()).artifactReportGenerate(null, artifact.getCode(), null, null, null)).withRel(rel);
+			return linkTo(methodOn(getClass()).artifactReportGenerate(id, artifact.getCode(), null, null, null)).withRel(rel);
 		} else {
 			return linkTo(methodOn(getClass()).artifactReportGenerate(artifact.getCode(), null, null, null)).withRel(rel);
 		}
