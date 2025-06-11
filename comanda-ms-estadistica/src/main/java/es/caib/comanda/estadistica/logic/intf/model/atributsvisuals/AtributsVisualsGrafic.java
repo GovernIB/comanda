@@ -38,10 +38,14 @@ public class AtributsVisualsGrafic implements AtributsVisuals {
     private Boolean lineShowPoints;  // Indica si s'han de mostrar els punts a les línies
     private Boolean lineSmooth;      // Indica si les línies han de ser suaus o rectes
     private Integer lineWidth;       // Amplada de les línies
+    private Boolean area;            // Emplenar area
 
     // Configuració específica per a gràfics de tipus PIE_CHART
     private Boolean pieDonut;        // Indica si el gràfic de pastís és de tipus donut
     private Boolean pieShowLabels;   // Indica si s'han de mostrar les etiquetes al gràfic
+    private Integer outerRadius;
+    private Integer innerRadius;
+    private Integer labelSize;
 
     // Configuració específica per a gràfics de tipus GAUGE_CHART
     private Double gaugeMin;         // Valor mínim del gauge
