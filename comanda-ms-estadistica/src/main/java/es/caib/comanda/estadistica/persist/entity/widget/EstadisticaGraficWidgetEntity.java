@@ -74,6 +74,8 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "widget_descomposicio_fk"))
     private DimensioEntity descomposicioDimensio;
+    @Column(name = "agrupar_dimensio_descomposicio")
+    private Boolean agruparPerDimensioDescomposicio;
 
     // Quina agrupació de temps utilitzar:
     // hora, dia, setmana, mes, trimestre, any, o dia de la setmana (DL, DM, ...)

@@ -269,6 +269,9 @@ databaseChangeLog:
                 name: descomposicio_dimensio_id
                 type: BIGINT
             - column:
+                name: agrupar_dimensio_descomposicio
+                type: BOOLEAN
+            - column:
                 name: llegenda_x
                 type: varchar(64 ${varcharUnit})
             - column:

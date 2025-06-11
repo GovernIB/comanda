@@ -90,15 +90,16 @@ public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseRe
     // Tipus de vista a generar
     @NotNull
     private TipusGraficEnum tipusGrafic;
+    @NotNull
     private TipusGraficDataEnum tipusDades;
     private ResourceReference<IndicadorTaula, Long> indicadorInfo;
     private List<IndicadorTaula> indicadorsInfo;
 //    @NotNull
 //    private GraficValueTypeEnum tipusValors;
     private ResourceReference<Dimensio, Long> descomposicioDimensio;
+    private Boolean agruparPerDimensioDescomposicio;
 
     // En cas de gràfic, quina agrupació de temps utilitzar
-    @NotNull
     private PeriodeUnitat tempsAgrupacio;
 
 
