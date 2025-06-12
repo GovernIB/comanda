@@ -22,7 +22,7 @@ public class InformeWidgetGraficItem extends InformeWidgetItem implements Serial
 
     private String titol;
     private String llegendaX;
-    private String llegendaY;
+//    private String llegendaY;
     private TipusGraficEnum tipusGrafic;
     private TipusGraficDataEnum tipusDades;
 //    private GraficValueTypeEnum tipusValors;

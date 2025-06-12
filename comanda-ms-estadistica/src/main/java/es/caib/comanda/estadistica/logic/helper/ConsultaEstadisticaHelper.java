@@ -20,6 +20,7 @@ import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -29,6 +30,7 @@ import es.caib.comanda.ms.estadistica.model.Format;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -40,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.*;
 
 /**
  * Lògica comuna per a obtenir i consultar informació estadística de les apps.
@@ -164,19 +168,69 @@ public class ConsultaEstadisticaHelper {
                 .descripcio(widget.getDescripcio())
                 .canviPercentual(valorConsultaPrevia)
                 .atributsVisuals((AtributsVisualsSimple) dadesComunsConsulta.getAtributsVisuals())
+                .posX(dashboardItem.getPosX())
+                .posY(dashboardItem.getPosY())
+                .width(dashboardItem.getWidth())
+                .height(dashboardItem.getHeight())
                 .build();
     }
 
     private InformeWidgetItem getDadesWidgetGrafic(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) {
 
         EstadisticaGraficWidgetEntity widget = (EstadisticaGraficWidgetEntity)dashboardItem.getWidget();
+        PeriodeUnitat tempsAgrupacio = widget.getTempsAgrupacio();
+        // Mapa de dimensions per filtrar la consulta
+        Map<String, List<String>> dimensionsFiltre = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
+                ? createDimensionsFiltre(widget.getDimensionsValor())
+                : new HashMap<>();
+
+
+        if (UN_INDICADOR.equals(widget.getTipusDades()) || UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades()) || DOS_INDICADORS.equals(widget.getTipusDades())) {
+
+            IndicadorTaulaEntity indicadorInfo = widget.getIndicadorInfo();
+            IndicadorAgregacio indicadorAgregacio = indicadorInfo != null ?
+                    IndicadorAgregacio.builder()
+                            .indicadorCodi(indicadorInfo.getIndicador().getCodi())
+                            .agregacio(indicadorInfo.getAgregacio())
+                            .unitatAgregacio(indicadorInfo.getUnitatAgregacio())
+                            .build()
+                    : null;
+
+            if (UN_INDICADOR.equals(widget.getTipusDades())) {
+
+            } else if (UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
+
+                String descomposicioDimensioCodi = widget.getDescomposicioDimensio() != null ? widget.getDescomposicioDimensio().getCodi() : null;
+                Boolean agruparPerDimensioDescomposicio = widget.getAgruparPerDimensioDescomposicio();
+
+            } else if (DOS_INDICADORS.equals(widget.getTipusDades())) {
+                throw new NotImplementedException("La configuració de 2 indicadors encara no ha estat implementada");
+            }
+        } else if (VARIS_INDICADORS.equals(widget.getTipusDades())) {
+                List<IndicadorAgregacio> indicadorsAgregacio = widget.getIndicadorsInfo().stream()
+                        .map(columna -> IndicadorAgregacio.builder()
+                                .indicadorCodi(columna.getIndicador().getCodi())
+                                .agregacio(columna.getAgregacio())
+                                .unitatAgregacio(columna.getUnitatAgregacio())
+                                .build())
+                        .collect(Collectors.toList());
+//                List<Map<String, String>> columnes = new ArrayList<>();
+//                columnes.add(Map.of("id", "agrupacio", "label", widget.getTitolAgrupament()));
+//                IntStream.range(0, widget.getIndicadorsInfo().size()).forEach(index -> {
+//                    var columna = widget.getIndicadorsInfo().get(index);
+//                    columnes.add(Map.of("id", "col" + index, "label", columna.getTitol()));
+//                });
+
+        } else {
+            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de dades incorrecte");
+        }
 
         return InformeWidgetGraficItem.builder()
                 .dashboardItemId(dashboardItem.getId())
                 .tipus(WidgetTipus.GRAFIC)
                 .titol(widget.getTitol())
                 .llegendaX(widget.getLlegendaX())
-                .llegendaY(widget.getLlegendaY())
+//                .llegendaY(widget.getLlegendaY())
                 .tipusGrafic(widget.getTipusGrafic())
                 .tipusDades(widget.getTipusDades())
                 // TODO:
@@ -185,6 +239,10 @@ public class ConsultaEstadisticaHelper {
                 .dimensionValues(new ArrayList<>())
 
                 .atributsVisuals((AtributsVisualsGrafic) dadesComunsConsulta.getAtributsVisuals())
+                .posX(dashboardItem.getPosX())
+                .posY(dashboardItem.getPosY())
+                .width(dashboardItem.getWidth())
+                .height(dashboardItem.getHeight())
                 .build();
     }
 
@@ -228,6 +286,10 @@ public class ConsultaEstadisticaHelper {
                 .columns(columnes)
                 .rows(files)
                 .atributsVisuals((AtributsVisualsTaula) dadesComunsConsulta.getAtributsVisuals())
+                .posX(dashboardItem.getPosX())
+                .posY(dashboardItem.getPosY())
+                .width(dashboardItem.getWidth())
+                .height(dashboardItem.getHeight())
                 .build();
     }
 

@@ -114,7 +114,7 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         grid={{
             horizontal: true,
             // vertical: true TODO No funciona amb versió @mui/x-charts@8.5.1
-    }}
+        }}
     />;
 }
 

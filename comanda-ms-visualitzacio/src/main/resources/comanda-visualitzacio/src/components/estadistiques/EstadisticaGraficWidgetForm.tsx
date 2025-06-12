@@ -16,7 +16,13 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
     const { data, dataDispatchAction } = useFormContext();
     const { t } = useTranslation();
     const previewData = useMemo(() =>({
-        title: data.titol || 'Títol del gràfic',
+        titol: data.titol || 'Títol del gràfic',
+        descripcio: data.descripcio,
+        colorText: data.colorText,
+        colorFons: data.colorFons,
+        mostrarVora: data.mostrarVora,
+        colorVora: data.colorVora,
+        ampleVora: data.ampleVora,
         tipusGrafic: data.tipusGrafic || 'BAR_CHART',
         llegendaX: data.llegendaX,
         // llegendaY: data.llegendaY || 'Eix Y',
@@ -42,6 +48,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         heatmapMaxValue: data.heatmapMaxValue,
     }), [data])
 
+    const isMostrarVora: boolean = data?.mostrarVora;
     // Get current graphic type (BAR_CHART, LINE_CHART, PIE_CHART, SCATTER_CHART, SPARK_LINE_CHART, GAUGE_CHART, HEATMAP_CHART)
     const chartType = data?.tipusGrafic;
     const isChartTypeSelected = chartType ?? false;
@@ -127,7 +134,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                     { isChartTypeSelected && (
                         <>
                             <Grid size={4}><FormField name="tipusDades" hiddenEnumValues={tipusDadesOcultar} required/></Grid>
-                            <Grid size={4}><FormField name="tempsAgrupacio" onChange={handleTempsAgrupacioChange}/></Grid>
+                            <Grid size={4}><FormField name="tempsAgrupacio" onChange={handleTempsAgrupacioChange} disabled={data.agruparPerDimensioDescomposicio === true}/></Grid>
                             { (isUnIndicador || isUnIndicadorAmbDescomposicio || isDosIndicadors) && (
                                 <>
                                     <Grid size={4}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
@@ -144,7 +151,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             { isVarisIndicadors && (
                                 <Grid size={12}>
                                     <ColumnesTable name="columnes"
-                                                   label="Columnes de la taula"
+                                                   label="Indicadors"
                                                    value={data.indicadorsInfo}
                                                    mostrarUnitat={false}
                                                    hiddenAgregacioValues={['FIRST_SEEN', 'LAST_SEEN']}
@@ -190,7 +197,16 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
     function renderGraficFormFields() {
         return (
             <Grid container spacing={2}>
-                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>Configuració general</Typography></Grid>
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 0 }}>Configuració general</Typography></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorText" label="Color de text" type="color" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorFons" label="Color de fons" type="color" required={false} /></Grid>
+                <Grid size={12}><FormField name="mostrarVora" label="Mostrar vora" type="checkbox" /></Grid>
+                { isMostrarVora && (
+                    <>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorVora" label="Color de la vora" type="color" required={false} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleVora" label="Ample de la vora" type="number" required={false} /></Grid>
+                    </>
+                )}
                 {/*<Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" type="color" /></Grid>*/}
                 <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><ColorPaletteSelector initialColors={appPalette} onPaletteChange={handlePaletteChange} /></Grid>
                 { (isBarTypeVisible || isLineTypeVisible || isSparkLineTypeVisible || isScatterTypeVisible) && (

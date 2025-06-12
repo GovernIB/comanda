@@ -17,6 +17,9 @@ import {
     PieArcPlot,
     PieArcLabel,
 } from '@mui/x-charts';
+import estils from "./WidgetEstils.ts";
+import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
+import {TaulaWidgetVisualizationProps} from "./TaulaWidgetVisualization.tsx";
 
 interface ColumnLabel {
     id: string;
@@ -26,7 +29,14 @@ interface ColumnLabel {
 // Define the props for the GraficWidgetVisualization component
 export interface GraficWidgetVisualizationProps {
     // Widget data
-    title?: string;
+    titol?: string;
+    descripcio?: string;
+    colorText?: string;
+    colorFons?: string;
+    mostrarVora: boolean;
+    colorVora?: string;
+    ampleVora: number;
+
     dades?: Record<string, unknown>[];
     labels?: ColumnLabel[];
     columnaAgregacio?: string;
@@ -71,6 +81,13 @@ export interface GraficWidgetVisualizationProps {
     onClick?: () => void;
 }
 
+interface GraficWidgetColors {
+    textColor: string;
+    backgroundColor: string;
+    voraColor: string;
+    isWhiteBackground: boolean;
+}
+
 /**
  * Component for visualizing a graph widget with configurable visual attributes.
  * Can be used both for dashboard display and for preview in configuration forms.
@@ -78,7 +95,13 @@ export interface GraficWidgetVisualizationProps {
 const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (props) => {
     const {
         // Widget data
-        title = 'Títol del gràfic',
+        titol = 'Títol del gràfic',
+        descripcio,
+        colorText,
+        colorFons,
+        mostrarVora = false,
+        colorVora,
+        ampleVora = 1,
         dades = generateSampleData(props.tipusGrafic),
         labels = generateSampleLabels(props.tipusGrafic),
         columnaAgregacio = generateSampleAgregacio(props.tipusGrafic),
@@ -87,7 +110,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
         // Visual attributes
         colorsPaleta = '#1f77b4,#ff7f0e,#2ca02c,#d62728,#9467bd,#8c564b',
-        mostrarReticula = true,
+        mostrarReticula = false,
 
         // Bar chart specific
         barStacked = false,
@@ -123,10 +146,36 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         onClick,
     } = props;
 
+    const useWidgetColors = (props: GraficWidgetVisualizationProps, theme: any): GraficWidgetColors => {
+        const {
+            colorText,
+            colorFons,
+            colorVora,
+        } = props;
+
+        const colors = {
+            text: colorText || theme.palette.text.primary,
+            background: colorFons || theme.palette.background.paper,
+            vora: colorVora || theme.palette.divider,
+        };
+
+        return {
+            textColor: colors.text,
+            backgroundColor: colors.background,
+            voraColor: colors.vora,
+            isWhiteBackground: !colorFons || isWhiteColor(colors.background),
+        };
+    };
+
     const theme = useTheme();
+    const colors: GraficWidgetColors = useWidgetColors(props, theme);
+
+    const bgColor = colors.isWhiteBackground ? colors.backgroundColor + ' !important' : 'transparent';
+    const bg = colors.isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colors.backgroundColor}, ${createTransparentColor(colors.backgroundColor, 0.75)})`;
+    const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
 
     // Parse color palette
-    const colors = colorsPaleta.split(',');
+    const paletaColors = colorsPaleta.split(',');
 
     // Determine chart height based on preview mode
     const chartHeight = preview ? 150 : 300;
@@ -179,7 +228,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         const series = dataKeys.map((key, index) => ({
             dataKey: key,
             label: labels?.find((label) => label.id === key)?.label || key,
-            color: colors[index % colors.length],
+            color: paletaColors[index % paletaColors.length],
             stack: barStacked ? 'stack' : undefined,
         }));
         console.log('series', series);
@@ -198,15 +247,9 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         console.log('xAxisData', xAxisData);
         console.log('yAxisData', yAxisData);
 
-        const grid = mostrarReticula
-            ? {
-                horizontal: true,
-                // vertical: true,
-            }
-            : {
-                horizontal: false,
-                // vertical: false,
-            }
+        const grid = barHorizontal ?
+            mostrarReticula ? { vertical: true, } : { vertical: false, }
+            : mostrarReticula ? { horizontal: true, } : { horizontal: false, }
 
         return (
             <Box sx={{width: '100%', height: chartHeight}}>
@@ -242,7 +285,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         const series = dataKeys.map((key, index) => ({
             dataKey: key,
             label: labels?.find((label) => label.id === key)?.label || key,
-            color: colors[index % colors.length],
+            color: paletaColors[index % paletaColors.length],
             curve: lineSmooth ? 'natural' : 'linear',
             showMark: lineShowPoints,
             area: area,
@@ -298,7 +341,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             id: index,
             label: item.label,
             value: typeof item.value === 'number' ? item.value : 0,
-            color: colors[index % colors.length]
+            color: paletaColors[index % paletaColors.length]
         }));
 
         // Calculate inner radius for donut chart
@@ -422,60 +465,20 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     };
 
     return (
-        <Paper
-            elevation={preview ? 1 : 2}
-            onClick={onClick}
-            sx={{
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                borderRadius: '.6rem',
-                cursor: onClick ? 'pointer' : 'default',
-                height: '100%',
-                minHeight: preview ? '200px' : '350px',
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                    boxShadow: onClick ? theme.shadows[4] : undefined,
-                },
-            }}
-        >
-            {/* Title */}
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    pt: 1,
-                    px: 2,
-                }}
-            >
-                <Typography
-                    sx={{
-                        letterSpacing: '0.025em',
-                        fontWeight: '500',
-                        fontSize: '1.2rem',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        width: '100%',
-                    }}
-                >
-                    {title}
-                </Typography>
+        <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)}>
+            {/* Titol */}
+            <Box sx={estils.titleContainer} >
+                <Typography sx={estils.titleText} >{titol}</Typography>
             </Box>
 
             {/* Chart */}
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                    p: 2,
-                    width: '100%',
-                }}
-            >
+            <Box sx={ estils.tableContainerBox } >
                 {renderChart()}
+            </Box>
+
+            {/*Peu*/}
+            <Box sx={estils.footerContainer}>
+                <Typography sx={estils.descText(colors.textColor)}>{descripcio}</Typography>
             </Box>
         </Paper>
     );
