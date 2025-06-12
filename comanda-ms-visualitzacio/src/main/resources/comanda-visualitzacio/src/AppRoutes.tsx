@@ -7,12 +7,18 @@ import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
 import EstadisticaWidget from './pages/EstadisticaWidget';
+import Dashboards from './pages/Dashboards.tsx';
+import EstadisticaDashboard from './pages/EstadisticaDashboard.tsx';
 
 const AppRoutes: React.FC = () => {
     return (
         <Routes>
             <Route index element={<Salut />} />
             <Route path="/appinfo/:id" element={<SalutAppInfo />} />
+            <Route path="dashboard">
+                <Route index element={<Dashboards />} />
+                <Route path=":id" element={<EstadisticaDashboard />} />
+            </Route>
             <Route path="app">
                 <Route index element={<Apps />} />
                 <Route path="form">
