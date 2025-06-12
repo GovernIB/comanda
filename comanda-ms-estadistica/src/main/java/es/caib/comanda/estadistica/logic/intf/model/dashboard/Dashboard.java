@@ -48,7 +48,6 @@ public class Dashboard extends BaseResource<Long> {
     @Size(max = 1024)
     private String descripcio;
 
-    @NotEmpty
     private List<DashboardItem> items;
     
 }
