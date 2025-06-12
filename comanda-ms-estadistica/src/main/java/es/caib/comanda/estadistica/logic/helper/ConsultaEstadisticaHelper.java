@@ -18,6 +18,7 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
@@ -184,6 +185,7 @@ public class ConsultaEstadisticaHelper {
                 ? createDimensionsFiltre(widget.getDimensionsValor())
                 : new HashMap<>();
 
+        List<Map<String, String>> labels = new ArrayList<>();
 
         if (UN_INDICADOR.equals(widget.getTipusDades()) || UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades()) || DOS_INDICADORS.equals(widget.getTipusDades())) {
 
@@ -197,11 +199,17 @@ public class ConsultaEstadisticaHelper {
                     : null;
 
             if (UN_INDICADOR.equals(widget.getTipusDades())) {
+                labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
 
             } else if (UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
 
-                String descomposicioDimensioCodi = widget.getDescomposicioDimensio() != null ? widget.getDescomposicioDimensio().getCodi() : null;
-                Boolean agruparPerDimensioDescomposicio = widget.getAgruparPerDimensioDescomposicio();
+                DimensioEntity descomposicioDimensio = widget.getDescomposicioDimensio() != null ? widget.getDescomposicioDimensio() : null;
+                boolean agruparPerDimensioDescomposicio = Boolean.TRUE.equals(widget.getAgruparPerDimensioDescomposicio());
+                if (agruparPerDimensioDescomposicio) {
+                    labels.add(Map.of("id", "agrupacio", "label", descomposicioDimensio.getNom()));
+                } else {
+                    labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
+                }
 
             } else if (DOS_INDICADORS.equals(widget.getTipusDades())) {
                 throw new NotImplementedException("La configuració de 2 indicadors encara no ha estat implementada");
@@ -214,12 +222,12 @@ public class ConsultaEstadisticaHelper {
                                 .unitatAgregacio(columna.getUnitatAgregacio())
                                 .build())
                         .collect(Collectors.toList());
-//                List<Map<String, String>> columnes = new ArrayList<>();
-//                columnes.add(Map.of("id", "agrupacio", "label", widget.getTitolAgrupament()));
-//                IntStream.range(0, widget.getIndicadorsInfo().size()).forEach(index -> {
-//                    var columna = widget.getIndicadorsInfo().get(index);
-//                    columnes.add(Map.of("id", "col" + index, "label", columna.getTitol()));
-//                });
+
+                labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
+                IntStream.range(0, widget.getIndicadorsInfo().size()).forEach(index -> {
+                    var indicador = widget.getIndicadorsInfo().get(index);
+                    labels.add(Map.of("id", "col" + index, "label", indicador.getTitol()));
+                });
 
         } else {
             throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de dades incorrecte");
@@ -616,6 +624,23 @@ public class ConsultaEstadisticaHelper {
             return isZero(valor2) ? 0 : Math.signum(valor2) * 100;
         } else {
             return ((valor2 - valor1) / Math.abs(valor1)) * 100;
+        }
+    }
+
+    private String getLabelAgrupacioTemporal(PeriodeUnitat tempsAgrupacio) {
+        switch (tempsAgrupacio) {
+            case DIA:
+                return "Dia";
+            case SETMANA:
+                return "Setmana";
+            case MES:
+                return "Mes";
+            case TRIMESTRE:
+                return "Trimestre";
+            case ANY:
+                return "Any";
+            default:
+                return tempsAgrupacio.name();
         }
     }
 

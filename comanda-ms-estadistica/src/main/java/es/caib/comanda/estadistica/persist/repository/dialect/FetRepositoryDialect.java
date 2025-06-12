@@ -63,6 +63,42 @@ public interface FetRepositoryDialect {
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
     String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
+
+    String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio);
+
+    // SELECT
+    //     t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
+    //     JSON_VALUE(f.dimensions_json, '$."ORG"') AS descomposicio,
+    //     SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
+    // FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
+    // WHERE f.entorn_app_id = 1
+    //   AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
+    //   AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
+    // GROUP BY t.anualitat, t.mes, t.dia, JSON_VALUE(f.dimensions_json, '$."ORG"')
+    // ORDER BY agrupacio, descomposicio
+    String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio);
+
+    // -- Consulta SQL d'exemple per a widget grafic 1 indicador amb descomposició, agrupant per la descomposició
+    // SELECT
+    //    agrupacio,
+    //    SUM(sum_fets_per_data) AS total_sum,
+    //    AVG(sum_fets_per_data) AS average_result
+    // FROM (
+    //         -- Subconsulta per calcular les sumes per data
+    //         SELECT
+    //             JSON_VALUE(f.dimensions_json, '$."ORG"') AS agrupacio,
+    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
+    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
+    //         WHERE f.entorn_app_id = 1
+    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
+    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
+    //         GROUP BY JSON_VALUE(f.dimensions_json, '$."ORG"')
+    //     )
+    // GROUP BY agrupacio;
+    String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi);
+
+    String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio);
+
     String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCode);
 
 }

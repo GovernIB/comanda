@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 
 import java.time.LocalDate;
@@ -103,6 +104,39 @@ public interface FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             IndicadorAgregacio indicadorAgregacio);
+
+    List<Map<String, String>> getValorsGraficUnIndicador(
+            Long entornAppId,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            Map<String, List<String>> dimensionsFiltre,
+            IndicadorAgregacio indicadorAgregacio,
+            PeriodeUnitat tempsAgregacio);
+
+    List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(
+            Long entornAppId,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            Map<String, List<String>> dimensionsFiltre,
+            IndicadorAgregacio indicadorAgregacio,
+            String dimensioDescomposicioCodi,
+            PeriodeUnitat tempsAgregacio);
+
+    List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(
+            Long entornAppId,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            Map<String, List<String>> dimensionsFiltre,
+            IndicadorAgregacio indicadorAgregacio,
+            String dimensioDescomposicioCodi);
+
+    List<Map<String, String>> getValorsGraficVarisIndicadors(
+            Long entornAppId,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            Map<String, List<String>> dimensionsFiltre,
+            List<IndicadorAgregacio> indicadorsAgregacio,
+            PeriodeUnitat tempsAgregacio);
 
     List<Map<String, String>> getValorsTaulaAgregat(
             Long entornAppId,

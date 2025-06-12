@@ -22,8 +22,49 @@ databaseChangeLog:
             - column:
                 name: data
     - createIndex:
+        tableName: ${db_prefix}est_temps
+        indexName: ${db_prefix}est_temps_anualitat_i
+        columns:
+            - column:
+                name: anualitat
+    - createIndex:
+        tableName: ${db_prefix}est_temps
+        indexName: ${db_prefix}est_temps_trimestre_i
+        columns:
+            - column:
+                name: anualitat
+            - column:
+                name: trimestre
+    - createIndex:
+        tableName: ${db_prefix}est_temps
+        indexName: ${db_prefix}est_temps_mes_i
+        columns:
+            - column:
+                name: anualitat
+            - column:
+                name: mes
+    - createIndex:
+        tableName: ${db_prefix}est_temps
+        indexName: ${db_prefix}est_temps_setmana_i
+        columns:
+            - column:
+                name: anualitat
+            - column:
+                name: setmana
+    - createIndex:
+        tableName: ${db_prefix}est_temps
+        indexName: ${db_prefix}est_temps_dia_i
+        columns:
+            - column:
+                name: anualitat
+            - column:
+                name: mes
+            - column:
+                name: dia
+    - createIndex:
         tableName: ${db_prefix}est_dimensio_valor
         indexName: ${db_prefix}est_dimensio_valor_dim_i
         columns:
             - column:
                 name: dimensio_id
+

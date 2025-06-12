@@ -146,6 +146,92 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
+    public List<Map<String, String>> getValorsGraficUnIndicador(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio) {
+
+        String sql = dialectFactory.getDialect().getGraficUnIndicadorQuery(dimensionsFiltre, indicadorAgregacio, tempsAgregacio);
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("entornAppId", entornAppId);
+        query.setParameter("dataInici", dataInici);
+        query.setParameter("dataFi", dataFi);
+
+        List<Object[]> resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
+        }
+
+        // TODO:
+        return List.of();
+    }
+
+    @Override
+    public List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
+
+        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, tempsAgregacio);
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("entornAppId", entornAppId);
+        query.setParameter("dataInici", dataInici);
+        query.setParameter("dataFi", dataFi);
+
+        List<Object[]> resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
+        }
+
+        // TODO:
+        return List.of();
+    }
+
+    @Override
+    public List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
+
+        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi);
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("entornAppId", entornAppId);
+        query.setParameter("dataInici", dataInici);
+        query.setParameter("dataFi", dataFi);
+
+        List<Object[]> resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
+        }
+
+        // TODO:
+        return List.of();
+    }
+
+    @Override
+    public List<Map<String, String>> getValorsGraficVarisIndicadors(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
+
+        // Filtrar indicadors tipus percentatge
+        List<IndicadorAgregacio> indicadorsPercentatge = filterIndicadorsPercentatge(indicadorsAgregacio);
+        // Filtrar indicadors per query (excloent percentatges que tinguin altres agregacions del mateix indicador)
+        List<IndicadorAgregacio> filteredIndicadors = filterIndicadorsQuery(indicadorsAgregacio);
+
+        // Tots els nom de les columnes
+        String[] columnNames = ConsultaEstadisticaHelper.getColumnNames(indicadorsAgregacio);
+        // Els noms de les columnes excloent les de percentatges que tinguin altres agregacions del mateix indicador
+        String[] columnNamesForQuery = createColumnNamesArray(columnNames, filteredIndicadors, indicadorsAgregacio);
+
+        String sql = dialectFactory.getDialect().getGraficVarisIndicadorsQuery(dimensionsFiltre, filteredIndicadors, tempsAgregacio);
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("entornAppId", entornAppId);
+        query.setParameter("dataInici", dataInici);
+        query.setParameter("dataFi", dataFi);
+
+        List<Object[]> resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
+        }
+
+        // TODO:
+        return List.of();
+    }
+
+    @Override
     public List<Map<String, String>> getValorsTaulaAgregat(
             Long entornAppId,
             LocalDate dataInici,
