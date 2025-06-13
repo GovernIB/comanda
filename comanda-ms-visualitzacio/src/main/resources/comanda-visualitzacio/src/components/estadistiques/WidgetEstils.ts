@@ -68,11 +68,13 @@ export const estils = {
         fontWeight: '500',
         textAlign: 'center',
         lineHeight: '1',
+        zIndex:2,
     }),
     unitText: (preview: boolean) => ({
         fontSize: preview ? '1em' : '1em',
         textAlign: 'center',
         lineHeight: '1',
+        zIndex:2,
     }),
     footerContainer: {
         display: 'flex',
@@ -95,6 +97,7 @@ export const estils = {
         whiteSpace: 'nowrap',
         minWidth: '260px',
         color: textColor,
+        zIndex:2,
     }),
     percText: (textColor: string) => ({
         flexShrink: 0,
@@ -105,20 +108,27 @@ export const estils = {
         whiteSpace: 'nowrap',
         ml: 2,
         color: textColor,
+        zIndex:2,
     }),
     iconContainer: {
     },
     icon: (preview: boolean, color: string, bgColor: string) => ({
         color,
-        width: preview ? '1em' : '1.4em',
-        height: preview ? '1em' : '1.4em',
-        fontSize: preview ? '1.8em' : '1.8em',
+        // width: preview ? '1em' : '1.4em',
+        // height: preview ? '1em' : '1.4em',
+        // fontSize: preview ? '1.8em' : '1.8em',
         backgroundColor: bgColor,
         borderRadius: '50%',
-        padding: '0.1em',
-        border: 'solid',
-        borderWidth: '0.1em',
-        boxSizing: 'content-box',
+        // padding: '0.1em',
+        // border: 'solid',
+        // borderWidth: '0.1em',
+        // boxSizing: 'content-box',
+        position: 'absolute',
+        bottom: '-60px',
+        right: '-60px',
+        border: 'none',
+        fontSize: '200px',
+        opacity: '0.3',
     }),
     tableContainerBox: {
         display: 'flex',
@@ -162,7 +172,10 @@ export const estils = {
         '& > *:last-child': {
             borderRight: "none",
         },
-    })
+    }),
+    entornCodi: {
+        fontWeight: 600,
+    }
 
 };
 

@@ -267,6 +267,9 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     private String generateGraficGroupConditions(PeriodeUnitat tempsAgregacio) {
+        if (tempsAgregacio == null)
+            return "t.anualitat, t.mes, t.dia";
+
         switch (tempsAgregacio) {
             case SETMANA: return "t.anualitat, t.setmana";
             case MES: return "t.anualitat, t.mes";

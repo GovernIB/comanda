@@ -13,6 +13,8 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimple
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTaulaItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
@@ -33,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
@@ -131,7 +134,7 @@ public class ConsultaEstadisticaHelper {
     }
 
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem) {
 
         WidgetTipus tipus = determineWidgetType(dashboardItem);
@@ -186,6 +189,7 @@ public class ConsultaEstadisticaHelper {
                 : new HashMap<>();
 
         List<Map<String, String>> labels = new ArrayList<>();
+        List<Map<String, String>> files = new ArrayList<>();
 
         if (UN_INDICADOR.equals(widget.getTipusDades()) || UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades()) || DOS_INDICADORS.equals(widget.getTipusDades())) {
 
@@ -200,6 +204,15 @@ public class ConsultaEstadisticaHelper {
 
             if (UN_INDICADOR.equals(widget.getTipusDades())) {
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
+                labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
+                files = fetRepository.getValorsGraficUnIndicador(
+                        dadesComunsConsulta.getEntornAppId(),
+                        dadesComunsConsulta.getPeriodeDates().getStart(),
+                        dadesComunsConsulta.getPeriodeDates().getEnd(),
+                        dimensionsFiltre,
+                        indicadorAgregacio,
+                        tempsAgrupacio);
+                // files: [{'agrupacio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
 
             } else if (UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
 
@@ -207,8 +220,30 @@ public class ConsultaEstadisticaHelper {
                 boolean agruparPerDimensioDescomposicio = Boolean.TRUE.equals(widget.getAgruparPerDimensioDescomposicio());
                 if (agruparPerDimensioDescomposicio) {
                     labels.add(Map.of("id", "agrupacio", "label", descomposicioDimensio.getNom()));
+                    labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
+                    files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
+                            dadesComunsConsulta.getEntornAppId(),
+                            dadesComunsConsulta.getPeriodeDates().getStart(),
+                            dadesComunsConsulta.getPeriodeDates().getEnd(),
+                            dimensionsFiltre,
+                            indicadorAgregacio,
+                            descomposicioDimensio.getCodi());
+                    // files: [{'agrupacio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
+
                 } else {
                     labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
+                    labels.add(Map.of("id", "descomposicio", "label", descomposicioDimensio.getNom()));
+                    labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
+                    files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
+                            dadesComunsConsulta.getEntornAppId(),
+                            dadesComunsConsulta.getPeriodeDates().getStart(),
+                            dadesComunsConsulta.getPeriodeDates().getEnd(),
+                            dimensionsFiltre,
+                            indicadorAgregacio,
+                            descomposicioDimensio.getCodi(),
+                            tempsAgrupacio);
+                    // files: [{'agrupacio': '', 'descomposicio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
+
                 }
 
             } else if (DOS_INDICADORS.equals(widget.getTipusDades())) {
@@ -226,8 +261,18 @@ public class ConsultaEstadisticaHelper {
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
                 IntStream.range(0, widget.getIndicadorsInfo().size()).forEach(index -> {
                     var indicador = widget.getIndicadorsInfo().get(index);
-                    labels.add(Map.of("id", "col" + index, "label", indicador.getTitol()));
+                    labels.add(Map.of("id", "col" + (index + 1), "label", indicador.getTitol()));
                 });
+
+            files = fetRepository.getValorsGraficVarisIndicadors(
+                    dadesComunsConsulta.getEntornAppId(),
+                    dadesComunsConsulta.getPeriodeDates().getStart(),
+                    dadesComunsConsulta.getPeriodeDates().getEnd(),
+                    dimensionsFiltre,
+                    indicadorsAgregacio,
+                    tempsAgrupacio);
+
+            // files: [{'agrupacio': '', 'col1': '', .. , 'colN': ''}]
 
         } else {
             throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de dades incorrecte");
@@ -241,10 +286,10 @@ public class ConsultaEstadisticaHelper {
 //                .llegendaY(widget.getLlegendaY())
                 .tipusGrafic(widget.getTipusGrafic())
                 .tipusDades(widget.getTipusDades())
+                .labels(labels)
                 // TODO:
-                .labels(new ArrayList<>())
-                .series(new ArrayList<>())
-                .dimensionValues(new ArrayList<>())
+                .series(filesToSeries(files, widget.getTipusGrafic(), widget.getTipusDades()))
+//                .dimensionValues(new ArrayList<>())
 
                 .atributsVisuals((AtributsVisualsGrafic) dadesComunsConsulta.getAtributsVisuals())
                 .posX(dashboardItem.getPosX())
@@ -252,6 +297,208 @@ public class ConsultaEstadisticaHelper {
                 .width(dashboardItem.getWidth())
                 .height(dashboardItem.getHeight())
                 .build();
+    }
+
+//    private List<Map<String, Object>> filesToSeries(List<Map<String, String>> files, TipusGraficEnum tipusGrafic, TipusGraficDataEnum tipusDades) {
+//        if (files == null || files.isEmpty()) {
+//            return new ArrayList<>();
+//        }
+//
+//        switch (tipusGrafic) {
+//            case BAR_CHART:
+//            case LINE_CHART:
+//                if (files.get(0).size() == 2) {
+//                    String key = files.get(0).keySet().stream().filter(k -> !"agrupacio".equals(k)).findFirst().orElse(null);
+//                    return files.stream()
+//                            .map(f -> Map.<String, Object>of("agrupacio", f.get("agrupacio"), key, toDouble(f.get(key))))
+//                            .collect(Collectors.toList());
+//                } else {
+//                    List<String> keys = files.get(0).keySet().stream().filter(k -> !"agrupacio".equals(k)).collect(Collectors.toList());
+//                    if (keys.contains("descomposicio")) {
+//                        String valorKey = keys.stream().filter(k -> !"descomposicio".equals(k)).findFirst().orElse(null);
+//                        return files.stream()
+//                                .collect(Collectors.groupingBy(f -> f.get("agrupacio")))
+//                                .entrySet().stream()
+//                                .map(entry -> {
+//                                    Map<String, Object> item = new HashMap<>();
+//                                    item.put("agrupacio", entry.getKey());
+//                                    entry.getValue().forEach(f -> {
+//                                        item.put(f.get("descomposicio"), toDouble(f.get(valorKey)));
+//                                    });
+//                                    return item;
+//                                })
+//                                .collect(Collectors.toList());
+//                    } else {
+//                        return files.stream()
+//                                .map(f -> {
+//                                    Map<String, Object> item = new HashMap<>();
+//                                    item.put("agrupacio", f.get("agrupacio"));
+//                                    keys.forEach(k -> {
+//                                        item.put(k, toDouble(f.get(k)));
+//                                    });
+//                                    return item;
+//                                })
+//                                .collect(Collectors.toList());
+//                    }
+//
+//                }
+//            case PIE_CHART:
+//                if (files.get(0).size() == 2) {
+//                    String key = files.get(0).keySet().stream().filter(k -> !"agrupacio".equals(k)).findFirst().orElse(null);
+//                    return files.stream()
+//                            .map(f -> Map.<String, Object>of("label", f.get("agrupacio"), "value", toDouble(f.get(key))))
+//                            .collect(Collectors.toList());
+//                } else {
+//                    List<String> keys = files.get(0).keySet().stream().filter(k -> !"agrupacio".equals(k)).collect(Collectors.toList());
+//                    if (keys.contains("descomposicio")) {
+//                        return files.stream()
+//                                .collect(Collectors.groupingBy(
+//                                        f -> f.get("descomposicio"),
+//                                        Collectors.summingDouble(f -> toDouble(f.get(keys.stream()
+//                                                .filter(k -> !"descomposicio".equals(k))
+//                                                .findFirst()
+//                                                .orElse(null))))
+//                                ))
+//                                .entrySet().stream()
+//                                .map(entry -> Map.<String, Object>of(
+//                                        "label", entry.getKey(),
+//                                        "value", entry.getValue()
+//                                ))
+//                                .collect(Collectors.toList());
+//                    } else {
+//                        return keys.stream()
+//                                .map(key -> {
+//                                    double sum = files.stream()
+//                                            .mapToDouble(row -> toDouble(row.get(key)) != null ? toDouble(row.get(key)) : 0.0)
+//                                            .sum();
+//                                    return Map.<String, Object>of(
+//                                            "label", key,
+//                                            "value", sum
+//                                    );
+//                                })
+//                                .collect(Collectors.toList());
+//                    }
+//                }
+//            default:
+//                throw new NotImplementedException("Tipus de grafic no implementat");
+//        }
+//    }
+
+    private List<Map<String, Object>> filesToSeries(List<Map<String, String>> files, TipusGraficEnum tipusGrafic, TipusGraficDataEnum tipusDades) {
+        if (files == null || files.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String agrupacioKey = "agrupacio";
+        switch (tipusGrafic) {
+            case BAR_CHART:
+            case LINE_CHART:
+            case PIE_CHART:
+                boolean isSimpleMapping = files.get(0).size() == 2;
+
+                if (isSimpleMapping) {
+                    String key = extractKeyExcluding(files.get(0), agrupacioKey);
+                    return tipusGrafic == TipusGraficEnum.PIE_CHART
+                            ? convertToPieChartSeriesSimple(files, agrupacioKey, key)
+                            : convertToChartSeriesSimple(files, agrupacioKey, key);
+                }
+
+                List<String> keys = files.get(0).keySet().stream()
+                        .filter(k -> !k.equals(agrupacioKey))
+                        .collect(Collectors.toList());
+
+                if (keys.contains("descomposicio")) {
+                    String valueKey = keys.stream()
+                            .filter(k -> !"descomposicio".equals(k))
+                            .findFirst()
+                            .orElse(null);
+
+                    return tipusGrafic == TipusGraficEnum.PIE_CHART
+                            ? groupByAndAggregate(files, "descomposicio", valueKey)
+                            : groupByAndMapToSeries(files, agrupacioKey, "descomposicio", valueKey);
+                }
+
+                return convertFilesToSeriesWithKeys(files, keys, agrupacioKey, tipusGrafic);
+            default:
+                throw new NotImplementedException("Tipus de grafic no implementat");
+        }
+    }
+
+    private String extractKeyExcluding(Map<String, String> map, String excludedKey) {
+        return map.keySet().stream()
+                .filter(k -> !k.equals(excludedKey))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private List<Map<String, Object>> convertToPieChartSeriesSimple(List<Map<String, String>> files, String agrupacioKey, String valueKey) {
+        return files.stream()
+                .map(f -> Map.of("label", f.get(agrupacioKey), "value", (Object) toDouble(f.get(valueKey))))
+                .collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> convertToChartSeriesSimple(List<Map<String, String>> files, String agrupacioKey, String valueKey) {
+        return files.stream()
+                .map(f -> Map.of(agrupacioKey, f.get(agrupacioKey), valueKey, (Object) toDouble(f.get(valueKey))))
+                .collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> groupByAndAggregate(List<Map<String, String>> files, String groupByKey, String aggregateKey) {
+        return files.stream()
+                .collect(Collectors.groupingBy(
+                        f -> f.get(groupByKey),
+                        Collectors.summingDouble(f -> toDouble(f.get(aggregateKey)))
+                ))
+                .entrySet().stream()
+                .map(entry -> Map.<String, Object>of("label", entry.getKey(), "value", entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> groupByAndMapToSeries(List<Map<String, String>> files, String agrupacioKey, String descomposicioKey, String valueKey) {
+        return files.stream()
+                .collect(Collectors.groupingBy(f -> f.get(agrupacioKey)))
+                .entrySet().stream()
+                .map(entry -> {
+                    Map<String, Object> mapped = new HashMap<>();
+                    mapped.put(agrupacioKey, entry.getKey());
+                    entry.getValue().forEach(f -> mapped.put(f.get(descomposicioKey), toDouble(f.get(valueKey))));
+                    return mapped;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> convertFilesToSeriesWithKeys(List<Map<String, String>> files, List<String> keys, String agrupacioKey, TipusGraficEnum tipusGrafic) {
+        if (tipusGrafic == TipusGraficEnum.PIE_CHART) {
+            return keys.stream()
+                    .map(key -> {
+                        double sum = files.stream()
+                                .mapToDouble(row -> toDouble(row.get(key)) != null ? toDouble(row.get(key)) : 0.0)
+                                .sum();
+                        return Map.<String, Object>of("label", key, "value", sum);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return files.stream()
+                .map(f -> {
+                    Map<String, Object> mapped = new HashMap<>();
+                    mapped.put(agrupacioKey, f.get(agrupacioKey));
+                    keys.forEach(k -> mapped.put(k, toDouble(f.get(k))));
+                    return mapped;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    private Double toDouble(String valor) {
+        if (valor == null || valor.isEmpty()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(valor);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private InformeWidgetItem getDadesWidgetTaula(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) {
@@ -275,7 +522,7 @@ public class ConsultaEstadisticaHelper {
         columnes.add(Map.of("id", "agrupacio", "label", widget.getTitolAgrupament()));
         IntStream.range(0, widget.getColumnes().size()).forEach(index -> {
             var columna = widget.getColumnes().get(index);
-            columnes.add(Map.of("id", "col" + index, "label", columna.getTitol()));
+            columnes.add(Map.of("id", "col" + (index + 1), "label", columna.getTitol()));
         });
 
         List<Map<String, String>> files = fetRepository.getValorsTaulaAgregat(

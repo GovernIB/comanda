@@ -60,7 +60,18 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
 
             DashboardEntity dashboard = getDashboard(code, entity);
             return dashboard.getItems().stream()
-                    .map(item -> consultaEstadisticaHelper.getDadesWidget(item))
+                    .map(item -> {
+                        try {
+                            return consultaEstadisticaHelper.getDadesWidget(item);
+                        } catch (Exception e) {
+                            log.error("Error generant informe widget. Item {}: {}", item.getId(), e.getMessage(), e);
+                            InformeWidgetItem errorItem = InformeWidgetItem.builder()
+                                    .error(true)
+                                    .errorMsg("Error processing item " + item.getId() + ": " + e.getMessage())
+                                    .build();
+                            return errorItem;
+                        }
+                    })
                     .collect(Collectors.toList());
         }
 

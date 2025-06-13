@@ -14,7 +14,7 @@ import java.io.Serializable;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class InformeWidgetItem implements Serializable {
+public class InformeWidgetItem implements Serializable {
 
     protected WidgetTipus tipus;
     protected Long dashboardItemId;
@@ -23,5 +23,8 @@ public abstract class InformeWidgetItem implements Serializable {
     protected int posY;
     protected int width;
     protected int height;
+
+    protected boolean error;
+    protected String errorMsg;
 
 }

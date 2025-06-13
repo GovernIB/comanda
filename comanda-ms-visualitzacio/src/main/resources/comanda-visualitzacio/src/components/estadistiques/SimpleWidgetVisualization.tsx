@@ -7,6 +7,7 @@ import { useTheme } from '@mui/material/styles';
 import { numberFormat, useBaseAppContext } from 'reactlib';
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil";
 import estils from "./WidgetEstils.ts";
+import Chip from "@mui/material/Chip";
 
 // Define the props for the SimpleWidgetVisualization component
 export interface SimpleWidgetVisualizationProps {
@@ -16,6 +17,7 @@ export interface SimpleWidgetVisualizationProps {
     unitat?: string;
     descripcio?: string;
     canviPercentual?: string;
+    entornCodi?: string;
 
     // Visual attributes
     icona?: string | undefined;
@@ -37,25 +39,15 @@ export interface SimpleWidgetVisualizationProps {
 // Components
 const WidgetTitle: React.FC<{
     titol: string;
-    icona: string | undefined;
-    preview: boolean;
-    iconColor: string;
-    iconBgColor: string;
-}> = ({titol, icona, preview, iconColor, iconBgColor}) => {
+    entornCodi: string;
+}> = ({titol, entornCodi}) => {
 
-    const camelToSnakeCase = (str: string | undefined) => {
-        if (!str) return undefined;
-        return str
-            .replace(/([A-Z])/g, (letter, index) =>
-                index === 0 ? letter.toLowerCase() : `_${letter.toLowerCase()}`)
-            .replace(/^_/, ''); // Eliminar _ inicial por si acaso
-    };
-
-    const snakeCaseIcona = camelToSnakeCase(icona);
     return (
         <Box sx={estils.titleContainer}>
             <Typography sx={estils.titleText}>{titol}</Typography>
-            {icona && (<Box sx={estils.iconContainer}><Icon sx={estils.icon(preview, iconColor, iconBgColor)}>{snakeCaseIcona}</Icon></Box>)}
+            <Box sx={estils.iconContainer}>
+                <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
+            </Box>
         </Box>
     );
 };
@@ -120,6 +112,7 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
         unitat = props.unitat || '',
         descripcio = props.descripcio || 'Descripcio...',
         canviPercentual = props.canviPercentual || '',
+        entornCodi = props.entornCodi || 'DEV',
         icona,
         vora = false,
         ampleVora,
@@ -136,11 +129,22 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
     const bg = isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${backgroundColor}, ${createTransparentColor(backgroundColor, 0.75)})`;
     const voraAmple = ampleVora || (vora ? 1 : 0);
 
+    const camelToSnakeCase = (str: string | undefined) => {
+        if (!str) return undefined;
+        return str
+            .replace(/([A-Z])/g, (letter, index) =>
+                index === 0 ? letter.toLowerCase() : `_${letter.toLowerCase()}`)
+            .replace(/^_/, ''); // Eliminar _ inicial por si acaso
+    };
+
+    const snakeCaseIcona = camelToSnakeCase(icona);
+
     return (
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, textColor, vora, voraAmple, voraColor, onClick, theme)}>
-            <WidgetTitle titol={titol} icona={icona} iconColor={iconColor} iconBgColor={iconBgColor} preview={preview}/>
+            <WidgetTitle titol={titol} entornCodi={entornCodi} icona={icona} iconColor={iconColor} iconBgColor={iconBgColor} preview={preview}/>
             <WidgetContent valor={formattedValue} unitat={unitat} preview={preview}/>
             <WidgetFooter descripcio={descripcio} canviPercentual={canviPercentual} textColor={highlightTextColor} preview={preview}/>
+            <Icon sx={estils.icon(preview, iconColor, iconBgColor)}>{snakeCaseIcona}</Icon>
         </Paper>
     );
 };

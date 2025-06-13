@@ -12,6 +12,7 @@ import Icon from '@mui/material/Icon';
 import {useTheme} from '@mui/material/styles';
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil";
 import estils from './WidgetEstils';
+import Chip from "@mui/material/Chip";
 
 // Define the column style interface
 interface ColumnaEstil {
@@ -67,6 +68,7 @@ export interface TaulaWidgetVisualizationProps {
     descripcio?: string;
     columnes?: { id: string; label: string; format?: (value: any) => string }[];
     files?: any[];
+    entornCodi?: string;
 
     // Visual attributes
     // Contenidor
@@ -159,6 +161,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         descripcio = 'Descripcio de la taula',
         columnes = generateSampleColumns(),
         files = generateSampleData(),
+        entornCodi = 'DEV',
 
         // Atributs visuals
         // Contenidor
@@ -282,6 +285,9 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
             {/* Titol */}
             <Box sx={estils.titleContainer} >
                 <Typography sx={estils.titleText} >{titol}</Typography>
+                <Box sx={estils.iconContainer}>
+                    <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
+                </Box>
             </Box>
 
             {/* Table */}

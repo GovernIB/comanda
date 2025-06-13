@@ -28,11 +28,11 @@ public class InformeWidgetGraficItem extends InformeWidgetItem implements Serial
 //    private GraficValueTypeEnum tipusValors;
 
     // Data for the chart
-    private List<String> labels;
+    private List<Map<String, String>> labels;
     private List<Map<String, Object>> series;
 
-    // For charts with dimension decomposition
-    private List<String> dimensionValues;
+//    // For charts with dimension decomposition
+//    private List<String> dimensionValues;
 
     // Configuracions visuals
     private AtributsVisualsGrafic atributsVisuals;

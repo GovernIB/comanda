@@ -160,8 +160,16 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
         }
 
-        // TODO:
-        return List.of();
+        List<Map<String, String>> result = resultList.stream()
+                .map(rowArray -> Map.of(
+                        "agrupacio", Objects.toString(rowArray[0]),
+                        indicadorAgregacio.getIndicadorCodi(), formatCellValue(rowArray[1], indicadorAgregacio.getAgregacio())))
+                .collect(Collectors.toList());
+
+        if (TableColumnsEnum.PERCENTAGE.equals(indicadorAgregacio.getAgregacio())) {
+            calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
+        }
+        return result;
     }
 
     @Override
@@ -179,8 +187,17 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
         }
 
-        // TODO:
-        return List.of();
+        List<Map<String, String>> result = resultList.stream()
+                .map(rowArray -> Map.of(
+                        "agrupacio", Objects.toString(rowArray[0]),
+                        "descomposicio", Objects.toString(rowArray[1]),
+                        indicadorAgregacio.getIndicadorCodi(), formatCellValue(rowArray[1], indicadorAgregacio.getAgregacio())))
+                .collect(Collectors.toList());
+
+        if (TableColumnsEnum.PERCENTAGE.equals(indicadorAgregacio.getAgregacio())) {
+            calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
+        }
+        return result;
     }
 
     @Override
@@ -198,8 +215,16 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
         }
 
-        // TODO:
-        return List.of();
+        List<Map<String, String>> result = resultList.stream()
+                .map(rowArray -> Map.of(
+                        "agrupacio", Objects.toString(rowArray[0]),
+                        indicadorAgregacio.getIndicadorCodi(), formatCellValue(rowArray[1], indicadorAgregacio.getAgregacio())))
+                .collect(Collectors.toList());
+
+        if (TableColumnsEnum.PERCENTAGE.equals(indicadorAgregacio.getAgregacio())) {
+            calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
+        }
+        return result;
     }
 
     @Override
@@ -227,8 +252,12 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
         }
 
-        // TODO:
-        return List.of();
+        List<Map<String, String>> result = resultList.stream()
+                .map(rowArray -> convertRowToMap(rowArray, columnNamesForQuery, indicadorsAgregacio))
+                .collect(Collectors.toList());
+
+        processPercentages(result, indicadorsPercentatge, filteredIndicadors, columnNames, indicadorsAgregacio);
+        return result;
     }
 
     @Override

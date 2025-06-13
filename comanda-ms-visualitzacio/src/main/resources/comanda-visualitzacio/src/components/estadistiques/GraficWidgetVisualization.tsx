@@ -20,6 +20,7 @@ import {
 import estils from "./WidgetEstils.ts";
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
 import {TaulaWidgetVisualizationProps} from "./TaulaWidgetVisualization.tsx";
+import Chip from "@mui/material/Chip";
 
 interface ColumnLabel {
     id: string;
@@ -36,6 +37,7 @@ export interface GraficWidgetVisualizationProps {
     mostrarVora: boolean;
     colorVora?: string;
     ampleVora: number;
+    entornCodi?: string;
 
     dades?: Record<string, unknown>[];
     labels?: ColumnLabel[];
@@ -97,6 +99,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         // Widget data
         titol = 'Títol del gràfic',
         descripcio,
+        entornCodi = 'DEV',
         colorText,
         colorFons,
         mostrarVora = false,
@@ -469,6 +472,9 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             {/* Titol */}
             <Box sx={estils.titleContainer} >
                 <Typography sx={estils.titleText} >{titol}</Typography>
+                <Box sx={estils.iconContainer}>
+                    <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
+                </Box>
             </Box>
 
             {/* Chart */}
