@@ -40,8 +40,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -65,6 +68,8 @@ public class ConsultaEstadisticaHelper {
     private final EstadisticaClientHelper estadisticaClientHelper;
 
     private final RestTemplate restTemplate;
+
+    private static DateTimeFormatter DMYYYY_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
 
 
     // CONSULTA ESTADISTIQUES
@@ -455,16 +460,45 @@ public class ConsultaEstadisticaHelper {
     }
 
     private List<Map<String, Object>> groupByAndMapToSeries(List<Map<String, String>> files, String agrupacioKey, String descomposicioKey, String valueKey) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
+        var agrupacioElement = files.get(0).get(agrupacioKey);
+        var isNumeric = isNumeric(agrupacioElement);
+        var isDate = idDate(agrupacioElement);
+
         return files.stream()
                 .collect(Collectors.groupingBy(f -> f.get(agrupacioKey)))
+//                        LinkedHashMap::new,
+//                        Collectors.toList()))
                 .entrySet().stream()
+                .sorted((e1, e2) -> {
+                    if (isDate)
+                        return LocalDate.parse(e1.getKey(), formatter).compareTo(LocalDate.parse(e2.getKey(), formatter));
+                    if (isNumeric)
+                        return toDouble(e1.getKey()).compareTo(toDouble(e2.getKey()));
+                    return e1.getKey().compareTo(e2.getKey());
+                })
                 .map(entry -> {
-                    Map<String, Object> mapped = new HashMap<>();
+                    Map<String, Object> mapped = new LinkedHashMap<>();
                     mapped.put(agrupacioKey, entry.getKey());
                     entry.getValue().forEach(f -> mapped.put(f.get(descomposicioKey), toDouble(f.get(valueKey))));
                     return mapped;
                 })
                 .collect(Collectors.toList());
+    }
+
+    private boolean isNumeric(String valor) {
+        return valor.matches("-?\\d+(\\.\\d+)?");
+    }
+    private boolean idDate(String valor) {
+
+        try {
+            // Intenta analitzar la data; si fallés, llençarà una excepció
+            LocalDate.parse(valor, DMYYYY_FORMATTER);
+            return true; // És una data vàlida
+        } catch (DateTimeParseException e) {
+            return false; // No és una data vàlida
+        }
+
     }
 
     private List<Map<String, Object>> convertFilesToSeriesWithKeys(List<Map<String, String>> files, List<String> keys, String agrupacioKey, TipusGraficEnum tipusGrafic) {
@@ -481,7 +515,7 @@ public class ConsultaEstadisticaHelper {
 
         return files.stream()
                 .map(f -> {
-                    Map<String, Object> mapped = new HashMap<>();
+                    Map<String, Object> mapped = new LinkedHashMap<>();
                     mapped.put(agrupacioKey, f.get(agrupacioKey));
                     keys.forEach(k -> mapped.put(k, toDouble(f.get(k))));
                     return mapped;
@@ -810,7 +844,7 @@ public class ConsultaEstadisticaHelper {
 //        }
 //    }
 
-    private WidgetTipus determineWidgetType(DashboardItemEntity dashboardItem) throws ReportGenerationException {
+    public WidgetTipus determineWidgetType(DashboardItemEntity dashboardItem) throws ReportGenerationException {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         if (widget instanceof EstadisticaSimpleWidgetEntity) {
             return WidgetTipus.SIMPLE;
@@ -845,7 +879,7 @@ public class ConsultaEstadisticaHelper {
     }
 
     private Map<String, List<String>> createDimensionsFiltre(List<DimensioValorEntity> dimensioValors) {
-        Map<String, List<String>> dimensionFilters = new HashMap<>();
+        Map<String, List<String>> dimensionFilters = new LinkedHashMap<>();
         for (DimensioValorEntity dimensioValor : dimensioValors) {
             String dimensionCode = dimensioValor.getDimensio().getCodi();
             String value = dimensioValor.getValor();

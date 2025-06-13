@@ -10,6 +10,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -66,8 +67,15 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         } catch (Exception e) {
                             log.error("Error generant informe widget. Item {}: {}", item.getId(), e.getMessage(), e);
                             InformeWidgetItem errorItem = InformeWidgetItem.builder()
+                                    .dashboardItemId(item.getId())
+                                    .tipus(consultaEstadisticaHelper.determineWidgetType(item))
+                                    .posX(item.getPosX())
+                                    .posY(item.getPosY())
+                                    .width(item.getWidth())
+                                    .height(item.getHeight())
                                     .error(true)
                                     .errorMsg("Error processing item " + item.getId() + ": " + e.getMessage())
+                                    .errorTrace(ExceptionUtils.getStackTrace(e))
                                     .build();
                             return errorItem;
                         }

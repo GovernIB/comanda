@@ -113,23 +113,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
      * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
-    // -- Consulta SQL d'exemple per a widget simple
-    // SELECT
-    //    SUM(sum_fets) AS total_sum,
-    //    CASE WHEN SUM(sum_fets) > 0 THEN MIN(data) ELSE NULL END AS first_seen,
-    //    CASE WHEN SUM(sum_fets) > 0 THEN MAX(data) ELSE NULL END AS last_seen,
-    //    AVG(sum_fets) AS average_result
-    // FROM (
-    //     -- Subconsulta per calcular les sumes per data
-    //    SELECT
-    //        t.data as data,
-    //        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets
-    //    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    //    WHERE f.entorn_app_id = 1
-    //    AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //    AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    //    GROUP BY t.data
-    // );
     @Override
     public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
 
@@ -149,24 +132,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 queryGrouping +
                 ")";
     }
-
-    // -- Consulta SQL d'exemple per a widget grafic 1 indicador
-    // SELECT
-    //    agrupacio,
-    //    SUM(sum_fets_per_data) AS total_sum,
-    //    AVG(sum_fets_per_data) AS average_result
-    // FROM (
-    //         -- Subconsulta per calcular les sumes per data
-    //         SELECT
-    //             t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    //         WHERE f.entorn_app_id = 1
-    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    //         GROUP BY t.anualitat, t.mes, t.dia, JSON_VALUE(f.dimensions_json, '$."ORG"')
-    // )
-    // GROUP BY agrupacio;
 
     @Override
     public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio) {
@@ -192,19 +157,9 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 "GROUP BY " + queryGrouping +
                 ") " +
                 "GROUP BY agrupacio " +
-                "ORDER BY agrupacio";
+                "ORDER BY " + queryGrouping;
     }
 
-    // SELECT
-    //     t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
-    //     JSON_VALUE(f.dimensions_json, '$."ORG"') AS descomposicio,
-    //     SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    // FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    // WHERE f.entorn_app_id = 1
-    //   AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //   AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    // GROUP BY t.anualitat, t.mes, t.dia, JSON_VALUE(f.dimensions_json, '$."ORG"')
-    // ORDER BY agrupacio, descomposicio
     @Override
     public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
 
@@ -223,20 +178,10 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 "    WHERE f.entorn_app_id = :entornAppId " +
                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                 queryConditions +
-                "GROUP BY " + queryGrouping + " " +
-                "ORDER BY agrupacio, descomposicio";
+                "GROUP BY " + queryGrouping + "," + queryDescomposicio +
+                "ORDER BY " + queryGrouping + ", descomposicio";
     }
 
-    // -- Consulta SQL d'exemple per a widget grafic 1 indicador amb descomposició, agrupant per la descomposició
-    // SELECT
-    //     JSON_VALUE(f.dimensions_json, '$."ORG"') AS agrupacio,
-    //     SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    // FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    // WHERE f.entorn_app_id = 1
-    //   AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //   AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    // GROUP BY JSON_VALUE(f.dimensions_json, '$."ORG"')
-    // ORDER BY agrupacio
     @Override
     public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
 
@@ -255,50 +200,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 "GROUP BY " + queryDescomposicio +
                 "ORDER BY agrupacio";
     }
-
-    private String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
-        switch (tempsAgregacio) {
-            case SETMANA: return "t.setmana || + '/' || t.anualitat";
-            case MES: return "t.mes || + '/' || t.anualitat";
-            case TRIMESTRE: return "t.trimestre || + '/' || t.anualitat";
-            case ANY: return "t.anualitat";
-            default: return "t.dia || '/' || t.mes || + '/' || t.anualitat";
-        }
-    }
-
-    private String generateGraficGroupConditions(PeriodeUnitat tempsAgregacio) {
-        if (tempsAgregacio == null)
-            return "t.anualitat, t.mes, t.dia";
-
-        switch (tempsAgregacio) {
-            case SETMANA: return "t.anualitat, t.setmana";
-            case MES: return "t.anualitat, t.mes";
-            case TRIMESTRE: return "t.anualitat, t.trimestre";
-            case ANY: return "t.anualitat";
-            default: return "t.anualitat, t.mes, t.dia";
-        }
-    }
-
-    // -- Consulta SQL d'exemple per a widget gràfic amb múltiples indicadors
-    // SELECT
-    //    agrupacio,
-    //    SUM(sum_fets_per_data) AS total_sum,
-    //    AVG(sum_fets_per_data) AS average_result,
-    //    SUM(sum_pnd_per_data) AS total_pnd
-    //FROM (
-    //         -- Subconsulta per calcular les sumes per data
-    //         SELECT
-    //             t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."PND"'))) AS sum_pnd_per_data
-    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    //         WHERE f.entorn_app_id = 1
-    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    //         GROUP BY t.anualitat, t.mes, t.dia
-    //     )
-    //GROUP BY agrupacio
-    //ORDER BY agrupacio
 
     @Override
     public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
@@ -346,31 +247,31 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 "GROUP BY " + queryGrouping +
                 ") " +
                 "GROUP BY agrupacio " +
-                "ORDER BY agrupacio";
+                "ORDER BY " + queryGrouping;
     }
 
-    // -- Consulta SQL d'exemple per a widget taula
-    // SELECT
-    //    agrupacio,
-    //    SUM(sum_fets_per_data) AS total_sum,
-    //    CASE WHEN SUM(sum_fets_per_data) > 0 THEN MIN(data) ELSE NULL END AS first_seen,
-    //    CASE WHEN SUM(sum_fets_per_data) > 0 THEN MAX(data) ELSE NULL END AS last_seen,
-    //    AVG(sum_fets_per_data) AS average_result,
-    //    SUM(sum_pnd_per_data) AS total_pnd
-    // FROM (
-    //         -- Subconsulta per calcular les sumes per data
-    //         SELECT
-    //             t.data as data,
-    //             JSON_VALUE(f.dimensions_json, '$."ORG"') AS agrupacio,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."PND"'))) AS sum_pnd_per_data
-    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    //         WHERE f.entorn_app_id = 1
-    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    //         GROUP BY t.data, JSON_VALUE(f.dimensions_json, '$."ORG"')
-    //     )
-    // GROUP BY agrupacio;
+    private String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
+        switch (tempsAgregacio) {
+            case SETMANA: return "t.setmana || + '/' || t.anualitat";
+            case MES: return "t.mes || + '/' || t.anualitat";
+            case TRIMESTRE: return "t.trimestre || + '/' || t.anualitat";
+            case ANY: return "t.anualitat";
+            default: return "t.dia || '/' || t.mes || + '/' || t.anualitat";
+        }
+    }
+
+    private String generateGraficGroupConditions(PeriodeUnitat tempsAgregacio) {
+        if (tempsAgregacio == null)
+            return "t.anualitat, t.mes, t.dia";
+
+        switch (tempsAgregacio) {
+            case SETMANA: return "t.anualitat, t.setmana";
+            case MES: return "t.anualitat, t.mes";
+            case TRIMESTRE: return "t.anualitat, t.trimestre";
+            case ANY: return "t.anualitat";
+            default: return "t.anualitat, t.mes, t.dia";
+        }
+    }
 
     @Override
     public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi) {

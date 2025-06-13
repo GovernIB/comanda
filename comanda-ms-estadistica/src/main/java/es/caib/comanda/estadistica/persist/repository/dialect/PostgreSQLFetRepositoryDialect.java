@@ -131,23 +131,6 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 ")";
     }
 
-    // -- Consulta SQL d'exemple per a widget grafic 1 indicador
-    // SELECT
-    //    agrupacio,
-    //    SUM(sum_fets_per_data) AS total_sum,
-    //    AVG(sum_fets_per_data) AS average_result
-    // FROM (
-    //         -- Subconsulta per calcular les sumes per data
-    //         SELECT
-    //             t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    //         WHERE f.entorn_app_id = 1
-    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    //         GROUP BY t.anualitat, t.mes, t.dia, JSON_VALUE(f.dimensions_json, '$."ORG"')
-    // )
-    // GROUP BY agrupacio;
     @Override
     public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio) {
 
@@ -171,19 +154,9 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 queryConditions +
                 "GROUP BY " + queryGrouping +
                 ") " +
-                "GROUP BY agrupacio";
+                "ORDER BY " + queryGrouping;
     }
 
-    // SELECT
-    //     t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
-    //     JSON_VALUE(f.dimensions_json, '$."ORG"') AS descomposicio,
-    //     SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    // FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    // WHERE f.entorn_app_id = 1
-    //   AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //   AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    // GROUP BY t.anualitat, t.mes, t.dia, JSON_VALUE(f.dimensions_json, '$."ORG"')
-    // ORDER BY agrupacio, descomposicio
     @Override
     public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
 
@@ -202,27 +175,10 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 "    WHERE f.entorn_app_id = :entornAppId " +
                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                 queryConditions +
-                "GROUP BY " + queryGrouping +
-                "ORDER BY agrupacio, descomposicio";
+                "GROUP BY " + queryGrouping + "," + queryDescomposicio +
+                "ORDER BY " + queryGrouping + ", descomposicio";
     }
 
-    // -- Consulta SQL d'exemple per a widget grafic 1 indicador amb descomposició, agrupant per la descomposició
-    // SELECT
-    //    agrupacio,
-    //    SUM(sum_fets_per_data) AS total_sum,
-    //    AVG(sum_fets_per_data) AS average_result
-    // FROM (
-    //         -- Subconsulta per calcular les sumes per data
-    //         SELECT
-    //             JSON_VALUE(f.dimensions_json, '$."ORG"') AS agrupacio,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    //         WHERE f.entorn_app_id = 1
-    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    //         GROUP BY JSON_VALUE(f.dimensions_json, '$."ORG"')
-    //     )
-    // GROUP BY agrupacio;
     @Override
     public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
 
@@ -231,10 +187,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String queryDescomposicio = " JSON_VALUE(f.dimensions_json->>'" + dimensioDescomposicioCodi + "') ";
 
 
-        return "SELECT agrupacio, " +
-                "      SUM(sum_fets) AS total_sum," +
-                " FROM ( " +
-                "    SELECT " +
+        return "SELECT " +
                 queryDescomposicio + " AS agrupacio," +
                 "        SUM((f.indicadors_json->>'" + indicadorCodi + "')::numeric) AS sum_fets " +
                 "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
@@ -242,50 +195,8 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                 queryConditions +
                 "GROUP BY " + queryDescomposicio +
-                ") " +
                 "GROUP BY agrupacio";
     }
-
-    private String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
-        switch (tempsAgregacio) {
-            case SETMANA: return "t.setmana || + '/' || t.anualitat";
-            case MES: return "t.mes || + '/' || t.anualitat";
-            case TRIMESTRE: return "t.trimestre || + '/' || t.anualitat";
-            case ANY: return "t.anualitat";
-            default: return "t.dia || '/' || t.mes || + '/' || t.anualitat";
-        }
-    }
-
-    private String generateGraficGroupConditions(PeriodeUnitat tempsAgregacio) {
-        switch (tempsAgregacio) {
-            case SETMANA: return "t.anualitat, t.setmana";
-            case MES: return "t.anualitat, t.mes";
-            case TRIMESTRE: return "t.anualitat, t.trimestre";
-            case ANY: return "t.anualitat";
-            default: return "t.anualitat, t.mes, t.dia";
-        }
-    }
-
-    // -- Consulta SQL d'exemple per a widget gràfic amb múltiples indicadors
-    // SELECT
-    //    agrupacio,
-    //    SUM(sum_fets_per_data) AS total_sum,
-    //    AVG(sum_fets_per_data) AS average_result,
-    //    SUM(sum_pnd_per_data) AS total_pnd
-    //FROM (
-    //         -- Subconsulta per calcular les sumes per data
-    //         SELECT
-    //             t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data,
-    //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."PND"'))) AS sum_pnd_per_data
-    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
-    //         WHERE f.entorn_app_id = 1
-    //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
-    //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
-    //         GROUP BY t.anualitat, t.mes, t.dia
-    //     )
-    //GROUP BY agrupacio
-    //ORDER BY agrupacio
 
     @Override
     public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
@@ -333,7 +244,27 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 "GROUP BY " + queryGrouping +
                 ") " +
                 "GROUP BY agrupacio " +
-                "ORDER BY agrupacio";
+                "ORDER BY " + queryGrouping;
+    }
+
+    private String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
+        switch (tempsAgregacio) {
+            case SETMANA: return "t.setmana || + '/' || t.anualitat";
+            case MES: return "t.mes || + '/' || t.anualitat";
+            case TRIMESTRE: return "t.trimestre || + '/' || t.anualitat";
+            case ANY: return "t.anualitat";
+            default: return "t.dia || '/' || t.mes || + '/' || t.anualitat";
+        }
+    }
+
+    private String generateGraficGroupConditions(PeriodeUnitat tempsAgregacio) {
+        switch (tempsAgregacio) {
+            case SETMANA: return "t.anualitat, t.setmana";
+            case MES: return "t.anualitat, t.mes";
+            case TRIMESTRE: return "t.anualitat, t.trimestre";
+            case ANY: return "t.anualitat";
+            default: return "t.anualitat, t.mes, t.dia";
+        }
     }
 
     @Override
@@ -381,7 +312,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         return "SELECT agrupacio, " + querySelect +
                 " FROM ( " +
                 "    SELECT " +
-                (isAnyAverageQuery ? "" : "t.data as data, ") +
+                (isAnyAverageQuery ? "t.data as data, " : "") +
                 queryAgrupacio + " AS agrupacio," +
                 subQuerySelects +
                 "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
@@ -477,6 +408,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     private static String getGrupping(PeriodeUnitat unitatAgregacio) {
         if (unitatAgregacio != null) {
             switch (unitatAgregacio) {
+                case DIA: return "t.anualitat, t.mes, t.dia";
                 case SETMANA: return "t.anualitat, t.setmana";
                 case MES: return "t.anualitat, t.mes";
                 case TRIMESTRE: return "t.anualitat, t.trimestre";

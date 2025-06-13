@@ -12,13 +12,12 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -191,7 +190,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
                 .map(rowArray -> Map.of(
                         "agrupacio", Objects.toString(rowArray[0]),
                         "descomposicio", Objects.toString(rowArray[1]),
-                        indicadorAgregacio.getIndicadorCodi(), formatCellValue(rowArray[1], indicadorAgregacio.getAgregacio())))
+                        indicadorAgregacio.getIndicadorCodi(), formatCellValue(rowArray[2], indicadorAgregacio.getAgregacio())))
                 .collect(Collectors.toList());
 
         if (TableColumnsEnum.PERCENTAGE.equals(indicadorAgregacio.getAgregacio())) {
@@ -395,7 +394,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
 
     // Helper per convertir una fila del resultat de la query en un map
     private Map<String, String> convertRowToMap(Object[] rowArray, String[] columnNames, List<IndicadorAgregacio> indicadorsAgregacio) {
-        Map<String, String> fila = new HashMap<>();
+        Map<String, String> fila = new LinkedHashMap<>();
         for (int i = 0; i < columnNames.length; i++) {
             String columnName = columnNames[i];
             String value;
@@ -415,11 +414,28 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         if (cellValue == null) {
             return (TableColumnsEnum.FIRST_SEEN.equals(agregacio) || TableColumnsEnum.LAST_SEEN.equals(agregacio)) ? null : "0";
         }
-        if (TableColumnsEnum.FIRST_SEEN.equals(agregacio) || TableColumnsEnum.LAST_SEEN.equals(agregacio)) {
-            LocalDate date = ((Timestamp) cellValue).toLocalDateTime().toLocalDate();
-            return date.format(DATE_FORMATTER);
+//        if (TableColumnsEnum.FIRST_SEEN.equals(agregacio) || TableColumnsEnum.LAST_SEEN.equals(agregacio)) {
+//            LocalDate date = ((Timestamp) cellValue).toLocalDateTime().toLocalDate();
+//            return date.format(DATE_FORMATTER);
+//        }
+//        return NUMBER_FORMAT.format(((BigDecimal) cellValue).doubleValue());
+        return cellFormat(cellValue);
+    }
+
+    private String cellFormat(Object valor) {
+        if (valor == null) {
+            return null;
         }
-        return NUMBER_FORMAT.format(((BigDecimal) cellValue).doubleValue());
+        if (valor instanceof String && ((String) valor).isEmpty()) {
+            return null;
+        }
+        if (valor instanceof Timestamp) {
+            return ((Timestamp) valor).toLocalDateTime().toLocalDate().format(DATE_FORMATTER);
+        }
+        if (valor instanceof Number) {
+            return NUMBER_FORMAT.format(((Number) valor).doubleValue());
+        }
+        return valor.toString();
     }
 
 }

@@ -26,5 +26,6 @@ public class InformeWidgetItem implements Serializable {
 
     protected boolean error;
     protected String errorMsg;
+    protected String errorTrace;
 
 }
