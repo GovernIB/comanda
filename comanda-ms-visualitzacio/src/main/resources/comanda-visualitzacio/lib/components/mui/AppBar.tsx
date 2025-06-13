@@ -42,14 +42,21 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
             {logo ? <Box sx={{ mr: 2, pt: 1, pr: 2, cursor: 'pointer', ...logoStyle }}>
                 <img src={logo} alt="logo" />
             </Box> : null}
-            <Typography
-                variant="h6"
-                component="div"
-                title={title + (version ? ' v' + version : '')}
-                sx={{ flexGrow: 1 }}>
-                {title}
-                {/*version && <Typography variant="caption">&nbsp;v{version}</Typography>*/}
-            </Typography>
+            {typeof title === 'string' ? (
+                <Typography
+                    variant="h6"
+                    component="div"
+                    title={title + (version ? ' v' + version : '')}
+                    sx={{ flexGrow: 1 }}
+                >
+                    {title}
+                    {/*version && <Typography variant="caption">&nbsp;v{version}</Typography>*/}
+                </Typography>
+            ) : (
+                <div style={{
+                    flexGrow: 1,
+                }}>{title}</div>
+            )}
             {additionalToolbarComponents}
             {authButton}
         </Toolbar>
