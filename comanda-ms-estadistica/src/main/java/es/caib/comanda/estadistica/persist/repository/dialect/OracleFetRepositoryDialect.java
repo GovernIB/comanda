@@ -417,7 +417,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         return "SELECT agrupacio, " + querySelect +
                 " FROM ( " +
                 "    SELECT " +
-                (isAnyAverageQuery ? "" : generateGraficGroupConditions(avgUnitat) + ", ") +
+                (isAnyAverageQuery ? generateGraficGroupConditions(avgUnitat) + ", " : "") +
                 queryAgrupacio + " AS agrupacio," +
                 subQuerySelects +
                 "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
@@ -512,6 +512,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     private static String getGrupping(PeriodeUnitat unitatAgregacio) {
         if (unitatAgregacio != null) {
             switch (unitatAgregacio) {
+                case DIA: return "t.anualitat, t.mes, t.dia";
                 case SETMANA: return "t.anualitat, t.setmana";
                 case MES: return "t.anualitat, t.mes";
                 case TRIMESTRE: return "t.anualitat, t.trimestre";
