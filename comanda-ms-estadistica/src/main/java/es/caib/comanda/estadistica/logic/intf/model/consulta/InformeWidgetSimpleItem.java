@@ -17,10 +17,8 @@ import java.io.Serializable;
 public class InformeWidgetSimpleItem extends InformeWidgetItem implements Serializable {
 
     // Contingut
-    private String titol;
     private String valor;
     private String unitat;
-    private String descripcio;
     private String canviPercentual;
 
     // Configuracions visuals

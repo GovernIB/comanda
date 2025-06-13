@@ -68,6 +68,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                             log.error("Error generant informe widget. Item {}: {}", item.getId(), e.getMessage(), e);
                             InformeWidgetItem errorItem = InformeWidgetItem.builder()
                                     .dashboardItemId(item.getId())
+                                    .titol(item.getWidget() != null ? item.getWidget().getTitol() : null)
                                     .tipus(consultaEstadisticaHelper.determineWidgetType(item))
                                     .posX(item.getPosX())
                                     .posY(item.getPosY())

@@ -67,6 +67,7 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
     protected void afterUpdateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         estadisticaGraficWidgetHelper.upsertColumnes(entity, resource);
         estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
+        estadisticaWidgetHelper.clearDashboardWidgetCache(entity.getId());
     }
 
     @Override

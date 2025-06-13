@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DadesComunsWidgetConsulta {
     private Long entornAppId;
+    private String entornCodi;
     private PeriodeDates periodeDates;
     private AtributsVisuals atributsVisuals;
 }

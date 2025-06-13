@@ -64,13 +64,14 @@ interface TaulaWidgetColors {
 // Define the props for the TaulaWidgetVisualization component
 export interface TaulaWidgetVisualizationProps {
     // Widget data
+    entornCodi?: string;
     titol?: string;
     descripcio?: string;
+
     columnes?: { id: string; label: string; format?: (value: any) => string }[];
     files?: any[];
-    entornCodi?: string;
 
-    // Visual attributes
+    // Atributs visuals
     // Contenidor
     colorText?: string;
     colorFons?: string;

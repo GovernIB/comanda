@@ -18,14 +18,14 @@ import java.util.Map;
 @AllArgsConstructor
 public class InformeWidgetTaulaItem extends InformeWidgetItem implements Serializable {
 
-    private String titol;
+
     private String titolAgrupament;
 
     // Column definitions
-    private List<Map<String, String>> columns;
+    private List<Map<String, String>> columnes;
 
     // Row data
-    private List<Map<String, String>> rows;
+    private List<Map<String, String>> files;
 
     // Configuracions visuals
     private AtributsVisualsTaula atributsVisuals;

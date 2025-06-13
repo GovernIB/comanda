@@ -12,14 +12,15 @@ import Chip from "@mui/material/Chip";
 // Define the props for the SimpleWidgetVisualization component
 export interface SimpleWidgetVisualizationProps {
     // Widget data
+    entornCodi?: string;
     titol?: string;
+    descripcio?: string;
+
     valor?: number | string;
     unitat?: string;
-    descripcio?: string;
     canviPercentual?: string;
-    entornCodi?: string;
 
-    // Visual attributes
+    // Atributs visuals
     icona?: string | undefined;
     colorText?: string;
     colorFons?: string;

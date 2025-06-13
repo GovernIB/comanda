@@ -23,6 +23,15 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 public class AtributsVisualsGrafic implements AtributsVisuals {
 
+    @Size(max = 8)
+    private String colorText;
+    @Size(max = 8)
+    private String colorFons;
+    private Boolean mostrarVora;
+    @Size(max = 8)
+    private String colorVora;
+    private Integer ampleVora;
+
     // Colors per a la gama cromàtica del gràfic
     @Size(max = 1000)
     private String colorsPaleta;  // Emmagatzemat com a string amb colors separats per comes
@@ -62,38 +71,17 @@ public class AtributsVisualsGrafic implements AtributsVisuals {
     private Double heatmapMaxValue;  // Valor màxim per al heatmap
 
 
-//    public String fromAtributsVisuals() {
-//
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            return objectMapper.writeValueAsString(this);
-//        } catch (JsonProcessingException e) {
-//            log.error("Error convertint atributs visuals a JSON", e);
-//            throw new ObjectMappingException(AtributsVisualsGrafic.class, String.class, "Error convertint atributs visuals a JSON");
-//        }
-//    }
-//
-//    public static AtributsVisualsGrafic toAtributsVisuals(String json) {
-//
-//        if (json == null) {
-//            return null;
-//        }
-//
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            return objectMapper.readValue(json, AtributsVisualsGrafic.class);
-//        } catch (JsonProcessingException e) {
-//            log.error("Error convertint JSON a atributs visuals", e);
-//            throw new ObjectMappingException(String.class, AtributsVisualsGrafic.class, "Error convertint JSON a atributs visuals");
-//        }
-//    }
-
     public AtributsVisuals merge(AtributsVisuals otherAtributsVisuals) {
         if (otherAtributsVisuals == null || !(otherAtributsVisuals instanceof AtributsVisualsGrafic)) {
             return this;
         }
 
         AtributsVisualsGrafic other = (AtributsVisualsGrafic) otherAtributsVisuals;
+        this.colorText = mergeField(this.colorText, other.getColorText());
+        this.colorFons = mergeField(this.colorFons, other.getColorFons());
+        this.mostrarVora = mergeField(this.mostrarVora, other.getMostrarVora());
+        this.colorVora = mergeField(this.colorVora, other.getColorVora());
+        this.ampleVora = mergeField(this.ampleVora, other.getAmpleVora());
         this.colorsPaleta = mergeField(this.colorsPaleta, other.getColorsPaleta());
         this.mostrarReticula = mergeField(this.mostrarReticula, other.getMostrarReticula());
         this.barStacked = mergeField(this.barStacked, other.getBarStacked());

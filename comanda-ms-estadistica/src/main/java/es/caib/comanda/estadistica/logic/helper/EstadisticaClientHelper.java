@@ -2,8 +2,10 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
+import es.caib.comanda.client.EntornServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
@@ -26,6 +28,7 @@ public class EstadisticaClientHelper {
     private final KeycloakHelper keycloakHelper;
     private final MonitorServiceClient monitorServiceClient;
     private final EntornAppServiceClient entornAppServiceClient;
+    private final EntornServiceClient entornServiceClient;
     private final AppServiceClient appServiceClient;
 
     // Client App
@@ -42,6 +45,7 @@ public class EstadisticaClientHelper {
         }
         return null;
     }
+
 
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +93,22 @@ public class EstadisticaClientHelper {
         return entornApps.getContent().stream().
                 map(EntityModel::getContent).
                 collect(Collectors.toList());
+    }
+
+
+    // Client Entorn
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Cacheable(value = "entornCache", key = "#entornId")
+    public Entorn entornById(Long entornId) {
+        EntityModel<Entorn> entorn = entornServiceClient.getOne(
+                entornId,
+                null,
+                keycloakHelper.getAuthorizationHeader());
+        if (entorn != null) {
+            return entorn.getContent();
+        }
+        return null;
     }
 
 

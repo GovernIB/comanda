@@ -30,20 +30,23 @@ interface ColumnLabel {
 // Define the props for the GraficWidgetVisualization component
 export interface GraficWidgetVisualizationProps {
     // Widget data
+    entornCodi?: string;
     titol?: string;
     descripcio?: string;
+
+    tipusGrafic?: 'BAR_CHART' | 'LINE_CHART' | 'PIE_CHART' | 'GAUGE_CHART' | 'HEATMAP_CHART' | 'SCATTER_CHART' | 'SPARK_LINE_CHART';
+    labels?: ColumnLabel[];
+    dades?: Record<string, unknown>[];
+    columnaAgregacio?: string;
+    llegendaX?: string;
+
+    // Atributs visuals
     colorText?: string;
     colorFons?: string;
     mostrarVora: boolean;
     colorVora?: string;
     ampleVora: number;
-    entornCodi?: string;
 
-    dades?: Record<string, unknown>[];
-    labels?: ColumnLabel[];
-    columnaAgregacio?: string;
-    tipusGrafic?: 'BAR_CHART' | 'LINE_CHART' | 'PIE_CHART' | 'GAUGE_CHART' | 'HEATMAP_CHART' | 'SCATTER_CHART' | 'SPARK_LINE_CHART';
-    llegendaX?: string;
 
     // Visual attributes
     colorsPaleta?: string;  // Colors separated by commas

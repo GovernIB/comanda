@@ -67,6 +67,7 @@ public class EstadisticaTaulaWidgetServiceImpl extends BaseMutableResourceServic
     protected void afterUpdateSave(EstadisticaTaulaWidgetEntity entity, EstadisticaTaulaWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         estadisticaTaulaWidgetHelper.upsertColumnes(entity, resource);
         estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
+        estadisticaWidgetHelper.clearDashboardWidgetCache(entity.getId());
     }
 
     @Override

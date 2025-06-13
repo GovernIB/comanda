@@ -20,17 +20,17 @@ import java.util.Map;
 @AllArgsConstructor
 public class InformeWidgetGraficItem extends InformeWidgetItem implements Serializable {
 
-    private String titol;
-    private String llegendaX;
-//    private String llegendaY;
     private TipusGraficEnum tipusGrafic;
     private TipusGraficDataEnum tipusDades;
 //    private GraficValueTypeEnum tipusValors;
 
     // Data for the chart
     private List<Map<String, String>> labels;
-    private List<Map<String, Object>> series;
+    private List<Map<String, Object>> dades;
+    private String columnaAgregacio;
 
+    private String llegendaX;
+//    private String llegendaY;
 //    // For charts with dimension decomposition
 //    private List<String> dimensionValues;
 
