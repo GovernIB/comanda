@@ -36,7 +36,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     code: string;
     logo?: string;
     logoStyle?: any;
-    title: string;
+    title: string | React.ReactElement;
     version: string;
     availableLanguages?: string[];
     menuEntries?: MenuEntryWithResource[];
