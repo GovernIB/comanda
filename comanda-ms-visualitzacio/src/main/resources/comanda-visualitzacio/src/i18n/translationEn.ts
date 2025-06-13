@@ -148,6 +148,9 @@ const translationEn = {
                 },
             }
         },
+        dashboards: {
+            title: "Dashboards",
+        },
         notFound: "Not found",
     },
     generic: {

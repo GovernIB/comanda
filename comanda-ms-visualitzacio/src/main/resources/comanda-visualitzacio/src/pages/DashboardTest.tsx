@@ -5,22 +5,32 @@ import { Responsive, WidthProvider } from 'react-grid-layout';
 import Paper from '@mui/material/Paper';
 import { isEqual } from 'lodash';
 import SimpleWidgetVisualization from '../components/estadistiques/SimpleWidgetVisualization.tsx';
-
-// TODO Cambiar esta constante por una prop
-const editing = true;
+import GraficWidgetVisualization from '../components/estadistiques/GraficWidgetVisualization.tsx';
+import TaulaWidgetVisualization from '../components/estadistiques/TaulaWidgetVisualization.tsx';
+import { useEffect, useMemo, useRef } from 'react';
 
 const CustomGridLayout = WidthProvider(Responsive);
 
 function SimpleChartWrapper({ dashboardWidget }) {
-    return <SimpleWidgetVisualization
-        titol={dashboardWidget.titol}
-        valor={dashboardWidget.valor}
-        // unitat={} TODO
-        descripcio={dashboardWidget.descripcio}
-        icona={dashboardWidget.atributsVisuals?.icona}
-        vora={dashboardWidget.atributsVisuals?.vora}
-        ampleVora={dashboardWidget.atributsVisuals?.ampleVora}
-    />;
+    return <SimpleWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
+}
+
+function GraficChartWrapper({ dashboardWidget }) {
+    return (
+        <GraficWidgetVisualization
+            {...dashboardWidget}
+            {...dashboardWidget.atributsVisuals}
+        />
+    );
+}
+
+function TaulaChartWrapper({ dashboardWidget }) {
+    return (
+        <TaulaWidgetVisualization
+            {...dashboardWidget}
+            {...dashboardWidget.atributsVisuals}
+        />
+    );
 }
 
 function ChartsOverviewDemo(props) {
@@ -60,10 +70,11 @@ function PieChartDemo(props) {
 }
 
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
-    ({ style, className, onMouseDown, onMouseUp, onTouchEnd, children, ...props }, ref) => {
+    ({ style, className, onMouseDown, onMouseUp, onTouchEnd, editable, children, ...props }, ref) => {
         return (
             <div
-                style={{ ...style,
+                style={{
+                    ...style,
                 }}
                 className={className}
                 ref={ref}
@@ -73,14 +84,13 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
             >
                 <div
                     style={{
-                        padding: "8px",
+                        padding: '8px',
                         position: 'relative',
                         height: '100%',
-                        pointerEvents: editing ? 'none' : undefined,
+                        pointerEvents: editable ? 'none' : undefined,
                     }}
                 >
                     {children}
-
                 </div>
             </div>
         );
@@ -131,14 +141,32 @@ export type GridLayoutItem = {
 type AppEstadisticaTestProps = {
     dashboardWidgets: any[];
     gridLayoutItems: GridLayoutItem[];
-    onGridLayoutItemsChange: (gridLayoutItems: GridLayoutItem[]) => void;
+    onGridLayoutItemsChange?: (gridLayoutItems: GridLayoutItem[]) => void;
+    editable: boolean;
+};
+
+export const useMapDashboardItems = (dashboardWidgets) => {
+    return useMemo(
+        () =>
+            dashboardWidgets?.map((widget: any) => ({
+                id: String(widget.dashboardItemId),
+                x: widget.posX,
+                y: widget.posY,
+                w: widget.width,
+                h: widget.height,
+                type: widget.tipus,
+            })),
+        [dashboardWidgets]
+    );
 };
 
 export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     dashboardWidgets,
+    editable,
     gridLayoutItems,
     onGridLayoutItemsChange,
 }) => {
+    const canvasRef = useRef();
     // const { isReady: dashboardItemApiIsReady, artifactReport: dashboardItemReport } =
     //     useResourceApiService('dashboardItem');
     //
@@ -175,6 +203,7 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     //     },
     // ]);
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
+        drawGrid();
         console.log('onLayoutChange:', _currentLayout);
         const mappedLayouts: (GridLayoutItem | undefined)[] = allLayouts.md.map((item) => {
             const typeInGridLayoutItems = gridLayoutItems.find((i) => i.id === item.i)?.type;
@@ -215,14 +244,82 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
         [gridLayoutItems]
     );
     console.log(gridLayoutItems, layout);
+
+    const rowHeight = 50;
+    const horizontalSubdivisions = 24;
+
+    const drawGrid = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        // Obtenir la mida del contenidor
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+
+        const cols = 24;
+        const colWidth = canvas.width / cols;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Netejar el canvas
+
+        // Dibuixar línies verticals
+        for (let i = 0; i <= cols; i++) {
+            const x = i * colWidth;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.strokeStyle = '#ccc';
+            ctx.stroke();
+        }
+
+        // Dibuixar línies horitzontals
+        for (let y = 0; y <= canvas.height; y += rowHeight) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    };
+
+    useEffect(() => {
+        console.log('useEffect layout: ', layout);
+
+        drawGrid();
+        window.addEventListener('resize', drawGrid);
+
+        return () => window.removeEventListener('resize', drawGrid);
+    }, [layout]);
+
+    const isReadonly = sizeLock || !editable;
+
     return (
         <>
             <Paper
                 sx={{
                     // width: width + 'px',
+                    position: 'relative',
                     width: '100%',
+                    // TODO Calcular dinamicament
+                    minHeight: '800px',
                 }}
             >
+                {editable && (
+                    <canvas
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            zIndex: 0,
+                            pointerEvents: 'none',
+                        }}
+                        ref={canvasRef}
+                    />
+                )}
                 <CustomGridLayout
                     className="layout"
                     breakpoints={{
@@ -235,21 +332,22 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
                     onLayoutChange={onLayoutChange}
                     cols={{
                         // lg: 12,
-                        md: 24,
+                        md: horizontalSubdivisions,
                         sm: 1,
                         // xs: 1,
                         // xxs: 1,
                     }}
-                    rowHeight={30}
+                    margin={[0, 0]}
+                    rowHeight={rowHeight}
                     compactType={null}
                     preventCollision
                     onWidthChange={(_containerWidth, _margin, cols) => {
                         setSizeLock(cols === 1);
                     }}
-                    isDraggable={!sizeLock}
-                    isResizable={!sizeLock}
+                    isDraggable={!isReadonly}
+                    isResizable={!isReadonly}
                     resizeHandle={<CustomHandle />}
-                    resizeHandles={!sizeLock ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] : []}
+                    resizeHandles={!isReadonly ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] : []}
                 >
                     {gridLayoutItems.map((item) => {
                         const dashboardWidget = dashboardWidgets.find(
@@ -257,20 +355,28 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
                         );
                         console.log(dashboardWidget, item.id, dashboardWidgets);
                         return (
-                            <CustomGridItemComponent key={item.id}>
+                            <CustomGridItemComponent key={item.id} editable={editable}>
                                 {(() => {
                                     switch (item.type) {
                                         // TODO Completar
-                                        case 'GRAFIC':
-                                        // return <GraficChartWrapper />;
                                         case 'SIMPLE':
                                             return (
                                                 <SimpleChartWrapper
                                                     dashboardWidget={dashboardWidget}
                                                 />
                                             );
-                                        default:
-                                            return <PieChartDemo />;
+                                        case 'GRAFIC':
+                                            return (
+                                                <GraficChartWrapper
+                                                    dashboardWidget={dashboardWidget}
+                                                />
+                                            );
+                                        case 'TAULA':
+                                            return (
+                                                <TaulaChartWrapper
+                                                    dashboardWidget={dashboardWidget}
+                                                />
+                                            );
                                     }
                                 })()}
                             </CustomGridItemComponent>

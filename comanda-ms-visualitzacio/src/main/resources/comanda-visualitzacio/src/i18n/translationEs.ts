@@ -148,6 +148,9 @@ const translationEs = {
                 },
             }
         },
+        dashboards: {
+            title: "Cuadros de control",
+        },
         notFound: "No encontrado",
     },
     generic: {

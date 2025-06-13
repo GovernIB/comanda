@@ -9,6 +9,7 @@ import Monitors from './pages/Monitor';
 import EstadisticaWidget from './pages/EstadisticaWidget';
 import Dashboards from './pages/Dashboards.tsx';
 import EstadisticaDashboard from './pages/EstadisticaDashboard.tsx';
+import EstadisticaDashboardView from './pages/EstadisticaDashboardView.tsx';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -19,6 +20,7 @@ const AppRoutes: React.FC = () => {
                 <Route index element={<Dashboards />} />
                 <Route path=":id" element={<EstadisticaDashboard />} />
             </Route>
+            <Route path="estadistiques" element={<EstadisticaDashboardView />} />
             <Route path="app">
                 <Route index element={<Apps />} />
                 <Route path="form">

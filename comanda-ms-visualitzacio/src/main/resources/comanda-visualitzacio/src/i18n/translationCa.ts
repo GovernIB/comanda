@@ -148,6 +148,9 @@ const translationCa = {
                 },
             },
         },
+        dashboards: {
+            title: "Taulers de control",
+        },
         notFound: "No trobat",
 
     },
