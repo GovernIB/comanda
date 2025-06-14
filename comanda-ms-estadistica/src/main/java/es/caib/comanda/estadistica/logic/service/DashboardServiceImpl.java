@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaAsyncHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
@@ -9,9 +10,8 @@ import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -33,20 +33,22 @@ import java.util.stream.Collectors;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, Long, DashboardEntity> implements DashboardService {
 
-    @Autowired
-    private ConsultaEstadisticaHelper consultaEstadisticaHelper;
-
-    public DashboardServiceImpl(ConsultaEstadisticaHelper consultaEstadisticaHelper) {
-        super();
-        this.consultaEstadisticaHelper = consultaEstadisticaHelper;
-    }
+    private final ConsultaEstadisticaHelper consultaEstadisticaHelper;
+    private final ConsultaEstadisticaAsyncHelper consultaEstadisticaAsyncHelper;
 
     @PostConstruct
     public void init() {
         register(Dashboard.WIDGETS_REPORT, new DashboardServiceImpl.InformeWidgets());
+    }
+
+    private DashboardEntity getDashboard(String code, DashboardEntity entity) {
+        DashboardEntity dashboard = entityRepository.findById(entity.getId())
+                .orElseThrow(() -> new ReportGenerationException(Dashboard.class, entity.getId(), code, "No existeix"));
+        return dashboard;
     }
 
     // REPORT PER OBTENIR EMPLENAR I WIDGETS
@@ -60,34 +62,30 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 InformeWidgetParams params) throws ReportGenerationException {
 
             DashboardEntity dashboard = getDashboard(code, entity);
-            return dashboard.getItems().stream()
+            List<InformeWidgetItem> dashboardItems = dashboard.getItems().stream()
                     .map(item -> {
-                        try {
-                            return consultaEstadisticaHelper.getDadesWidget(item);
-                        } catch (Exception e) {
-                            log.error("Error generant informe widget. Item {}: {}", item.getId(), e.getMessage(), e);
-                            InformeWidgetItem errorItem = InformeWidgetItem.builder()
-                                    .dashboardItemId(item.getId())
-                                    .titol(item.getWidget() != null ? item.getWidget().getTitol() : null)
-                                    .tipus(consultaEstadisticaHelper.determineWidgetType(item))
-                                    .posX(item.getPosX())
-                                    .posY(item.getPosY())
-                                    .width(item.getWidth())
-                                    .height(item.getHeight())
-                                    .error(true)
-                                    .errorMsg("Error processing item " + item.getId() + ": " + e.getMessage())
-                                    .errorTrace(ExceptionUtils.getStackTrace(e))
-                                    .build();
-                            return errorItem;
-                        }
+                        InformeWidgetItem informeItem = InformeWidgetItem.builder()
+                                .dashboardItemId(item.getId())
+                                .titol(item.getWidget() != null ? item.getWidget().getTitol() : null)
+                                .tipus(consultaEstadisticaHelper.determineWidgetType(item))
+                                .posX(item.getPosX())
+                                .posY(item.getPosY())
+                                .width(item.getWidth())
+                                .height(item.getHeight())
+                                .loading(true)
+                                .build();
+                        return informeItem;
                     })
                     .collect(Collectors.toList());
-        }
-
-        private DashboardEntity getDashboard(String code, DashboardEntity entity) {
-            DashboardEntity dashboard = entityRepository.findById(entity.getId())
-                    .orElseThrow(() -> new ReportGenerationException(Dashboard.class, entity.getId(), code, "No existeix"));
-            return dashboard;
+            dashboard.getItems().forEach(dashboardItem -> {
+                try {
+                    consultaEstadisticaAsyncHelper.generateAsyncData(dashboardItem);
+                } catch (Exception e) {
+                    log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
+                }
+            });
+            log.info("Dashboard {}: {} items generated", entity.getId(), dashboardItems.size());
+            return dashboardItems;
         }
 
         @Override

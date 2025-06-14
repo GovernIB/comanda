@@ -13,6 +13,12 @@ import {useTheme} from '@mui/material/styles';
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil";
 import estils from './WidgetEstils';
 import Chip from "@mui/material/Chip";
+import Skeleton from '@mui/material/Skeleton';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 // Define the column style interface
 interface ColumnaEstil {
@@ -103,6 +109,9 @@ export interface TaulaWidgetVisualizationProps {
     // Additional props
     loading?: boolean;
     preview?: boolean;
+    error?: boolean;
+    errorMsg?: string;
+    errorTrace?: string;
     onClick?: () => void;
 }
 
@@ -196,6 +205,9 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         // Additional props
         loading = false,
         preview = false,
+        error = false,
+        errorMsg,
+        errorTrace,
         onClick,
     }
         = props;
@@ -285,72 +297,126 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)}>
             {/* Titol */}
             <Box sx={estils.titleContainer} >
-                <Typography sx={estils.titleText} >{titol}</Typography>
-                <Box sx={estils.iconContainer}>
-                    <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
-                </Box>
+                {loading ? (
+                    <>
+                        <Skeleton width="70%" height={32} />
+                        <Box sx={estils.iconContainer}>
+                            <Skeleton width={40} height={24} />
+                        </Box>
+                    </>
+                ) : (
+                    <>
+                        <Typography sx={estils.titleText} >{titol}</Typography>
+                        <Box sx={estils.iconContainer}>
+                            <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
+                        </Box>
+                    </>
+                )}
             </Box>
 
-            {/* Table */}
-            <Box sx={ estils.tableContainerBox } >
-                <TableContainer sx={{height: '100%'}}>
-                    <Table
-                        stickyHeader
-                        size={preview ? "small" : "medium"}
-                        sx={ estils.tableContainer(mostrarVoraTaula, ampleVoraTaula, colors.voraTaulaColor, colors.taulaBgColor) }
+            {error ? (
+                // Error content
+                <Box sx={{ flex: 1, p: 2 }}>
+                    <Accordion 
+                        sx={estils.errorAccordion}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        {mostrarCapcalera && (
-                            <TableHead>
-                                <TableRow sx={estils.tableHeader(colors.textTaulaColor, colors.taulaBgColor,
-                                    colors.horDividerColor, mostrarSeparadorHoritzontal ? Number(ampleSeparadorHoritzontal) + 1 : 1,
-                                    mostrarSeparadorVertical, colors.verDividerColor, ampleSeparadorVertical)}>
-                                    {columnes.map((column) => (
-                                        <TableCell
-                                            key={column.id}
-                                            align="left"
-                                            sx={{
-                                                fontWeight: '600',
-                                                color: colors.textHeaderColor,
-                                                backgroundColor: colors.headerBgColor,
-                                            }}
-                                        >
-                                            {column.label}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
+                        <AccordionSummary
+                            expandIcon={<ExpandMoreIcon />}
+                            sx={estils.errorSummary(theme)}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
+                                <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || 'Error'}</Typography>
+                            </Box>
+                        </AccordionSummary>
+                        <AccordionDetails sx={estils.errorDetails(theme)}>
+                            {errorTrace || 'No error trace available'}
+                        </AccordionDetails>
+                    </Accordion>
+                </Box>
+            ) : (
+                // Normal content
+                <>
+                    {/* Table */}
+                    <Box sx={ estils.tableContainerBox } >
+                        {loading ? (
+                            <Box sx={{ width: '100%', height: '100%', minHeight: 200 }}>
+                                {/* Table header skeleton */}
+                                <Skeleton variant="rectangular" width="100%" height={40} sx={{ mb: 1 }} />
+
+                                {/* Table rows skeletons */}
+                                {[...Array(5)].map((_, index) => (
+                                    <Skeleton key={index} variant="rectangular" width="100%" height={30} sx={{ mb: 1 }} />
+                                ))}
+                            </Box>
+                        ) : (
+                            <TableContainer sx={{height: '100%'}}>
+                                <Table
+                                    stickyHeader
+                                    size={preview ? "small" : "medium"}
+                                    sx={ estils.tableContainer(mostrarVoraTaula, ampleVoraTaula, colors.voraTaulaColor, colors.taulaBgColor) }
+                                >
+                                    {mostrarCapcalera && (
+                                        <TableHead>
+                                            <TableRow sx={estils.tableHeader(colors.textTaulaColor, colors.taulaBgColor,
+                                                colors.horDividerColor, mostrarSeparadorHoritzontal ? Number(ampleSeparadorHoritzontal) + 1 : 1,
+                                                mostrarSeparadorVertical, colors.verDividerColor, ampleSeparadorVertical)}>
+                                                {columnes.map((column) => (
+                                                    <TableCell
+                                                        key={column.id}
+                                                        align="left"
+                                                        sx={{
+                                                            fontWeight: '600',
+                                                            color: colors.textHeaderColor,
+                                                            backgroundColor: colors.headerBgColor,
+                                                        }}
+                                                    >
+                                                        {column.label}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        </TableHead>
+                                    )}
+                                    <TableBody>
+                                        {files.map((row, rowIndex) => (
+                                            <TableRow key={rowIndex}
+                                                    sx={estils.tableRow(colors.textTaulaColor, colors.taulaBgColor,
+                                                        mostrarSeparadorHoritzontal, colors.horDividerColor, ampleSeparadorHoritzontal,
+                                                        mostrarSeparadorVertical, colors.verDividerColor, ampleSeparadorVertical)}>
+                                                {columnes.map((column) => {
+                                                    const value = row[column.id];
+                                                    const formattedValue = column.format ? column.format(value) : value;
+
+                                                    return (
+                                                        <TableCell
+                                                            key={column.id}
+                                                            align="left"
+                                                            sx={getCellStyle(column.id, rowIndex, value, row)}
+                                                        >
+                                                            {renderCellContent(column.id, formattedValue, row)}
+                                                        </TableCell>
+                                                    );
+                                                })}
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
                         )}
-                        <TableBody>
-                            {files.map((row, rowIndex) => (
-                                <TableRow key={rowIndex}
-                                          sx={estils.tableRow(colors.textTaulaColor, colors.taulaBgColor,
-                                              mostrarSeparadorHoritzontal, colors.horDividerColor, ampleSeparadorHoritzontal,
-                                              mostrarSeparadorVertical, colors.verDividerColor, ampleSeparadorVertical)}>
-                                    {columnes.map((column) => {
-                                        const value = row[column.id];
-                                        const formattedValue = column.format ? column.format(value) : value;
+                    </Box>
 
-                                        return (
-                                            <TableCell
-                                                key={column.id}
-                                                align="left"
-                                                sx={getCellStyle(column.id, rowIndex, value, row)}
-                                            >
-                                                {renderCellContent(column.id, formattedValue, row)}
-                                            </TableCell>
-                                        );
-                                    })}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Box>
-
-            {/*Peu*/}
-            <Box sx={estils.footerContainer}>
-                <Typography sx={estils.descText(colors.textColor)}>{descripcio}</Typography>
-            </Box>
+                    {/*Peu*/}
+                    <Box sx={estils.footerContainer}>
+                        {loading ? (
+                            <Skeleton width="60%" height={24} />
+                        ) : (
+                            <Typography sx={estils.descText(colors.textColor)}>{descripcio}</Typography>
+                        )}
+                    </Box>
+                </>
+            )}
         </Paper>
     );
 };

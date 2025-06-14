@@ -385,6 +385,7 @@ const EstadisticaDashboard: React.FC = () => {
                 'Loading' // TODO
             ) : (
                 <AppEstadisticaTest
+                    dashboardId={dashboard.id}
                     dashboardWidgets={dashboardWidgets}
                     gridLayoutItems={mappedDashboardItems}
                     onGridLayoutItemsChange={onGridLayoutItemsChange}

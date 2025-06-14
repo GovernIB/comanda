@@ -23,4 +23,5 @@ import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
  * @author Límit Tecnologies
  */
 public interface DashboardService extends MutableResourceService<Dashboard, Long> {
+
 }

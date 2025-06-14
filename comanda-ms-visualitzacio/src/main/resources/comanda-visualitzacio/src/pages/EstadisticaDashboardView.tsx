@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 const EstadisticaDashboardView = () => {
     // const { id: dashboardId } = useParams();
-    const dashboardId = 1;
+    const dashboardId = 21;
     const {
         isReady: apiDashboardIsReady,
         getOne: getOneDashboard,
@@ -70,6 +70,7 @@ const EstadisticaDashboardView = () => {
                 'Loading' // TODO
             ) : (
                 <AppEstadisticaTest
+                    dashboardId={dashboard.id}
                     editable={false}
                     dashboardWidgets={dashboardWidgets}
                     gridLayoutItems={mappedDashboardItems}

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
@@ -16,6 +17,7 @@ import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +38,7 @@ import java.util.Map;
  *
  * @author Límit Tecnologies
  */
-    @Slf4j
+@Slf4j
 @Service
 public class DashboardItemServiceImpl extends BaseMutableResourceService<DashboardItem, Long, DashboardItemEntity> implements DashboardItemService {
 
@@ -44,6 +46,8 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private ConsultaEstadisticaHelper consultaEstadisticaHelper;
     @Autowired
     private AtributsVisualsHelper atributsVisualsHelper;
+    @Autowired
+    private EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     static {
@@ -80,6 +84,12 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     }
 
     @Override
+    protected void afterUpdateSave(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+        estadisticaWidgetHelper.clearDashboardWidgetCache(entity.getId());
+    }
+
+    @Override
     protected void afterConversion(DashboardItemEntity entity, DashboardItem resource) {
         // Convertir el JSON d'atributs visuals a objectes i assignar-los al recurs
         resource.setAtributsVisuals(atributsVisualsHelper.getAtributsVisuals(entity));
@@ -97,7 +107,24 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 InformeWidgetParams params) throws ReportGenerationException {
 
             DashboardItemEntity dashboardItem = getDashboardItem(code, entity);
-            InformeWidgetItem item = consultaEstadisticaHelper.getDadesWidget(dashboardItem);
+            InformeWidgetItem item;
+            try {
+                item = consultaEstadisticaHelper.getDadesWidget(dashboardItem);
+            } catch (Exception e) {
+                log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
+                item = InformeWidgetItem.builder()
+                        .dashboardItemId(dashboardItem.getId())
+                        .titol(dashboardItem.getWidget() != null ? dashboardItem.getWidget().getTitol() : null)
+                        .tipus(consultaEstadisticaHelper.determineWidgetType(dashboardItem))
+                        .posX(dashboardItem.getPosX())
+                        .posY(dashboardItem.getPosY())
+                        .width(dashboardItem.getWidth())
+                        .height(dashboardItem.getHeight())
+                        .error(true)
+                        .errorMsg("Error processing item " + dashboardItem.getId() + ": " + e.getMessage())
+                        .errorTrace(ExceptionUtils.getStackTrace(e))
+                        .build();
+            }
 
             return List.of(item);
         }

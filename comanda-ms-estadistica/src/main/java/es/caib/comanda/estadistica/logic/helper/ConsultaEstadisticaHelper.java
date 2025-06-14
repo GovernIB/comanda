@@ -28,6 +28,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidget
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.ms.estadistica.model.Format;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
@@ -38,7 +39,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -67,8 +67,7 @@ public class ConsultaEstadisticaHelper {
 
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
-
-    private final RestTemplate restTemplate;
+    private final DashboardItemRepository dashboardItemRepository;
 
     private static DateTimeFormatter DMYYYY_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
 
@@ -139,11 +138,12 @@ public class ConsultaEstadisticaHelper {
         return toFets(fets);
     }
 
-
     @Cacheable(value = "dashboardWidgetCache", key = "#dashboardItem.id + '_' + T(java.time.LocalDate).now()")
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem) {
 
+        // Recarregam l'item, ja que estem en una nova transacció.
+        dashboardItem= dashboardItemRepository.findById(dashboardItem.getId()).orElseThrow();
         WidgetTipus tipus = determineWidgetType(dashboardItem);
         DadesComunsWidgetConsulta dadesComunsConsulta = getDadesComunsConsulta(dashboardItem);
 

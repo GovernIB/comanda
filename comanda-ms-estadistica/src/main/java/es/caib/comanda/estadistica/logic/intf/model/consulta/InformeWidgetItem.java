@@ -31,4 +31,6 @@ public class InformeWidgetItem implements Serializable {
     protected String errorMsg;
     protected String errorTrace;
 
+    protected boolean loading;
+
 }

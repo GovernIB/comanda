@@ -16,7 +16,6 @@ export const estils = {
         border: mostrarVora ? `${voraAmple}px solid ${voraColor}` : 'none',
         cursor: onClick ? 'pointer' : 'default',
         height: '100%',
-        minHeight: '200px',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
             boxShadow: onClick ? theme.shadows[4] : undefined,
@@ -45,7 +44,7 @@ export const estils = {
     contentContainer: {
         display: 'flex',
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'flex-start',
         flexGrow: 1,
         flexShrink: 1,
@@ -55,7 +54,7 @@ export const estils = {
         pb: 0,
     },
     contentText: (preview: boolean) => ({
-        height: preview ? '80px' : '120px', // Altura fixa del contenidor
+        // height: preview ? '80px' : '120px', // Altura fixa del contenidor
         display: 'flex',
         flexDirection: 'column', // Els elements s'apilen verticalment
         justifyContent: 'flex-end', // Alinea els elements al final (inferior)
@@ -175,7 +174,36 @@ export const estils = {
     }),
     entornCodi: {
         fontWeight: 600,
-    }
+    },
+    errorIcon: (theme: Theme) => ({
+        color: theme.palette.error.main,
+        fontSize: '3rem',
+        marginRight: 1
+    }),
+    errorAccordion: {
+        margin: 0,
+        boxShadow: 'none',
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
+        '&:before': {
+            display: 'none',
+        },
+    },
+    errorSummary: (theme: Theme) => ({
+        color: theme.palette.error.main,
+        fontWeight: 'bold',
+        padding: '0 16px',
+    }),
+    errorDetails: (theme: Theme) => ({
+        whiteSpace: 'pre-wrap',
+        fontFamily: 'monospace',
+        fontSize: '0.875rem',
+        backgroundColor: theme.palette.grey[100],
+        padding: 2,
+        maxHeight: '200px',
+        overflow: 'auto',
+    })
 
 };
 
