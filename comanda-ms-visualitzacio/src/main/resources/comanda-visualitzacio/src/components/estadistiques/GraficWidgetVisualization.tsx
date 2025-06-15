@@ -506,11 +506,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             {error ? (
                 // Error content
                 <Box sx={{ flex: 1, p: 2 }}>
-                    <Accordion sx={estils.errorAccordion}>
-                        <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            sx={estils.errorSummary(theme)}
-                        >
+                    <Accordion sx={{...estils.errorAccordion, pointerEvents: "auto"}} onMouseDown={(event) => {
+                        event.stopPropagation(); // Evita que React-Grid-Layout bloquegi el clic
+                    }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
                                 <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || 'Error'}</Typography>

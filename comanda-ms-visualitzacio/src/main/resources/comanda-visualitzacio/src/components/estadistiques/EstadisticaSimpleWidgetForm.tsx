@@ -27,12 +27,12 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
         colorIcona: data.colorIcona,
         colorFonsIcona: data.colorFonsIcona,
         colorTextDestacat: data.colorTextDestacat,
-        vora: data.vora || false,
+        mostrarVora: data.mostrarVora || false,
         colorVora: data.colorVora,
         ampleVora: data.ampleVora,
     }), [data]);
 
-    const isMostrarVora: boolean = data?.vora;
+    const isMostrarVora: boolean = data?.mostrarVora;
     const isIcona: boolean = !!data?.icona;
 
 
@@ -46,7 +46,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
     //                 'colorIcona': data.colorIcona,
     //                 'colorFonsIcona': data.colorFonsIcona,
     //                 'colorTextDestacat': data.colorTextDestacat,
-    //                 'vora': data.vora,
+    //                 'mostrarVora': data.mostrarVora,
     //                 'colorVora': data.colorVora,
     //                 'ampleVora': data.ampleVora,
     //             } }
@@ -121,7 +121,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                 )}
                 <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorTextDestacat" label="Color del text destacat" type="color" required={false} onChange={generateOnChange("colorTextDestacat", "atributsVisuals")} /></Grid>
                 <Grid size={6} />
-                <Grid size={12}><FormField name="vora" label="Mostrar vora" type="checkbox" onChange={generateOnChange("vora", "atributsVisuals")} /></Grid>
+                <Grid size={12}><FormField name="mostrarVora" label="Mostrar vora" type="checkbox" onChange={generateOnChange("mostrarVora", "atributsVisuals")} /></Grid>
                 { isMostrarVora && (
                     <>
                         <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorVora" label="Color de la vora" type="color" required={false} onChange={generateOnChange("colorVora", "atributsVisuals")} /></Grid>

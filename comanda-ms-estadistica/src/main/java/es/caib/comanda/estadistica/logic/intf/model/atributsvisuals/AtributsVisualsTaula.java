@@ -5,9 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -19,20 +21,10 @@ import java.util.List;
 @Slf4j
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AtributsVisualsTaula implements AtributsVisuals {
-
-    // Estils per defecte del widget (opcionals)
-    @Size(max = 8)
-    private String colorText;
-    @Size(max = 8)
-    private String colorFons;
-    private Boolean mostrarVora;
-    @Size(max = 8)
-    private String colorVora;
-    private Integer ampleVora;
+public class AtributsVisualsTaula extends AtributsVisuals implements Serializable {
 
     // Configuració general de la taula
     @Size(max = 8)

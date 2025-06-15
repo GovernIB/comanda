@@ -200,7 +200,7 @@ export const estils = {
     errorDetails: (theme: Theme) => ({
         whiteSpace: 'pre-wrap',
         fontFamily: 'monospace',
-        fontSize: '0.875rem',
+        fontSize: '0.5rem',
         backgroundColor: theme.palette.grey[100],
         padding: 2,
         maxHeight: '200px',

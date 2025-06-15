@@ -7,7 +7,7 @@ import { isEqual } from 'lodash';
 import SimpleWidgetVisualization from '../components/estadistiques/SimpleWidgetVisualization.tsx';
 import GraficWidgetVisualization from '../components/estadistiques/GraficWidgetVisualization.tsx';
 import TaulaWidgetVisualization from '../components/estadistiques/TaulaWidgetVisualization.tsx';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 // Keys d'events SSE
 const sseConnectedKey = 'dashboard_connect';
@@ -169,6 +169,74 @@ export const useMapDashboardItems = (dashboardWidgets) => {
     );
 };
 
+// Exportar la funció connectToSSE i l'estat sseConnected per utilitzar en altres components
+export const useDashboardSSE = (dashboardId: number) => {
+    const eventSourceRef = useRef<EventSource | null>(null);
+    const [sseConnected, setSseConnected] = useState(false);
+
+    // Funció per establir la connexió SSE i retornar una promise que resolgui quan s'hagi connectat
+    const connectToSSE = useCallback(() => {
+        return new Promise<void>((resolve) => {
+            // Tancar la connexió anterior si existeix
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+            }
+
+            // Crear una nova connexió
+            const apiUrl = import.meta.env.VITE_API_URL || '/api';
+            const sseUrl = `${apiUrl}/dashboards/subscribe/${dashboardId}`;
+
+            // const eventSource = new EventSource(sseUrl, {withCredentials: true});
+            const eventSource = new EventSource(sseUrl);
+            eventSourceRef.current = eventSource;
+
+            // Gestionar l'esdeveniment de connexió
+            eventSource.addEventListener(sseConnectedKey, (event) => {
+                console.log('SSE connectat:', event.data);
+                setSseConnected(true);
+                resolve(); // Resoldre la promise quan s'ha connectat
+            });
+
+            eventSource.onopen = () => {
+                console.log("Connexió SSE oberta correctament!");
+            };
+
+            // Gestionar errors
+            eventSource.onerror = (error) => {
+                console.error('Error de connexió SSE:', error);
+
+                // Tancar la connexió actual
+                eventSource.close();
+                eventSourceRef.current = null;
+                setSseConnected(false);
+
+                // Intentar reconnectar després d'un temps
+                setTimeout(() => {
+                    connectToSSE().then(resolve);
+                }, 5000);
+            };
+        });
+    }, [dashboardId]);
+
+    useEffect(() => {
+        // Iniciar la connexió
+        connectToSSE();
+
+        // Netejar en desmuntar el component
+        return () => {
+            console.log('Netejam o desmontam el component');
+            if (eventSourceRef.current) {
+                console.log('Desconnectam SSE');
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
+                setSseConnected(false);
+            }
+        };
+    }, [connectToSSE]);
+
+    return { sseConnected, connectToSSE, eventSourceRef };
+};
+
 export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     dashboardId,
     dashboardWidgets,
@@ -177,8 +245,9 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     onGridLayoutItemsChange,
 }) => {
     const canvasRef = useRef();
-    // Add a state variable to force re-renders when dashboardWidgets is updated
+    // Afegir un estat per forçar re-renders quan els dashboardWidgets s'actualitzen
     const [forceUpdate, setForceUpdate] = useState(0);
+
     // const { isReady: dashboardItemApiIsReady, artifactReport: dashboardItemReport } =
     //     useResourceApiService('dashboardItem');
     //
@@ -215,132 +284,98 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     //     },
     // ]);
 
-    // Carregar widgets via SSE
-    const eventSourceRef = useRef<EventSource | null>(null);
+    // Utilitzar el custom hook per connexions SSE
+    const { eventSourceRef } = useDashboardSSE(dashboardId);
 
-      useEffect(() => {
-          const connectToSSE = () => {
-              // Tancar la connexió anterior si existeix
-              if (eventSourceRef.current) {
-                  eventSourceRef.current.close();
-              }
+    // Configurar els listeners d'event d'actualització d'items de dashboard
+    useEffect(() => {
+        if (!eventSourceRef.current || !dashboardWidgets) return;
 
-              // Crear una nova connexió
-              const apiUrl = import.meta.env.VITE_API_URL || '/api';
-              const sseUrl = `${apiUrl}/dashboards/subscribe/${dashboardId}`;
+        // Gestionar l'esdeveniment de dashboardItem carregat
+        const handleItemLoaded = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                const dashboardItemId = data.dashboardItemId;
+                const widgetItem = data.informeWidgetItem;
+                const tempsCarrega = data.tempsCarrega;
+                console.log('SSE item carregat:', dashboardItemId, tempsCarrega);
+                const trobatIndex = dashboardWidgets.findIndex(
+                    (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
+                );
+                if (trobatIndex !== -1) {
+                    // Crea un nou array amb el widget actualitzat
+                    const updatedWidgets = [...dashboardWidgets];
+                    // Crea un nou objecte pel widget actualitzat
+                    updatedWidgets[trobatIndex] = {
+                        ...dashboardWidgets[trobatIndex],
+                        ...widgetItem,
+                        loading: false
+                    };
+                    // Actualitza el l'array de dashboardWidgets amb el nou array
+                    dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
+                    // Força un re-render per actualitzar els widgets
+                    setForceUpdate(prev => prev + 1);
+                } else {
+                    console.log('Widget no trobat:', widgetItem);
+                }
+            } catch (error) {
+                console.error(`Error processant SSE: ${sseDashboardItemLoadedKey}`, error);
+            }
+        };
 
-              const eventSource = new EventSource(sseUrl, {withCredentials: true});
-              eventSourceRef.current = eventSource;
+        // Gestionar l'esdeveniment d'error en la càrrega de dashboardItem
+        const handleItemError = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                const dashboardItemId = data.dashboardItemId;
+                const widgetItem = data.informeWidgetItem;
+                const errorMsg = widgetItem?.errorMsg;
+                console.log('SSE item amb error:', dashboardItemId, errorMsg);
+                const trobatIndex = dashboardWidgets.findIndex(
+                    (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
+                );
+                if (trobatIndex !== -1) {
+                    // Crea un nou array amb el widget actualitzat
+                    const updatedWidgets = [...dashboardWidgets];
+                    // Crea un nou objecte pel widget actualitzat
+                    updatedWidgets[trobatIndex] = {
+                        ...dashboardWidgets[trobatIndex],
+                        ...widgetItem,
+                        loading: false,
+                        error: true,
+                        mostrarVora: true,
+                        colorVora: 'red',
+                        ampleVora: 6,
+                    };
+                    // Actualitza el l'array de dashboardWidgets amb el nou array
+                    dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
+                    // Força un re-render per actualitzar els widgets
+                    setForceUpdate(prev => prev + 1);
+                } else {
+                    console.log('Widget no trobat:', widgetItem);
+                }
+            } catch (error) {
+                console.error(`Error processant SSE: ${sseDashboardItemLoadingErrorKey}`, error);
+            }
+        };
 
-              // Gestionar l'esdeveniment de connexió
-              eventSource.addEventListener(sseConnectedKey, (event) => {
-                  console.log('SSE connectat:', event.data);
-              });
+        // Afegeix els listeners d'events
+        eventSourceRef.current.addEventListener(sseDashboardItemLoadedKey, handleItemLoaded);
+        eventSourceRef.current.addEventListener(sseDashboardItemLoadingErrorKey, handleItemError);
 
-              // Gestionar l'esdeveniment de dashboardItem carregat
-              eventSource.addEventListener(sseDashboardItemLoadedKey, (event) => {
-                  // console.log('SSE item carregat:', event.data);
-                  try {
-                      const data = JSON.parse(event.data);
-                      const dashboardItemId = data.dashboardItemId;
-                      const widgetItem = data.informeWidgetItem;
-                      // const widgetItemLoaded = {...widgetItem, loading: false};
-                      const tempsCarrega = data.tempsCarrega;
-                      console.log('SSE item carregat:', dashboardItemId, tempsCarrega);
-                      const trobatIndex = dashboardWidgets.findIndex(
-                          (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
-                      );
-                      if (trobatIndex !== -1) {
-                          // Create a new array with the updated widget
-                          const updatedWidgets = [...dashboardWidgets];
-                          // Create a new object for the updated widget
-                          updatedWidgets[trobatIndex] = {
-                              ...dashboardWidgets[trobatIndex],
-                              ...widgetItem,
-                              loading: false
-                          };
-                          // Update the dashboardWidgets array with the new array
-                          dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
-                          // Force a re-render to update the ChartWrapper components
-                          setForceUpdate(prev => prev + 1);
-                          // console.log('Widget modificat:', updatedWidgets[trobatIndex]);
-                      } else {
-                          console.log('Widget no trobat:', widgetItem);
-                      }
-                  } catch (error) {
-                      console.error(`Error processant SSE: ${sseDashboardItemLoadingErrorKey}`, error);
-                  }
-              });
+        // Elimina els listeners d'events
+        return () => {
+            if (eventSourceRef.current) {
+                eventSourceRef.current.removeEventListener(sseDashboardItemLoadedKey, handleItemLoaded);
+                eventSourceRef.current.removeEventListener(sseDashboardItemLoadingErrorKey, handleItemError);
+            }
+        };
+    }, [dashboardWidgets, eventSourceRef]);
 
-
-              // Gestionar l'esdeveniment d'error en la càrrega de dashboardItem
-              eventSource.addEventListener(sseDashboardItemLoadingErrorKey, (event) => {
-                  // console.log('SSE error carregat item:', event.data);
-                  try {
-                      const data = JSON.parse(event.data);
-                      const dashboardItemId = data.dashboardItemId;
-                      const widgetItem = data.informeWidgetItem;
-                      // const widgetItemLoaded = {...widgetItem, loading: false};
-                      const errorMsg = widgetItem?.errorMsg;
-                      console.log('SSE item amb error:', dashboardItemId, errorMsg);
-                      const trobatIndex = dashboardWidgets.findIndex(
-                          (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
-                      );
-                      if (trobatIndex !== -1) {
-                          // Create a new array with the updated widget
-                          const updatedWidgets = [...dashboardWidgets];
-                          // Create a new object for the updated widget
-                          updatedWidgets[trobatIndex] = {
-                              ...dashboardWidgets[trobatIndex],
-                              ...widgetItem,
-                              loading: false,
-                              error: true
-                          };
-                          // Update the dashboardWidgets array with the new array
-                          dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
-                          // Force a re-render to update the ChartWrapper components
-                          setForceUpdate(prev => prev + 1);
-                          // console.log('Widget amb error modificat:', updatedWidgets[trobatIndex]);
-                      } else {
-                          console.log('Widget no trobat:', widgetItem);
-                      }
-                  } catch (error) {
-                      console.error(`Error processant SSE: ${sseDashboardItemLoadingErrorKey}`, error);
-                  }
-              });
-
-
-              // Gestionar errors
-              eventSource.onerror = (error) => {
-                  console.error('Error de connexió SSE:', error);
-
-                  // Tancar la connexió actual
-                  eventSource.close();
-                  eventSourceRef.current = null;
-
-                  // Intentar reconnectar després d'un temps
-                  setTimeout(connectToSSE, 2000);
-              };
-          };
-
-          // Iniciar la connexió
-          connectToSSE();
-
-          // Netejar en desmuntar el component
-          return () => {
-              console.log('Netejam o desmontam el component');
-              if (eventSourceRef.current) {
-                  console.log('Desconnectam SSE');
-                  eventSourceRef.current.close();
-                  eventSourceRef.current = null;
-              }
-          };
-      }, []);
-
-      // This useEffect will trigger a re-render when forceUpdate changes
-      useEffect(() => {
-          console.log('forceUpdate changed, triggering re-render');
-      }, [forceUpdate]);
+    // Aquest useEffect llençarà un re-render quan forceUpdate canviï
+    useEffect(() => {
+        console.log('forceUpdate changed, triggering re-render');
+    }, [forceUpdate]);
 
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
         drawGrid();

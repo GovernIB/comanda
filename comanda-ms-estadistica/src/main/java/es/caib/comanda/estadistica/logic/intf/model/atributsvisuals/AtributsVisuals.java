@@ -1,5 +1,12 @@
 package es.caib.comanda.estadistica.logic.intf.model.atributsvisuals;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 /**
@@ -7,11 +14,25 @@ import java.io.Serializable;
  *
  * @author Límit Tecnologies
  */
-public interface AtributsVisuals extends Serializable {
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public abstract class AtributsVisuals implements Serializable {
 
-    public AtributsVisuals merge(AtributsVisuals other);
+    @Size(max = 8)
+    protected String colorText;
+    @Size(max = 8)
+    protected String colorFons;
+    protected Boolean mostrarVora;
+    @Size(max = 8)
+    protected String colorVora;
+    protected Integer ampleVora;
 
-    default <T> T mergeField(T currentValue, T otherValue) {
+    public abstract AtributsVisuals merge(AtributsVisuals other);
+
+    <T> T mergeField(T currentValue, T otherValue) {
         return currentValue != null ? currentValue : otherValue;
     }
 }

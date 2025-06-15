@@ -54,9 +54,12 @@ public class ConsultaEstadisticaAsyncHelper {
         try {
             Long inici = System.currentTimeMillis();
 
+            // TODO: Eliminar això:
             if (dashboardItem.getId() == 22L) {
                 inici = null;
             }
+            // Fi TODO
+
             InformeWidgetItem loadedItem = consultaEstadisticaHelper.getDadesWidget(dashboardItem);
             DashboardLoadedEvent dashboardLoadedEvent = DashboardLoadedEvent.builder()
                     .dashboardId(dashboard.getId())

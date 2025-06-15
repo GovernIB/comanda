@@ -1,13 +1,14 @@
 package es.caib.comanda.estadistica.logic.intf.model.atributsvisuals;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 /**
  * Classe que representa els atributs visuals d'un widget simple.
@@ -18,30 +19,20 @@ import javax.validation.constraints.Size;
 @Slf4j
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AtributsVisualsSimple implements AtributsVisuals {
+public class AtributsVisualsSimple extends AtributsVisuals implements Serializable {
 
     // Nom de la icona MUI a visualitzar (opcional)
     @Size(max = 64)
     private String icona;
-    
-    // Estils per defecte del widget (opcionals)
-    @Size(max = 8)
-    private String colorText;
-    @Size(max = 8)
-    private String colorFons;
     @Size(max = 8)
     private String colorIcona;
     @Size(max = 8)
     private String colorFonsIcona;
     @Size(max = 8)
     private String colorTextDestacat;
-    private Boolean vora;
-    @Size(max = 8)
-    private String colorVora;
-    private Integer ampleVora;
 
 
     public AtributsVisuals merge(AtributsVisuals otherAtributsVisuals) {
@@ -56,7 +47,7 @@ public class AtributsVisualsSimple implements AtributsVisuals {
         this.colorIcona = mergeField(this.colorIcona, other.getColorIcona());
         this.colorFonsIcona = mergeField(this.colorFonsIcona, other.getColorFonsIcona());
         this.colorTextDestacat = mergeField(this.colorTextDestacat, other.getColorTextDestacat());
-        this.vora = mergeField(this.vora, other.getVora());
+        this.mostrarVora = mergeField(this.mostrarVora, other.getMostrarVora());
         this.colorVora = mergeField(this.colorVora, other.getColorVora());
         this.ampleVora = mergeField(this.ampleVora, other.getAmpleVora());
 

@@ -5,9 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 /**
  * Classe que representa els atributs visuals d'un widget gràfic.
@@ -18,19 +20,10 @@ import javax.validation.constraints.Size;
 @Slf4j
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AtributsVisualsGrafic implements AtributsVisuals {
-
-    @Size(max = 8)
-    private String colorText;
-    @Size(max = 8)
-    private String colorFons;
-    private Boolean mostrarVora;
-    @Size(max = 8)
-    private String colorVora;
-    private Integer ampleVora;
+public class AtributsVisualsGrafic extends AtributsVisuals implements Serializable {
 
     // Colors per a la gama cromàtica del gràfic
     @Size(max = 1000)

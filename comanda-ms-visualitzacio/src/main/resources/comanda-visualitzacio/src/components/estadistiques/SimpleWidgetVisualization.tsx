@@ -33,7 +33,7 @@ export interface SimpleWidgetVisualizationProps {
     colorIcona?: string;
     colorFonsIcona?: string;
     colorTextDestacat?: string;
-    vora?: boolean;
+    mostrarVora?: boolean;
     colorVora?: string;
     ampleVora?: number | undefined;
 
@@ -160,7 +160,7 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
         canviPercentual = props.canviPercentual || '',
         entornCodi = props.entornCodi || 'DEV',
         icona,
-        vora = false,
+        mostrarVora = false,
         ampleVora,
         preview = false,
         loading = false,
@@ -177,7 +177,7 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
 
     const bgColor = isWhiteBackground ? backgroundColor + ' !important' : 'transparent';
     const bg = isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${backgroundColor}, ${createTransparentColor(backgroundColor, 0.75)})`;
-    const voraAmple = ampleVora || (vora ? 1 : 0);
+    const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
 
     const camelToSnakeCase = (str: string | undefined) => {
         if (!str) return undefined;
@@ -190,17 +190,16 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
     const snakeCaseIcona = camelToSnakeCase(icona);
 
     return (
-        <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, textColor, vora, voraAmple, voraColor, onClick, theme)}>
+        <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
             <WidgetTitle titol={titol} entornCodi={entornCodi} loading={loading}/>
 
             {error ? (
                 // Error content
                 <Box sx={{ flex: 1, p: 2 }}>
-                    <Accordion sx={estils.errorAccordion}>
-                        <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            sx={estils.errorSummary(theme)}
-                        >
+                    <Accordion sx={{...estils.errorAccordion, pointerEvents: "auto"}} onMouseDown={(event) => {
+                        event.stopPropagation(); // Evita que React-Grid-Layout bloquegi el clic
+                    }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
                                 <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || 'Error'}</Typography>
