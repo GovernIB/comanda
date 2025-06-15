@@ -54,11 +54,47 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
     @GetMapping("/subscribe/{dashboardId}")
     public SseEmitter streamDashboard(@PathVariable Long dashboardId) {
         SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
+
+        // Add completion callback to handle emitter completion
+        emitter.onCompletion(() -> {
+            log.debug("Emitter completed for dashboard {}, emitter {}", dashboardId, emitter.hashCode());
+            List<SseEmitter> emitters = clientsDashboard.get(dashboardId);
+            if (emitters != null) {
+                emitters.remove(emitter);
+                if (emitters.isEmpty()) {
+                    clientsDashboard.remove(dashboardId);
+                    log.debug("Removed dashboard {} from clients as it has no active emitters", dashboardId);
+                }
+            }
+        });
+
+        // Add timeout callback to handle emitter timeout
+        emitter.onTimeout(() -> {
+            log.debug("Emitter timeout for dashboard {}, emitter {}", dashboardId, emitter.hashCode());
+            List<SseEmitter> emitters = clientsDashboard.get(dashboardId);
+            if (emitters != null) {
+                emitters.remove(emitter);
+                if (emitters.isEmpty()) {
+                    clientsDashboard.remove(dashboardId);
+                    log.debug("Removed dashboard {} from clients as it has no active emitters", dashboardId);
+                }
+            }
+        });
+
+        // Add the emitter to the clients map
         clientsDashboard.computeIfAbsent(dashboardId, key -> new ArrayList<>()).add(emitter);
 
-        log.debug("Dashboard " + dashboardId + " subscrit a events amb emissor " + emitter.hashCode());
-        onSubscribeEmisorExpedient(dashboardId, emitter);
-        removeOldElements(pendingLoadedEvents);
+        log.debug("Dashboard {} subscrit a events amb emissor {}", dashboardId, emitter.hashCode());
+
+        // Process any pending events for this dashboard
+        locks.putIfAbsent(dashboardId, new Object());
+        Object lock = locks.get(dashboardId);
+
+        synchronized (lock) {
+            onSubscribeEmisorExpedient(dashboardId, emitter);
+            removeOldElements(pendingLoadedEvents);
+        }
+
         return emitter;
     }
 
@@ -69,19 +105,42 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
                     .name(DashboardEventType.DASHBOARD_CONNECT.getEventName())
                     .data("Connexió establerta a " + LocalDateTime.now())
                     .id(String.valueOf(System.currentTimeMillis())));
+
             // Si hi ha events pendents, s'envien
             if (pendingLoadedEvents.containsKey(dashboardId)) {
                 Queue<TimedEvent<DashboardEvent>> cua = pendingLoadedEvents.get(dashboardId);
-                cua.stream()
-                        .takeWhile(event -> !cua.isEmpty())
-                        .map(event -> cua.poll())
-                        .forEach( event ->
-                            sendDashboardEventToEmisor(
-                                    emitter,
-                                    event.getValue(),
-                                    dashboardId,
-                                    new ArrayList<>(),
-                                    event.getValue() instanceof DashboardLoadedEvent ? false : true));
+                log.debug("Found {} pending events for dashboard {}", cua.size(), dashboardId);
+
+                // Create a list to store events that we'll process
+                List<TimedEvent<DashboardEvent>> eventsToProcess = new ArrayList<>();
+
+                // Drain the queue into our list
+                TimedEvent<DashboardEvent> event;
+                while ((event = cua.poll()) != null) {
+                    eventsToProcess.add(event);
+                }
+
+                // Process all events
+                for (TimedEvent<DashboardEvent> timedEvent : eventsToProcess) {
+                    boolean isErrorEvent = !(timedEvent.getValue() instanceof DashboardLoadedEvent);
+                    log.debug("Sending pending {} event for dashboard {}, item {}", 
+                            isErrorEvent ? "error" : "loaded", 
+                            dashboardId, 
+                            timedEvent.getValue() instanceof DashboardLoadedEvent ? 
+                                ((DashboardLoadedEvent)timedEvent.getValue()).getDashboardItemId() : 
+                                ((DashboardLoadindErrorEvent)timedEvent.getValue()).getDashboardItemId());
+
+                    sendDashboardEventToEmisor(
+                            emitter,
+                            timedEvent.getValue(),
+                            dashboardId,
+                            new ArrayList<>(),
+                            isErrorEvent);
+                }
+
+                log.debug("Processed {} pending events for dashboard {}", eventsToProcess.size(), dashboardId);
+            } else {
+                log.debug("No pending events found for dashboard {}", dashboardId);
             }
         } catch (IOException e) {
             log.error("Error enviant esdeveniment inicial SSE", e);
@@ -114,17 +173,25 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
 
         synchronized (lock) {
             log.debug("Processant...");
-            for (Map.Entry<Long, List<SseEmitter>> entry : clientsDashboard.entrySet()) {
-                if (!dashboardId.equals(entry.getKey())) {
-                    pendingLoadedEvents.computeIfAbsent(dashboardId, key -> new ConcurrentLinkedQueue<>()).add(new TimedEvent<>(dashboardLoadedEvent));
-                    continue;
-                }
+            // Check if there are any emitters for this dashboard
+            List<SseEmitter> dashboardEmitters = clientsDashboard.get(dashboardId);
 
-                List<SseEmitter> dashboardEmitters = entry.getValue();
-                List<SseEmitter> inactiveEmitters = processEmitters(dashboardEmitters, dashboardLoadedEvent, entry.getKey());
+            if (dashboardEmitters == null || dashboardEmitters.isEmpty()) {
+                // No emitters found for this dashboard, add to pending events
+                log.debug("No emitters found for dashboard {}, adding to pending events", dashboardId);
+                pendingLoadedEvents.computeIfAbsent(dashboardId, key -> new ConcurrentLinkedQueue<>()).add(new TimedEvent<>(dashboardLoadedEvent));
+            } else {
+                // Process emitters for this dashboard
+                List<SseEmitter> inactiveEmitters = processEmitters(dashboardEmitters, dashboardLoadedEvent, dashboardId);
 
                 // Remove inactive emitters and clean up the dashboard if necessary
-                cleanupInactiveDashboards(entry.getKey(), dashboardEmitters, inactiveEmitters);
+                cleanupInactiveDashboards(dashboardId, dashboardEmitters, inactiveEmitters);
+
+                // If all emitters were inactive and removed, add to pending events
+                if (dashboardEmitters.isEmpty()) {
+                    log.debug("All emitters were inactive for dashboard {}, adding to pending events", dashboardId);
+                    pendingLoadedEvents.computeIfAbsent(dashboardId, key -> new ConcurrentLinkedQueue<>()).add(new TimedEvent<>(dashboardLoadedEvent));
+                }
             }
         }
     }
@@ -145,17 +212,25 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
 
         synchronized (lock) {
             log.debug("Processant...");
-            for (Map.Entry<Long, List<SseEmitter>> entry : clientsDashboard.entrySet()) {
-                if (!dashboardId.equals(entry.getKey())) {
-                    pendingLoadedEvents.computeIfAbsent(dashboardId, key -> new ConcurrentLinkedQueue<>()).add(new TimedEvent<>(dashboardLoadindErrorEvent));
-                    continue;
-                }
+            // Check if there are any emitters for this dashboard
+            List<SseEmitter> dashboardEmitters = clientsDashboard.get(dashboardId);
 
-                List<SseEmitter> dashboardEmitters = entry.getValue();
-                List<SseEmitter> inactiveEmitters = processEmitters(dashboardEmitters, dashboardLoadindErrorEvent, entry.getKey(), true);
+            if (dashboardEmitters == null || dashboardEmitters.isEmpty()) {
+                // No emitters found for this dashboard, add to pending events
+                log.debug("No emitters found for dashboard {}, adding to pending events", dashboardId);
+                pendingLoadedEvents.computeIfAbsent(dashboardId, key -> new ConcurrentLinkedQueue<>()).add(new TimedEvent<>(dashboardLoadindErrorEvent));
+            } else {
+                // Process emitters for this dashboard
+                List<SseEmitter> inactiveEmitters = processEmitters(dashboardEmitters, dashboardLoadindErrorEvent, dashboardId, true);
 
                 // Remove inactive emitters and clean up the dashboard if necessary
-                cleanupInactiveDashboards(entry.getKey(), dashboardEmitters, inactiveEmitters);
+                cleanupInactiveDashboards(dashboardId, dashboardEmitters, inactiveEmitters);
+
+                // If all emitters were inactive and removed, add to pending events
+                if (dashboardEmitters.isEmpty()) {
+                    log.debug("All emitters were inactive for dashboard {}, adding to pending events", dashboardId);
+                    pendingLoadedEvents.computeIfAbsent(dashboardId, key -> new ConcurrentLinkedQueue<>()).add(new TimedEvent<>(dashboardLoadindErrorEvent));
+                }
             }
         }
     }
@@ -166,14 +241,17 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
 
     private List<SseEmitter> processEmitters(List<SseEmitter> dashboardEmitters, DashboardEvent event, Long dashboardKey, boolean errorEvent) {
         List<SseEmitter> inactiveEmitters = new ArrayList<>();
-        if (dashboardEmitters != null) {
+        if (dashboardEmitters != null && !dashboardEmitters.isEmpty()) {
             for (SseEmitter emitter : dashboardEmitters) {
                 sendDashboardEventToEmisor(emitter, event, dashboardKey, inactiveEmitters, errorEvent);
             }
-        }
-        // Si no s'ha enviat
-        if (dashboardEmitters.size() == inactiveEmitters.size() && dashboardEmitters.size() > 0) {
-            pendingLoadedEvents.computeIfAbsent(event.getDashboardId(), key -> new ConcurrentLinkedQueue<>()).add(new TimedEvent<>(event));
+
+            // Log the result of the processing
+            int activeEmitters = dashboardEmitters.size() - inactiveEmitters.size();
+            log.debug("Processed event for dashboard {}: {} active emitters, {} inactive emitters", 
+                    dashboardKey, activeEmitters, inactiveEmitters.size());
+        } else {
+            log.debug("No emitters to process for dashboard {}", dashboardKey);
         }
         return inactiveEmitters;
     }
