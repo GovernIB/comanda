@@ -189,6 +189,8 @@ export const estils = {
         '&:before': {
             display: 'none',
         },
+        position: "relative",
+        zIndex: 10,
     },
     errorSummary: (theme: Theme) => ({
         color: theme.palette.error.main,

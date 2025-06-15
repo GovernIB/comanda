@@ -77,8 +77,9 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         return informeItem;
                     })
                     .collect(Collectors.toList());
-            dashboard.getItems().forEach(dashboardItem -> {
+            dashboard.getItems().parallelStream().forEach(dashboardItem -> {
                 try {
+                    log.info("Carregant dades del widget {}...", dashboardItem.getId());
                     consultaEstadisticaAsyncHelper.generateAsyncData(dashboardItem);
                 } catch (Exception e) {
                     log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);

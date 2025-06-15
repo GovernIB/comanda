@@ -29,12 +29,34 @@ public class ConsultaEstadisticaAsyncHelper {
     private final EntityManagerFactory entityManagerFactory;
 
 
+    // @Async("asyncTaskExecutor")
+    //    public void generateAsyncData(Long dashboardId) {
+    //        EntityManager entityManager = entityManagerFactory.createEntityManager();
+    //        try {
+    //            entityManager.getTransaction().begin();
+    //            DashboardEntity dashboard = entityManager.find(DashboardEntity.class, dashboardId);
+    //
+    //            processDashboardItems(dashboard, dashboardId);
+    //
+    //            entityManager.getTransaction().commit();
+    //        } catch (Exception e) {
+    //            entityManager.getTransaction().rollback();
+    //            throw e;
+    //        } finally {
+    //            entityManager.close();
+    //        }
+    //
+    //    }
+
     @Async("asyncTaskExecutor")
     public void generateAsyncData(DashboardItemEntity dashboardItem) {
         DashboardEntity dashboard = dashboardItem.getDashboard();
         try {
             Long inici = System.currentTimeMillis();
 
+            if (dashboardItem.getId() == 22L) {
+                inici = null;
+            }
             InformeWidgetItem loadedItem = consultaEstadisticaHelper.getDadesWidget(dashboardItem);
             DashboardLoadedEvent dashboardLoadedEvent = DashboardLoadedEvent.builder()
                     .dashboardId(dashboard.getId())

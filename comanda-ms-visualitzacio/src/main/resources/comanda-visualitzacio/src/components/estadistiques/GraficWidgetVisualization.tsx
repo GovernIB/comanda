@@ -506,14 +506,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             {error ? (
                 // Error content
                 <Box sx={{ flex: 1, p: 2 }}>
-                    <Accordion 
-                        sx={estils.errorAccordion}
-                        onClick={(e) => e.stopPropagation()}
-                    >
+                    <Accordion sx={estils.errorAccordion}>
                         <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
                             sx={estils.errorSummary(theme)}
-                            onClick={(e) => e.stopPropagation()}
                         >
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
