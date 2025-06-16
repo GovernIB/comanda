@@ -1,6 +1,5 @@
 package es.caib.comanda.estadistica.back.controller;
 
-import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaAsyncHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardEvent;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardLoadedEvent;
@@ -108,13 +107,14 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
     }
 
     private void onSubscribeEmisorExpedient(Long dashboardId, SseEmitter emitter) {
-        dashboardService.generateAsyncDataForAllItems(dashboardId);
         // Al moment de subscriure enviem un missatge de connexió
         try {
             emitter.send(SseEmitter.event()
                     .name(DashboardEventType.DASHBOARD_CONNECT.getEventName())
                     .data("Connexió establerta a " + LocalDateTime.now())
                     .id(String.valueOf(System.currentTimeMillis())));
+
+            dashboardService.generateAsyncDataForAllItems(dashboardId);
 
             // Si hi ha events pendents, s'envien
             if (pendingLoadedEvents.containsKey(dashboardId)) {
