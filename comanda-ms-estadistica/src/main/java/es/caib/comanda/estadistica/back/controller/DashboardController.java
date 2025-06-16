@@ -1,9 +1,11 @@
 package es.caib.comanda.estadistica.back.controller;
 
+import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaAsyncHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardEvent;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardLoadedEvent;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardLoadindErrorEvent;
+import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
 import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +45,12 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
     private final Map<Long, List<SseEmitter>> clientsDashboard = new HashMap<>();
     private final Map<Long, Object> locks = new ConcurrentHashMap<>();
     private final Map<Long, Queue<TimedEvent<DashboardEvent>>> pendingLoadedEvents = new HashMap<>();
+    private final DashboardService dashboardService;
+
+    public DashboardController(DashboardService dashboardService) {
+        super();
+        this.dashboardService = dashboardService;
+    }
 
 
     private enum DashboardEventType {
@@ -100,6 +108,7 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
     }
 
     private void onSubscribeEmisorExpedient(Long dashboardId, SseEmitter emitter) {
+        dashboardService.generateAsyncDataForAllItems(dashboardId);
         // Al moment de subscriure enviem un missatge de connexió
         try {
             emitter.send(SseEmitter.event()

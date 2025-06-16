@@ -7,6 +7,7 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -51,6 +52,21 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         return dashboard;
     }
 
+    @Override
+    public void generateAsyncDataForAllItems(Long dashboardId) {
+        DashboardEntity dashboard = entityRepository.findById(dashboardId).orElseThrow();
+        if (dashboard.getItems() == null)
+            return;
+        dashboard.getItems().forEach(dashboardItem -> {
+            try {
+                log.info("Carregant dades del widget {}...", dashboardItem.getId());
+                consultaEstadisticaAsyncHelper.generateAsyncData(dashboardItem);
+            } catch (Exception e) {
+                log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
+            }
+        });
+    }
+
     // REPORT PER OBTENIR EMPLENAR I WIDGETS
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public class InformeWidgets implements ReportGenerator<DashboardEntity, InformeWidgetParams, InformeWidgetItem> {
@@ -77,14 +93,6 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         return informeItem;
                     })
                     .collect(Collectors.toList());
-            dashboard.getItems().parallelStream().forEach(dashboardItem -> {
-                try {
-                    log.info("Carregant dades del widget {}...", dashboardItem.getId());
-                    consultaEstadisticaAsyncHelper.generateAsyncData(dashboardItem);
-                } catch (Exception e) {
-                    log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
-                }
-            });
             log.info("Dashboard {}: {} items generated", entity.getId(), dashboardItems.size());
             return dashboardItems;
         }
