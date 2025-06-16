@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -139,11 +138,11 @@ public class ConsultaEstadisticaHelper {
     }
 
     @Cacheable(value = "dashboardWidgetCache", key = "#dashboardItem.id + '_' + T(java.time.LocalDate).now()")
-    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+//    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem) {
 
         // Recarregam l'item, ja que estem en una nova transacció.
-        dashboardItem= dashboardItemRepository.findById(dashboardItem.getId()).orElseThrow();
+//        dashboardItem= dashboardItemRepository.findById(dashboardItem.getId()).orElseThrow();
         WidgetTipus tipus = determineWidgetType(dashboardItem);
         DadesComunsWidgetConsulta dadesComunsConsulta = getDadesComunsConsulta(dashboardItem);
 

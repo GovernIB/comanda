@@ -14,6 +14,8 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -49,23 +51,25 @@ public class ConsultaEstadisticaAsyncHelper {
     //    }
 
     @Async("asyncTaskExecutor")
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public void generateAsyncData(DashboardItemEntity dashboardItem) {
-        DashboardEntity dashboard = dashboardItem.getDashboard();
+        DashboardItemEntity item = dashboardItemRepository.findById(dashboardItem.getId()).orElseThrow();
+        DashboardEntity dashboard = item.getDashboard();
         try {
             Long inici = System.currentTimeMillis();
 
-            InformeWidgetItem loadedItem = consultaEstadisticaHelper.getDadesWidget(dashboardItem);
+            InformeWidgetItem loadedItem = consultaEstadisticaHelper.getDadesWidget(item);
             DashboardLoadedEvent dashboardLoadedEvent = DashboardLoadedEvent.builder()
                     .dashboardId(dashboard.getId())
-                    .dashboardItemId(dashboardItem.getId())
+                    .dashboardItemId(item.getId())
                     .informeWidgetItem(loadedItem)
                     .tempsCarrega(System.currentTimeMillis() - inici)
                     .build();
             eventPublisher.publishEvent(dashboardLoadedEvent);
-            log.info("Dashboard {}: Item {} loaded", dashboard.getId(), dashboardItem.getId());
+            log.info("Dashboard {}: Item {} loaded", dashboard.getId(), item.getId());
         } catch (Exception e) {
-            log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
-            handleWidgetError(dashboard, dashboardItem, e);
+            log.error("Error generant informe widget. Item {}: {}", item.getId(), e.getMessage(), e);
+            handleWidgetError(dashboard, item, e);
         }
     }
 

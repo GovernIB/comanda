@@ -91,7 +91,7 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
         // Afegeix un emissor al mapa de clients
         clientsDashboard.computeIfAbsent(dashboardId, key -> new ArrayList<>()).add(emitter);
 
-        log.debug("Dashboard {} subscrit a events amb emissor {}", dashboardId, emitter.hashCode());
+        log.info("Dashboard {} subscrit a events amb emissor {}", dashboardId, emitter.hashCode());
 
         // Processa qualsevol event pendent per aquest dashboard
         locks.putIfAbsent(dashboardId, new Object());
@@ -258,7 +258,7 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
 
             // Envia als logs el resultat del processament
             int activeEmitters = dashboardEmitters.size() - inactiveEmitters.size();
-            log.debug("Event enviat al dashboard {}: {} emissors actius, {} emissors inactius", dashboardKey, activeEmitters, inactiveEmitters.size());
+            log.info("Event enviat al dashboard {}: {} emissors actius, {} emissors inactius", dashboardKey, activeEmitters, inactiveEmitters.size());
         } else {
             log.debug("No hi ha emissors per enviar l'event al dashboard {}", dashboardKey);
         }
@@ -272,7 +272,7 @@ public class DashboardController extends BaseMutableResourceController<Dashboard
                             ? DashboardEventType.ITEM_ERROR.getEventName()
                             : DashboardEventType.ITEM_CARREGAT.getEventName())
                     .data(event));
-            log.debug("... comunicat " + (errorEvent ? "DashboardLoadindErrorEvent" : "DashboardLoadedEvent") + " al dashboard " + dashboardKey + " a traves de l'emissor " + emitter.hashCode() + ".");
+            log.info("... comunicat " + (errorEvent ? "DashboardLoadindErrorEvent" : "DashboardLoadedEvent") + " al dashboard " + dashboardKey + " a traves de l'emissor " + emitter.hashCode() + ".");
         } catch (Exception e) {
             inactiveEmitters.add(emitter);
             log.debug("... eliminat emisor de Dashboard " + emitter.hashCode() + " per error " + e.getMessage() + ".");
