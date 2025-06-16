@@ -576,8 +576,11 @@ databaseChangeLog:
                 constraints:
                     nullable: false
             - column:
-                name: last_modified_by
+                name: lastmod_by
                 type: VARCHAR(50 ${varcharUnit})
             - column:
-                name: last_modified_date
+                name: lastmod_date
                 type: TIMESTAMP
+            - column:
+                name: v
+                type: BIGINT
