@@ -421,7 +421,7 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     console.log(gridLayoutItems, layout);
 
     const rowHeight = 50;
-    const horizontalSubdivisions = 24;
+    const horizontalSubdivisions = 30;
 
     const drawGrid = () => {
         const canvas = canvasRef.current;
@@ -433,7 +433,7 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
         canvas.width = parent.clientWidth;
         canvas.height = parent.clientHeight;
 
-        const cols = 24;
+        const cols = horizontalSubdivisions;
         const colWidth = canvas.width / cols;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Netejar el canvas
