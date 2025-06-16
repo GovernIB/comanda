@@ -496,3 +496,88 @@ databaseChangeLog:
             - column:
                 name: v
                 type: BIGINT
+- changeSet:
+    id: est-init-table-12
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_dashboard_titol
+        columns:
+            - column:
+                name: id
+                type: BIGINT
+                constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_dashboard_titol_pk
+            - column:
+                name: dashboard_id
+                type: BIGINT
+                constraints:
+                    nullable: false
+            - column:
+                name: titol
+                type: VARCHAR(255 ${varcharUnit})
+                constraints:
+                    nullable: false
+            - column:
+                name: subtitol
+                type: VARCHAR(255 ${varcharUnit})
+            - column:
+                name: pos_x
+                type: INT
+                constraints:
+                    nullable: false
+            - column:
+                name: pos_y
+                type: INT
+                constraints:
+                    nullable: false
+            - column:
+                name: width
+                type: INT
+                constraints:
+                    nullable: false
+            - column:
+                name: height
+                type: INT
+                constraints:
+                    nullable: false
+            - column:
+                name: color_titol
+                type: VARCHAR(8 ${varcharUnit})
+            - column:
+                name: mida_font_titol
+                type: INT
+            - column:
+                name: color_subtitol
+                type: VARCHAR(8 ${varcharUnit})
+            - column:
+                name: mida_font_subtitol
+                type: INT
+            - column:
+                name: color_fons
+                type: VARCHAR(8 ${varcharUnit})
+            - column:
+                name: mostrar_vora
+                type: BOOLEAN
+            - column:
+                name: color_vora
+                type: VARCHAR(8 ${varcharUnit})
+            - column:
+                name: ample_vora
+                type: INT
+            - column:
+                name: created_by
+                type: VARCHAR(50 ${varcharUnit})
+            - column:
+                name: created_date
+                type: TIMESTAMP
+                constraints:
+                    nullable: false
+            - column:
+                name: last_modified_by
+                type: VARCHAR(50 ${varcharUnit})
+            - column:
+                name: last_modified_date
+                type: TIMESTAMP

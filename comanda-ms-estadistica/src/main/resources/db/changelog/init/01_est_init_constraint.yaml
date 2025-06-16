@@ -141,3 +141,13 @@ databaseChangeLog:
         tableName: ${db_prefix}est_dashboard
         columnNames: titol
         constraintName: ${db_prefix}dashboard_titol_uk
+- changeSet:
+    id: est-init-constraint-19
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: dashboard_id
+        baseTableName: ${db_prefix}est_dashboard_titol
+        constraintName: ${db_prefix}dboard_titol_dboard_fk
+        referencedColumnNames: id
+        referencedTableName: ${db_prefix}est_dashboard
