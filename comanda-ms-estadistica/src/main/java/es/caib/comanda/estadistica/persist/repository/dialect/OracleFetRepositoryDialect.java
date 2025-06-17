@@ -318,7 +318,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         return "SELECT agrupacio, " + querySelect +
                 " FROM ( " +
                 "    SELECT " +
-                (isAnyAverageQuery ? generateGraficGroupConditions(avgUnitat) + ", " : "") +
+                (isAnyAverageQuery ? generateGraficGroupConditions(avgUnitat) + ", " : "t.data as data, ") +
                 queryAgrupacio + " AS agrupacio," +
                 subQuerySelects +
                 "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +

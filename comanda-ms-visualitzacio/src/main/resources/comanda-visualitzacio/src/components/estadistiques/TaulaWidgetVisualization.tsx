@@ -355,7 +355,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                                 >
                                     {mostrarCapcalera && (
                                         <TableHead>
-                                            <TableRow sx={estils.tableHeader(colors.textTaulaColor, colors.taulaBgColor,
+                                            <TableRow sx={estils.tableHeader(colors.textHeaderColor, colors.headerBgColor,
                                                 colors.horDividerColor, mostrarSeparadorHoritzontal ? Number(ampleSeparadorHoritzontal) + 1 : 1,
                                                 mostrarSeparadorVertical, colors.verDividerColor, ampleSeparadorVertical)}>
                                                 {columnes.map((column) => (
@@ -388,7 +388,9 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                                                         <TableCell
                                                             key={column.id}
                                                             align="left"
-                                                            sx={getCellStyle(column.id, rowIndex, value, row)}
+                                                            sx={{color:colors.textTaulaColor,
+                                                                backgroundColor:colors.taulaBgColor,
+                                                                ...getCellStyle(column.id, rowIndex, value, row)}}
                                                         >
                                                             {renderCellContent(column.id, formattedValue, row)}
                                                         </TableCell>

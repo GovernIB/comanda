@@ -53,21 +53,6 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         return dashboard;
     }
 
-//    @Override
-//    public void generateAsyncDataForAllItems(Long dashboardId) {
-//        DashboardEntity dashboard = entityRepository.findById(dashboardId).orElseThrow();
-//        if (dashboard.getItems() == null)
-//            return;
-//        dashboard.getItems().forEach(dashboardItem -> {
-//            try {
-//                log.info("Carregant dades del widget {}...", dashboardItem.getId());
-//                consultaEstadisticaAsyncHelper.generateAsyncData(dashboardItem);
-//            } catch (Exception e) {
-//                log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
-//            }
-//        });
-//    }
-
     // REPORT PER OBTENIR EMPLENAR I WIDGETS
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public class InformeWidgets implements ReportGenerator<DashboardEntity, InformeWidgetParams, InformeWidgetItem> {
@@ -97,7 +82,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                             return informeItem;
                         })
                         .collect(Collectors.toList());
-                log.info("Dashboard {}: {} items", entity.getId(), dashboardItems.size());
+                log.debug("Dashboard {}: {} items", entity.getId(), dashboardItems.size());
             }
             if (dashboard.getTitols() != null) {
                 dashboartTitols = dashboard.getTitols().stream()
@@ -124,7 +109,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                             return informeTitol;
                         })
                         .collect(Collectors.toList());
-                log.info("Dashboard {}: {} titols", entity.getId(), dashboartTitols.size());
+                log.debug("Dashboard {}: {} titols", entity.getId(), dashboartTitols.size());
             }
             dashboardItems.addAll(dashboartTitols);
             return dashboardItems;
