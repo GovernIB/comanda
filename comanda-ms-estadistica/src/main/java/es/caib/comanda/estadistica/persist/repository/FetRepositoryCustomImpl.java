@@ -1,11 +1,11 @@
 package es.caib.comanda.estadistica.persist.repository;
 
-import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.dialect.FetRepositoryDialectFactory;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +17,7 @@ import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -229,17 +230,8 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     @Override
     public List<Map<String, String>> getValorsGraficVarisIndicadors(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
 
-        // Filtrar indicadors tipus percentatge
-        List<IndicadorAgregacio> indicadorsPercentatge = filterIndicadorsPercentatge(indicadorsAgregacio);
-        // Filtrar indicadors per query (excloent percentatges que tinguin altres agregacions del mateix indicador)
-        List<IndicadorAgregacio> filteredIndicadors = filterIndicadorsQuery(indicadorsAgregacio);
-
-        // Tots els nom de les columnes
-        String[] columnNames = ConsultaEstadisticaHelper.getColumnNames(indicadorsAgregacio);
-        // Els noms de les columnes excloent les de percentatges que tinguin altres agregacions del mateix indicador
-        String[] columnNamesForQuery = createColumnNamesArray(columnNames, filteredIndicadors, indicadorsAgregacio);
-
-        String sql = dialectFactory.getDialect().getGraficVarisIndicadorsQuery(dimensionsFiltre, filteredIndicadors, tempsAgregacio);
+        ColumnesConsulta columnesConsulta = new ColumnesConsulta(indicadorsAgregacio);
+        String sql = dialectFactory.getDialect().getGraficVarisIndicadorsQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), tempsAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -252,10 +244,18 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         }
 
         List<Map<String, String>> result = resultList.stream()
-                .map(rowArray -> convertRowToMap(rowArray, columnNamesForQuery, indicadorsAgregacio))
+                .map(rowArray -> convertRowToMap(
+                        rowArray,
+                        columnesConsulta.getColumnNames(),
+                        indicadorsAgregacio,
+                        columnesConsulta.getIndexColumnesFiltrades()))
                 .collect(Collectors.toList());
 
-        processPercentages(result, indicadorsPercentatge, filteredIndicadors, columnNames, indicadorsAgregacio);
+        processPercentages(result,
+                columnesConsulta.getIndicadorsPercentatge(),
+                columnesConsulta.getIndicadorsFiltrats(),
+                columnesConsulta.getColumnNames(),
+                indicadorsAgregacio);
         return result;
     }
 
@@ -268,17 +268,8 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             List<IndicadorAgregacio> indicadorsAgregacio,
             String dimensioAgrupacioCodi) {
 
-        // Filtrar indicadors tipus percentatge
-        List<IndicadorAgregacio> indicadorsPercentatge = filterIndicadorsPercentatge(indicadorsAgregacio);
-        // Filtrar indicadors per query (excloent percentatges que tinguin altres agregacions del mateix indicador)
-        List<IndicadorAgregacio> filteredIndicadors = filterIndicadorsQuery(indicadorsAgregacio);
-
-        // Tots els nom de les columnes
-        String[] columnNames = ConsultaEstadisticaHelper.getColumnNames(indicadorsAgregacio);
-        // Els noms de les columnes excloent les de percentatges que tinguin altres agregacions del mateix indicador
-        String[] columnNamesForQuery = createColumnNamesArray(columnNames, filteredIndicadors, indicadorsAgregacio);
-
-        String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, filteredIndicadors, dimensioAgrupacioCodi);
+        ColumnesConsulta columnesConsulta = new ColumnesConsulta(indicadorsAgregacio);
+        String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), dimensioAgrupacioCodi);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -291,39 +282,19 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         }
 
         List<Map<String, String>> result = resultList.stream()
-                .map(rowArray -> convertRowToMap(rowArray, columnNamesForQuery, indicadorsAgregacio))
+                .map(rowArray -> convertRowToMap(
+                        rowArray,
+                        columnesConsulta.getColumnNames(),
+                        indicadorsAgregacio,
+                        columnesConsulta.getIndexColumnesFiltrades()))
                 .collect(Collectors.toList());
 
-        processPercentages(result, indicadorsPercentatge, filteredIndicadors, columnNames, indicadorsAgregacio);
+        processPercentages(result,
+                columnesConsulta.getIndicadorsPercentatge(),
+                columnesConsulta.getIndicadorsFiltrats(),
+                columnesConsulta.getColumnNames(),
+                indicadorsAgregacio);
         return result;
-    }
-
-    private List<IndicadorAgregacio> filterIndicadorsPercentatge(List<IndicadorAgregacio> indicadorsAgregacio) {
-        return indicadorsAgregacio.stream()
-                .filter(i -> TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()))
-                .collect(Collectors.toList());
-    }
-
-    private List<IndicadorAgregacio> filterIndicadorsQuery(List<IndicadorAgregacio> indicadorsAgregacio) {
-        return indicadorsAgregacio.stream()
-                .filter(i -> !TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()) ||
-                        indicadorsAgregacio.stream()
-                                .filter(j -> j.getIndicadorCodi().equals(i.getIndicadorCodi()))
-                                .allMatch(j -> TableColumnsEnum.PERCENTAGE.equals(j.getAgregacio())
-                                        || TableColumnsEnum.AVERAGE.equals(j.getAgregacio())))
-                .collect(Collectors.toList());
-    }
-
-    private String[] createColumnNamesArray(String[] columnNames, List<IndicadorAgregacio> filteredIndicadors, List<IndicadorAgregacio> allIndicadors) {
-        String[] columnNamesQuery = new String[filteredIndicadors.size() + 1];
-        columnNamesQuery[0] = columnNames[0];
-        int queryIndex = 1;
-        for (int i = 1; i < columnNames.length; i++) {
-            if (filteredIndicadors.contains(allIndicadors.get(i - 1))) {
-                columnNamesQuery[queryIndex++] = columnNames[i];
-            }
-        }
-        return columnNamesQuery;
     }
 
     private void processPercentages(List<Map<String, String>> result,
@@ -393,19 +364,16 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
 
 
     // Helper per convertir una fila del resultat de la query en un map
-    private Map<String, String> convertRowToMap(Object[] rowArray, String[] columnNames, List<IndicadorAgregacio> indicadorsAgregacio) {
+    private Map<String, String> convertRowToMap(Object[] rowArray, String[] columnNames, List<IndicadorAgregacio> indicadorsAgregacio, List<Integer> indexColumnesFiltrades) {
         Map<String, String> fila = new LinkedHashMap<>();
-        for (int i = 0; i < columnNames.length; i++) {
-            String columnName = columnNames[i];
-            String value;
+        fila.put(ColumnesConsulta.GROUP_COLUMN_NAME, Objects.toString(rowArray[0], null));
 
-            if (i == 0) {
-                value = Objects.toString(rowArray[i], null);
-            } else {
-                IndicadorAgregacio indicador = indicadorsAgregacio.get(i - 1);
-                value = formatCellValue(rowArray[i], indicador.getAgregacio());
-            }
-            fila.put(columnName, value);
+        int rowIndex = 1; // Índex per accedir al valor corresponent
+        for (int colIndex : indexColumnesFiltrades) {
+            IndicadorAgregacio indicador = indicadorsAgregacio.get(colIndex - 1);
+            var value = formatCellValue(rowArray[rowIndex], indicador.getAgregacio());
+            fila.put(columnNames[colIndex], value);
+            rowIndex++; // Incrementem de manera explícita després del processament
         }
         return fila;
     }
@@ -414,11 +382,6 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         if (cellValue == null) {
             return (TableColumnsEnum.FIRST_SEEN.equals(agregacio) || TableColumnsEnum.LAST_SEEN.equals(agregacio)) ? null : "0";
         }
-//        if (TableColumnsEnum.FIRST_SEEN.equals(agregacio) || TableColumnsEnum.LAST_SEEN.equals(agregacio)) {
-//            LocalDate date = ((Timestamp) cellValue).toLocalDateTime().toLocalDate();
-//            return date.format(DATE_FORMATTER);
-//        }
-//        return NUMBER_FORMAT.format(((BigDecimal) cellValue).doubleValue());
         return cellFormat(cellValue);
     }
 
@@ -436,6 +399,83 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             return NUMBER_FORMAT.format(((Number) valor).doubleValue());
         }
         return valor.toString();
+    }
+
+    @Getter
+    private static class ColumnesConsulta {
+        private static final String GROUP_COLUMN_NAME = "agrupacio";
+
+        List<IndicadorAgregacio> allIndicadors;
+        List<IndicadorAgregacio> indicadorsPercentatge;
+        List<IndicadorAgregacio> indicadorsFiltrats;
+        String[] columnNames;
+        String[] columnNamesForQuery;
+        List<Integer> indexColumnesFiltrades;
+
+        public ColumnesConsulta(List<IndicadorAgregacio> allIndicadors) {
+            this.allIndicadors = allIndicadors;
+            this.indicadorsPercentatge = filterIndicadorsPercentatge(allIndicadors);
+            this.indicadorsFiltrats = filterIndicadorsQuery(allIndicadors);
+            this.columnNames = generateColumnNames(allIndicadors);
+            this.columnNamesForQuery = generateFilteredColumnNames(columnNames, indicadorsFiltrats, allIndicadors);
+            this.indexColumnesFiltrades = getFilteredColumnIndexes(columnNames, columnNamesForQuery);
+        }
+
+        private List<IndicadorAgregacio> filterIndicadorsPercentatge(List<IndicadorAgregacio> indicadors) {
+            return indicadors.stream()
+                    .filter(i -> TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()))
+                    .collect(Collectors.toList());
+        }
+
+        private List<IndicadorAgregacio> filterIndicadorsQuery(List<IndicadorAgregacio> indicadors) {
+            return indicadors.stream()
+                    .filter(i -> !TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()) ||
+                            indicadors.stream()
+                                    .filter(j -> j.getIndicadorCodi().equals(i.getIndicadorCodi()))
+                                    .allMatch(j -> isPercentageOrAverage(j.getAgregacio())))
+                    .collect(Collectors.toList());
+        }
+
+        private String[] generateColumnNames(List<IndicadorAgregacio> indicadors) {
+            List<String> columnNames = new ArrayList<>();
+            columnNames.add(GROUP_COLUMN_NAME);
+            for (int i = 1; i <= indicadors.size(); i++) {
+                columnNames.add("col" + i);
+            }
+            return columnNames.toArray(new String[0]);
+        }
+
+        private String[] generateFilteredColumnNames(String[] columnNames, List<IndicadorAgregacio> filteredIndicadors, List<IndicadorAgregacio> allIndicadors) {
+            String[] result = new String[filteredIndicadors.size() + 1];
+            result[0] = GROUP_COLUMN_NAME;
+            int queryIndex = 1;
+            for (int i = 1; i < columnNames.length; i++) {
+                if (filteredIndicadors.contains(allIndicadors.get(i - 1))) {
+                    result[queryIndex++] = columnNames[i];
+                }
+            }
+            return result;
+        }
+
+        private List<Integer> getFilteredColumnIndexes(String[] columnNames, String[] columnNamesForQuery) {
+            List<Integer> indexList = new ArrayList<>();
+            for (int i = 0; i < columnNames.length; i++) {
+                if (isColumnPresent(columnNamesForQuery, columnNames[i])) {
+                    indexList.add(i);
+                }
+            }
+            // Eliminal la columna de agrupació
+            indexList.remove(0);
+            return indexList;
+        }
+
+        private boolean isColumnPresent(String[] filteredColumnNames, String columnName) {
+            return Arrays.asList(filteredColumnNames).contains(columnName);
+        }
+
+        private boolean isPercentageOrAverage(TableColumnsEnum agregacio) {
+            return TableColumnsEnum.PERCENTAGE.equals(agregacio) || TableColumnsEnum.AVERAGE.equals(agregacio);
+        }
     }
 
 }

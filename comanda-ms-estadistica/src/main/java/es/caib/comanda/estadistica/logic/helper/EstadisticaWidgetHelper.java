@@ -5,14 +5,11 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
-import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -35,8 +32,7 @@ public class EstadisticaWidgetHelper {
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final DimensioValorRepository dimensioValorRepository;
-    private final DashboardItemRepository dashboardItemRepository;
-    private final CacheManager cacheManager;
+    private final CacheHelper cacheHelper;
 
     /** Sincronitza els valors de dimensió d'un widget estadístic entre el recurs rebut i l'entitat persistida.
         Afegeix noves associacions i elimina les que ja no hi són presents, modificant la relació. */
@@ -86,15 +82,7 @@ public class EstadisticaWidgetHelper {
     }
 
     public void clearDashboardWidgetCache(Long widgetId) {
-        Cache cache = cacheManager.getCache("dashboardWidgetCache");
-        if (cache == null) {
-            return;
-        }
-        try {
-            cache.evict(widgetId + "_" + java.time.LocalDate.now()); // Esborra l'entrada concreta
-        } catch (Exception e) {
-            cache.clear();
-        }
+        cacheHelper.evictCacheItemByPrefix("dashboardWidgetCache", widgetId + "_");
     }
 
 }

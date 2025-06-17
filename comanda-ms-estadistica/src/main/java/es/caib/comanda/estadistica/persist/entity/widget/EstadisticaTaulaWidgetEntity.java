@@ -17,6 +17,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import java.util.List;
 
 /**
@@ -49,6 +50,7 @@ import java.util.List;
 public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<EstadisticaTaulaWidget> {
 
     @OneToMany(mappedBy="widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("id")
     private List<IndicadorTaulaEntity> columnes;
 
     @ManyToOne(fetch = FetchType.LAZY)
