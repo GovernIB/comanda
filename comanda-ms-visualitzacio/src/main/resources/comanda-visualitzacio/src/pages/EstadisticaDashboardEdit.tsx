@@ -12,8 +12,8 @@ import {
     useMessageDialogButtons,
 } from 'reactlib';
 import { useParams } from 'react-router-dom';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AppEstadisticaTest, GridLayoutItem, useMapDashboardItems } from './DashboardTest.tsx';
+import { useState } from 'react';
+import { DashboardReactGridLayout, GridLayoutItem, useMapDashboardItems } from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import { isEqual } from 'lodash';
 import {
     Alert,
@@ -36,6 +36,7 @@ import Grid from '@mui/material/Grid';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
 
 const EntornAppFilterContent = () => {
     const { data } = useFormContext();
@@ -239,25 +240,23 @@ const defaultSizeAndPosition = {
     posY: 0,
     width: 3,
     height: 3,
-}
+};
 
-const EstadisticaDashboard: React.FC = () => {
+const EstadisticaDashboardEdit: React.FC = () => {
     const { id: dashboardId } = useParams();
-    const {
-        isReady: apiDashboardIsReady,
-        getOne: getOneDashboard,
-        artifactReport,
-    } = useResourceApiService('dashboard');
     const {
         isReady: apiDashboardItemIsReady,
         patch: patchDashboardItem,
         create: createDashboardItem,
     } = useResourceApiService('dashboardItem');
     const { temporalMessageShow } = useBaseAppContext();
-    const [dashboard, setDashboard] = useState<any>();
-    const [dashboardWidgets, setDashboardWidgets] = useState<any>();
-    const [errorDashboardWidgets, setErrorDashboardWidgets] = useState<any>();
-    const [loading, setLoading] = useState(false);
+    const { dashboard, loading: loadingDashboard } = useDashboard(dashboardId);
+    const {
+        dashboardWidgets,
+        errorDashboardWidgets,
+        loadingWidgetPositions,
+        forceRefresh: forceRefreshDashboardWidgets,
+    } = useDashboardWidgets(dashboardId);
     const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
 
     const openAddWidgetDialog = () => setAddWidgetDialogOpen(true);
@@ -274,35 +273,14 @@ const EstadisticaDashboard: React.FC = () => {
         })
             .then(async () => {
                 temporalMessageShow(null, 'Widget afegit correctament', 'success');
-                setLoading(true);
+                forceRefreshDashboardWidgets();
                 closeAddWidgetDialog();
-                await refreshWidgets();
-                setLoading(false);
             })
             .catch((reason) => {
                 temporalMessageShow(null, 'Error al afegir el widget', 'error');
                 console.error('Widget add error', reason);
             });
     };
-
-    const refreshWidgets = useCallback(async () => {
-        const widgetsDataResponse = (await artifactReport(dashboardId, {
-            code: 'widgets_data',
-        })) as any[];
-        setDashboardWidgets(widgetsDataResponse.filter((widget: any) => !widget.error));
-        setErrorDashboardWidgets(widgetsDataResponse.filter((widget: any) => !!widget.error));
-    }, [artifactReport, dashboardId]);
-
-    useEffect(() => {
-        (async () => {
-            if (apiDashboardIsReady && apiDashboardItemIsReady) {
-                setLoading(true);
-                setDashboard(await getOneDashboard(dashboardId));
-                await refreshWidgets();
-                setLoading(false);
-            }
-        })();
-    }, [dashboardId, apiDashboardIsReady, apiDashboardItemIsReady]);
 
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
 
@@ -341,34 +319,10 @@ const EstadisticaDashboard: React.FC = () => {
             });
     };
 
-    if (!dashboard) return 'Loading'; // TODO
+    const loading = loadingDashboard || loadingWidgetPositions;
 
     return (
-        <BasePage
-            toolbar={
-                <MuiToolbar
-                    disableGutters
-                    sx={{
-                        width: '100%',
-                        display: 'flex',
-                        px: 2,
-                        ml: 0,
-                        mr: 0,
-                        mt: 0,
-                        backgroundColor: (theme) => theme.palette.grey[200],
-                    }}
-                >
-                    {dashboard.titol}
-                    <Button disabled={!apiDashboardItemIsReady} onClick={openAddWidgetDialog}>
-                        Afegir widget
-                    </Button>
-                    <Box sx={{ flexGrow: 1 }} />
-                    {errorDashboardWidgets?.length ? (
-                        <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
-                    ) : undefined}
-                </MuiToolbar>
-            }
-        >
+        <>
             {loading ? (
                 <Box
                     sx={{
@@ -376,29 +330,61 @@ const EstadisticaDashboard: React.FC = () => {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
+                        zIndex: 10,
                     }}
                 >
                     <CircularProgress />
                 </Box>
             ) : null}
-            {!dashboardWidgets ? (
-                'Loading' // TODO
-            ) : (
-                <AppEstadisticaTest
-                    dashboardId={dashboard.id}
-                    dashboardWidgets={dashboardWidgets}
-                    gridLayoutItems={mappedDashboardItems}
-                    onGridLayoutItemsChange={onGridLayoutItemsChange}
-                    editable
-                />
+            {dashboard && (
+                <BasePage
+                    toolbar={
+                        <MuiToolbar
+                            disableGutters
+                            sx={{
+                                width: '100%',
+                                display: 'flex',
+                                px: 2,
+                                ml: 0,
+                                mr: 0,
+                                mt: 0,
+                                backgroundColor: (theme) => theme.palette.grey[200],
+                            }}
+                        >
+                            {dashboard.titol}
+                            <Button
+                                disabled={!apiDashboardItemIsReady}
+                                onClick={openAddWidgetDialog}
+                            >
+                                {/* TODO */}
+                                Afegir widget
+                            </Button>
+                            <Box sx={{ flexGrow: 1 }} />
+                            {errorDashboardWidgets?.length ? (
+                                <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
+                            ) : undefined}
+                        </MuiToolbar>
+                    }
+                >
+                    {dashboardWidgets && (
+                        <DashboardReactGridLayout
+                            dashboardId={dashboard.id}
+                            dashboardWidgets={dashboardWidgets}
+                            gridLayoutItems={mappedDashboardItems}
+                            onGridLayoutItemsChange={onGridLayoutItemsChange}
+                            editable
+                        />
+                    )}
+                </BasePage>
             )}
+
             <AddWidgetDialog
                 open={addWidgetDialogOpen}
                 onClose={closeAddWidgetDialog}
                 onAdd={addWidget}
             />
-        </BasePage>
+        </>
     );
 };
 
-export default EstadisticaDashboard;
+export default EstadisticaDashboardEdit;

@@ -7,7 +7,7 @@ import {
     FormField,
 } from 'reactlib';
 
-const Dashboards: React.FC = () => {
+const EstadisticaDashboards: React.FC = () => {
     const { t } = useTranslation();
     const columns = [
         {
@@ -57,4 +57,4 @@ const Dashboards: React.FC = () => {
     );
 };
 
-export default Dashboards;
+export default EstadisticaDashboards;

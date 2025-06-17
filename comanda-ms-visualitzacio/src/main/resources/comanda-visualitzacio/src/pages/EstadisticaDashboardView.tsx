@@ -1,116 +1,29 @@
 import MuiToolbar from '@mui/material/Toolbar';
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
-import { AppEstadisticaTest, useMapDashboardItems, useDashboardSSE } from './DashboardTest.tsx';
-import { BasePage, useResourceApiService } from 'reactlib';
-import { useEffect, useMemo, useState } from 'react';
+import { DashboardReactGridLayout, useMapDashboardItems } from '../components/estadistiques/DashboardReactGridLayout.tsx';
+import { BasePage } from 'reactlib';
+import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
+import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+
+const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 
 const EstadisticaDashboardView = () => {
-    // const { id: dashboardId } = useParams();
-    const dashboardId = 1;
-    const {
-        isReady: apiDashboardIsReady,
-        getOne: getOneDashboard,
-        artifactReport,
-    } = useResourceApiService('dashboard');
-    const {
-        isReady: apiDashboardItemIsReady,
-        // getOne: getOneDashboardItem,
-        artifactReport: artifactReportDashboardItem,
-    } = useResourceApiService('dashboardItem');
-    const [dashboard, setDashboard] = useState<any>();
-    const [dashboardWidgets, setDashboardWidgets] = useState<any>();
-    const [loading, setLoading] = useState(false);
-
-    // // Utilitza el custom hook per connexions SSE
-    // const { connectToSSE, sseConnected } = useDashboardSSE(dashboardId);
-
-    useEffect(() => {
-        (async () => {
-            if (apiDashboardIsReady && apiDashboardItemIsReady) {
-                setLoading(true);
-
-                // Primer, obtenir la informació del dashboard
-                setDashboard(await getOneDashboard(dashboardId));
-
-                const widgetsDataResponse = (await artifactReport(dashboardId, {
-                    code: 'widgets_data',
-                })) as any[];
-                setDashboardWidgets(widgetsDataResponse);
-
-                // Després, carregar la informació de cada un dels items
-                // Iterar sobre cada widget i processar-lo individualment
-                widgetsDataResponse.filter((widget: any) => widget.tipus !== 'TITOL')
-                    .forEach(async (widget) => {
-                        console.log('WIDGET', widget);
-                        const dashboardItemData = await artifactReportDashboardItem(widget.dashboardItemId, {code: 'widget_data'}) as any[];
-                        const firstDashboardItemData = dashboardItemData[0];
-                        if(!firstDashboardItemData)
-                            return;
-                        // Actualitzar el llistat de dashboardWidgets a mesura que es reben les dades
-                        setDashboardWidgets((prevWidgets) => prevWidgets.map((item) => (widget.dashboardItemId === item.dashboardItemId ? {
-                            ...firstDashboardItemData,
-                            loading: false
-                        } : item)));
-                    });
-                console.log("Widget END")
-                setLoading(false);
-            }
-        })();
-    }, [dashboardId, apiDashboardIsReady, apiDashboardItemIsReady]);
-    console.log("dashboardWidgets2", dashboardWidgets)
-    //         try {
-    //             const data = JSON.parse(event.data);
-    //             const dashboardItemId = data.dashboardItemId;
-    //             const widgetItem = data.informeWidgetItem;
-    //             const tempsCarrega = data.tempsCarrega;
-    //             console.log('SSE item carregat:', dashboardItemId, tempsCarrega);
-    //             const trobatIndex = dashboardWidgets.findIndex(
-    //                 (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
-    //             );
-    //             if (trobatIndex !== -1) {
-    //                 // Crea un nou array amb el widget actualitzat
-    //                 const updatedWidgets = [...dashboardWidgets];
-    //                 // Crea un nou objecte pel widget actualitzat
-    //                 updatedWidgets[trobatIndex] = {
-    //                     ...dashboardWidgets[trobatIndex],
-    //                     ...widgetItem,
-    //                     loading: false
-    //                 };
-    //                 // Actualitza el l'array de dashboardWidgets amb el nou array
-    //                 dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
-    //                 // Força un re-render per actualitzar els widgets
-    //                 setForceUpdate(prev => prev + 1);
-    //             } else {
-    //                 console.log('Widget no trobat:', widgetItem);
-    //             }
-    //         } catch (error) {
-    //             console.error(`Error processant SSE: ${sseDashboardItemLoadedKey}`, error);
-    //         }
-
+    const routeParams = useParams();
+    const dashboardId = routeParams.id ?? localStorage.getItem(LAST_VIEWED_STORAGE_KEY); // TODO Tratar null y selector de dashboard
+    const { dashboard, loading: loadingDashboard } = useDashboard(dashboardId);
+    const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId);
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
 
+    const loading = loadingDashboard || loadingWidgetPositions;
 
-    if (!dashboard) return 'Loading';
+    useEffect(() => {
+        localStorage.setItem(LAST_VIEWED_STORAGE_KEY, dashboardId);
+    }, [dashboardId]);
+
     return (
-        <BasePage
-            toolbar={
-                <MuiToolbar
-                    disableGutters
-                    sx={{
-                        width: '100%',
-                        display: 'flex',
-                        px: 2,
-                        ml: 0,
-                        mr: 0,
-                        mt: 0,
-                        backgroundColor: (theme) => theme.palette.grey[200],
-                    }}
-                >
-                    {dashboard.titol}
-                </MuiToolbar>
-            }
-        >
+        <>
             {loading ? (
                 <Box
                     sx={{
@@ -118,22 +31,42 @@ const EstadisticaDashboardView = () => {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
+                        zIndex: 10,
                     }}
                 >
                     <CircularProgress />
                 </Box>
             ) : null}
-            {!dashboardWidgets ? (
-                'Loading' // TODO
-            ) : (
-                <AppEstadisticaTest
-                    dashboardId={dashboard.id}
-                    editable={false}
-                    dashboardWidgets={dashboardWidgets}
-                    gridLayoutItems={mappedDashboardItems}
-                />
+            {dashboard && (
+                <BasePage
+                    toolbar={
+                        <MuiToolbar
+                            disableGutters
+                            sx={{
+                                width: '100%',
+                                display: 'flex',
+                                px: 2,
+                                ml: 0,
+                                mr: 0,
+                                mt: 0,
+                                backgroundColor: (theme) => theme.palette.grey[200],
+                            }}
+                        >
+                            {dashboard.titol}
+                        </MuiToolbar>
+                    }
+                >
+                    {dashboardWidgets && (
+                        <DashboardReactGridLayout
+                            dashboardId={dashboard.id}
+                            editable={false}
+                            dashboardWidgets={dashboardWidgets}
+                            gridLayoutItems={mappedDashboardItems}
+                        />
+                    )}
+                </BasePage>
             )}
-        </BasePage>
+        </>
     );
 };
 

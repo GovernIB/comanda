@@ -7,8 +7,8 @@ import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
 import EstadisticaWidget from './pages/EstadisticaWidget';
-import Dashboards from './pages/Dashboards.tsx';
-import EstadisticaDashboard from './pages/EstadisticaDashboard.tsx';
+import EstadisticaDashboards from './pages/EstadisticaDashboards.tsx';
+import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit.tsx';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView.tsx';
 
 const AppRoutes: React.FC = () => {
@@ -17,10 +17,10 @@ const AppRoutes: React.FC = () => {
             <Route index element={<Salut />} />
             <Route path="/appinfo/:id" element={<SalutAppInfo />} />
             <Route path="dashboard">
-                <Route index element={<Dashboards />} />
-                <Route path=":id" element={<EstadisticaDashboard />} />
+                <Route index element={<EstadisticaDashboards />} />
+                <Route path=":id" element={<EstadisticaDashboardEdit />} />
             </Route>
-            <Route path="estadistiques" element={<EstadisticaDashboardView />} />
+            <Route path="estadistiques/:id?" element={<EstadisticaDashboardView />} />
             <Route path="app">
                 <Route index element={<Apps />} />
                 <Route path="form">
