@@ -8,6 +8,8 @@ import SimpleWidgetVisualization from '../components/estadistiques/SimpleWidgetV
 import GraficWidgetVisualization from '../components/estadistiques/GraficWidgetVisualization.tsx';
 import TaulaWidgetVisualization from '../components/estadistiques/TaulaWidgetVisualization.tsx';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {ErrorBoundary} from "react-error-boundary";
+import {ErrorBoundaryFallback} from "./SalutAppInfo.tsx";
 
 // Keys d'events SSE
 const sseConnectedKey = 'dashboard_connect';
@@ -169,73 +171,73 @@ export const useMapDashboardItems = (dashboardWidgets) => {
     );
 };
 
-// Exportar la funció connectToSSE i l'estat sseConnected per utilitzar en altres components
-export const useDashboardSSE = (dashboardId: number) => {
-    const eventSourceRef = useRef<EventSource | null>(null);
-    const [sseConnected, setSseConnected] = useState(false);
-
-    // Funció per establir la connexió SSE i retornar una promise que resolgui quan s'hagi connectat
-    const connectToSSE = useCallback(() => {
-        return new Promise<void>((resolve) => {
-            // Tancar la connexió anterior si existeix
-            if (eventSourceRef.current) {
-                eventSourceRef.current.close();
-            }
-
-            // Crear una nova connexió
-            const apiUrl = import.meta.env.VITE_API_URL || '/api';
-            const sseUrl = `${apiUrl}/dashboards/subscribe/${dashboardId}`;
-
-            // const eventSource = new EventSource(sseUrl, {withCredentials: true});
-            const eventSource = new EventSource(sseUrl);
-            eventSourceRef.current = eventSource;
-
-            // Gestionar l'esdeveniment de connexió
-            eventSource.addEventListener(sseConnectedKey, (event) => {
-                console.log('SSE connectat:', event.data);
-                setSseConnected(true);
-                resolve(); // Resoldre la promise quan s'ha connectat
-            });
-
-            eventSource.onopen = () => {
-                console.log("Connexió SSE oberta correctament!");
-            };
-
-            // Gestionar errors
-            eventSource.onerror = (error) => {
-                console.error('Error de connexió SSE:', error);
-
-                // Tancar la connexió actual
-                eventSource.close();
-                eventSourceRef.current = null;
-                setSseConnected(false);
-
-                // Intentar reconnectar després d'un temps
-                setTimeout(() => {
-                    connectToSSE().then(resolve);
-                }, 5000);
-            };
-        });
-    }, [dashboardId]);
-
-    useEffect(() => {
-        // Iniciar la connexió
-        connectToSSE();
-
-        // Netejar en desmuntar el component
-        return () => {
-            console.log('Netejam o desmontam el component');
-            if (eventSourceRef.current) {
-                console.log('Desconnectam SSE');
-                eventSourceRef.current.close();
-                eventSourceRef.current = null;
-                setSseConnected(false);
-            }
-        };
-    }, [connectToSSE]);
-
-    return { sseConnected, connectToSSE, eventSourceRef };
-};
+// // Exportar la funció connectToSSE i l'estat sseConnected per utilitzar en altres components
+// export const useDashboardSSE = (dashboardId: number) => {
+//     const eventSourceRef = useRef<EventSource | null>(null);
+//     const [sseConnected, setSseConnected] = useState(false);
+//
+//     // Funció per establir la connexió SSE i retornar una promise que resolgui quan s'hagi connectat
+//     const connectToSSE = useCallback(() => {
+//         return new Promise<void>((resolve) => {
+//             // Tancar la connexió anterior si existeix
+//             if (eventSourceRef.current) {
+//                 eventSourceRef.current.close();
+//             }
+//
+//             // Crear una nova connexió
+//             const apiUrl = import.meta.env.VITE_API_URL || '/api';
+//             const sseUrl = `${apiUrl}/dashboards/subscribe/${dashboardId}`;
+//
+//             // const eventSource = new EventSource(sseUrl, {withCredentials: true});
+//             const eventSource = new EventSource(sseUrl);
+//             eventSourceRef.current = eventSource;
+//
+//             // Gestionar l'esdeveniment de connexió
+//             eventSource.addEventListener(sseConnectedKey, (event) => {
+//                 console.log('SSE connectat:', event.data);
+//                 setSseConnected(true);
+//                 resolve(); // Resoldre la promise quan s'ha connectat
+//             });
+//
+//             eventSource.onopen = () => {
+//                 console.log("Connexió SSE oberta correctament!");
+//             };
+//
+//             // Gestionar errors
+//             eventSource.onerror = (error) => {
+//                 console.error('Error de connexió SSE:', error);
+//
+//                 // Tancar la connexió actual
+//                 eventSource.close();
+//                 eventSourceRef.current = null;
+//                 setSseConnected(false);
+//
+//                 // Intentar reconnectar després d'un temps
+//                 setTimeout(() => {
+//                     connectToSSE().then(resolve);
+//                 }, 5000);
+//             };
+//         });
+//     }, [dashboardId]);
+//
+//     useEffect(() => {
+//         // Iniciar la connexió
+//         connectToSSE();
+//
+//         // Netejar en desmuntar el component
+//         return () => {
+//             console.log('Netejam o desmontam el component');
+//             if (eventSourceRef.current) {
+//                 console.log('Desconnectam SSE');
+//                 eventSourceRef.current.close();
+//                 eventSourceRef.current = null;
+//                 setSseConnected(false);
+//             }
+//         };
+//     }, [connectToSSE]);
+//
+//     return { sseConnected, connectToSSE, eventSourceRef };
+// };
 
 export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     dashboardId,
@@ -245,137 +247,101 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     onGridLayoutItemsChange,
 }) => {
     const canvasRef = useRef();
-    // Afegir un estat per forçar re-renders quan els dashboardWidgets s'actualitzen
-    const [forceUpdate, setForceUpdate] = useState(0);
+    // // Afegir un estat per forçar re-renders quan els dashboardWidgets s'actualitzen
+    // const [forceUpdate, setForceUpdate] = useState(0);
 
-    // const { isReady: dashboardItemApiIsReady, artifactReport: dashboardItemReport } =
-    //     useResourceApiService('dashboardItem');
+    // // Utilitzar el custom hook per connexions SSE
+    // const { eventSourceRef } = useDashboardSSE(dashboardId);
     //
+    // // Configurar els listeners d'event d'actualització d'items de dashboard
     // useEffect(() => {
-    //     if (dashboardItemApiIsReady){
-    //         dashboardItemReport(null, { code: 'widget_data' })
-    //     }
-    // }, [dashboardItemApiIsReady]);
+    //     if (!eventSourceRef.current || !dashboardWidgets) return;
+    //
+    //     // Gestionar l'esdeveniment de dashboardItem carregat
+    //     const handleItemLoaded = (event) => {
+    //         try {
+    //             const data = JSON.parse(event.data);
+    //             const dashboardItemId = data.dashboardItemId;
+    //             const widgetItem = data.informeWidgetItem;
+    //             const tempsCarrega = data.tempsCarrega;
+    //             console.log('SSE item carregat:', dashboardItemId, tempsCarrega);
+    //             const trobatIndex = dashboardWidgets.findIndex(
+    //                 (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
+    //             );
+    //             if (trobatIndex !== -1) {
+    //                 // Crea un nou array amb el widget actualitzat
+    //                 const updatedWidgets = [...dashboardWidgets];
+    //                 // Crea un nou objecte pel widget actualitzat
+    //                 updatedWidgets[trobatIndex] = {
+    //                     ...dashboardWidgets[trobatIndex],
+    //                     ...widgetItem,
+    //                     loading: false
+    //                 };
+    //                 // Actualitza el l'array de dashboardWidgets amb el nou array
+    //                 dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
+    //                 // Força un re-render per actualitzar els widgets
+    //                 setForceUpdate(prev => prev + 1);
+    //             } else {
+    //                 console.log('Widget no trobat:', widgetItem);
+    //             }
+    //         } catch (error) {
+    //             console.error(`Error processant SSE: ${sseDashboardItemLoadedKey}`, error);
+    //         }
+    //     };
+    //
+    //     // Gestionar l'esdeveniment d'error en la càrrega de dashboardItem
+    //     const handleItemError = (event) => {
+    //         try {
+    //             const data = JSON.parse(event.data);
+    //             const dashboardItemId = data.dashboardItemId;
+    //             const widgetItem = data.informeWidgetItem;
+    //             const errorMsg = widgetItem?.errorMsg;
+    //             console.log('SSE item amb error:', dashboardItemId, errorMsg);
+    //             const trobatIndex = dashboardWidgets.findIndex(
+    //                 (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
+    //             );
+    //             if (trobatIndex !== -1) {
+    //                 // Crea un nou array amb el widget actualitzat
+    //                 const updatedWidgets = [...dashboardWidgets];
+    //                 // Crea un nou objecte pel widget actualitzat
+    //                 updatedWidgets[trobatIndex] = {
+    //                     ...dashboardWidgets[trobatIndex],
+    //                     ...widgetItem,
+    //                     loading: false,
+    //                     error: true,
+    //                     mostrarVora: true,
+    //                     colorVora: 'red',
+    //                     ampleVora: 6,
+    //                 };
+    //                 // Actualitza el l'array de dashboardWidgets amb el nou array
+    //                 dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
+    //                 // Força un re-render per actualitzar els widgets
+    //                 setForceUpdate(prev => prev + 1);
+    //             } else {
+    //                 console.log('Widget no trobat:', widgetItem);
+    //             }
+    //         } catch (error) {
+    //             console.error(`Error processant SSE: ${sseDashboardItemLoadingErrorKey}`, error);
+    //         }
+    //     };
+    //
+    //     // Afegeix els listeners d'events
+    //     eventSourceRef.current.addEventListener(sseDashboardItemLoadedKey, handleItemLoaded);
+    //     eventSourceRef.current.addEventListener(sseDashboardItemLoadingErrorKey, handleItemError);
+    //
+    //     // Elimina els listeners d'events
+    //     return () => {
+    //         if (eventSourceRef.current) {
+    //             eventSourceRef.current.removeEventListener(sseDashboardItemLoadedKey, handleItemLoaded);
+    //             eventSourceRef.current.removeEventListener(sseDashboardItemLoadingErrorKey, handleItemError);
+    //         }
+    //     };
+    // }, [dashboardWidgets, eventSourceRef]);
 
-    // const [gridLayoutItems, setGridLayoutItems] = React.useState<GridLayoutItem[]>(defaultGridLayout ?? [
-    //     {
-    //         id: 'sample-1',
-    //         type: 'barChart',
-    //         x: 0,
-    //         y: 0,
-    //         w: 4,
-    //         h: 5,
-    //     },
-    //     {
-    //         id: 'sample-2',
-    //         type: 'pieChart',
-    //         x: 5,
-    //         y: 0,
-    //         w: 5,
-    //         h: 4,
-    //     },
-    //     {
-    //         id: 'sample-3',
-    //         type: 'barChart',
-    //         x: 4,
-    //         y: 4,
-    //         w: 2,
-    //         h: 3,
-    //     },
-    // ]);
-
-    // Utilitzar el custom hook per connexions SSE
-    const { eventSourceRef } = useDashboardSSE(dashboardId);
-
-    // Configurar els listeners d'event d'actualització d'items de dashboard
-    useEffect(() => {
-        if (!eventSourceRef.current || !dashboardWidgets) return;
-
-        // Gestionar l'esdeveniment de dashboardItem carregat
-        const handleItemLoaded = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                const dashboardItemId = data.dashboardItemId;
-                const widgetItem = data.informeWidgetItem;
-                const tempsCarrega = data.tempsCarrega;
-                console.log('SSE item carregat:', dashboardItemId, tempsCarrega);
-                const trobatIndex = dashboardWidgets.findIndex(
-                    (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
-                );
-                if (trobatIndex !== -1) {
-                    // Crea un nou array amb el widget actualitzat
-                    const updatedWidgets = [...dashboardWidgets];
-                    // Crea un nou objecte pel widget actualitzat
-                    updatedWidgets[trobatIndex] = {
-                        ...dashboardWidgets[trobatIndex],
-                        ...widgetItem,
-                        loading: false
-                    };
-                    // Actualitza el l'array de dashboardWidgets amb el nou array
-                    dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
-                    // Força un re-render per actualitzar els widgets
-                    setForceUpdate(prev => prev + 1);
-                } else {
-                    console.log('Widget no trobat:', widgetItem);
-                }
-            } catch (error) {
-                console.error(`Error processant SSE: ${sseDashboardItemLoadedKey}`, error);
-            }
-        };
-
-        // Gestionar l'esdeveniment d'error en la càrrega de dashboardItem
-        const handleItemError = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                const dashboardItemId = data.dashboardItemId;
-                const widgetItem = data.informeWidgetItem;
-                const errorMsg = widgetItem?.errorMsg;
-                console.log('SSE item amb error:', dashboardItemId, errorMsg);
-                const trobatIndex = dashboardWidgets.findIndex(
-                    (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
-                );
-                if (trobatIndex !== -1) {
-                    // Crea un nou array amb el widget actualitzat
-                    const updatedWidgets = [...dashboardWidgets];
-                    // Crea un nou objecte pel widget actualitzat
-                    updatedWidgets[trobatIndex] = {
-                        ...dashboardWidgets[trobatIndex],
-                        ...widgetItem,
-                        loading: false,
-                        error: true,
-                        mostrarVora: true,
-                        colorVora: 'red',
-                        ampleVora: 6,
-                    };
-                    // Actualitza el l'array de dashboardWidgets amb el nou array
-                    dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
-                    // Força un re-render per actualitzar els widgets
-                    setForceUpdate(prev => prev + 1);
-                } else {
-                    console.log('Widget no trobat:', widgetItem);
-                }
-            } catch (error) {
-                console.error(`Error processant SSE: ${sseDashboardItemLoadingErrorKey}`, error);
-            }
-        };
-
-        // Afegeix els listeners d'events
-        eventSourceRef.current.addEventListener(sseDashboardItemLoadedKey, handleItemLoaded);
-        eventSourceRef.current.addEventListener(sseDashboardItemLoadingErrorKey, handleItemError);
-
-        // Elimina els listeners d'events
-        return () => {
-            if (eventSourceRef.current) {
-                eventSourceRef.current.removeEventListener(sseDashboardItemLoadedKey, handleItemLoaded);
-                eventSourceRef.current.removeEventListener(sseDashboardItemLoadingErrorKey, handleItemError);
-            }
-        };
-    }, [dashboardWidgets, eventSourceRef]);
-
-    // Aquest useEffect llençarà un re-render quan forceUpdate canviï
-    useEffect(() => {
-        console.log('forceUpdate changed, triggering re-render');
-    }, [forceUpdate]);
+    // // Aquest useEffect llençarà un re-render quan forceUpdate canviï
+    // useEffect(() => {
+    //     console.log('forceUpdate changed, triggering re-render');
+    // }, [forceUpdate]);
 
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
         drawGrid();
@@ -400,7 +366,7 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
         const filteredMappedLayouts = mappedLayouts.filter((i) => i !== undefined);
         if (!isEqual(filteredMappedLayouts, gridLayoutItems)) {
             console.log('Layout not equal, propagating', filteredMappedLayouts, gridLayoutItems);
-            onGridLayoutItemsChange(filteredMappedLayouts);
+            onGridLayoutItemsChange?.(filteredMappedLayouts);
         }
     };
 
@@ -424,48 +390,48 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
     const horizontalSubdivisions = 30;
 
     const drawGrid = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-
-        // Obtenir la mida del contenidor
-        const parent = canvas.parentElement;
-        canvas.width = parent.clientWidth;
-        canvas.height = parent.clientHeight;
-
-        const cols = horizontalSubdivisions;
-        const colWidth = canvas.width / cols;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Netejar el canvas
-
-        // Dibuixar línies verticals
-        for (let i = 0; i <= cols; i++) {
-            const x = i * colWidth;
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-            ctx.strokeStyle = '#ccc';
-            ctx.stroke();
-        }
-
-        // Dibuixar línies horitzontals
-        for (let y = 0; y <= canvas.height; y += rowHeight) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvas.width, y);
-            ctx.strokeStyle = '#ccc';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
+        // const canvas = canvasRef.current;
+        // if (!canvas) return;
+        // const ctx = canvas.getContext('2d');
+        //
+        // // Obtenir la mida del contenidor
+        // const parent = canvas.parentElement;
+        // canvas.width = parent.clientWidth;
+        // canvas.height = parent.clientHeight;
+        //
+        // const cols = horizontalSubdivisions;
+        // const colWidth = canvas.width / cols;
+        //
+        // ctx.clearRect(0, 0, canvas.width, canvas.height); // Netejar el canvas
+        //
+        // // Dibuixar línies verticals
+        // for (let i = 0; i <= cols; i++) {
+        //     const x = i * colWidth;
+        //     ctx.beginPath();
+        //     ctx.moveTo(x, 0);
+        //     ctx.lineTo(x, canvas.height);
+        //     ctx.strokeStyle = '#ccc';
+        //     ctx.stroke();
+        // }
+        //
+        // // Dibuixar línies horitzontals
+        // for (let y = 0; y <= canvas.height; y += rowHeight) {
+        //     ctx.beginPath();
+        //     ctx.moveTo(0, y);
+        //     ctx.lineTo(canvas.width, y);
+        //     ctx.strokeStyle = '#ccc';
+        //     ctx.lineWidth = 1;
+        //     ctx.stroke();
+        // }
     };
 
     useEffect(() => {
-        console.log('useEffect layout: ', layout);
-
-        drawGrid();
-        window.addEventListener('resize', drawGrid);
-
-        return () => window.removeEventListener('resize', drawGrid);
+        // console.log('useEffect layout: ', layout);
+        //
+        // drawGrid();
+        // window.addEventListener('resize', drawGrid);
+        //
+        // return () => window.removeEventListener('resize', drawGrid);
     }, [layout]);
 
     const isReadonly = sizeLock || !editable;
@@ -481,20 +447,20 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
                     minHeight: '800px',
                 }}
             >
-                {editable && (
-                    <canvas
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            zIndex: 0,
-                            pointerEvents: 'none',
-                        }}
-                        ref={canvasRef}
-                    />
-                )}
+                {/*{editable && (*/}
+                {/*    <canvas*/}
+                {/*        style={{*/}
+                {/*            width: '100%',*/}
+                {/*            height: '100%',*/}
+                {/*            position: 'absolute',*/}
+                {/*            top: 0,*/}
+                {/*            left: 0,*/}
+                {/*            zIndex: 0,*/}
+                {/*            pointerEvents: 'none',*/}
+                {/*        }}*/}
+                {/*        ref={canvasRef}*/}
+                {/*    />*/}
+                {/*)}*/}
                 <CustomGridLayout
                     className="layout"
                     breakpoints={{
@@ -531,29 +497,31 @@ export const AppEstadisticaTest: React.FC<AppEstadisticaTestProps> = ({
                         console.log(dashboardWidget, item.id, dashboardWidgets);
                         return (
                             <CustomGridItemComponent key={item.id} editable={editable}>
-                                {(() => {
-                                    switch (item.type) {
-                                        // TODO Completar
-                                        case 'SIMPLE':
-                                            return (
-                                                <SimpleChartWrapper
-                                                    dashboardWidget={dashboardWidget}
-                                                />
-                                            );
-                                        case 'GRAFIC':
-                                            return (
-                                                <GraficChartWrapper
-                                                    dashboardWidget={dashboardWidget}
-                                                />
-                                            );
-                                        case 'TAULA':
-                                            return (
-                                                <TaulaChartWrapper
-                                                    dashboardWidget={dashboardWidget}
-                                                />
-                                            );
-                                    }
-                                })()}
+                                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                                    {(() => {
+                                        switch (item.type) {
+                                            // TODO Completar
+                                            case 'SIMPLE':
+                                                return (
+                                                    <SimpleChartWrapper
+                                                        dashboardWidget={dashboardWidget}
+                                                    />
+                                                );
+                                            case 'GRAFIC':
+                                                return (
+                                                    <GraficChartWrapper
+                                                        dashboardWidget={dashboardWidget}
+                                                    />
+                                                );
+                                            case 'TAULA':
+                                                return (
+                                                    <TaulaChartWrapper
+                                                        dashboardWidget={dashboardWidget}
+                                                    />
+                                                );
+                                        }
+                                    })()}
+                                </ErrorBoundary>
                             </CustomGridItemComponent>
                         );
                     })}

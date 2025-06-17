@@ -16,9 +16,9 @@ import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -40,14 +40,12 @@ import java.util.Map;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DashboardItemServiceImpl extends BaseMutableResourceService<DashboardItem, Long, DashboardItemEntity> implements DashboardItemService {
 
-    @Autowired
-    private ConsultaEstadisticaHelper consultaEstadisticaHelper;
-    @Autowired
-    private AtributsVisualsHelper atributsVisualsHelper;
-    @Autowired
-    private EstadisticaWidgetHelper estadisticaWidgetHelper;
+    private final ConsultaEstadisticaHelper consultaEstadisticaHelper;
+    private final AtributsVisualsHelper atributsVisualsHelper;
+    private final EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     static {

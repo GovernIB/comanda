@@ -46,4 +46,7 @@ public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
     @OneToMany(mappedBy = "dashboard", cascade = CascadeType.ALL)
     private List<DashboardItemEntity> items;
 
+    @OneToMany(mappedBy = "dashboard", cascade = CascadeType.ALL)
+    private List<DashboardTitolEntity> titols;
+
 }

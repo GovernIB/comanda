@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @ResourceConfig(
 //        descriptionField = "titol",
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT, requiresId = true),
         }
 )
 public class DashboardItem extends BaseResource<Long> {

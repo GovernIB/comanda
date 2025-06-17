@@ -1,11 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
-import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
-import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
-
-import java.util.List;
 
 /**
  * Servei de gestió i consulta per a quadres de comandament (Dashboard).
@@ -27,5 +23,5 @@ import java.util.List;
  * @author Límit Tecnologies
  */
 public interface DashboardService extends MutableResourceService<Dashboard, Long> {
-	void generateAsyncDataForAllItems(Long dashboardId);
+
 }

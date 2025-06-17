@@ -1,13 +1,14 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaAsyncHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTitol;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
+import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
-import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +41,6 @@ import java.util.stream.Collectors;
 public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, Long, DashboardEntity> implements DashboardService {
 
     private final ConsultaEstadisticaHelper consultaEstadisticaHelper;
-    private final ConsultaEstadisticaAsyncHelper consultaEstadisticaAsyncHelper;
 
     @PostConstruct
     public void init() {
@@ -52,20 +53,20 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         return dashboard;
     }
 
-    @Override
-    public void generateAsyncDataForAllItems(Long dashboardId) {
-        DashboardEntity dashboard = entityRepository.findById(dashboardId).orElseThrow();
-        if (dashboard.getItems() == null)
-            return;
-        dashboard.getItems().forEach(dashboardItem -> {
-            try {
-                log.info("Carregant dades del widget {}...", dashboardItem.getId());
-                consultaEstadisticaAsyncHelper.generateAsyncData(dashboardItem);
-            } catch (Exception e) {
-                log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
-            }
-        });
-    }
+//    @Override
+//    public void generateAsyncDataForAllItems(Long dashboardId) {
+//        DashboardEntity dashboard = entityRepository.findById(dashboardId).orElseThrow();
+//        if (dashboard.getItems() == null)
+//            return;
+//        dashboard.getItems().forEach(dashboardItem -> {
+//            try {
+//                log.info("Carregant dades del widget {}...", dashboardItem.getId());
+//                consultaEstadisticaAsyncHelper.generateAsyncData(dashboardItem);
+//            } catch (Exception e) {
+//                log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
+//            }
+//        });
+//    }
 
     // REPORT PER OBTENIR EMPLENAR I WIDGETS
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,22 +79,54 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 InformeWidgetParams params) throws ReportGenerationException {
 
             DashboardEntity dashboard = getDashboard(code, entity);
-            List<InformeWidgetItem> dashboardItems = dashboard.getItems().stream()
-                    .map(item -> {
-                        InformeWidgetItem informeItem = InformeWidgetItem.builder()
-                                .dashboardItemId(item.getId())
-                                .titol(item.getWidget() != null ? item.getWidget().getTitol() : null)
-                                .tipus(consultaEstadisticaHelper.determineWidgetType(item))
-                                .posX(item.getPosX())
-                                .posY(item.getPosY())
-                                .width(item.getWidth())
-                                .height(item.getHeight())
-                                .loading(true)
-                                .build();
-                        return informeItem;
-                    })
-                    .collect(Collectors.toList());
-            log.info("Dashboard {}: {} items generated", entity.getId(), dashboardItems.size());
+            List<InformeWidgetItem> dashboardItems = new ArrayList<>();
+            List<InformeWidgetItem> dashboartTitols = new ArrayList<>();
+            if (dashboard.getItems() != null) {
+                dashboardItems = dashboard.getItems().stream()
+                        .map(item -> {
+                            InformeWidgetItem informeItem = InformeWidgetItem.builder()
+                                    .dashboardItemId(item.getId())
+                                    .titol(item.getWidget() != null ? item.getWidget().getTitol() : null)
+                                    .tipus(consultaEstadisticaHelper.determineWidgetType(item))
+                                    .posX(item.getPosX())
+                                    .posY(item.getPosY())
+                                    .width(item.getWidth())
+                                    .height(item.getHeight())
+                                    .loading(true)
+                                    .build();
+                            return informeItem;
+                        })
+                        .collect(Collectors.toList());
+                log.info("Dashboard {}: {} items", entity.getId(), dashboardItems.size());
+            }
+            if (dashboard.getTitols() != null) {
+                dashboartTitols = dashboard.getTitols().stream()
+                        .map(titol -> {
+                            InformeWidgetTitolItem informeTitol = InformeWidgetTitolItem.builder()
+                                    .tipus(WidgetTipus.TITOL)
+                                    .titol(titol.getTitol())
+                                    .subtitol(titol.getSubtitol())
+                                    .posX(titol.getPosX())
+                                    .posY(titol.getPosY())
+                                    .width(titol.getWidth())
+                                    .height(titol.getHeight())
+                                    .atributsVisuals(AtributsVisualsTitol.builder()
+                                            .colorTitol(titol.getColorTitol())
+                                            .midaFontTitol(titol.getMidaFontTitol())
+                                            .colorSubtitol(titol.getColorSubtitol())
+                                            .midaFontSubtitol(titol.getMidaFontSubtitol())
+                                            .colorFons(titol.getColorFons())
+                                            .mostrarVora(titol.getMostrarVora())
+                                            .colorVora(titol.getColorVora())
+                                            .ampleVora(titol.getAmpleVora())
+                                            .build())
+                                    .build();
+                            return informeTitol;
+                        })
+                        .collect(Collectors.toList());
+                log.info("Dashboard {}: {} titols", entity.getId(), dashboartTitols.size());
+            }
+            dashboardItems.addAll(dashboartTitols);
             return dashboardItems;
         }
 

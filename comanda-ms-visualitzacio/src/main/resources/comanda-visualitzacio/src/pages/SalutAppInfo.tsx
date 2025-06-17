@@ -41,7 +41,7 @@ import {
 } from '@mui/x-charts';
 import { useTheme } from '@mui/material/styles';
 
-const ErrorBoundaryFallback = () => {
+export const ErrorBoundaryFallback = () => {
     return <Typography sx={{
         height: '100%',
         display: 'flex',

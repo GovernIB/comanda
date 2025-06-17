@@ -13,41 +13,80 @@ const EstadisticaDashboardView = () => {
         getOne: getOneDashboard,
         artifactReport,
     } = useResourceApiService('dashboard');
+    const {
+        isReady: apiDashboardItemIsReady,
+        // getOne: getOneDashboardItem,
+        artifactReport: artifactReportDashboardItem,
+    } = useResourceApiService('dashboardItem');
     const [dashboard, setDashboard] = useState<any>();
     const [dashboardWidgets, setDashboardWidgets] = useState<any>();
     const [loading, setLoading] = useState(false);
 
-    // Utilitza el custom hook per connexions SSE
-    const { connectToSSE, sseConnected } = useDashboardSSE(dashboardId);
+    // // Utilitza el custom hook per connexions SSE
+    // const { connectToSSE, sseConnected } = useDashboardSSE(dashboardId);
 
     useEffect(() => {
         (async () => {
-            if (apiDashboardIsReady) {
+            if (apiDashboardIsReady && apiDashboardItemIsReady) {
                 setLoading(true);
 
                 // Primer, obtenir la informació del dashboard
                 setDashboard(await getOneDashboard(dashboardId));
 
-                // Després, assegurar que la connexió SSE s'ha establert abans de consultar la informació dels widgets
-                try {
-                    // Wait for the SSE connection to be established
-                    await connectToSSE();
-                    console.log('SSE connection established, requesting widget data');
+                const widgetsDataResponse = (await artifactReport(dashboardId, {
+                    code: 'widgets_data',
+                })) as any[];
+                setDashboardWidgets(widgetsDataResponse);
 
-                    // Now that the SSE connection is established, request the widget data
-                    const widgetsDataResponse = (await artifactReport(dashboardId, {
-                        code: 'widgets_data',
-                    })) as any[];
-
-                    setDashboardWidgets(widgetsDataResponse.filter((widget: any) => !widget.error));
-                } catch (error) {
-                    console.error('Error establishing SSE connection:', error);
-                } finally {
-                    setLoading(false);
-                }
+                // Després, carregar la informació de cada un dels items
+                // Iterar sobre cada widget i processar-lo individualment
+                widgetsDataResponse.filter((widget: any) => widget.tipus !== 'TITOL')
+                    .forEach(async (widget) => {
+                        console.log('WIDGET', widget);
+                        const dashboardItemData = await artifactReportDashboardItem(widget.dashboardItemId, {code: 'widget_data'}) as any[];
+                        const firstDashboardItemData = dashboardItemData[0];
+                        if(!firstDashboardItemData)
+                            return;
+                        // Actualitzar el llistat de dashboardWidgets a mesura que es reben les dades
+                        setDashboardWidgets((prevWidgets) => prevWidgets.map((item) => (widget.dashboardItemId === item.dashboardItemId ? {
+                            ...firstDashboardItemData,
+                            loading: false
+                        } : item)));
+                    });
+                console.log("Widget END")
+                setLoading(false);
             }
         })();
-    }, [dashboardId, apiDashboardIsReady, connectToSSE]);
+    }, [dashboardId, apiDashboardIsReady, apiDashboardItemIsReady]);
+    console.log("dashboardWidgets2", dashboardWidgets)
+    //         try {
+    //             const data = JSON.parse(event.data);
+    //             const dashboardItemId = data.dashboardItemId;
+    //             const widgetItem = data.informeWidgetItem;
+    //             const tempsCarrega = data.tempsCarrega;
+    //             console.log('SSE item carregat:', dashboardItemId, tempsCarrega);
+    //             const trobatIndex = dashboardWidgets.findIndex(
+    //                 (dashboardWidget) => dashboardWidget.dashboardItemId === dashboardItemId
+    //             );
+    //             if (trobatIndex !== -1) {
+    //                 // Crea un nou array amb el widget actualitzat
+    //                 const updatedWidgets = [...dashboardWidgets];
+    //                 // Crea un nou objecte pel widget actualitzat
+    //                 updatedWidgets[trobatIndex] = {
+    //                     ...dashboardWidgets[trobatIndex],
+    //                     ...widgetItem,
+    //                     loading: false
+    //                 };
+    //                 // Actualitza el l'array de dashboardWidgets amb el nou array
+    //                 dashboardWidgets.splice(0, dashboardWidgets.length, ...updatedWidgets);
+    //                 // Força un re-render per actualitzar els widgets
+    //                 setForceUpdate(prev => prev + 1);
+    //             } else {
+    //                 console.log('Widget no trobat:', widgetItem);
+    //             }
+    //         } catch (error) {
+    //             console.error(`Error processant SSE: ${sseDashboardItemLoadedKey}`, error);
+    //         }
 
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
 
