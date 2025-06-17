@@ -1,10 +1,12 @@
 package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.dialect.FetRepositoryDialectFactory;
+import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -266,35 +268,39 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             List<IndicadorAgregacio> indicadorsAgregacio,
-            String dimensioAgrupacioCodi) {
+            String dimensioAgrupacioCodi) throws ReportGenerationException {
 
-        ColumnesConsulta columnesConsulta = new ColumnesConsulta(indicadorsAgregacio);
-        String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), dimensioAgrupacioCodi);
+        try {
+            ColumnesConsulta columnesConsulta = new ColumnesConsulta(indicadorsAgregacio);
+            String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), dimensioAgrupacioCodi);
 
-        Query query = entityManager.createNativeQuery(sql);
-        query.setParameter("entornAppId", entornAppId);
-        query.setParameter("dataInici", dataInici);
-        query.setParameter("dataFi", dataFi);
+            Query query = entityManager.createNativeQuery(sql);
+            query.setParameter("entornAppId", entornAppId);
+            query.setParameter("dataInici", dataInici);
+            query.setParameter("dataFi", dataFi);
 
-        List<Object[]> resultList = query.getResultList();
-        if (resultList.isEmpty()) {
-            return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
+            List<Object[]> resultList = query.getResultList();
+            if (resultList.isEmpty()) {
+                return new ArrayList<>(); // Retorna un Map buit si no hi ha resultats
+            }
+
+            List<Map<String, String>> result = resultList.stream()
+                    .map(rowArray -> convertRowToMap(
+                            rowArray,
+                            columnesConsulta.getColumnNames(),
+                            indicadorsAgregacio,
+                            columnesConsulta.getIndexColumnesFiltrades()))
+                    .collect(Collectors.toList());
+
+            processPercentages(result,
+                    columnesConsulta.getIndicadorsPercentatge(),
+                    columnesConsulta.getIndicadorsFiltrats(),
+                    columnesConsulta.getColumnNames(),
+                    indicadorsAgregacio);
+            return result;
+        } catch (Exception e) {
+            throw new ReportGenerationException(DashboardItem.class, e.getMessage(), e.getCause());
         }
-
-        List<Map<String, String>> result = resultList.stream()
-                .map(rowArray -> convertRowToMap(
-                        rowArray,
-                        columnesConsulta.getColumnNames(),
-                        indicadorsAgregacio,
-                        columnesConsulta.getIndexColumnesFiltrades()))
-                .collect(Collectors.toList());
-
-        processPercentages(result,
-                columnesConsulta.getIndicadorsPercentatge(),
-                columnesConsulta.getIndicadorsFiltrats(),
-                columnesConsulta.getColumnNames(),
-                indicadorsAgregacio);
-        return result;
     }
 
     private void processPercentages(List<Map<String, String>> result,

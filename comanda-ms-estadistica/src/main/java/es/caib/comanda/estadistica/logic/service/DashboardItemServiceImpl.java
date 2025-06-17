@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
@@ -97,7 +96,6 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
     // REPORT PER OBTENIR I EMPLENAR WIDGETS
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    @Transactional(noRollbackFor = {ReportGenerationException.class})
     public class InformeWidget implements ReportGenerator<DashboardItemEntity, InformeWidgetParams, InformeWidgetItem> {
 
         @Override
