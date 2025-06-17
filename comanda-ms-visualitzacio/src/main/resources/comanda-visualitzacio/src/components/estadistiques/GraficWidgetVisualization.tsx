@@ -254,11 +254,11 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         // Prepare xAxis categories from data
         const xAxis = barHorizontal
             ? {scaleType: 'linear'} // Si és horitzontal, l'eix X té valors numèrics
-            : {scaleType: 'band', data: dades.map((item) => item.name)}; // Si no és horitzontal, l'eix X té categories
+            : {scaleType: 'band', data: dades.map((item) => item[discriminador])}; // Si no és horitzontal, l'eix X té categories
         const xAxisData = barHorizontal && llegendaX ? xAxis : {...xAxis, label: llegendaX};
 
         const yAxis = barHorizontal
-            ? {scaleType: 'band', data: dades.map((item) => item.name)} // Si és horitzontal, l'eix Y té categories
+            ? {scaleType: 'band', data: dades.map((item) => item[discriminador])} // Si és horitzontal, l'eix Y té categories
             : {scaleType: 'linear'}; // Si no és horitzontal, l'eix Y té valors numèrics
         const yAxisData = barHorizontal && llegendaX ? {...yAxis, label: llegendaX} : yAxis;
 

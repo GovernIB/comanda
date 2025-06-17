@@ -3,7 +3,6 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaWidget;
-import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
@@ -91,16 +90,8 @@ public class EstadisticaWidgetHelper {
         if (cache == null) {
             return;
         }
-
         try {
-            List<DashboardItemEntity> dashboardItems = dashboardItemRepository.findByWidget_Id(widgetId);
-            if (dashboardItems.isEmpty()) {
-                return;
-            }
-
-            dashboardItems.forEach(dashboardItem -> {
-                cache.evict(dashboardItem.getId() + "_" + java.time.LocalDate.now()); // Esborra l'entrada concreta
-            });
+            cache.evict(widgetId + "_" + java.time.LocalDate.now()); // Esborra l'entrada concreta
         } catch (Exception e) {
             cache.clear();
         }
