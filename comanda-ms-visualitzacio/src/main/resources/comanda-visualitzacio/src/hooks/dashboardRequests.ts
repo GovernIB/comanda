@@ -5,6 +5,7 @@ export const useDashboard = (dashboardId: any) => {
     type RequestStateType = {
         loading: boolean;
         dashboard?: any;
+        exception?: any;
     };
 
     const { isReady: apiDashboardIsReady, getOne: getOneDashboard } =
@@ -15,20 +16,31 @@ export const useDashboard = (dashboardId: any) => {
     useEffect(() => {
         let cancelRequests = false;
         (async () => {
-            if (apiDashboardIsReady) {
-                if (cancelRequests) return;
-                setRequestState((prevState) => ({
-                    ...prevState,
-                    loading: true,
-                }));
+            if (apiDashboardIsReady && dashboardId != null) {
+                try {
+                    if (cancelRequests) return;
+                    setRequestState((prevState) => ({
+                        ...prevState,
+                        loading: true,
+                    }));
 
-                const dashboardData = await getOneDashboard(dashboardId);
-                if (cancelRequests) return;
-                setRequestState((prevState) => ({
-                    ...prevState,
-                    dashboard: dashboardData,
-                    loading: false,
-                }));
+                    const dashboardData = await getOneDashboard(dashboardId);
+                    if (cancelRequests) return;
+                    setRequestState((prevState) => ({
+                        ...prevState,
+                        dashboard: dashboardData,
+                        exception: null,
+                        loading: false,
+                    }));
+                } catch (exception) {
+                    if (cancelRequests) return;
+                    setRequestState((prevState) => ({
+                        ...prevState,
+                        exception,
+                        dashboard: null,
+                        loading: false,
+                    }));
+                }
             }
         })();
         return () => {
@@ -55,7 +67,7 @@ export const useDashboardWidgets = (dashboardId: any) => {
     const effectFunction = useCallback(() => {
         let cancelRequests = false;
         (async () => {
-            if (apiDashboardIsReady && apiDashboardItemIsReady) {
+            if (apiDashboardIsReady && apiDashboardItemIsReady && dashboardId != null) {
                 if (cancelRequests) return;
                 setRequestState((prevState) => ({
                     ...prevState,
@@ -78,7 +90,6 @@ export const useDashboardWidgets = (dashboardId: any) => {
                 const widgetsDataPromises = widgetsPositionResponse
                     .filter((widget: any) => widget.tipus !== 'TITOL')
                     .map(async (widget) => {
-                        console.log('WIDGET', widget);
                         const dashboardItemData = (await artifactReportDashboardItem(
                             widget.dashboardItemId,
                             { code: 'widget_data' }

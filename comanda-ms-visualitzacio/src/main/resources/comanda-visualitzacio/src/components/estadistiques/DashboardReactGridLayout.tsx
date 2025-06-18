@@ -310,7 +310,6 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         const dashboardWidget = dashboardWidgets.find(
                             (dashboardWidget) => String(dashboardWidget.dashboardItemId) === item.id
                         );
-                        console.log(dashboardWidget, item.id, dashboardWidgets);
                         return (
                             <CustomGridItemComponent key={item.id} editable={editable}>
                                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>

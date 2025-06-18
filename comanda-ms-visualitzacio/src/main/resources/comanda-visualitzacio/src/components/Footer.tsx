@@ -29,11 +29,15 @@ export const Footer: React.FC<AppFootProps> = (props) => {
 
     useEffect(() => {
         fetch('/build-info.json')
-            .then(response => response.json())
-            .then(data => {
+            .then((response) => response.json())
+            .then((data) => {
                 setBuildTimestamp(data.buildTimestamp);
                 setScmRevision(data.scmRevision);
                 setComandaVersion(data.comandaVersion);
+            })
+            .catch((error) => {
+                if (import.meta.env.DEV) return;
+                console.error(error);
             });
     }, []);
 

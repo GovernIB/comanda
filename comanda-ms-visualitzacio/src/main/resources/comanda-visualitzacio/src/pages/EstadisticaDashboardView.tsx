@@ -1,29 +1,147 @@
+import MenuIcon from '@mui/icons-material/Menu';
 import MuiToolbar from '@mui/material/Toolbar';
-import { Box } from '@mui/material';
+import { Alert, Box, Button, Typography } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
-import { DashboardReactGridLayout, useMapDashboardItems } from '../components/estadistiques/DashboardReactGridLayout.tsx';
-import { BasePage } from 'reactlib';
+import {
+    DashboardReactGridLayout,
+    useMapDashboardItems,
+} from '../components/estadistiques/DashboardReactGridLayout.tsx';
+import { BasePage, MuiGrid, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
-import { useParams } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import Dialog from '../../lib/components/mui/Dialog.tsx';
+import { ESTADISTIQUES_PATH } from '../AppRoutes.tsx';
 
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
+const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
+
+function useDashboardSelect(currentDashboardId: any) {
+    const buttons = useCloseDialogButtons();
+    const [open, setOpen] = useState(false);
+
+    const columns = [
+        {
+            field: 'titol',
+            flex: 1,
+        },
+        {
+            field: 'descripcio',
+            flex: 2,
+        },
+    ];
+
+    const dialog = (
+        <Dialog
+            open={open}
+            buttonCallback={() => setOpen(false)}
+            closeCallback={() => setOpen(false)}
+            buttons={buttons}
+            componentProps={{
+                maxWidth: 'md',
+            }}
+        >
+            <Box
+                sx={{
+                    mt: 3,
+                    height: '500px',
+                    width: '600px',
+                }}
+            >
+                <MuiGrid
+                    title={'Seleccioni el tauler a mostrar...'} // TODO
+                    resourceName="dashboard"
+                    columns={columns}
+                    toolbarType="upper"
+                    paginationActive
+                    rowLink={`/${ESTADISTIQUES_PATH}/{{id}}`}
+                    onRowClick={() => setOpen(false)}
+                    filter={currentDashboardId != null ? `id ! ${currentDashboardId}` : undefined}
+                    readOnly
+                />
+            </Box>
+        </Dialog>
+    );
+
+    return { dialog, open: () => setOpen(true) };
+}
 
 const EstadisticaDashboardView = () => {
     const routeParams = useParams();
-    const dashboardId = routeParams.id ?? localStorage.getItem(LAST_VIEWED_STORAGE_KEY); // TODO Tratar null y selector de dashboard
-    const { dashboard, loading: loadingDashboard } = useDashboard(dashboardId);
+    const [firstDashboard, setFirstDashboard] = useState<any>(null);
+    const idFromFirstDashboard: string | null =
+        firstDashboard?.id != null ? String(firstDashboard.id) : null;
+    const dashboardIdFromRouteAndLocalStorage =
+        routeParams.id ?? localStorage.getItem(LAST_VIEWED_STORAGE_KEY);
+    const dashboardId = dashboardIdFromRouteAndLocalStorage ?? idFromFirstDashboard;
+    const {
+        dashboard,
+        loading: loadingDashboard,
+        exception: dashboardException,
+    } = useDashboard(dashboardId);
     const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId);
+    const { isReady: apiDashboardIsReady, find: findDashboard } =
+        useResourceApiService('dashboard');
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
+    const { open: openDashboardSelect, dialog: dashboardSelectDialog } =
+        useDashboardSelect(dashboardId);
+    const navigate = useNavigate();
 
     const loading = loadingDashboard || loadingWidgetPositions;
 
     useEffect(() => {
-        localStorage.setItem(LAST_VIEWED_STORAGE_KEY, dashboardId);
+        if (
+            apiDashboardIsReady &&
+            dashboardIdFromRouteAndLocalStorage == null &&
+            firstDashboard == null
+        ) {
+            findDashboard({ size: 1 }).then((dashboardResponse) => {
+                const resultFirstDashboard = dashboardResponse.rows[0];
+                setFirstDashboard(resultFirstDashboard ?? NO_DASHBOARD_FOUND);
+            });
+        }
+    }, [
+        apiDashboardIsReady,
+        dashboardId,
+        dashboardIdFromRouteAndLocalStorage,
+        firstDashboard,
+        findDashboard,
+    ]);
+
+    useEffect(() => {
+        if (dashboardId != null) localStorage.setItem(LAST_VIEWED_STORAGE_KEY, dashboardId);
     }, [dashboardId]);
+
+    const returnToDefaultDashboardAndClear = () => {
+        localStorage.removeItem(LAST_VIEWED_STORAGE_KEY);
+        navigate(`/${ESTADISTIQUES_PATH}`);
+    }
+
+    if (dashboardException) {
+        if (dashboardException.status === 404)
+            return (
+                <Alert
+                    severity="warning"
+                    action={
+                        <Button onClick={returnToDefaultDashboardAndClear}>
+                            {/* TODO */}
+                            Tornar al tauler per defecte
+                        </Button>
+                    }
+                >
+                    El tauler de control no existeix.
+                </Alert>
+            );
+        // TODO
+        else return <Alert severity="error">Error al carregar el tauler de control.</Alert>;
+    }
+
+    if (dashboardId == null && firstDashboard === NO_DASHBOARD_FOUND)
+        return <Alert severity="warning">No hi ha cap tauler de control definit. </Alert>; // TODO
 
     return (
         <>
+            {dashboardSelectDialog}
             {loading ? (
                 <Box
                     sx={{
@@ -37,35 +155,51 @@ const EstadisticaDashboardView = () => {
                     <CircularProgress />
                 </Box>
             ) : null}
-            {dashboard && (
-                <BasePage
-                    toolbar={
-                        <MuiToolbar
-                            disableGutters
+            <BasePage
+                toolbar={
+                    <MuiToolbar
+                        disableGutters
+                        sx={{
+                            width: '100%',
+                            display: 'flex',
+                            px: 2,
+                            ml: 0,
+                            mr: 0,
+                            mt: 0,
+                            backgroundColor: (theme) => theme.palette.grey[200],
+                        }}
+                    >
+                        <Button
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                            onClick={openDashboardSelect}
+                            endIcon={<MenuIcon />}
                             sx={{
-                                width: '100%',
-                                display: 'flex',
-                                px: 2,
-                                ml: 0,
-                                mr: 0,
-                                mt: 0,
-                                backgroundColor: (theme) => theme.palette.grey[200],
+                                borderRadius: 1,
                             }}
                         >
-                            {dashboard.titol}
-                        </MuiToolbar>
-                    }
-                >
-                    {dashboardWidgets && (
-                        <DashboardReactGridLayout
-                            dashboardId={dashboard.id}
-                            editable={false}
-                            dashboardWidgets={dashboardWidgets}
-                            gridLayoutItems={mappedDashboardItems}
-                        />
-                    )}
-                </BasePage>
-            )}
+                            <Typography
+                                color="textPrimary"
+                                sx={{
+                                    textTransform: 'none',
+                                }}
+                            >
+                                {dashboard?.titol}
+                            </Typography>
+                        </Button>
+                    </MuiToolbar>
+                }
+            >
+                {dashboardWidgets && (
+                    <DashboardReactGridLayout
+                        dashboardId={dashboard.id}
+                        editable={false}
+                        dashboardWidgets={dashboardWidgets}
+                        gridLayoutItems={mappedDashboardItems}
+                    />
+                )}
+            </BasePage>
         </>
     );
 };
