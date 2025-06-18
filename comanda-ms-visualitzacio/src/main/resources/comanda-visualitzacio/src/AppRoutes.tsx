@@ -6,10 +6,11 @@ import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
+import Caches from "./pages/Caches";
 import EstadisticaWidget from './pages/EstadisticaWidget';
-import EstadisticaDashboards from './pages/EstadisticaDashboards.tsx';
-import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit.tsx';
-import EstadisticaDashboardView from './pages/EstadisticaDashboardView.tsx';
+import EstadisticaDashboards from './pages/EstadisticaDashboards';
+import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
+import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -36,6 +37,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="monitor">
                 <Route index element={<Monitors />} />
+            </Route>
+            <Route path="cache">
+                <Route index element={<Caches />} />
             </Route>
             <Route path="estadisticaWidget">
                 <Route index element={<EstadisticaWidget />} />

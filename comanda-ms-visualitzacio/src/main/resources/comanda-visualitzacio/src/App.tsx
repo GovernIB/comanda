@@ -62,11 +62,19 @@ export const App: React.FC = () => {
         icon: 'monitor',
         resourceName: 'monitor',
     }
+    const menuCache = {
+        id: 'cache',
+        title: t('menu.cache'),
+        to: '/cache',
+        icon: 'cached',
+        resourceName: 'comandaCache',
+    }
     const menuEntries = [
         menuSalut,
         menuEstadistiques,
         menuConfiguracio,
-        menuMonitor
+        menuMonitor,
+        menuCache
     ];
     const appMenuEntries = [
         menuSalut,

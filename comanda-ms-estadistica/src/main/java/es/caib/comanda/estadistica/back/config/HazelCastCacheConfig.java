@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
 @EnableCaching
 public class HazelCastCacheConfig {
 
-    @Bean
+    @Bean(name = "hazelcastConfig")
     public Config hazelcastConfig() {
         Config config = new Config();
         config.addMapConfig(new MapConfig().setName("entornAppCache").setTimeToLiveSeconds(3600));

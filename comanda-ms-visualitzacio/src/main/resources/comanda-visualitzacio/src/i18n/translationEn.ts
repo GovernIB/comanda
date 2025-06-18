@@ -8,6 +8,7 @@ const translationEn = {
         monitor: "Monitor",
         widget: "Statistic widgets",
         dashboard: "Dashboards",
+        cache: "Cache management",
     },
     page: {
         salut: {
@@ -150,6 +151,27 @@ const translationEn = {
         },
         dashboards: {
             title: "Dashboards",
+        },
+        caches: {
+            title: "Caches",
+            columna: {
+                codi: "Code",
+                nom: "Name",
+                entrades: "Elements",
+                mida: "Size (bytes)",
+            },
+            buidar: {
+                titol: "Clear cache",
+                confirm: "Are you sure you want to clear the cache?",
+                success: "Cache cleared",
+                error: "Error clearing cache",
+                totes: {
+                    titol: "Clear all caches",
+                    confirm: "Are you sure ypu want to clear oll caches?",
+                    success: "Caches cleared",
+                    error: "Error clearing caches",
+                },
+            },
         },
         notFound: "Not found",
     },

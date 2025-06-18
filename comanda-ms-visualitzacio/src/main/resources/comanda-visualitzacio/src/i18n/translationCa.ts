@@ -8,6 +8,7 @@ const translationCa = {
         entorn: "Entorns",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
+        cache: "Gestió de cachés",
     },
     page: {
         salut: {
@@ -150,6 +151,27 @@ const translationCa = {
         },
         dashboards: {
             title: "Taulers de control",
+        },
+        caches: {
+            title: "Caches",
+            columna: {
+                codi: "Codi",
+                nom: "Nom",
+                entrades: "Núm. elements",
+                mida: "Mida (bytes)",
+            },
+            buidar: {
+                titol: "Buidar cache",
+                confirm: "Estau segur que voleu buidar la cache?",
+                success: "Cache buidada",
+                error: "Error buidant cache",
+                totes: {
+                    titol: "Buidar totes les caches",
+                    confirm: "Estau segur que voleu buidar totes les caches?",
+                    success: "Caches buidades",
+                    error: "Error buidant caches",
+                },
+            },
         },
         notFound: "No trobat",
 

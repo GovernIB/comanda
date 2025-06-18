@@ -8,6 +8,7 @@ const translationEs = {
         monitor: "Monitor",
         widget: "Widgets estadísticos",
         dashboard: "Cuadros de control",
+        cache: "Gestión de cachés",
     },
     page: {
         salut: {
@@ -150,6 +151,27 @@ const translationEs = {
         },
         dashboards: {
             title: "Cuadros de control",
+        },
+        caches: {
+            title: "Caches",
+            columna: {
+                codi: "Código",
+                nom: "Nombre",
+                entrades: "Núm. elementos",
+                mida: "Tamaño (bytes)",
+            },
+            buidar: {
+                titol: "Vaciar cache",
+                confirm: "Estas seguro que quieres vaciar la cache?",
+                success: "Cache vaciada",
+                error: "Error vaciando cache",
+                totes: {
+                    titol: "Vaciar todas las caches",
+                    confirm: "Estas seguro que quieres vaciar todas las caches?",
+                    success: "Caches vaciadas",
+                    error: "Error vaciando caches",
+                },
+            },
         },
         notFound: "No encontrado",
     },
