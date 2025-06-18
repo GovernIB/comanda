@@ -11,6 +11,7 @@ import EstadisticaDashboards from './pages/EstadisticaDashboards.tsx';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit.tsx';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView.tsx';
 
+export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
 
 const AppRoutes: React.FC = () => {
@@ -18,7 +19,7 @@ const AppRoutes: React.FC = () => {
         <Routes>
             <Route index element={<Salut />} />
             <Route path="/appinfo/:id" element={<SalutAppInfo />} />
-            <Route path="dashboard">
+            <Route path={DASHBOARDS_PATH}>
                 <Route index element={<EstadisticaDashboards />} />
                 <Route path=":id" element={<EstadisticaDashboardEdit />} />
             </Route>

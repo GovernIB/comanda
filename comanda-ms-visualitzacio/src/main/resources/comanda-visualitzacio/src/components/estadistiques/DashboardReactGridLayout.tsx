@@ -10,6 +10,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorBoundaryFallback } from '../../pages/SalutAppInfo.tsx';
 import { Box } from '@mui/material';
+import 'react-grid-layout/css/styles.css';
+import './react-resizable-custom.css';
 
 const CustomGridLayout = WidthProvider(Responsive);
 

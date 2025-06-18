@@ -11,9 +11,13 @@ import {
     useFormContext,
     useMessageDialogButtons,
 } from 'reactlib';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
-import { DashboardReactGridLayout, GridLayoutItem, useMapDashboardItems } from '../components/estadistiques/DashboardReactGridLayout.tsx';
+import {
+    DashboardReactGridLayout,
+    GridLayoutItem,
+    useMapDashboardItems,
+} from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import { isEqual } from 'lodash';
 import {
     Alert,
@@ -28,6 +32,7 @@ import {
     TableHead,
     TableRow,
     Tabs,
+    Typography,
 } from '@mui/material';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -37,6 +42,9 @@ import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
+import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
+import AddIcon from '@mui/icons-material/Add';
+import { useFormDialog } from '../../lib/components/mui/form/FormDialog.tsx';
 
 const EntornAppFilterContent = () => {
     const { data } = useFormContext();
@@ -250,7 +258,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
         create: createDashboardItem,
     } = useResourceApiService('dashboardItem');
     const { temporalMessageShow } = useBaseAppContext();
-    const { dashboard, loading: loadingDashboard } = useDashboard(dashboardId);
+    const {
+        dashboard,
+        loading: loadingDashboard,
+        exception: dashboardException,
+    } = useDashboard(dashboardId);
     const {
         dashboardWidgets,
         errorDashboardWidgets,
@@ -258,6 +270,8 @@ const EstadisticaDashboardEdit: React.FC = () => {
         forceRefresh: forceRefreshDashboardWidgets,
     } = useDashboardWidgets(dashboardId);
     const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
+    const navigate = useNavigate();
+    const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog("dashboardTitol");
 
     const openAddWidgetDialog = () => setAddWidgetDialogOpen(true);
     const closeAddWidgetDialog = () => setAddWidgetDialogOpen(false);
@@ -321,8 +335,27 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
     const loading = loadingDashboard || loadingWidgetPositions;
 
+    if (dashboardException) {
+        if (dashboardException.status === 404) {
+            return (
+                <Alert
+                    severity="warning"
+                    action={
+                        <Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>
+                            {/* TODO */}
+                            Tornar al llistat
+                        </Button>
+                    }
+                >
+                    El tauler de control no existeix.
+                </Alert>
+            );
+        } else return <Alert severity="error">Error al carregar el tauler de control.</Alert>;
+    }
+
     return (
         <>
+            {titolFormDialogComponent}
             {loading ? (
                 <Box
                     sx={{
@@ -344,6 +377,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             sx={{
                                 width: '100%',
                                 display: 'flex',
+                                justifyContent: 'center',
                                 px: 2,
                                 ml: 0,
                                 mr: 0,
@@ -351,13 +385,34 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 backgroundColor: (theme) => theme.palette.grey[200],
                             }}
                         >
-                            {dashboard.titol}
+                            <Typography
+                                sx={{
+                                    mr: 2,
+                                }}
+                            >
+                                {dashboard.titol}
+                            </Typography>
                             <Button
                                 disabled={!apiDashboardItemIsReady}
                                 onClick={openAddWidgetDialog}
+                                endIcon={<AddIcon />}
                             >
                                 {/* TODO */}
                                 Afegir widget
+                            </Button>
+                            <Button
+                                disabled={!apiDashboardItemIsReady}
+                                onClick={() => {
+                                    titolFormDialogShow(null, {
+                                        title: 'Afegir titol', // TODO
+                                        formContent: (<FormField name="titol" />),
+                                        additionalData: { dashboard: { id: dashboardId } },
+                                    }).then(() => forceRefreshDashboardWidgets());
+                                }}
+                                endIcon={<AddIcon />}
+                            >
+                                {/* TODO */}
+                                Afegir titol
                             </Button>
                             <Box sx={{ flexGrow: 1 }} />
                             {errorDashboardWidgets?.length ? (
