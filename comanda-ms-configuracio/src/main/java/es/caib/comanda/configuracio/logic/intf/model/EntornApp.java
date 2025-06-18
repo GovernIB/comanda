@@ -3,6 +3,7 @@ package es.caib.comanda.configuracio.logic.intf.model;
 import es.caib.comanda.configuracio.logic.intf.validation.EntornAppExists;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -37,6 +38,7 @@ import java.util.List;
 	artifacts = {
 		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REFRESH, formClass = EntornApp.EntornAppParamAction.class),
 		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),
+		@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class)
 	}
 )
 @EntornAppExists
@@ -45,6 +47,7 @@ public class EntornApp extends BaseResource<Long> {
 
 	public final static String ENTORN_APP_ACTION_REFRESH = "refresh";
 	public final static String ENTORN_APP_ACTION_REPROGRAMAR = "reprogramar";
+	public final static String ENTORN_APP_FILTER = "entornApp_filter";
 
 	@NotNull
 	@Transient
@@ -96,6 +99,19 @@ public class EntornApp extends BaseResource<Long> {
 	@NoArgsConstructor
 	public static class EntornAppParamAction implements Serializable {
 		private Long entornAppId;
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@FieldNameConstants
+	public static class EntornAppFilter implements Serializable {
+		@NotNull
+		@ResourceField(onChangeActive = true)
+		protected ResourceReference<App, Long> app;
+		@NotNull
+		protected ResourceReference<EntornApp, Long> entornApp;
 	}
 
 }

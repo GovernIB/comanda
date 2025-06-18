@@ -17,6 +17,9 @@ import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -97,6 +101,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         schedulerService.programarTasca(entity);
         appInfoHelper.programarTasquesSalutEstadistica(entity);
+    }
+
+    @Override
+    public <P extends Serializable> Map<String, Object> artifactOnChange(ResourceArtifactType type, String code, Serializable id, P previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
+        Map<String, Object> response = new HashMap<>();
+        if (type == ResourceArtifactType.FILTER && Objects.equals(code, EntornApp.ENTORN_APP_FILTER)){
+            if (Objects.equals(fieldName, EntornApp.EntornAppFilter.Fields.app)){
+                response.put(EntornApp.EntornAppFilter.Fields.entornApp, null);
+            }
+        }
+        return response;
     }
 
     // ACCIONS
