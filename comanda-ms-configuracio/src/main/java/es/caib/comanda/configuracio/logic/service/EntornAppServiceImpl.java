@@ -87,6 +87,9 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                             s.isActiu(),
                             null)).collect(Collectors.toList()));
         }
+        resource.setEntornAppDescription((resource.getApp() != null ? resource.getApp().getDescription() : "")
+                + " - "
+                + (resource.getEntorn() != null ? resource.getEntorn().getDescription() : ""));
     }
 
     @Override
