@@ -3,6 +3,7 @@ package es.caib.comanda.configuracio.logic.service;
 import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
@@ -20,6 +21,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,9 +111,20 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     @Override
     public <P extends Serializable> Map<String, Object> artifactOnChange(ResourceArtifactType type, String code, Serializable id, P previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
         Map<String, Object> response = new HashMap<>();
-        if (type == ResourceArtifactType.FILTER && Objects.equals(code, EntornApp.ENTORN_APP_FILTER)){
-            if (Objects.equals(fieldName, EntornApp.EntornAppFilter.Fields.app)){
-                response.put(EntornApp.EntornAppFilter.Fields.entornApp, null);
+        if (type == ResourceArtifactType.FILTER && Objects.equals(code, EntornApp.ENTORN_APP_FILTER) && fieldName != null) {
+            switch (fieldName) {
+                case EntornApp.EntornAppFilter.Fields.app:
+                    response.put(EntornApp.EntornAppFilter.Fields.entornApp, null);
+                    break;
+                case EntornApp.EntornAppFilter.Fields.entornApp:
+                    var entornAppReference = (ResourceReference<EntornApp, Long>) fieldValue;
+                    if (fieldValue == null) break;
+                    var previousEntornAppFilter = (EntornApp.EntornAppFilter) previous;
+                    ResourceReference<App, Long> appReference = getOne(entornAppReference.getId(), new String[]{}).getApp();
+                    if (!Objects.equals(appReference, previousEntornAppFilter.getApp())) {
+                        response.put(EntornApp.EntornAppFilter.Fields.app, appReference);
+                    }
+                    break;
             }
         }
         return response;

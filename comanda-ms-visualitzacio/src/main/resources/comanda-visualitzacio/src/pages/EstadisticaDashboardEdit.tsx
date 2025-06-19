@@ -45,6 +45,8 @@ import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts
 import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
 import AddIcon from '@mui/icons-material/Add';
 import { useFormDialog } from '../../lib/components/mui/form/FormDialog.tsx';
+import Icon from '@mui/material/Icon';
+import IconButton from '@mui/material/IconButton';
 
 const EntornAppFilterContent = () => {
     const { data } = useFormContext();
@@ -62,7 +64,6 @@ const EntornAppFilterContent = () => {
             <Grid size={6}>
                 <FormField
                     name="entornApp"
-                    disabled={data.app?.id == null || undefined}
                     filter={
                         data.app?.id != null
                             ? springFilterBuilder.eq('app.id', data.app?.id)
@@ -108,10 +109,11 @@ const addWidgetDialogGridColumns = [
     },
 ];
 
-const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter }) => {
+const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
     return (
         <MuiGrid
             resourceName={resourceName}
+            title={title}
             columns={addWidgetDialogGridColumns}
             toolbarType="upper"
             paginationActive
@@ -129,7 +131,13 @@ const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter }) => {
     );
 };
 
-const AddWidgetDialog = ({ open, onClose, onAdd }) => {
+type AddWidgetDialogProps = {
+    open: boolean;
+    onClose: () => void;
+    onAdd: (widgetId: any, entornAppId: any) => void;
+};
+
+const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd }) => {
     const { t } = useTranslation();
     const [tab, setTab] = React.useState(0);
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -144,7 +152,22 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
 
     return (
         <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Afegir widget</DialogTitle>
+            <DialogTitle>
+                Afegir widget
+                <IconButton
+                    aria-label="close"
+                    onClick={onClose}
+                    size="small"
+                    sx={(theme) => ({
+                        position: 'absolute',
+                        right: 8,
+                        top: 8,
+                        color: theme.palette.grey[500],
+                    })}
+                >
+                    <Icon fontSize="small">close</Icon>
+                </IconButton>
+            </DialogTitle>
             <DialogContent
                 style={{
                     width: '600px',
@@ -169,6 +192,7 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
                         {tab === 0 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaSimpleWidget"
+                                title={t('page.widget.simple.title')}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -176,6 +200,7 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
                         {tab === 1 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaGraficWidget"
+                                title={t('page.widget.grafic.title')}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -183,6 +208,7 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
                         {tab === 2 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaTaulaWidget"
+                                title={t('page.widget.taula.title')}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -271,7 +297,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
     } = useDashboardWidgets(dashboardId);
     const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
     const navigate = useNavigate();
-    const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog("dashboardTitol");
+    const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
 
     const openAddWidgetDialog = () => setAddWidgetDialogOpen(true);
     const closeAddWidgetDialog = () => setAddWidgetDialogOpen(false);
@@ -405,7 +431,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 onClick={() => {
                                     titolFormDialogShow(null, {
                                         title: 'Afegir titol', // TODO
-                                        formContent: (<FormField name="titol" />),
+                                        formContent: <FormField name="titol" />,
                                         additionalData: { dashboard: { id: dashboardId } },
                                     }).then(() => forceRefreshDashboardWidgets());
                                 }}
