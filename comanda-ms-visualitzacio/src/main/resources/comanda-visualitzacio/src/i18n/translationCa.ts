@@ -151,6 +151,8 @@ const translationCa = {
         },
         dashboards: {
             title: "Taulers de control",
+            edit: "Editar",
+            dashboardView: "Anar al dashboard",
         },
         caches: {
             title: "Caches",

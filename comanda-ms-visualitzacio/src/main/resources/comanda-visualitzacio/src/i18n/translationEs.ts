@@ -151,6 +151,8 @@ const translationEs = {
         },
         dashboards: {
             title: "Cuadros de control",
+            edit: "Editar",
+            dashboardView: "Ir al panel de control",
         },
         caches: {
             title: "Caches",
