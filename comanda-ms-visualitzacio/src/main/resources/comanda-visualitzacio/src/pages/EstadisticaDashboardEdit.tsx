@@ -363,6 +363,56 @@ const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns
     );
 };
 
+const AfegirTitolFormContent = () => {
+    const { data } = useFormContext();
+    const { t } = useTranslation();
+
+    return (
+        <Grid container spacing={2}>
+            <Grid size={12}>
+                <FormField name="titol" />
+            </Grid>
+            <Grid size={12}>
+                <FormField name="subtitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="midaFontTitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="midaFontSubtitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorTitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorSubtitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorFons" />
+            </Grid>
+            <Grid size={4} sx={{
+                minHeight: "53px", // TODO Evitar layout shift
+            }}>
+                <FormField name="mostrarVora" />
+            </Grid>
+            {data?.mostrarVora ? (
+                <>
+                    <Grid size={4}>
+                        <FormField name="colorVora" />
+                    </Grid>
+                    <Grid size={4}>
+                        <FormField name="ampleVora" />
+                    </Grid>
+                </>
+            ) : (
+                <Grid size={8} />
+            )}
+
+
+        </Grid>
+    );
+};
+
 const EstadisticaDashboardEdit: React.FC = () => {
     const { id: dashboardId } = useParams();
     const {
@@ -387,6 +437,14 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
     const navigate = useNavigate();
     const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
+    const openCreateTitolForm = () => {
+        titolFormDialogShow(null, {
+            title: 'Afegir titol', // TODO
+            formContent: <AfegirTitolFormContent />,
+            additionalData: { dashboard: { id: dashboardId }, ...defaultSizeAndPosition },
+            dialogComponentProps: { maxWidth: 'md', fullWidth: true },
+        }).then(() => forceRefreshDashboardWidgets());
+    };
 
     const openAddWidgetDialog = () => setAddWidgetDialogOpen(true);
     const closeAddWidgetDialog = () => setAddWidgetDialogOpen(false);
@@ -587,15 +645,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         </ListItemIcon>
                                         <ListItemText>Afegir widget</ListItemText>
                                     </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
-                                            titolFormDialogShow(null, {
-                                                title: 'Afegir titol', // TODO
-                                                formContent: <FormField name="titol" />,
-                                                additionalData: { dashboard: { id: dashboardId } },
-                                            }).then(() => forceRefreshDashboardWidgets());
-                                        }}
-                                    >
+                                    <MenuItem onClick={openCreateTitolForm}>
                                         <ListItemIcon>
                                             <Icon fontSize="small">title</Icon>
                                         </ListItemIcon>
