@@ -10,6 +10,7 @@ import {
     FormField,
     useFormContext,
     useMessageDialogButtons,
+    useConfirmDialogButtons,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
@@ -24,6 +25,7 @@ import {
     Box,
     Button,
     Dialog,
+    ListItemIcon,
     Paper,
     Tab,
     Table,
@@ -45,6 +47,12 @@ import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts
 import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
 import AddIcon from '@mui/icons-material/Add';
 import { useFormDialog } from '../../lib/components/mui/form/FormDialog.tsx';
+import Icon from '@mui/material/Icon';
+import IconButton from '@mui/material/IconButton';
+import ButtonMenu from '../components/ButtonMenu.tsx';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemText from '@mui/material/ListItemText';
+import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 
 const EntornAppFilterContent = () => {
     const { data } = useFormContext();
@@ -62,7 +70,6 @@ const EntornAppFilterContent = () => {
             <Grid size={6}>
                 <FormField
                     name="entornApp"
-                    disabled={data.app?.id == null || undefined}
                     filter={
                         data.app?.id != null
                             ? springFilterBuilder.eq('app.id', data.app?.id)
@@ -100,20 +107,18 @@ const addWidgetDialogGridColumns = [
     },
     {
         field: 'titol',
-        flex: 1,
-    },
-    {
-        field: 'descripcio',
-        flex: 3,
+        flex: 2,
     },
 ];
 
-const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter }) => {
+const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
     return (
         <MuiGrid
             resourceName={resourceName}
+            title={title}
             columns={addWidgetDialogGridColumns}
-            toolbarType="upper"
+            rowHeight={26}
+            columnHeaderHeight={30}
             paginationActive
             readOnly
             filter={filter}
@@ -129,7 +134,13 @@ const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter }) => {
     );
 };
 
-const AddWidgetDialog = ({ open, onClose, onAdd }) => {
+type AddWidgetDialogProps = {
+    open: boolean;
+    onClose: () => void;
+    onAdd: (widgetId: any, entornAppId: any) => void;
+};
+
+const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd }) => {
     const { t } = useTranslation();
     const [tab, setTab] = React.useState(0);
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -143,11 +154,26 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
     };
 
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Afegir widget</DialogTitle>
+        <Dialog maxWidth="lg" open={open} onClose={onClose}>
+            <DialogTitle>
+                Afegir widget
+                <IconButton
+                    aria-label="close"
+                    onClick={onClose}
+                    size="small"
+                    sx={(theme) => ({
+                        position: 'absolute',
+                        right: 8,
+                        top: 8,
+                        color: theme.palette.grey[500],
+                    })}
+                >
+                    <Icon fontSize="small">close</Icon>
+                </IconButton>
+            </DialogTitle>
             <DialogContent
                 style={{
-                    width: '600px',
+                    width: '900px',
                     height: '500px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -169,6 +195,7 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
                         {tab === 0 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaSimpleWidget"
+                                title={t('page.widget.simple.title')}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -176,6 +203,7 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
                         {tab === 1 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaGraficWidget"
+                                title={t('page.widget.grafic.title')}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -183,6 +211,7 @@ const AddWidgetDialog = ({ open, onClose, onAdd }) => {
                         {tab === 2 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaTaulaWidget"
+                                title={t('page.widget.taula.title')}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -250,6 +279,140 @@ const defaultSizeAndPosition = {
     height: 3,
 };
 
+const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns, onDelete }) => {
+    const { isReady: apiIsReady, delete: apiDelete } = useResourceApiService(resourceName);
+    // @ts-ignore
+    const gridApiRef: MuiDataGridApiRef = React.useRef({});
+    const { messageDialogShow, temporalMessageShow, t: tLib } = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const onDeleteClick = (id: any) => {
+        messageDialogShow(
+            tLib('datacommon.delete.single.title'),
+            tLib('datacommon.delete.single.confirm'),
+            confirmDialogButtons,
+            confirmDialogComponentProps
+        )
+            .then((value: any) => {
+                if (value && apiIsReady) {
+                    apiDelete(id)
+                        .then(() => {
+                            gridApiRef.current?.refresh();
+                            onDelete?.();
+                            temporalMessageShow(
+                                null,
+                                tLib('datacommon.delete.single.success'),
+                                'success'
+                            );
+                        })
+                        .catch((error: ResourceApiError) => {
+                            temporalMessageShow(
+                                tLib('datacommon.delete.single.error'),
+                                error.message,
+                                'error'
+                            );
+                        });
+                }
+            })
+            .catch(() => {});
+    };
+
+    return (
+        <Box
+            sx={{
+                mt: 2,
+                width: '900px',
+            }}
+        >
+            <MuiGrid
+                title={title}
+                apiRef={gridApiRef}
+                height={500}
+                resourceName={resourceName}
+                filter={`dashboard.id : ${dashboardId}`}
+                rowHideUpdateButton
+                columns={[
+                    ...baseColumns,
+                    {
+                        field: 'position',
+                        flex: 1,
+                        headerName: 'Posició', // TODO
+                        valueGetter: (value, row) => `${row.posX}, ${row.posY}`,
+                    },
+                    {
+                        field: 'size',
+                        flex: 1,
+                        headerName: 'Mida', // TODO
+                        valueGetter: (value, row) => `${row.width}, ${row.height}`,
+                    },
+                ]}
+                rowHeight={26}
+                columnHeaderHeight={30}
+                rowActionsColumnProps={{ width: 10 }}
+                rowAdditionalActions={[
+                    {
+                        title: tLib('datacommon.delete.title'),
+                        icon: 'delete',
+                        onClick: onDeleteClick,
+                    },
+                ]}
+                rowHideDeleteButton
+                toolbarHideCreate
+            />
+        </Box>
+    );
+};
+
+const AfegirTitolFormContent = () => {
+    const { data } = useFormContext();
+    const { t } = useTranslation();
+
+    return (
+        <Grid container spacing={2}>
+            <Grid size={12}>
+                <FormField name="titol" />
+            </Grid>
+            <Grid size={12}>
+                <FormField name="subtitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="midaFontTitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="midaFontSubtitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorTitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorSubtitol" />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorFons" />
+            </Grid>
+            <Grid size={4} sx={{
+                minHeight: "53px", // TODO Evitar layout shift
+            }}>
+                <FormField name="mostrarVora" />
+            </Grid>
+            {data?.mostrarVora ? (
+                <>
+                    <Grid size={4}>
+                        <FormField name="colorVora" />
+                    </Grid>
+                    <Grid size={4}>
+                        <FormField name="ampleVora" />
+                    </Grid>
+                </>
+            ) : (
+                <Grid size={8} />
+            )}
+
+
+        </Grid>
+    );
+};
+
 const EstadisticaDashboardEdit: React.FC = () => {
     const { id: dashboardId } = useParams();
     const {
@@ -257,7 +420,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
         patch: patchDashboardItem,
         create: createDashboardItem,
     } = useResourceApiService('dashboardItem');
-    const { temporalMessageShow } = useBaseAppContext();
+    const { temporalMessageShow, t: tLib, goBack } = useBaseAppContext();
     const {
         dashboard,
         loading: loadingDashboard,
@@ -269,9 +432,19 @@ const EstadisticaDashboardEdit: React.FC = () => {
         loadingWidgetPositions,
         forceRefresh: forceRefreshDashboardWidgets,
     } = useDashboardWidgets(dashboardId);
+    const [showContentDialog, contentDialogComponent] = useContentDialog();
+    const messageDialogButtons = useMessageDialogButtons();
     const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
     const navigate = useNavigate();
-    const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog("dashboardTitol");
+    const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
+    const openCreateTitolForm = () => {
+        titolFormDialogShow(null, {
+            title: 'Afegir titol', // TODO
+            formContent: <AfegirTitolFormContent />,
+            additionalData: { dashboard: { id: dashboardId }, ...defaultSizeAndPosition },
+            dialogComponentProps: { maxWidth: 'md', fullWidth: true },
+        }).then(() => forceRefreshDashboardWidgets());
+    };
 
     const openAddWidgetDialog = () => setAddWidgetDialogOpen(true);
     const closeAddWidgetDialog = () => setAddWidgetDialogOpen(false);
@@ -356,6 +529,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
     return (
         <>
             {titolFormDialogComponent}
+            {contentDialogComponent}
             {loading ? (
                 <Box
                     sx={{
@@ -377,7 +551,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             sx={{
                                 width: '100%',
                                 display: 'flex',
-                                justifyContent: 'center',
+                                justifyContent: 'space-between',
                                 px: 2,
                                 ml: 0,
                                 mr: 0,
@@ -385,39 +559,100 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 backgroundColor: (theme) => theme.palette.grey[200],
                             }}
                         >
-                            <Typography
-                                sx={{
-                                    mr: 2,
-                                }}
-                            >
-                                {dashboard.titol}
-                            </Typography>
-                            <Button
-                                disabled={!apiDashboardItemIsReady}
-                                onClick={openAddWidgetDialog}
-                                endIcon={<AddIcon />}
-                            >
-                                {/* TODO */}
-                                Afegir widget
-                            </Button>
-                            <Button
-                                disabled={!apiDashboardItemIsReady}
-                                onClick={() => {
-                                    titolFormDialogShow(null, {
-                                        title: 'Afegir titol', // TODO
-                                        formContent: (<FormField name="titol" />),
-                                        additionalData: { dashboard: { id: dashboardId } },
-                                    }).then(() => forceRefreshDashboardWidgets());
-                                }}
-                                endIcon={<AddIcon />}
-                            >
-                                {/* TODO */}
-                                Afegir titol
-                            </Button>
-                            <Box sx={{ flexGrow: 1 }} />
-                            {errorDashboardWidgets?.length ? (
-                                <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
-                            ) : undefined}
+                            <Box>
+                                <IconButton
+                                    title={tLib('form.goBack.title')}
+                                    onClick={() => goBack(`/${DASHBOARDS_PATH}`)}
+                                >
+                                    <Icon>arrow_back</Icon>
+                                </IconButton>
+                                <Typography
+                                    sx={{
+                                        display: 'inline',
+                                        mx: 2,
+                                    }}
+                                >
+                                    {dashboard.titol}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                {errorDashboardWidgets?.length ? (
+                                    <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
+                                ) : undefined}
+                                <ButtonMenu title={'Llistar components'}>
+                                    {[
+                                        {
+                                            icon: 'widgets',
+                                            title: 'Llistar widgets',
+                                            resourceName: 'dashboardItem',
+                                            baseColumns: [
+                                                {
+                                                    field: 'widget',
+                                                    flex: 1,
+                                                },
+                                                {
+                                                    field: 'entornId',
+                                                    flex: 1,
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            icon: 'title',
+                                            title: 'Llistar títols',
+                                            resourceName: 'dashboardTitol',
+                                            baseColumns: [
+                                                {
+                                                    field: 'titol',
+                                                    flex: 1,
+                                                },
+                                            ],
+                                        },
+                                    ].map((item, index) => (
+                                        <MenuItem
+                                            key={'llistarComponents-' + index}
+                                            onClick={() =>
+                                                showContentDialog(
+                                                    '',
+                                                    <ListWidgetDialogContent
+                                                        title={item.title}
+                                                        baseColumns={item.baseColumns}
+                                                        resourceName={item.resourceName}
+                                                        dashboardId={dashboardId}
+                                                        onDelete={forceRefreshDashboardWidgets}
+                                                    />,
+                                                    messageDialogButtons,
+                                                    {
+                                                        maxWidth: 'lg',
+                                                    }
+                                                )
+                                            }
+                                        >
+                                            <ListItemIcon>
+                                                <Icon fontSize="small">{item.icon}</Icon>
+                                            </ListItemIcon>
+                                            <ListItemText>{item.title}</ListItemText>
+                                        </MenuItem>
+                                    ))}
+                                </ButtonMenu>
+                                <ButtonMenu
+                                    title={'Afegir component'}
+                                    disabled={!apiDashboardItemIsReady}
+                                    buttonIcon={<AddIcon />}
+                                >
+                                    <MenuItem onClick={openAddWidgetDialog}>
+                                        <ListItemIcon>
+                                            <Icon fontSize="small">widgets</Icon>
+                                        </ListItemIcon>
+                                        <ListItemText>Afegir widget</ListItemText>
+                                    </MenuItem>
+                                    <MenuItem onClick={openCreateTitolForm}>
+                                        <ListItemIcon>
+                                            <Icon fontSize="small">title</Icon>
+                                        </ListItemIcon>
+                                        <ListItemText>Afegir titol</ListItemText>
+                                    </MenuItem>
+                                </ButtonMenu>
+                            </Box>
                         </MuiToolbar>
                     }
                 >

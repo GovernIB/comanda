@@ -151,6 +151,8 @@ const translationEn = {
         },
         dashboards: {
             title: "Dashboards",
+            edit: "Edit",
+            dashboardView: "Go to dashboard",
         },
         caches: {
             title: "Caches",

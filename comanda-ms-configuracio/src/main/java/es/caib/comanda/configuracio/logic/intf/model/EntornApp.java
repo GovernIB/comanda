@@ -93,6 +93,9 @@ public class EntornApp extends BaseResource<Long> {
 	private String estadisticaUrl;
 	private String estadisticaCron;
 
+	// Camps calculats
+	private String entornAppDescription;
+
 	@Getter
 	@Setter
 	@AllArgsConstructor
@@ -111,6 +114,7 @@ public class EntornApp extends BaseResource<Long> {
 		@ResourceField(onChangeActive = true)
 		protected ResourceReference<App, Long> app;
 		@NotNull
+		@ResourceField(descriptionField = "entornAppDescription", onChangeActive = true)
 		protected ResourceReference<EntornApp, Long> entornApp;
 	}
 

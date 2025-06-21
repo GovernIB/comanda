@@ -30,7 +30,7 @@ const EstadisticaDashboards: React.FC = () => {
                 rowHideUpdateButton
                 rowAdditionalActions={[
                     {
-                        // title: TODO
+                        title: t('page.dashboards.edit'),//TODO
                         icon: 'edit',
                         clickShowUpdateDialog: true,
                     },

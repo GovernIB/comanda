@@ -49,7 +49,7 @@ public class HalFormsUtil {
 	public static boolean isOnChangeActive(Class<?> resourceClass, String fieldName) {
 		Field field = ReflectionUtils.findField(resourceClass, fieldName);
 		if (field != null) {
-			ResourceField resourceField = resourceClass.getAnnotation(ResourceField.class);
+			ResourceField resourceField = field.getAnnotation(ResourceField.class);
 			return resourceField != null && resourceField.onChangeActive();
 		} else {
 			return false;
