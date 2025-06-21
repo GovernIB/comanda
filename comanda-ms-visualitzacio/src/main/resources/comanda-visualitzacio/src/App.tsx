@@ -66,7 +66,7 @@ export const App: React.FC = () => {
         id: 'cache',
         title: t('menu.cache'),
         to: '/cache',
-        icon: 'cached',
+        icon: 'storage',
         resourceName: 'comandaCache',
     }
     const menuEntries = [

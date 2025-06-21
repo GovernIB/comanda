@@ -138,7 +138,6 @@ public class ConsultaEstadisticaHelper {
     }
 
     @Cacheable(value = "dashboardWidgetCache", key = "#dashboardItem.id + '_' + T(java.time.LocalDate).now()")
-//    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem) {
 
         try {
