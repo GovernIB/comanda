@@ -8,6 +8,7 @@ import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
@@ -37,6 +38,9 @@ public class AppInfoHelperTest {
 
     @Mock
     private EntornAppRepository entornAppRepository;
+
+    @Mock
+    private AppIntegracioRepository appIntegracioRepository;
 
     @Mock
     private IntegracioRepository integracioRepository;
@@ -72,6 +76,7 @@ public class AppInfoHelperTest {
         // Create the helper with mocked dependencies
         appInfoHelper = new AppInfoHelper(
                 entornAppRepository,
+                appIntegracioRepository,
                 integracioRepository,
                 subsistemaRepository,
                 keycloakHelper,
@@ -160,7 +165,7 @@ public class AppInfoHelperTest {
         assertNotNull(entornAppEntity.getInfoData());
 
         // Verify that integracions and subsistemes were refreshed
-        verify(integracioRepository).findByEntornApp(entornAppEntity);
+        verify(appIntegracioRepository).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository).findByEntornApp(entornAppEntity);
     }
 
@@ -201,7 +206,7 @@ public class AppInfoHelperTest {
         assertNotNull(entornAppEntity.getInfoData());
 
         // Verify that integracions and subsistemes were refreshed
-        verify(integracioRepository).findByEntornApp(entornAppEntity);
+        verify(appIntegracioRepository).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository).findByEntornApp(entornAppEntity);
     }
 
@@ -225,7 +230,7 @@ public class AppInfoHelperTest {
         verifyRestTemplateCall();
 
         // Verify that integracions and subsistemes were not refreshed
-        verify(integracioRepository, never()).findByEntornApp(entornAppEntity);
+        verify(appIntegracioRepository, never()).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository, never()).findByEntornApp(entornAppEntity);
     }
 

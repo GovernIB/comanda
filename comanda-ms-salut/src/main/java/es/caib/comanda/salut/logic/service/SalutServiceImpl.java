@@ -87,7 +87,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 					Optional<SalutIntegracio> salutIntegracio = resource.getIntegracions().stream().
 						filter(si -> si.getCodi().equals(i.getCodi())).
 						findFirst();
-					salutIntegracio.ifPresent(integracio -> integracio.setNom(i.getNom()));
+					salutIntegracio.ifPresent(integracio -> {
+						integracio.setNom(i.getIntegracio().getNom());
+						integracio.setLogo(i.getLogo());
+					});
 				});
 			}
 		}

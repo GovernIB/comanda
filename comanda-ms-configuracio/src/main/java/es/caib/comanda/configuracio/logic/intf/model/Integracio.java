@@ -1,12 +1,12 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
-import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * Informació d'una integració.
@@ -16,19 +16,16 @@ import javax.persistence.Transient;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppIntegracio extends BaseResource<Long> {
+public class Integracio extends BaseResource<Long> {
 
-	@Transient
-	private ResourceReference<Integracio, Long> integracio;
-
-	@Transient
-	private ResourceReference<EntornApp, Long> entornApp;
-
-	@Transient
+	@NotNull
+	@Size(max = 10)
 	private String codi;
-	@Transient
+	@NotNull
+	@Size(max = 100)
+	private String nom;
+
 	private byte[] logo;
 
-	private boolean activa;
 
 }

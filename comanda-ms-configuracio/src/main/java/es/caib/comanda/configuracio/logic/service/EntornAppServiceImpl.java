@@ -13,7 +13,7 @@ import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
-import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
+import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.KeycloakHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, Long, EntornAppEntity> implements EntornAppService {
 
     @Autowired
-    private IntegracioRepository integracioRepository;
+    private AppIntegracioRepository appIntegracioRepository;
     @Autowired
     private SubsistemaRepository subsistemaRepository;
     @Autowired
@@ -71,14 +71,15 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @Override
     protected void afterConversion(EntornAppEntity entity, EntornApp resource) {
-        List<AppIntegracioEntity> integracions = integracioRepository.findByEntornApp(entity);
+        List<AppIntegracioEntity> integracions = appIntegracioRepository.findByEntornApp(entity);
         if (!integracions.isEmpty()) {
             resource.setIntegracions(
                     integracions.stream().map(i -> new AppIntegracio(
-                            i.getCodi(),
-                            i.getNom(),
-                            i.isActiva(),
-                            null)).collect(Collectors.toList()));
+                            ResourceReference.toResourceReference(i.getIntegracio().getId(), i.getIntegracio().getNom()),
+                            null,
+                            i.getIntegracio().getCodi(),
+                            i.getIntegracio().getLogo(),
+                            i.isActiva())).collect(Collectors.toList()));
         }
         List<AppSubsistemaEntity> subsistemes = subsistemaRepository.findByEntornApp(entity);
         if (!integracions.isEmpty()) {

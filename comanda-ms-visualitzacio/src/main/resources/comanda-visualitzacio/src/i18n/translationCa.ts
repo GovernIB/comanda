@@ -9,6 +9,7 @@ const translationCa = {
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
         cache: "Gestió de cachés",
+        integracio: "Integracions",
     },
     page: {
         salut: {
@@ -96,6 +97,14 @@ const translationCa = {
         appsEntorns: {
             title: "Entorns",
             resourceTitle: "entorn",
+        },
+        integracions: {
+            title: "Integracions",
+            column: {
+                codi: "Codi",
+                nom: "Nom",
+                logo: "Logo",
+            },
         },
         monitors: {
             title: "Monitors",

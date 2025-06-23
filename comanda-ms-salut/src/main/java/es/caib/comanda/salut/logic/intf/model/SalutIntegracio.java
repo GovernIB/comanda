@@ -34,5 +34,7 @@ public class SalutIntegracio extends BaseResource<Long> {
 
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private String nom;
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private byte[] logo;
 
 }

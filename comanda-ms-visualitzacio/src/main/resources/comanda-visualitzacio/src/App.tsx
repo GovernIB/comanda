@@ -40,6 +40,13 @@ export const App: React.FC = () => {
                 resourceName: 'entorn',
             },
             {
+                id: 'integracio',
+                title: t('menu.integracio'),
+                to: '/integracio',
+                icon: 'integration_instructions',
+                resourceName: 'integracio',
+            },
+            {
                 id: 'estadisticaWidget',
                 title: t('menu.widget'),
                 to: '/estadisticaWidget',

@@ -337,7 +337,8 @@ const Integracions: React.FC<any> = (props) => {
             {integracions && <Table size="small">
                 <TableHead>
                     <TableRow>
-                        <TableCell>{t('page.salut.integracions.column.codi')}</TableCell>
+                        {/*<TableCell>{t('page.salut.integracions.column.codi')}</TableCell>*/}
+                        <TableCell sx={{width: '50px'}}></TableCell>
                         <TableCell>{t('page.salut.integracions.column.nom')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.estat')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.latencia')}</TableCell>
@@ -346,7 +347,8 @@ const Integracions: React.FC<any> = (props) => {
                 </TableHead>
                 <TableBody>
                     {integracions.map((i: any, key: number) => <TableRow key={key}>
-                        <TableCell>{i.codi}</TableCell>
+                        {/*<TableCell>{i.codi}</TableCell>*/}
+                        <TableCell sx={{width: '50px'}}>{i.logo && <img src={`data:image/png;base64,${i.logo}`} alt="logo" style={{ maxHeight: '32px' }}/>}</TableCell>
                         <TableCell>{i.nom}</TableCell>
                         <TableCell>
                             <Chip label={i.estat} size="small" color={getEstatColor(i.estat)} />

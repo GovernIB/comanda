@@ -9,6 +9,8 @@ import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
+import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
+import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
@@ -39,6 +41,7 @@ import java.util.Optional;
 public class AppInfoHelper {
 
 	private final EntornAppRepository entornAppRepository;
+	private final AppIntegracioRepository appIntegracioRepository;
 	private final IntegracioRepository integracioRepository;
 	private final SubsistemaRepository subsistemaRepository;
 
@@ -150,37 +153,48 @@ public class AppInfoHelper {
 	}
 
 	private void refreshIntegracions(EntornAppEntity entornApp, List<IntegracioInfo> integracioInfos) {
-		List<AppIntegracioEntity> integracionsDb = integracioRepository.findByEntornApp(entornApp);
+		List<AppIntegracioEntity> appIntegracionsDb = appIntegracioRepository.findByEntornApp(entornApp);
+		List<IntegracioEntity> integracionsDb = integracioRepository.findAll();
 		// Actualitzam les integracions existents i cream les integracions que falten a la base de dades
 		if (integracioInfos != null) {
 			integracioInfos.forEach(iin -> {
-				Optional<AppIntegracioEntity> integracioDb = integracionsDb.stream().
-						filter(idb -> idb.getCodi().equals(iin.getCodi())).
+				Optional<AppIntegracioEntity> appIntegracioDb = appIntegracionsDb.stream().
+						filter(idb -> idb.getIntegracio().getCodi().equals(iin.getCodi())).
 						findFirst();
-				if (integracioDb.isPresent()) {
+				if (appIntegracioDb.isPresent()) {
 					// Si la integració ja existeix l'actualitzam
 					log.debug("\tActualitzant informació de la integració {}", iin.getCodi());
-					integracioDb.get().setNom(iin.getNom());
-					integracioDb.get().setActiva(true);
+					appIntegracioDb.get().getIntegracio().setNom(iin.getNom());
+					appIntegracioDb.get().setActiva(true);
 				} else {
 					// Si la integració no existeix la cream
 					log.debug("\tCreant nova integració {}", iin.getCodi());
 					AppIntegracioEntity integracioNova = new AppIntegracioEntity();
-					integracioNova.setCodi(iin.getCodi());
-					integracioNova.setNom(iin.getNom());
+					Optional<IntegracioEntity> integracioDb = integracionsDb.stream()
+							.filter(idb -> idb.getCodi().equals(iin.getCodi()))
+							.findFirst();
+					if (integracioDb.isPresent()) {
+						integracioNova.setIntegracio(integracioDb.get());
+					} else {
+						IntegracioEntity integracioNou = new IntegracioEntity();
+						integracioNou.setCodi(iin.getCodi());
+						integracioNou.setNom(iin.getNom());
+						integracioRepository.save(integracioNou);
+						integracioNova.setIntegracio(integracioNou);
+					}
 					integracioNova.setActiva(true);
 					integracioNova.setEntornApp(entornApp);
-					integracioRepository.save(integracioNova);
+					appIntegracioRepository.save(integracioNova);
 				}
 			});
 		}
 		// Desactivam les integracions que no apareixen a la resposta
-		integracionsDb.forEach(idb -> {
+		appIntegracionsDb.forEach(idb -> {
 			Optional<IntegracioInfo> integracioInfo = integracioInfos != null ? integracioInfos.stream().
-					filter(iin -> idb.getCodi().equals(iin.getCodi())).
+					filter(iin -> idb.getIntegracio().getCodi().equals(iin.getCodi())).
 					findFirst() : Optional.empty();
 			if (integracioInfo.isEmpty()) {
-				log.debug("\tDesactivant integració {}", idb.getCodi());
+				log.debug("\tDesactivant integració {}", idb.getIntegracio().getCodi());
 				idb.setActiva(false);
 			}
 		});

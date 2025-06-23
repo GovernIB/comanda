@@ -5,6 +5,7 @@ import Grid from '@mui/material/Grid';
 import {FormField, FormPage, GridPage, MuiForm, MuiFormTabContent, MuiGrid, springFilterBuilder, useFormContext} from 'reactlib';
 import {Box, Tab, Tabs} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
+import BlockIcon from "@mui/icons-material/Block";
 
 const AppEntornForm: React.FC = () => {
     const { data } = useFormContext();
@@ -156,12 +157,31 @@ const Apps: React.FC = () => {
     const { t } = useTranslation();
     const columns = [
         {
-            field: 'codi',
+            field: 'logo',
             flex: 1,
+            renderCell: (params: any) => {
+                const value = params.value; // Obtenir el valor de la cel·la
+                return value ? (
+                    <img
+                        src={`data:image/png;base64,${value}`}
+                        alt="logo"
+                        style={{ maxHeight: '32px' }}
+                    />
+                ) : (
+                    <span role="img" aria-label="block" style={{ fontSize: '24px' }}>
+                    <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
+                </span>
+                );
+            }
+            ,
+        },
+        {
+            field: 'codi',
+            flex: 2,
         },
         {
             field: 'nom',
-            flex: 3,
+            flex: 7,
         },
         {
             field: 'activa',

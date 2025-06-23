@@ -4,7 +4,7 @@ import es.caib.comanda.configuracio.logic.intf.model.Entorn;
 import es.caib.comanda.configuracio.logic.service.EntornServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
-import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
+import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ public class EntornServiceImplTest {
     private AppRepository appRepository;
 
     @Mock
-    private IntegracioRepository integracioRepository;
+    private AppIntegracioRepository integracioRepository;
 
     @Mock
     private SubsistemaRepository subsistemaRepository;

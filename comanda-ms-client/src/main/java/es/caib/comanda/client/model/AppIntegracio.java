@@ -15,8 +15,10 @@ import java.io.Serializable;
 public class AppIntegracio implements Serializable {
 
 	private Long id;
+	private AppRef app;
 	private String codi;
-	private String nom;
+	private IntegracioRef integracio;
+	private byte[] logo;
 	private boolean activa;
 
 }

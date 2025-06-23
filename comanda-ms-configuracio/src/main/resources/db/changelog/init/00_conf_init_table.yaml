@@ -162,6 +162,53 @@ databaseChangeLog:
                 name: v
                 type: BIGINT
 - changeSet:
+    id: conf-init-table-6
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}integracio
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}integracio_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: codi
+            type: VARCHAR(16 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: nom
+            type: VARCHAR(100 ${varcharUnit})
+        - column:
+            name: logo
+            type: BLOB
+        - column:
+            constraints:
+                nullable: false
+            name: created_by
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: created_date
+            type: TIMESTAMP
+        - column:
+            name: lastmod_by
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            name: lastmod_date
+            type: TIMESTAMP
+        - column:
+            name: v
+            type: BIGINT
+- changeSet:
     id: conf-init-table-4
     author: limit
     changes:
@@ -179,21 +226,16 @@ databaseChangeLog:
         - column:
             constraints:
                 nullable: false
-            name: codi
-            type: VARCHAR(16 ${varcharUnit})
-        - column:
-            constraints:
-                nullable: false
-            name: nom
-            type: VARCHAR(100 ${varcharUnit})
-        - column:
-            name: activa
-            type: BOOLEAN
+            name: integracio_id
+            type: BIGINT
         - column:
             constraints:
                 nullable: false
             name: entorn_app_id
             type: BIGINT
+        - column:
+            name: activa
+            type: BOOLEAN
         - column:
             constraints:
                 nullable: false

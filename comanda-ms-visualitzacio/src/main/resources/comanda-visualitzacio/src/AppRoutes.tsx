@@ -7,6 +7,7 @@ import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
 import Caches from "./pages/Caches";
+import Integracions from "./pages/Integracions";
 import EstadisticaWidget from './pages/EstadisticaWidget';
 import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
@@ -40,6 +41,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="cache">
                 <Route index element={<Caches />} />
+            </Route>
+            <Route path="integracio">
+                <Route index element={<Integracions />} />
             </Route>
             <Route path="estadisticaWidget">
                 <Route index element={<EstadisticaWidget />} />
