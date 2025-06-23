@@ -113,6 +113,10 @@ const translationEs = {
         },
         widget: {
             title: "Widgets estadísticos",
+            grid: {
+                position: "Posición",
+                size: "Tamaño",
+            },
             form: {
                 periode: "Period",
                 simple: "Widget simple",
@@ -147,12 +151,57 @@ const translationEs = {
                     accions: "Acciones",
                     arrossega: "Arrastra para reordenar",
                 },
-            }
+            },
+            action: {
+                add: {
+                    label: "Añadir",
+                },
+            },
         },
         dashboards: {
             title: "Cuadros de control",
             edit: "Editar",
             dashboardView: "Ir al panel de control",
+            components: {
+                llistar: "Listar componentes",
+                afegir: "Añadir componente",
+            },
+            action: {
+                select: {
+                    title: "Seleccione el tablero a mostrar...",
+                },
+                llistarWidget: {
+                    label: "Listar widgets",
+                    title: "Listar widgets",
+                },
+                llistarTitle: {
+                    label: "Listar títulos",
+                    title: "Listar títulos",
+                },
+                patchItem: {
+                    success: "Guardado correctamente",
+                    warning: "No se pudo encontrar newDashboardItem con id {{id}}, la actualización no se propagará.",
+                    error: "Error al guardar",
+                    saveError: "Error al guardar",
+                },
+                addWidget: {
+                    label: "Añadir widget",
+                    title: "Añadir widget",
+                    success: "Widget añadido correctamente",
+                    error: "Error al añadir el widget",
+                },
+                afegirTitle: {
+                    label: "Añadir título",
+                    title: "Añadir título",
+                }
+            },
+            alert: {
+                tornarLlistat: "Volver al listado",
+                tornarTauler: "Volver al tablero por defecto",
+                notExists: "El panel de control no existe.",
+                notDefined: "No hay ningún panel de control definido.",
+                carregar: "Error al cargar el panel de control.",
+            }
         },
         caches: {
             title: "Caches",
@@ -163,6 +212,7 @@ const translationEs = {
                 mida: "Tamaño (bytes)",
             },
             buidar: {
+                label: "Vaciar",
                 titol: "Vaciar cache",
                 confirm: "Estas seguro que quieres vaciar la cache?",
                 success: "Cache vaciada",

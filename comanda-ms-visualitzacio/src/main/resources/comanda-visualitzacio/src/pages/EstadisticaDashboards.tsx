@@ -22,7 +22,7 @@ const EstadisticaDashboards: React.FC = () => {
     return (
         <GridPage disableMargins>
             <MuiGrid
-                title={t('page.dashboards.title')} // TODO
+                title={t('page.dashboards.title')}
                 resourceName="dashboard"
                 columns={columns}
                 toolbarType="upper"
@@ -30,12 +30,12 @@ const EstadisticaDashboards: React.FC = () => {
                 rowHideUpdateButton
                 rowAdditionalActions={[
                     {
-                        title: t('page.dashboards.edit'),//TODO
+                        title: t('page.dashboards.edit'),
                         icon: 'edit',
                         clickShowUpdateDialog: true,
                     },
                     {
-                        title: t('page.dashboards.dashboardView'), // TODO
+                        title: t('page.dashboards.dashboardView'),
                         icon: 'dashboard',
                         showInMenu: false,
                         linkTo: '{{id}}',

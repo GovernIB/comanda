@@ -113,6 +113,10 @@ const translationCa = {
         },
         widget: {
             title: "Widgets estadístics",
+            grid: {
+                position: "Posició",
+                size: "Mida",
+            },
             form: {
                 periode: "Període",
                 simple: "Widget simple",
@@ -148,11 +152,56 @@ const translationCa = {
                     arrossega: "Arrossega per reordenar",
                 },
             },
+            action: {
+                add: {
+                    label: "Afegir",
+                },
+            },
         },
         dashboards: {
             title: "Taulers de control",
             edit: "Editar",
             dashboardView: "Anar al dashboard",
+            components: {
+                llistar: "Llistar components",
+                afegir: "Afegir component",
+            },
+            action: {
+                select: {
+                    title: "Seleccioni el tauler a mostrar...",
+                },
+                llistarWidget: {
+                    label: "Llistar widgets",
+                    title: "Llistar widgets",
+                },
+                llistarTitle: {
+                    label: "Llistar títols",
+                    title: "Llistar títols",
+                },
+                patchItem: {
+                    success: "Desat correctament",
+                    warning: "No s'ha pogut trobar el newDashboardItem amb l'id {{id}}, l'actualització no es propagarà.",
+                    error: "Error en desar",
+                    saveError: "Error en desar",
+                },
+                addWidget: {
+                    label: "Afegir widget",
+                    title: "Afegir widget",
+                    success: "Widget afegit correctament",
+                    error: "Error en afegir el widget",
+                },
+                afegirTitle: {
+                    label: "Afegir títol",
+                    title: "Afegir títol",
+                }
+            },
+            alert: {
+                tornarLlistat: "Tornar al llistat",
+                tornarTauler: "Tornar al tauler per defecte",
+                notExists: "El tauler de control no existeix.",
+                notDefined: "No hi ha cap tauler de control definit.",
+                carregar: "Error en carregar el tauler de control.",
+            }
         },
         caches: {
             title: "Caches",
@@ -163,6 +212,7 @@ const translationCa = {
                 mida: "Mida (bytes)",
             },
             buidar: {
+                label: "Buidar",
                 titol: "Buidar cache",
                 confirm: "Estau segur que voleu buidar la cache?",
                 success: "Cache buidada",
@@ -176,7 +226,6 @@ const translationCa = {
             },
         },
         notFound: "No trobat",
-
     },
     generic: {
         tipus: "Tipus",

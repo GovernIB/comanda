@@ -112,6 +112,7 @@ const addWidgetDialogGridColumns = [
 ];
 
 const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
+    const { t } = useTranslation();
     return (
         <MuiGrid
             resourceName={resourceName}
@@ -124,7 +125,7 @@ const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
             filter={filter}
             rowAdditionalActions={[
                 {
-                    title: 'Afegir',
+                    title: t('page.widget.action.add.label'),
                     icon: 'add',
                     onClick: onAddClick,
                 },
@@ -156,7 +157,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd 
     return (
         <Dialog maxWidth="lg" open={open} onClose={onClose}>
             <DialogTitle>
-                Afegir widget
+                {t('page.dashboards.action.addWidget.title')}
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
@@ -281,6 +282,7 @@ const defaultSizeAndPosition = {
 
 const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns, onDelete }) => {
     const { isReady: apiIsReady, delete: apiDelete } = useResourceApiService(resourceName);
+    const { t } = useTranslation();
     // @ts-ignore
     const gridApiRef: MuiDataGridApiRef = React.useRef({});
     const { messageDialogShow, temporalMessageShow, t: tLib } = useBaseAppContext();
@@ -336,13 +338,13 @@ const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns
                     {
                         field: 'position',
                         flex: 1,
-                        headerName: 'Posició', // TODO
+                        headerName: t('page.widget.grid.position'),
                         valueGetter: (value, row) => `${row.posX}, ${row.posY}`,
                     },
                     {
                         field: 'size',
                         flex: 1,
-                        headerName: 'Mida', // TODO
+                        headerName: t('page.widget.grid.size'),
                         valueGetter: (value, row) => `${row.width}, ${row.height}`,
                     },
                 ]}
@@ -414,6 +416,7 @@ const AfegirTitolFormContent = () => {
 };
 
 const EstadisticaDashboardEdit: React.FC = () => {
+    const { t } = useTranslation();
     const { id: dashboardId } = useParams();
     const {
         isReady: apiDashboardItemIsReady,
@@ -439,7 +442,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
     const openCreateTitolForm = () => {
         titolFormDialogShow(null, {
-            title: 'Afegir titol', // TODO
+            title: t('page.dashboards.action.afegirTitle.title'),
             formContent: <AfegirTitolFormContent />,
             additionalData: { dashboard: { id: dashboardId }, ...defaultSizeAndPosition },
             dialogComponentProps: { maxWidth: 'md', fullWidth: true },
@@ -459,12 +462,12 @@ const EstadisticaDashboardEdit: React.FC = () => {
             },
         })
             .then(async () => {
-                temporalMessageShow(null, 'Widget afegit correctament', 'success');
+                temporalMessageShow(null, t('page.dashboards.action.addWidget.success'), 'success');
                 forceRefreshDashboardWidgets();
                 closeAddWidgetDialog();
             })
             .catch((reason) => {
-                temporalMessageShow(null, 'Error al afegir el widget', 'error');
+                temporalMessageShow(null, t('page.dashboards.action.addWidget.error'), 'error');
                 console.error('Widget add error', reason);
             });
     };
@@ -479,9 +482,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             );
 
             if (newDashboardItem === undefined) {
-                console.error(
-                    `Failed to find newDashboardItem with id ${oldDashboardItem.id}, update won't propagate.`
-                );
+                console.error( t('page.dashboards.action.patchItem.warning', oldDashboardItem) );
             } else if (!isEqual(oldDashboardItem, newDashboardItem)) {
                 const patchPromise = patchDashboardItem(oldDashboardItem.id, {
                     data: {
@@ -495,14 +496,13 @@ const EstadisticaDashboardEdit: React.FC = () => {
             }
         });
 
-        // TODO Traducir mensajes
         Promise.all(promises)
             .then(() => {
-                temporalMessageShow(null, 'Guardat correctament', 'success');
+                temporalMessageShow(null, t('page.dashboards.action.patchItem.success'), 'success');
             })
             .catch((reason) => {
-                temporalMessageShow(null, 'Error al guardar', 'error');
-                console.error('Save error', reason);
+                temporalMessageShow(null, t('page.dashboards.action.patchItem.error'), 'error');
+                console.error(t('page.dashboards.action.patchItem.saveError'), reason);
             });
     };
 
@@ -515,15 +515,14 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     severity="warning"
                     action={
                         <Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>
-                            {/* TODO */}
-                            Tornar al llistat
+                            {t('page.dashboards.alert.tornarLlistat')}
                         </Button>
                     }
                 >
-                    El tauler de control no existeix.
+                    {t('page.dashboards.alert.notExists')}
                 </Alert>
             );
-        } else return <Alert severity="error">Error al carregar el tauler de control.</Alert>;
+        } else return <Alert severity="error">{t('page.dashboards.alert.carregar')}</Alert>;
     }
 
     return (
@@ -579,11 +578,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 {errorDashboardWidgets?.length ? (
                                     <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
                                 ) : undefined}
-                                <ButtonMenu title={'Llistar components'}>
+                                <ButtonMenu title={t('page.dashboards.components.llistar')}>
                                     {[
                                         {
                                             icon: 'widgets',
-                                            title: 'Llistar widgets',
+                                            title: t('page.dashboards.action.llistarWidget.label'),
                                             resourceName: 'dashboardItem',
                                             baseColumns: [
                                                 {
@@ -598,7 +597,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         },
                                         {
                                             icon: 'title',
-                                            title: 'Llistar títols',
+                                            title: t('page.dashboards.action.llistarTitle.label'),
                                             resourceName: 'dashboardTitol',
                                             baseColumns: [
                                                 {
@@ -635,7 +634,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     ))}
                                 </ButtonMenu>
                                 <ButtonMenu
-                                    title={'Afegir component'}
+                                    title={t('page.dashboards.components.afegir')}
                                     disabled={!apiDashboardItemIsReady}
                                     buttonIcon={<AddIcon />}
                                 >
@@ -643,13 +642,13 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         <ListItemIcon>
                                             <Icon fontSize="small">widgets</Icon>
                                         </ListItemIcon>
-                                        <ListItemText>Afegir widget</ListItemText>
+                                        <ListItemText>{t('page.dashboards.action.addWidget.label')}</ListItemText>
                                     </MenuItem>
                                     <MenuItem onClick={openCreateTitolForm}>
                                         <ListItemIcon>
                                             <Icon fontSize="small">title</Icon>
                                         </ListItemIcon>
-                                        <ListItemText>Afegir titol</ListItemText>
+                                        <ListItemText>{t('page.dashboards.action.afegirTitle.label')}</ListItemText>
                                     </MenuItem>
                                 </ButtonMenu>
                             </Box>
