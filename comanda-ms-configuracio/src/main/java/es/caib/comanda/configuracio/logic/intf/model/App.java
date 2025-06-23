@@ -2,7 +2,6 @@ package es.caib.comanda.configuracio.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,7 +9,6 @@ import org.springframework.hateoas.InputType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,6 +34,7 @@ public class App extends BaseResource<Long> {
 	private String descripcio;
 	@InputType("checkbox")
 	private boolean activa = true;
+	private byte[] logo;
 
 
 	private List<EntornApp> entornApps;

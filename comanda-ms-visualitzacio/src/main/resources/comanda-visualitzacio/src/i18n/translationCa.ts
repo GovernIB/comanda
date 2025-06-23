@@ -85,6 +85,10 @@ const translationCa = {
             update: "Modificar aplicació",
             general: "General",
             entornApp: "Entorns de l'aplicació",
+            logo: "Logo",
+            uploadLogo: "Pujar logo",
+            changeLogo: "Canviar logo",
+            removeLogo: "Eliminar logo",
         },
         entorns: {
             title: "Entorns",

@@ -85,6 +85,10 @@ const translationEn = {
             update: "Update application",
             general: "General",
             entornApp: "App environments",
+            logo: "Logo",
+            uploadLogo: "Upload logo",
+            changeLogo: "Change logo",
+            removeLogo: "Remove logo",
         },
         entorns: {
             title: "Environments",

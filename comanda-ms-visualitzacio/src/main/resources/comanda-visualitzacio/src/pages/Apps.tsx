@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import {useTranslation} from 'react-i18next';
+import {useParams} from 'react-router-dom';
 import Grid from '@mui/material/Grid';
-import { GridPage, FormPage, MuiGrid, MuiForm, FormField, MuiFormTabContent, useFormContext, springFilterBuilder } from 'reactlib';
-import { Box, Tab, Tabs } from '@mui/material';
+import {FormField, FormPage, GridPage, MuiForm, MuiFormTabContent, MuiGrid, springFilterBuilder, useFormContext} from 'reactlib';
+import {Box, Tab, Tabs} from '@mui/material';
+import LogoUpload from "../components/LogoUpload";
 
 const AppEntornForm: React.FC = () => {
     const { data } = useFormContext();
@@ -131,6 +132,9 @@ export const AppForm: React.FC = () => {
                         </Grid>
                         <Grid size={12}>
                             <FormField name="descripcio" type="textarea" />
+                        </Grid>
+                        <Grid size={12}>
+                            <LogoUpload />
                         </Grid>
                         <Grid size={12}>
                             <FormField name="activa" />

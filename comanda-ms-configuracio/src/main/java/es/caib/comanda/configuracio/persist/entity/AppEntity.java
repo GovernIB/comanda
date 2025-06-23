@@ -12,6 +12,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * Entitat de base de dades que representa una aplicació a monitoritzar.
@@ -36,6 +37,10 @@ public class AppEntity extends BaseAuditableEntity<App> {
 	private String descripcio;
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
+
+	@Lob
+	@Column(name = "logo", nullable = true)
+	private byte[] logo;
 
 	@OneToMany(mappedBy= "app", cascade = CascadeType.ALL)
 	private List<EntornAppEntity> entornApps;

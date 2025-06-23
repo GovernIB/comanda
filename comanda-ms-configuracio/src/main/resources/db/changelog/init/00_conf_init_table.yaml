@@ -58,6 +58,9 @@ databaseChangeLog:
               name: activa
               type: BOOLEAN
         - column:
+              name: LOGO
+              type: BLOB
+        - column:
             constraints:
                 nullable: false
             name: created_by
