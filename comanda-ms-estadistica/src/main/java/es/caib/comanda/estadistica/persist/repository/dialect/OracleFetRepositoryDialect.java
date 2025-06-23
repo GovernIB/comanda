@@ -23,7 +23,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     private static final String FILTER_BETWEEN = " AND t.data BETWEEN :dataInici AND :dataFi ";
     private static final String FILTER_DATE = " AND t.data = :data ";
     private static final String BASE_WHERE = BASE_WHERE_ENTORN + FILTER_BETWEEN;
-    private static final String SUM_INDICADOR_TEMPLATE = "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"%s\"'))) AS sum_fets";
+    private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"%s\"'))) AS sum_fets";
     private static final String DIMENSION_VALUE_TEMPLATE = " JSON_VALUE(f.dimensions_json, '$.\"%s\"') ";
 
 
@@ -152,22 +152,24 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre);
-        String queryGrouping = generateGroupConditions(tempsAgregacio);
+        String queryGrouping = generateGroupConditions(tempsAgregacio).replace("t.", "");
+        String querySubGrouping = generateGroupConditions(indicadorAgregacio.getUnitatAgregacio() != null
+                ? indicadorAgregacio.getUnitatAgregacio()
+                : tempsAgregacio);
 
 
-        return "SELECT agrupacio, " +
-                "      SUM(sum_fets) AS total_sum," +
+        return "SELECT " + queryAgrupacio + " as agrupacio, " +
                 querySelect +
                 " FROM ( SELECT " +
-                queryAgrupacio + " AS agrupacio," +
+                querySubGrouping + ", " +
                 getSumIndicadorQuery(indicadorCodi) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
-                "GROUP BY " + queryGrouping +
+                "GROUP BY " + querySubGrouping +
                 ") " +
-                "GROUP BY agrupacio " +
-                "ORDER BY " + queryGrouping;
+                "GROUP BY " + queryGrouping + " " +
+                "ORDER BY agrupacio";
     }
 
     /**
@@ -180,24 +182,33 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
      * @return cadena de text que conté la consulta SQL generada.
      */
     @Override
-    public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
+    public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
 
         String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
+        String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre);
-        String queryGrouping = generateGroupConditions(tempsAgregacio);
+        String queryGrouping = generateGroupConditions(tempsAgregacio).replace("t.", "");
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
+        String querySubGrouping = generateGroupConditions(indicadorAgregacio.getUnitatAgregacio() != null
+                ? indicadorAgregacio.getUnitatAgregacio()
+                : tempsAgregacio);
 
 
-        return  "SELECT " +
-                queryAgrupacio + " AS agrupacio," +
+        return "SELECT " + queryAgrupacio + " as agrupacio, " +
+                "descomposicio, " +
+                querySelect +
+                " FROM ( SELECT " +
+                querySubGrouping + ", " +
                 queryDescomposicio + "AS descomposicio," +
                 getSumIndicadorQuery(indicadorCodi) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
-                "GROUP BY " + queryGrouping + "," + queryDescomposicio +
-                "ORDER BY " + queryGrouping + ", descomposicio";
+                "GROUP BY " + querySubGrouping + "," + queryDescomposicio +
+                ") " +
+                "GROUP BY " + queryGrouping + ", descomposicio " +
+                "ORDER BY agrupacio, descomposicio";
     }
 
     /**
@@ -212,12 +223,11 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
 
         String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
+        String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
 
-
-        return "SELECT " +
-                queryDescomposicio + " AS agrupacio," +
+        return "SELECT " + queryDescomposicio + " AS agrupacio, " +
                 getSumIndicadorQuery(indicadorCodi) +
                 BASE_JOIN +
                 BASE_WHERE +
@@ -237,17 +247,19 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     @Override
     public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
 
-        IndicadorAgregacio indicadorCodi = indicadorsAgregacio.get(0);
-        boolean isAnyAverageQuery = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
+        boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
+        boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
 
         PeriodeUnitat avgUnitat = indicadorsAgregacio.get(0).getUnitatAgregacio();
-        if (isAnyAverageQuery) {
+        if (hasAverage) {
             boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
                     .skip(1) // Ignora el primer element
                     .anyMatch(indicador -> !indicador.getUnitatAgregacio().equals(avgUnitat));
 
+            // TODO: Afegir validació per a no permetre diferents unitats d'agregació
             // Si hi ha columnes tipus AVERAGE amb diferents períodes, les separam per unitatAgregacio i fem UNION
             if (thereAreDifferentUnitatAgregacio) {
+                // TODO: Modificar per funcionar semblant a taula (si es permeten difirents unitats d'agregació)
                 List<List<IndicadorAgregacio>> indicadorsAgregacioByPeriode = indicadorsAgregacio.stream()
                         .collect(Collectors.groupingBy(IndicadorAgregacio::getUnitatAgregacio))
                         .values()
@@ -264,30 +276,22 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         String subQuerySelects = getTaulaSubQuerySelects(indicadorsAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String subQueryGrouping = generateGroupConditions(avgUnitat);
         String queryGrouping = generateGroupConditions(tempsAgregacio);
 
 
         return  "SELECT agrupacio, " + querySelect +
                 " FROM ( SELECT " +
-                (isAnyAverageQuery ? "" : generateGroupConditions(avgUnitat) + ", ") +
+                (hasDataCols ? "t.data, " : "") +
+                (hasAverage ? "" : generateGroupConditions(avgUnitat) + ", ") +
                 queryAgrupacio + " AS agrupacio," +
                 subQuerySelects +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
-                "GROUP BY " + queryGrouping + ") " +
+                "GROUP BY " + (hasDataCols ? "t.data, " : "") + subQueryGrouping + ") " +
                 "GROUP BY agrupacio " +
-                "ORDER BY " + queryGrouping;
-    }
-
-    private String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
-        switch (tempsAgregacio) {
-            case SETMANA: return "t.setmana || + '/' || t.anualitat";
-            case MES: return "t.mes || + '/' || t.anualitat";
-            case TRIMESTRE: return "t.trimestre || + '/' || t.anualitat";
-            case ANY: return "t.anualitat";
-            default: return "t.dia || '/' || t.mes || + '/' || t.anualitat";
-        }
+                "ORDER BY agrupacio"; // + queryGrouping;
     }
 
     @Override
@@ -479,7 +483,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     private String getTaulaQuerySelect(List<IndicadorAgregacio> indicadorsAgregacio) {
         return indicadorsAgregacio.stream()
                 .map(ind -> getSimpleQuerySelect(ind.getAgregacio(), ind.getIndicadorCodi()) )
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(", "));
     }
 
 
@@ -543,16 +547,27 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 .collect(Collectors.joining(" "));
     }
 
+    // TODO: Girar i posar any/mes/dia
+    private static String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
+        switch (tempsAgregacio) {
+            case SETMANA: return "setmana || '/' || anualitat";
+            case MES: return "mes || '/' || anualitat";
+            case TRIMESTRE: return "trimestre || '/' || anualitat";
+            case ANY: return "anualitat";
+            default: return "dia || '/' || mes || '/' || anualitat";
+        }
+    }
+
     private static String generateGroupConditions(PeriodeUnitat tempsAgregacio) {
         if (tempsAgregacio == null)
-            return "t.anualitat, t.mes, t.dia";
+            return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
 
         switch (tempsAgregacio) {
-            case SETMANA: return "t.anualitat, t.setmana";
-            case MES: return "t.anualitat, t.mes";
+            case SETMANA: return "t.anualitat, t.trimestre, t.mes, t.setmana";
+            case MES: return "t.anualitat, t.trimestre, t.mes";
             case TRIMESTRE: return "t.anualitat, t.trimestre";
             case ANY: return "t.anualitat";
-            default: return "t.anualitat, t.mes, t.dia";
+            default: return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
         }
     }
 
@@ -568,9 +583,9 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     private static String getGrupping(PeriodeUnitat unitatAgregacio) {
         if (unitatAgregacio != null) {
             switch (unitatAgregacio) {
-                case DIA: return "t.anualitat, t.mes, t.dia";
-                case SETMANA: return "t.anualitat, t.setmana";
-                case MES: return "t.anualitat, t.mes";
+                case DIA: return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
+                case SETMANA: return "t.anualitat, t.trimestre, t.mes, t.setmana";
+                case MES: return "t.anualitat, t.trimestre, t.mes";
                 case TRIMESTRE: return "t.anualitat, t.trimestre";
                 case ANY: return "t.anualitat";
             }

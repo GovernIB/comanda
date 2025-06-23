@@ -177,7 +177,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     @Override
     public List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
 
-        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, tempsAgregacio);
+        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, tempsAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);

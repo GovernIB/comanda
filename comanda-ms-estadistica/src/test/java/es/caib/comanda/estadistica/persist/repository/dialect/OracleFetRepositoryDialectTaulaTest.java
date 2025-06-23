@@ -61,8 +61,8 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 "SUM(sum_fets_visites) AS total_sum_visites " +
                                 "FROM ( " +
                                 "    SELECT t.data as data, " +
-                                " JSON_VALUE(f.dimensions_json, '$.\"departament\"')  AS agrupacio," +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites" +
+                                " JSON_VALUE(f.dimensions_json, '$.\"departament\"')  AS agrupacio, " +
+                                " SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
                                 "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                 "    WHERE f.entorn_app_id = :entornAppId " +
                                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
@@ -85,14 +85,14 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 "SUM(sum_fets_visites) AS total_sum_visites," +
                                 "AVG(sum_fets_sessions) AS average_result_sessions " +
                                 "FROM ( " +
-                                "   SELECT t.anualitat, t.mes, " +
-                                "   JSON_VALUE(f.dimensions_json, '$.\"area\"')  AS agrupacio," +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions" +
+                                "   SELECT t.anualitat, t.trimestre, t.mes, " +
+                                "   JSON_VALUE(f.dimensions_json, '$.\"area\"')  AS agrupacio, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                 "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                 "   WHERE f.entorn_app_id = :entornAppId " +
                                 "   AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "   GROUP BY t.anualitat, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
+                                "   GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
                                 ") " +
                                 "GROUP BY agrupacio " +
                                 "ORDER BY agrupacio")
@@ -112,9 +112,9 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 "CASE WHEN SUM(sum_fets_sessions) > 0 THEN MIN(data) ELSE NULL END AS first_seen_sessions " +
                                 "FROM ( " +
                                 "   SELECT t.data as data, " +
-                                "   JSON_VALUE(f.dimensions_json, '$.\"usuari\"')  AS agrupacio," +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
+                                "   JSON_VALUE(f.dimensions_json, '$.\"usuari\"')  AS agrupacio, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                 "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                 "   WHERE f.entorn_app_id = :entornAppId " +
                                 "   AND t.data BETWEEN :dataInici AND :dataFi " +
@@ -139,9 +139,9 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 "CASE WHEN SUM(sum_fets_sessions) > 0 THEN MAX(data) ELSE NULL END AS last_seen_sessions " +
                                 "   FROM ( " +
                                 "   SELECT t.data as data, " +
-                                "   JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"')  AS agrupacio," +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
+                                "   JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"')  AS agrupacio, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                 "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                 "   WHERE f.entorn_app_id = :entornAppId " +
                                 "   AND t.data BETWEEN :dataInici AND :dataFi " +
@@ -169,9 +169,9 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 "SUM(sum_fets_sessions) AS total_sum_sessions " +
                                 "FROM ( " +
                                 "   SELECT t.data as data, " +
-                                "   JSON_VALUE(f.dimensions_json, '$.\"departament\"')  AS agrupacio," +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
-                                "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
+                                "   JSON_VALUE(f.dimensions_json, '$.\"departament\"')  AS agrupacio, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
+                                "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                 "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                 "   WHERE f.entorn_app_id = :entornAppId " +
                                 "   AND t.data BETWEEN :dataInici AND :dataFi " +
@@ -230,14 +230,14 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 removeConsecutiveSpaces("AVG(sum_fets_visites) AS average_result_visites"),
                                 removeConsecutiveSpaces("null AS average_result_sessions"),
                                 removeConsecutiveSpaces("FROM ( " +
-                                        "   SELECT t.anualitat, t.mes, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
+                                        "   SELECT t.anualitat, t.trimestre, t.mes, " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
                                         "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +
                                         "   AND t.data BETWEEN :dataInici AND :dataFi " +
                                         "   AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
-                                        "   GROUP BY t.anualitat, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
+                                        "   GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
                                         ") " +
                                         "GROUP BY agrupacio "),
                                 removeConsecutiveSpaces("UNION ALL "),
@@ -246,8 +246,8 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 removeConsecutiveSpaces("null AS average_result_visites"),
                                 removeConsecutiveSpaces("FROM ( " +
                                         "   SELECT t.anualitat, t.trimestre, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                         "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +
                                         "   AND t.data BETWEEN :dataInici AND :dataFi " +
@@ -279,14 +279,14 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 removeConsecutiveSpaces("AVG(sum_fets_visites) AS average_result_visites"),
                                 removeConsecutiveSpaces("null AS first_seen_sessions"),
                                 removeConsecutiveSpaces("FROM ( " +
-                                        "   SELECT t.anualitat, t.mes, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
+                                        "   SELECT t.anualitat, t.trimestre, t.mes, " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
                                         "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +
                                         "   AND t.data BETWEEN :dataInici AND :dataFi " +
                                         "   AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
-                                        "   GROUP BY t.anualitat, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
+                                        "   GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
                                         ") " +
                                         "GROUP BY agrupacio "),
                                 removeConsecutiveSpaces("UNION ALL "),
@@ -295,8 +295,8 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 removeConsecutiveSpaces("null AS average_result_visites"),
                                 removeConsecutiveSpaces("FROM ( " +
                                         "   SELECT t.data as data, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                         "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +
                                         "   AND t.data BETWEEN :dataInici AND :dataFi " +
@@ -327,22 +327,22 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 removeConsecutiveSpaces("SELECT agrupacio, "),
                                 removeConsecutiveSpaces("AVG(sum_fets_visites) AS average_result_visites"),
                                 removeConsecutiveSpaces("null AS average_result_sessions"),
-                                removeConsecutiveSpaces("FROM ( SELECT t.anualitat, t.mes, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
+                                removeConsecutiveSpaces("FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
                                         "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +
                                         "   AND t.data BETWEEN :dataInici AND :dataFi " +
                                         "   AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
-                                        "   GROUP BY t.anualitat, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') ) " +
+                                        "   GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') ) " +
                                         "GROUP BY agrupacio "),
                                 removeConsecutiveSpaces("UNION ALL "),
                                 removeConsecutiveSpaces("SELECT agrupacio, "),
                                 removeConsecutiveSpaces("AVG(sum_fets_sessions) AS average_result_sessions"),
                                 removeConsecutiveSpaces("null AS average_result_visites"),
                                 removeConsecutiveSpaces("FROM ( SELECT t.anualitat, t.trimestre, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                         "   FROM cmd_est_fet f " +
                                         "   JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +
@@ -374,22 +374,22 @@ public class OracleFetRepositoryDialectTaulaTest {
                                 removeConsecutiveSpaces("SELECT agrupacio, "),
                                 removeConsecutiveSpaces("SUM(sum_fets_visites) AS total_sum_visites"),
                                 removeConsecutiveSpaces("null AS average_result_sessions "),
-                                removeConsecutiveSpaces("FROM ( SELECT t.anualitat, t.mes, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
+                                removeConsecutiveSpaces("FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
                                         "   FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +
                                         "   AND t.data BETWEEN :dataInici AND :dataFi " +
                                         "   AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
-                                        "   GROUP BY t.anualitat, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') ) " +
+                                        "   GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') ) " +
                                         "GROUP BY agrupacio "),
                                 removeConsecutiveSpaces("UNION ALL "),
                                 removeConsecutiveSpaces("SELECT agrupacio, "),
                                 removeConsecutiveSpaces("AVG(sum_fets_sessions) AS average_result_sessions"),
                                 removeConsecutiveSpaces("null AS total_sum_visites "),
                                 removeConsecutiveSpaces("FROM ( SELECT t.anualitat, t.trimestre, " +
-                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio," +
-                                        "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
+                                        "   JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio,   " +
+                                        "   SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                         "   FROM cmd_est_fet f " +
                                         "   JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                         "   WHERE f.entorn_app_id = :entornAppId " +

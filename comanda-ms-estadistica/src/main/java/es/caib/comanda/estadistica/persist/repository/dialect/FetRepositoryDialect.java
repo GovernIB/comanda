@@ -76,7 +76,7 @@ public interface FetRepositoryDialect {
     //   AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
     // GROUP BY t.anualitat, t.mes, t.dia, JSON_VALUE(f.dimensions_json, '$."ORG"')
     // ORDER BY agrupacio, descomposicio
-    String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio);
+    String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio);
 
     // -- Consulta SQL d'exemple per a widget grafic 1 indicador amb descomposició, agrupant per la descomposició
     // SELECT
