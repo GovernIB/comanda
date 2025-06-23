@@ -113,6 +113,10 @@ const translationEn = {
         },
         widget: {
             title: "Statistic widgets",
+            grid: {
+                position: "Position",
+                size: "Size",
+            },
             form: {
                 periode: "Period",
                 simple: "Simple widget",
@@ -147,12 +151,57 @@ const translationEn = {
                     accions: "Actions",
                     arrossega: "Drag to reorder",
                 },
-            }
+            },
+            action: {
+                add: {
+                    label: "Add",
+                },
+            },
         },
         dashboards: {
             title: "Dashboards",
             edit: "Edit",
             dashboardView: "Go to dashboard",
+            components: {
+                llistar: "List components",
+                afegir: "Add component",
+            },
+            action: {
+                select: {
+                    title: "Select the dashboard to display...",
+                },
+                llistarWidget: {
+                    label: "List widgets",
+                    title: "List widgets",
+                },
+                llistarTitle: {
+                    label: "List titles",
+                    title: "List titles",
+                },
+                patchItem: {
+                    success: "Saved successfully",
+                    warning: "Could not find newDashboardItem with id {{id}}, the update will not propagate.",
+                    error: "Error while saving",
+                    saveError: "Save error",
+                },
+                addWidget: {
+                    label: "Add widget",
+                    title: "Add widget",
+                    success: "Widget added successfully",
+                    error: "Error while adding the widget",
+                },
+                afegirTitle: {
+                    label: "Add title",
+                    title: "Add title",
+                }
+            },
+            alert: {
+                tornarLlistat: "Return to list",
+                tornarTauler: "Return to default dashboard",
+                notExists: "The dashboard does not exist.",
+                notDefined: "No dashboard is defined.",
+                carregar: "Error loading the dashboard.",
+            }
         },
         caches: {
             title: "Caches",
@@ -163,6 +212,7 @@ const translationEn = {
                 mida: "Size (bytes)",
             },
             buidar: {
+                label: "Clear",
                 titol: "Clear cache",
                 confirm: "Are you sure you want to clear the cache?",
                 success: "Cache cleared",

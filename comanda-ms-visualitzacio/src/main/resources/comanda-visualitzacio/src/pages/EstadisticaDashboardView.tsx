@@ -12,11 +12,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Dialog from '../../lib/components/mui/Dialog.tsx';
 import { ESTADISTIQUES_PATH } from '../AppRoutes.tsx';
+import {useTranslation} from "react-i18next";
 
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
 
 function useDashboardSelect(currentDashboardId: any) {
+    const { t } = useTranslation();
     const buttons = useCloseDialogButtons();
     const [open, setOpen] = useState(false);
 
@@ -49,7 +51,7 @@ function useDashboardSelect(currentDashboardId: any) {
                 }}
             >
                 <MuiGrid
-                    title={'Seleccioni el tauler a mostrar...'} // TODO
+                    title={t('page.dashboards.action.select.title')}
                     resourceName="dashboard"
                     columns={columns}
                     toolbarType="upper"
@@ -67,6 +69,7 @@ function useDashboardSelect(currentDashboardId: any) {
 }
 
 const EstadisticaDashboardView = () => {
+    const { t } = useTranslation();
     const routeParams = useParams();
     const [firstDashboard, setFirstDashboard] = useState<any>(null);
     const idFromFirstDashboard: string | null =
@@ -124,20 +127,18 @@ const EstadisticaDashboardView = () => {
                     severity="warning"
                     action={
                         <Button onClick={returnToDefaultDashboardAndClear}>
-                            {/* TODO */}
-                            Tornar al tauler per defecte
+                            {t('page.dashboards.alert.tornarTauler')}
                         </Button>
                     }
                 >
-                    El tauler de control no existeix.
+                    {t('page.dashboards.alert.notExists')}
                 </Alert>
             );
-        // TODO
-        else return <Alert severity="error">Error al carregar el tauler de control.</Alert>;
+        else return <Alert severity="error">{t('page.dashboards.alert.carregar')}.</Alert>;
     }
 
     if (dashboardId == null && firstDashboard === NO_DASHBOARD_FOUND)
-        return <Alert severity="warning">No hi ha cap tauler de control definit. </Alert>; // TODO
+        return <Alert severity="warning">{t('page.dashboards.alert.notDefined')}</Alert>;
 
     return (
         <>

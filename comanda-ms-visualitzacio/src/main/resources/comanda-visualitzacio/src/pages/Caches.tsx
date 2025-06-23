@@ -114,7 +114,7 @@ const Caches: React.FC = () => {
             rowHideDeleteButton
             rowAdditionalActions={[
                 {
-                    title: 'Buidar',
+                    title: t('page.caches.buidar.label'),
                     icon: 'delete',
                     onClick: onDeleteClick,
                 },

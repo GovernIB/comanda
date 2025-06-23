@@ -12,6 +12,7 @@ import { ErrorBoundaryFallback } from '../../pages/SalutAppInfo.tsx';
 import { Box } from '@mui/material';
 import 'react-grid-layout/css/styles.css';
 import './react-resizable-custom.css';
+import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
 
 const CustomGridLayout = WidthProvider(Responsive);
 
@@ -25,6 +26,10 @@ const GraficChartWrapper = React.memo(({ dashboardWidget }) => {
 
 const TaulaChartWrapper = React.memo(({ dashboardWidget }) => {
     return <TaulaWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
+});
+
+const TitolChartWrapper = React.memo(({ dashboardWidget }) => {
+    return <TitolWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
 });
 
 function ChartsOverviewDemo(props) {
@@ -120,7 +125,7 @@ const getMinDimensionsByType = (type: WidgetType) => {
     }
 };
 
-type WidgetType = 'SIMPLE' | 'GRAFIC' | 'TAULA';
+type WidgetType = 'SIMPLE' | 'GRAFIC' | 'TAULA' | 'TITOL';
 
 const isValidWidgetType = (type: string): type is WidgetType => {
     return type === 'SIMPLE' || type === 'GRAFIC' || type === 'TAULA';
@@ -333,6 +338,12 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                             case 'TAULA':
                                                 return (
                                                     <TaulaChartWrapper
+                                                        dashboardWidget={dashboardWidget}
+                                                    />
+                                                );
+                                            case 'TITOL':
+                                                return (
+                                                    <TitolChartWrapper
                                                         dashboardWidget={dashboardWidget}
                                                     />
                                                 );
