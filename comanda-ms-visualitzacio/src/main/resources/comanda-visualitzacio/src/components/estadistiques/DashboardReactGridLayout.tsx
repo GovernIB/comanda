@@ -128,7 +128,7 @@ const getMinDimensionsByType = (type: WidgetType) => {
 type WidgetType = 'SIMPLE' | 'GRAFIC' | 'TAULA' | 'TITOL';
 
 const isValidWidgetType = (type: string): type is WidgetType => {
-    return type === 'SIMPLE' || type === 'GRAFIC' || type === 'TAULA';
+    return type === 'SIMPLE' || type === 'GRAFIC' || type === 'TAULA' || type === 'TITOL';
 };
 
 export type GridLayoutItem = {

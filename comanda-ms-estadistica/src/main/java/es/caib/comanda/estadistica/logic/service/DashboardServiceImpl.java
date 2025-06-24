@@ -88,6 +88,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 dashboartTitols = dashboard.getTitols().stream()
                         .map(titol -> {
                             InformeWidgetTitolItem informeTitol = InformeWidgetTitolItem.builder()
+                                    .dashboardTitolId(titol.getId())
                                     .tipus(WidgetTipus.TITOL)
                                     .titol(titol.getTitol())
                                     .subtitol(titol.getSubtitol())
