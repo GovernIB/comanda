@@ -435,6 +435,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
         patch: patchDashboardItem,
         create: createDashboardItem,
     } = useResourceApiService('dashboardItem');
+    const {
+        isReady: apiDashboardTitolIsReady,
+        patch: patchDashboardTitol,
+    } = useResourceApiService('dashboardTitol');
     const { temporalMessageShow, t: tLib, goBack } = useBaseAppContext();
     const {
         dashboard,
@@ -494,16 +498,20 @@ const EstadisticaDashboardEdit: React.FC = () => {
             );
 
             if (newDashboardItem === undefined) {
-                console.error( t('page.dashboards.action.patchItem.warning', oldDashboardItem) );
+                console.error(t('page.dashboards.action.patchItem.warning', oldDashboardItem));
             } else if (!isEqual(oldDashboardItem, newDashboardItem)) {
-                const patchPromise = patchDashboardItem(oldDashboardItem.id, {
+                const patchArgs = {
                     data: {
                         posX: newDashboardItem.x,
                         posY: newDashboardItem.y,
                         width: newDashboardItem.w,
                         height: newDashboardItem.h,
                     },
-                });
+                };
+                const isTitol = newDashboardItem.type === 'TITOL';
+                const patchPromise = !isTitol
+                    ? patchDashboardItem(oldDashboardItem.id, patchArgs)
+                    : patchDashboardTitol(oldDashboardItem.id, patchArgs);
                 promises.push(patchPromise);
             }
         });
@@ -611,7 +619,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             icon: 'title',
                                             title: t('page.dashboards.action.llistarTitle.label'),
                                             resourceName: 'dashboardTitol',
-                                            form: <AfegirTitolFormContent/>,
+                                            form: <AfegirTitolFormContent />,
                                             baseColumns: [
                                                 {
                                                     field: 'titol',
@@ -656,20 +664,25 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         <ListItemIcon>
                                             <Icon fontSize="small">widgets</Icon>
                                         </ListItemIcon>
-                                        <ListItemText>{t('page.dashboards.action.addWidget.label')}</ListItemText>
+                                        <ListItemText>
+                                            {t('page.dashboards.action.addWidget.label')}
+                                        </ListItemText>
                                     </MenuItem>
                                     <MenuItem onClick={openCreateTitolForm}>
                                         <ListItemIcon>
                                             <Icon fontSize="small">title</Icon>
                                         </ListItemIcon>
-                                        <ListItemText>{t('page.dashboards.action.afegirTitle.label')}</ListItemText>
+                                        <ListItemText>
+                                            {t('page.dashboards.action.afegirTitle.label')}
+                                        </ListItemText>
                                     </MenuItem>
                                 </ButtonMenu>
                             </Box>
                         </MuiToolbar>
                     }
                 >
-                    {dashboardWidgets && (
+                    {/* Se espera a tener los datos a mostrar y a todas las APIs que puedan ser llamadas por onGridLayoutItemsChange */}
+                    {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
                         <DashboardReactGridLayout
                             dashboardId={dashboard.id}
                             dashboardWidgets={dashboardWidgets}
