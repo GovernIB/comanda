@@ -53,6 +53,7 @@ import ButtonMenu from '../components/ButtonMenu.tsx';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
+import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
 
 const EntornAppFilterContent = () => {
     const { data } = useFormContext();
@@ -280,7 +281,7 @@ const defaultSizeAndPosition = {
     height: 3,
 };
 
-const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns, onDelete }) => {
+const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseColumns, onDelete }) => {
     const { isReady: apiIsReady, delete: apiDelete } = useResourceApiService(resourceName);
     const { t } = useTranslation();
     // @ts-ignore
@@ -332,7 +333,10 @@ const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns
                 height={500}
                 resourceName={resourceName}
                 filter={`dashboard.id : ${dashboardId}`}
+                popupEditFormDialogResourceTitle={''}
                 rowHideUpdateButton
+                popupEditUpdateActive
+                popupEditFormContent={form}
                 columns={[
                     ...baseColumns,
                     {
@@ -353,6 +357,12 @@ const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns
                 rowActionsColumnProps={{ width: 10 }}
                 rowAdditionalActions={[
                     {
+                        title: tLib('datacommon.update.title'),
+                        icon: "edit",
+                        clickShowUpdateDialog: true,
+                        hidden: !form,
+                    },
+                    {
                         title: tLib('datacommon.delete.title'),
                         icon: 'delete',
                         onClick: onDeleteClick,
@@ -369,8 +379,8 @@ const AfegirTitolFormContent = () => {
     const { data } = useFormContext();
     const { t } = useTranslation();
 
-    return (
-        <Grid container spacing={2}>
+    return (<Grid container spacing={2}>
+        <Grid container spacing={2} size={8}>
             <Grid size={12}>
                 <FormField name="titol" />
             </Grid>
@@ -384,13 +394,13 @@ const AfegirTitolFormContent = () => {
                 <FormField name="midaFontSubtitol" />
             </Grid>
             <Grid size={6}>
-                <FormField name="colorTitol" />
+                <FormField name="colorTitol" type={"color"} />
             </Grid>
             <Grid size={6}>
-                <FormField name="colorSubtitol" />
+                <FormField name="colorSubtitol" type={"color"} />
             </Grid>
             <Grid size={6}>
-                <FormField name="colorFons" />
+                <FormField name="colorFons" type={"color"} />
             </Grid>
             <Grid size={4} sx={{
                 minHeight: "53px", // TODO Evitar layout shift
@@ -400,7 +410,7 @@ const AfegirTitolFormContent = () => {
             {data?.mostrarVora ? (
                 <>
                     <Grid size={4}>
-                        <FormField name="colorVora" />
+                        <FormField name="colorVora" type={"color"} />
                     </Grid>
                     <Grid size={4}>
                         <FormField name="ampleVora" />
@@ -409,10 +419,12 @@ const AfegirTitolFormContent = () => {
             ) : (
                 <Grid size={8} />
             )}
-
-
         </Grid>
-    );
+
+        <Grid size={4}>
+            <TitolWidgetVisualization {...data}/>
+        </Grid>
+    </Grid>);
 };
 
 const EstadisticaDashboardEdit: React.FC = () => {
@@ -599,6 +611,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             icon: 'title',
                                             title: t('page.dashboards.action.llistarTitle.label'),
                                             resourceName: 'dashboardTitol',
+                                            form: <AfegirTitolFormContent/>,
                                             baseColumns: [
                                                 {
                                                     field: 'titol',
@@ -616,6 +629,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                                         title={item.title}
                                                         baseColumns={item.baseColumns}
                                                         resourceName={item.resourceName}
+                                                        form={item.form}
                                                         dashboardId={dashboardId}
                                                         onDelete={forceRefreshDashboardWidgets}
                                                     />,

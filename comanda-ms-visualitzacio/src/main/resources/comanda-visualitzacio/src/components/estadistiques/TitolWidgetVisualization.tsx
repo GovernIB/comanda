@@ -50,13 +50,13 @@ const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props
 
     const theme = useTheme();
     const {textColor, backgroundColor, voraColor, isWhiteBackground} = useWidgetColors(props, theme);
-    const bg = !isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colorFons}, ${createTransparentColor(backgroundColor, 0.75)})`;
+    const bg = isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colorFons}, ${createTransparentColor(backgroundColor, 0.75)})`;
     const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
 
     return (
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(backgroundColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
-            <Typography color={textColor} fontSize={midaFontTitol}>{titol}</Typography>
-            <Typography color={colorSubtitol} fontSize={midaFontSubtitol}>{subtitol}</Typography>
+            <Typography color={textColor} fontSize={`${midaFontTitol}px`}>{titol}</Typography>
+            <Typography color={colorSubtitol} fontSize={`${midaFontSubtitol}px`}>{subtitol}</Typography>
         </Paper>
     );
 }

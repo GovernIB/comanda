@@ -322,7 +322,6 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
                                     {(() => {
                                         switch (item.type) {
-                                            // TODO Completar
                                             case 'SIMPLE':
                                                 return (
                                                     <SimpleChartWrapper
