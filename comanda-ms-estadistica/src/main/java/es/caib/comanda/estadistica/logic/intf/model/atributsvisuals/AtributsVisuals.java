@@ -29,6 +29,8 @@ public abstract class AtributsVisuals implements Serializable {
     @Size(max = 8)
     protected String colorVora;
     protected Integer ampleVora;
+    protected Integer midaFontTitol;
+    protected Integer midaFontDescripcio;
 
     public abstract AtributsVisuals merge(AtributsVisuals other);
 

@@ -44,6 +44,12 @@ export interface SimpleWidgetVisualizationProps {
     errorMsg?: string;
     errorTrace?: string;
     onClick?: () => void;
+
+    midaFontTitol?: number,
+    midaFontDescripcio?: number,
+    midaFontValor?: number,
+    midaFontUnitats?: number,
+    midaFontCanviPercentual?: number,
 }
 
 // Components
@@ -51,7 +57,13 @@ const WidgetTitle: React.FC<{
     titol: string;
     entornCodi: string;
     loading?: boolean;
-}> = ({titol, entornCodi, loading}) => {
+    midaFontTitol?: number;
+}> = ({titol, entornCodi, loading, midaFontTitol}) => {
+
+    const titleEstils = {
+        ...estils.titleText,
+        fontSize: midaFontTitol ?`${midaFontTitol}px` :estils.titleText.fontSize
+    }
 
     return (
         <Box sx={estils.titleContainer}>
@@ -64,7 +76,7 @@ const WidgetTitle: React.FC<{
                 </>
             ) : (
                 <>
-                    <Typography sx={estils.titleText}>{titol}</Typography>
+                    <Typography sx={titleEstils}>{titol}</Typography>
                     <Box sx={estils.iconContainer}>
                         <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
                     </Box>
@@ -74,52 +86,73 @@ const WidgetTitle: React.FC<{
     );
 };
 
-const WidgetContent: React.FC<{ valor: string | number; unitat: string; preview: boolean; loading?: boolean }> = ({
+const WidgetContent: React.FC<{ valor: string | number; unitat: string; preview: boolean; loading?: boolean, midaFontValor?:number, midaFontUnitats?:number }> = ({
     valor,
     unitat,
     preview,
-    loading
-}) => (
-    <Box sx={estils.contentContainer}>
+    loading,
+    midaFontValor,
+    midaFontUnitats,
+}) => {
+    const valorEstils = {
+        ...estils.valueText(preview),
+        fontSize: midaFontValor ?`${midaFontValor}px` :estils.valueText(preview).fontSize
+    }
+    const unitatEstils = {
+        ...estils.unitText(preview),
+        fontSize: midaFontUnitats ?`${midaFontUnitats}px` :estils.unitText(preview).fontSize
+    }
+
+    return <Box sx={estils.contentContainer}>
         {loading ? (
             <>
                 <Box sx={{...estils.contentText(preview), width: '10em'}}>
-                    <Skeleton width="100%" height={80} />
+                    <Skeleton width="100%" height={80}/>
                 </Box>
                 <Box sx={{...estils.contentText(preview), width: '4em'}}>
-                    <Skeleton width="100%" height={20} />
+                    <Skeleton width="100%" height={20}/>
                 </Box>
             </>
         ) : (
             <>
-                <Box sx={estils.contentText(preview)}><Typography sx={estils.valueText(preview)}>{valor}</Typography></Box>
-                <Box sx={estils.contentText(preview)}><Typography sx={estils.unitText(preview)}>{unitat}</Typography></Box>
+                <Box sx={estils.contentText(preview)}><Typography sx={valorEstils}>{valor}</Typography></Box>
+                <Box sx={estils.contentText(preview)}><Typography sx={unitatEstils}>{unitat}</Typography></Box>
             </>
         )}
     </Box>
-);
+};
 
-const WidgetFooter: React.FC<{ descripcio: string; canviPercentual: string; textColor: string; preview: boolean; loading?: boolean }> = ({
+const WidgetFooter: React.FC<{ descripcio: string; canviPercentual: string; textColor: string; preview: boolean; loading?: boolean, midaFontDescripcio?: number, midaFontCanviPercentual?: number }> = ({
     descripcio,
     canviPercentual,
     textColor,
     preview,
-    loading
-}) => (
-    <Box sx={estils.footerContainer}>
+    loading,
+    midaFontDescripcio,
+    midaFontCanviPercentual,
+}) => {
+    const descEstils = {
+        ...estils.descText(textColor),
+        fontSize: midaFontDescripcio ?`${midaFontDescripcio}px` :estils.descText(textColor).fontSize
+    }
+    const canviPercentualEstils = {
+        ...estils.percText(textColor),
+        fontSize: midaFontCanviPercentual ?`${midaFontCanviPercentual}px` :estils.percText(textColor).fontSize
+    }
+    return <Box sx={estils.footerContainer}>
         {loading ? (
             <>
-                <Skeleton width="60%" height={24} />
-                {canviPercentual && <Skeleton width="20%" height={24} />}
+                <Skeleton width="60%" height={24}/>
+                {canviPercentual && <Skeleton width="20%" height={24}/>}
             </>
         ) : (
             <>
-                <Typography sx={estils.descText(textColor)}>{descripcio}</Typography>
-                {canviPercentual && (<Typography sx={estils.percText(textColor)}>{canviPercentual}</Typography>)}
+                <Typography sx={descEstils}>{descripcio}</Typography>
+                {canviPercentual && (<Typography sx={canviPercentualEstils}>{canviPercentual}</Typography>)}
             </>
         )}
     </Box>
-);
+};
 
 const useWidgetColors = (props: SimpleWidgetVisualizationProps, theme: any) => {
     const {
@@ -168,6 +201,11 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
         errorMsg,
         errorTrace,
         onClick,
+        midaFontTitol,
+        midaFontDescripcio,
+        midaFontValor,
+        midaFontUnitats,
+        midaFontCanviPercentual,
     } = props;
 
     const theme = useTheme();
@@ -191,7 +229,7 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
 
     return (
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
-            <WidgetTitle titol={titol} entornCodi={entornCodi} loading={loading}/>
+            <WidgetTitle titol={titol} entornCodi={entornCodi} loading={loading} midaFontTitol={midaFontTitol}/>
 
             {error ? (
                 // Error content
@@ -213,8 +251,8 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
             ) : (
                 // Normal content
                 <>
-                    <WidgetContent valor={formattedValue} unitat={unitat} preview={preview} loading={loading}/>
-                    <WidgetFooter descripcio={descripcio} canviPercentual={canviPercentual} textColor={highlightTextColor} preview={preview} loading={loading}/>
+                    <WidgetContent valor={formattedValue} midaFontValor={midaFontValor} unitat={unitat} midaFontUnitats={midaFontUnitats} preview={preview} loading={loading}/>
+                    <WidgetFooter descripcio={descripcio} midaFontDescripcio={midaFontDescripcio} canviPercentual={canviPercentual} midaFontCanviPercentual={midaFontCanviPercentual} textColor={highlightTextColor} preview={preview} loading={loading}/>
                     {!loading && <Icon sx={estils.icon(preview, iconColor, iconBgColor)}>{snakeCaseIcona}</Icon>}
                 </>
             )}

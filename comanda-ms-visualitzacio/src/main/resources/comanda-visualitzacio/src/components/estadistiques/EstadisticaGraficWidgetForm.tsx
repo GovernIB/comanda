@@ -46,6 +46,8 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         heatmapColors: data.heatmapColors,
         heatmapMinValue: data.heatmapMinValue,
         heatmapMaxValue: data.heatmapMaxValue,
+        midaFontTitol: data.midaFontTitol,
+        midaFontDescripcio: data.midaFontDescripcio,
     }), [data])
 
     const isMostrarVora: boolean = data?.mostrarVora;
@@ -256,6 +258,10 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                         <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="heatmapMaxValue" label="Valor màxim" type="number" required={false} /></Grid>
                     </>
                 )}
+
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració de la mida de font</Typography></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontTitol" label={"Mida de la font del títol"} type="number" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontDescripcio" label={"Mida de la font de la descripció"} type="number" required={false} /></Grid>
             </Grid>
         );
     }

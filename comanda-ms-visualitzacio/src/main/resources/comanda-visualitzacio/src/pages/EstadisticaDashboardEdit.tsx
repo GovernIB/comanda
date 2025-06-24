@@ -53,6 +53,7 @@ import ButtonMenu from '../components/ButtonMenu.tsx';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
+import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
 
 const EntornAppFilterContent = () => {
     const { data } = useFormContext();
@@ -280,7 +281,7 @@ const defaultSizeAndPosition = {
     height: 3,
 };
 
-const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns, onDelete }) => {
+const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseColumns, onDelete, onUpdate }) => {
     const { isReady: apiIsReady, delete: apiDelete } = useResourceApiService(resourceName);
     const { t } = useTranslation();
     // @ts-ignore
@@ -332,7 +333,13 @@ const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns
                 height={500}
                 resourceName={resourceName}
                 filter={`dashboard.id : ${dashboardId}`}
+                popupEditFormDialogResourceTitle={''}
                 rowHideUpdateButton
+                popupEditUpdateActive
+                popupEditFormContent={form}
+                popupEditFormComponentProps={{
+                    onUpdateSuccess: onUpdate,
+                }}
                 columns={[
                     ...baseColumns,
                     {
@@ -353,6 +360,12 @@ const ListWidgetDialogContent = ({ title, resourceName, dashboardId, baseColumns
                 rowActionsColumnProps={{ width: 10 }}
                 rowAdditionalActions={[
                     {
+                        title: tLib('datacommon.update.title'),
+                        icon: 'edit',
+                        clickShowUpdateDialog: true,
+                        hidden: !form,
+                    },
+                    {
                         title: tLib('datacommon.delete.title'),
                         icon: 'delete',
                         onClick: onDeleteClick,
@@ -369,8 +382,8 @@ const AfegirTitolFormContent = () => {
     const { data } = useFormContext();
     const { t } = useTranslation();
 
-    return (
-        <Grid container spacing={2}>
+    return (<Grid container spacing={2}>
+        <Grid container spacing={2} size={8}>
             <Grid size={12}>
                 <FormField name="titol" />
             </Grid>
@@ -384,13 +397,13 @@ const AfegirTitolFormContent = () => {
                 <FormField name="midaFontSubtitol" />
             </Grid>
             <Grid size={6}>
-                <FormField name="colorTitol" />
+                <FormField name="colorTitol" type={"color"} />
             </Grid>
             <Grid size={6}>
-                <FormField name="colorSubtitol" />
+                <FormField name="colorSubtitol" type={"color"} />
             </Grid>
             <Grid size={6}>
-                <FormField name="colorFons" />
+                <FormField name="colorFons" type={"color"} />
             </Grid>
             <Grid size={4} sx={{
                 minHeight: "53px", // TODO Evitar layout shift
@@ -400,7 +413,7 @@ const AfegirTitolFormContent = () => {
             {data?.mostrarVora ? (
                 <>
                     <Grid size={4}>
-                        <FormField name="colorVora" />
+                        <FormField name="colorVora" type={"color"} />
                     </Grid>
                     <Grid size={4}>
                         <FormField name="ampleVora" />
@@ -409,10 +422,12 @@ const AfegirTitolFormContent = () => {
             ) : (
                 <Grid size={8} />
             )}
-
-
         </Grid>
-    );
+
+        <Grid size={4}>
+            <TitolWidgetVisualization {...data}/>
+        </Grid>
+    </Grid>);
 };
 
 const EstadisticaDashboardEdit: React.FC = () => {
@@ -423,6 +438,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
         patch: patchDashboardItem,
         create: createDashboardItem,
     } = useResourceApiService('dashboardItem');
+    const {
+        isReady: apiDashboardTitolIsReady,
+        patch: patchDashboardTitol,
+    } = useResourceApiService('dashboardTitol');
     const { temporalMessageShow, t: tLib, goBack } = useBaseAppContext();
     const {
         dashboard,
@@ -482,16 +501,20 @@ const EstadisticaDashboardEdit: React.FC = () => {
             );
 
             if (newDashboardItem === undefined) {
-                console.error( t('page.dashboards.action.patchItem.warning', oldDashboardItem) );
+                console.error(t('page.dashboards.action.patchItem.warning', oldDashboardItem));
             } else if (!isEqual(oldDashboardItem, newDashboardItem)) {
-                const patchPromise = patchDashboardItem(oldDashboardItem.id, {
+                const patchArgs = {
                     data: {
                         posX: newDashboardItem.x,
                         posY: newDashboardItem.y,
                         width: newDashboardItem.w,
                         height: newDashboardItem.h,
                     },
-                });
+                };
+                const isTitol = newDashboardItem.type === 'TITOL';
+                const patchPromise = !isTitol
+                    ? patchDashboardItem(oldDashboardItem.id, patchArgs)
+                    : patchDashboardTitol(oldDashboardItem.id, patchArgs);
                 promises.push(patchPromise);
             }
         });
@@ -599,6 +622,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             icon: 'title',
                                             title: t('page.dashboards.action.llistarTitle.label'),
                                             resourceName: 'dashboardTitol',
+                                            form: <AfegirTitolFormContent />,
                                             baseColumns: [
                                                 {
                                                     field: 'titol',
@@ -616,8 +640,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                                         title={item.title}
                                                         baseColumns={item.baseColumns}
                                                         resourceName={item.resourceName}
+                                                        form={item.form}
                                                         dashboardId={dashboardId}
                                                         onDelete={forceRefreshDashboardWidgets}
+                                                        onUpdate={forceRefreshDashboardWidgets}
                                                     />,
                                                     messageDialogButtons,
                                                     {
@@ -642,20 +668,25 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         <ListItemIcon>
                                             <Icon fontSize="small">widgets</Icon>
                                         </ListItemIcon>
-                                        <ListItemText>{t('page.dashboards.action.addWidget.label')}</ListItemText>
+                                        <ListItemText>
+                                            {t('page.dashboards.action.addWidget.label')}
+                                        </ListItemText>
                                     </MenuItem>
                                     <MenuItem onClick={openCreateTitolForm}>
                                         <ListItemIcon>
                                             <Icon fontSize="small">title</Icon>
                                         </ListItemIcon>
-                                        <ListItemText>{t('page.dashboards.action.afegirTitle.label')}</ListItemText>
+                                        <ListItemText>
+                                            {t('page.dashboards.action.afegirTitle.label')}
+                                        </ListItemText>
                                     </MenuItem>
                                 </ButtonMenu>
                             </Box>
                         </MuiToolbar>
                     }
                 >
-                    {dashboardWidgets && (
+                    {/* Se espera a tener los datos a mostrar y a todas las APIs que puedan ser llamadas por onGridLayoutItemsChange */}
+                    {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
                         <DashboardReactGridLayout
                             dashboardId={dashboard.id}
                             dashboardWidgets={dashboardWidgets}

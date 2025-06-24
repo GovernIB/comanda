@@ -28,8 +28,8 @@ const TaulaChartWrapper = React.memo(({ dashboardWidget }) => {
     return <TaulaWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
 });
 
-const TitolChartWrapper = React.memo(({ dashboardWidget }) => {
-    return <TitolWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
+const TitolChartWrapper = React.memo(({ dashboardTitol }) => {
+    return <TitolWidgetVisualization {...dashboardTitol} {...dashboardTitol.atributsVisuals} />;
 });
 
 function ChartsOverviewDemo(props) {
@@ -128,7 +128,7 @@ const getMinDimensionsByType = (type: WidgetType) => {
 type WidgetType = 'SIMPLE' | 'GRAFIC' | 'TAULA' | 'TITOL';
 
 const isValidWidgetType = (type: string): type is WidgetType => {
-    return type === 'SIMPLE' || type === 'GRAFIC' || type === 'TAULA';
+    return type === 'SIMPLE' || type === 'GRAFIC' || type === 'TAULA' || type === 'TITOL';
 };
 
 export type GridLayoutItem = {
@@ -152,7 +152,7 @@ export const useMapDashboardItems = (dashboardWidgets) => {
     return useMemo(
         () =>
             dashboardWidgets?.map((widget: any) => ({
-                id: String(widget.dashboardItemId),
+                id: String(widget.dashboardItemId ?? widget.dashboardTitolId),
                 x: widget.posX,
                 y: widget.posY,
                 w: widget.width,
@@ -315,12 +315,14 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         const dashboardWidget = dashboardWidgets.find(
                             (dashboardWidget) => String(dashboardWidget.dashboardItemId) === item.id
                         );
+                        const dashboardTitol = dashboardWidgets.find(
+                            (dashboardWidget) => String(dashboardWidget.dashboardTitolId) === item.id
+                        );
                         return (
                             <CustomGridItemComponent key={item.id} editable={editable}>
                                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
                                     {(() => {
                                         switch (item.type) {
-                                            // TODO Completar
                                             case 'SIMPLE':
                                                 return (
                                                     <SimpleChartWrapper
@@ -342,7 +344,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                             case 'TITOL':
                                                 return (
                                                     <TitolChartWrapper
-                                                        dashboardWidget={dashboardWidget}
+                                                        dashboardTitol={dashboardTitol}
                                                     />
                                                 );
                                         }

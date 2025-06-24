@@ -1,5 +1,5 @@
 import React from "react";
-import { Paper, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import estils from "./WidgetEstils.ts";
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
 import {useTheme} from "@mui/material/styles";
@@ -50,14 +50,23 @@ const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props
 
     const theme = useTheme();
     const {textColor, backgroundColor, voraColor, isWhiteBackground} = useWidgetColors(props, theme);
-    const bg = !isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colorFons}, ${createTransparentColor(backgroundColor, 0.75)})`;
+    const bg = isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colorFons}, ${createTransparentColor(backgroundColor, 0.75)})`;
     const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
 
+    const titleEstils = {
+        ...estils.titleText,
+        fontSize: midaFontTitol ?`${midaFontTitol}px` :estils.titleText.fontSize
+    }
+    const subtitolEstils = {
+        ...estils.descText(colorSubtitol || textColor),
+        fontSize: midaFontSubtitol ?`${midaFontSubtitol}px` :estils.descText(colorSubtitol || textColor).fontSize
+    }
+
     return (
-        <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(backgroundColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
-            <Typography color={textColor} fontSize={midaFontTitol}>{titol}</Typography>
-            <Typography color={colorSubtitol} fontSize={midaFontSubtitol}>{subtitol}</Typography>
-        </Paper>
+        <Box onClick={onClick} sx={estils.paperContainer(backgroundColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
+            <Typography sx={titleEstils}>{titol}</Typography>
+            <Typography sx={subtitolEstils}>{subtitol}</Typography>
+        </Box>
     );
 }
 export default TitolWidgetVisualization;
