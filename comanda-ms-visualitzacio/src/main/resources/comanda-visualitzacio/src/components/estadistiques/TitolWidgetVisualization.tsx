@@ -1,5 +1,5 @@
 import React from "react";
-import { Paper, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import estils from "./WidgetEstils.ts";
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
 import {useTheme} from "@mui/material/styles";
@@ -54,10 +54,10 @@ const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props
     const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
 
     return (
-        <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(backgroundColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
+        <Box onClick={onClick} sx={estils.paperContainer(backgroundColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
             <Typography color={textColor} fontSize={`${midaFontTitol}px`}>{titol}</Typography>
             <Typography color={colorSubtitol} fontSize={`${midaFontSubtitol}px`}>{subtitol}</Typography>
-        </Paper>
+        </Box>
     );
 }
 export default TitolWidgetVisualization;
