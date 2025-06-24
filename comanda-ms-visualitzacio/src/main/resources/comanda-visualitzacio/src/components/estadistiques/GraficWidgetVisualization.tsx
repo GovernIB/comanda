@@ -200,7 +200,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
     // Render the appropriate chart based on the type
     const renderChart = () => {
-        console.log('Tipus gràfic', tipusGrafic);
         switch (tipusGrafic) {
             case 'BAR_CHART':
                 return renderBarChart();
@@ -224,13 +223,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     // Render a bar chart
     const renderBarChart = () => {
         // Extract data keys
-        console.log('dades', dades);
         const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
-        console.log('discriminador', discriminador);
         const dataKeys = dades.length > 0
             ? Object.keys(dades[0]).filter(key => key !== discriminador)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
             : [];
-        console.log('dataKeys', dataKeys);
         // Construïm el `dataset` utilitzat pel gràfic. Aquí simplement copiem la matriu de dades.
         // const dataset = [...dades];
         const dataset = dades.map((item) => ({
@@ -240,7 +236,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 return acc;
             }, {}),
         }));
-        console.log('dataset:', dataset);
 
         // Prepare series for MUI X-Charts
         const series = dataKeys.map((key, index) => ({
@@ -249,7 +244,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             color: paletaColors[index % paletaColors.length],
             stack: barStacked ? 'stack' : undefined,
         }));
-        console.log('series', series);
 
         // Prepare xAxis categories from data
         const xAxis = barHorizontal
@@ -261,9 +255,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             ? {scaleType: 'band', data: dades.map((item) => item[discriminador])} // Si és horitzontal, l'eix Y té categories
             : {scaleType: 'linear'}; // Si no és horitzontal, l'eix Y té valors numèrics
         const yAxisData = barHorizontal && llegendaX ? {...yAxis, label: llegendaX} : yAxis;
-
-        console.log('xAxisData', xAxisData);
-        console.log('yAxisData', yAxisData);
 
         const grid = barHorizontal ?
             mostrarReticula ? { vertical: true, } : { vertical: false, }
@@ -291,14 +282,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     // Render a line chart
     const renderLineChart = () => {
         // Extract data keys
-        console.log('dades', dades);
         const datakey: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
-        console.log('datakey', datakey);
         const dataKeys = dades.length > 0
             ? Object.keys(dades[0]).filter(key => key !== datakey)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
             : [];
-        console.log('dataKeys', dataKeys);
-        console.log('Tipus de lineWidth abans del map:', typeof lineWidth);
         // Prepare series for MUI X-Charts
         const series = dataKeys.map((key, index) => ({
             dataKey: key,
@@ -308,7 +295,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             showMark: lineShowPoints,
             area: area,
         }));
-        console.log('series', series);
 
         // Prepare xAxis categories from data
         const xAxisData = [{
@@ -317,7 +303,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             label: llegendaX,
             // data: dades.map(d => d[datakey]),
         }];
-        console.log('xAxisData', xAxisData);
 
         const grid = mostrarReticula
             ? {
@@ -390,7 +375,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 faded: { innerRadius: 20, additionalRadius: -15, color: 'gray' },
             },
         ];
-        console.log('series', series);
         return (
             <Box sx={{ width: '100%', height: chartHeight }}>
                 <PieChart

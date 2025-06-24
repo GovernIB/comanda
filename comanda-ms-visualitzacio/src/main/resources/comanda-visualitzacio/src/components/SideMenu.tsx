@@ -242,7 +242,6 @@ export const Menu: React.FC<MenuProps & { onClose?: () => void }> = (props) => {
     const smallHeader = useSmallHeader();
     const [open, setOpen] = React.useState<boolean>(false);
     React.useEffect(() => {
-        console.log('Open', open);
         setOpen(o => !o);
     }, [iconClicked]);
     React.useEffect(() => {

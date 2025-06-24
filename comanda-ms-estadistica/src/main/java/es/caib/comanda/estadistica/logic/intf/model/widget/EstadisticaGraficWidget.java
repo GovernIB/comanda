@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.intf.model.widget;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.annotation.Nulls;
+import es.caib.comanda.estadistica.back.intf.validation.ValidGraficWidget;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
@@ -85,8 +86,9 @@ import java.util.List;
         quickFilterFields = { "titol", "descripcio" },
         descriptionField = "titol"
 )
+@ValidGraficWidget
 public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
-// TODO: Afegir validador
+
     // Tipus de vista a generar
     @NotNull
     private TipusGraficEnum tipusGrafic;
@@ -118,5 +120,7 @@ public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseRe
     @Transient
     @JsonSetter(nulls = Nulls.SKIP)
     private TableColumnsEnum agregacio;
-
+    @Transient
+    @JsonSetter(nulls = Nulls.SKIP)
+    private PeriodeUnitat unitatAgregacio;
 }

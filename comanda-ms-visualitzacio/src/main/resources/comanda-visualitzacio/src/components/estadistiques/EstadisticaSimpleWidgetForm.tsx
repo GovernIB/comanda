@@ -63,7 +63,6 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
     // }, [isReady]);
 
     const generateOnChange = (name: string, fieldName: string)  => ((value: any) => {
-        console.log(name, value);
         // dataDispatchAction({
         //     type: FormFieldDataActionType.FIELD_CHANGE,
         //     payload: { fieldName: fieldName, value: {

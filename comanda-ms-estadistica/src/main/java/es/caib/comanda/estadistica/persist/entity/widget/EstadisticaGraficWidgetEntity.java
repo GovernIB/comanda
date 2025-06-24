@@ -22,7 +22,6 @@ import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import java.util.List;
 
 
@@ -53,8 +52,8 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
     @Enumerated(EnumType.STRING)
     private TipusGraficDataEnum tipusDades;
 
-    @OneToOne(mappedBy = "widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private IndicadorTaulaEntity indicadorInfo;
+//    @OneToOne(mappedBy = "widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    private IndicadorTaulaEntity indicadorInfo;
 
 //    // Format dels valors a mostrar: NO_MOSTRAR, NUMERIC, PERCENTATGE
 //    @Column(name = "tipus_valors", length = 16, nullable = false)

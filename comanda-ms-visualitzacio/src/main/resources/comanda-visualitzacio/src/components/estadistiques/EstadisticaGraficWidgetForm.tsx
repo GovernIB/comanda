@@ -66,19 +66,15 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
     const isDosIndicadors: boolean = dataType === 'DOS_INDICADORS';
     const tipusDadesOcultar = useMemo((): string[] => {
         if (isPieTypeVisible || isScatterTypeVisible || isHeatTypeVisible) {
-            console.log("['UN_INDICADOR', 'DOS_INDICADORS']");
             return ['UN_INDICADOR', 'DOS_INDICADORS'];
         }
         if (isBarTypeVisible || isLineTypeVisible) {
-            console.log("['DOS_INDICADORS']");
             return ['DOS_INDICADORS'];
         }
         if (isSparkLineTypeVisible) {
-            console.log("['DOS_INDICADORS', 'UN_INDICADOR_AMB_DESCOMPOSICIO', 'VARIS_INDICADORS']");
             return ['DOS_INDICADORS', 'UN_INDICADOR_AMB_DESCOMPOSICIO', 'VARIS_INDICADORS'];
         }
         if (isGaugeTypeVisible) {
-            console.log("['UN_INDICADOR', 'VARIS_INDICADORS']");
             return ['UN_INDICADOR', 'VARIS_INDICADORS'];
         }
         return [];
@@ -87,7 +83,6 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
     const [appPalette, setAppPalette] = useState(data.colorsPaleta);
     const handlePaletteChange = (newPalette: string[]) => {
         const paletteString = newPalette.join(',');
-        console.log('La paleta ha canviat:', newPalette);
         setAppPalette(paletteString);
         dataDispatchAction({
             type: FormFieldDataActionType.FIELD_CHANGE,
@@ -138,8 +133,9 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             { (isUnIndicador || isUnIndicadorAmbDescomposicio || isDosIndicadors) && (
                                 <>
                                     <Grid size={4}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
-                                    <Grid size={6}><FormField name="titolIndicador" /></Grid>
+                                    <Grid size={4}><FormField name="titolIndicador" /></Grid>
                                     <Grid size={2}><FormField name="agregacio" hiddenEnumValues={['FIRST_SEEN', 'LAST_SEEN']}/></Grid>
+                                    <Grid size={2}><FormField name="unitatAgregacio" disabled={data.agregacio !== 'AVERAGE'}/></Grid>
                                 </>
                             )}
                             { isUnIndicadorAmbDescomposicio && (
@@ -150,10 +146,10 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             )}
                             { isVarisIndicadors && (
                                 <Grid size={12}>
-                                    <ColumnesTable name="columnes"
+                                    <ColumnesTable name="indicadorsInfo"
                                                    label="Indicadors"
                                                    value={data.indicadorsInfo}
-                                                   mostrarUnitat={false}
+                                                   mostrarUnitat={true}
                                                    hiddenAgregacioValues={['FIRST_SEEN', 'LAST_SEEN']}
                                                    onChange={(value) => {
                                         dataDispatchAction({

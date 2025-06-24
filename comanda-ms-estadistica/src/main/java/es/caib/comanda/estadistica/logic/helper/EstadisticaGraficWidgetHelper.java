@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -49,7 +51,7 @@ public class EstadisticaGraficWidgetHelper {
                         columna.setWidget(entity);
                         columna.setTitol(columnaResource.getTitol());
                         columna.setAgregacio(columnaResource.getAgregacio());
-                        columna.setUnitatAgregacio(columnaResource.getUnitatAgregacio());
+                        columna.setUnitatAgregacio(TableColumnsEnum.AVERAGE.equals(columnaResource.getAgregacio()) ? columnaResource.getUnitatAgregacio() : null);
                         if (columnaResource.getIndicador() != null && columnaResource.getIndicador().getId() != null) {
                             indicadorRepository.findById(columnaResource.getIndicador().getId())
                                     .ifPresent(columna::setIndicador);
@@ -57,15 +59,18 @@ public class EstadisticaGraficWidgetHelper {
                         return columna;
                     }).collect(Collectors.toList());
             indicadorTaulaRepository.saveAll(indicadors);
+            entity.setIndicadorsInfo(indicadors);
         } else {
-            IndicadorTaulaEntity indicadorTaulaEntity = entity.getIndicadorInfo();
+            IndicadorTaulaEntity indicadorTaulaEntity = entity.getIndicadorsInfo() == null || entity.getIndicadorsInfo().isEmpty()
+                    ? null
+                    : entity.getIndicadorsInfo().get(0);
             if (indicadorTaulaEntity == null) {
                 indicadorTaulaEntity = new IndicadorTaulaEntity();
                 indicadorTaulaEntity.setWidget(entity);
             }
             indicadorTaulaEntity.setTitol(resource.getTitolIndicador());
             indicadorTaulaEntity.setAgregacio(resource.getAgregacio());
-            indicadorTaulaEntity.setUnitatAgregacio(resource.getTempsAgrupacio());
+            indicadorTaulaEntity.setUnitatAgregacio(TableColumnsEnum.AVERAGE.equals(resource.getAgregacio()) ? resource.getUnitatAgregacio() : null);
             if (resource.getIndicador() != null && resource.getIndicador().getId() != null) {
                 if (Objects.isNull(indicadorTaulaEntity.getIndicadorId()) ||
                         !Objects.equals(indicadorTaulaEntity.getIndicadorId(), resource.getIndicador().getId())) {
@@ -74,7 +79,7 @@ public class EstadisticaGraficWidgetHelper {
                 }
             }
             indicadorTaulaEntity = indicadorTaulaRepository.save(indicadorTaulaEntity);
-            entity.setIndicadorInfo(indicadorTaulaEntity);
+            entity.setIndicadorsInfo(List.of(indicadorTaulaEntity));
         }
 
         if (TipusGraficDataEnum.DOS_INDICADORS.equals(entity.getTipusDades())) {
@@ -100,13 +105,13 @@ public class EstadisticaGraficWidgetHelper {
                     }).collect(Collectors.toList());
             resource.setIndicadorsInfo(indicadorsResource);
         } else {
-            if (Objects.nonNull(entity.getIndicadorInfo()) && Objects.nonNull(entity.getIndicadorInfo().getIndicador())) {
-                IndicadorTaulaEntity indicadorTaula = entity.getIndicadorInfo();
+            if (entity.getIndicadorsInfo() != null && !entity.getIndicadorsInfo().isEmpty() && entity.getIndicadorsInfo().get(0) != null) {
+                IndicadorTaulaEntity indicadorTaula = entity.getIndicadorsInfo().get(0);
                 IndicadorEntity indicador = indicadorTaula.getIndicador();
                 resource.setIndicador(ResourceReference.toResourceReference(indicador.getId(), indicador.getCodi()));
                 resource.setTitolIndicador(indicadorTaula.getTitol());
                 resource.setAgregacio(indicadorTaula.getAgregacio());
-                resource.setTempsAgrupacio(indicadorTaula.getUnitatAgregacio());
+                resource.setUnitatAgregacio(indicadorTaula.getUnitatAgregacio());
             }
         }
 

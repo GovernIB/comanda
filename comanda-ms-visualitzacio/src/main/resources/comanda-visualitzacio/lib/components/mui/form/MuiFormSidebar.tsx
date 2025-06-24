@@ -69,10 +69,6 @@ export const MuiFormSidebar: React.FC<FormSidebarProps> = (props) => {
             const insideDrawer = event.x > (window.innerWidth - drawerWidth) && event.y > 64;
             const insideDialog = (event.target as any)?.closest('.MuiDialog-container') != null;
             const insideAutocompletePopper = (event.target as any)?.closest('.MuiAutocomplete-popper') != null;
-            /*console.log('>>> target', event.target)
-            console.log('>>> insideDrawer', insideDrawer)
-            console.log('>>> insideDialog', insideDialog)
-            console.log('>>> insideAutocompletePopper', insideAutocompletePopper)*/
             !insideDrawer && !insideDialog && !insideAutocompletePopper && setOpen(false);
         }
     };

@@ -188,7 +188,10 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
 
     // Find error for a specific field
     const getFieldError = (fieldName: string): FormFieldError | undefined => {
-        return validationErrors.find(error => error.field === fieldName);
+        // Replace first '.' with '[' and second '.' with '].'
+        const formattedFieldName = fieldName.replace(/\./, '[').replace(/\./, '].');
+        const error = fieldErrors.find(error => error.field === formattedFieldName);
+        return error ? error : validationErrors.find(error => error.field === fieldName);
     };
 
     // Handle field change for a specific row and field
@@ -352,6 +355,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                         value={columna.indicador}
                                         onChange={(value) => handleFieldChange(index, 'indicador', value)}
                                         field={fields?.find((field) => field.name === "indicador")}
+                                        fieldError={getFieldError(`${name}.${index}.indicador`)}
                                         componentProps={{
                                             onBlur: () => handleFieldBlur(`${name}.${index}.indicador`)
                                         }}
@@ -396,7 +400,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                             componentProps={{
                                                 onBlur: () => handleFieldBlur(`${name}.${index}.unitatAgregacio`)
                                             }}
-                                            disabled={data.columnes?.[index]?.agregacio !== 'AVERAGE'}
+                                            disabled={columnes?.[index]?.agregacio !== 'AVERAGE'}
                                         />
                                     </TableCell>
                                 )}

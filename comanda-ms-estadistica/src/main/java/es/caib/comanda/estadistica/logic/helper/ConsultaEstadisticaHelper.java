@@ -206,7 +206,7 @@ public class ConsultaEstadisticaHelper {
 
         if (UN_INDICADOR.equals(widget.getTipusDades()) || UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades()) || DOS_INDICADORS.equals(widget.getTipusDades())) {
 
-            IndicadorTaulaEntity indicadorInfo = widget.getIndicadorInfo();
+            IndicadorTaulaEntity indicadorInfo = widget.getIndicadorsInfo() != null ? widget.getIndicadorsInfo().get(0) : null;
             IndicadorAgregacio indicadorAgregacio = indicadorInfo != null ?
                     IndicadorAgregacio.builder()
                             .indicadorCodi(indicadorInfo.getIndicador().getCodi())

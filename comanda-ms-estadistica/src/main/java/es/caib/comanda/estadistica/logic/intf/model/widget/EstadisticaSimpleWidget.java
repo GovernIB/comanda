@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.widget;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import es.caib.comanda.estadistica.back.intf.validation.ValidSimpleWidget;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
@@ -61,6 +62,7 @@ import javax.validation.constraints.Size;
         quickFilterFields = { "titol", "descripcio" },
         descriptionField = "titol"
 )
+@ValidSimpleWidget
 public class EstadisticaSimpleWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
 
     //    @NotNull

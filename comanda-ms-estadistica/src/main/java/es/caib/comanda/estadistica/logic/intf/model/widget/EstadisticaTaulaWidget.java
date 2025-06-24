@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.intf.model.widget;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.annotation.Nulls;
+import es.caib.comanda.estadistica.back.intf.validation.ValidTaulaWidget;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
@@ -64,6 +65,7 @@ import java.util.List;
         quickFilterFields = { "titol", "descripcio" },
         descriptionField = "titol"
 )
+@ValidTaulaWidget
 public class EstadisticaTaulaWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
 
     // Camps en cas de vist tipus TABLE

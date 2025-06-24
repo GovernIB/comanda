@@ -52,7 +52,6 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
     }), [data]);
 
     const generateOnChange = (name: string, fieldName: string)  => ((value: any) => {
-        console.log(name, value);
         // dataDispatchAction({
         //     type: FormFieldDataActionType.FIELD_CHANGE,
         //     payload: { fieldName: fieldName, value: {
@@ -99,7 +98,11 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                     <Grid size={6}><FormField name="dimensioAgrupacio" advancedSearchColumns={columnesDimensio} /></Grid>
                     <Grid size={6}><FormField name="titolAgrupament" /></Grid>
                     <Grid size={12}>
-                        <ColumnesTable name="columnes" label="Columnes de la taula" value={data.columnes} onChange={(value) => {
+                        <ColumnesTable name="columnes"
+                                       label="Columnes de la taula"
+                                       value={data.columnes}
+                                       mostrarUnitat={true}
+                                       onChange={(value) => {
                             dataDispatchAction({
                                 type: FormFieldDataActionType.FIELD_CHANGE,
                                 payload: { fieldName: "columnes", value }

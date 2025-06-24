@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
@@ -45,7 +46,7 @@ public class EstadisticaTaulaWidgetHelper {
                     columna.setWidget(entity);
                     columna.setTitol(columnaResource.getTitol());
                     columna.setAgregacio(columnaResource.getAgregacio());
-                    columna.setUnitatAgregacio(columnaResource.getUnitatAgregacio());
+                    columna.setUnitatAgregacio(TableColumnsEnum.AVERAGE.equals(columnaResource.getAgregacio()) ? columnaResource.getUnitatAgregacio() : null);
                     if (columnaResource.getIndicador() != null && columnaResource.getIndicador().getId() != null) {
                         indicadorRepository.findById(columnaResource.getIndicador().getId())
                                 .ifPresent(columna::setIndicador);
