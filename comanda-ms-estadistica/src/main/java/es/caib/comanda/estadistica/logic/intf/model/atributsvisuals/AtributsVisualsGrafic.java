@@ -70,6 +70,8 @@ public class AtributsVisualsGrafic extends AtributsVisuals implements Serializab
         }
 
         AtributsVisualsGrafic other = (AtributsVisualsGrafic) otherAtributsVisuals;
+        this.midaFontTitol = mergeField(this.midaFontTitol, other.getMidaFontTitol());
+        this.midaFontDescripcio = mergeField(this.midaFontDescripcio, other.getMidaFontDescripcio());
         this.colorText = mergeField(this.colorText, other.getColorText());
         this.colorFons = mergeField(this.colorFons, other.getColorFons());
         this.mostrarVora = mergeField(this.mostrarVora, other.getMostrarVora());

@@ -34,10 +34,8 @@ public class AtributsVisualsSimple extends AtributsVisuals implements Serializab
     @Size(max = 8)
     private String colorTextDestacat;
 
-    private Integer midaFontTitol;
     private Integer midaFontValor;
     private Integer midaFontUnitats;
-    private Integer midaFontDescripcio;
     private Integer midaFontCanviPercentual;
 
     public AtributsVisuals merge(AtributsVisuals otherAtributsVisuals) {
@@ -46,6 +44,8 @@ public class AtributsVisualsSimple extends AtributsVisuals implements Serializab
         }
 
         AtributsVisualsSimple other = (AtributsVisualsSimple) otherAtributsVisuals;
+        this.midaFontTitol = mergeField(this.midaFontTitol, other.getMidaFontTitol());
+        this.midaFontDescripcio = mergeField(this.midaFontDescripcio, other.getMidaFontDescripcio());
         this.icona = mergeField(this.icona, other.getIcona());
         this.colorText = mergeField(this.colorText, other.getColorText());
         this.colorFons = mergeField(this.colorFons, other.getColorFons());
@@ -55,6 +55,9 @@ public class AtributsVisualsSimple extends AtributsVisuals implements Serializab
         this.mostrarVora = mergeField(this.mostrarVora, other.getMostrarVora());
         this.colorVora = mergeField(this.colorVora, other.getColorVora());
         this.ampleVora = mergeField(this.ampleVora, other.getAmpleVora());
+        this.midaFontValor = mergeField(this.midaFontValor, other.getMidaFontValor());
+        this.midaFontUnitats = mergeField(this.midaFontUnitats, other.getMidaFontUnitats());
+        this.midaFontCanviPercentual = mergeField(this.midaFontCanviPercentual, other.getMidaFontCanviPercentual());
 
         return this;
     }
