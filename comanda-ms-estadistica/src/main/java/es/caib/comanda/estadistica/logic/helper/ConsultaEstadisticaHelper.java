@@ -388,7 +388,7 @@ public class ConsultaEstadisticaHelper {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
         var agrupacioElement = files.get(0).get(agrupacioKey);
         var isNumeric = isNumeric(agrupacioElement);
-        var isDate = idDate(agrupacioElement);
+        var isDate = isDate(agrupacioElement);
 
         return files.stream()
                 .collect(Collectors.groupingBy(f -> f.get(agrupacioKey)))
@@ -412,10 +412,11 @@ public class ConsultaEstadisticaHelper {
     }
 
     private boolean isNumeric(String valor) {
+        if (valor == null || valor.isEmpty()) return false;
         return valor.matches("-?\\d+(\\.\\d+)?");
     }
-    private boolean idDate(String valor) {
-
+    private boolean isDate(String valor) {
+        if (valor == null || valor.isEmpty()) return false;
         try {
             // Intenta analitzar la data; si fallés, llençarà una excepció
             LocalDate.parse(valor, DMYYYY_FORMATTER);
@@ -448,17 +449,6 @@ public class ConsultaEstadisticaHelper {
                 .collect(Collectors.toList());
     }
 
-
-    private Double toDouble(String valor) {
-        if (valor == null || valor.isEmpty()) {
-            return null;
-        }
-        try {
-            return Double.parseDouble(valor);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
 
     private InformeWidgetItem getDadesWidgetTaula(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) throws ReportGenerationException {
         EstadisticaTaulaWidgetEntity widget = (EstadisticaTaulaWidgetEntity)dashboardItem.getWidget();
@@ -557,14 +547,14 @@ public class ConsultaEstadisticaHelper {
                 || periodePrevi == null || periodePrevi.start == null || periodePrevi.end == null) {
             return null;
         }
-        Double resultatActual = stringToDouble(valorConsulta);
+        Double resultatActual = toDouble(valorConsulta);
         if (resultatActual == null) {
             return null;
         }
 
         // Calcula el valor pel període previ
         String valorConsultaPrevia = calculateValorSimple(widget, periodePrevi, entornAppId);
-        Double resultatPrevi = stringToDouble(valorConsultaPrevia);
+        Double resultatPrevi = toDouble(valorConsultaPrevia);
         if (resultatPrevi == null) {
             return null;
         }
@@ -619,7 +609,7 @@ public class ConsultaEstadisticaHelper {
         return dimensionFilters;
     }
 
-    private Double stringToDouble(String value) {
+    private Double toDouble(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
         }

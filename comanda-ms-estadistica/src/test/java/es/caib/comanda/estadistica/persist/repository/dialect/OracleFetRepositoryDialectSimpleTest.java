@@ -82,7 +82,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                                 "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
                                 "    WHERE f.entorn_app_id = :entornAppId " +
                                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "GROUP BY t.anualitat, t.mes)")
+                                "GROUP BY t.anualitat, t.trimestre, t.mes)")
                 ),
 
                 // Test 3: Single dimension with single value, PERCENTAGE aggregation, SETMANA period
@@ -180,7 +180,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                             "    WHERE f.entorn_app_id = :entornAppId " +
                             "    AND t.data BETWEEN :dataInici AND :dataFi " +
                             "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
-                            "GROUP BY t.anualitat, t.mes)")
+                            "GROUP BY t.anualitat, t.trimestre, t.mes)")
                 )
         );
     }

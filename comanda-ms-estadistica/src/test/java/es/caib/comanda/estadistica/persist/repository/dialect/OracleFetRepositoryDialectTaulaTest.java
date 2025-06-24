@@ -82,7 +82,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                         ),
                         "area",
                         removeConsecutiveSpaces("SELECT agrupacio, " +
-                                "SUM(sum_fets_visites) AS total_sum_visites," +
+                                "SUM(sum_fets_visites) AS total_sum_visites, " +
                                 "AVG(sum_fets_sessions) AS average_result_sessions " +
                                 "FROM ( " +
                                 "   SELECT t.anualitat, t.trimestre, t.mes, " +
@@ -108,7 +108,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                         ),
                         "usuari",
                         removeConsecutiveSpaces("SELECT agrupacio, " +
-                                "SUM(sum_fets_visites) AS total_sum_visites," +
+                                "SUM(sum_fets_visites) AS total_sum_visites, " +
                                 "CASE WHEN SUM(sum_fets_sessions) > 0 THEN MIN(data) ELSE NULL END AS first_seen_sessions " +
                                 "FROM ( " +
                                 "   SELECT t.data as data, " +
@@ -135,7 +135,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                         ),
                         "aplicacio",
                         removeConsecutiveSpaces("SELECT agrupacio, " +
-                                "SUM(sum_fets_visites) AS total_sum_visites," +
+                                "SUM(sum_fets_visites) AS total_sum_visites, " +
                                 "CASE WHEN SUM(sum_fets_sessions) > 0 THEN MAX(data) ELSE NULL END AS last_seen_sessions " +
                                 "   FROM ( " +
                                 "   SELECT t.data as data, " +
@@ -165,7 +165,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                         ),
                         "departament",
                         removeConsecutiveSpaces("SELECT agrupacio, " +
-                                "SUM(sum_fets_visites) AS total_sum_visites," +
+                                "SUM(sum_fets_visites) AS total_sum_visites, " +
                                 "SUM(sum_fets_sessions) AS total_sum_sessions " +
                                 "FROM ( " +
                                 "   SELECT t.data as data, " +
