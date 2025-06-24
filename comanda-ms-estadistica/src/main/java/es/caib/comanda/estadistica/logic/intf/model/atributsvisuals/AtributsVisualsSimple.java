@@ -34,6 +34,11 @@ public class AtributsVisualsSimple extends AtributsVisuals implements Serializab
     @Size(max = 8)
     private String colorTextDestacat;
 
+    private Integer midaFontTitol;
+    private Integer midaFontValor;
+    private Integer midaFontUnitats;
+    private Integer midaFontDescripcio;
+    private Integer midaFontCanviPercentual;
 
     public AtributsVisuals merge(AtributsVisuals otherAtributsVisuals) {
         if (otherAtributsVisuals == null || !(otherAtributsVisuals instanceof AtributsVisualsSimple)) {
