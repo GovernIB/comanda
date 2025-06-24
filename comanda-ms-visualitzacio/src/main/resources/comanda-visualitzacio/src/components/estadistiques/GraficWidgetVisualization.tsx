@@ -93,6 +93,9 @@ export interface GraficWidgetVisualizationProps {
     errorMsg?: string;
     errorTrace?: string;
     onClick?: () => void;
+
+    midaFontTitol?: number,
+    midaFontDescripcio?: number,
 }
 
 interface GraficWidgetColors {
@@ -162,6 +165,9 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         errorMsg,
         errorTrace,
         onClick,
+
+        midaFontTitol,
+        midaFontDescripcio,
     } = props;
 
     const useWidgetColors = (props: GraficWidgetVisualizationProps, theme: any): GraficWidgetColors => {
@@ -482,6 +488,15 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         );
     };
 
+    const titleEstils = {
+        ...estils.titleText,
+        fontSize: midaFontTitol ?`${midaFontTitol}px` :estils.titleText.fontSize
+    }
+    const descEstils = {
+        ...estils.descText(colors.textColor),
+        fontSize: midaFontDescripcio ?`${midaFontDescripcio}px` :estils.descText(colors.textColor).fontSize
+    }
+
     return (
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)}>
             {/* Titol */}
@@ -495,7 +510,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     </>
                 ) : (
                     <>
-                        <Typography sx={estils.titleText} >{titol}</Typography>
+                        <Typography sx={titleEstils} >{titol}</Typography>
                         <Box sx={estils.iconContainer}>
                             <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
                         </Box>
@@ -539,7 +554,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                         {loading ? (
                             <Skeleton width="60%" height={24} />
                         ) : (
-                            <Typography sx={estils.descText(colors.textColor)}>{descripcio}</Typography>
+                            <Typography sx={descEstils}>{descripcio}</Typography>
                         )}
                     </Box>
                 </>

@@ -49,6 +49,8 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
         paginada: data.paginada,
         columnesEstils: data.columnesEstils || [],
         cellesDestacades: data.cellesDestacades || [],
+        midaFontTitol: data.midaFontTitol,
+        midaFontDescripcio: data.midaFontDescripcio,
     }), [data]);
 
     const generateOnChange = (name: string, fieldName: string)  => ((value: any) => {
@@ -197,6 +199,10 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">Les cel·les destacades es configuren a través d'una estructura complexa. Utilitzeu el botó "Afegir cel·la destacada" per afegir-ne una de nova.</Typography>
                     <Typography variant="body2" color="#b71c1c">(Pendent de desenvolupament)</Typography>
                 </Grid>
+
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració de la mida de font</Typography></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontTitol" label={"Mida de la font del títol"} type="number" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontDescripcio" label={"Mida de la font de la descripció"} type="number" required={false} /></Grid>
             </Grid>
         );
     }

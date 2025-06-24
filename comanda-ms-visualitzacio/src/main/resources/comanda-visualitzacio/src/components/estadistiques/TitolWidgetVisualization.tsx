@@ -53,10 +53,19 @@ const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props
     const bg = isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colorFons}, ${createTransparentColor(backgroundColor, 0.75)})`;
     const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
 
+    const titleEstils = {
+        ...estils.titleText,
+        fontSize: midaFontTitol ?`${midaFontTitol}px` :estils.titleText.fontSize
+    }
+    const subtitolEstils = {
+        ...estils.descText(colorSubtitol || textColor),
+        fontSize: midaFontSubtitol ?`${midaFontSubtitol}px` :estils.descText(colorSubtitol || textColor).fontSize
+    }
+
     return (
         <Box onClick={onClick} sx={estils.paperContainer(backgroundColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
-            <Typography color={textColor} fontSize={`${midaFontTitol}px`}>{titol}</Typography>
-            <Typography color={colorSubtitol} fontSize={`${midaFontSubtitol}px`}>{subtitol}</Typography>
+            <Typography sx={titleEstils}>{titol}</Typography>
+            <Typography sx={subtitolEstils}>{subtitol}</Typography>
         </Box>
     );
 }

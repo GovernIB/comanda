@@ -30,6 +30,11 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
         mostrarVora: data.mostrarVora || false,
         colorVora: data.colorVora,
         ampleVora: data.ampleVora,
+        midaFontTitol: data.midaFontTitol,
+        midaFontDescripcio: data.midaFontDescripcio,
+        midaFontValor: data.midaFontValor,
+        midaFontUnitats: data.midaFontUnitats,
+        midaFontCanviPercentual: data.midaFontCanviPercentual,
     }), [data]);
 
     const isMostrarVora: boolean = data?.mostrarVora;
@@ -128,6 +133,13 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleVora" label="Ample de la vora" type="number" required={false} onChange={generateOnChange("ampleVora", "atributsVisuals")} /></Grid>
                     </>
                 )}
+
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració de la mida de font</Typography></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontTitol" label={"Mida de la font del títol"} type="number" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontDescripcio" label={"Mida de la font de la descripció"} type="number" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontValor" label={"Mida de la font del valor"} type="number" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontUnitats" label={"Mida de la font de les unitats"} type="number" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontCanviPercentual" label={"Mida de la font del canvi percentual"} type="number" required={false}/></Grid>
             </Grid>
         );
     }

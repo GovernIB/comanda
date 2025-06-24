@@ -113,6 +113,9 @@ export interface TaulaWidgetVisualizationProps {
     errorMsg?: string;
     errorTrace?: string;
     onClick?: () => void;
+
+    midaFontTitol?: number,
+    midaFontDescripcio?: number,
 }
 
 const useWidgetColors = (props: TaulaWidgetVisualizationProps, theme: any): TaulaWidgetColors => {
@@ -209,6 +212,9 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         errorMsg,
         errorTrace,
         onClick,
+
+        midaFontTitol,
+        midaFontDescripcio,
     }
         = props;
 
@@ -293,6 +299,15 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         return value;
     };
 
+    const titleEstils = {
+        ...estils.titleText,
+        fontSize: midaFontTitol ?`${midaFontTitol}px` :estils.titleText.fontSize
+    }
+    const descEstils = {
+        ...estils.descText(colors.textColor),
+        fontSize: midaFontDescripcio ?`${midaFontDescripcio}px` :estils.descText(colors.textColor).fontSize
+    }
+
     return (
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)}>
             {/* Titol */}
@@ -306,7 +321,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                     </>
                 ) : (
                     <>
-                        <Typography sx={estils.titleText} >{titol}</Typography>
+                        <Typography sx={titleEstils} >{titol}</Typography>
                         <Box sx={estils.iconContainer}>
                             <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
                         </Box>
@@ -409,7 +424,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                         {loading ? (
                             <Skeleton width="60%" height={24} />
                         ) : (
-                            <Typography sx={estils.descText(colors.textColor)}>{descripcio}</Typography>
+                            <Typography sx={descEstils}>{descripcio}</Typography>
                         )}
                     </Box>
                 </>
