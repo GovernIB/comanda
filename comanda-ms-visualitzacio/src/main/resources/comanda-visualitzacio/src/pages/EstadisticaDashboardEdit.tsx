@@ -281,7 +281,7 @@ const defaultSizeAndPosition = {
     height: 3,
 };
 
-const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseColumns, onDelete }) => {
+const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseColumns, onDelete, onUpdate }) => {
     const { isReady: apiIsReady, delete: apiDelete } = useResourceApiService(resourceName);
     const { t } = useTranslation();
     // @ts-ignore
@@ -337,6 +337,9 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                 rowHideUpdateButton
                 popupEditUpdateActive
                 popupEditFormContent={form}
+                popupEditFormComponentProps={{
+                    onUpdateSuccess: onUpdate,
+                }}
                 columns={[
                     ...baseColumns,
                     {
@@ -358,7 +361,7 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                 rowAdditionalActions={[
                     {
                         title: tLib('datacommon.update.title'),
-                        icon: "edit",
+                        icon: 'edit',
                         clickShowUpdateDialog: true,
                         hidden: !form,
                     },
@@ -640,6 +643,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                                         form={item.form}
                                                         dashboardId={dashboardId}
                                                         onDelete={forceRefreshDashboardWidgets}
+                                                        onUpdate={forceRefreshDashboardWidgets}
                                                     />,
                                                     messageDialogButtons,
                                                     {
