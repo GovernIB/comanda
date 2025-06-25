@@ -414,13 +414,13 @@ const AfegirTitolFormContent = () => {
         </Grid>
         {data?.mostrarVora ? (
             <>
-                <Grid size={3}>
-                    <FormField name="mostrarVoraBottom" type={"checkbox"} />
-                </Grid>
-                <Grid size={4}>
+                {/*<Grid size={3}>*/}
+                {/*    <FormField name="mostrarVoraBottom" type={"checkbox"} /> TODO Desactivado hasta que se añada la columna en base de datos */}
+                {/*</Grid>*/}
+                <Grid size={6}>
                     <FormField name="colorVora" type={"color"} />
                 </Grid>
-                <Grid size={4}>
+                <Grid size={6}>
                     <FormField name="ampleVora" />
                 </Grid>
             </>
