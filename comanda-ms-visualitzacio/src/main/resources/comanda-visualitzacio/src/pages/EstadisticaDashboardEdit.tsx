@@ -383,50 +383,47 @@ const AfegirTitolFormContent = () => {
     const { t } = useTranslation();
 
     return (<Grid container spacing={2}>
-        <Grid container spacing={2} size={8}>
-            <Grid size={12}>
-                <FormField name="titol" />
-            </Grid>
-            <Grid size={12}>
-                <FormField name="subtitol" />
-            </Grid>
-            <Grid size={6}>
-                <FormField name="midaFontTitol" />
-            </Grid>
-            <Grid size={6}>
-                <FormField name="midaFontSubtitol" />
-            </Grid>
-            <Grid size={6}>
-                <FormField name="colorTitol" type={"color"} />
-            </Grid>
-            <Grid size={6}>
-                <FormField name="colorSubtitol" type={"color"} />
-            </Grid>
-            <Grid size={6}>
-                <FormField name="colorFons" type={"color"} />
-            </Grid>
-            <Grid size={4} sx={{
-                minHeight: "53px", // TODO Evitar layout shift
-            }}>
-                <FormField name="mostrarVora" />
-            </Grid>
-            {data?.mostrarVora ? (
-                <>
-                    <Grid size={4}>
-                        <FormField name="colorVora" type={"color"} />
-                    </Grid>
-                    <Grid size={4}>
-                        <FormField name="ampleVora" />
-                    </Grid>
-                </>
-            ) : (
-                <Grid size={8} />
-            )}
-        </Grid>
-
-        <Grid size={4}>
+        <Grid size={12}>
             <TitolWidgetVisualization {...data}/>
         </Grid>
+        <Grid size={12}>
+            <FormField name="titol" />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="subtitol" />
+        </Grid>
+        <Grid size={6}>
+            <FormField name="midaFontTitol" />
+        </Grid>
+        <Grid size={6}>
+            <FormField name="midaFontSubtitol" />
+        </Grid>
+        <Grid size={6}>
+            <FormField name="colorTitol" type={"color"} />
+        </Grid>
+        <Grid size={6}>
+            <FormField name="colorSubtitol" type={"color"} />
+        </Grid>
+        <Grid size={6}>
+            <FormField name="colorFons" type={"color"} />
+        </Grid>
+        <Grid size={4} sx={{
+            minHeight: "53px", // TODO Evitar layout shift
+        }}>
+            <FormField name="mostrarVora" />
+        </Grid>
+        {data?.mostrarVora ? (
+            <>
+                <Grid size={4}>
+                    <FormField name="colorVora" type={"color"} />
+                </Grid>
+                <Grid size={4}>
+                    <FormField name="ampleVora" />
+                </Grid>
+            </>
+        ) : (
+            <Grid size={8} />
+        )}
     </Grid>);
 };
 
