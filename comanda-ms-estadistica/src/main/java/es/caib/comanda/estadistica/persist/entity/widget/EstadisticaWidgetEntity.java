@@ -145,9 +145,9 @@ public abstract class EstadisticaWidgetEntity<R> extends BaseAuditableEntity<R> 
     @Enumerated(EnumType.STRING)
     protected PeriodeAbsolutTipus absolutTipus;
     // Si absolutTipus = DATE_RANGE (Rang de dates)
-    @Column(name = "absolut_data_inici")
+    @Column(name = "absolut_data_inici", columnDefinition = "DATE")
     protected LocalDate absolutDataInici;
-    @Column(name = "absolut_data_fi")
+    @Column(name = "absolut_data_fi", columnDefinition = "DATE")
     protected LocalDate absolutDataFi;
     // Si absolutTipus = SPECIFIC_PERIOD_OF_YEAR (Periode de temps)
     @Column(name = "absolut_any_referencia")
