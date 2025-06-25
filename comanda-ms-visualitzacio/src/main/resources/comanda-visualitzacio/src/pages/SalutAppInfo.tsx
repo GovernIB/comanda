@@ -126,6 +126,7 @@ const useAppData = (id: any) => {
                     size: 1,
                     sorts: ['data,desc'],
                     perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES', 'SAL_MISSATGES', 'SAL_DETALLS'],
+                    filter: 'entornAppId : ' + entornAppId,
                 };
                 return salutApiFind(findArgs);
             }).then(({ rows }) => {
