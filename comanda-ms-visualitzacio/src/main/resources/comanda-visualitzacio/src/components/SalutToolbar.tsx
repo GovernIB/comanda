@@ -13,6 +13,7 @@ import {
     Toolbar,
     useBaseAppContext,
 } from 'reactlib';
+import { Box } from '@mui/material';
 
 export type SalutToolbarProps = {
     title: string;
@@ -155,6 +156,35 @@ const AppDataRangeSelect: React.FC<any> = (props: { disabled?: boolean; onChange
     </FormControl>;
 }
 
+function formatTimeDifference(otherDate) {
+    const now = new Date();
+    const diffInMs = Math.abs(now.getTime() - otherDate.getTime());
+    const diffInSeconds = Math.floor(diffInMs / 1000);
+
+    if (diffInSeconds < 60) {
+        return `${diffInSeconds} s`;
+    } else {
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        return `${diffInMinutes} m`;
+    }
+}
+
+
+const useTimeUntilNextRefreshFormatted = (nextRefresh: Date | null) => {
+    const [timeUntilNextRefreshFormatted, setTimeUntilNextRefreshFormatted] = React.useState<
+        string | null
+    >(null);
+    React.useEffect(() => {
+        if (nextRefresh != null) {
+            const intervalId = setInterval(() => {
+                setTimeUntilNextRefreshFormatted(formatTimeDifference(nextRefresh))
+            }, 1000);
+            return () => clearInterval(intervalId);
+        }
+    }, [nextRefresh]);
+    return timeUntilNextRefreshFormatted;
+};
+
 export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const {
         title,
@@ -169,13 +199,22 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const theme = useTheme();
     const [refreshTimeoutMinutes, setRefreshTimeoutMinutes] = React.useState<number>();
     const [appDataRangeMinutes, setAppDataRangeMinutes] = React.useState<number>();
+    const [lastRefresh, setLastRefresh] = React.useState<Date | null>(null);
+    const [nextRefresh, setNextRefresh] = React.useState<Date | null>(null);
+    const timeUntilNextRefreshFormatted = useTimeUntilNextRefreshFormatted(nextRefresh);
     const {
         dataInici,
         dataFi,
         agrupacio,
     } = useReportInterval(appDataRangeMinutes);
     const refresh = (execAction?: boolean) => {
+        setLastRefresh(new Date());
         appDataRangeMinutes != null && onRefresh(dataInici, dataFi, agrupacio, execAction);
+    }
+    const updateNextRefresh = (refreshTimeout) => {
+        const nextRequestDate = new Date();
+        nextRequestDate.setTime(nextRequestDate.getTime() + refreshTimeout);
+        setNextRefresh(nextRequestDate);
     }
     React.useEffect(() => {
         // Refresca les dades quan es carrega la pàgina i quan es canvien les dates o l'agrupació
@@ -187,7 +226,9 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         // Refresca la informació periòdicament
         if (refreshTimeoutMinutes) {
             const timeoutMs = refreshTimeoutMinutes * 60 * 1000;
+            updateNextRefresh(timeoutMs);
             const intervalId = setInterval(() => {
+                updateNextRefresh(timeoutMs);
                 refresh();
             }, timeoutMs);
             return () => {
@@ -196,6 +237,25 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         }
     }, [refreshTimeoutMinutes, dataInici, dataFi, agrupacio]);
     const toolbarElementsWithPositions = [
+        {
+            position: 2,
+            element: (
+                <Box sx={{ mr: 2 }}>
+                    {lastRefresh != null && (
+                        <Typography sx={{ display: 'block' }} variant="caption">
+                            Últim refresc: <b>{lastRefresh.toLocaleTimeString()}</b>
+                        </Typography>
+                    )}
+                    {nextRefresh != null &&
+                        nextRefresh > new Date() &&
+                        timeUntilNextRefreshFormatted && (
+                            <Typography sx={{ display: 'block' }} variant="caption">
+                                Pròxim refresc en: <b>{timeUntilNextRefreshFormatted}</b>
+                            </Typography>
+                        )}
+                </Box>
+            ),
+        },
         {
             position: 2,
             element: <RefreshTimeoutSelect onChange={setRefreshTimeoutMinutes} disabled={!ready} />,
