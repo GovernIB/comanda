@@ -1,14 +1,20 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -40,8 +46,14 @@ import java.util.List;
 @NoArgsConstructor
 @ResourceConfig(
         quickFilterFields = { "nom", "descripcio" },
-        descriptionField = "nom")
+        descriptionField = "nom",
+        artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.DIMENSIO_FILTER, formClass = Dimensio.DimensioFilter.class)
+        }
+)
 public class Dimensio extends BaseResource<Long> {
+
+    public final static String DIMENSIO_FILTER = "dimensioFilter";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -56,5 +68,12 @@ public class Dimensio extends BaseResource<Long> {
     private Long entornAppId;
     private List<DimensioValor> valors;
 
-
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class DimensioFilter implements Serializable {
+        protected ResourceReference<Dimensio, Long> dimensio;
+    }
 }

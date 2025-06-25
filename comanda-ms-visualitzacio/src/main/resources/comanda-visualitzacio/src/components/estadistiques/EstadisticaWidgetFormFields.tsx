@@ -4,6 +4,8 @@ import * as React from "react";
 import Divider from "@mui/material/Divider";
 import { columnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from "react-i18next";
+import FormFieldAdvancedSearchFilters from '../FormFieldAdvancedSearchFilters.tsx';
+import { Box } from '@mui/material';
 
 const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data } = useFormContext();
@@ -54,7 +56,32 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
             <Grid size={12}><FormField name="titol" /></Grid>
             <Grid size={12}><FormField name="descripcio" type="textarea"/></Grid>
 
-            <Grid size={12}><FormField name="dimensionsValor" multiple advancedSearchColumns={columnesDimensioValor} /></Grid>
+            <Grid size={12}>
+                <FormFieldAdvancedSearchFilters
+                    name="dimensionsValor"
+                    advancedSearchFilterResourceName="dimensio"
+                    advancedSearchFilterCode="dimensioFilter"
+                    advancedSearchFilterContent={
+                        <Box sx={{ my: 1 }}>
+                            <FormField
+                                componentProps={{
+                                    size: 'small',
+                                }}
+                                name="dimensio"
+                            />
+                        </Box>
+                    }
+                    advancedSearchFilterBuilder={(data) =>
+                        data.dimensio ? `dimensio.id : ${data.dimensio.id}` : undefined
+                    }
+                    advancedSearchDataGridProps={{
+                        rowHeight: 30,
+                    }}
+                    advancedSearchDialogHeight={500}
+                    multiple
+                    advancedSearchColumns={columnesDimensioValor}
+                />
+            </Grid>
 
             <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.periode')}</Divider></Grid>
 
