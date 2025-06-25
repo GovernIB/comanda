@@ -14,6 +14,7 @@ export interface TitolWidgetVisualizationProps {
     colorFons?: string;
     onClick?: () => void;
     mostrarVora:boolean;
+    mostrarVoraBottom:boolean;
     colorVora?: string;
     ampleVora?: number;
 }
@@ -45,6 +46,7 @@ const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props
         colorFons,
         onClick,
         mostrarVora,
+        mostrarVoraBottom,
         ampleVora,
     } = props;
 
@@ -61,9 +63,14 @@ const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props
         ...estils.descText(colorSubtitol || textColor),
         fontSize: midaFontSubtitol ?`${midaFontSubtitol}px` :estils.descText(colorSubtitol || textColor).fontSize
     }
+    const borderStyle = {
+        ...estils.paperContainer(backgroundColor, bg, textColor, (mostrarVora && !mostrarVoraBottom), voraAmple, voraColor, onClick, theme),
+        borderBottom: (mostrarVora || mostrarVoraBottom) ? `${voraAmple}px solid ${voraColor}` : 'none',
+        borderRadius: (!mostrarVoraBottom) ?'.6rem' :'none',
+    }
 
     return (
-        <Box onClick={onClick} sx={estils.paperContainer(backgroundColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
+        <Box onClick={onClick} sx={borderStyle}>
             <Typography sx={titleEstils}>{titol}</Typography>
             <Typography sx={subtitolEstils}>{subtitol}</Typography>
         </Box>

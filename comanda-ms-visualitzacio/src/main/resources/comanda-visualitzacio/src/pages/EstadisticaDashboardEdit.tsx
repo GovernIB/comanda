@@ -407,13 +407,16 @@ const AfegirTitolFormContent = () => {
         <Grid size={6}>
             <FormField name="colorFons" type={"color"} />
         </Grid>
-        <Grid size={4} sx={{
+        <Grid size={3} sx={{
             minHeight: "53px", // TODO Evitar layout shift
         }}>
             <FormField name="mostrarVora" />
         </Grid>
         {data?.mostrarVora ? (
             <>
+                <Grid size={3}>
+                    <FormField name="mostrarVoraBottom" type={"checkbox"} />
+                </Grid>
                 <Grid size={4}>
                     <FormField name="colorVora" type={"color"} />
                 </Grid>
