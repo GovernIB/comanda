@@ -1,0 +1,172 @@
+[
+  {
+    "id": 1,
+    "temps": {
+      "id": 1
+    },
+    "dimensionsJson": {
+      "departament": "RRHH",
+      "aplicacio": "APP1",
+      "usuari": "user1"
+    },
+    "indicadorsJson": {
+      "visites": 10.0,
+      "temps_resposta": 2.5,
+      "errors": 1.0
+    },
+    "entornAppId": 1
+  },
+  {
+    "id": 2,
+    "temps": {
+      "id": 2
+    },
+    "dimensionsJson": {
+      "departament": "RRHH",
+      "aplicacio": "APP1",
+      "usuari": "user2"
+    },
+    "indicadorsJson": {
+      "visites": 15.0,
+      "temps_resposta": 1.8,
+      "errors": 0.0
+    },
+    "entornAppId": 1
+  },
+  {
+    "id": 3,
+    "temps": {
+      "id": 3
+    },
+    "dimensionsJson": {
+      "departament": "RRHH",
+      "aplicacio": "APP2",
+      "usuari": "user1"
+    },
+    "indicadorsJson": {
+      "visites": 8.0,
+      "temps_resposta": 3.2,
+      "errors": 2.0
+    },
+    "entornAppId": 1
+  },
+  {
+    "id": 4,
+    "temps": {
+      "id": 4
+    },
+    "dimensionsJson": {
+      "departament": "IT",
+      "aplicacio": "APP1",
+      "usuari": "user3"
+    },
+    "indicadorsJson": {
+      "visites": 20.0,
+      "temps_resposta": 1.5,
+      "errors": 0.0
+    },
+    "entornAppId": 1
+  },
+  {
+    "id": 5,
+    "temps": {
+      "id": 5
+    },
+    "dimensionsJson": {
+      "departament": "IT",
+      "aplicacio": "APP2",
+      "usuari": "user4"
+    },
+    "indicadorsJson": {
+      "visites": 12.0,
+      "temps_resposta": 2.0,
+      "errors": 1.0
+    },
+    "entornAppId": 1
+  },
+  {
+    "id": 6,
+    "temps": {
+      "id": 6
+    },
+    "dimensionsJson": {
+      "departament": "MARKETING",
+      "aplicacio": "APP3",
+      "usuari": "user5"
+    },
+    "indicadorsJson": {
+      "visites": 25.0,
+      "temps_resposta": 1.2,
+      "errors": 0.0
+    },
+    "entornAppId": 2
+  },
+  {
+    "id": 7,
+    "temps": {
+      "id": 7
+    },
+    "dimensionsJson": {
+      "departament": "MARKETING",
+      "aplicacio": "APP3",
+      "usuari": "user6"
+    },
+    "indicadorsJson": {
+      "visites": 18.0,
+      "temps_resposta": 1.7,
+      "errors": 1.0
+    },
+    "entornAppId": 2
+  },
+  {
+    "id": 8,
+    "temps": {
+      "id": 8
+    },
+    "dimensionsJson": {
+      "departament": "VENDES",
+      "aplicacio": "APP4",
+      "usuari": "user7"
+    },
+    "indicadorsJson": {
+      "visites": 30.0,
+      "temps_resposta": 1.0,
+      "errors": 0.0
+    },
+    "entornAppId": 2
+  },
+  {
+    "id": 9,
+    "temps": {
+      "id": 9
+    },
+    "dimensionsJson": {
+      "departament": "VENDES",
+      "aplicacio": "APP4",
+      "usuari": "user8"
+    },
+    "indicadorsJson": {
+      "visites": 22.0,
+      "temps_resposta": 1.3,
+      "errors": 1.0
+    },
+    "entornAppId": 2
+  },
+  {
+    "id": 10,
+    "temps": {
+      "id": 10
+    },
+    "dimensionsJson": {
+      "departament": "DIRECCIO",
+      "aplicacio": "APP5",
+      "usuari": "user9"
+    },
+    "indicadorsJson": {
+      "visites": 5.0,
+      "temps_resposta": 0.8,
+      "errors": 0.0
+    },
+    "entornAppId": 3
+  }
+]
