@@ -61,11 +61,20 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-lib</artifactId>
 			<version>${project.version}</version>
-<!--			Comentar per generar aplicació spring-boot  -->
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<profiles>
+		<profile>
+			<id>spring-boot</id>
+			<dependencies>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>comanda-lib</artifactId>
+					<version>${project.version}</version>
+				</dependency>
+			</dependencies>
+		</profile>
 		<profile>
 			<id>frontend</id>
 			<build>

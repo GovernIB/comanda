@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * Controlador per a verificar si l'aplicació està funcionant
- * 
+ *
  * @author Limit Tecnologies
  */
 @Hidden
@@ -42,6 +42,11 @@ public abstract class BaseUtilsController {
 		return ResponseEntity.ok().build();
 	}
 
+	@GetMapping(BaseConfig.AUTH_TOKEN_PATH)
+	public ResponseEntity<String> authToken() {
+		return ResponseEntity.ok().body(getAuthToken());
+	}
+
 	@GetMapping(BaseConfig.MANIFEST_PATH)
 	public ResponseEntity<String> manifest() throws IOException {
 		Map<String, Object> manifestProps = getManifestProperties();
@@ -56,6 +61,7 @@ public abstract class BaseUtilsController {
 				contentType(contentType).
 				body(response);
 	}
+
 	@GetMapping(BaseConfig.SYSENV_PATH)
 	public ResponseEntity<String> systemEnvironment(
 			@RequestParam(required = false) String format) {
@@ -120,6 +126,10 @@ public abstract class BaseUtilsController {
 			}
 		}
 		return props;
+	}
+
+	protected String getAuthToken() {
+		return null;
 	}
 
 	protected abstract boolean isReactAppMappedFrontProperty(String propertyName);
