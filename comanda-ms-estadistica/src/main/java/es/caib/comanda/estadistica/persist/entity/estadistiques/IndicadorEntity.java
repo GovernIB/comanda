@@ -7,6 +7,7 @@ import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,6 +45,7 @@ import javax.persistence.UniqueConstraint;
  *
  * @author Límit Tecnologies
  */
+@Slf4j
 @Entity
 @Table(
         name = BaseConfig.DB_PREFIX + "est_indicador",
@@ -67,4 +69,5 @@ public class IndicadorEntity extends BaseEntity<Indicador> {
     @Column(name = "format", length = 64)
     @Enumerated(EnumType.STRING)
     private Format format;
+
 }

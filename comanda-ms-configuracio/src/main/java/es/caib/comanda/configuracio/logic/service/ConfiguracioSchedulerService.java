@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -45,11 +47,24 @@ public class ConfiguracioSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
-        List<EntornAppEntity> entornAppsActives = entornAppRepository.findByActivaTrueAndAppActivaTrue();
-        entornAppsActives.forEach(this::programarTasca);
+        // Esperarem 1 minut a inicialitzar les tasques en segon pla
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.schedule(() -> {
+            try {
+                List<EntornAppEntity> entornAppsActives = entornAppRepository.findByActivaTrueAndAppActivaTrue();
+                entornAppsActives.forEach(this::programarTasca);
+            } finally {
+                executor.shutdown();
+            }
+        }, 1, TimeUnit.MINUTES);
     }
 
     public void programarTasca(EntornAppEntity entornApp) {
+        if (entornApp.getInfoInterval() == null || entornApp.getInfoInterval() <= 1) {
+            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getInfoInterval() + " no és un període vàlid.");
+            return;
+        }
+
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
 

@@ -3,11 +3,24 @@ package es.caib.comanda.ms.logic.service;
 import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
-import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
-import es.caib.comanda.ms.logic.intf.exception.*;
-import es.caib.comanda.ms.logic.intf.model.*;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
+import es.caib.comanda.ms.logic.intf.exception.FieldArtifactNotFoundException;
+import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
+import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
+import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
+import es.caib.comanda.ms.logic.intf.model.ExportField;
+import es.caib.comanda.ms.logic.intf.model.FieldArtifactType;
+import es.caib.comanda.ms.logic.intf.model.FieldOption;
+import es.caib.comanda.ms.logic.intf.model.ReportFileType;
+import es.caib.comanda.ms.logic.intf.model.Resource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.ms.logic.intf.util.StringUtil;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;
@@ -21,9 +34,13 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
 
@@ -36,7 +53,13 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -361,7 +384,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	@Override
-	@Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+	@Transactional(readOnly = true) //, propagation = Propagation.SUPPORTS)
 	public <P extends Serializable> List<?> artifactReportGenerateData(
 			ID id,
 			String code,

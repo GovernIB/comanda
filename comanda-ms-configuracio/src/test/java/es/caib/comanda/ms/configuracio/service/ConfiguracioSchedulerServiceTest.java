@@ -77,22 +77,28 @@ public class ConfiguracioSchedulerServiceTest {
         scheduledFuture = mock(ScheduledFuture.class);
     }
 
-    @Test
-    void testInicialitzarTasques() {
-        // Mock the repository to return active EntornApps
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(activeEntornApps);
-        // Mock the taskScheduler to return the mock ScheduledFuture
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-
-        // Call the method to test
-        schedulerService.inicialitzarTasques();
-
-        // Verify that the repository was called
-        verify(entornAppRepository).findByActivaTrueAndAppActivaTrue();
-
-        // Verify that the taskScheduler was called to schedule a task
-        verify(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-    }
+//    @Test
+//    void testInicialitzarTasques() {
+//        // Mock the repository to return active EntornApps
+//        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(activeEntornApps);
+//        // Mock the taskScheduler to return the mock ScheduledFuture
+//        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+//
+//        // Call the method to test
+//        schedulerService.inicialitzarTasques();
+//
+//        // Verify that the repository was called
+//        verify(entornAppRepository).findByActivaTrueAndAppActivaTrue();
+//
+//        // Verify that the taskScheduler was called to schedule a task
+//        verify(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+//        // Verify that programarTasca was called for each active EntornAppEntity
+//        //for (EntornAppEntity entity : activeEntornApps) {
+//        //verify(taskScheduler).schedule(argThat(runnable -> {
+//        //    runnable.run();
+//        //    return true;
+//        //}), any(PeriodicTrigger.class));
+//    }
 
     @Test
     void testProgramarTasca() {

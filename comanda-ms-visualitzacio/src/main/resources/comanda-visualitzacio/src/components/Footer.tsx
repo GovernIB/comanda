@@ -28,7 +28,7 @@ export const Footer: React.FC<AppFootProps> = (props) => {
     const [comandaVersion, setComandaVersion] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('/build-info.json')
+        fetch('build-info.json')
             .then((response) => response.json())
             .then((data) => {
                 setBuildTimestamp(data.buildTimestamp);

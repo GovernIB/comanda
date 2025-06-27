@@ -6,6 +6,7 @@ import es.caib.comanda.monitor.back.controller.MonitorController;
 import es.caib.comanda.ms.back.config.BaseHalFormsConfig;
 import es.caib.comanda.salut.back.controller.SalutController;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * Configuració de HAL-FORMS.
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Límit Tecnologies
  */
 @Configuration
+@EnableAspectJAutoProxy(proxyTargetClass = false)
 public class BackHalFormsConfig extends BaseHalFormsConfig {
 
 	@Override

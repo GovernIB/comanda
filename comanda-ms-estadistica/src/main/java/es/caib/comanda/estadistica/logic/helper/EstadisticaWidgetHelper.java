@@ -3,8 +3,10 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaWidget;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -33,6 +35,7 @@ public class EstadisticaWidgetHelper {
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final DimensioValorRepository dimensioValorRepository;
     private final CacheHelper cacheHelper;
+    private final DashboardItemRepository dashboardItemRepository;
 
     /** Sincronitza els valors de dimensió d'un widget estadístic entre el recurs rebut i l'entitat persistida.
         Afegeix noves associacions i elimina les que ja no hi són presents, modificant la relació. */
@@ -81,8 +84,21 @@ public class EstadisticaWidgetHelper {
         resource.setDimensionsValor(dimensionsValors);
     }
 
-    public void clearDashboardWidgetCache(Long widgetId) {
-        cacheHelper.evictCacheItemByPrefix("dashboardWidgetCache", widgetId + "_");
+    public void clearDashboardWidgetCacheByWidget(Long widgetId) {
+        try {
+            List<DashboardItemEntity> dashboardIds = dashboardItemRepository.findByWidgetId(widgetId);
+            if (dashboardIds == null || dashboardIds.isEmpty()) return;
+
+            dashboardIds.forEach(dashboardItem -> {
+                cacheHelper.evictCacheItemByPrefix("dashboardWidgetCache", dashboardItem.getId() + "_");
+            });
+        } catch (Exception e) {
+            log.error("Error en la crida a clearDashboardWidgetCacheByWidget: " + e.getMessage(), e);
+        }
+    }
+
+    public void clearDashboardWidgetCache(Long dashboardItemId) {
+        cacheHelper.evictCacheItemByPrefix("dashboardWidgetCache", dashboardItemId + "_");
     }
 
 }

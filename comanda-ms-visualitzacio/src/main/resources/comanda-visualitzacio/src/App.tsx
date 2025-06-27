@@ -98,7 +98,7 @@ export const App: React.FC = () => {
                 mr: 4,
                 borderRight: '2px solid #000',
             }}
-            title={<img style={{ height: '64px', verticalAlign: 'middle' }} src="/COM_DRA_COL.svg" alt="Logo de l'aplicació de Comanda" />}
+            title={<img style={{ height: '64px', verticalAlign: 'middle' }} src="COM_DRA_COL.svg" alt="Logo de l'aplicació de Comanda" />}
             version="0.1"
             availableLanguages={['ca', 'es']}
             menuEntries={menuEntries}

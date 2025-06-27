@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -47,11 +49,24 @@ public class SalutSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
-        List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
-        entornAppsActives.forEach(this::programarTasca);
+        // Esperarem 1 minut a inicialitzar les tasques en segon pla
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.schedule(() -> {
+            try {
+                List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
+                entornAppsActives.forEach(this::programarTasca);
+            } finally {
+                executor.shutdown();
+            }
+        }, 1, TimeUnit.MINUTES);
     }
 
     public void programarTasca(EntornApp entornApp) {
+        if (entornApp.getSalutInterval() == null || entornApp.getSalutInterval() <= 1) {
+            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getSalutInterval() + " no és un període vàlid.");
+            return;
+        }
+
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
 

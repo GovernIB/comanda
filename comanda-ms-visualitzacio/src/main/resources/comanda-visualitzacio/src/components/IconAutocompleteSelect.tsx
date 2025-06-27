@@ -42,7 +42,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
     const [iconAliases, setIconAliases] = useState<Record<string, string[]>>({});
 
     useEffect(() => {
-        fetch("/mui_icon_aliases_complete.json")
+        fetch("mui_icon_aliases_complete.json")
             .then((res) => res.json())
             .then((data) => setIconAliases(data))
             .catch((err) => console.error("Error carregant àlies d'icones:", err));

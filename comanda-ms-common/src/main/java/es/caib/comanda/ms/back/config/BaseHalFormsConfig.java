@@ -48,8 +48,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL_FORMS)
 public abstract class BaseHalFormsConfig {
 
-	@Autowired(required = false)
 	@Lazy
+	@Autowired(required = false)
 	private Set<ReadonlyResourceController> resourceControllers;
 
 	@Bean
@@ -62,17 +62,6 @@ public abstract class BaseHalFormsConfig {
 	}
 
 	protected abstract String[] getControllerPackages();
-
-//	@Bean
-//	HalFormsConfiguration halFormsConfiguration() {
-//		Set<Class<ReadonlyResourceController>> resourceControllerClasses = null;
-//		if (resourceControllers != null) {
-//			resourceControllerClasses = resourceControllers.stream().
-//					map(rc -> (Class<ReadonlyResourceController>) rc.getClass()).
-//					collect(Collectors.toSet());
-//		}
-//		return createHalFormsConfiguration(resourceControllerClasses);
-//	}
 
 	private HalFormsConfiguration createHalFormsConfiguration(
 			Set<Class<ReadonlyResourceController>> resourceControllerClasses) {

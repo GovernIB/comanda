@@ -11,13 +11,17 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -43,11 +47,24 @@ public class EstadisticaSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
-        List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
-        entornAppsActives.forEach(this::programarTasca);
+        // Esperarem 1 minut a inicialitzar les tasques en segon pla
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.schedule(() -> {
+            try {
+                List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
+                entornAppsActives.forEach(this::programarTasca);
+            } finally {
+                executor.shutdown();
+            }
+        }, 1, TimeUnit.MINUTES);
     }
 
     public void programarTasca(EntornApp entornApp) {
+        if (!CronExpression.isValidExpression(entornApp.getEstadisticaCron())) {
+            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getEstadisticaCron() + " no és un cron vàlid.");
+            return;
+        }
+
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
 

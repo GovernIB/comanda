@@ -30,7 +30,6 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetE
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
-import es.caib.comanda.ms.estadistica.model.Format;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -165,7 +164,7 @@ public class ConsultaEstadisticaHelper {
 
         EstadisticaSimpleWidgetEntity widget = (EstadisticaSimpleWidgetEntity)dashboardItem.getWidget();
         TableColumnsEnum agregacio = widget.getIndicadorInfo().getAgregacio();
-        Format format = widget.getIndicadorInfo().getIndicador().getFormat();
+//        Format format = widget.getIndicadorInfo().getIndicador().getFormat();
         boolean compararPeriodeAnterior = widget.isCompararPeriodeAnterior() && !TableColumnsEnum.FIRST_SEEN.equals(agregacio) && !TableColumnsEnum.LAST_SEEN.equals(agregacio);
         String valorConsulta = calculateValorSimple(widget, dadesComunsConsulta.getPeriodeDates(), dadesComunsConsulta.getEntornAppId());
         PeriodeDates periodePrevi = compararPeriodeAnterior

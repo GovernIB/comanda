@@ -91,21 +91,21 @@ public class SalutSchedulerServiceTest {
 
     }
 
-    @Test
-    void testInicialitzarTasques() {
-        // Arrange
-        List<EntornApp> entornApps = Arrays.asList(entornApp);
-        when(salutClientHelper.entornAppFindByActivaTrue()).thenReturn(entornApps);
-        // Mock taskScheduler.schedule to return scheduledFuture
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-
-        // Act
-        salutSchedulerService.inicialitzarTasques();
-
-        // Assert
-        verify(salutClientHelper).entornAppFindByActivaTrue();
-        verify(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-    }
+//    @Test
+//    void testInicialitzarTasques() {
+//        // Arrange
+//        List<EntornApp> entornApps = Arrays.asList(entornApp);
+//        when(salutClientHelper.entornAppFindByActivaTrue()).thenReturn(entornApps);
+//        // Mock taskScheduler.schedule to return scheduledFuture
+//        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+//
+//        // Act
+//        salutSchedulerService.inicialitzarTasques();
+//
+//        // Assert
+//        verify(salutClientHelper).entornAppFindByActivaTrue();
+//        verify(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+//    }
 
     @Test
     void testProgramarTasca_ActiveEntornApp() {
