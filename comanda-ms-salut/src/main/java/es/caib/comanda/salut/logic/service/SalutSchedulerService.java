@@ -62,7 +62,7 @@ public class SalutSchedulerService {
     }
 
     public void programarTasca(EntornApp entornApp) {
-        if (entornApp.getSalutInterval() == null || entornApp.getSalutInterval() <= 1) {
+        if (entornApp.getSalutInterval() == null || entornApp.getSalutInterval() <= 0) {
             log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getSalutInterval() + " no és un període vàlid.");
             return;
         }

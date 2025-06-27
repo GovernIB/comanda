@@ -60,7 +60,7 @@ public class ConfiguracioSchedulerService {
     }
 
     public void programarTasca(EntornAppEntity entornApp) {
-        if (entornApp.getInfoInterval() == null || entornApp.getInfoInterval() <= 1) {
+        if (entornApp.getInfoInterval() == null || entornApp.getInfoInterval() <= 0) {
             log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getInfoInterval() + " no és un període vàlid.");
             return;
         }
