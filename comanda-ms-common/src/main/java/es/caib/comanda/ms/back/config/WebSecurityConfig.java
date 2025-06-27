@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.back.config;
 
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,38 +16,11 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
  * @author Límit Tecnologies
  */
 @EnableWebSecurity
-public class WebSecurityConfig {
-
-	protected final JwtAuthConverter jwtAuthConverter;
+public class WebSecurityConfig extends BaseWebSecurityConfig {
 
 	public WebSecurityConfig(JwtAuthConverter jwtAuthConverter) {
-		this.jwtAuthConverter = jwtAuthConverter;
+		super(jwtAuthConverter);
 	}
-
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		if (jwtAuthConverter != null) {
-			http.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwtAuthConverter);
-		}
-		if (isPermitAllRequestsByDefault()) {
-			http.authorizeHttpRequests().
-				requestMatchers(new AntPathRequestMatcher("/sysenv")).permitAll().
-				requestMatchers(new AntPathRequestMatcher("/manifest")).permitAll().
-				requestMatchers(publicRequestMatchers()).permitAll().
-				requestMatchers(privateRequestMatchers()).authenticated().
-				anyRequest().permitAll();
-		} else {
-			http.authorizeHttpRequests().
-				requestMatchers(new AntPathRequestMatcher("/sysenv")).permitAll().
-				requestMatchers(new AntPathRequestMatcher("/manifest")).permitAll().
-				requestMatchers(publicRequestMatchers()).permitAll().
-				requestMatchers(privateRequestMatchers()).authenticated().
-				anyRequest().denyAll();
-		}
-		customHttpSecurityConfiguration(http);
-		return http.build();
-	}
-
 
 	protected RequestMatcher[] publicRequestMatchers() {
 		return new RequestMatcher[] {
@@ -60,14 +34,15 @@ public class WebSecurityConfig {
 		};
 	}
 
-	protected void customHttpSecurityConfiguration(HttpSecurity http) throws Exception {
-		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-		http.csrf().disable();
-		http.cors();
+	@Override
+	protected boolean isWebContainerAuthActive() {
+		return isJboss();
 	}
 
-	protected boolean isPermitAllRequestsByDefault() {
-		return true;
+	@Value("${jboss.home.dir:#{null}}")
+	private String jbossHomeDir;
+	private boolean isJboss() {
+		return jbossHomeDir != null;
 	}
 
 }

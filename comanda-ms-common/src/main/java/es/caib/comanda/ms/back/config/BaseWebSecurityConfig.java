@@ -3,12 +3,26 @@ package es.caib.comanda.ms.back.config;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationDetailsSource;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesUserDetailsService;
+import org.springframework.security.web.authentication.preauth.j2ee.J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource;
+import org.springframework.security.web.authentication.preauth.j2ee.J2eePreAuthenticatedProcessingFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Configuració de Spring Security.
@@ -23,24 +37,45 @@ public abstract class BaseWebSecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		if (jwtAuthConverter != null) {
+		if (isWebContainerAuthActive()) {
+			http.addFilterBefore(
+					webContainerProcessingFilter(),
+					BasicAuthenticationFilter.class);
+		}
+		if (isBearerTokenAuthActive() && jwtAuthConverter != null) {
 			http.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwtAuthConverter);
 		}
+		var auth = http.authorizeHttpRequests()
+				.requestMatchers(internalRequestMatchers()).permitAll()
+				.requestMatchers(publicRequestMatchers()).permitAll()
+				.requestMatchers(privateRequestMatchers()).authenticated();
 		if (isPermitAllRequestsByDefault()) {
-			http.authorizeHttpRequests().
-					requestMatchers(internalRequestMatchers()).permitAll().
-					requestMatchers(publicRequestMatchers()).permitAll().
-					requestMatchers(privateRequestMatchers()).authenticated().
-					anyRequest().permitAll();
+			auth.anyRequest().permitAll();
 		} else {
-			http.authorizeHttpRequests().
-					requestMatchers(internalRequestMatchers()).permitAll().
-					requestMatchers(publicRequestMatchers()).permitAll().
-					requestMatchers(privateRequestMatchers()).authenticated().
-					anyRequest().denyAll();
+			auth.anyRequest().denyAll();
 		}
 		customHttpSecurityConfiguration(http);
 		return http.build();
+	}
+
+	@Bean
+	public J2eePreAuthenticatedProcessingFilter webContainerProcessingFilter() {
+		J2eePreAuthenticatedProcessingFilter preAuthenticatedProcessingFilter = new J2eePreAuthenticatedProcessingFilter();
+		preAuthenticatedProcessingFilter.setAuthenticationDetailsSource(getPreAuthFilterAuthenticationDetailsSource());
+		final List<AuthenticationProvider> providers = new ArrayList<>(1);
+		PreAuthenticatedAuthenticationProvider preauthAuthProvider = new PreAuthenticatedAuthenticationProvider();
+		preauthAuthProvider.setPreAuthenticatedUserDetailsService(getPreAuthAuthenticationUserDetailsService());
+		providers.add(preauthAuthProvider);
+		preAuthenticatedProcessingFilter.setAuthenticationManager(new ProviderManager(providers));
+		preAuthenticatedProcessingFilter.setContinueFilterChainOnUnsuccessfulAuthentication(false);
+		return preAuthenticatedProcessingFilter;
+	}
+
+	protected boolean isWebContainerAuthActive() {
+		return false;
+	}
+	protected boolean isBearerTokenAuthActive() {
+		return true;
 	}
 
 	protected RequestMatcher[] internalRequestMatchers() {
@@ -67,6 +102,14 @@ public abstract class BaseWebSecurityConfig {
 
 	protected boolean isPermitAllRequestsByDefault() {
 		return true;
+	}
+
+	protected AuthenticationDetailsSource<HttpServletRequest, ?> getPreAuthFilterAuthenticationDetailsSource() {
+		return new J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource();
+	}
+
+	protected AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> getPreAuthAuthenticationUserDetailsService() {
+		return new PreAuthenticatedGrantedAuthoritiesUserDetailsService();
 	}
 
 }

@@ -14,7 +14,7 @@
 	<properties>
 		<node.version>v22.13.1</node.version>
 		<skip.npm>true</skip.npm>
-		<frontend.resources.path>src/main/resources/comanda-visualitzacio</frontend.resources.path>
+		<frontend.resources.path>src/main/jsapp/comanda-visualitzacio</frontend.resources.path>
 	</properties>
 	<dependencies>
 		<dependency>

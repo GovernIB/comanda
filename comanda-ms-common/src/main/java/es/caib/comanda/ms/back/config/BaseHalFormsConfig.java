@@ -1,6 +1,5 @@
 package es.caib.comanda.ms.back.config;
 
-
 import es.caib.comanda.ms.back.controller.MutableResourceController;
 import es.caib.comanda.ms.back.controller.ReadonlyResourceController;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
