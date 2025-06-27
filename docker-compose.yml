@@ -48,10 +48,7 @@ services:
       - es.caib.comanda.keycloak.client.id=${AUTH_CLIENTID}
       - es.caib.comanda.keycloak.username=${CLIENT_USERNAME}
       - es.caib.comanda.keycloak.password=${CLIENT_PASSWORD}
-      - VITE_API_URL=${APP_URL:-http://localhost:8080}/comandaback/api
-      - VITE_AUTH_KEYCLOAK_URL=${AUTH_URL}
-      - VITE_AUTH_KEYCLOAK_REALM=${AUTH_REALM}
-      - VITE_AUTH_KEYCLOAK_CLIENTID=${AUTH_CLIENTID}
+      - es.caib.comanda.front.api.url=${APP_URL:-http://localhost:8080}/comandaback/api
       - DEBUG=${DEBUG:-}
       - DEBUG_PORT=${DEBUG_HOST:-0.0.0.0:}${DEBUG_PORT:-8787}
     restart: always
