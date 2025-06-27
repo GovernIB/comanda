@@ -5,6 +5,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 /comanda-configuracio/application.properties
+**/jsapp/comanda-visualitzacio/dist
 
 ### STS ###
 .apt_generated
