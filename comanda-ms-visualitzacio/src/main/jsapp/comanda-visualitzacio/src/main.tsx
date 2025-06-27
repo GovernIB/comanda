@@ -13,7 +13,8 @@ import "@fontsource/noto-sans/700.css";
 import App from './App.tsx'
 import {
     envVar,
-    KeycloakAuthProvider as AuthProvider,
+    KeycloakAuthProvider,
+    ContainerAuthProvider,
     ResourceApiProvider
 } from 'reactlib';
 
@@ -26,15 +27,15 @@ export const envVars = {
     VITE_API_PUBLIC_URL: import.meta.env.VITE_API_PUBLIC_URL,
     VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
     VITE_API_SUFFIX: import.meta.env.VITE_API_SUFFIX,
-    VITE_AUTH_KEYCLOAK_URL: import.meta.env.VITE_AUTH_KEYCLOAK_URL,
-    VITE_AUTH_KEYCLOAK_REALM: import.meta.env.VITE_AUTH_KEYCLOAK_REALM,
-    VITE_AUTH_KEYCLOAK_CLIENTID: import.meta.env.VITE_AUTH_KEYCLOAK_CLIENTID,
+    VITE_AUTH_PROVIDER_URL: import.meta.env.VITE_AUTH_PROVIDER_URL,
+    VITE_AUTH_PROVIDER_REALM: import.meta.env.VITE_AUTH_PROVIDER_REALM,
+    VITE_AUTH_PROVIDER_CLIENTID: import.meta.env.VITE_AUTH_PROVIDER_CLIENTID,
 }
 
 const getAuthConfig = () => ({
-    url: envVar('VITE_AUTH_KEYCLOAK_URL', envVars),
-    realm: envVar('VITE_AUTH_KEYCLOAK_REALM', envVars),
-    clientId: envVar('VITE_AUTH_KEYCLOAK_CLIENTID', envVars),
+    url: envVar('VITE_AUTH_PROVIDER_URL', envVars),
+    realm: envVar('VITE_AUTH_PROVIDER_REALM', envVars),
+    clientId: envVar('VITE_AUTH_PROVIDER_CLIENTID', envVars),
 });
 
 const getEnvApiUrl = () => {
@@ -53,10 +54,13 @@ const getEnvApiUrl = () => {
     }
 }
 
+const isAuthUrlPresent = envVar('VITE_AUTH_PROVIDER_URL', envVars) != null;
+const AuthProvider = isAuthUrlPresent ? KeycloakAuthProvider : ContainerAuthProvider;
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <AuthProvider config={getAuthConfig()} mandatory everetAuthPatch>
-            <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive /*defaultUserSession={{ i: 443, e: 987 }}*/>
+        <AuthProvider config={getAuthConfig()} mandatory debug>
+            <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
                     <BrowserRouter basename={import.meta.env.BASE_URL}>

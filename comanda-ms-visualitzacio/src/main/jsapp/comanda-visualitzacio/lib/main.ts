@@ -1,6 +1,7 @@
 export { AuthContext, useAuthContext } from './components/AuthContext';
 export { AuthProvider as KeycloakAuthProvider } from './components/KeycloakAuthProvider';
 export { AuthProvider as OidcAuthProvider } from './components/OidcAuthProvider';
+export { AuthProvider as ContainerAuthProvider } from './components/ContainerAuthProvider';
 export { ResourceApiContext, useResourceApiContext } from './components/ResourceApiContext';
 export { ResourceApiProvider, useResourceApiService } from './components/ResourceApiProvider';
 export { BaseAppContext, useBaseAppContext } from './components/BaseAppContext';
