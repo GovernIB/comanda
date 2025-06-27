@@ -1,5 +1,8 @@
 package es.caib.comanda.ms.logic.intf.config;
 
+import java.util.AbstractMap;
+import java.util.Map;
+
 /**
  * Propietats de configuració de l'aplicació.
  * 
@@ -11,6 +14,7 @@ public class BaseConfig {
 	public static final String DB_PREFIX = "cmd_";
 	public static final String BASE_PACKAGE = "es.caib." + APP_NAME;
 	public static final String PROPERTY_PREFIX = BASE_PACKAGE + ".";
+	public static final String PROPERTY_PREFIX_FRONT = PROPERTY_PREFIX + "front.";
 
 	public static final String APP_URL = PROPERTY_PREFIX + ".app.url";
 
@@ -39,5 +43,21 @@ public class BaseConfig {
 	public static final String PROP_KEYCLOAK_USERNAME = PROPERTY_PREFIX + "keycloak.username";
 	public static final String PROP_KEYCLOAK_PASSWORD = PROPERTY_PREFIX + "keycloak.password";
 
+	public static final String PROP_FRONT_API_URL = PROPERTY_PREFIX_FRONT + "api.url";
+	public static final String PROP_FRONT_AUTH_PROVIDER_URL = PROPERTY_PREFIX_FRONT + "auth.provider.url";
+	public static final String PROP_FRONT_AUTH_PROVIDER_REALM = PROPERTY_PREFIX_FRONT + "auth.provider.realm";
+	public static final String PROP_FRONT_AUTH_PROVIDER_CLIENTID = PROPERTY_PREFIX_FRONT + "auth.provider.clientid";
+
+	public static final Map<String, String> REACT_APP_PROPS_MAP = Map.ofEntries(
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_API_URL, "REACT_APP_API_URL"),
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_AUTH_PROVIDER_URL, "REACT_APP_AUTH_PROVIDER_URL"),
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_AUTH_PROVIDER_REALM, "REACT_APP_AUTH_PROVIDER_REALM"),
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_AUTH_PROVIDER_CLIENTID, "REACT_APP_AUTH_PROVIDER_CLIENTID"));
+
+	public static final Map<String, String> VITE_PROPS_MAP = Map.ofEntries(
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_API_URL, "VITE_API_URL"),
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_AUTH_PROVIDER_URL, "VITE_AUTH_PROVIDER_URL"),
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_AUTH_PROVIDER_REALM, "VITE_AUTH_PROVIDER_REALM"),
+			new AbstractMap.SimpleEntry<>(PROP_FRONT_AUTH_PROVIDER_CLIENTID, "VITE_AUTH_PROVIDER_CLIENTID"));
 
 }

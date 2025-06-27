@@ -44,7 +44,12 @@ public abstract class BaseUtilsController {
 
 	@GetMapping(BaseConfig.AUTH_TOKEN_PATH)
 	public ResponseEntity<String> authToken() {
-		return ResponseEntity.ok().body(getAuthToken());
+		String authToken = getAuthToken();
+		String response = null;
+		if (authToken != null) {
+			response = "window.__AUTH_TOKEN__ = '" + authToken + "'";
+		}
+		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping(BaseConfig.MANIFEST_PATH)
