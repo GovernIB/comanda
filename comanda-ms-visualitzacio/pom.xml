@@ -26,6 +26,9 @@
 	<profiles>
 		<profile>
 			<id>frontend</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
 			<properties>
 				<skip.npm>false</skip.npm>
 			</properties>

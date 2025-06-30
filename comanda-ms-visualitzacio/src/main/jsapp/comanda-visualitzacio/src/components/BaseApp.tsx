@@ -1,4 +1,6 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
+import {AccessTime, CalendarMonth} from '@mui/icons-material';
+import dayjs from 'dayjs';
 import {
     useNavigate,
     useLocation,
@@ -72,6 +74,47 @@ const CustomLocalizationProvider = ({ children }: React.PropsWithChildren) => {
     return <LocalizationProvider dateAdapter={adapter} adapterLocale={adapterLocale}>
         {children}
     </LocalizationProvider>;
+}
+
+// Hora del sistema
+// Component separat per al rellotge del sistema per evitar re-renders innecesaris
+const SystemTimeDisplay = React.memo(() => {
+    const [currentTime, setCurrentTime] = useState(dayjs());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(dayjs());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                marginLeft: '20px',
+                color: 'inherit',
+                fontSize: '11px'
+            }}
+        >
+            <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                <CalendarMonth sx={{ fontSize: '14px' }}/>
+                <span>{currentTime.format('DD/MM/YYYY')}</span>
+            </div>
+            <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                <AccessTime  sx={{ fontSize: '14px' }}/>
+                <span>{currentTime.format('HH:mm:ss')}</span>
+            </div>
+        </div>
+    );
+});
+
+const generateSystemTimeItems = () => {
+    return [
+        <SystemTimeDisplay key="system_time" />
+    ];
 }
 
 // Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
@@ -168,6 +211,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAppbarStyle={appbarStyle}
         headerAdditionalComponents={[
             ...generateMenuItems(appMenuEntries), // Menú
+            ...generateSystemTimeItems(), // Hora del sistema
             ...generateLanguageItems(availableLanguages), // Idioma
             ...generateAppMenu(menuEntries) // Menú lateral
         ]}
