@@ -13,6 +13,7 @@ export type AuthContextType = {
     isLoading: boolean;
     isReady: boolean;
     isAuthenticated: boolean;
+    bearerTokenActive: boolean;
     getToken: () => string | undefined;
     getTokenParsed: () => any | undefined;
     getUserId: () => any | string;

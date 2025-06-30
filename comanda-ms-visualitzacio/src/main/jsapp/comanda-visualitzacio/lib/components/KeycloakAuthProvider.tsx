@@ -152,6 +152,7 @@ export const AuthProvider = (props: KeycloakAuthProviderProps) => {
         isLoading,
         isReady: !isLoading,
         isAuthenticated,
+        bearerTokenActive: true,
         getToken: () => tokenRef.current,
         getTokenParsed: () => tokenParsedRef.current,
         getUserId: () => tokenParsedRef.current?.['preferred_username'],

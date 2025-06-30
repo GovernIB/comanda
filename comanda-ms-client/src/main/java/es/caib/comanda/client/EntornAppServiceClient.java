@@ -1,6 +1,5 @@
 package es.caib.comanda.client;
 
-import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.EntornApp;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.hateoas.EntityModel;

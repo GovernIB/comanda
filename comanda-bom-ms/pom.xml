@@ -18,6 +18,7 @@
 		<liquibase.version>4.4.3</liquibase.version>
 		<jasperreports.version>6.20.6</jasperreports.version>
 		<dynamicreports-core.version>6.12.1</dynamicreports-core.version>
+		<keycloak.version>22.0.4</keycloak.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -86,6 +87,12 @@
 			<groupId>com.turkraft</groupId>
 			<artifactId>spring-filter</artifactId>
 			<version>${spring.filter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-core</artifactId>
+			<version>${keycloak.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.liquibase</groupId>

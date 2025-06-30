@@ -15,18 +15,11 @@
 		<display-name>Any logged in user</display-name>
 		<web-resource-collection>
 			<web-resource-name>API resources</web-resource-name>
-			<url-pattern>/api/*</url-pattern>
+			<url-pattern>/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>*</role-name>
 		</auth-constraint>
-	</security-constraint>
-	<security-constraint>
-		<display-name>Unauthenticated</display-name>
-		<web-resource-collection>
-			<web-resource-name>Any resource</web-resource-name>
-			<url-pattern>/*</url-pattern>
-		</web-resource-collection>
 	</security-constraint>
 	<security-role>
 		<role-name>*</role-name>

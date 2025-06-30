@@ -27,7 +27,8 @@ import java.util.jar.Manifest;
 				"es.caib.comanda.salut",
 				"es.caib.comanda.estadistica",
 				"es.caib.comanda.monitor",
-				"es.caib.comanda.back"
+				"es.caib.comanda.back",
+				"es.caib.comanda.visualitzacio"
 		},
 		excludeFilters = @ComponentScan.Filter(
 				type = FilterType.REGEX,

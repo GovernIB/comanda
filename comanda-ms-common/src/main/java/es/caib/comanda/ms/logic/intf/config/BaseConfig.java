@@ -42,6 +42,8 @@ public class BaseConfig {
 	public static final String PROP_KEYCLOAK_CLIENT_ID = PROPERTY_PREFIX + "keycloak.client.id";
 	public static final String PROP_KEYCLOAK_USERNAME = PROPERTY_PREFIX + "keycloak.username";
 	public static final String PROP_KEYCLOAK_PASSWORD = PROPERTY_PREFIX + "keycloak.password";
+	public static final String PROP_SECURITY_MAPPABLE_ROLES = PROPERTY_PREFIX + "security.mappableRoles";
+	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
 
 	public static final String PROP_FRONT_API_URL = PROPERTY_PREFIX_FRONT + "api.url";
 	public static final String PROP_FRONT_AUTH_PROVIDER_URL = PROPERTY_PREFIX_FRONT + "auth.provider.url";

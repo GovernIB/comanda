@@ -2,6 +2,7 @@ package es.caib.comanda.ms.back.config;
 
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -9,7 +10,11 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -45,10 +50,10 @@ public abstract class BaseWebSecurityConfig {
 		if (isBearerTokenAuthActive() && jwtAuthConverter != null) {
 			http.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwtAuthConverter);
 		}
-		var auth = http.authorizeHttpRequests()
-				.requestMatchers(internalRequestMatchers()).permitAll()
-				.requestMatchers(publicRequestMatchers()).permitAll()
-				.requestMatchers(privateRequestMatchers()).authenticated();
+		var auth = http.authorizeHttpRequests().
+				requestMatchers(internalRequestMatchers()).permitAll().
+				requestMatchers(publicRequestMatchers()).permitAll().
+				requestMatchers(privateRequestMatchers()).authenticated();
 		if (isPermitAllRequestsByDefault()) {
 			auth.anyRequest().permitAll();
 		} else {
@@ -61,10 +66,10 @@ public abstract class BaseWebSecurityConfig {
 	@Bean
 	public J2eePreAuthenticatedProcessingFilter webContainerProcessingFilter() {
 		J2eePreAuthenticatedProcessingFilter preAuthenticatedProcessingFilter = new J2eePreAuthenticatedProcessingFilter();
-		preAuthenticatedProcessingFilter.setAuthenticationDetailsSource(getPreAuthFilterAuthenticationDetailsSource());
+		preAuthenticatedProcessingFilter.setAuthenticationDetailsSource(getPreauthFilterAuthenticationDetailsSource());
 		final List<AuthenticationProvider> providers = new ArrayList<>(1);
 		PreAuthenticatedAuthenticationProvider preauthAuthProvider = new PreAuthenticatedAuthenticationProvider();
-		preauthAuthProvider.setPreAuthenticatedUserDetailsService(getPreAuthAuthenticationUserDetailsService());
+		preauthAuthProvider.setPreAuthenticatedUserDetailsService(getPreauthAuthenticationUserDetailsService());
 		providers.add(preauthAuthProvider);
 		preAuthenticatedProcessingFilter.setAuthenticationManager(new ProviderManager(providers));
 		preAuthenticatedProcessingFilter.setContinueFilterChainOnUnsuccessfulAuthentication(false);
@@ -86,6 +91,7 @@ public abstract class BaseWebSecurityConfig {
 				new AntPathRequestMatcher("/swagger-ui/*"),
 				new AntPathRequestMatcher(BaseConfig.API_PATH),
 				new AntPathRequestMatcher(BaseConfig.PING_PATH),
+				new AntPathRequestMatcher(BaseConfig.AUTH_TOKEN_PATH),
 				new AntPathRequestMatcher(BaseConfig.SYSENV_PATH),
 				new AntPathRequestMatcher(BaseConfig.MANIFEST_PATH)
 		};
@@ -104,11 +110,11 @@ public abstract class BaseWebSecurityConfig {
 		return true;
 	}
 
-	protected AuthenticationDetailsSource<HttpServletRequest, ?> getPreAuthFilterAuthenticationDetailsSource() {
+	protected AuthenticationDetailsSource<HttpServletRequest, ?> getPreauthFilterAuthenticationDetailsSource() {
 		return new J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource();
 	}
 
-	protected AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> getPreAuthAuthenticationUserDetailsService() {
+	protected AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> getPreauthAuthenticationUserDetailsService() {
 		return new PreAuthenticatedGrantedAuthoritiesUserDetailsService();
 	}
 

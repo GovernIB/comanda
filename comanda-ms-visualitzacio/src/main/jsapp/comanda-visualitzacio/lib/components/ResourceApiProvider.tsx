@@ -974,6 +974,7 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const authContext = useOptionalAuthContext();
     const isAuthReady = authContext?.isReady;
     const isAuthenticated = authContext?.isAuthenticated;
+    const bearerTokenActive = authContext?.bearerTokenActive;
     const getToken = authContext?.getToken;
     const kettingClientRef = React.useRef<Client>(undefined);
     const openAnswerRequiredDialogRef = React.useRef<OpenAnswerRequiredDialogFn>(undefined);
@@ -994,10 +995,9 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
             const newRequest = new Request(request, {
                 credentials: 'include', // Afegir el suport per a cookies
             });
-
             // Actualitzar les capçaleres
             const token = getToken?.();
-            if (isAuthenticated && token) {
+            if (isAuthenticated && bearerTokenActive && token) {
                 newRequest.headers.set('Authorization', 'Bearer ' + token);
             }
             if (userSession && Object.keys(userSession).length > 0) {
