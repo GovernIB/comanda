@@ -31,7 +31,7 @@ public class EstadisticaSchedulerService {
     private final EstadisticaHelper estadisticaHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
 
-    @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{false}}")
+    @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();

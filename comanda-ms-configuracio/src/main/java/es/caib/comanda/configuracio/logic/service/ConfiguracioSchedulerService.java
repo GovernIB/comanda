@@ -31,7 +31,7 @@ public class ConfiguracioSchedulerService {
     private final EntornAppRepository entornAppRepository;
     private final AppInfoHelper appInfoHelper;
 
-    @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{false}}")
+    @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();

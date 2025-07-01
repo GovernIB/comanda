@@ -396,3 +396,27 @@ GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_indicador_table TO WWW_COMANDA;
 GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dashboard TO WWW_COMANDA;
 GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dashboard_item TO WWW_COMANDA;
 GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dashboard_titol TO WWW_COMANDA;
+
+-- =============================================
+-- Module: comanda-ms-monitor
+-- =============================================
+
+-- Table: cmd_monitor
+CREATE TABLE cmd_monitor (
+    id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    entorn_app_id NUMBER(38),
+    codi VARCHAR2(16 CHAR) NOT NULL,
+    tipus VARCHAR2(255 CHAR) NOT NULL,
+    data TIMESTAMP NOT NULL,
+    url VARCHAR2(255 CHAR),
+    operacio VARCHAR2(255 CHAR) NOT NULL,
+    temps_resposta NUMBER(38),
+    estat VARCHAR2(255 CHAR) NOT NULL,
+    codi_usuari VARCHAR2(64 CHAR),
+    error_descripcio VARCHAR2(1024 CHAR),
+    excepcio_msg VARCHAR2(1024 CHAR),
+    excepcio_stacktrace VARCHAR2(4000 CHAR)
+);
+
+-- Grant permissions
+GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_monitor TO WWW_COMANDA;
