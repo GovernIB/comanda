@@ -8,7 +8,7 @@ import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EstadisticaClientHelper {
 
-    private final KeycloakHelper keycloakHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final MonitorServiceClient monitorServiceClient;
     private final EntornAppServiceClient entornAppServiceClient;
     private final EntornServiceClient entornServiceClient;
@@ -39,7 +39,7 @@ public class EstadisticaClientHelper {
         EntityModel<App> app = appServiceClient.getOne(
                 appId,
                 null,
-                keycloakHelper.getAuthorizationHeader());
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
         if (app != null) {
             return app.getContent();
         }
@@ -55,7 +55,7 @@ public class EstadisticaClientHelper {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
                 null,
-                keycloakHelper.getAuthorizationHeader());
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
         if (entornApp != null) {
             return entornApp.getContent();
         }
@@ -70,7 +70,7 @@ public class EstadisticaClientHelper {
                 null,
                 "UNPAGED",
                 null,
-                keycloakHelper.getAuthorizationHeader());
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
         if (entornApps == null) {
             return null;
         }
@@ -86,7 +86,7 @@ public class EstadisticaClientHelper {
                 null,
                 "UNPAGED",
                 null,
-                keycloakHelper.getAuthorizationHeader());
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
         if (entornApps == null) {
             return List.of();
         }
@@ -104,7 +104,7 @@ public class EstadisticaClientHelper {
         EntityModel<Entorn> entorn = entornServiceClient.getOne(
                 entornId,
                 null,
-                keycloakHelper.getAuthorizationHeader());
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
         if (entorn != null) {
             return entorn.getContent();
         }
@@ -117,7 +117,7 @@ public class EstadisticaClientHelper {
 
     public void monitorCreate(Monitor monitor) {
         try {
-            monitorServiceClient.create(monitor, keycloakHelper.getAuthorizationHeader());
+            monitorServiceClient.create(monitor, httpAuthorizationHeaderHelper.getAuthorizationHeader());
         } catch (Exception e) {
             log.error("Error al guardar el monitor: " + monitor, e);
         }

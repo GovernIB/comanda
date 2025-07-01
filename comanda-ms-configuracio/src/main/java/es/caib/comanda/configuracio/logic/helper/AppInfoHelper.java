@@ -14,7 +14,7 @@ import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.salut.model.AppInfo;
 import es.caib.comanda.ms.salut.model.IntegracioInfo;
@@ -46,7 +46,7 @@ public class AppInfoHelper {
 	private final SubsistemaRepository subsistemaRepository;
 
 	@Lazy
-	private final KeycloakHelper keycloakHelper;
+	private final HttpAuthorizationHeaderHelper keycloakHelper;
 	private final SalutServiceClient salutServiceClient;
 	private final EstadisticaServiceClient estadisticaServiceClient;
 	private final MonitorServiceClient monitorServiceClient;

@@ -37,11 +37,11 @@ public class BaseConfig {
 	public static final String PROP_SCHEDULER_SALUT_INFO_CRON = PROPERTY_PREFIX + "scheduler.salut.info.cron";
 	public static final String PROP_SCHEDULER_ESTADISTIQUES_INFO_CRON = PROPERTY_PREFIX + "scheduler.estadistiqeus.info.cron";
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
-	public static final String PROP_KEYCLOAK_BASE_URL = PROPERTY_PREFIX + "keycloak.base.url";
-	public static final String PROP_KEYCLOAK_REALM = PROPERTY_PREFIX + "keycloak.realm";
-	public static final String PROP_KEYCLOAK_CLIENT_ID = PROPERTY_PREFIX + "keycloak.client.id";
-	public static final String PROP_KEYCLOAK_USERNAME = PROPERTY_PREFIX + "keycloak.username";
-	public static final String PROP_KEYCLOAK_PASSWORD = PROPERTY_PREFIX + "keycloak.password";
+	public static final String PROP_HTTPAUTH_KEYCLOAK_BASE_URL = PROPERTY_PREFIX + "httpauth.keycloak.base.url";
+	public static final String PROP_HTTPAUTH_KEYCLOAK_REALM = PROPERTY_PREFIX + "httpauth.keycloak.realm";
+	public static final String PROP_HTTPAUTH_KEYCLOAK_CLIENT_ID = PROPERTY_PREFIX + "httpauth.keycloak.client.id";
+	public static final String PROP_HTTPAUTH_USERNAME = PROPERTY_PREFIX + "httpauth.username";
+	public static final String PROP_HTTPAUTH_PASSWORD = PROPERTY_PREFIX + "httpauth.password";
 	public static final String PROP_SECURITY_MAPPABLE_ROLES = PROPERTY_PREFIX + "security.mappableRoles";
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
 

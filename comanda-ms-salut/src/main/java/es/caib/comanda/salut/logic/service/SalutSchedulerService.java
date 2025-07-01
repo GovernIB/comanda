@@ -1,7 +1,7 @@
 package es.caib.comanda.salut.logic.service;
 
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
@@ -41,7 +41,7 @@ public class SalutSchedulerService {
             @Qualifier("salutTaskScheduler") TaskScheduler taskScheduler,
             SalutClientHelper salutClientHelper,
             SalutInfoHelper salutInfoHelper,
-            KeycloakHelper keycloakHelper) {
+            HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper) {
         this.taskScheduler = taskScheduler;
         this.salutClientHelper = salutClientHelper;
         this.salutInfoHelper = salutInfoHelper;

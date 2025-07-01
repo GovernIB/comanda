@@ -14,6 +14,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
 
 /**
@@ -24,36 +26,42 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class KeycloakHelper {
+public class HttpAuthorizationHeaderHelper {
 
-	@Value("${" + BaseConfig.PROP_KEYCLOAK_BASE_URL + ":#{null}}")
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_KEYCLOAK_BASE_URL + ":#{null}}")
 	private String keycloakBaseUrl;
-	@Value("${" + BaseConfig.PROP_KEYCLOAK_REALM + ":#{null}}")
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_KEYCLOAK_REALM + ":#{null}}")
 	private String keycloakRealm;
-	@Value("${" + BaseConfig.PROP_KEYCLOAK_CLIENT_ID + ":#{null}}")
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_KEYCLOAK_CLIENT_ID + ":#{null}}")
 	private String keycloakClientId;
-	@Value("${" + BaseConfig.PROP_KEYCLOAK_USERNAME + ":#{null}}")
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_USERNAME + ":#{null}}")
 	private String keycloakUsername;
-	@Value("${" + BaseConfig.PROP_KEYCLOAK_PASSWORD + ":#{null}}")
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_PASSWORD + ":#{null}}")
 	private String keycloakPassword;
 
 	@Lazy
 	private final RestTemplate restTemplate;
 
-	public String getAccessTokenWithClientCredentials(String clientSecret) {
+	public String getAuthorizationHeader() {
 		if (isKeycloakConfigured()) {
-			return getAccessToken(
-					"client_credentials",
-					null,
-					null,
-					clientSecret);
+			String accessToken = getAccessTokenWithUsernamePassword(
+					keycloakUsername,
+					keycloakPassword);
+			return accessToken != null ? "Bearer " + accessToken : null;
 		} else {
-			log.error("Couldn't get access token: missing keycloak configuration parameters");
-			return null;
+			String credentials = keycloakUsername + ":" + keycloakPassword;
+			String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+			return "Basic " + encodedCredentials;
 		}
 	}
 
-	public String getAccessTokenWithUsernamePassword(String username, String password) {
+	private boolean isKeycloakConfigured() {
+		return keycloakBaseUrl != null &&
+				keycloakRealm != null &&
+				keycloakClientId != null;
+	}
+
+	private String getAccessTokenWithUsernamePassword(String username, String password) {
 		if (isKeycloakConfigured()) {
 			try {
 				return getAccessToken(
@@ -71,12 +79,6 @@ public class KeycloakHelper {
 		}
 	}
 
-	private boolean isKeycloakConfigured() {
-		return keycloakBaseUrl != null &&
-				keycloakRealm != null &&
-				keycloakClientId != null;
-	}
-
 	private String getAccessToken(
 			String grantType,
 			String username,
@@ -91,7 +93,6 @@ public class KeycloakHelper {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
-//		ResponseEntity<Map> response = getRestTemplate().postForEntity(getAuthUrl(), entity, Map.class);
 		ResponseEntity<Map> response = restTemplate.postForEntity(getAuthUrl(), entity, Map.class);
 		return response.getBody() != null ? (String)response.getBody().get("access_token") : null;
 	}
@@ -100,24 +101,4 @@ public class KeycloakHelper {
 		return keycloakBaseUrl + "/realms/" + keycloakRealm + "/protocol/openid-connect/token";
 	}
 
-//	private RestTemplate getRestTemplate() {
-//		if (restTemplate == null) {
-//			restTemplate = new RestTemplateBuilder().build();
-//		}
-//		return restTemplate;
-//	}
-
-	public String getAuthorizationHeader() {
-		String accessToken = getAccessTokenWithUsernamePassword(
-				keycloakUsername,
-				keycloakPassword);
-		return accessToken != null ? "Bearer " + accessToken : null;
-	}
-
-	public String getAuthorizationHeader(String keycloakUsername, String keycloakPassword) {
-		String accessToken = getAccessTokenWithUsernamePassword(
-				keycloakUsername,
-				keycloakPassword);
-		return accessToken != null ? "Bearer " + accessToken : null;
-	}
 }

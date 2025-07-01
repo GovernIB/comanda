@@ -46,11 +46,13 @@ public abstract class BasePermissionHelper {
 			Class<?> targetTypeClass = Class.forName(targetType);
 			ResourceConfig resourceConfig = targetTypeClass.getAnnotation(ResourceConfig.class);
 			if (resourceConfig != null) {
-				return checkResourceAccessConstraints(
+				boolean hasPermission = checkResourceAccessConstraints(
 						auth,
 						targetTypeClass,
 						permission,
 						resourceConfig.accessConstraints());
+				log.debug("Checking {} permission for resource {}: {}", permission, targetType, hasPermission);
+				return hasPermission;
 			} else {
 				// Els recursos sense configuració tenen l'accés permès per defecte
 				return true;

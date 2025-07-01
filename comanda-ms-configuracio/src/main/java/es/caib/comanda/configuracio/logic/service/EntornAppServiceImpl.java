@@ -15,7 +15,7 @@ import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
@@ -54,7 +54,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     @Autowired
     private AppInfoHelper appInfoHelper;
     @Autowired
-    private KeycloakHelper keycloakHelper;
+    private HttpAuthorizationHeaderHelper keycloakHelper;
     @Autowired
     private SalutServiceClient salutServiceClient;
     @Autowired

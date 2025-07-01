@@ -3,7 +3,7 @@ package es.caib.comanda.ms.salut.service;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.service.SalutSchedulerService;
@@ -42,7 +42,7 @@ public class SalutSchedulerServiceTest {
     private SalutInfoHelper salutInfoHelper;
 
     @Mock
-    private KeycloakHelper keycloakHelper;
+    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @Mock
     private ScheduledFuture<?> scheduledFuture;
@@ -64,7 +64,7 @@ public class SalutSchedulerServiceTest {
                 taskScheduler,
                 salutClientHelper,
                 salutInfoHelper,
-                keycloakHelper
+                httpAuthorizationHeaderHelper
         );
 
         // Set schedulerLeader to true for testing

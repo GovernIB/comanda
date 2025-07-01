@@ -17,7 +17,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * Configuració per a Open Feign.
@@ -35,28 +36,19 @@ import javax.servlet.http.HttpServletRequest;
 })
 public class OpenFeignConfig {
 
-	private static final String JSESSIONID_COOKIE_NAME = "JSESSIONID";
-
 	@Bean
 	public RequestInterceptor headerInterceptor() {
 		return new RequestInterceptor() {
 			@Override
 			public void apply(RequestTemplate template) {
-				ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+				ServletRequestAttributes attrs = (ServletRequestAttributes)RequestContextHolder.getRequestAttributes();
 				if (attrs != null) {
-					HttpServletRequest request = attrs.getRequest();
-					Cookie[] cookies = request.getCookies();
+					Cookie[] cookies = attrs.getRequest().getCookies();
 					if (cookies != null && cookies.length > 0) {
-						StringBuilder cookieHeader = new StringBuilder();
-						for (int i = 0; i < cookies.length; i++) {
-							cookieHeader.append(cookies[i].getName())
-									.append("=")
-									.append(cookies[i].getValue());
-							if (i < cookies.length - 1) {
-								cookieHeader.append("; ");
-							}
-						}
-						template.header("Cookie", cookieHeader.toString());
+						String cookieHeader = Arrays.stream(cookies).
+								map(cookie -> cookie.getName() + "=" + cookie.getValue()).
+								collect(Collectors.joining("; "));
+						template.header("Cookie", cookieHeader);
 					}
 				}
 			}
@@ -72,4 +64,5 @@ public class OpenFeignConfig {
 	public ErrorDecoder errorDecoder() {
 		return new CustomErrorDecoder();
 	}
+
 }

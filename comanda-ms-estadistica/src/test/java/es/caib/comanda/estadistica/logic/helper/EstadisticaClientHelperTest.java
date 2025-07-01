@@ -9,7 +9,7 @@ import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
 import es.caib.comanda.client.model.monitor.Monitor;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 public class EstadisticaClientHelperTest {
 
     @Mock
-    private KeycloakHelper keycloakHelper;
+    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @Mock
     private MonitorServiceClient monitorServiceClient;
@@ -71,7 +71,7 @@ public class EstadisticaClientHelperTest {
                 .build();
 
         authHeader = "Bearer test-token";
-        when(keycloakHelper.getAuthorizationHeader()).thenReturn(authHeader);
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(authHeader);
     }
 
     @Test

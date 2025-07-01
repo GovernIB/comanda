@@ -12,7 +12,7 @@ import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.salut.model.AppInfo;
 import es.caib.comanda.ms.salut.model.IntegracioInfo;
@@ -49,7 +49,7 @@ public class AppInfoHelperTest {
     private SubsistemaRepository subsistemaRepository;
 
     @Mock
-    private KeycloakHelper keycloakHelper;
+    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @Mock
     private SalutServiceClient salutServiceClient;
@@ -79,7 +79,7 @@ public class AppInfoHelperTest {
                 appIntegracioRepository,
                 integracioRepository,
                 subsistemaRepository,
-                keycloakHelper,
+                httpAuthorizationHeaderHelper,
                 salutServiceClient,
                 estadisticaServiceClient,
                 monitorServiceClient,
@@ -237,7 +237,7 @@ public class AppInfoHelperTest {
     @Test
     void testProgramarTasquesSalutEstadistica() {
         // Mock keycloakHelper
-        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
 
         // Call the method to test
         appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
@@ -247,7 +247,7 @@ public class AppInfoHelperTest {
         verify(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
 
         // Verify that the keycloakHelper was called
-        verify(keycloakHelper, times(2)).getAuthorizationHeader();
+        verify(httpAuthorizationHeaderHelper, times(2)).getAuthorizationHeader();
     }
 
     @Test
@@ -256,7 +256,7 @@ public class AppInfoHelperTest {
         doThrow(new RuntimeException("Salut error")).when(salutServiceClient).programar(any(EntornApp.class), anyString());
         doThrow(new RuntimeException("Estadistica error")).when(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
         // Mock keycloakHelper
-        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
 
         // Call the method to test
         appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
@@ -266,7 +266,7 @@ public class AppInfoHelperTest {
         verify(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
 
         // Verify that the keycloakHelper was called
-        verify(keycloakHelper, times(2)).getAuthorizationHeader();
+        verify(httpAuthorizationHeaderHelper, times(2)).getAuthorizationHeader();
     }
 
 //    private void mockRestTemplate() {

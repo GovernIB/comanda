@@ -17,7 +17,7 @@ import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.helper.KeycloakHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +71,7 @@ public class EntornAppServiceImplTest {
     private AppInfoHelper appInfoHelper;
 
     @Mock
-    private KeycloakHelper keycloakHelper;
+    private HttpAuthorizationHeaderHelper keycloakHelper;
 
     @Mock
     private SalutServiceClient salutServiceClient;

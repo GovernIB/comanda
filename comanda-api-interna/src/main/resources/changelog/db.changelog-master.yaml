@@ -1,0 +1,18 @@
+databaseChangeLog:
+-  property:
+    name: db_prefix
+    value: cmd_
+- property:
+    dbms: oracle
+    name: varcharUnit
+    value: CHAR
+- property:
+    dbms: postgresql
+    name: varcharUnit
+    value: ''
+- includeAll:
+    path: db/changelog/init
+    errorIfMissingOrEmpty: false
+- includeAll:
+    path: db/changelog/changes
+    errorIfMissingOrEmpty: false
