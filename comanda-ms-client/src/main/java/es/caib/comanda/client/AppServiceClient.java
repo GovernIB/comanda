@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author Límit Tecnologies
  */
-@FeignClient(value = "app", url = "${es.caib.comanda.client.app.url}")
+@FeignClient(value = "app", url = "${es.caib.comanda.client.base.url}/apps")
 public interface AppServiceClient {
 
 	@GetMapping(value = "/{id}")

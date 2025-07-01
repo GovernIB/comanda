@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
  *
  * @author Límit Tecnologies
  */
-@FeignClient(value = "estadistica", url = "${es.caib.comanda.client.estadistica.url}")
+@FeignClient(value = "estadistica", url = "${es.caib.comanda.client.base.url}/fets")
 public interface EstadisticaServiceClient {
 
 	@PostMapping("/programar")

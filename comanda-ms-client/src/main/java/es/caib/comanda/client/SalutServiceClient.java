@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
  *
  * @author Límit Tecnologies
  */
-@FeignClient(value = "salut", url = "${es.caib.comanda.client.salut.url}")
+@FeignClient(value = "salut", url = "${es.caib.comanda.client.base.url}/saluts")
 public interface SalutServiceClient {
 
 	@PostMapping("/programar")

@@ -32,16 +32,8 @@ services:
       - JBOSS_MAIL_TLS=${MAIL_TLS}
       - JBOSS_PROXY_HOST=${PROXY_HOST:-}
       - JBOSS_PROXY_PORT=${PROXY_PORT:-}
-      - spring.jpa.properties.hibernate.dialect=${HIBERNATE_DIALECT}
-      - spring.security.oauth2.resourceserver.jwt.issuer-uri=${AUTH_URL}/realms/${AUTH_REALM}
       - es.caib.comanda.app.url=${APP_URL:-http://localhost:8080}
-      - es.caib.comanda.client.app.url=${CLIENT_APP_URL}
-      - es.caib.comanda.client.entorn.url=${CLIENT_ENTORN_URL}
-      - es.caib.comanda.client.entorn.app.url=${CLIENT_ENTORN_APP_URL}
-      - es.caib.comanda.client.monitor.url=${CLIENT_MONITOR_URL}
-      - es.caib.comanda.client.salut.url=${CLIENT_SALUT_URL}
-      - es.caib.comanda.client.estadistica.url=${CLIENT_ESTADISTICA_URL}
-      - es.caib.comanda.scheduler.leader=${SCHEDULER_LEADER:-true}
+      - es.caib.comanda.client.base.url=${APP_URL:-http://localhost:8080}/comandaapi/interna/api
       - es.caib.comanda.httpauth.username=${HTTPAUTH_USERNAME}
       - es.caib.comanda.httpauth.password=${HTTPAUTH_PASSWORD}
       - es.caib.comanda.front.api.url=${APP_URL:-http://localhost:8080}/comandaback/api

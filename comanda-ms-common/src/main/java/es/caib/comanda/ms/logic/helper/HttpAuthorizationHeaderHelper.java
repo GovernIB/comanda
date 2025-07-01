@@ -35,9 +35,9 @@ public class HttpAuthorizationHeaderHelper {
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_KEYCLOAK_CLIENT_ID + ":#{null}}")
 	private String keycloakClientId;
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_USERNAME + ":#{null}}")
-	private String keycloakUsername;
+	private String authUsername;
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_PASSWORD + ":#{null}}")
-	private String keycloakPassword;
+	private String authPassword;
 
 	@Lazy
 	private final RestTemplate restTemplate;
@@ -45,11 +45,11 @@ public class HttpAuthorizationHeaderHelper {
 	public String getAuthorizationHeader() {
 		if (isKeycloakConfigured()) {
 			String accessToken = getAccessTokenWithUsernamePassword(
-					keycloakUsername,
-					keycloakPassword);
+					authUsername,
+					authPassword);
 			return accessToken != null ? "Bearer " + accessToken : null;
 		} else {
-			String credentials = keycloakUsername + ":" + keycloakPassword;
+			String credentials = authUsername + ":" + authPassword;
 			String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
 			return "Basic " + encodedCredentials;
 		}

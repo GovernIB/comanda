@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author Límit Tecnologies
  */
-@FeignClient(value = "entorn", url = "${es.caib.comanda.client.entorn.url}")
+@FeignClient(value = "entorn", url = "${es.caib.comanda.client.base.url}/entorns")
 public interface EntornServiceClient {
 
 	@GetMapping(value = "/{id}")

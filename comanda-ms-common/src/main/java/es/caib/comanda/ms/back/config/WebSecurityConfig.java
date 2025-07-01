@@ -55,6 +55,9 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 	protected boolean isWebContainerAuthActive() {
 		return isJboss();
 	}
+	protected boolean isBearerTokenAuthActive() {
+		return !isJboss();
+	}
 
 	@Value("${jboss.home.dir:#{null}}")
 	private String jbossHomeDir;

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
  *
  * @author Límit Tecnologies
  */
-@FeignClient(value = "monitor", url = "${es.caib.comanda.client.monitor.url}")
+@FeignClient(value = "monitor", url = "${es.caib.comanda.client.base.url}/monitors")
 public interface MonitorServiceClient {
 
 	@PostMapping
