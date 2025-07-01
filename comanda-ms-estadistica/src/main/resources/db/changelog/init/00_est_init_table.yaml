@@ -137,7 +137,7 @@ databaseChangeLog:
                 constraints:
                     nullable: false
             - column:
-                name: diaSetmana
+                name: dia_setmana
                 type: varchar(2 ${varcharUnit})
                 constraints:
                     nullable: false
