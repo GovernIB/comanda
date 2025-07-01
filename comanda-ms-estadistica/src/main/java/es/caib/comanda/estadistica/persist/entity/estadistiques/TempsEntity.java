@@ -76,7 +76,7 @@ public class TempsEntity extends BaseEntity<Temps> {
     private int setmana;
     @Column(name = "dia", nullable = false)
     private int dia;
-    @Column(name = "diaSetmana", length = 2, nullable = false)
+    @Column(name = "dia_setmana", length = 2, nullable = false)
     @Enumerated(EnumType.STRING)
     private DiaSetmanaEnum diaSetmana;
 

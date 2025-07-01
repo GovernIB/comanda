@@ -221,7 +221,7 @@ CREATE TABLE cmd_est_temps (
     mes NUMBER(10) NOT NULL,
     setmana NUMBER(10) NOT NULL,
     dia NUMBER(10) NOT NULL,
-    diaSetmana VARCHAR2(2 CHAR) NOT NULL
+    dia_setmana VARCHAR2(2 CHAR) NOT NULL
 );
 
 -- Table: cmd_est_fet
