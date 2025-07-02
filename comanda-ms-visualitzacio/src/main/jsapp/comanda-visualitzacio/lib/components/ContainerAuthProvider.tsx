@@ -54,6 +54,7 @@ export const AuthProvider = (props: AuthProviderProps) => {
     const signOut = loading ? undefined : () => {
         fetch(signOutUrl).
             finally(() => {
+                debug && logConsole.debug('Signout');
                 window.location.href = logoutUrl;
             });
     }

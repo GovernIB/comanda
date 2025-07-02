@@ -19,6 +19,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
@@ -49,6 +50,18 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 		super.customHttpSecurityConfiguration(http);
 		LogoutHandler logoutHandler = (request, response, authentication) -> {
 			try {
+				log.info("Logout called");
+				Cookie[] cookies = request.getCookies();
+				if (cookies != null) {
+					for (Cookie cookie: cookies) {
+						Cookie deletedCookie = new Cookie(cookie.getName(), "");
+						deletedCookie.setPath(cookie.getPath() != null ? cookie.getPath() : "/");
+						deletedCookie.setMaxAge(0);
+						deletedCookie.setHttpOnly(cookie.isHttpOnly());
+						deletedCookie.setSecure(cookie.getSecure());
+						response.addCookie(deletedCookie);
+					}
+				}
 				request.logout();
 			} catch (ServletException ex) {
 				log.error("Error en el logout", ex);
@@ -58,7 +71,7 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 				logoutRequestMatcher(new AntPathRequestMatcher("/logout")).
 				invalidateHttpSession(true).
 				logoutSuccessUrl("/").
-				permitAll(false));
+				permitAll(true));
 	}
 
 	protected RequestMatcher[] publicRequestMatchers() {
