@@ -34,6 +34,6 @@ build/
 
 ### VS Code ###
 **/.vscode/
-**/.env.development
 **/.env.local
+**/.env.development
 **/node_modules/

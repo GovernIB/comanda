@@ -197,7 +197,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         } else if (fallback != null) {
             navigate(fallback);
         } else {
-            console.warn('[BACK] Couldn\'t go back, neither fallback specified nor previous entry exists in navigation history');
+            console.warn('[BACK] No s\'ha pogut tornar enrere, ni s\'ha especificat una ruta alternativa ni existeix una entrada prèvia a l\'historial de navegació');
         }
     }
     return <MuiBaseApp

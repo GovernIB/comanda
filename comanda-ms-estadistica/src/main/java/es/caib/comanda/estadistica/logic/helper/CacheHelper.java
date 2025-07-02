@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hazelcast.config.Config;
 import com.hazelcast.spring.cache.HazelcastCache;
 import es.caib.comanda.estadistica.logic.intf.model.cache.ComandaCache;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CacheHelper {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final CacheManager cacheManager;
     private final Config hazleCastConfig;
     

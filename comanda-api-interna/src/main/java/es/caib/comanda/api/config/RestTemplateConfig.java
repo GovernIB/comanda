@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.caib.comanda.ms.estadistica.model.GenericDimensio;
 import es.caib.comanda.ms.estadistica.model.GenericFet;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +33,7 @@ public class RestTemplateConfig {
      */
     private static MappingJackson2HttpMessageConverter getConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 

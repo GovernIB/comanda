@@ -1,4 +1,4 @@
-import {FormField, useFormContext} from "reactlib";
+import {envVar, FormField, useFormContext} from "reactlib";
 import Grid from "@mui/material/Grid";
 import * as React from "react";
 import Divider from "@mui/material/Divider";
@@ -6,6 +6,7 @@ import { columnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchCol
 import { useTranslation } from "react-i18next";
 import FormFieldAdvancedSearchFilters from '../FormFieldAdvancedSearchFilters.tsx';
 import { Box } from '@mui/material';
+import {envVars} from "../../main.tsx";
 
 const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data } = useFormContext();
@@ -37,7 +38,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
     return <>
         <Grid container spacing={2}>
             <Grid size={12}><FormField name="aplicacio" optionsRequest={(q) => {
-                const url = new URL(`${import.meta.env.VITE_API_URL}/apps`);
+                const url = new URL(`${envVar('VITE_API_URL', envVars)}/apps`);
                 url.searchParams.append('filter', 'activa:true');
                 url.searchParams.append('page', 'UNPAGED');
                 if (q) {
