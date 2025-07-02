@@ -2,19 +2,23 @@ package es.caib.comanda.ms.back.config;
 
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.SimpleAttributes2GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.SimpleMappableAttributesRetriever;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails;
 import org.springframework.security.web.authentication.preauth.j2ee.J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
@@ -23,6 +27,7 @@ import java.util.*;
  *
  * @author Límit Tecnologies
  */
+@Slf4j
 @EnableWebSecurity
 public class WebSecurityConfig extends BaseWebSecurityConfig {
 
@@ -37,6 +42,23 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 
 	public WebSecurityConfig(JwtAuthConverter jwtAuthConverter) {
 		super(jwtAuthConverter);
+	}
+
+	@Override
+	protected void customHttpSecurityConfiguration(HttpSecurity http) throws Exception {
+		super.customHttpSecurityConfiguration(http);
+		LogoutHandler logoutHandler = (request, response, authentication) -> {
+			try {
+				request.logout();
+			} catch (ServletException ex) {
+				log.error("Error en el logout", ex);
+			}
+		};
+		http.logout(lo -> lo.addLogoutHandler(logoutHandler).
+				logoutRequestMatcher(new AntPathRequestMatcher("/logout")).
+				invalidateHttpSession(true).
+				logoutSuccessUrl("/").
+				permitAll(false));
 	}
 
 	protected RequestMatcher[] publicRequestMatchers() {

@@ -5,6 +5,8 @@ import AuthContext from './AuthContext';
 const LOG_PREFIX = '[CAUTH]';
 
 type AuthProviderProps = React.PropsWithChildren & {
+    /** La url a carregar després de fer logout */
+    logoutUrl: string;
     /** Indica que l'autenticació és obligatòria (no es pot veure res si no s'està autenticat) */
     mandatory?: true;
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
@@ -28,14 +30,15 @@ const parseJwt = (token?: string) => {
 };
 
 export const AuthProvider = (props: AuthProviderProps) => {
-    const { mandatory, debug, children } = props;
+    const { logoutUrl, mandatory, debug, children } = props;
     const [loading, setLoading] = React.useState<boolean>(true);
     const tokenRef = React.useRef<string>(undefined);
     const tokenParsedRef = React.useRef<any>(undefined);
     const logConsole = useLogConsole(LOG_PREFIX);
     const isAuthenticated = !loading && tokenRef.current != null;
+    const authSrc = document.head.getElementsByTagName('script')[2].src;
+    const signOutUrl = authSrc.replace('/authToken', '/logout');
     React.useEffect(() => {
-        const authSrc = document.head.getElementsByTagName('script')[2].src;
         fetch(authSrc).
             then(response => response.text()).
             then(text => {
@@ -48,7 +51,12 @@ export const AuthProvider = (props: AuthProviderProps) => {
             });
     }, []);
     const signIn = loading ? undefined : () => {};
-    const signOut = loading ? undefined : () => {};
+    const signOut = loading ? undefined : () => {
+        fetch(signOutUrl).
+            finally(() => {
+                window.location.href = logoutUrl;
+            });
+    }
     const context = {
         isLoading: loading,
         isReady: !loading,
