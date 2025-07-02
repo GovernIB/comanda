@@ -12,6 +12,20 @@
 		<realm-name>Govern de les Illes Balears</realm-name>
 	</login-config>
 	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>Public Resources</web-resource-name>
+			<url-pattern>/sysenv</url-pattern>
+			<url-pattern>/manifest</url-pattern>
+			<url-pattern>/authToken</url-pattern>
+			<url-pattern>/assets/*</url-pattern>
+		</web-resource-collection>
+		<web-resource-collection>
+			<web-resource-name>API preflight</web-resource-name>
+			<url-pattern>/api/*</url-pattern>
+			<http-method>OPTIONS</http-method>
+		</web-resource-collection>
+	</security-constraint>
+	<security-constraint>
 		<display-name>Any logged in user</display-name>
 		<web-resource-collection>
 			<web-resource-name>API resources</web-resource-name>

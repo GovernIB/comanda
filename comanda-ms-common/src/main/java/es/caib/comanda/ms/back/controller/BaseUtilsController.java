@@ -42,7 +42,7 @@ public abstract class BaseUtilsController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value = BaseConfig.AUTH_TOKEN_PATH, produces = "text/javascript")
+	@GetMapping(value = { BaseConfig.AUTH_TOKEN_PATH, BaseConfig.AUTH_TOKEN_PATH + ".js" }, produces = "text/javascript")
 	public ResponseEntity<String> authToken() {
 		String authToken = getAuthToken();
 		String response = null;
@@ -52,7 +52,7 @@ public abstract class BaseUtilsController {
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping(value = BaseConfig.MANIFEST_PATH, produces = "text/javascript")
+	@GetMapping(value = { BaseConfig.MANIFEST_PATH, BaseConfig.MANIFEST_PATH + ".js" }, produces = "text/javascript")
 	public ResponseEntity<String> manifest() throws IOException {
 		Map<String, Object> manifestProps = getManifestProperties();
 		MediaType contentType = MediaType.valueOf("text/javascript"); // MediaType.TEXT_PLAIN;
@@ -67,7 +67,7 @@ public abstract class BaseUtilsController {
 				body(response);
 	}
 
-	@GetMapping(value = BaseConfig.SYSENV_PATH, produces = "text/javascript")
+	@GetMapping(value = { BaseConfig.SYSENV_PATH, BaseConfig.SYSENV_PATH + ".js" }, produces = "text/javascript")
 	public ResponseEntity<String> systemEnvironment(
 			@RequestParam(required = false) String format) {
 		Map<String, Object> systemEnv = getAllProperties(env); // System.getenv();

@@ -39,16 +39,18 @@ export const AuthProvider = (props: AuthProviderProps) => {
     const authSrc = document.head.getElementsByTagName('script')[2].src;
     const signOutUrl = authSrc.replace('/authToken', '/logout');
     React.useEffect(() => {
-        fetch(authSrc).
-            then(response => response.text()).
-            then(text => {
-                const match = text.match(/window\.__AUTH_TOKEN__\s*=\s*'([^']+)'/);
-                const token = (match ? match[1] : null) ?? undefined;
-                tokenRef.current = token;
-                tokenParsedRef.current = parseJwt(token);
-                setLoading(false);
-                debug && logConsole.debug(token != null ? 'Token obtingut: ' + token : 'Usuari no autenticat');
-            });
+        setTimeout(() => {
+            fetch(authSrc).
+                then(response => response.text()).
+                then(text => {
+                    const match = text.match(/window\.__AUTH_TOKEN__\s*=\s*'([^']+)'/);
+                    const token = (match ? match[1] : null) ?? undefined;
+                    tokenRef.current = token;
+                    tokenParsedRef.current = parseJwt(token);
+                    setLoading(false);
+                    debug && logConsole.debug(token != null ? 'Token obtingut: ' + token : 'Usuari no autenticat');
+                });
+        }, 500);
     }, []);
     const signIn = loading ? undefined : () => {};
     const signOut = loading ? undefined : () => {
