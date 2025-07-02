@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
 
-    private static final String BASE_JOIN = " FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id ";
+    private static final String BASE_JOIN = " FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id ";
     private static final String BASE_WHERE_ENTORN = " WHERE f.entorn_app_id = :entornAppId ";
     private static final String FILTER_BETWEEN = " AND t.data BETWEEN :dataInici AND :dataFi ";
     private static final String FILTER_DATE = " AND t.data = :data ";
@@ -43,11 +43,11 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
 
     /**
      * Genera la consulta SQL per obtenir fets basats en l'entornAppId, un rang de dates i múltiples valors de dimensions.
-     * Aquesta consulta selecciona els resultats de la taula `cmd_est_fet` filtrats per condicions específiques.
+     * Aquesta consulta selecciona els resultats de la taula `com_est_fet` filtrats per condicions específiques.
      *
      * Els filtres inclouen:
      * - Identificador de l'entorn d'aplicació (entornAppId).
-     * - Rang de dates utilitzant les columnes de la taula de temps associada (cmd_est_temps).
+     * - Rang de dates utilitzant les columnes de la taula de temps associada (com_est_temps).
      * - Valor específic de dimensions expressat com una estructura JSON.
      *
      * @return Una cadena amb la consulta SQL per obtenir els resultats filtrats segons entornAppId, rang de dates i múltiples valors de dimensió.

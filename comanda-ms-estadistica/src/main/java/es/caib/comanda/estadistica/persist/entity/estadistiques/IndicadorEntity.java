@@ -19,7 +19,7 @@ import javax.persistence.UniqueConstraint;
 /**
  * Entitat JPA que representa un Indicador dins de l'entorn de l'aplicació.
  *
- * Aquesta entitat correspon a la taula "cmd_est_indicador" i permet emmagatzemar informació relacionada amb indicadors
+ * Aquesta entitat correspon a la taula "com_est_indicador" i permet emmagatzemar informació relacionada amb indicadors
  * estadístics o de mesura en el sistema. La taula inclou una restricció d'unicitat sobre el nom i l'identificador
  * de l'entorn (entorn_app_id) per evitar duplicats.
  *

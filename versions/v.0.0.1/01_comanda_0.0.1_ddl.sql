@@ -5,15 +5,15 @@
 -- Module: comanda-ms-configuracio
 -- =============================================
 
--- Table: cmd_entorn
-CREATE TABLE cmd_entorn (
+-- Table: com_entorn
+CREATE TABLE com_entorn (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     nom VARCHAR2(255 CHAR)
 );
 
--- Table: cmd_app
-CREATE TABLE cmd_app (
+-- Table: com_app
+CREATE TABLE com_app (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     nom VARCHAR2(100 CHAR) NOT NULL,
@@ -27,8 +27,8 @@ CREATE TABLE cmd_app (
     v NUMBER(38)
 );
 
--- Table: cmd_entorn_app
-CREATE TABLE cmd_entorn_app (
+-- Table: com_entorn_app
+CREATE TABLE com_entorn_app (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     entorn_id NUMBER(38) NOT NULL,
     app_id NUMBER(38) NOT NULL,
@@ -49,8 +49,8 @@ CREATE TABLE cmd_entorn_app (
     v NUMBER(38)
 );
 
--- Table: cmd_integracio
-CREATE TABLE cmd_integracio (
+-- Table: com_integracio
+CREATE TABLE com_integracio (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     nom VARCHAR2(100 CHAR) NOT NULL,
@@ -62,8 +62,8 @@ CREATE TABLE cmd_integracio (
     v NUMBER(38)
 );
 
--- Table: cmd_app_integracio
-CREATE TABLE cmd_app_integracio (
+-- Table: com_app_integracio
+CREATE TABLE com_app_integracio (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     integracio_id NUMBER(38) NOT NULL,
     entorn_app_id NUMBER(38) NOT NULL,
@@ -75,8 +75,8 @@ CREATE TABLE cmd_app_integracio (
     v NUMBER(38)
 );
 
--- Table: cmd_app_subsistema
-CREATE TABLE cmd_app_subsistema (
+-- Table: com_app_subsistema
+CREATE TABLE com_app_subsistema (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     nom VARCHAR2(100 CHAR) NOT NULL,
@@ -91,34 +91,38 @@ CREATE TABLE cmd_app_subsistema (
 
 -- Constraints
 -- Foreign Keys
-ALTER TABLE cmd_entorn_app ADD CONSTRAINT cmd_entorn_app_entorn_fk FOREIGN KEY (entorn_id) REFERENCES cmd_entorn(id);
-ALTER TABLE cmd_entorn_app ADD CONSTRAINT cmd_entorn_app_app_fk FOREIGN KEY (app_id) REFERENCES cmd_app(id);
-ALTER TABLE cmd_app_integracio ADD CONSTRAINT cmd_app_integ_entorn_app_fk FOREIGN KEY (entorn_app_id) REFERENCES cmd_entorn_app(id);
-ALTER TABLE cmd_app_integracio ADD CONSTRAINT cmd_app_integ_integracio_fk FOREIGN KEY (integracio_id) REFERENCES cmd_integracio(id);
-ALTER TABLE cmd_app_subsistema ADD CONSTRAINT cmd_app_subs_entorn_app_fk FOREIGN KEY (entorn_app_id) REFERENCES cmd_entorn_app(id);
+ALTER TABLE com_entorn_app ADD CONSTRAINT com_entorn_app_entorn_fk FOREIGN KEY (entorn_id) REFERENCES com_entorn(id);
+ALTER TABLE com_entorn_app ADD CONSTRAINT com_entorn_app_app_fk FOREIGN KEY (app_id) REFERENCES com_app(id);
+ALTER TABLE com_app_integracio ADD CONSTRAINT com_app_integ_entorn_app_fk FOREIGN KEY (entorn_app_id) REFERENCES com_entorn_app(id);
+ALTER TABLE com_app_integracio ADD CONSTRAINT com_app_integ_integracio_fk FOREIGN KEY (integracio_id) REFERENCES com_integracio(id);
+ALTER TABLE com_app_subsistema ADD CONSTRAINT com_app_subs_entorn_app_fk FOREIGN KEY (entorn_app_id) REFERENCES com_entorn_app(id);
 
 -- Unique Constraints
-ALTER TABLE cmd_entorn ADD CONSTRAINT cmd_entorn_codi_uk UNIQUE (codi);
-ALTER TABLE cmd_entorn_app ADD CONSTRAINT cmd_entorn_app_entapp_uk UNIQUE (entorn_id, app_id);
-ALTER TABLE cmd_app ADD CONSTRAINT cmd_app_codi_uk UNIQUE (codi);
-ALTER TABLE cmd_app_integracio ADD CONSTRAINT cmd_app_integracio_app_int_uk UNIQUE (entorn_app_id, integracio_id);
-ALTER TABLE cmd_app_subsistema ADD CONSTRAINT cmd_app_subsistema_appcodi_uk UNIQUE (entorn_app_id, codi);
-ALTER TABLE cmd_integracio ADD CONSTRAINT cmd_integracio_codi_uk UNIQUE (codi);
+ALTER TABLE com_entorn ADD CONSTRAINT com_entorn_codi_uk UNIQUE (codi);
+ALTER TABLE com_entorn_app ADD CONSTRAINT com_entorn_app_entapp_uk UNIQUE (entorn_id, app_id);
+ALTER TABLE com_app ADD CONSTRAINT com_app_codi_uk UNIQUE (codi);
+ALTER TABLE com_app_integracio ADD CONSTRAINT com_app_integracio_app_int_uk UNIQUE (entorn_app_id, integracio_id);
+ALTER TABLE com_app_subsistema ADD CONSTRAINT com_app_subsistema_appcodi_uk UNIQUE (entorn_app_id, codi);
+ALTER TABLE com_integracio ADD CONSTRAINT com_integracio_codi_uk UNIQUE (codi);
+
+-- Lobs
+-- ALTER TABLE com_app MOVE LOB(logo) STORE AS com_app_logo_lob(TABLESPACE comanda_lob INDEX com_app_logo_lob_i);
+-- ALTER TABLE com_integracio MOVE LOB(logo) STORE AS com_integracio_logo_lob(TABLESPACE comanda_lob INDEX com_integracio_logo_lob_i);
 
 -- Grant permissions
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_entorn TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_app TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_entorn_app TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_integracio TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_app_integracio TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_app_subsistema TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_entorn TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_app TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_entorn_app TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_integracio TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_app_integracio TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_app_subsistema TO WWW_COMANDA;
 
 -- =============================================
 -- Module: comanda-ms-salut
 -- =============================================
 
--- Table: cmd_salut
-CREATE TABLE cmd_salut (
+-- Table: com_salut
+CREATE TABLE com_salut (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     entorn_app_id NUMBER(38) NOT NULL,
     data TIMESTAMP NOT NULL,
@@ -128,8 +132,8 @@ CREATE TABLE cmd_salut (
     bd_latencia NUMBER(10)
 );
 
--- Table: cmd_salut_integracio
-CREATE TABLE cmd_salut_integracio (
+-- Table: com_salut_integracio
+CREATE TABLE com_salut_integracio (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     estat VARCHAR2(20 CHAR) NOT NULL,
@@ -139,8 +143,8 @@ CREATE TABLE cmd_salut_integracio (
     salut_id NUMBER(38) NOT NULL
 );
 
--- Table: cmd_salut_subsistema
-CREATE TABLE cmd_salut_subsistema (
+-- Table: com_salut_subsistema
+CREATE TABLE com_salut_subsistema (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     estat VARCHAR2(20 CHAR) NOT NULL,
@@ -150,8 +154,8 @@ CREATE TABLE cmd_salut_subsistema (
     salut_id NUMBER(38) NOT NULL
 );
 
--- Table: cmd_salut_missatge
-CREATE TABLE cmd_salut_missatge (
+-- Table: com_salut_missatge
+CREATE TABLE com_salut_missatge (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     data TIMESTAMP NOT NULL,
     nivell VARCHAR2(10 CHAR) NOT NULL,
@@ -159,8 +163,8 @@ CREATE TABLE cmd_salut_missatge (
     salut_id NUMBER(38) NOT NULL
 );
 
--- Table: cmd_salut_detall
-CREATE TABLE cmd_salut_detall (
+-- Table: com_salut_detall
+CREATE TABLE com_salut_detall (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(10 CHAR) NOT NULL,
     nom VARCHAR2(100 CHAR) NOT NULL,
@@ -170,24 +174,24 @@ CREATE TABLE cmd_salut_detall (
 
 -- Constraints
 -- Foreign Keys
-ALTER TABLE cmd_salut_integracio ADD CONSTRAINT cmd_salutint_salut_fk FOREIGN KEY (salut_id) REFERENCES cmd_salut(id);
-ALTER TABLE cmd_salut_subsistema ADD CONSTRAINT cmd_salutsub_salut_fk FOREIGN KEY (salut_id) REFERENCES cmd_salut(id);
-ALTER TABLE cmd_salut_missatge ADD CONSTRAINT cmd_salutmsg_salut_fk FOREIGN KEY (salut_id) REFERENCES cmd_salut(id);
-ALTER TABLE cmd_salut_detall ADD CONSTRAINT cmd_salutdet_salut_fk FOREIGN KEY (salut_id) REFERENCES cmd_salut(id);
+ALTER TABLE com_salut_integracio ADD CONSTRAINT com_salutint_salut_fk FOREIGN KEY (salut_id) REFERENCES com_salut(id);
+ALTER TABLE com_salut_subsistema ADD CONSTRAINT com_salutsub_salut_fk FOREIGN KEY (salut_id) REFERENCES com_salut(id);
+ALTER TABLE com_salut_missatge ADD CONSTRAINT com_salutmsg_salut_fk FOREIGN KEY (salut_id) REFERENCES com_salut(id);
+ALTER TABLE com_salut_detall ADD CONSTRAINT com_salutdet_salut_fk FOREIGN KEY (salut_id) REFERENCES com_salut(id);
 
 -- Grant permissions
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_salut TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_salut_integracio TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_salut_subsistema TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_salut_missatge TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_salut_detall TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_salut TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_salut_integracio TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_salut_subsistema TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_salut_missatge TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_salut_detall TO WWW_COMANDA;
 
 -- =============================================
 -- Module: comanda-ms-estadistica
 -- =============================================
 
--- Table: cmd_est_dimensio
-CREATE TABLE cmd_est_dimensio (
+-- Table: com_est_dimensio
+CREATE TABLE com_est_dimensio (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     nom VARCHAR2(64 CHAR) NOT NULL,
@@ -195,15 +199,15 @@ CREATE TABLE cmd_est_dimensio (
     entorn_app_id NUMBER(38) NOT NULL
 );
 
--- Table: cmd_est_dimensio_valor
-CREATE TABLE cmd_est_dimensio_valor (
+-- Table: com_est_dimensio_valor
+CREATE TABLE com_est_dimensio_valor (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     valor VARCHAR2(255 CHAR),
     dimensio_id NUMBER(38) NOT NULL
 );
 
--- Table: cmd_est_indicador
-CREATE TABLE cmd_est_indicador (
+-- Table: com_est_indicador
+CREATE TABLE com_est_indicador (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(16 CHAR) NOT NULL,
     nom VARCHAR2(64 CHAR) NOT NULL,
@@ -212,8 +216,8 @@ CREATE TABLE cmd_est_indicador (
     format VARCHAR2(64 CHAR)
 );
 
--- Table: cmd_est_temps
-CREATE TABLE cmd_est_temps (
+-- Table: com_est_temps
+CREATE TABLE com_est_temps (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     data DATE NOT NULL,
     anualitat NUMBER(10) NOT NULL,
@@ -224,8 +228,8 @@ CREATE TABLE cmd_est_temps (
     dia_setmana VARCHAR2(2 CHAR) NOT NULL
 );
 
--- Table: cmd_est_fet
-CREATE TABLE cmd_est_fet (
+-- Table: com_est_fet
+CREATE TABLE com_est_fet (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     temps_id NUMBER(38) NOT NULL,
     dimensions_json VARCHAR2(4000 CHAR),
@@ -233,8 +237,8 @@ CREATE TABLE cmd_est_fet (
     entorn_app_id NUMBER(38) NOT NULL
 );
 
--- Table: cmd_est_widget
-CREATE TABLE cmd_est_widget (
+-- Table: com_est_widget
+CREATE TABLE com_est_widget (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     widget_type VARCHAR2(16 CHAR) NOT NULL,
     titol VARCHAR2(64 CHAR) NOT NULL,
@@ -276,14 +280,14 @@ CREATE TABLE cmd_est_widget (
     v NUMBER(38)
 );
 
--- Table: cmd_est_widget_dim_valor
-CREATE TABLE cmd_est_widget_dim_valor (
+-- Table: com_est_widget_dim_valor
+CREATE TABLE com_est_widget_dim_valor (
     widget_id NUMBER(38) NOT NULL,
     dimensio_valor_id NUMBER(38) NOT NULL
 );
 
--- Table: cmd_est_indicador_table
-CREATE TABLE cmd_est_indicador_table (
+-- Table: com_est_indicador_table
+CREATE TABLE com_est_indicador_table (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     indicador_id NUMBER(38) NOT NULL,
     widget_id NUMBER(38) NOT NULL,
@@ -297,8 +301,8 @@ CREATE TABLE cmd_est_indicador_table (
     v NUMBER(38)
 );
 
--- Table: cmd_est_dashboard
-CREATE TABLE cmd_est_dashboard (
+-- Table: com_est_dashboard
+CREATE TABLE com_est_dashboard (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     titol VARCHAR2(64 CHAR) NOT NULL,
     descripcio VARCHAR2(1024 CHAR),
@@ -309,8 +313,8 @@ CREATE TABLE cmd_est_dashboard (
     v NUMBER(38)
 );
 
--- Table: cmd_est_dashboard_item
-CREATE TABLE cmd_est_dashboard_item (
+-- Table: com_est_dashboard_item
+CREATE TABLE com_est_dashboard_item (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     pos_x NUMBER(10) NOT NULL,
     pos_y NUMBER(10) NOT NULL,
@@ -327,8 +331,8 @@ CREATE TABLE cmd_est_dashboard_item (
     v NUMBER(38)
 );
 
--- Table: cmd_est_dashboard_titol
-CREATE TABLE cmd_est_dashboard_titol (
+-- Table: com_est_dashboard_titol
+CREATE TABLE com_est_dashboard_titol (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     dashboard_id NUMBER(38) NOT NULL,
     titol VARCHAR2(255 CHAR) NOT NULL,
@@ -354,55 +358,55 @@ CREATE TABLE cmd_est_dashboard_titol (
 
 -- Constraints
 -- Unique Constraints
-ALTER TABLE cmd_est_dimensio ADD CONSTRAINT cmd_dim_nom_uk UNIQUE (nom, entorn_app_id);
-ALTER TABLE cmd_est_indicador ADD CONSTRAINT cmd_ind_nom_uk UNIQUE (nom, entorn_app_id);
-ALTER TABLE cmd_est_widget ADD CONSTRAINT cmd_widget_titol_uk UNIQUE (titol, app_id);
-ALTER TABLE cmd_est_dashboard ADD CONSTRAINT cmd_dashboard_titol_uk UNIQUE (titol);
+ALTER TABLE com_est_dimensio ADD CONSTRAINT com_dim_nom_uk UNIQUE (nom, entorn_app_id);
+ALTER TABLE com_est_indicador ADD CONSTRAINT com_ind_nom_uk UNIQUE (nom, entorn_app_id);
+ALTER TABLE com_est_widget ADD CONSTRAINT com_widget_titol_uk UNIQUE (titol, app_id);
+ALTER TABLE com_est_dashboard ADD CONSTRAINT com_dashboard_titol_uk UNIQUE (titol);
 
 -- Foreign Keys
-ALTER TABLE cmd_est_dimensio_valor ADD CONSTRAINT cmd_dim_valor_dim_fk FOREIGN KEY (dimensio_id) REFERENCES cmd_est_dimensio(id);
-ALTER TABLE cmd_est_fet ADD CONSTRAINT cmd_fet_temps_fk FOREIGN KEY (temps_id) REFERENCES cmd_est_temps(id);
-ALTER TABLE cmd_est_widget ADD CONSTRAINT cmd_widget_indicador_fk FOREIGN KEY (indicador_id) REFERENCES cmd_est_indicador(id);
-ALTER TABLE cmd_est_widget ADD CONSTRAINT cmd_widget_taula_dimensio_fk FOREIGN KEY (agrupament_dimensio_id) REFERENCES cmd_est_dimensio(id);
-ALTER TABLE cmd_est_widget ADD CONSTRAINT cmd_widget_descomposicio_fk FOREIGN KEY (descomposicio_dimensio_id) REFERENCES cmd_est_dimensio(id);
-ALTER TABLE cmd_est_widget_dim_valor ADD CONSTRAINT cmd_widget_dvalor_widget_fk FOREIGN KEY (widget_id) REFERENCES cmd_est_widget(id);
-ALTER TABLE cmd_est_widget_dim_valor ADD CONSTRAINT cmd_widget_dvalor_dvalor_fk FOREIGN KEY (dimensio_valor_id) REFERENCES cmd_est_dimensio_valor(id);
-ALTER TABLE cmd_est_indicador_table ADD CONSTRAINT cmd_indtab_indicador_fk FOREIGN KEY (indicador_id) REFERENCES cmd_est_indicador(id);
-ALTER TABLE cmd_est_indicador_table ADD CONSTRAINT cmd_indtab_widget_fk FOREIGN KEY (widget_id) REFERENCES cmd_est_widget(id);
-ALTER TABLE cmd_est_dashboard_item ADD CONSTRAINT cmd_dboard_item_dboard_fk FOREIGN KEY (dashboard_id) REFERENCES cmd_est_dashboard(id);
-ALTER TABLE cmd_est_dashboard_item ADD CONSTRAINT cmd_dboard_item_widget_fk FOREIGN KEY (widget_id) REFERENCES cmd_est_widget(id);
-ALTER TABLE cmd_est_dashboard_titol ADD CONSTRAINT cmd_dboard_titol_dboard_fk FOREIGN KEY (dashboard_id) REFERENCES cmd_est_dashboard(id);
+ALTER TABLE com_est_dimensio_valor ADD CONSTRAINT com_dim_valor_dim_fk FOREIGN KEY (dimensio_id) REFERENCES com_est_dimensio(id);
+ALTER TABLE com_est_fet ADD CONSTRAINT com_fet_temps_fk FOREIGN KEY (temps_id) REFERENCES com_est_temps(id);
+ALTER TABLE com_est_widget ADD CONSTRAINT com_widget_indicador_fk FOREIGN KEY (indicador_id) REFERENCES com_est_indicador(id);
+ALTER TABLE com_est_widget ADD CONSTRAINT com_widget_taula_dimensio_fk FOREIGN KEY (agrupament_dimensio_id) REFERENCES com_est_dimensio(id);
+ALTER TABLE com_est_widget ADD CONSTRAINT com_widget_descomposicio_fk FOREIGN KEY (descomposicio_dimensio_id) REFERENCES com_est_dimensio(id);
+ALTER TABLE com_est_widget_dim_valor ADD CONSTRAINT com_widget_dvalor_widget_fk FOREIGN KEY (widget_id) REFERENCES com_est_widget(id);
+ALTER TABLE com_est_widget_dim_valor ADD CONSTRAINT com_widget_dvalor_dvalor_fk FOREIGN KEY (dimensio_valor_id) REFERENCES com_est_dimensio_valor(id);
+ALTER TABLE com_est_indicador_table ADD CONSTRAINT com_indtab_indicador_fk FOREIGN KEY (indicador_id) REFERENCES com_est_indicador(id);
+ALTER TABLE com_est_indicador_table ADD CONSTRAINT com_indtab_widget_fk FOREIGN KEY (widget_id) REFERENCES com_est_widget(id);
+ALTER TABLE com_est_dashboard_item ADD CONSTRAINT com_dboard_item_dboard_fk FOREIGN KEY (dashboard_id) REFERENCES com_est_dashboard(id);
+ALTER TABLE com_est_dashboard_item ADD CONSTRAINT com_dboard_item_widget_fk FOREIGN KEY (widget_id) REFERENCES com_est_widget(id);
+ALTER TABLE com_est_dashboard_titol ADD CONSTRAINT com_dboard_titol_dboard_fk FOREIGN KEY (dashboard_id) REFERENCES com_est_dashboard(id);
 
 -- Indexes
-CREATE INDEX cmd_est_fet_temps_i ON cmd_est_fet(temps_id);
-CREATE INDEX cmd_est_fet_entornapp_i ON cmd_est_fet(entorn_app_id);
-CREATE INDEX cmd_est_temps_data_i ON cmd_est_temps(data);
-CREATE INDEX cmd_est_temps_anualitat_i ON cmd_est_temps(anualitat);
-CREATE INDEX cmd_est_temps_trimestre_i ON cmd_est_temps(anualitat, trimestre);
-CREATE INDEX cmd_est_temps_mes_i ON cmd_est_temps(anualitat, mes);
-CREATE INDEX cmd_est_temps_setmana_i ON cmd_est_temps(anualitat, setmana);
-CREATE INDEX cmd_est_temps_dia_i ON cmd_est_temps(anualitat, mes, dia);
-CREATE INDEX cmd_est_dimensio_valor_dim_i ON cmd_est_dimensio_valor(dimensio_id);
+CREATE INDEX com_est_fet_temps_i ON com_est_fet(temps_id);
+CREATE INDEX com_est_fet_entornapp_i ON com_est_fet(entorn_app_id);
+CREATE INDEX com_est_temps_data_i ON com_est_temps(data);
+CREATE INDEX com_est_temps_anualitat_i ON com_est_temps(anualitat);
+CREATE INDEX com_est_temps_trimestre_i ON com_est_temps(anualitat, trimestre);
+CREATE INDEX com_est_temps_mes_i ON com_est_temps(anualitat, mes);
+CREATE INDEX com_est_temps_setmana_i ON com_est_temps(anualitat, setmana);
+CREATE INDEX com_est_temps_dia_i ON com_est_temps(anualitat, mes, dia);
+CREATE INDEX com_est_dimensio_valor_dim_i ON com_est_dimensio_valor(dimensio_id);
 
 -- Grant permissions
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dimensio TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dimensio_valor TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_indicador TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_temps TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_fet TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_widget TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_widget_dim_valor TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_indicador_table TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dashboard TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dashboard_item TO WWW_COMANDA;
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_est_dashboard_titol TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_dimensio TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_dimensio_valor TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_indicador TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_temps TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_fet TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_widget TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_widget_dim_valor TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_indicador_table TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_dashboard TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_dashboard_item TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_dashboard_titol TO WWW_COMANDA;
 
 -- =============================================
 -- Module: comanda-ms-monitor
 -- =============================================
 
--- Table: cmd_monitor
-CREATE TABLE cmd_monitor (
+-- Table: com_monitor
+CREATE TABLE com_monitor (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     entorn_app_id NUMBER(38),
     codi VARCHAR2(16 CHAR) NOT NULL,
@@ -419,4 +423,4 @@ CREATE TABLE cmd_monitor (
 );
 
 -- Grant permissions
-GRANT SELECT, UPDATE, INSERT, DELETE ON cmd_monitor TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_monitor TO WWW_COMANDA;

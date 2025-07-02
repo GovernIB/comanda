@@ -19,7 +19,7 @@ import javax.persistence.Table;
 @Getter
 @Setter
 @NoArgsConstructor
-@Subselect("select codi AS id from CMD_ENTORN")
+@Subselect("select codi AS id from COM_ENTORN")
 public class FakeCacheEntity  implements ResourceEntity<ComandaCache, String> {
 
     @Id

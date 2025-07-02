@@ -1,7 +1,7 @@
 databaseChangeLog:
 -  property:
     name: db_prefix
-    value: cmd_
+    value: com_
 - property:
     dbms: oracle
     name: varcharUnit

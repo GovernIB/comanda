@@ -62,7 +62,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                                 "FROM ( " +
                                 "    SELECT t.data as data, " +
                                 "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
-                                "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "    WHERE f.entorn_app_id = :entornAppId " +
                                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "GROUP BY t.data)")
@@ -79,7 +79,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                                 "FROM ( " +
                                 "    SELECT " +
                                 "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
-                                "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "    WHERE f.entorn_app_id = :entornAppId " +
                                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "GROUP BY t.anualitat, t.trimestre, t.mes)")
@@ -96,7 +96,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                                 "FROM ( " +
                                 "    SELECT t.data as data, " +
                                 "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
-                                "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "    WHERE f.entorn_app_id = :entornAppId " +
                                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
@@ -114,7 +114,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                                 "FROM ( " +
                                 "    SELECT t.data as data, " +
                                 "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
-                                "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "    WHERE f.entorn_app_id = :entornAppId " +
                                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
@@ -135,7 +135,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                             "FROM ( " +
                             "    SELECT t.data as data, " +
                             "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
-                            "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                            "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                             "    WHERE f.entorn_app_id = :entornAppId " +
                             "    AND t.data BETWEEN :dataInici AND :dataFi " +
                             "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT')  " +
@@ -157,7 +157,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                                 "FROM ( " +
                                 "    SELECT t.data as data, " +
                                 "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"usuaris\"'))) AS sum_fets " +
-                                "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "    WHERE f.entorn_app_id = :entornAppId " +
                                 "    AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT')  " +
@@ -176,7 +176,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                             "FROM ( " +
                             "    SELECT " +
                             "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets " +
-                            "    FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                            "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                             "    WHERE f.entorn_app_id = :entornAppId " +
                             "    AND t.data BETWEEN :dataInici AND :dataFi " +
                             "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +

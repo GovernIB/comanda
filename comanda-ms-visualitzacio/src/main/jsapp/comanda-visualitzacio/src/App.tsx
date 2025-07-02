@@ -89,7 +89,7 @@ export const App: React.FC = () => {
     ];
     return (
         <BaseApp
-            code="cmd"
+            code="com"
             logo={logo}
             logoStyle={{
                 '& img': { height: '38px' },

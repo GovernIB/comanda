@@ -70,7 +70,7 @@ public interface FetRepositoryDialect {
     //     t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
     //     JSON_VALUE(f.dimensions_json, '$."ORG"') AS descomposicio,
     //     SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    // FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
+    // FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id
     // WHERE f.entorn_app_id = 1
     //   AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
     //   AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
@@ -88,7 +88,7 @@ public interface FetRepositoryDialect {
     //         SELECT
     //             JSON_VALUE(f.dimensions_json, '$."ORG"') AS agrupacio,
     //             SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$."NOT_ENV"'))) AS sum_fets_per_data
-    //         FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id
+    //         FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id
     //         WHERE f.entorn_app_id = 1
     //           AND t.data BETWEEN TO_DATE('2025-04-30', 'YYYY-MM-DD') AND TO_DATE('2025-05-30', 'YYYY-MM-DD')
     //           AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'

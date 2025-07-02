@@ -11,15 +11,15 @@ import java.util.Map;
 public class BaseConfig {
 
 	public static final String APP_NAME = "comanda";
-	public static final String DB_PREFIX = "cmd_";
+	public static final String DB_PREFIX = "com_";
 	public static final String BASE_PACKAGE = "es.caib." + APP_NAME;
 	public static final String PROPERTY_PREFIX = BASE_PACKAGE + ".";
 	public static final String PROPERTY_PREFIX_FRONT = PROPERTY_PREFIX + "front.";
 
 	public static final String APP_URL = PROPERTY_PREFIX + ".app.url";
 
-	public static final String ROLE_ADMIN = "CMD_ADMIN";
-	public static final String ROLE_CONSULTA = "CMD_CONSULTA";
+	public static final String ROLE_ADMIN = "COM_ADMIN";
+	public static final String ROLE_CONSULTA = "COM_CONSULTA";
 
 	public static final String API_PATH = "/api";
 	public static final String PING_PATH = "/ping";

@@ -24,7 +24,7 @@ databaseChangeLog:
                 BEGIN
                     -- 1. Generar columnes dinàmiques per dimensions ordenades pel codi
                     FOR dim IN (SELECT LOWER(codi) AS codi, REPLACE(LOWER(codi), '''', '''''') AS escaped_clau
-                                FROM COMANDA.CMD_EST_DIMENSIO
+                                FROM COMANDA.COM_EST_DIMENSIO
                                 WHERE entorn_app_id = p_entorn_app_id
                                 ORDER BY LOWER(codi)) LOOP
                         -- Construir columnes JSON dinàmiques
@@ -35,7 +35,7 @@ databaseChangeLog:
                     
                     -- 2. Generar columnes dinàmiques per indicadors ordenats pel codi
                     FOR ind IN (SELECT LOWER(codi) AS codi, REPLACE(LOWER(codi), '''', '''''') AS escaped_clau
-                                FROM COMANDA.CMD_EST_INDICADOR
+                                FROM COMANDA.COM_EST_INDICADOR
                                 WHERE entorn_app_id = p_entorn_app_id
                                 ORDER BY LOWER(codi)) LOOP
                         -- Construir columnes JSON dinàmiques
@@ -69,7 +69,7 @@ databaseChangeLog:
                             SELECT
                                 d.*,
                                 i.*
-                            FROM COMANDA.CMD_EST_FET f
+                            FROM COMANDA.COM_EST_FET f
                             -- Extraiem les dimensions del JSON
                             CROSS JOIN JSON_TABLE(
                                 f.dimensions_json,
@@ -123,7 +123,7 @@ databaseChangeLog:
                   BEGIN
                       -- 1. Generar columnes dinàmiques per dimensions
                       FOR dim IN SELECT LOWER(codi) AS codi
-                                 FROM comanda.cmd_est_dimensio
+                                 FROM comanda.com_est_dimensio
                                  WHERE entorn_app_id = p_entorn_app_id
                                  ORDER BY LOWER(codi)
                       LOOP
@@ -133,7 +133,7 @@ databaseChangeLog:
 
                       -- 2. Generar columnes dinàmiques per indicadors
                       FOR ind IN SELECT LOWER(codi) AS codi
-                                 FROM comanda.cmd_est_indicador
+                                 FROM comanda.com_est_indicador
                                  WHERE entorn_app_id = p_entorn_app_id
                                  ORDER BY LOWER(codi)
                       LOOP
@@ -164,7 +164,7 @@ databaseChangeLog:
                               SELECT
                                   d.*,
                                   i.*
-                              FROM comanda.cmd_est_fet f
+                              FROM comanda.com_est_fet f
                               CROSS JOIN jsonb_to_recordset(f.dimensions_json::jsonb) AS d(%s)
                               CROSS JOIN jsonb_to_recordset(f.indicadors_json::jsonb) AS i(%s)
                               WHERE f.entorn_app_id = %s
@@ -215,23 +215,23 @@ databaseChangeLog:
                       -- 1. Generar columnes dinàmiques per dimensions
                       SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '` VARCHAR(1000) JSON PATH ''$.', LOWER(codi), ''''))
                       INTO dynamic_dimension_columns
-                      FROM comanda.cmd_est_dimensio
+                      FROM comanda.com_est_dimensio
                       WHERE entorn_app_id = p_entorn_app_id;
 
                       SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '`'))
                       INTO static_dimension_columns
-                      FROM comanda.cmd_est_dimensio
+                      FROM comanda.com_est_dimensio
                       WHERE entorn_app_id = p_entorn_app_id;
 
                       -- 2. Generar columnes dinàmiques per indicadors
                       SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '` DECIMAL(10, 2) JSON PATH ''$.', LOWER(codi), ''''))
                       INTO dynamic_indicator_columns
-                      FROM comanda.cmd_est_indicador
+                      FROM comanda.com_est_indicador
                       WHERE entorn_app_id = p_entorn_app_id;
 
                       SELECT GROUP_CONCAT(CONCAT('`', LOWER(codi), '`'))
                       INTO static_indicator_columns
-                      FROM comanda.cmd_est_indicador
+                      FROM comanda.com_est_indicador
                       WHERE entorn_app_id = p_entorn_app_id;
 
                       -- 3. Construir la condició de dimensions
@@ -249,7 +249,7 @@ databaseChangeLog:
                           'SELECT ', static_dimension_columns, ', ', static_indicator_columns, '
                           FROM (
                               SELECT d.*, i.*
-                              FROM comanda.cmd_est_fet f
+                              FROM comanda.com_est_fet f
                               CROSS JOIN JSON_TABLE(f.dimensions_json, ''$'' COLUMNS (', dynamic_dimension_columns, ')) AS d
                               CROSS JOIN JSON_TABLE(f.indicadors_json, ''$'' COLUMNS (', dynamic_indicator_columns, ')) AS i
                               WHERE f.entorn_app_id = ', p_entorn_app_id, 

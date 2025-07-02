@@ -35,8 +35,8 @@ public class OracleFetRepositoryDialectTest {
 
         // Assert
         String expectedQuery = removeConsecutiveSpaces("SELECT f.* " +
-                "FROM cmd_est_fet f " +
-                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                "FROM com_est_fet f " +
+                "JOIN com_est_temps t ON f.temps_id = t.id " +
                 "WHERE f.entorn_app_id = :entornAppId " +
                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                 "AND JSON_VALUE(f.dimensions_json, '$.\"' || :dimensioCodi || '\"') = :dimensioValor");
@@ -51,8 +51,8 @@ public class OracleFetRepositoryDialectTest {
 
         // Assert
         String expectedQuery = removeConsecutiveSpaces("SELECT f.* " +
-                "FROM cmd_est_fet f " +
-                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                "FROM com_est_fet f " +
+                "JOIN com_est_temps t ON f.temps_id = t.id " +
                 "WHERE f.entorn_app_id = :entornAppId " +
                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                 "AND JSON_VALUE(f.dimensions_json, '$.\"' || :dimensioCodi || '\"') IN (:dimensioValor)");
@@ -78,8 +78,8 @@ public class OracleFetRepositoryDialectTest {
                         "Test Null Dimensions",
                         null,
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f " +
-                                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f " +
+                                "JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data = :data ")),
 
@@ -88,8 +88,8 @@ public class OracleFetRepositoryDialectTest {
                         "Test Empty Dimensions",
                         new HashMap<>(),
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f " +
-                                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f " +
+                                "JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data = :data ")),
 
@@ -98,8 +98,8 @@ public class OracleFetRepositoryDialectTest {
                         "Test Single Dimension with Single Value (departament=RRHH)",
                         Map.of("departament", List.of("RRHH")),
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f " +
-                                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f " +
+                                "JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data = :data " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' ")
@@ -110,8 +110,8 @@ public class OracleFetRepositoryDialectTest {
                         "Test Single Dimension with Multiple Values (departament=RRHH,IT)",
                         Map.of("departament", List.of("RRHH", "IT")),
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f " +
-                                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f " +
+                                "JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data = :data " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') ")
@@ -125,8 +125,8 @@ public class OracleFetRepositoryDialectTest {
                             put("area", List.of("Finance"));
                         }},
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f " +
-                                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f " +
+                                "JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data = :data " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
@@ -141,8 +141,8 @@ public class OracleFetRepositoryDialectTest {
                             put("area", List.of("Finance", "HR"));
                         }},
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f " +
-                                "JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f " +
+                                "JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data = :data " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
@@ -169,7 +169,7 @@ public class OracleFetRepositoryDialectTest {
                         "Test Null Dimensions",
                         null,
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi ")
                 ),
@@ -179,7 +179,7 @@ public class OracleFetRepositoryDialectTest {
                         "Test Empty Dimensions",
                         new HashMap<>(),
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi ")
                 ),
@@ -189,7 +189,7 @@ public class OracleFetRepositoryDialectTest {
                         "Test Single Dimension with Single Value (departament=RRHH)",
                         Map.of("departament", List.of("RRHH")),
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' ")
@@ -200,7 +200,7 @@ public class OracleFetRepositoryDialectTest {
                         "Test Single Dimension with Multiple Values (departament=RRHH,IT)",
                         Map.of("departament", List.of("RRHH", "IT")),
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') ")
@@ -214,7 +214,7 @@ public class OracleFetRepositoryDialectTest {
                             put("area", List.of("Finance"));
                         }},
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT')  " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"area\"') = 'Finance' ")
@@ -228,7 +228,7 @@ public class OracleFetRepositoryDialectTest {
                             put("area", List.of("Finance", "HR"));
                         }},
                         removeConsecutiveSpaces("SELECT f.* " +
-                                "FROM cmd_est_fet f JOIN cmd_est_temps t ON f.temps_id = t.id " +
+                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT')  " +
