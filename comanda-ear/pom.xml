@@ -12,10 +12,24 @@
 	<packaging>ear</packaging>
 	<properties>
 		<docker.base.image>${project.parent.artifactId}</docker.base.image>
+		<docker.image.alias>${project.parent.artifactId}</docker.image.alias>
 		<docker.jboss.userhome>/home/jboss</docker.jboss.userhome>
 		<docker.jboss.dir>jboss-eap-7.2</docker.jboss.dir>
+		<docker.image.from>280421/jboss-eap-caib-7.2</docker.image.from>
+		<docker.assembly.dir>${basedir}/src/main/docker/jboss</docker.assembly.dir>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+	<profiles>
+		<profile>
+			<id>jboss74</id>
+			<properties>
+				<!-- <docker.base.image>${project.parent.artifactId}-7.4</docker.base.image> -->
+				<!-- <docker.image.alias>${project.parent.artifactId}-7.4</docker.image.alias> -->
+				<docker.image.from>280421/jboss-eap-caib-7.4</docker.image.from>
+				<docker.assembly.dir>${basedir}/src/main/docker/jboss74</docker.assembly.dir>
+			</properties>
+		</profile>
+	</profiles>
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -126,9 +140,9 @@
 					<images>
 						<image>
 							<name>${docker.base.image}</name>
-							<alias>${project.parent.artifactId}</alias>
+							<alias>${docker.image.alias}</alias>
 							<build>
-								<from>280421/jboss-eap-caib-7.2</from>
+								<from>${docker.image.from}</from>
 								<maintainer>limit@limit.es</maintainer>
 								<ports>
 									<port>8080</port>
@@ -139,7 +153,7 @@
 										<inline>
 											<fileSets>
 												<fileSet>
-													<directory>${basedir}/src/main/docker/jboss</directory>
+													<directory>${docker.assembly.dir}</directory>
 													<outputDirectory>config</outputDirectory>
 												</fileSet>
 											</fileSets>

@@ -1,0 +1,7 @@
+    <system-properties>
+        <property name="es.caib.comanda.properties" value="/home/jboss/apps/comanda/comanda.properties"/>
+        <property name="es.caib.comanda.system.properties" value="/home/jboss/apps/comanda/comanda.system.properties"/>
+        <!-- property name="http.proxyHost" value="${env.JBOSS_PROXY_HOST}"/>
+        <property name="http.proxyPort" value="${env.JBOSS_PROXY_PORT}"/>
+        <property name="http.nonProxyHosts" value="localhost"/ -->
+    </system-properties>

@@ -3,7 +3,7 @@
 	<deployment>
 		<dependencies>
 			<module name="org.jboss.as.mail" services="import"/>
-			<module name="org.keycloak.keycloak-core" export="TRUE"/>
+			<module name="org.keycloak.keycloak-core" export="true"/>
 		</dependencies>
 		<exclusions>
 			<module name="com.fasterxml.jackson.core.jackson-core" />
@@ -11,6 +11,9 @@
 			<module name="com.fasterxml.jackson.core.jackson-databind" />
 			<module name="com.fasterxml.jackson.dataformat.jackson-dataformat-xml" />
 			<module name="com.fasterxml.jackson.dataformat.jackson-dataformat-yaml" />
+			<!-- Les següents exclusions serien per evitar l'error al trobar 2 instàncies que implementen slf4j en jboss74 -->
+			<!-- <module name="org.slf4j.impl" /> -->
+			<!-- <module name="ch.qos.logback" /> -->
 		</exclusions>
 		<exclude-subsystems>
 			<subsystem name="jaxrs"/>
