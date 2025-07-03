@@ -3,6 +3,7 @@ import useLogConsole from '../util/useLogConsole';
 import AuthContext from './AuthContext';
 
 const LOG_PREFIX = '[CAUTH]';
+const CHECK_TOKEN_TIMEOUT_MARGIN_SECS = 1;
 
 type AuthProviderProps = React.PropsWithChildren & {
     /** La url a carregar després de fer logout */
@@ -29,6 +30,20 @@ const parseJwt = (token?: string) => {
     }
 };
 
+const useTokenWatchTimeout = (callback: () => void, delay: number = 1000) => {
+    let timeoutId: any;
+    const start = (newDelay?: number) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(callback, newDelay ?? delay);
+    };
+    const refresh = (newDelay?: number) => start(newDelay);
+    const stop = () => clearTimeout(timeoutId);
+    return {
+        refresh,
+        stop,
+    };
+};
+
 export const AuthProvider = (props: AuthProviderProps) => {
     const { logoutUrl, mandatory, debug, children } = props;
     const [loading, setLoading] = React.useState<boolean>(true);
@@ -38,48 +53,71 @@ export const AuthProvider = (props: AuthProviderProps) => {
     const isAuthenticated = !loading && tokenRef.current != null;
     const authSrc = document.head.getElementsByTagName('script')[2].src;
     const signOutUrl = authSrc.replace('/authToken', '/logout');
+    const checkToken = () => {
+        debug && logConsole.debug('Verificació del token iniciada');
+        getToken()
+            .then((token) => {
+                if (token) {
+                    setToken(token, true);
+                } else {
+                    debug && logConsole.debug('La verificació del token ha retornat <null>');
+                    window.location.href = logoutUrl;
+                }
+            })
+            .catch((error) => {
+                logConsole.error('Error al verificar el token:', JSON.stringify(error));
+                window.location.href = logoutUrl;
+            });
+    };
+    const { refresh: checkTokenRefresh, stop: checkTokenStop } = useTokenWatchTimeout(checkToken);
+    const getToken = async () => {
+        const response = await fetch(authSrc);
+        const text = await response.text();
+        const match = text.match(/window\.__AUTH_TOKEN__\s*=\s*'([^']+)'/);
+        return match ? match[1] : null;
+    };
+    const setToken = (token: string, verified?: boolean) => {
+        tokenRef.current = token;
+        const tokenParsed = parseJwt(token);
+        tokenParsedRef.current = tokenParsed;
+        const checkTokenTimeout = (tokenParsed.exp - (Date.now() / 1000) + CHECK_TOKEN_TIMEOUT_MARGIN_SECS) * 1000;
+        tokenParsed && checkTokenRefresh(checkTokenTimeout);
+        setLoading(false);
+        debug && logConsole.debug('Token', verified ? 'verificat:' : 'obtingut:', token);
+    };
     React.useEffect(() => {
-        const setToken = (token: string) => {
-            tokenRef.current = token;
-            tokenParsedRef.current = parseJwt(token);
-            setLoading(false);
-            debug && logConsole.debug('Token obtingut:', token);
-        }
         // Comprova si el token ja està disponible a l'objecte window
-        if (window.__AUTH_TOKEN__) {
-            setToken(window.__AUTH_TOKEN__);
+        if ((window as any).__AUTH_TOKEN__) {
+            setToken((window as any).__AUTH_TOKEN__);
         } else {
             // Si no està disponible, espera a que el script es carregui i després obté el token
             const checkTokenInterval = setInterval(() => {
-                if (window.__AUTH_TOKEN__) {
-                    setToken(window.__AUTH_TOKEN__);
+                if ((window as any).__AUTH_TOKEN__) {
+                    setToken((window as any).__AUTH_TOKEN__);
                     clearInterval(checkTokenInterval);
                 }
             }, 100);
             // Com a alternativa, obté el token del script si no està disponible després d'un temps raonable
-            const fallbackTimeout = setTimeout(() => {
+            setTimeout(() => {
                 clearInterval(checkTokenInterval);
-                fetch(authSrc).
-                    then(response => response.text()).
-                    then(text => {
-                        const match = text.match(/window\.__AUTH_TOKEN__\s*=\s*'([^']+)'/);
-                        const token = (match ? match[1] : null) ?? undefined;
+                if (!(window as any).__AUTH_TOKEN__) {
+                    getToken().then((token) => {
                         token && setToken(token);
                     });
+                }
             }, 1000);
-            return () => {
-                clearInterval(checkTokenInterval);
-                clearTimeout(fallbackTimeout);
-            };
         }
+        return () => {
+            checkTokenStop();
+        };
     }, []);
     const signIn = loading ? undefined : () => {};
     const signOut = loading ? undefined : () => {
         fetch(signOutUrl).
             finally(() => {
-                debug && logConsole.debug('Tancament de sessió');
-                window.location.href = logoutUrl;
-            });
+                  debug && logConsole.debug('Tancament de sessió');
+                  window.location.href = logoutUrl;
+              });
     }
     const context = {
         isLoading: loading,
@@ -96,6 +134,6 @@ export const AuthProvider = (props: AuthProviderProps) => {
     };
     const showChildren = !loading && (!mandatory || (mandatory && isAuthenticated));
     return <AuthContext.Provider value={context}>
-        {showChildren ? children : null}
+            {showChildren ? children : null}
     </AuthContext.Provider>;
 };
