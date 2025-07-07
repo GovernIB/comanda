@@ -69,7 +69,6 @@
 									<goal>npm</goal>
 								</goals>
 								<configuration>
-									<npmInheritsProxyConfigFromMaven>true</npmInheritsProxyConfigFromMaven>
 									<arguments>install --userconfig=${basedir}/src/main/jsapp/comanda-visualitzacio/.npmrc</arguments>
 								</configuration>
 							</execution>
@@ -79,7 +78,6 @@
 									<goal>npm</goal>
 								</goals>
 								<configuration>
-									<npmInheritsProxyConfigFromMaven>true</npmInheritsProxyConfigFromMaven>
 									<arguments>run build-jboss --userconfig=${basedir}/src/main/jsapp/comanda-visualitzacio/.npmrc</arguments>
 								</configuration>
 							</execution>
