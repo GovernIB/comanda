@@ -16,7 +16,10 @@ public class BaseConfig {
 	public static final String PROPERTY_PREFIX = BASE_PACKAGE + ".";
 	public static final String PROPERTY_PREFIX_FRONT = PROPERTY_PREFIX + "front.";
 
-	public static final String APP_URL = PROPERTY_PREFIX + ".app.url";
+	public static final String APP_PROPERTIES = PROPERTY_PREFIX + "properties";
+	public static final String APP_SYSTEM_PROPERTIES = PROPERTY_PREFIX + "system.properties";
+
+	public static final String APP_URL = PROPERTY_PREFIX + "app.url";
 
 	public static final String ROLE_ADMIN = "COM_ADMIN";
 	public static final String ROLE_CONSULTA = "COM_CONSULTA";
@@ -33,9 +36,6 @@ public class BaseConfig {
 	public static final String PROP_HTTP_HEADER_ANSWERS = PROPERTY_PREFIX + "http.header.answers";
 	public static final String PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED = PROPERTY_PREFIX + "persist.container-transactions-disabled";
 	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
-	public static final String PROP_SCHEDULER_APP_INFO_CRON = PROPERTY_PREFIX + "scheduler.app.info.cron";
-	public static final String PROP_SCHEDULER_SALUT_INFO_CRON = PROPERTY_PREFIX + "scheduler.salut.info.cron";
-	public static final String PROP_SCHEDULER_ESTADISTIQUES_INFO_CRON = PROPERTY_PREFIX + "scheduler.estadistiqeus.info.cron";
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
 	public static final String PROP_HTTPAUTH_KEYCLOAK_BASE_URL = PROPERTY_PREFIX + "httpauth.keycloak.base.url";
 	public static final String PROP_HTTPAUTH_KEYCLOAK_REALM = PROPERTY_PREFIX + "httpauth.keycloak.realm";
