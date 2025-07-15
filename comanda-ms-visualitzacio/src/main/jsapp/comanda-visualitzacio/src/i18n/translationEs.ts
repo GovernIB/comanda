@@ -6,6 +6,7 @@ const translationEs = {
         app: "Aplicaciones",
         entorn: "Entornos",
         monitor: "Monitor",
+        versionsEntorn: "Versiones por entorno",
         widget: "Widgets estadísticos",
         dashboard: "Cuadros de control",
         cache: "Gestión de cachés",
@@ -97,6 +98,9 @@ const translationEs = {
         appsEntorns: {
             title: "Entornos",
             resourceTitle: "entorno",
+        },
+        versionsEntorns: {
+            title: "Versiones por entorno",
         },
         integracions: {
             title: "Integraciones",

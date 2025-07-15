@@ -6,6 +6,7 @@ const translationCa = {
         monitor: "Monitor",
         app: "Aplicacions",
         entorn: "Entorns",
+        versionsEntorn: "Versions per entorn",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
         cache: "Gestió de cachés",
@@ -97,6 +98,9 @@ const translationCa = {
         appsEntorns: {
             title: "Entorns",
             resourceTitle: "entorn",
+        },
+        versionsEntorns: {
+            title: "Versions per entorn",
         },
         integracions: {
             title: "Integracions",
