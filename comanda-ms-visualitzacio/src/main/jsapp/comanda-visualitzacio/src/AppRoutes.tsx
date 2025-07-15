@@ -12,6 +12,7 @@ import EstadisticaWidget from './pages/EstadisticaWidget';
 import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
+import VersionsEntorns from './pages/VersionsEntorns';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -35,6 +36,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="entorn">
                 <Route index element={<Entorns />} />
+            </Route>
+            <Route path="versionsEntorn">
+                <Route index element={<VersionsEntorns />} />
             </Route>
             <Route path="monitor">
                 <Route index element={<Monitors />} />

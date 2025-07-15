@@ -41,6 +41,13 @@ export const App: React.FC = () => {
                 resourceName: 'entorn',
             },
             {
+                id: 'versionsEntorn',
+                title: t('menu.versionsEntorn'),
+                to: '/versionsEntorn',
+                icon: 'format_list_numbered_rtl',
+                resourceName: 'entornApp',
+            },
+            {
                 id: 'integracio',
                 title: t('menu.integracio'),
                 to: '/integracio',
