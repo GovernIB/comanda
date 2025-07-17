@@ -1,5 +1,7 @@
         <subsystem xmlns="urn:jboss:domain:keycloak:1.2">
             <realm name="GOIB">
+            <!-- SOFID -->
+<!--            <realm name="soffid">-->
                 <auth-server-url>${env.JBOSS_AUTH_URL}</auth-server-url>
                 <ssl-required>none</ssl-required>
             </realm>
@@ -21,3 +23,4 @@
                 <credential name="secret">${env.JBOSS_AUTH_CREDENTIAL_SECRET}</credential>
             </secure-deployment>
         </subsystem>
+

@@ -1,7 +1,7 @@
         <subsystem xmlns="urn:jboss:domain:logging:8.0">
             <use-deployment-logging-config value="false"/>
             <console-handler name="CONSOLE">
-                <level name="DEBUG"/>
+                <level name="TRACE"/>
                 <formatter>
                     <named-formatter name="COLOR-PATTERN"/>
                 </formatter>
@@ -36,15 +36,29 @@
             <logger category="es.caib.comanda">
                 <level name="INFO"/>
             </logger>
-            <!--logger category="org.keycloak">
-                <level name="TRACE"/>
-            </logger-->
-            <!--logger category="org.hibernate.SQL">
+            <!--
+            <logger category="org.hibernate.SQL">
                 <level name="DEBUG"/>
             </logger>
             <logger category="org.hibernate.type.descriptor.sql.BasicBinder">
                 <level name="TRACE"/>
-            </logger-->
+            </logger>
+            <logger category="org.keycloak">
+                <level name="TRACE"/>
+            </logger>
+            <logger category="org.keycloak.adapters">
+                <level name="TRACE"/>
+            </logger>
+            <logger category="org.keycloak.events">
+                <level name="TRACE"/>
+            </logger>
+            <logger category="org.wildfly.security">
+                <level name="TRACE"/>
+            </logger>
+            <logger category="org.wildfly.elytron">
+                <level name="TRACE"/>
+            </logger>
+            -->
             <formatter name="PATTERN">
                 <pattern-formatter pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n"/>
             </formatter>
