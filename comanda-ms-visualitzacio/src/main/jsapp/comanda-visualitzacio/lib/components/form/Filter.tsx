@@ -1,11 +1,7 @@
-import React from 'react';
+import React, { KeyboardEvent } from 'react';
+import { useSessionComponentPersistentState } from '../../util/useComponentPersistentState';
 import Form from './Form';
-import {
-    FilterApi,
-    FilterApiRef,
-    FilterContext,
-    useFilterContext,
-} from './FilterContext';
+import { FilterApi, FilterApiRef, FilterContext, useFilterContext } from './FilterContext';
 import { FormApiRef, FormApi } from './FormContext';
 
 /**
@@ -18,6 +14,10 @@ export type FilterProps = React.PropsWithChildren & {
     code: string;
     /** Indica si l'aplicació del filtre està controlada per un botó o si s'aplica de forma automàtica */
     buttonControlled?: true;
+    /** Indica si s'ha de validar el filtre en cada canvi */
+    validationActive?: true;
+    /** Activa la persistència dels valors del filtre */
+    persistentState?: true;
     /** Referència a l'api del component */
     apiRef?: FilterApiRef;
     /** Referència a l'api del component Form */
@@ -30,6 +30,8 @@ export type FilterProps = React.PropsWithChildren & {
     additionalData?: any;
     /** Indica si s'ha de fer una petició onChange sense cap camp associat quan es crea el component */
     initOnChangeRequest?: true;
+    /** Indica si s'ha de filtrar quan es pitgi la tecla Intro en algun camp */
+    filterOnFieldEnterKeyPressed?: true;
     /** Propietats comunes per a tots els components FormField de dins aquest component */
     commonFieldComponentProps?: any;
     /** Event que es llença quan es modifica alguna dada del filtre */
@@ -71,9 +73,12 @@ export const Filter: React.FC<FilterProps> = (props) => {
         resourceName,
         code,
         buttonControlled,
+        validationActive,
+        persistentState,
         springFilterBuilder,
         initialData,
         additionalData,
+        filterOnFieldEnterKeyPressed,
         onDataChange,
         onSpringFilterChange,
         apiRef: apiRefProp,
@@ -81,19 +86,37 @@ export const Filter: React.FC<FilterProps> = (props) => {
         children,
         ...otherFormProps
     } = props;
+    const [formInitialData, setFormInitialData] = React.useState<any>(initialData);
     const [nextDataChangeAsUncontrolled, setNextDataChangeAsUncontrolled] =
-        React.useState(false);
+        React.useState<boolean>(false);
+    const initialized = persistentState ? formInitialData !== undefined : true;
     const apiRef = React.useRef<FilterApi>(undefined);
     const formApiRef = React.useRef<FormApi | any>({});
+    const { state, isReady: stateIsReady } =
+        !initialData && persistentState
+            ? useSessionComponentPersistentState('filter_state', resourceName, () =>
+                  formApiRef.current?.getData()
+              )
+            : { isReady: false };
+    React.useEffect(() => {
+        if (stateIsReady) {
+            setFormInitialData(state);
+        }
+    }, [state, stateIsReady]);
     if (formApiRefProp != null) {
         formApiRefProp.current = formApiRef.current;
     }
     const filter = (data?: any) => {
-        formApiRef.current.validate().then(() => {
+        const applyFilter = () => {
             const formData = data ?? formApiRef.current?.getData();
             const springFilter = springFilterBuilder(formData);
             onSpringFilterChange?.(springFilter);
-        });
+        };
+        if (validationActive) {
+            formApiRef.current.validate().then(applyFilter);
+        } else {
+            applyFilter();
+        }
     };
     const clear = (data?: any) => {
         setNextDataChangeAsUncontrolled(true);
@@ -112,6 +135,15 @@ export const Filter: React.FC<FilterProps> = (props) => {
         ['datetime-local', 'date'],
         ['checkbox', 'checkbox-select'],
     ]);
+    const handleFilterEnterKeyPressed = filterOnFieldEnterKeyPressed
+        ? (e: KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === 'Enter') {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  filter();
+              }
+          }
+        : undefined;
     apiRef.current = {
         clear,
         filter,
@@ -121,9 +153,7 @@ export const Filter: React.FC<FilterProps> = (props) => {
             apiRefProp.current.clear = clear;
             apiRefProp.current.filter = filter;
         } else {
-            console.warn(
-                'apiRef prop must be initialized with an empty object'
-            );
+            console.warn('apiRef prop must be initialized with an empty object');
         }
     }
     const context = {
@@ -132,20 +162,24 @@ export const Filter: React.FC<FilterProps> = (props) => {
         apiRef,
     };
     return (
-        <FilterContext.Provider value={context}>
-            <Form
-                resourceName={resourceName}
-                resourceType="FILTER"
-                resourceTypeCode={code}
-                initialData={initialData}
-                additionalData={additionalData}
-                onDataChange={handleDataChange}
-                fieldTypeMap={fieldTypeMap}
-                apiRef={formApiRef}
-                {...otherFormProps}>
-                {children}
-            </Form>
-        </FilterContext.Provider>
+        initialized && (
+            <FilterContext.Provider value={context}>
+                <div onKeyDown={handleFilterEnterKeyPressed}>
+                    <Form
+                        resourceName={resourceName}
+                        resourceType="FILTER"
+                        resourceTypeCode={code}
+                        initialData={formInitialData}
+                        additionalData={additionalData}
+                        onDataChange={handleDataChange}
+                        fieldTypeMap={fieldTypeMap}
+                        apiRef={formApiRef}
+                        {...otherFormProps}>
+                        {children}
+                    </Form>
+                </div>
+            </FilterContext.Provider>
+        )
     );
 };
 

@@ -6,7 +6,7 @@ import { useBaseAppContext } from './BaseAppContext';
  */
 type GridPageProps = React.PropsWithChildren & {
     /** Indica que s'han de desactivar els marges */
-    disableMargins?: true;
+    disableMargins?: boolean;
     /** Estils addicionals per l'element contenidor */
     style?: React.CSSProperties;
 };
@@ -18,7 +18,7 @@ type GridPageProps = React.PropsWithChildren & {
  * @returns Element JSX de la pàgina.
  */
 export const GridPage: React.FC<GridPageProps> = (props) => {
-    const { disableMargins = false, style, children } = props;
+    const { disableMargins = true, style, children } = props;
     const {
         setMarginsDisabled,
         contentExpandsToAvailableHeight,

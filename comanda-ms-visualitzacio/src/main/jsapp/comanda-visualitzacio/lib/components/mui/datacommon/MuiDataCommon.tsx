@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-    useResourceApiService,
-    ResourceApiFindCommonArgs,
-    ResourceApiError,
-} from '../../ResourceApiProvider';
+import { useResourceApiService, ResourceApiFindCommonArgs } from '../../ResourceApiProvider';
 import { ResourceType, ExportFileType } from '../../ResourceApiContext';
 import { useDataQuickFilter } from './DataQuickFilter';
 import { toToolbarIcon } from '../ToolbarIcon';
@@ -30,7 +26,11 @@ export type DataCommonAdditionalAction = {
     onClick?: (id: any, row: any, event: React.MouseEvent) => void;
 };
 
-export type DataCommonExportFn = (fields?: string[], fileType?: ExportFileType, forceUnpaged?: boolean) => void;
+export type DataCommonExportFn = (
+    fields?: string[],
+    fileType?: ExportFileType,
+    forceUnpaged?: boolean
+) => void;
 export type DataCommonShowCreateDialogFn = (row?: any) => void;
 export type DataCommonShowUpdateDialogFn = (id: any, row?: any) => void;
 export type DataCommonTriggerDeleteFn = (id: any) => void;
@@ -45,7 +45,8 @@ export const useApiDataCommon = (
     quickFilterInitialValue?: string,
     quickFilterSetFocus?: true,
     quickFilterProps?: any,
-    getArtifacts?: boolean) => {
+    getArtifacts?: boolean
+) => {
     const { saveAs } = useBaseAppContext();
     const {
         isReady: apiIsReady,
@@ -63,10 +64,12 @@ export const useApiDataCommon = (
     const [rows, setRows] = React.useState<any[]>([]);
     const [pageInfo, setPageInfo] = React.useState<any>();
     const [artifacts, setArtifacts] = React.useState<any[]>();
-    const {
-        value: quickFilterValue,
-        component: quickFilterComponent
-    } = useDataQuickFilter(quickFilterInitialValue, quickFilterSetFocus, quickFilterProps);
+    const [error, setError] = React.useState<any>();
+    const { value: quickFilterValue, component: quickFilterComponent } = useDataQuickFilter(
+        quickFilterInitialValue,
+        quickFilterSetFocus,
+        quickFilterProps
+    );
     const refresh = () => {
         if (apiIsReady && !findDisabled) {
             const processedFindArgs = {
@@ -75,77 +78,99 @@ export const useApiDataCommon = (
                 includeLinksInRows: true,
             };
             setLoading(true);
+            setError(null);
             if (resourceFieldName == null) {
-                apiFind(processedFindArgs).then((response) => {
-                    setRows(response.rows);
-                    setPageInfo(response.page);
-                }).finally(() => setLoading(false));
+                apiFind(processedFindArgs)
+                    .then((response) => {
+                        setRows(response.rows);
+                        setPageInfo(response.page);
+                    })
+                    .catch(setError)
+                    .finally(() => setLoading(false));
             } else if (resourceType == null) {
-                apiFieldOptionsFind({ fieldName: resourceFieldName, ...processedFindArgs }).then((response) => {
-                    setRows(response.rows);
-                    setPageInfo(response.page);
-                }).finally(() => setLoading(false));
+                apiFieldOptionsFind({
+                    fieldName: resourceFieldName,
+                    ...processedFindArgs,
+                })
+                    .then((response) => {
+                        setRows(response.rows);
+                        setPageInfo(response.page);
+                    })
+                    .catch(setError)
+                    .finally(() => setLoading(false));
             } else {
                 const args = {
                     type: resourceType,
                     code: resourceTypeCode ?? '',
                     fieldName: resourceFieldName,
-                    ...processedFindArgs
+                    ...processedFindArgs,
                 };
-                apiArtifactFieldOptionsFind(args).then((response) => {
-                    setRows(response.rows);
-                    setPageInfo(response.page);
-                }).finally(() => setLoading(false));
+                apiArtifactFieldOptionsFind(args)
+                    .then((response) => {
+                        setRows(response.rows);
+                        setPageInfo(response.page);
+                    })
+                    .catch(setError)
+                    .finally(() => setLoading(false));
             }
         }
-    }
-    const exportt: DataCommonExportFn = (fields?: string[], fileType?: ExportFileType, forceUnpaged?: boolean) => {
+    };
+    const exportt: DataCommonExportFn = (
+        fields?: string[],
+        fileType?: ExportFileType,
+        forceUnpaged?: boolean
+    ) => {
         const args = {
             ...(findArgs ?? {}),
             quickFilter: quickFilterValue?.length ? quickFilterValue : undefined,
             fields,
             fileType,
         };
-        apiExport(forceUnpaged ? { ...args, unpaged: true } : args).then(response => {
+        apiExport(forceUnpaged ? { ...args, unpaged: true } : args).then((response) => {
             if (saveAs) {
                 saveAs(response.blob, response.fileName);
             } else {
-                console.error('Couldn\'t save export file ' + response.fileName + ': saveAs not available in BaseAppContext');
+                console.error(
+                    "Couldn't save export file " +
+                        response.fileName +
+                        ': saveAs not available in BaseAppContext'
+                );
             }
-        })
-    }
+        });
+    };
     React.useEffect(() => {
         if (apiIsReady) {
             if (resourceFieldName == null) {
                 setFields(apiCurrentFields ?? []);
             } else if (resourceType == null) {
-                apiFieldOptionsFields({ fieldName: resourceFieldName }).then(fields => {
+                apiFieldOptionsFields({ fieldName: resourceFieldName }).then((fields) => {
                     setFields(fields);
                 });
             } else {
                 const args = {
                     type: resourceType,
                     code: resourceTypeCode ?? '',
-                    fieldName: resourceFieldName
+                    fieldName: resourceFieldName,
                 };
-                apiArtifactFieldOptionsFields(args).then(fields => {
-                    setFields(fields);
-                });
+                setError(null);
+                apiArtifactFieldOptionsFields(args)
+                    .then((fields) => {
+                        setFields(fields);
+                    })
+                    .catch(setError);
             }
             refresh();
         }
-    }, [
-        apiIsReady,
-        quickFilterValue,
-        findDisabled,
-        findArgs,
-    ]);
+    }, [apiIsReady, quickFilterValue, findDisabled, findArgs]);
     React.useEffect(() => {
         if (getArtifacts) {
             if (apiIsReady) {
-                apiArtifacts({}).then(artifacts => {
-                    setArtifacts(artifacts);
-                });
+                setError(null);
+                apiArtifacts({})
+                    .then((artifacts) => {
+                        setArtifacts(artifacts);
+                    })
+                    .catch(setError);
             }
         } else {
             artifacts != null && setArtifacts(undefined);
@@ -157,11 +182,12 @@ export const useApiDataCommon = (
         rows: findDisabled ? [] : rows,
         pageInfo,
         artifacts,
+        error,
         refresh,
         export: exportt,
         quickFilterComponent,
     };
-}
+};
 
 export const useDataCommonEditable = (
     resourceName: string,
@@ -183,15 +209,13 @@ export const useDataCommonEditable = (
     popupEditFormDialogTitle: string | undefined,
     popupEditFormDialogResourceTitle: string | undefined,
     popupEditFormDialogComponentProps: any,
+    popupEditFormDialogOnClose: ((reason?: string) => boolean) | undefined,
     popupEditFormComponentProps: any,
     apiCurrentActions: any,
     apiDelete: (id: any) => Promise<any>,
-    refresh: () => void) => {
-    const {
-        t,
-        temporalMessageShow,
-        messageDialogShow,
-    } = useBaseAppContext();
+    refresh: () => void
+) => {
+    const { t, temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>(undefined);
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
@@ -199,96 +223,148 @@ export const useDataCommonEditable = (
     const isPopupEditUpdate = popupEditActive || popupEditUpdateActive;
     const showCreateDialog: DataCommonShowCreateDialogFn = (row?: any, additionalData?: any) => {
         const processedAdditionalData = {
-            ...((typeof formAdditionalData === 'function') ? formAdditionalData(row, 'create') : formAdditionalData),
-            ...additionalData
-        }
-        dataDialogPopupApiRef.current?.show(undefined, processedAdditionalData).
-            then(() => {
+            ...(typeof formAdditionalData === 'function'
+                ? formAdditionalData(row, 'create')
+                : formAdditionalData),
+            ...additionalData,
+        };
+        dataDialogPopupApiRef.current
+            ?.show(undefined, processedAdditionalData)
+            .then(() => {
                 refresh?.();
-            }).
-            catch(() => {
+            })
+            .catch(() => {
                 // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
             });
-    }
-    const showUpdateDialog: DataCommonShowUpdateDialogFn = (id: any, row?: any, additionalData?: any) => {
+    };
+    const showUpdateDialog: DataCommonShowUpdateDialogFn = (
+        id: any,
+        row?: any,
+        additionalData?: any
+    ) => {
         const processedAdditionalData = {
-            ...((typeof formAdditionalData === 'function') ? formAdditionalData(row, 'update') : formAdditionalData),
-            ...additionalData
-        }
-        dataDialogPopupApiRef.current?.show(id, processedAdditionalData).
-            then(() => {
+            ...(typeof formAdditionalData === 'function'
+                ? formAdditionalData(row, 'update')
+                : formAdditionalData),
+            ...additionalData,
+        };
+        dataDialogPopupApiRef.current
+            ?.show(id, processedAdditionalData)
+            .then(() => {
                 refresh?.();
-            }).
-            catch(() => {
+            })
+            .catch(() => {
                 // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
             });
-    }
+    };
     const triggerDelete = (id: any) => {
         messageDialogShow(
             t('datacommon.delete.single.title'),
             t('datacommon.delete.single.confirm'),
             confirmDialogButtons,
-            confirmDialogComponentProps).
-            then((value: any) => {
+            confirmDialogComponentProps
+        )
+            .then((value: any) => {
                 if (value) {
                     apiDelete(id)
                         .then(() => {
                             refresh?.();
-                            temporalMessageShow(null, t('datacommon.delete.single.success'), 'success');
+                            temporalMessageShow(
+                                null,
+                                t('datacommon.delete.single.success'),
+                                'success'
+                            );
                         })
-                        .catch((error: ResourceApiError) => {
-                            temporalMessageShow(t('datacommon.delete.single.error'), error.message, 'error');
+                        .catch((error) => {
+                            temporalMessageShow(
+                                t('datacommon.delete.single.error'),
+                                error.description ?? error.message,
+                                'error'
+                            );
                         });
                 }
-            }).
-            catch(() => {
+            })
+            .catch(() => {
                 // Feim un catch buit perquè no aparegui a la consola el missatge: Uncaught (in promise)
             });
-    }
+    };
     const isCreateLinkPresent = apiCurrentActions?.['create'] != null;
-    const toolbarAddElement = isCreateLinkPresent && !readOnly ? toToolbarIcon('add', {
-        title: t('datacommon.create.title'),
-        linkTo: toolbarCreateLink,
-        linkState: formAdditionalData ? { additionalData: formAdditionalData } : undefined,
-        onClick: !toolbarCreateLink ? showCreateDialog : undefined,
-    }) : undefined;
+    const createLinkConfigError = !readOnly && !isPopupEditCreate && toolbarCreateLink == null;
+    const toolbarAddElement =
+        isCreateLinkPresent && !readOnly
+            ? toToolbarIcon('add', {
+                  title: t('datacommon.create.title'),
+                  linkTo: toolbarCreateLink,
+                  linkState: formAdditionalData
+                      ? { additionalData: formAdditionalData }
+                      : undefined,
+                  onClick: !toolbarCreateLink ? showCreateDialog : undefined,
+                  disabled: createLinkConfigError,
+              })
+            : undefined;
     const rowEditActions: DataCommonAdditionalAction[] = [];
-    !readOnly && rowEditActions.push({
-        title: t('datacommon.update.title'),
-        rowLink: 'update',
-        icon: 'edit',
-        linkTo: rowUpdateLink,
-        linkState: rowUpdateLink != null && formAdditionalData != null ? { additionalData: formAdditionalData } : undefined,
-        disabled: rowDisableUpdateButton,
-        hidden: rowHideUpdateButton,
-        clickShowUpdateDialog: rowUpdateLink == null,
-    });
-    !readOnly && rowEditActions.push({
-        title: t('datacommon.delete.title'),
-        icon: 'delete',
-        onClick: triggerDelete,
-        disabled: rowDisableDeleteButton,
-        hidden: rowHideDeleteButton,
-        showInMenu: true,
-        rowLink: 'delete',
-    });
-    rowDetailLink && rowEditActions.push({
-        title: t('datacommon.details.title'),
-        icon: 'info',
-        linkTo: rowDetailLink,
-        disabled: rowDisableDetailsButton,
-        hidden: rowHideDetailsButton,
-        rowLink: readOnly ? undefined : '!update',
-    });
-    const formDialogComponent = !readOnly && (isPopupEditCreate || isPopupEditUpdate) ? <DataFormDialog
-        resourceName={resourceName}
-        title={popupEditFormDialogTitle}
-        resourceTitle={popupEditFormDialogResourceTitle}
-        dialogComponentProps={popupEditFormDialogComponentProps}
-        formComponentProps={popupEditFormComponentProps}
-        apiRef={dataDialogPopupApiRef}>
-        {popupEditFormContent}
-    </DataFormDialog> : null;
+    const updateLinkConfigError = !readOnly && !isPopupEditUpdate && rowUpdateLink == null;
+    !readOnly &&
+        rowEditActions.push({
+            title: t('datacommon.update.title'),
+            rowLink: 'update',
+            icon: 'edit',
+            linkTo: rowUpdateLink,
+            linkState:
+                rowUpdateLink != null && formAdditionalData != null
+                    ? { additionalData: formAdditionalData }
+                    : undefined,
+            disabled: rowDisableUpdateButton || updateLinkConfigError,
+            hidden: rowHideUpdateButton,
+            clickShowUpdateDialog: rowUpdateLink == null,
+        });
+    !readOnly &&
+        rowEditActions.push({
+            title: t('datacommon.delete.title'),
+            icon: 'delete',
+            onClick: triggerDelete,
+            disabled: rowDisableDeleteButton,
+            hidden: rowHideDeleteButton,
+            showInMenu: true,
+            rowLink: 'delete',
+        });
+    rowDetailLink &&
+        rowEditActions.push({
+            title: t('datacommon.details.title'),
+            icon: 'info',
+            linkTo: rowDetailLink,
+            disabled: rowDisableDetailsButton,
+            hidden: rowHideDetailsButton,
+            rowLink: readOnly ? undefined : '!update',
+        });
+    React.useEffect(() => {
+        if (createLinkConfigError || updateLinkConfigError) {
+            createLinkConfigError &&
+                console.warn(
+                    'Create link not configured in data component for resource:',
+                    resourceName
+                );
+            updateLinkConfigError &&
+                console.warn(
+                    'Update link not configured in data component for resource:',
+                    resourceName
+                );
+            console.warn('\t(to avoid these messages configure data component as read only)');
+        }
+    }, [createLinkConfigError, updateLinkConfigError]);
+    const formDialogComponent =
+        !readOnly && (isPopupEditCreate || isPopupEditUpdate) ? (
+            <DataFormDialog
+                resourceName={resourceName}
+                title={popupEditFormDialogTitle}
+                resourceTitle={popupEditFormDialogResourceTitle}
+                dialogComponentProps={popupEditFormDialogComponentProps}
+                formComponentProps={popupEditFormComponentProps}
+                onClose={popupEditFormDialogOnClose}
+                apiRef={dataDialogPopupApiRef}>
+                {popupEditFormContent}
+            </DataFormDialog>
+        ) : null;
     return {
         toolbarAddElement,
         rowEditActions,
@@ -297,4 +373,4 @@ export const useDataCommonEditable = (
         showUpdateDialog,
         triggerDelete,
     };
-}
+};

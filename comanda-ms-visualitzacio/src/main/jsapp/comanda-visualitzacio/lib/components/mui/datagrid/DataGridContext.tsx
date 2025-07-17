@@ -18,7 +18,7 @@ export type DataGridContextType = {
     rows: any[];
     selection: GridRowSelectionModel | undefined;
     apiRef: MuiDataGridApiRef;
-}
+};
 
 export const DEFAULT_ROW_SELECTION: GridRowSelectionModel = {
     type: 'include',
@@ -32,10 +32,10 @@ export const useDataGridContext = () => {
         throw new Error('useGridContext must be used within a GridProvider');
     }
     return context;
-}
+};
 
 export const useOptionalDataGridContext = (): DataGridContextType | undefined => {
     return React.useContext(DataGridContext);
-}
+};
 
 export default DataGridContext;

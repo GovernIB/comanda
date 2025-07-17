@@ -30,7 +30,7 @@ export const DataFormDialog: React.FC<DataFormDialogProps> = (props) => {
         apiRef,
         formSubmit,
         onClose,
-        children
+        children,
     } = props;
     const { t } = useBaseAppContext();
     const [formDialogShow, formDialogComponent, formDialogClose] = useFormDialog(
@@ -43,18 +43,22 @@ export const DataFormDialog: React.FC<DataFormDialogProps> = (props) => {
         children,
         dialogComponentProps ?? { fullWidth: true, maxWidth: 'md' },
         formComponentProps,
-        onClose);
-    const show = (id?: any, additionalData?: any) => formDialogShow(id, {
-        title: titleProp ?? ((id != null ? t('datacommon.update.title') : t('datacommon.create.title')) + ' ' + (resourceTitle ?? resourceName)),
-        additionalData,
-    });
+        onClose
+    );
+    const show = (id?: any, additionalData?: any) =>
+        formDialogShow(id, {
+            title:
+                titleProp ??
+                (id != null ? t('datacommon.update.title') : t('datacommon.create.title')) +
+                    ' ' +
+                    (resourceTitle ?? resourceName),
+            additionalData,
+        });
     const close = () => formDialogClose();
     if (apiRef != null) {
         apiRef.current = { show, close };
     }
-    return <>
-        {formDialogComponent}
-    </>;
-}
+    return <>{formDialogComponent}</>;
+};
 
 export default DataFormDialog;

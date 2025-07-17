@@ -80,24 +80,22 @@ export const AuthProvider = (props: AuthProviderProps) => {
         tokenRef.current = token;
         const tokenParsed = parseJwt(token);
         tokenParsedRef.current = tokenParsed;
-        const checkTokenTimeout = (tokenParsed.exp - (Date.now() / 1000) + CHECK_TOKEN_TIMEOUT_MARGIN_SECS) * 1000;
+        const checkTokenTimeout =
+            (tokenParsed.exp - Date.now() / 1000 + CHECK_TOKEN_TIMEOUT_MARGIN_SECS) * 1000;
         tokenParsed && checkTokenRefresh(checkTokenTimeout);
         setLoading(false);
         debug && logConsole.debug('Token', verified ? 'verificat:' : 'obtingut:', token);
     };
     React.useEffect(() => {
-        // Comprova si el token ja està disponible a l'objecte window
         if ((window as any).__AUTH_TOKEN__) {
             setToken((window as any).__AUTH_TOKEN__);
         } else {
-            // Si no està disponible, espera a que el script es carregui i després obté el token
             const checkTokenInterval = setInterval(() => {
                 if ((window as any).__AUTH_TOKEN__) {
                     setToken((window as any).__AUTH_TOKEN__);
                     clearInterval(checkTokenInterval);
                 }
             }, 100);
-            // Com a alternativa, obté el token del script si no està disponible després d'un temps raonable
             setTimeout(() => {
                 clearInterval(checkTokenInterval);
                 if (!(window as any).__AUTH_TOKEN__) {
@@ -112,13 +110,14 @@ export const AuthProvider = (props: AuthProviderProps) => {
         };
     }, []);
     const signIn = loading ? undefined : () => {};
-    const signOut = loading ? undefined : () => {
-        fetch(signOutUrl).
-            finally(() => {
+    const signOut = loading
+        ? undefined
+        : () => {
+              fetch(signOutUrl).finally(() => {
                   debug && logConsole.debug('Tancament de sessió');
                   window.location.href = logoutUrl;
               });
-    }
+          };
     const context = {
         isLoading: loading,
         isReady: !loading,
@@ -133,7 +132,9 @@ export const AuthProvider = (props: AuthProviderProps) => {
         signOut,
     };
     const showChildren = !loading && (!mandatory || (mandatory && isAuthenticated));
-    return <AuthContext.Provider value={context}>
+    return (
+        <AuthContext.Provider value={context}>
             {showChildren ? children : null}
-    </AuthContext.Provider>;
+        </AuthContext.Provider>
+    );
 };

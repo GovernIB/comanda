@@ -8,25 +8,28 @@ type DataGridRowProps = any & {
 };
 
 const DataGridRow: React.FC<DataGridRowProps> = (props) => {
-    const {
-        linkTo,
-        cursorPointer,
-        rowId,
-        style,
-        ...otherProps
-    } = props;
+    const { linkTo, cursorPointer, rowId, style, ...otherProps } = props;
     const { getLinkComponent } = useBaseAppContext();
-    const row = <MuiGridRow
-        rowId={rowId}
-        style={{ cursor: cursorPointer ? 'pointer' : undefined, ...style }}
-        {...otherProps} />;
-    return linkTo ? <Box
-        component={getLinkComponent()}
-        to={linkTo.replace('{{id}}', '' + rowId)}
-        sx={{
-            color: 'inherit',
-            textDecoration: 'inherit',
-        }}>{row}</Box> : row;
-}
+    const row = (
+        <MuiGridRow
+            rowId={rowId}
+            style={{ cursor: cursorPointer ? 'pointer' : undefined, ...style }}
+            {...otherProps}
+        />
+    );
+    return linkTo ? (
+        <Box
+            component={getLinkComponent()}
+            to={linkTo.replace('{{id}}', '' + rowId)}
+            sx={{
+                color: 'inherit',
+                textDecoration: 'inherit',
+            }}>
+            {row}
+        </Box>
+    ) : (
+        row
+    );
+};
 
 export default DataGridRow;

@@ -2,11 +2,7 @@ import React from 'react';
 import { useBaseAppContext } from '../BaseAppContext';
 import useLogConsole from '../../util/useLogConsole';
 import { processType } from '../../util/fields';
-import {
-    useFormContext,
-    FormFieldDataActionType,
-    FormFieldError,
-} from './FormContext';
+import { useFormContext, FormFieldDataActionType, FormFieldError } from './FormContext';
 import { useOptionalFilterContext } from './FilterContext';
 
 const LOG_PREFIX = 'FIELD';
@@ -44,6 +40,8 @@ export type FormFieldCommonProps = {
 export type FormFieldProps = FormFieldCommonProps & {
     /** Tipus del component (si no s'especifica s'utilitzarà el tipus del backend) */
     type?: string;
+    /** Validador pel camp. Ha de retornar un array d'errors si el camp no és vàlid */
+    validator?: (value: any) => FormFieldError[] | void;
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
     debug?: boolean;
     [x: string | number | symbol]: unknown;
@@ -67,15 +65,9 @@ export type FormFieldCustomProps = FormFieldCommonProps & {
     onChange: (value: any) => void;
 };
 
-const useFormFieldComponent = (
-    type?: string,
-    field?: any,
-    fieldTypeMap?: Map<string, string>
-) => {
+const useFormFieldComponent = (type?: string, field?: any, fieldTypeMap?: Map<string, string>) => {
     const { getFormFieldComponent } = useBaseAppContext();
-    const fieldType = field?.type
-        ? (fieldTypeMap?.get(field?.type) ?? field?.type)
-        : field?.type;
+    const fieldType = field?.type ? (fieldTypeMap?.get(field?.type) ?? field?.type) : field?.type;
     const processedType = processType(field, type ?? fieldType);
     return {
         type: processedType,
@@ -103,13 +95,7 @@ const FormFieldRenderer: React.FC<FormFieldRendererProps> = (props) => {
     } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
     const label = labelProp ?? field?.label ?? name;
-    debug &&
-        logConsole.debug(
-            'Field',
-            name,
-            'rendered',
-            value ? 'with value: ' + value : 'empty'
-        );
+    debug && logConsole.debug('Field', name, 'rendered', value ? 'with value: ' + value : 'empty');
     const { type: formFieldType, FormFieldComponent } = useFormFieldComponent(
         type,
         field,
@@ -154,6 +140,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         onChange,
         componentProps,
         type,
+        validator,
         debug,
         ...otherProps
     } = props;
@@ -166,6 +153,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         inline: inlineCtx,
         dataGetFieldValue,
         dataDispatchAction,
+        validationSetFieldErrors,
         commonFieldComponentProps,
     } = useFormContext();
     const filterContext = useOptionalFilterContext();
@@ -192,12 +180,12 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
                 payload: { fieldName: name, field, value },
             });
             onChange?.(value);
+            validationSetFieldErrors(name, validator?.(value) ?? undefined);
         },
         [dataDispatchAction, name, field, onChange]
     );
     const inline = inlineProp ?? inlineCtx;
-    const forceDisabledAndReadonly =
-        filterContext == null && !isSaveActionPresent;
+    const forceDisabledAndReadonly = filterContext == null && !isSaveActionPresent;
     const joinedComponentProps = React.useMemo(
         () => ({
             ...commonFieldComponentProps,
@@ -205,6 +193,9 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         }),
         [commonFieldComponentProps, componentProps]
     );
+    React.useEffect(() => {
+        validationSetFieldErrors(name, validator?.(value) ?? undefined);
+    }, []);
     return isReady ? (
         <Renderer
             name={name}

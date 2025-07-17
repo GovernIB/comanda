@@ -12,7 +12,7 @@ const componentsCa = {
         },
         offline: {
             message: 'Sense connexió amb el servidor',
-        }
+        },
     },
     datacommon: {
         details: {
@@ -28,7 +28,8 @@ const componentsCa = {
             title: 'Esborrar',
             single: {
                 title: 'Confirmació',
-                confirm: 'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
+                confirm:
+                    'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
                 success: 'Element esborrat',
                 error: 'Error esborrant element',
             },
@@ -40,7 +41,7 @@ const componentsCa = {
             title: 'Refrescar',
         },
         toolbar: {
-            error: 'S\'ha produit un error',
+            error: "S'ha produit un error",
         },
         findDisabled: 'Sense consultar',
         noRows: 'Sense dades',
@@ -64,17 +65,19 @@ const componentsCa = {
         create: {
             title: 'Crear',
             success: 'Element creat',
-            error: 'Error creant element'
+            error: 'Error creant element',
         },
         update: {
             title: 'Modificar',
             success: 'Element modificat',
             error: 'Error modificant element',
-            wrong_resource_type: 'No es possible desar els formularis amb tipus de recurs "{{resourceType}}"',
+            wrong_resource_type:
+                'No es possible desar els formularis amb tipus de recurs "{{resourceType}}"',
         },
         delete: {
             title: 'Esborrar',
-            confirm: 'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
+            confirm:
+                'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
             success: 'Element esborrat',
             error: 'Error esborrant element',
         },
@@ -87,8 +90,8 @@ const componentsCa = {
                 noOptions: 'Sense opcions',
                 page: 'Mostrant {{size}} de {{totalElements}} elements',
                 advanced: {
-                    title: 'Seleccionar valor'
-                }
+                    title: 'Seleccionar valor',
+                },
             },
             checkboxSelect: {
                 true: 'Si',
@@ -101,19 +104,20 @@ const componentsCa = {
         },
         validate: {
             error: 'Error de validació',
+            saveErrors: 'Hi ha errors de validació',
         },
     },
     actionreport: {
         action: {
             confirm: {
                 title: 'Confirmació',
-                message: 'Estau segur que voleu executar l\'acció {{action}}?'
+                message: "Estau segur que voleu executar l'acció {{action}}?",
             },
-            error: 'Error executant l\'acció'
+            error: "Error executant l'acció",
         },
         report: {
-            error: 'Error generant l\'informe'
-        }
+            error: "Error generant l'informe",
+        },
     },
     buttons: {
         answerRequired: {
@@ -140,7 +144,7 @@ const componentsCa = {
             close: 'Tancar',
             retry: 'Tornar a provar',
         },
-    }
+    },
 };
 
 export default componentsCa;

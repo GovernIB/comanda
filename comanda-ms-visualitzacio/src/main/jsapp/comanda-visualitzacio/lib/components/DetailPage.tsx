@@ -6,7 +6,7 @@ import { useBaseAppContext } from './BaseAppContext';
  */
 type DetailPageProps = React.PropsWithChildren & {
     /** Indica que s'han de desactivar els marges */
-    disableMargins?: true;
+    disableMargins?: boolean;
 };
 
 /**

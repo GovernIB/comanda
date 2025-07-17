@@ -12,10 +12,7 @@ export type FormApi = {
     save: () => Promise<any>;
     delete: () => void;
     setFieldValue: (name: string, value: any) => void;
-    handleSubmissionErrors: (
-        error: ResourceApiError,
-        temporalMessageTitle?: string
-    ) => void;
+    handleSubmissionErrors: (error: ResourceApiError, temporalMessageTitle?: string) => void;
 };
 
 export type FormApiRef = React.MutableRefObject<FormApi | undefined>;
@@ -56,18 +53,17 @@ export type FormContextType = {
     apiRef: FormApiRef;
     dataGetFieldValue: (fieldName: string) => any;
     dataDispatchAction: (action: FormFieldDataAction) => void;
+    validationSetFieldErrors: (fieldName: string, errors?: FormFieldError[]) => void;
     commonFieldComponentProps?: any;
 };
 
 export type FormFieldError = {
-    code: string;
     field: string;
+    code?: string;
     message: string;
 };
 
-export const FormContext = React.createContext<FormContextType | undefined>(
-    undefined
-);
+export const FormContext = React.createContext<FormContextType | undefined>(undefined);
 
 export const useFormContext = () => {
     const context = React.useContext(FormContext);
