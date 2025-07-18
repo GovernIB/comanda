@@ -19,7 +19,7 @@ const Entorns: React.FC = () => {
             flex: 3,
         },
     ];
-    return <GridPage disableMargins>
+    return <GridPage>
         <MuiGrid
             title={t('page.entorns.title')}
             resourceName="entorn"

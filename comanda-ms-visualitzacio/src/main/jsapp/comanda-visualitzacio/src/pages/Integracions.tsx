@@ -40,7 +40,7 @@ const Integracions: React.FC = () => {
             flex: 7,
         },
     ];
-    return <GridPage disableMargins>
+    return <GridPage>
         <MuiGrid
             title={t('page.integracions.title')}
             resourceName="integracio"

@@ -1,21 +1,35 @@
 import * as React from 'react';
-import {useTranslation} from 'react-i18next';
-import {useParams} from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
-import {FormField, FormPage, GridPage, MuiForm, MuiFormTabContent, MuiGrid, springFilterBuilder, useFormContext} from 'reactlib';
-import {Box, Tab, Tabs} from '@mui/material';
-import LogoUpload from "../components/LogoUpload";
-import BlockIcon from "@mui/icons-material/Block";
+import {
+    FormField,
+    GridPage,
+    MuiForm,
+    MuiFormTabContent,
+    MuiGrid,
+    springFilterBuilder, useBaseAppContext,
+    useFormContext,
+} from 'reactlib';
+import LogoUpload from '../components/LogoUpload';
+import BlockIcon from '@mui/icons-material/Block';
+import MuiFormTabs, { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 
 const AppEntornForm: React.FC = () => {
     const { data } = useFormContext();
     const { id: appId } = useParams();
-    const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
+    const entornFilter = springFilterBuilder.not(
+        springFilterBuilder.exists(springFilterBuilder.eq('entornAppEntities.app.id', appId))
+    );
 
     return (
         <Grid container spacing={2}>
             <Grid size={12}>
-                <FormField name="entorn" disabled={data?.id != null} filter={entornFilter}/>
+                <FormField
+                    name="entorn"
+                    disabled={data?.id != null || undefined}
+                    filter={entornFilter}
+                />
             </Grid>
             <Grid size={12}>
                 <FormField name="infoUrl" />
@@ -23,7 +37,6 @@ const AppEntornForm: React.FC = () => {
             <Grid size={4}>
                 <FormField name="infoInterval" />
             </Grid>
-
 
             <Grid size={12}>
                 <FormField name="salutUrl" />
@@ -34,7 +47,6 @@ const AppEntornForm: React.FC = () => {
             <Grid size={12}>
                 <FormField name="estadisticaInfoUrl" />
             </Grid>
-
 
             <Grid size={12}>
                 <FormField name="estadisticaUrl" />
@@ -67,88 +79,82 @@ const AppsEntorns: React.FC = () => {
         },
     ];
     return (
-        <GridPage disableMargins>
-            <MuiGrid
-                title={t('page.appsEntorns.title')}
-                resourceName="entornApp"
-                staticFilter={`app.id : ${appId}`}
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                popupEditActive
-                popupEditFormContent={<AppEntornForm />}
-                popupEditFormDialogResourceTitle={t('page.appsEntorns.resourceTitle')}
-                formAdditionalData={{
-                    app: { id: appId },
-                }}
-            />
-        </GridPage>
+        <MuiGrid
+            title={t('page.appsEntorns.title')}
+            resourceName="entornApp"
+            staticFilter={`app.id : ${appId}`}
+            columns={columns}
+            toolbarType="upper"
+            paginationActive
+            popupEditActive
+            popupEditFormContent={<AppEntornForm />}
+            popupEditFormDialogResourceTitle={t('page.appsEntorns.resourceTitle')}
+            formAdditionalData={{
+                app: { id: appId },
+            }}
+        />
     );
 };
+
+const AppFormContent = () => (
+    <Grid container spacing={2}>
+        <Grid size={4}>
+            <FormField name="codi" />
+        </Grid>
+        <Grid size={8}></Grid>
+        <Grid size={12}>
+            <FormField name="nom" />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="descripcio" type="textarea" />
+        </Grid>
+        <Grid size={12}>
+            <LogoUpload />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="activa" />
+        </Grid>
+    </Grid>
+);
 
 export const AppForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
-    const [tabValue, setTabValue] = React.useState(0);
-    const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-        setTabValue(newValue);
-    };
-
-    function a11yProps(index: number) {
-        return {
-            id: `tab-${index}`,
-            'aria-controls': `tabpanel-${index}`,
-        };
-    }
+    const { setMarginsDisabled } = useBaseAppContext();
+    React.useEffect(() => {
+        setMarginsDisabled(true);
+        return () => setMarginsDisabled(false);
+    }, []);
 
     const isCreation = id == null;
 
+    const formTabs: FormTabsValue[] = [
+        {
+            label: t('page.apps.general'),
+        },
+        {
+            label: t('page.apps.entornApp'),
+        },
+    ];
+
     return (
         <MuiForm
+            key={id}
             id={id}
             title={id ? t('page.apps.update') : t('page.apps.create')}
             resourceName="app"
             goBackLink="/app"
             createLink="form/{{id}}"
         >
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs
-                    value={tabValue}
-                    onChange={handleChange}
-                    aria-label="Tabs formulario de aplicacion"
-                >
-                    <Tab label={t('page.apps.general')} {...a11yProps(0)} />
-                    <Tab label={t('page.apps.entornApp')} disabled={isCreation} {...a11yProps(1)} />
-                </Tabs>
-            </Box>
-            <MuiFormTabContent currentIndex={tabValue} index={0} showOnCreate>
-                <FormPage>
-                    <Grid container spacing={2}>
-                        <Grid size={4}>
-                            <FormField name="codi" />
-                        </Grid>
-                        <Grid size={8}></Grid>
-                        <Grid size={12}>
-                            <FormField name="nom" />
-                        </Grid>
-                        <Grid size={12}>
-                            <FormField name="descripcio" type="textarea" />
-                        </Grid>
-                        <Grid size={12}>
-                            <LogoUpload />
-                        </Grid>
-                        <Grid size={12}>
-                            <FormField name="activa" />
-                        </Grid>
-                    </Grid>
-                </FormPage>
-            </MuiFormTabContent>
-            <MuiFormTabContent
-                currentIndex={tabValue}
-                index={1}
-            >
-                <AppsEntorns />
-            </MuiFormTabContent>
+            {isCreation && <AppFormContent />}
+            <MuiFormTabs tabs={formTabs} tabIndexesWithGrids={[1]}>
+                <MuiFormTabContent index={0} showOnCreate>
+                    <AppFormContent />
+                </MuiFormTabContent>
+                <MuiFormTabContent index={1}>
+                    <AppsEntorns />
+                </MuiFormTabContent>
+            </MuiFormTabs>
         </MuiForm>
     );
 };
@@ -169,11 +175,10 @@ const Apps: React.FC = () => {
                     />
                 ) : (
                     <span role="img" aria-label="block" style={{ fontSize: '24px' }}>
-                    <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
-                </span>
+                        <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
+                    </span>
                 );
-            }
-            ,
+            },
         },
         {
             field: 'codi',
@@ -189,7 +194,7 @@ const Apps: React.FC = () => {
         },
     ];
     return (
-        <GridPage disableMargins>
+        <GridPage>
             <MuiGrid
                 title={t('page.apps.title')}
                 resourceName="app"
