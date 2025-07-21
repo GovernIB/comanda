@@ -28,7 +28,11 @@ import java.util.jar.Manifest;
 				"es.caib.comanda.estadistica",
 				"es.caib.comanda.monitor",
 				"es.caib.comanda.back",
-				"es.caib.comanda.visualitzacio"
+				"es.caib.comanda.avisos",
+				"es.caib.comanda.permisos",
+				"es.caib.comanda.tasques",
+				"es.caib.comanda.usuaris",
+				"es.caib.comanda.broker",
 		},
 		excludeFilters = @ComponentScan.Filter(
 				type = FilterType.REGEX,
@@ -40,7 +44,15 @@ import java.util.jar.Manifest;
 						"es\\.caib\\.comanda\\.estadistica\\.back\\.config\\..*",
 						"es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*",
 						"es\\.caib\\.comanda\\.monitor\\.back\\.config\\..*",
-						"es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*"
+						"es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*",
+						"es\\.caib\\.comanda\\.avisos\\.back\\.config\\..*",
+						"es\\.caib\\.comanda\\.avisos\\.persist\\.config\\..*",
+						"es\\.caib\\.comanda\\.permisos\\.back\\.config\\..*",
+						"es\\.caib\\.comanda\\.permisos\\.persist\\.config\\..*",
+						"es\\.caib\\.comanda\\.tasques\\.back\\.config\\..*",
+						"es\\.caib\\.comanda\\.tasques\\.persist\\.config\\..*",
+						"es\\.caib\\.comanda\\.usuaris\\.back\\.config\\..*",
+						"es\\.caib\\.comanda\\.usuaris\\.persist\\.config\\..*",
 				})
 )
 public class ComandaBackApp extends SpringBootServletInitializer {

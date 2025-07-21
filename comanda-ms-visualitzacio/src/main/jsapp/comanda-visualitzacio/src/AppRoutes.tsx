@@ -13,6 +13,8 @@ import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
+import Broker from './pages/Broker';
+import QueueMessages from './pages/QueueMessages';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -51,6 +53,10 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="estadisticaWidget">
                 <Route index element={<EstadisticaWidget />} />
+            </Route>
+            <Route path="broker">
+                <Route index element={<Broker />} />
+                <Route path="queue/:queueName" element={<QueueMessages />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

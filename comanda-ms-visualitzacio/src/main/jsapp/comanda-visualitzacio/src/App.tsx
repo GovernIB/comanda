@@ -83,12 +83,20 @@ export const App: React.FC = () => {
         icon: 'storage',
         resourceName: 'comandaCache',
     }
+    const menuBroker = {
+        id: 'broker',
+        title: t('menu.broker'),
+        to: '/broker',
+        icon: 'send_time_extension',
+        resourceName: 'broker',
+    }
     const menuEntries = [
         menuSalut,
         menuEstadistiques,
         menuConfiguracio,
         menuMonitor,
-        menuCache
+        menuCache,
+        menuBroker
     ];
     const appMenuEntries = [
         menuSalut,

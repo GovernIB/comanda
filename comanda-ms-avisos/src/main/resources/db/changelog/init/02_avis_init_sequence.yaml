@@ -1,0 +1,9 @@
+databaseChangeLog:
+- changeSet:
+    id: avis-init-sequence-1
+    author: limit
+#    changes:
+#        - createSequence:
+#            sequenceName: ${db_prefix}avis_seq
+#            startValue: 1
+#            incrementBy: 1

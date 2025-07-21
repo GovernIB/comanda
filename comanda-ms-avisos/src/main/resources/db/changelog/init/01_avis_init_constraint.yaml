@@ -1,0 +1,9 @@
+databaseChangeLog:
+- changeSet:
+    id: avis-init-constraint-1
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}avis
+        columnNames: entorn_app_id, identificador
+        constraintName: ${db_prefix}avis_ident_uk
