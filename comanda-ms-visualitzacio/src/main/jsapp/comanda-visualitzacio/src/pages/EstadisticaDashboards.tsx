@@ -20,7 +20,7 @@ const EstadisticaDashboards: React.FC = () => {
         },
     ];
     return (
-        <GridPage disableMargins>
+        <GridPage>
             <MuiGrid
                 title={t('page.dashboards.title')}
                 resourceName="dashboard"
