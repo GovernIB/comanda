@@ -87,11 +87,20 @@ export const AuthProvider = (props: AuthProviderProps) => {
         debug && logConsole.debug('Token', verified ? 'verificat:' : 'obtingut:', token);
     };
     React.useEffect(() => {
+        debug &&
+            logConsole.debug(
+                "Inicialitzant proveidor d'autenticació de JBoss",
+                authSrc,
+                signOutUrl,
+                logoutUrl
+            );
         if ((window as any).__AUTH_TOKEN__) {
             setToken((window as any).__AUTH_TOKEN__);
         } else {
+            debug && logConsole.debug("No s'ha trobat el token, programant consulta periòdica");
             const checkTokenInterval = setInterval(() => {
                 if ((window as any).__AUTH_TOKEN__) {
+                    debug && logConsole.debug('Consultant si el token ja està disponible');
                     setToken((window as any).__AUTH_TOKEN__);
                     clearInterval(checkTokenInterval);
                 }
@@ -99,9 +108,17 @@ export const AuthProvider = (props: AuthProviderProps) => {
             setTimeout(() => {
                 clearInterval(checkTokenInterval);
                 if (!(window as any).__AUTH_TOKEN__) {
-                    getToken().then((token) => {
-                        token && setToken(token);
-                    });
+                    debug &&
+                        logConsole.debug(
+                            'La consulta periòdica no ha pogut obtenir el token. El consultarem directament.'
+                        );
+                    getToken()
+                        .then((token) => {
+                            token && setToken(token);
+                        })
+                        .catch((error) => {
+                            logConsole.error('Error al obtenir el token directament', error);
+                        });
                 }
             }, 1000);
         }

@@ -4,6 +4,7 @@ import Icon from '@mui/material/Icon';
 import { useDebounce } from '../../../util/useDebounce';
 import { FormFieldCustomProps } from '../../form/FormField';
 import { FormFieldError } from '../../form/FormContext';
+import { TextFieldProps } from '@mui/material/TextField';
 
 type FormFieldTextProps = FormFieldCustomProps & {
     /** Indica si s'ha de fer debounce amb els valors del camp */
@@ -42,7 +43,11 @@ export const useFormFieldCommon = (
     };
 };
 
-export const FormFieldText: React.FC<FormFieldTextProps> = (props) => {
+const InnerFormFieldText: React.FC<
+    FormFieldTextProps & {
+        overrideTextFieldProps?: TextFieldProps;
+    }
+> = (props) => {
     const {
         name,
         label,
@@ -56,9 +61,8 @@ export const FormFieldText: React.FC<FormFieldTextProps> = (props) => {
         readOnly,
         onChange,
         componentProps,
-        debounce,
+        overrideTextFieldProps,
     } = props;
-    const [localValue, setLocalValue] = React.useState<string | null>(value);
     const { helperText, title, startAdornment } = useFormFieldCommon(
         field,
         fieldError,
@@ -75,25 +79,18 @@ export const FormFieldText: React.FC<FormFieldTextProps> = (props) => {
         ...componentProps?.slotProps?.htmlInput,
     };
     const isTextAreaType = type === 'textarea' || field?.type === 'textarea';
-    const changedValue = debounce ? useDebounce(localValue, undefined, true) : localValue;
-    React.useEffect(() => {
-        setLocalValue(value);
-    }, [value]);
-    React.useEffect(() => {
-        onChange?.(changedValue);
-    }, [changedValue]);
     return (
         <TextField
             name={name}
             label={!inline ? label : undefined}
             placeholder={componentProps?.placeholder ?? (inline ? label : undefined)}
-            value={localValue ?? ''}
+            value={value ?? ''}
             required={required ?? field?.required}
             disabled={disabled}
             error={fieldError != null}
             title={title}
             helperText={helperText}
-            onChange={(e) => setLocalValue(e.target.value === '' ? null : e.target.value)}
+            onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
             fullWidth
             multiline={isTextAreaType}
             rows={isTextAreaType ? 4 : undefined}
@@ -102,7 +99,61 @@ export const FormFieldText: React.FC<FormFieldTextProps> = (props) => {
                 input: inputProps,
                 htmlInput: htmlInputProps,
             }}
+            {...overrideTextFieldProps}
         />
     );
 };
+
+const useIsUserTypingRef = (delay: number = 250): [React.RefObject<boolean>, () => void] => {
+    const isUserTypingRef = React.useRef(false);
+    const timeoutIdRef = React.useRef<any>(null);
+
+    const onUserInput = () => {
+        isUserTypingRef.current = true;
+
+        if (timeoutIdRef.current != null) {
+            clearTimeout(timeoutIdRef.current);
+        }
+        timeoutIdRef.current = setTimeout(() => {
+            isUserTypingRef.current = false;
+        }, delay);
+    };
+    return [isUserTypingRef, onUserInput];
+};
+
+const InnerFormFieldTextDebounce: React.FC<FormFieldTextProps> = (props) => {
+    const { value, onChange } = props;
+    const [localValue, setLocalValue] = React.useState<string | null>(value);
+    const changedValue = useDebounce(localValue, undefined, true);
+    const [isUserTypingRef, onUserInput] = useIsUserTypingRef();
+    React.useEffect(() => {
+        if (!isUserTypingRef.current) {
+            setLocalValue(value);
+        }
+    }, [value]);
+    React.useEffect(() => {
+        onChange?.(changedValue);
+    }, [changedValue]);
+    return (
+        <InnerFormFieldText
+            {...props}
+            overrideTextFieldProps={{
+                value: localValue ?? '',
+                onChange: (e) => {
+                    onUserInput();
+                    setLocalValue(e.target.value === '' ? null : e.target.value);
+                },
+            }}
+        />
+    );
+};
+
+export const FormFieldText: React.FC<FormFieldTextProps> = (props) => {
+    if (props.debounce) {
+        return <InnerFormFieldTextDebounce {...props} />;
+    } else {
+        return <InnerFormFieldText {...props} />;
+    }
+};
+
 export default FormFieldText;
