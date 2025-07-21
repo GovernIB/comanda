@@ -1,0 +1,51 @@
+databaseChangeLog:
+- changeSet:
+    id: permis-init-constraint-1
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}permis_acces
+        baseColumnNames: permis_id
+        referencedTableName: ${db_prefix}permis
+        referencedColumnNames: id
+        constraintName: ${db_prefix}permisacces_permis_fk
+- changeSet:
+    id: permis-init-constraint-2
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}permis_acces
+        baseColumnNames: acces_id
+        referencedTableName: ${db_prefix}acces
+        referencedColumnNames: id
+        constraintName: ${db_prefix}permisacces_acces_fk
+- changeSet:
+    id: permis-init-constraint-3
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}permis
+        baseColumnNames: objecte_id
+        referencedTableName: ${db_prefix}objecte
+        referencedColumnNames: id
+        constraintName: ${db_prefix}permis_objecte_fk
+- changeSet:
+    id: permis-init-constraint-4
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}permis_hereus
+        baseColumnNames: permis_id
+        referencedTableName: ${db_prefix}permis
+        referencedColumnNames: id
+        constraintName: ${db_prefix}permishereus_permis_fk
+- changeSet:
+    id: permis-init-constraint-5
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}permis_hereus
+        baseColumnNames: hereu_id
+        referencedTableName: ${db_prefix}objecte
+        referencedColumnNames: id
+        constraintName: ${db_prefix}permishereus_objecte_fk

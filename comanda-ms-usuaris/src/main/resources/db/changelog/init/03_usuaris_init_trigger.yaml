@@ -1,0 +1,17 @@
+databaseChangeLog:
+- changeSet:
+    id: usuaris-init-trigger-1
+    author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}usuari_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}usuari_trg
+#                    BEFORE INSERT ON ${db_prefix}usuari
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}usuari_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
