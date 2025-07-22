@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BaseApp } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
+import comandaLogo from './assets/COM_DRA_COL.svg';
 import AppRoutes from './AppRoutes';
 
 export const App: React.FC = () => {
@@ -113,7 +114,7 @@ export const App: React.FC = () => {
                 mr: 4,
                 borderRight: '2px solid #000',
             }}
-            title={<img style={{ height: '64px', verticalAlign: 'middle' }} src="COM_DRA_COL.svg" alt="Logo de l'aplicació de Comanda" />}
+            title={<img style={{ height: '64px', verticalAlign: 'middle' }} src={comandaLogo} alt="Logo de l'aplicació de Comanda" />}
             version="0.1"
             availableLanguages={['ca', 'es']}
             menuEntries={menuEntries}

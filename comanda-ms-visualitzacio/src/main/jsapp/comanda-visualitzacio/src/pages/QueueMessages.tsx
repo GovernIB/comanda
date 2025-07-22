@@ -8,12 +8,12 @@ import {
     useCloseDialogButtons,
 } from 'reactlib';
 import { ContentDetail } from '../components/ContentDetail';
-import { 
-    Box, 
-    Button, 
-    Icon, 
-    Typography, 
-    Paper, 
+import {
+    Box,
+    Button,
+    Icon,
+    Typography,
+    Paper,
     Chip,
     Dialog,
     DialogActions,
@@ -354,7 +354,7 @@ const QueueMessages: React.FC = () => {
     ];
 
     return (
-        <GridPage disableMargins>
+        <GridPage>
             <Box sx={{ p: 2 }}>
                 {/* Breadcrumbs navigation */}
                 <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>

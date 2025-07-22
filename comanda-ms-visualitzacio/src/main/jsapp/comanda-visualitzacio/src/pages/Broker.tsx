@@ -212,7 +212,7 @@ const Broker: React.FC = () => {
     }
 
     return (
-        <GridPage disableMargins>
+        <GridPage>
             <Box sx={{ p: 2 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     {t('page.broker.title')}
