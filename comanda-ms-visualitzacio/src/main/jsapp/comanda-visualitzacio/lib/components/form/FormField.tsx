@@ -21,13 +21,13 @@ export type FormFieldCommonProps = {
     /** Etiqueta del camp (si no s'especifica s'utilitzarà l'etiqueta del backend) */
     label?: string;
     /** Indica que aquest camp pertany a un formulari d'una sola línia */
-    inline?: true;
+    inline?: boolean;
     /** Indica que aquest camp és obligatori (si no s'especifica s'utilitzarà el valor proporcionat pel backend) */
-    required?: true;
+    required?: boolean;
     /** Indica que aquest camp està deshabilitat */
-    disabled?: true;
+    disabled?: boolean;
     /** Indica que aquest camp és de nomes lectura */
-    readOnly?: true;
+    readOnly?: boolean;
     /** Event que es llença quan es canvia el valor del camp */
     onChange?: (value: any) => void;
     /** Event que es llença quan es canvia el valor del camp */
