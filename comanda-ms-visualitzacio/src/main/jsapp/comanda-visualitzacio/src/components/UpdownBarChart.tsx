@@ -6,6 +6,7 @@ import {
     isDataInGroup,
     toXAxisDataGroups
 } from '../util/dataGroup';
+import {useTranslation} from "react-i18next";
 
 export type UpdownBarChartProps = {
     dataInici: string;
@@ -57,6 +58,7 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         estats
     } = props;
     const theme = useTheme();
+    const { t } = useTranslation();
     const estatsMaxData = getEstatsMaxData(estats);
     const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
 
@@ -71,37 +73,37 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const series = [
         {
             data: seriesUp,
-            label: 'up',
+            label: t('enum.appEstat.UP'),
             stack: 'total',
             color: theme.palette.success.main,
         },
         {
             data: seriesWarn,
-            label: 'warn',
+            label: t('enum.appEstat.WARN'),
             stack: 'total',
             color: theme.palette.warning.light,
         },
         {
             data: seriesDegraded,
-            label: 'degraded',
+            label: t('enum.appEstat.DEGRADED'),
             stack: 'total',
             color: theme.palette.warning.dark,
         },
         {
             data: seriesMaintenance,
-            label: 'maintenance',
+            label: t('enum.appEstat.MAINTENANCE'),
             stack: 'total',
             color: theme.palette.primary.main,
         },
         {
             data: seriesDown,
-            label: 'down',
+            label: t('enum.appEstat.DOWN'),
             stack: 'total',
             color: theme.palette.error.main,
         },
         {
             data: seriesUnknown,
-            label: 'unknown',
+            label: t('enum.appEstat.UNKNOWN'),
             stack: 'total',
             color: theme.palette.grey[600],
         }

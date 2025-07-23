@@ -124,6 +124,7 @@ const useAppData = () => {
 
 const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
     const { salutLastItems } = props;
+    const { t } = useTranslation();
     const theme = useTheme();
 
     const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'UP').length;
@@ -154,37 +155,37 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
                     data: [
                         {
                             id: 'UP',
-                            label: `Up (${upValue})`,
+                            label: `${t('enum.appEstat.UP')} (${upValue})`,
                             value: upValue,
                             color: theme.palette.success.main,
                         },
                         {
                             id: 'WARN',
-                            label: `Warn (${warnValue})`,
+                            label: `${t('enum.appEstat.WARN')} (${warnValue})`,
                             value: warnValue,
                             color: theme.palette.warning.light,
                         },
                         {
                             id: 'DOWN',
-                            label: `Down (${downValue})`,
+                            label: `${t('enum.appEstat.DOWN')} (${downValue})`,
                             value: downValue,
                             color: theme.palette.error.main,
                         },
                         {
                             id: 'DEGRADED',
-                            label: `Degraded (${degradedValue})`,
+                            label: `${t('enum.appEstat.DEGRADED')} (${degradedValue})`,
                             value: degradedValue,
                             color: theme.palette.warning.dark,
                         },
                         {
                             id: 'MAINTENANCE',
-                            label: `Maintenance (${maintenanceValue})`,
+                            label: `${t('enum.appEstat.MAINTENANCE')} (${maintenanceValue})`,
                             value: maintenanceValue,
                             color: theme.palette.primary.main,
                         },
                         {
                             id: 'UNKNOWN',
-                            label: `Unknown (${unknownValue})`,
+                            label: `${t('enum.appEstat.UNKNOWN')} (${unknownValue})`,
                             value: unknownValue,
                             color: theme.palette.grey[600],
                         },
@@ -197,12 +198,13 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
 
 const ItemStateChip: React.FC<any> = (props: { up: boolean; date: string }) => {
     const { up, date } = props;
+    const { t } = useTranslation()
     return (
         <>
             {up ? (
-                <Chip label="UP" size="small" color="success" />
+                <Chip label={t('enum.appEstat.UP')} size="small" color="success" />
             ) : (
-                <Chip label="DOWN" size="small" color="error" />
+                <Chip label={t('enum.appEstat.DOWN')} size="small" color="error" />
             )}
             <br />
             <Typography variant="caption">{date}</Typography>

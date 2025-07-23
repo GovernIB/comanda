@@ -1,4 +1,14 @@
 const translationCa = {
+    enum: {
+        appEstat: {
+            UP: "Actiu",
+            WARN: "Avís",
+            DOWN: "Inactiu",
+            DEGRADED: "Degradat",
+            MAINTENANCE: "Manteniment",
+            UNKNOWN: "Desconegut"
+        }
+    },
     menu: {
         configuracio: "Configuració",
         estadistiques: "Estadístiques",
@@ -135,6 +145,16 @@ const translationCa = {
                 simple: "Widget simple",
                 grafic: "Widget gràfic",
                 taula: "Widget taula",
+                preview: "Previsualització",
+                configVisual: "Configuració visual",
+                configGeneral: "Configuració general",
+                configTaula: "Configuració taula",
+                configFont: "Configuració de la mida de font",
+                graficBar: "Gràfic de barres",
+                graficLin: "Gràfic de línies",
+                graficPst: "Gràfic de pastís",
+                graficGug: "Gràfic de gauge",
+                graficMap: "Gràfic de heatmap",
             },
             simple: {
                 tab: {
@@ -149,6 +169,7 @@ const translationCa = {
                 },
                 title: "Widgets estadístics gràfics",
                 resourceTitle: "widget gràfic",
+                indicadors: "Indicadors",
             },
             taula: {
                 tab: {
@@ -156,6 +177,7 @@ const translationCa = {
                 },
                 title: "Widgets estadístics tipus taula",
                 resourceTitle: "widget tipus taula",
+                tableCols: "Columnes de la taula",
                 columna: {
                     indicador: "Indicador",
                     titolIndicador: "Títol",
@@ -165,10 +187,72 @@ const translationCa = {
                     arrossega: "Arrossega per reordenar",
                 },
             },
+            atributsVisuals: {
+                colorText: "Color del text",
+                colorFons: "Color de fons",
+                icona: "Icona",
+                colorIcona: "Color de la icona",
+                colorFonsIcona: "Color de fons de la icona",
+                colorTextDestacat: "Color del text destacat",
+                mostrarVora: "Mostrar vora",
+                colorVora: "Color de la vora",
+                ampleVora: "Ample de la vora",
+                midaFontTitol: "Mida de la font del títol",
+                midaFontDescripcio: "Mida de la font de la descripció",
+                midaFontValor: "Mida de la font del valor",
+                midaFontUnitats: "Mida de la font de les unitats",
+                midaFontCanviPercentual: "Mida de la font del canvi percentual",
+                colorsPaleta: "Colors de la paleta",
+                mostrarReticula: "Mostrar retícula",
+                barStacked: "Barres apilades",
+                barHorizontal: "Barres horitzontals",
+                lineShowPoints: "Mostrar punts",
+                area: "Emplenar area",
+                lineSmooth: "Línies suaus",
+                lineWidth: "Amplada de línia",
+                outerRadius: "Radi exterior",
+                pieDonut: "Tipus donut",
+                innerRadius: "Radi interior",
+                pieShowLabels: "Mostrar etiquetes",
+                labelSize: "Mida etiquetes",
+                gaugeMin: "Valor mínim",
+                gaugeMax: "Valor màxim",
+                gaugeColors: "Colors (separats per comes)",
+                gaugeRangs: "Rangs (separats per comes)",
+                heatmapMinValue: "Valor mínim",
+                heatmapMaxValue: "Valor màxim",
+                colorTextTaula: "Color de text de la taula",
+                colorFonsTaula: "Color de fons de la taula",
+                mostrarCapcalera: "Mostrar capçalera",
+                colorCapcalera: "Color de text de la capçalera",
+                colorFonsCapcalera: "Color de fons de la capçalera",
+                mostrarAlternancia: "Mostrar alternança de files",
+                colorAlternancia: "Color d'alternança",
+                mostrarVoraTaula: "Mostrar vora de taula",
+                colorVoraTaula: "Color de la vora",
+                ampleVoraTaula: "Ample de la vora",
+                mostrarSeparadorHoritzontal: "Mostrar separador horitzontal",
+                colorSeparadorHoritzontal: "Color del separador",
+                ampleSeparadorHoritzontal: "Ample del separador",
+                mostrarSeparadorVertical: "Mostrar separador vertical",
+                colorSeparadorVertical: "Color del separador",
+                ampleSeparadorVertical: "Ample del separador",
+            },
+            editorPaleta: {
+                title: "Editor de Paleta de Colors",
+                color: "Color",
+                hex: "Codi HEX",
+                palet: "Paleta actual:",
+                empty: "No hi ha colors a la paleta.",
+                exist: "Aquest color ja existeix a la paleta!",
+            },
             action: {
                 add: {
                     label: "Afegir",
                 },
+                addColumn: {
+                    label: "Afegir columna",
+                }
             },
         },
         dashboards: {
@@ -218,12 +302,6 @@ const translationCa = {
         },
         caches: {
             title: "Caches",
-            columna: {
-                codi: "Codi",
-                nom: "Nom",
-                entrades: "Núm. elements",
-                mida: "Mida (bytes)",
-            },
             buidar: {
                 label: "Buidar",
                 titol: "Buidar cache",
