@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -35,7 +36,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(
             name = "dashboard_id",
             referencedColumnName = "id",
@@ -43,7 +44,7 @@ public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
             nullable = false)
     private DashboardEntity dashboard;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(
             name = "widget_id",
             referencedColumnName = "id",
