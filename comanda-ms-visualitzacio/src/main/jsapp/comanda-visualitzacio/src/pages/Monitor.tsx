@@ -43,11 +43,12 @@ const TabMonitor: React.FC<TabMonitorProps> = (props) => {
 
 type EstatBadgeProps = {
   value: string;
+  children?: string,
 };
 
-const EstatBadge: React.FC<EstatBadgeProps> = ({ value }) => {
+const EstatBadge: React.FC<EstatBadgeProps> = ({ value, children }) => {
   let color: 'success' | 'error' | 'warning' | 'default' = 'default';
-  let label = value;
+  let label = children ?? value;
 
   switch (value) {
     case 'OK':
@@ -87,7 +88,7 @@ const columns = [{
 }, {
     field: 'estat',
     flex: 0.5,
-    renderCell: (params: any) => <EstatBadge value={params.value} />
+    renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
 },];
 
 const MonitorDetails: React.FC<any> = (props) => {

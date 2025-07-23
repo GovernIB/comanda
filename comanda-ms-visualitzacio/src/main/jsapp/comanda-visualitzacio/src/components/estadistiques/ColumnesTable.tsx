@@ -427,7 +427,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                 onClick={handleAddRow}
                 size="small"
             >
-                {t('Afegir columna')}
+                {t('page.widget.action.addColumn.label')}
             </Button>
         </Box>
     );
