@@ -19,6 +19,7 @@ services:
 #    networks:
 #      - comanda_net
 
+# APP COMANDA
   comanda:
     image: comanda:0.0.1
     container_name: jboss-comanda
@@ -58,7 +59,10 @@ services:
       - es.caib.comanda.front.api.url=${APP_URL:-http://localhost:8080}/comandaback/api
       - DEBUG=${DEBUG:-}
       - DEBUG_PORT=${DEBUG_HOST:-0.0.0.0:}${DEBUG_PORT:-8787}
-    restart: always
+#     SOFFID
+#    extra_hosts:
+      - "dev.caib.es:172.18.0.3"
+#    restart: always
     networks:
       - comanda_net
 

@@ -23,7 +23,8 @@
 		<profile>
 			<id>jboss74</id>
 			<properties>
-				<docker.image.from>280421/jboss-eap-caib-7.4</docker.image.from>
+<!--				<docker.image.from>280421/jboss-eap-caib-7.4</docker.image.from>-->
+				<docker.image.from>jboss-eap-7.4</docker.image.from>
 				<docker.assembly.dir>${basedir}/src/main/docker/jboss74</docker.assembly.dir>
 			</properties>
 		</profile>
@@ -199,13 +200,14 @@
 									<run>keytool -import -trustcacerts -alias comanda-local -file /opt/comanda/ssl/certs/server.crt -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias authdev-limit -file /opt/comanda/ssl/certs/authdev-limit-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias dev-caib -file /opt/comanda/ssl/certs/dev-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
-									<run>keytool -import -trustcacerts -alias idp-caib -file /opt/comanda/ssl/certs/idp-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias pre-caib -file /opt/comanda/ssl/certs/proves-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias se-caib -file /opt/comanda/ssl/certs/se-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>echo 'JAVA_OPTS="$JAVA_OPTS -Djavax.net.ssl.trustStore=/home/jboss/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"' >> $JBOSS_HOME/bin/standalone.conf</run>
-									<!-- SOFFID -->
+									<!-- SOFFID INICI -->
+<!--									<run>keytool -import -trustcacerts -alias idp-caib -file /opt/comanda/ssl/certs/idp-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>-->
 <!--									<run>cp $JBOSS_USERHOME/config/keycloak-adapter-core-22.0.5.jar $JBOSS_HOME/modules/system/add-ons/keycloak/org/keycloak/keycloak-adapter-core/main</run>-->
 <!--									<run>cp $JBOSS_USERHOME/config/keycloak-wildfly-elytron-oidc-adapter-22.0.5.jar $JBOSS_HOME/modules/system/add-ons/keycloak/org/keycloak/keycloak-wildfly-elytron-oidc-adapter/main</run>-->
+									<!-- SOFFID FI -->
 								</runCmds>
 								<tags>
 									<tag>latest</tag>

@@ -43,10 +43,25 @@
             <logger category="org.hibernate.type.descriptor.sql.BasicBinder">
                 <level name="TRACE"/>
             </logger>
+            <logger category="org.apache.http">
+                <level name="DEBUG"/>
+            </logger>
+
+            <logger category="org.apache.http.wire">
+                <level name="DEBUG"/>
+            </logger>
+
+            <logger category="org.apache.http.headers">
+                <level name="DEBUG"/>
+            </logger>
+
             <logger category="org.keycloak">
                 <level name="TRACE"/>
             </logger>
             <logger category="org.keycloak.adapters">
+                <level name="TRACE"/>
+            </logger>
+            <logger category="org.keycloak.adapters.authentication">
                 <level name="TRACE"/>
             </logger>
             <logger category="org.keycloak.events">
