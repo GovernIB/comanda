@@ -504,7 +504,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
             {error ? (
                 // Error content
-                <Box sx={{ flex: 1, p: 2, overflow: auto }}>
+                <Box sx={{ flex: 1, p: 2, overflow: "auto" }}>
                     <Accordion sx={{...estils.errorAccordion, pointerEvents: "auto"}} onMouseDown={(event) => {
                         event.stopPropagation(); // Evita que React-Grid-Layout bloquegi el clic
                     }}>
