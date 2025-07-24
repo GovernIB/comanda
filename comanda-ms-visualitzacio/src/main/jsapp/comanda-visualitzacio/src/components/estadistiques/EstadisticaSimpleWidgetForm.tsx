@@ -10,6 +10,7 @@ import { Divider, Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import IconAutocompleteSelect from "../IconAutocompleteSelect.tsx";
 import {FormFieldDataActionType} from "../../../lib/components/form/FormContext.tsx";
+import FormFieldAdvancedSearchFilters from '../FormFieldAdvancedSearchFilters.tsx';
 
 
 const EstadisticaSimpleWidgetForm: React.FC = () => {
@@ -84,7 +85,19 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                     <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.simple')}</Divider></Grid>
                     <Grid size={6}><FormField name="unitat" /></Grid>
                     <Grid size={6}><FormField name="compararPeriodeAnterior" /></Grid>AAA
-                    <Grid size={12}><FormField name="indicador" advancedSearchColumns={columnesIndicador} onChange={generateOnChange("indicador", "indicadorAgregacio")} /></Grid>
+                    <Grid size={12}>
+                        {/* TODO Refactorizar y crear componente FormFieldAdvancedSearchCustom para pasar props al grid sin filtro o añadir la opción al
+                             FormFieldReference de /lib */}
+                        <FormFieldAdvancedSearchFilters
+                            name="indicador"
+                            advancedSearchColumns={columnesIndicador}
+                            advancedSearchDataGridProps={{
+                                rowHeight: 30,
+                            }}
+                            advancedSearchDialogHeight={500}
+                            onChange={generateOnChange("indicador", "indicadorAgregacio")}
+                        />
+                    </Grid>
                     <Grid size={12}><FormField name="titolIndicador" onChange={generateOnChange("titolIndicador", "indicadorAgregacio")} /></Grid>
                     <Grid size={6}><FormField name="tipusIndicador" onChange={generateOnChange("tipusIndicador", "indicadorAgregacio")} /></Grid>
                     <Grid size={6}><FormField name="periodeIndicador" onChange={generateOnChange("periodeIndicador", "indicadorAgregacio")} disabled={data.tipusIndicador !== 'AVERAGE'} /></Grid>
