@@ -132,6 +132,7 @@ const translationCa = {
             modulEnum: {
                 salut: "Salut",
                 estadistica: "Estadística",
+                configuracio: "Configuració",
             },
         },
         widget: {

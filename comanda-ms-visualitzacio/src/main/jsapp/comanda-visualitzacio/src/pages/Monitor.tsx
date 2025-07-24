@@ -18,7 +18,8 @@ import { Tabs, Tab, Chip, Box, Button, Icon } from '@mui/material';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
-    { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' }
+    { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' },
+    { value: 'CONFIGURACIO', labelKey: 'page.monitors.modulEnum.configuracio' },
 ];
 
 type TabMonitorProps = {

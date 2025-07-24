@@ -130,8 +130,9 @@ const translationEs = {
                 excepcioStacktrace: "Traza de la excepción",
             },
             modulEnum: {
-                salut: "Health",
-                estadistica: "Statistics",
+                salut: "Salud",
+                estadistica: "Estadística",
+                configuracio: "Configuración",
             },
         },
         widget: {

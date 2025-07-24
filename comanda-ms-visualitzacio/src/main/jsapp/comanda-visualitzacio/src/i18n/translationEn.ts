@@ -130,8 +130,9 @@ const translationEn = {
                 excepcioStacktrace: "Exception stack trace",
             },
             modulEnum: {
-                salut: "Salud",
-                estadistica: "Estadística",
+                salut: "Health",
+                estadistica: "Statistics",
+                configuracio: "Configuration",
             },
         },
         widget: {
