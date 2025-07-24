@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom</artifactId>
-		<version>0.0.1</version>
+		<version>0.1.0</version>
 		<relativePath>../comanda-bom</relativePath>
 	</parent>
 	<artifactId>comanda-bom-ms</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<packaging>pom</packaging>
 	<properties>
 		<spring.filter.version>2.1.6</spring.filter.version>

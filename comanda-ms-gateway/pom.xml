@@ -5,11 +5,11 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom</artifactId>
-		<version>0.0.1</version>
+		<version>0.1.0</version>
 		<relativePath>../comanda-bom/pom.xml</relativePath>
 	</parent>
 	<artifactId>comanda-ms-gateway</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<description>API Gateway per Comanda</description>
 	<properties>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>

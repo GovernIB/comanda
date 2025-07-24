@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda</artifactId>
-		<version>0.0.1</version>
+		<version>0.1.0</version>
 	</parent>
 	<artifactId>comanda-ear</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<packaging>ear</packaging>
 	<properties>
 		<docker.base.image>${project.parent.artifactId}</docker.base.image>
