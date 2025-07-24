@@ -46,7 +46,7 @@ public class MonitorApp {
     private Monitor createMonitor(Long entornAppId, String url, String operacio, String codiUsuari) {
         return Monitor.builder()
                 .entornAppId(entornAppId)
-                .modul(ModulEnum.ESTADISTICA)
+                .modul(ModulEnum.CONFIGURACIO)
                 .tipus(AccioTipusEnum.SORTIDA)
                 .url(url)
                 .operacio(operacio)
