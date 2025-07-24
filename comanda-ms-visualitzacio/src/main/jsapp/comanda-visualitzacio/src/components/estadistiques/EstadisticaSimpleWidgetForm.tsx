@@ -84,7 +84,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                 <EstadisticaWidgetFormFields>
                     <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.simple')}</Divider></Grid>
                     <Grid size={6}><FormField name="unitat" /></Grid>
-                    <Grid size={6}><FormField name="compararPeriodeAnterior" /></Grid>AAA
+                    <Grid size={6}><FormField name="compararPeriodeAnterior" /></Grid>
                     <Grid size={12}>
                         {/* TODO Refactorizar y crear componente FormFieldAdvancedSearchCustom para pasar props al grid sin filtro o añadir la opción al
                              FormFieldReference de /lib */}
