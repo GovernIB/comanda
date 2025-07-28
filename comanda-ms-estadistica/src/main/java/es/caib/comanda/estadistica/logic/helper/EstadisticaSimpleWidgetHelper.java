@@ -51,7 +51,7 @@ public class EstadisticaSimpleWidgetHelper {
         if (Objects.nonNull(entity.getIndicadorInfo()) && Objects.nonNull(entity.getIndicadorInfo().getIndicador())) {
             IndicadorTaulaEntity indicadorTaula = entity.getIndicadorInfo();
             IndicadorEntity indicador = indicadorTaula.getIndicador();
-            resource.setIndicador(ResourceReference.toResourceReference(indicador.getId(), indicador.getCodi()));
+            resource.setIndicador(ResourceReference.toResourceReference(indicador.getId(), indicador.getCodiNomDescription()));
             resource.setTitolIndicador(indicadorTaula.getTitol());
             resource.setTipusIndicador(indicadorTaula.getAgregacio());
             resource.setPeriodeIndicador(indicadorTaula.getUnitatAgregacio());

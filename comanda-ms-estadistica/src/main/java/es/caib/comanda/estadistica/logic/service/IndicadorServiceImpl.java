@@ -7,6 +7,12 @@ import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
+import java.util.Objects;
+
 /**
  * Classe de servei que implementa la interfície IndicadorService. Aquesta classe proporciona operacions específiques per gestionar
  * els recursos d'Indicador.
@@ -25,5 +31,24 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class IndicadorServiceImpl extends BaseReadonlyResourceService<Indicador, Long, IndicadorEntity> implements IndicadorService {
-    
+
+	@Override
+	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {
+		if (Objects.equals(Indicador.NAMED_FILTER_GROUP_BY_NOM, name)) {
+			return uniqueNomByMinEntornAppId();
+		}
+		return null;
+	}
+
+	/** Filtro para solo mostrar un resultado por nombre en la aplicación. Aprovechando el UK de entornAppId y nom. **/
+	private static Specification<IndicadorEntity> uniqueNomByMinEntornAppId() {
+		return (root, query, cb) -> {
+			Subquery<Long> subquery = query.subquery(Long.class);
+			Root<IndicadorEntity> subRoot = subquery.from(IndicadorEntity.class);
+			subquery.select(cb.min(subRoot.get("entornAppId")));
+			subquery.where(cb.equal(subRoot.get("nom"), root.get("nom")));
+			return cb.equal(root.get("entornAppId"), subquery);
+		};
+	}
+
 }

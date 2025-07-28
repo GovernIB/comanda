@@ -46,8 +46,11 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @ResourceConfig(
     quickFilterFields = { "codi", "nom" },
-    descriptionField = "nom")
+    descriptionField = "codiNomDescription")
 public class Indicador extends BaseResource<Long> {
+
+    /** Named Filter para devolver un solo un resultado por el atributo nom **/
+    public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -61,5 +64,9 @@ public class Indicador extends BaseResource<Long> {
     @NotNull
     private Long entornAppId;
     private Format format;
+
+    public String getCodiNomDescription() {
+        return this.codi + " - " + this.nom;
+    }
 
 }

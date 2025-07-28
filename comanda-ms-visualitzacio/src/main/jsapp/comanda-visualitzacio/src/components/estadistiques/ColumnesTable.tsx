@@ -351,6 +351,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                     <FormField
                                         name={`${name}.${index}.indicador`}
                                         label={t('page.widget.taula.columna.indicador')}
+                                        namedQueries= {["groupByNom"]}
                                         advancedSearchColumns={columnesIndicador}
                                         value={columna.indicador}
                                         onChange={(value) => handleFieldChange(index, 'indicador', value)}

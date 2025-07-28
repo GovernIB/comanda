@@ -90,10 +90,9 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                              FormFieldReference de /lib */}
                         <FormFieldAdvancedSearchFilters
                             name="indicador"
+                            namedQueries= {["groupByNom"]}
                             advancedSearchColumns={columnesIndicador}
-                            advancedSearchDataGridProps={{
-                                rowHeight: 30,
-                            }}
+                            advancedSearchDataGridProps={{ rowHeight: 30, }}
                             advancedSearchDialogHeight={500}
                             onChange={generateOnChange("indicador", "indicadorAgregacio")}
                         />
