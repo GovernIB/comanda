@@ -43,7 +43,10 @@ export const calculateEstatsSeries = (
             valueCount += estatForGroup != null ? 1 : 0;
         });
 
-        if (percentKey === "degradedPercent" || percentKey === "maintenancePercent" || percentKey === "downPercent") {
+        if (valueSum != 0 &&
+            (percentKey === "degradedPercent" ||
+             percentKey === "maintenancePercent" ||
+             percentKey === "downPercent")) {
             valueSum = -valueSum;
         }
         return valueCount !== 0 ? valueSum / valueCount : 0.0;
