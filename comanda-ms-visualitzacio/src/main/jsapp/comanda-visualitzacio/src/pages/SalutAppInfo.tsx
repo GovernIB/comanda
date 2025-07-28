@@ -174,29 +174,49 @@ const AppInfo: React.FC<any> = (props) => {
         size="small"
         variant="contained"
         onClick={() => detailsDialogShow(null, detallsContent, undefined, { fullWidth: true, maxWidth: 'md' })}
-        sx={{ mt: 8 }}>
+        sx={{ mt: 1 }}>
         {t('page.salut.info.detalls')}
     </Button> : null;
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.info.title')}</Typography>
-            <List sx={{ ml: 2 }}>
-                <ListItem secondaryAction={data} disablePadding>
-                    <ListItemText primary={t('page.salut.info.data')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                <ListItem secondaryAction={bdEstat} disablePadding>
-                    <ListItemText primary={t('page.salut.info.bdEstat')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                <ListItem secondaryAction={appLatencia} disablePadding>
-                    <ListItemText primary={t('page.salut.info.appLatencia')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                <ListItem secondaryAction={missatges} disablePadding>
-                    <ListItemText primary={t('page.salut.info.missatges')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                {detalls?.length && <ListItem secondaryAction={detailsButton} disablePadding>
-                    <ListItemText />
-                </ListItem>}
-            </List>
+            <Grid container columnSpacing={1} rowSpacing={1} sx={{ ml: 2 }}>
+                <Grid item size={6} >
+                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.data')}:</Typography>
+                </Grid>
+                <Grid item size={6} >
+                    <Typography component="span">{data}</Typography>
+                </Grid>
+
+                <Grid item size={6} >
+                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.bdEstat')}:</Typography>
+                </Grid>
+                <Grid item size={6} >
+                    <Typography component="span">{bdEstat}</Typography>
+                </Grid>
+
+                <Grid item size={6} >
+                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.appLatencia')}:</Typography>
+                </Grid>
+                <Grid item size={6} >
+                    <Typography component="span">{appLatencia}</Typography>
+                </Grid>
+
+                <Grid item size={6} >
+                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.missatges')}:</Typography>
+                </Grid>
+                <Grid item size={6} >
+                    <Box display="flex" alignItems="center">
+                        {missatges}
+                    </Box>
+                </Grid>
+
+                {detalls?.length && (
+                    <Grid item size={12} sx={{ display: 'flex', justifyContent: 'flex-end' }} >
+                        {detailsButton}
+                    </Grid>
+                )}
+            </Grid>
         </CardContent>
     </Card>;
 }
