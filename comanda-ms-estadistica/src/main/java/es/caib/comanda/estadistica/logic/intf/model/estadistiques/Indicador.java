@@ -49,7 +49,7 @@ import javax.validation.constraints.Size;
     descriptionField = "codiNomDescription")
 public class Indicador extends BaseResource<Long> {
 
-    /** Named Filter para devolver un solo un resultado por el atributo nom **/
+    /** Named Filter para devolver un solo resultado por el atributo nom **/
     public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
 
     @NotNull
