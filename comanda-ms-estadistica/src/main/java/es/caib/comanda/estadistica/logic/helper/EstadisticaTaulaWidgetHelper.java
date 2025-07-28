@@ -68,7 +68,7 @@ public class EstadisticaTaulaWidgetHelper {
                     columnaResource.setUnitatAgregacio(columna.getUnitatAgregacio());
                     columnaResource.setIndicador(ResourceReference.toResourceReference(
                             columna.getIndicador().getId(),
-                            columna.getIndicador().getCodi()));
+                            columna.getIndicador().getCodiNomDescription()));
                     return columnaResource;
                 }).collect(Collectors.toList());
         resource.setColumnes(columnesResource);

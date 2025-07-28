@@ -355,7 +355,10 @@ const Integracions: React.FC<any> = (props) => {
                             <Chip label={i.estat} size="small" color={getEstatColor(i.estat)} />
                         </TableCell>
                         <TableCell>{i.latencia != null ? i.latencia + ' ms' : t('page.salut.nd')}</TableCell>
-                        <TableCell>{i.latencia} ms</TableCell>
+                        <TableCell>
+                            <Chip label={i.totalOk} size="small" color={"success"} sx={{ minWidth: '35px', textAlign: 'center', mr:1 }} />
+                            <Chip label={i.totalError} size="small" color={"error"} sx={{ minWidth: '35px', textAlign: 'center' }} />
+                        </TableCell>
                     </TableRow>)}
                 </TableBody>
             </Table>}

@@ -70,4 +70,8 @@ public class IndicadorEntity extends BaseEntity<Indicador> {
     @Enumerated(EnumType.STRING)
     private Format format;
 
+    public String getCodiNomDescription() {
+        return this.codi + " - " + this.nom;
+    }
+
 }

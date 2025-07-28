@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import ColorPaletteSelector from "../ColorPaletteSelector";
 import ColumnesTable from "./ColumnesTable.tsx";
 import {FormFieldDataActionType, FormFieldError} from "../../../lib/components/form/FormContext.tsx";
+import FormFieldAdvancedSearchFilters from "../FormFieldAdvancedSearchFilters.tsx";
 
 const EstadisticaGraficWidgetForm: React.FC = () => {
     const { data, dataDispatchAction } = useFormContext();
@@ -134,7 +135,12 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             <Grid size={4}><FormField name="tempsAgrupacio" onChange={handleTempsAgrupacioChange} disabled={data.agruparPerDimensioDescomposicio === true}/></Grid>
                             { (isUnIndicador || isUnIndicadorAmbDescomposicio || isDosIndicadors) && (
                                 <>
-                                    <Grid size={4}><FormField name="indicador" advancedSearchColumns={columnesIndicador}/></Grid>
+                                    <Grid size={4}><FormFieldAdvancedSearchFilters
+                                        name="indicador" 
+                                        namedQueries= {["groupByNom"]}
+                                        advancedSearchColumns={columnesIndicador}
+                                        advancedSearchDataGridProps={{ rowHeight: 30, }}
+                                        advancedSearchDialogHeight={500}/></Grid>
                                     <Grid size={4}><FormField name="titolIndicador" /></Grid>
                                     <Grid size={2}><FormField name="agregacio" hiddenEnumValues={['FIRST_SEEN', 'LAST_SEEN']}/></Grid>
                                     <Grid size={2}><FormField name="unitatAgregacio" disabled={data.agregacio !== 'AVERAGE'}/></Grid>
