@@ -1,5 +1,6 @@
-# ![Logo comanda](https://github.com/GovernIB/comanda/raw/main/assets/comanda_logo.png) Comanda
+![Logo comanda](https://github.com/GovernIB/comanda/raw/main/assets/comanda_logo.png) 
 
+# Comanda
 Quadre de control per coneixer l'estat d'una aplicació via cridades REST  
 
 **Versions**
