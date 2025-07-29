@@ -1,4 +1,4 @@
-![Logo comanda](https://github.com/GovernIB/comanda/raw/main/assets/comanda_logo.png) 
+![Logo comanda](https://github.com/GovernIB/comanda/raw/main/assets/logo_comanda.png) 
 
 # Comanda
 Quadre de control per coneixer l'estat d'una aplicació via cridades REST  
