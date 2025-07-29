@@ -41,7 +41,6 @@ const agrupacioFromMinutes = (intervalMinutes: number) => {
 const useReportInterval = (intervalMinutes?: number) => {
     const result = React.useMemo(() => {
         if (intervalMinutes != null && intervalMinutes > 0) {
-            console.log("useReportInterval A");
             const dataFi = dayjs().set('second', 59).set('millisecond', 999);
             const dataInici = dataFi.subtract(intervalMinutes - 1, 'm').set('second', 0).set('millisecond', 0);
             const dataIniciFormat = dataInici.format('YYYY-MM-DDTHH:mm:ss');
@@ -53,7 +52,6 @@ const useReportInterval = (intervalMinutes?: number) => {
                 agrupacio,
             };
         } else {
-            console.log("useReportInterval B");
             return {
                 dataInici: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
                 dataFi: dayjs().format('YYYY-MM-DDTHH:mm:ss'),

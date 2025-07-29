@@ -2,15 +2,38 @@ import * as React from 'react';
 import {useTranslation} from 'react-i18next';
 import {useParams} from 'react-router-dom';
 import Grid from '@mui/material/Grid';
-import {FormField, FormPage, GridPage, MuiForm, MuiFormTabContent, MuiGrid, springFilterBuilder, useFormContext} from 'reactlib';
+import {FormField, FormPage, GridPage, MuiForm, MuiFormTabContent, MuiGrid, springFilterBuilder, useBaseAppContext, useFormContext, useResourceApiService} from 'reactlib';
 import {Box, Tab, Tabs} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import BlockIcon from "@mui/icons-material/Block";
+import UrlPingAdornment from '../components/UrlPingAdornment';
+
+const useActions = (refresh?: () => void) => {
+    const { artifactAction: apiAction } = useResourceApiService('entornApp');
+    const { temporalMessageShow } = useBaseAppContext();
+
+    const pingUrl = React.useCallback(async (additionalData: any): Promise<boolean> => {
+        try {
+            const data = await apiAction(null, { code: 'pingUrl', data: additionalData });
+            refresh?.();
+            temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
+            return data.success;
+        } catch (error: any) {
+            temporalMessageShow(null, error.message, 'error');
+            return false;
+        }
+    }, [apiAction, refresh, temporalMessageShow]);
+
+    return {
+        pingUrl,
+    };
+};
 
 const AppEntornForm: React.FC = () => {
     const { data } = useFormContext();
     const { id: appId } = useParams();
     const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
+    const { pingUrl } = useActions();
 
     return (
         <Grid container spacing={2}>
@@ -18,26 +41,24 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="entorn" disabled={data?.id != null} filter={entornFilter}/>
             </Grid>
             <Grid size={12}>
-                <FormField name="infoUrl" />
+                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} onClick={pingUrl}/>}}}} />
             </Grid>
-            <Grid size={4}>
+            <Grid size={{xs:12, md:4}}>
                 <FormField name="infoInterval" />
             </Grid>
 
-
             <Grid size={12}>
-                <FormField name="salutUrl" />
+                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} onClick={pingUrl}/>}}}} />
             </Grid>
-            <Grid size={4}>
+            <Grid size={{xs:12, md:4}}>
                 <FormField name="salutInterval" />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaInfoUrl" />
+                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} onClick={pingUrl}/>}}}} />
             </Grid>
 
-
             <Grid size={12}>
-                <FormField name="estadisticaUrl" />
+                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} onClick={pingUrl}/>}}}} />
             </Grid>
             <Grid size={12}>
                 <FormField name="estadisticaCron" />

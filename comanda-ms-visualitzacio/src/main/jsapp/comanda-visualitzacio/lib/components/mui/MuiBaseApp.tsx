@@ -87,7 +87,10 @@ const baseFormFieldComponents = [{
 }, {
     type: 'file',
     component: FormFieldFile,
-}];
+}, {
+    type: 'url',
+    component: FormFieldText,
+},];
 
 const MuiComponentsConfigurer: React.FC = () => {
     const [messageDialogShow, messageDialogComponent] = useMessageDialog();
