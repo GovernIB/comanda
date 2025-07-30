@@ -130,15 +130,9 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
     const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'UP').length;
     const warnValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'WARN').length;
     const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'DOWN').length;
-    const degradedValue = salutLastItems.filter(
-        (salutItem) => salutItem.appEstat === 'DEGRADED'
-    ).length;
-    const maintenanceValue = salutLastItems.filter(
-        (salutItem) => salutItem.appEstat === 'MAINTENANCE'
-    ).length;
-    const unknownValue = salutLastItems.filter(
-        (salutItem) => salutItem.appEstat === 'UNKNOWN'
-    ).length;
+    const degradedValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'DEGRADED').length;
+    const maintenanceValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'MAINTENANCE').length;
+    const unknownValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'UNKNOWN').length;
 
     return (
         <PieChart

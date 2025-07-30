@@ -39,25 +39,28 @@ const agrupacioFromMinutes = (intervalMinutes: number) => {
 }
 
 const useReportInterval = (intervalMinutes?: number) => {
-    if (intervalMinutes != null && intervalMinutes > 0) {
-        const dataFi = dayjs().set('second', 59).set('millisecond', 999);
-        const dataInici = dataFi.subtract(intervalMinutes - 1, 'm').set('second', 0).set('millisecond', 0);
-        const dataIniciFormat = dataInici.format('YYYY-MM-DDTHH:mm:ss');
-        const dataFiFormat = dataFi.format('YYYY-MM-DDTHH:mm:ss');
-        const agrupacio = agrupacioFromMinutes(intervalMinutes);
-        return {
-            dataInici: dataIniciFormat,
-            dataFi: dataFiFormat,
-            agrupacio,
-        };
-    } else {
-        return {
-            dataInici: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
-            dataFi: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
-            agrupacio: 'MINUT',
-        };
-    }
-}
+    const result = React.useMemo(() => {
+        if (intervalMinutes != null && intervalMinutes > 0) {
+            const dataFi = dayjs().set('second', 59).set('millisecond', 999);
+            const dataInici = dataFi.subtract(intervalMinutes - 1, 'm').set('second', 0).set('millisecond', 0);
+            const dataIniciFormat = dataInici.format('YYYY-MM-DDTHH:mm:ss');
+            const dataFiFormat = dataFi.format('YYYY-MM-DDTHH:mm:ss');
+            const agrupacio = agrupacioFromMinutes(intervalMinutes);
+            return {
+                dataInici: dataIniciFormat,
+                dataFi: dataFiFormat,
+                agrupacio,
+            };
+        } else {
+            return {
+                dataInici: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+                dataFi: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+                agrupacio: 'MINUT',
+            };
+        }
+    }, [intervalMinutes]);
+    return result;
+};
 
 const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void; initialValue?: string }) => {
     const { onChange, disabled, initialValue = 'PT1M' } = props;

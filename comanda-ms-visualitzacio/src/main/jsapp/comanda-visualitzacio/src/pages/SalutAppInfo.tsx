@@ -460,10 +460,10 @@ const SalutAppInfo: React.FC = () => {
     const [detailsDialogShow, detailsDialogComponent] = useMuiContentDialog();
     const detailsComponent = (
         <Grid container spacing={2}>
-            <Grid size={3}>
+            <Grid size={{sm: 12, md: 3}}>
                 <AppInfo salutCurrentApp={salutCurrentApp} detailsDialogShow={detailsDialogShow} />
             </Grid>
-            <Grid size={9}>
+            <Grid size={{sm: 12, md: 9}}>
                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
                     {dataLoaded && (
                         <LatenciaEstatsChart
@@ -475,10 +475,10 @@ const SalutAppInfo: React.FC = () => {
                     )}
                 </ErrorBoundary>
             </Grid>
-            <Grid size={6}>
+            <Grid size={{sm: 12, md:6}}>
                 <Integracions salutCurrentApp={salutCurrentApp} />
             </Grid>
-            <Grid size={6}>
+            <Grid size={{sm: 12, md:6}}>
                 <Subsistemes salutCurrentApp={salutCurrentApp} />
             </Grid>
         </Grid>

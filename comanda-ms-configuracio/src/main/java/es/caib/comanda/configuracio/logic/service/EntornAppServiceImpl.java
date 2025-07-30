@@ -8,6 +8,7 @@ import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppParamAction;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
@@ -22,11 +23,17 @@ import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
@@ -45,28 +52,21 @@ import java.util.stream.Collectors;
 @Service
 public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, Long, EntornAppEntity> implements EntornAppService {
 
-    @Autowired
-    private AppIntegracioRepository appIntegracioRepository;
-    @Autowired
-    private SubsistemaRepository subsistemaRepository;
-    @Autowired
-    private EntornAppRepository entornAppRepository;
-    @Autowired
-    private AppInfoHelper appInfoHelper;
-    @Autowired
-    private HttpAuthorizationHeaderHelper keycloakHelper;
-    @Autowired
-    private SalutServiceClient salutServiceClient;
-    @Autowired
-    private EstadisticaServiceClient estadisticaServiceClient;
-
-    @Autowired
-    private ConfiguracioSchedulerService schedulerService;
+    @Autowired private AppIntegracioRepository appIntegracioRepository;
+    @Autowired private SubsistemaRepository subsistemaRepository;
+    @Autowired private EntornAppRepository entornAppRepository;
+    @Autowired private AppInfoHelper appInfoHelper;
+    @Autowired private HttpAuthorizationHeaderHelper keycloakHelper;
+    @Autowired private SalutServiceClient salutServiceClient;
+    @Autowired private EstadisticaServiceClient estadisticaServiceClient;
+    @Autowired private ConfiguracioSchedulerService schedulerService;
+    @Autowired private RestTemplate restTemplate;
 
     @PostConstruct
     public void init() {
         register(EntornApp.ENTORN_APP_ACTION_REFRESH, new EntornAppServiceImpl.RefreshAction(entornAppRepository, appInfoHelper));
         register(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService));
+        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
     }
 
     @Override
@@ -193,6 +193,63 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public void onChange(Serializable id, EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
+        }
+    }
+
+    public static class PingUrlAction implements ActionExecutor<EntornAppEntity, String, PingUrlResponse> {
+        private final RestTemplate restTemplate;
+
+        public PingUrlAction(RestTemplate restTemplate) {
+            this.restTemplate = restTemplate;
+        }
+
+        @Override
+        public PingUrlResponse exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
+            return isEndpointReachable(params);
+        }
+
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        }
+
+        public PingUrlResponse isEndpointReachable(String url) {
+            PingUrlResponse pingUrlResponse = new PingUrlResponse();
+            pingUrlResponse.setSuccess(false);
+            String message = null;
+            try {
+                ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.GET, null, Void.class);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    pingUrlResponse.setSuccess(true);
+                    message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
+                }
+            } catch (IllegalArgumentException e) {
+                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.illegalArgument");
+            } catch (ResourceAccessException e) {
+                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.timeout");
+            } catch (HttpStatusCodeException e) {
+                int statusCode = e.getRawStatusCode();
+                switch (statusCode) {
+                    case 401:
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.401");
+                        break;
+                    case 403 :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.403");
+                        break;
+                    case 404 :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.404");
+                        break;
+                    case 500 :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.500");
+                        break;
+                    default :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.default", statusCode, e.getStatusText());
+                        break;
+                }
+            } catch (Exception e) {
+                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.unknown", e.getClass().getSimpleName());
+            }
+            pingUrlResponse.setMessage(message);
+            return pingUrlResponse;
         }
     }
 
