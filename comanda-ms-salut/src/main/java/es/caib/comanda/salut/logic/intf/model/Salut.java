@@ -1,5 +1,6 @@
 package es.caib.comanda.salut.logic.intf.model;
 
+import es.caib.comanda.client.model.AppContext;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
@@ -28,6 +29,7 @@ import java.util.List;
 		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
 		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_INTEGRACIONS),
 		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_SUBSISTEMES),
+		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_CONTEXTS),
 		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_MISSATGES),
 		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_DETALLS),
 	}
@@ -39,6 +41,7 @@ public class Salut extends BaseResource<Long> {
 	public final static String SALUT_REPORT_LATENCIA = "latencia";
 	public static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
 	public static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
+	public static final String PERSP_CONTEXTS = "SAL_CONTEXTS";
 	public static final String PERSP_MISSATGES = "SAL_MISSATGES";
 	public static final String PERSP_DETALLS = "SAL_DETALLS";
 
@@ -74,6 +77,7 @@ public class Salut extends BaseResource<Long> {
 
 	private List<SalutIntegracio> integracions;
 	private List<SalutSubsistema> subsistemes;
+	private List<AppContext> contexts;
 	private List<SalutMissatge> missatges;
 	private List<SalutDetall> detalls;
 

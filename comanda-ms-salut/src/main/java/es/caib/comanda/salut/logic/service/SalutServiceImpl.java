@@ -26,8 +26,8 @@ import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -45,19 +45,15 @@ import java.util.stream.Collectors;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, SalutEntity> implements SalutService {
 
-	@Autowired
-	private SalutIntegracioRepository salutIntegracioRepository;
-	@Autowired
-	private SalutSubsistemaRepository salutSubsistemaRepository;
-	@Autowired
-	private SalutMissatgeRepository salutMissatgeRepository;
-	@Autowired
-	private SalutDetallRepository salutDetallRepository;
-    @Autowired
-    private SalutClientHelper salutClientHelper;
+	private final SalutIntegracioRepository salutIntegracioRepository;
+	private final SalutSubsistemaRepository salutSubsistemaRepository;
+	private final SalutMissatgeRepository salutMissatgeRepository;
+	private final SalutDetallRepository salutDetallRepository;
+    private final SalutClientHelper salutClientHelper;
 
 	@PostConstruct
 	public void init() {
@@ -66,6 +62,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.SALUT_REPORT_LATENCIA, new InformeLatencia());
 		register(Salut.PERSP_INTEGRACIONS, new PerspectiveIntegracions());
 		register(Salut.PERSP_SUBSISTEMES, new PerspectiveSubsistemes());
+		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
 	}
@@ -116,6 +113,14 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 					salutSubsistema.ifPresent(subsistema -> subsistema.setNom(s.getNom()));
 				});
 			}
+		}
+	}
+
+	public class PerspectiveContexts implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
+			resource.setContexts(entornAppForEntity.getContexts());
 		}
 	}
 

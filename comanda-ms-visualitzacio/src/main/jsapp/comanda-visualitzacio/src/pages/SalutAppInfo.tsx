@@ -5,9 +5,6 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -125,7 +122,7 @@ const useAppData = (id: any) => {
                     page: 0,
                     size: 1,
                     sorts: ['data,desc'],
-                    perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES', 'SAL_MISSATGES', 'SAL_DETALLS'],
+                    perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES', 'SAL_CONTEXTS', 'SAL_MISSATGES', 'SAL_DETALLS'],
                     filter: 'entornAppId : ' + entornAppId,
                 };
                 return salutApiFind(findArgs);
@@ -153,9 +150,11 @@ const useAppData = (id: any) => {
 const AppInfo: React.FC<any> = (props) => {
     const {
         salutCurrentApp: app,
-        detailsDialogShow
+        entornApp: entornApp,
     } = props;
     const { t } = useTranslation();
+    const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
+    const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
     const bdEstat = app && <Typography><Chip label={app.bdEstat} size="small" color={app.bdEstat === 'UP' ? 'success' : 'error'} /></Typography>;
     const appLatencia = app && <Typography>{app.appLatencia != null ? app.appLatencia + ' ms' : t('page.salut.nd')}</Typography>;
@@ -164,59 +163,37 @@ const AppInfo: React.FC<any> = (props) => {
         <Chip label={app.missatgeWarnCount} size="small" color="warning" />&nbsp;/&nbsp;
         <Chip label={app.missatgeInfoCount} size="small" color="info" />
     </>;
-    const detalls = app?.detalls;
-    const detallsContent = detalls?.length ? <List sx={{ ml: 2 }}>
-        {detalls.map((d: any) => <ListItem secondaryAction={d.valor} disablePadding>
-            <ListItemText primary={d.nom} sx={{ '& span': { fontWeight: 'bold' } }} />
-        </ListItem>)}
-    </List> : null;
-    const detailsButton = detalls?.length ? <Button
-        size="small"
-        variant="contained"
-        onClick={() => detailsDialogShow(null, detallsContent, undefined, { fullWidth: true, maxWidth: 'md' })}
-        sx={{ mt: 1 }}>
-        {t('page.salut.info.detalls')}
-    </Button> : null;
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.info.title')}</Typography>
-            <Grid container columnSpacing={1} rowSpacing={1} sx={{ ml: 2 }}>
-                <Grid item size={6} >
-                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.data')}:</Typography>
-                </Grid>
-                <Grid item size={6} >
-                    <Typography component="span">{data}</Typography>
-                </Grid>
-
-                <Grid item size={6} >
-                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.bdEstat')}:</Typography>
-                </Grid>
-                <Grid item size={6} >
-                    <Typography component="span">{bdEstat}</Typography>
-                </Grid>
-
-                <Grid item size={6} >
-                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.appLatencia')}:</Typography>
-                </Grid>
-                <Grid item size={6} >
-                    <Typography component="span">{appLatencia}</Typography>
-                </Grid>
-
-                <Grid item size={6} >
-                    <Typography component="span" sx={{ fontWeight: 'bold' }}>{t('page.salut.info.missatges')}:</Typography>
-                </Grid>
-                <Grid item size={6} >
-                    <Box display="flex" alignItems="center">
-                        {missatges}
-                    </Box>
-                </Grid>
-
-                {detalls?.length && (
-                    <Grid item size={12} sx={{ display: 'flex', justifyContent: 'flex-end' }} >
-                        {detailsButton}
-                    </Grid>
-                )}
-            </Grid>
+            <Table size="small">
+                <TableBody>
+                    <TableRow key={1}>
+                        <TableCell>{t('page.salut.info.revisio')}</TableCell>
+                        <TableCell>{revisio}</TableCell>
+                    </TableRow>
+                    <TableRow key={2}>
+                        <TableCell>{t('page.salut.info.jdk.versio')}</TableCell>
+                        <TableCell>{jdk}</TableCell>
+                    </TableRow>
+                    <TableRow key={3}>
+                        <TableCell>{t('page.salut.info.data')}</TableCell>
+                        <TableCell>{data}</TableCell>
+                    </TableRow>
+                    <TableRow key={4}>
+                        <TableCell>{t('page.salut.info.bdEstat')}</TableCell>
+                        <TableCell>{bdEstat}</TableCell>
+                    </TableRow>
+                    <TableRow key={5}>
+                        <TableCell>{t('page.salut.info.appLatencia')}</TableCell>
+                        <TableCell>{appLatencia}</TableCell>
+                    </TableRow>
+                    <TableRow key={6}>
+                        <TableCell>{t('page.salut.info.missatges')}</TableCell>
+                        <TableCell>{missatges}</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
         </CardContent>
     </Card>;
 }
@@ -417,6 +394,60 @@ const Subsistemes: React.FC<any> = (props) => {
     </Card>;
 }
 
+const Contexts: React.FC<any> = (props) => {
+    const { salutCurrentApp } = props;
+    const { t } = useTranslation();
+    const contexts = salutCurrentApp?.contexts;
+    return <Card variant="outlined" sx={{ height: '100%' }}>
+        <CardContent>
+            <Typography gutterBottom variant="h5" component="div">{t('page.salut.contexts.title')}</Typography>
+            {contexts && <Table size="small">
+                <TableHead>
+                    <TableRow>
+                        <TableCell>{t('page.salut.contexts.column.codi')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.nom')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.path')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.api')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.manuals')}</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {contexts.map((s: any, key: number) => <TableRow key={key}>
+                        <TableCell>{s.codi}</TableCell>
+                        <TableCell>{s.nom}</TableCell>
+                        <TableCell>{s.path && <Button href={s.path} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{s.path}</Button>}</TableCell>
+                        <TableCell>{s.api && <Button href={s.api} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>API</Button>}</TableCell>
+                        <TableCell>
+                            {s.manuals && s.manuals.map((manual: any, index: number) => (
+                                <Button key={index} href={manual.path} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{manual.nom}</Button>
+                            ))}
+                        </TableCell>
+                    </TableRow>)}
+                </TableBody>
+            </Table>}
+        </CardContent>
+    </Card>;
+}
+
+const DetallInfo: React.FC<any> = (props) => {
+    const { salutCurrentApp } = props;
+    const { t } = useTranslation();
+    const detalls = salutCurrentApp?.detalls;
+    return <Card variant="outlined" sx={{ height: '100%' }}>
+        <CardContent>
+            <Typography gutterBottom variant="h5" component="div">{t('page.salut.detalls.title')}</Typography>
+            {detalls && <Table size="small">
+                <TableBody>
+                    {detalls.map((d: any) => <TableRow key={d.id}>
+                        <TableCell>{d.nom}</TableCell>
+                        <TableCell>{d.valor}</TableCell>
+                    </TableRow>)}
+                </TableBody>
+            </Table>}
+        </CardContent>
+    </Card>;
+}
+
 const SalutAppInfo: React.FC = () => {
     const { id } = useParams();
     const {
@@ -457,11 +488,10 @@ const SalutAppInfo: React.FC = () => {
         }}>
         <CircularProgress size={100} />
     </Box> : null;
-    const [detailsDialogShow, detailsDialogComponent] = useMuiContentDialog();
     const detailsComponent = (
         <Grid container spacing={2}>
             <Grid size={{sm: 12, md: 3}}>
-                <AppInfo salutCurrentApp={salutCurrentApp} detailsDialogShow={detailsDialogShow} />
+                <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
             </Grid>
             <Grid size={{sm: 12, md: 9}}>
                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
@@ -475,6 +505,12 @@ const SalutAppInfo: React.FC = () => {
                     )}
                 </ErrorBoundary>
             </Grid>
+            <Grid size={{sm: 12, md: 3}}>
+                <DetallInfo salutCurrentApp={salutCurrentApp} />
+            </Grid>
+            <Grid size={{sm: 12, md: 9}}>
+                <Contexts salutCurrentApp={salutCurrentApp} />
+            </Grid>
             <Grid size={{sm: 12, md:6}}>
                 <Integracions salutCurrentApp={salutCurrentApp} />
             </Grid>
@@ -485,7 +521,6 @@ const SalutAppInfo: React.FC = () => {
     );
     return <BasePage toolbar={toolbar}>
         {loading ? loadingComponent : detailsComponent}
-        {detailsDialogComponent}
     </BasePage>;
 }
 

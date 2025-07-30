@@ -5,21 +5,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.List;
 
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppInfo {
+public class ContextInfo {
     private String codi;
     private String nom;
-    private String versio;
-    private Date data;
-    private String revisio;
-    private String jdkVersion;
-    private List<IntegracioInfo> integracions;
-    private List<AppInfo> subsistemes;
-    private List<ContextInfo> contexts;
+    private String path;
+    private List<Manual> manuals;
+    private String api;
 }

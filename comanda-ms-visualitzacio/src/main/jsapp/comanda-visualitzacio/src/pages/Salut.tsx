@@ -252,20 +252,26 @@ const AppDataTable: React.FC<any> = (props: {
     const columns: MuiDataGridColDef[] = React.useMemo(() => {
         return [
             {
-                flex: 0.5,
+                flex: 0.3,
                 field: 'estat',
                 headerName: t('page.salut.apps.column.estat'),
                 minWidth: 100,
                 renderCell: ({ id }) => renderItemStateChip(id, 'appUp'),
             },
             {
-                flex: 0.5,
+                flex: 0.3,
                 field: 'versio',
                 headerName: t('page.salut.apps.column.versio'),
                 minWidth: 100,
             },
             {
-                flex: 0.5,
+                flex: 0.3,
+                field: 'revisioSimplificat',
+                headerName: t('page.salut.apps.column.revisio'),
+                minWidth: 100,
+            },
+            {
+                flex: 0.3,
                 field: 'bd',
                 headerName: t('page.salut.apps.column.bd'),
                 minWidth: 100,
@@ -273,7 +279,7 @@ const AppDataTable: React.FC<any> = (props: {
                 renderCell: ({ id }) => renderItemStateChip(id, 'bdUp'),
             },
             {
-                flex: 0.5,
+                flex: 0.3,
                 field: 'latencia',
                 headerName: t('page.salut.apps.column.latencia'),
                 minWidth: 100,

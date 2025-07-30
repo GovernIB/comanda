@@ -43,7 +43,7 @@ public abstract class ValidWidgetValidator {
             if (widget.getAbsolutTipus() != null) {
                 if (PeriodeAbsolutTipus.DATE_RANGE.equals(widget.getAbsolutTipus())) {
                     isValid = validateField(widget.getAbsolutDataInici() != null, context, "absolutDataInici", "És obligatori emplenar aquest camp") && isValid;
-                    isValid = validateField(widget.getAbsolutDataFi() != null, context, "absolutDataFi", "És obligatori emplenar aquest camp") && isValid;
+//                    isValid = validateField(widget.getAbsolutDataFi() != null, context, "absolutDataFi", "És obligatori emplenar aquest camp") && isValid;
                 } else if (PeriodeAbsolutTipus.SPECIFIC_PERIOD_OF_YEAR.equals(widget.getAbsolutTipus())) {
                     isValid = validateField(widget.getAbsolutAnyReferencia() != null, context, "absolutAnyReferencia", "És obligatori emplenar aquest camp") && isValid;
                     if (widget.getAbsolutAnyReferencia() != null && PeriodeEspecificAny.SPECIFIC_YEAR.equals(widget.getAbsolutAnyReferencia())) {

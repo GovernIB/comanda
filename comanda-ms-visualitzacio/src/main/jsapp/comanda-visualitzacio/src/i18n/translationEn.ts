@@ -32,6 +32,7 @@ const translationEn = {
                     codi: "Code",
                     nom: "Name",
                     versio: "Version",
+                    revisio: "Revision",
                     bd: "Database",
                     latencia: "Latency",
                     integ: "Integrations",
@@ -55,6 +56,10 @@ const translationEn = {
             },
             info: {
                 title: "Information",
+                revisio: "Revision",
+                jdk: {
+                    versio: "JDK versin",
+                },
                 data: "Last update",
                 bdEstat: "Database",
                 appLatencia: "Latency",
@@ -85,6 +90,19 @@ const translationEn = {
                     estat: "State",
                     latencia: "Latency",
                 },
+            },
+            contexts: {
+                title: "Contexts",
+                column: {
+                    codi: "Code",
+                    nom: "Name",
+                    path: "Path",
+                    api: "Api",
+                    manuals: "Manuals",
+                },
+            },
+            detalls: {
+                title: "Details",
             },
             estats: {
                 title: "States",

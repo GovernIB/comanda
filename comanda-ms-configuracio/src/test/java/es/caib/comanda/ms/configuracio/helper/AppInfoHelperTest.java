@@ -9,8 +9,10 @@ import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
+import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
+import es.caib.comanda.configuracio.persist.repository.ManualRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
@@ -49,6 +51,12 @@ public class AppInfoHelperTest {
     private SubsistemaRepository subsistemaRepository;
 
     @Mock
+    private ContextRepository contextRepository;
+
+    @Mock
+    private ManualRepository manualRepository;
+
+    @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @Mock
@@ -79,6 +87,8 @@ public class AppInfoHelperTest {
                 appIntegracioRepository,
                 integracioRepository,
                 subsistemaRepository,
+                contextRepository,
+                manualRepository,
                 httpAuthorizationHeaderHelper,
                 salutServiceClient,
                 estadisticaServiceClient,

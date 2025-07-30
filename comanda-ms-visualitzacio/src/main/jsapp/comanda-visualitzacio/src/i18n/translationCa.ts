@@ -32,6 +32,7 @@ const translationCa = {
                     codi: "Codi",
                     nom: "Nom",
                     versio: "Versió",
+                    revisio: "Revisió",
                     bd: "Base de dades",
                     latencia: "Latència",
                     integ: "Integracions",
@@ -55,6 +56,10 @@ const translationCa = {
             },
             info: {
                 title: "Informació",
+                revisio: "Revisió",
+                jdk: {
+                    versio: "Versió JDK",
+                },
                 data: "Darrera actualització",
                 bdEstat: "Base de dades",
                 appLatencia: "Latència",
@@ -85,6 +90,19 @@ const translationCa = {
                     estat: "Estat",
                     latencia: "Latència",
                 },
+            },
+            contexts: {
+                title: "Contexts",
+                column: {
+                    codi: "Códi",
+                    nom: "Nom",
+                    path: "Ruta",
+                    api: "Api",
+                    manuals: "Manuals",
+                },
+            },
+            detalls: {
+                title: "Detalls",
             },
             estats: {
                 title: "Estats",

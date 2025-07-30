@@ -9,16 +9,17 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 /**
- * Informació d'un subsistema.
+ * Informació d'un context.
  *
  * @author Límit Tecnologies
  */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor()
-public class AppSubsistema extends BaseResource<Long> {
+public class AppContext extends BaseResource<Long> {
 
 	@NotNull
 	@Size(max = 16)
@@ -26,6 +27,9 @@ public class AppSubsistema extends BaseResource<Long> {
 	@NotNull
 	@Size(max = 100)
 	private String nom;
+	private String path;
+	private List<AppManual> manuals;
+	private String api;
 	private boolean actiu;
 
 	@Transient

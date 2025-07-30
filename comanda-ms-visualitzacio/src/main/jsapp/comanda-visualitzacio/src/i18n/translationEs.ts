@@ -32,6 +32,7 @@ const translationEs = {
                     codi: "Código",
                     nom: "Nombre",
                     versio: "Versión",
+                    revisio: "Revisión",
                     bd: "Base de datos",
                     latencia: "Latencia",
                     integ: "Integraciones",
@@ -55,6 +56,10 @@ const translationEs = {
             },
             info: {
                 title: "Información",
+                revisio: "Revisión",
+                jdk: {
+                    versio: "Versión JDK",
+                },
                 data: "Última actualización",
                 bdEstat: "Base de datos",
                 appLatencia: "Latencia",
@@ -85,6 +90,19 @@ const translationEs = {
                     estat: "Estado",
                     latencia: "Latencia",
                 },
+            },
+            contexts: {
+                title: "Contextos",
+                column: {
+                    codi: "Código",
+                    nom: "Nombre",
+                    path: "Ruta",
+                    api: "Api",
+                    manuals: "Manuales",
+                },
+            },
+            detalls: {
+                title: "Detalles",
             },
             estats: {
                 title: "Estados",

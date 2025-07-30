@@ -1,22 +1,23 @@
 package es.caib.comanda.configuracio.logic.service;
 
-import es.caib.comanda.client.EstadisticaServiceClient;
-import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
+import es.caib.comanda.configuracio.logic.intf.model.AppContext;
 import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
+import es.caib.comanda.configuracio.logic.intf.model.AppManual;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppParamAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
+import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
+import es.caib.comanda.configuracio.persist.repository.ContextRepository;
+import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
@@ -25,8 +26,8 @@ import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -49,18 +50,17 @@ import java.util.stream.Collectors;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, Long, EntornAppEntity> implements EntornAppService {
 
-    @Autowired private AppIntegracioRepository appIntegracioRepository;
-    @Autowired private SubsistemaRepository subsistemaRepository;
-    @Autowired private EntornAppRepository entornAppRepository;
-    @Autowired private AppInfoHelper appInfoHelper;
-    @Autowired private HttpAuthorizationHeaderHelper keycloakHelper;
-    @Autowired private SalutServiceClient salutServiceClient;
-    @Autowired private EstadisticaServiceClient estadisticaServiceClient;
-    @Autowired private ConfiguracioSchedulerService schedulerService;
-    @Autowired private RestTemplate restTemplate;
+    private final AppIntegracioRepository appIntegracioRepository;
+    private final SubsistemaRepository subsistemaRepository;
+    private final ContextRepository contextRepository;
+    private final EntornAppRepository entornAppRepository;
+    private final AppInfoHelper appInfoHelper;
+    private final ConfiguracioSchedulerService schedulerService;
+    private final RestTemplate restTemplate;
 
     @PostConstruct
     public void init() {
@@ -87,6 +87,19 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                     subsistemes.stream().map(s -> new AppSubsistema(
                             s.getCodi(),
                             s.getNom(),
+                            s.isActiu(),
+                            null)).collect(Collectors.toList()));
+        }
+        List<AppContextEntity> contexts = contextRepository.findByEntornApp(entity);
+        if (!contexts.isEmpty()) {
+            resource.setContexts(
+                    contexts.stream().map(s -> new AppContext(
+                            s.getCodi(),
+                            s.getNom(),
+                            s.getPath(),
+//                            null,
+                            (s.getManuals() != null ? s.getManuals().stream().map(m -> new AppManual(m.getNom(), m.getPath(), null)).collect(Collectors.toList()) : null),
+                            s.getApi(),
                             s.isActiu(),
                             null)).collect(Collectors.toList()));
         }

@@ -18,17 +18,16 @@ import javax.validation.constraints.Size;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor()
-public class AppSubsistema extends BaseResource<Long> {
+public class AppManual extends BaseResource<Long> {
 
 	@NotNull
-	@Size(max = 16)
-	private String codi;
-	@NotNull
-	@Size(max = 100)
+	@Size(max = 128)
 	private String nom;
-	private boolean actiu;
+	@NotNull
+	@Size(max = 255)
+	private String path;
 
 	@Transient
-	private ResourceReference<EntornApp, Long> entornApp;
+	private ResourceReference<AppContext, Long> appContext;
 
 }

@@ -14,5 +14,13 @@ import java.util.List;
 public interface AppRepository extends BaseRepository<AppEntity, Long> {
 
     List<AppEntity> findByActivaTrue();
+    
+    /**
+     * Cerca una aplicació pel seu codi.
+     * 
+     * @param codi Codi de l'aplicació
+     * @return L'entitat de l'aplicació o null si no existeix
+     */
+    AppEntity findByCodi(String codi);
 
 }

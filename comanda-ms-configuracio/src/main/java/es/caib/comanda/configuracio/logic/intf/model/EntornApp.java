@@ -1,8 +1,8 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
 import es.caib.comanda.configuracio.logic.intf.validation.EntornAppExists;
-import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
@@ -72,6 +72,12 @@ public class EntornApp extends BaseResource<Long> {
 	@Size(max = 10)
 	@Setter(AccessLevel.NONE)
 	private String versio;
+	@Size(max = 64)
+	@Setter(AccessLevel.NONE)
+	private String revisio;
+	@Size(max = 10)
+	@Setter(AccessLevel.NONE)
+	private String jdkVersion;
 	@InputType("checkbox")
 	@Builder.Default
 	private boolean activa = true;
@@ -87,6 +93,7 @@ public class EntornApp extends BaseResource<Long> {
 
 	private List<AppIntegracio> integracions;
 	private List<AppSubsistema> subsistemes;
+	private List<AppContext> contexts;
 
 	private Integer integracioCount;
 	private Integer subsistemaCount;
@@ -102,6 +109,11 @@ public class EntornApp extends BaseResource<Long> {
 
 	// Camps calculats
 	private String entornAppDescription;
+
+	public String getRevisioSimplificat() {
+		return revisio != null ? revisio.substring(0, 7) : null;
+	}
+
 
 	@Getter
 	@Setter
