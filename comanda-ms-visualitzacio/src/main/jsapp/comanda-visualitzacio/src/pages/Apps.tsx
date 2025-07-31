@@ -7,10 +7,14 @@ import {Box, Tab, Tabs} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import BlockIcon from "@mui/icons-material/Block";
 import UrlPingAdornment from '../components/UrlPingAdornment';
+import {iniciaDescargaJSON} from "../util/commonsActions";
+import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
+    const { artifactReport: apiReport } = useResourceApiService('app');
     const { temporalMessageShow } = useBaseAppContext();
+    const { t } = useTranslation();
 
     const pingUrl = React.useCallback(async (additionalData: any): Promise<boolean> => {
         try {
@@ -24,8 +28,29 @@ const useActions = (refresh?: () => void) => {
         }
     }, [apiAction, refresh, temporalMessageShow]);
 
+    const report = (id:any, code:any, mssg:any, fileType:any) => {
+        apiReport(id, {code, fileType})
+            .then((result) => {
+                iniciaDescargaJSON(result);
+                temporalMessageShow(null, mssg, 'success');
+            })
+            .catch((error) => {
+                temporalMessageShow(null, error.message, 'error');
+            });
+    }
+    const appExport = (id:any) => report(id, 'app_export', t('page.apps.action.export'), 'JSON')
+    const appActions: DataCommonAdditionalAction[] = [
+        {
+            title: t('page.apps.action.export'),
+            icon: 'download',
+            showInMenu: true,
+            onClick: appExport,
+        },
+    ]
+
     return {
         pingUrl,
+        appActions,
     };
 };
 
@@ -176,6 +201,8 @@ export const AppForm: React.FC = () => {
 
 const Apps: React.FC = () => {
     const { t } = useTranslation();
+    const { appActions } = useActions();
+    
     const columns = [
         {
             field: 'logo',
@@ -221,6 +248,7 @@ const Apps: React.FC = () => {
                 rowDetailLink="/dd"
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
+                rowAdditionalActions={appActions}
             />
         </GridPage>
     );

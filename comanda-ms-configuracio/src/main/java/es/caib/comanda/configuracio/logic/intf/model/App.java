@@ -1,7 +1,9 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,8 +23,15 @@ import java.util.List;
 @NoArgsConstructor
 @ResourceConfig(
 		quickFilterFields = { "codi", "nom" },
-		descriptionField = "nom")
+		descriptionField = "nom",
+		artifacts = {
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = App.APP_EXPORT, requiresId = true),
+//				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT)
+		})
 public class App extends BaseResource<Long> {
+
+	public final static String APP_EXPORT = "app_export";
+	public final static String APP_IMPORT = "app_import";
 
 	@NotNull
 	@Size(max = 16)

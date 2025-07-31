@@ -332,7 +332,10 @@ const Integracions: React.FC<any> = (props) => {
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.integracions.title')}</Typography>
-            {integracions && <Table size="small">
+            {!integracions?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.integracions.noInfo')}
+            </Typography>}
+            {integracions?.length > 0 && <Table size="small">
                 <TableHead>
                     <TableRow>
                         {/*<TableCell>{t('page.salut.integracions.column.codi')}</TableCell>*/}
@@ -370,7 +373,10 @@ const Subsistemes: React.FC<any> = (props) => {
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.subsistemes.title')}</Typography>
-            {subsistemes && <Table size="small">
+            {!subsistemes?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.subsistemes.noInfo')}
+            </Typography>}
+            {subsistemes?.length > 0 && <Table size="small">
                 <TableHead>
                     <TableRow>
                         <TableCell>{t('page.salut.subsistemes.column.codi')}</TableCell>
@@ -401,8 +407,11 @@ const Contexts: React.FC<any> = (props) => {
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.contexts.title')}</Typography>
-            {contexts && <Table size="small">
-                <TableHead>
+            {!contexts?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.contexts.noInfo')}
+            </Typography>}
+            {contexts?.length > 0 && <Table size="small">
+            <TableHead>
                     <TableRow>
                         <TableCell>{t('page.salut.contexts.column.codi')}</TableCell>
                         <TableCell>{t('page.salut.contexts.column.nom')}</TableCell>
@@ -436,10 +445,13 @@ const DetallInfo: React.FC<any> = (props) => {
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.detalls.title')}</Typography>
-            {detalls && <Table size="small">
+            {!detalls?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.detalls.noInfo')}
+            </Typography>}
+            {detalls?.length > 0 && <Table size="small">
                 <TableBody>
                     {detalls.map((d: any) => <TableRow key={d.id}>
-                        <TableCell>{d.nom}</TableCell>
+                        <TableCell sx={{minWidth: '170px'}}>{d.nom}</TableCell>
                         <TableCell>{d.valor}</TableCell>
                     </TableRow>)}
                 </TableBody>

@@ -4,11 +4,36 @@ import Grid from '@mui/material/Grid';
 import {
     GridPage,
     MuiGrid,
-    FormField,
+    FormField, useResourceApiService, useBaseAppContext,
 } from 'reactlib';
+import {iniciaDescargaJSON} from "../util/commonsActions.ts";
+import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon.tsx";
+
+const useActions = (refresh?: () => void) => {
+    const { artifactReport: apiReport } = useResourceApiService('dashboard');
+    const { temporalMessageShow } = useBaseAppContext();
+    const { t } = useTranslation();
+
+    const report = (id:any, code:any, mssg:any, fileType:any) => {
+        apiReport(id, {code, fileType})
+            .then((result) => {
+                iniciaDescargaJSON(result);
+                temporalMessageShow(null, mssg, 'success');
+            })
+            .catch((error) => {
+                temporalMessageShow(null, error.message, 'error');
+            });
+    }
+    const dashboardExport = (id:any) => report(id, 'dashboard_export', t('page.dashboard.action.export'), 'JSON')
+
+    return {
+        dashboardExport,
+    };
+};
 
 const EstadisticaDashboards: React.FC = () => {
     const { t } = useTranslation();
+    const { dashboardExport } = useActions();
     const columns = [
         {
             field: 'titol',
@@ -39,6 +64,12 @@ const EstadisticaDashboards: React.FC = () => {
                         icon: 'dashboard',
                         showInMenu: false,
                         linkTo: '{{id}}',
+                    },
+                    {
+                        title: t('page.dashboards.action.export'),
+                        icon: 'download',
+                        showInMenu: true,
+                        onClick: dashboardExport,
                     },
                 ]}
                 popupEditActive

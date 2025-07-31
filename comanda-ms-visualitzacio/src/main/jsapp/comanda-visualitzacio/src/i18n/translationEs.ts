@@ -75,6 +75,7 @@ const translationEs = {
             },
             integracions: {
                 title: "Integraciones",
+                noInfo: "No hay información de integraciones",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -85,6 +86,7 @@ const translationEs = {
             },
             subsistemes: {
                 title: "Subsistemas",
+                noInfo: "No hay información de subsistemas",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -94,6 +96,7 @@ const translationEs = {
             },
             contexts: {
                 title: "Contextos",
+                noInfo: "No hay información de contextos",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -104,6 +107,7 @@ const translationEs = {
             },
             detalls: {
                 title: "Detalles",
+                noInfo: "No hay información sobre detalles de la aplicación",
             },
             estats: {
                 title: "Estados",
@@ -119,6 +123,9 @@ const translationEs = {
             uploadLogo: "Subir logo",
             changeLogo: "Cambiar logo",
             removeLogo: "Eliminar logo",
+            action: {
+                export: "Exportar aplicación",
+            },
         },
         entorns: {
             title: "Entornos",
@@ -313,7 +320,8 @@ const translationEs = {
                 afegirTitle: {
                     label: "Añadir título",
                     title: "Añadir título",
-                }
+                },
+                export: "Exportar tablero",
             },
             alert: {
                 tornarLlistat: "Volver al listado",
