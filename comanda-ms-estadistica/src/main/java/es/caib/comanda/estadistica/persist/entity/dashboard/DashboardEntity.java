@@ -42,11 +42,15 @@ public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
     private String titol;
     @Column(name = "descripcio", length = 1024)
     private String descripcio;
+    @Column(name = "app_id")
+    protected Long appId;
+    @Column(name = "entorn_id")
+    protected Long entornId;
 
-    @OneToMany(mappedBy = "dashboard", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "dashboard", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
     private List<DashboardItemEntity> items;
 
-    @OneToMany(mappedBy = "dashboard", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "dashboard", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
     private List<DashboardTitolEntity> titols;
 
 }

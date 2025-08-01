@@ -290,6 +290,7 @@ const translationEs = {
             title: "Cuadros de control",
             edit: "Editar",
             dashboardView: "Ir al panel de control",
+            cloneDashboard: "Clonar el panel de control",
             components: {
                 llistar: "Listar componentes",
                 afegir: "Añadir componente",

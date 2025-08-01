@@ -1,14 +1,10 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.logic.intf.model.App;
-import es.caib.comanda.configuracio.logic.intf.model.AppContext;
-import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
-import es.caib.comanda.configuracio.logic.intf.model.AppManual;
-import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
+import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppParamAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppFilter;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
@@ -38,10 +34,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -125,20 +118,25 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     @Override
     public <P extends Serializable> Map<String, Object> artifactOnChange(ResourceArtifactType type, String code, Serializable id, P previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
         Map<String, Object> response = new HashMap<>();
-        if (type == ResourceArtifactType.FILTER && Objects.equals(code, EntornApp.ENTORN_APP_FILTER) && fieldName != null) {
-            switch (fieldName) {
-                case EntornApp.EntornAppFilter.Fields.app:
-                    response.put(EntornApp.EntornAppFilter.Fields.entornApp, null);
-                    break;
-                case EntornApp.EntornAppFilter.Fields.entornApp:
-                    var entornAppReference = (ResourceReference<EntornApp, Long>) fieldValue;
-                    if (fieldValue == null) break;
-                    var previousEntornAppFilter = (EntornApp.EntornAppFilter) previous;
-                    ResourceReference<App, Long> appReference = getOne(entornAppReference.getId(), new String[]{}).getApp();
-                    if (!Objects.equals(appReference, previousEntornAppFilter.getApp())) {
-                        response.put(EntornApp.EntornAppFilter.Fields.app, appReference);
-                    }
-                    break;
+        if ((type == ResourceArtifactType.FILTER && Objects.equals(code, EntornApp.ENTORN_APP_FILTER))) {
+            EntornAppFilter previousFilter = (EntornAppFilter) previous;
+            ResourceReference<App, Long> appRef = previousFilter.getApp();
+            ResourceReference<Entorn, Long> entornRef = previousFilter.getEntorn();
+            if (EntornAppFilter.Fields.app.equals(fieldName)) {
+                appRef = (ResourceReference<App, Long>) fieldValue;
+            } else if (EntornAppFilter.Fields.entorn.equals(fieldName)) {
+                entornRef = (ResourceReference<Entorn, Long>) fieldValue;
+            }
+            ResourceReference<EntornApp, Long> newEntornAppRef = null;
+            if (appRef != null && entornRef != null) {
+                Optional<EntornAppEntity> entornAppOpt = entornAppRepository.findByEntornIdAndAppId(entornRef.getId(), appRef.getId());
+                final String entornAppDescripcion = appRef.getDescription() + " - " + entornRef.getDescription();
+                newEntornAppRef = entornAppOpt.<ResourceReference<EntornApp, Long>>map(
+                    entity -> ResourceReference.toResourceReference(entity.getId(), entornAppDescripcion)
+                ).orElse(null);
+            }
+            if (!Objects.equals(newEntornAppRef, previousFilter.getEntornApp())) {
+                response.put(EntornAppFilter.Fields.entornApp, newEntornAppRef);
             }
         }
         return response;

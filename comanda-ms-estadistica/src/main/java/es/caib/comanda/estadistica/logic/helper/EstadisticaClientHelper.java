@@ -78,6 +78,14 @@ public class EstadisticaClientHelper {
                 findFirst().orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, "app:" + appId + ", entorn:" + entornId)).getContent();
     }
 
+    public EntornApp entornAppFindByAppAndEntornOrDefaultNull(Long appId, Long entornId) {
+        try {
+            return this.entornAppFindByAppAndEntorn(appId, entornId);
+        } catch (ResourceNotFoundException ex) {
+            return null;
+        }
+    }
+
     public List<EntornApp> entornAppFindByActivaTrue() {
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
                 null,

@@ -36,7 +36,6 @@ import javax.validation.constraints.NotNull;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-//        descriptionField = "titol",
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT, requiresId = true),
         }
@@ -50,6 +49,7 @@ public class DashboardItem extends BaseResource<Long> {
     private ResourceReference<Dashboard, Long> dashboard;
     @NotNull
     private ResourceReference<EstadisticaSimpleWidget, Long> widget;
+    /** Referencia a entornApp **/
     @NotNull
     private Long entornId;
 
