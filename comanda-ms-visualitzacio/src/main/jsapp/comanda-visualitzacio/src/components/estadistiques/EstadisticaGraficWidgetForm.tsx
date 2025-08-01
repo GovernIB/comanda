@@ -136,7 +136,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             { (isUnIndicador || isUnIndicadorAmbDescomposicio || isDosIndicadors) && (
                                 <>
                                     <Grid size={4}><FormFieldAdvancedSearchFilters
-                                        name="indicador" 
+                                        name="indicador"
                                         namedQueries= {["groupByNom"]}
                                         advancedSearchColumns={columnesIndicador}
                                         advancedSearchDataGridProps={{ rowHeight: 30, }}
@@ -152,7 +152,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                                     <Grid size={6}><FormField name="agruparPerDimensioDescomposicio" type={"checkbox"} onChange={handleAgruparPerDimensioChange} /></Grid>
                                 </>
                             )}
-                            { (isVarisIndicadors || true) && (
+                            { isVarisIndicadors && (
                                 <Grid size={12}>
                                     <ColumnesTable name="indicadorsInfo"
                                                    label={t('page.widget.grafic.indicadors')}

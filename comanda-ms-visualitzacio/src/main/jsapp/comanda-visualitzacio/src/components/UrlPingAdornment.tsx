@@ -8,6 +8,17 @@ interface UrlPingAdornmentProps {
 
 type PingStatus = 'idle' | 'loading' | 'success' | 'error';
 
+const StatusIcon = ({ status }: { status: PingStatus }) => {
+    switch (status) {
+        case 'success':
+            return <Icon fontSize="small" color="success">check_circle</Icon>;
+        case 'error':
+            return <Icon fontSize="small" color="error">cancel</Icon>;
+        default:
+            return null;
+    }
+};
+
 const UrlPingAdornment: React.FC<UrlPingAdornmentProps> = ({ url, onClick }) => {
   const [status, setStatus] = useState<PingStatus>('idle');
   useEffect(() => {//Si cambian el valor en el URL vaciaremos el Status
@@ -26,23 +37,12 @@ const UrlPingAdornment: React.FC<UrlPingAdornmentProps> = ({ url, onClick }) => 
     }
   };
 
-  const StatusIcon = () => {
-    switch (status) {
-      case 'success':
-        return <Icon fontSize="small" color="success">check_circle</Icon>;
-      case 'error':
-        return <Icon fontSize="small" color="error">cancel</Icon>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <React.Fragment>
       {status === 'loading' ? (
         <CircularProgress size={20} />
       ) : (
-        <StatusIcon />
+        <StatusIcon status={status} />
       )}
       <IconButton disabled={!url || status === 'loading'} onClick={handleOnClick}>
         <Icon fontSize="small">network_check</Icon>
