@@ -44,6 +44,7 @@ const translationEs = {
             },
             refreshperiod: {
                 PT1M: "1 minuto",
+                PT5M: "5 minutos",
                 PT10M: "10 minutos",
                 PT30M: "30 minutos",
                 PT1H: "1 hora",

@@ -44,6 +44,7 @@ const translationCa = {
             },
             refreshperiod: {
                 PT1M: "1 minut",
+                PT5M: "5 minuts",
                 PT10M: "10 minuts",
                 PT30M: "30 minuts",
                 PT1H: "1 hora",

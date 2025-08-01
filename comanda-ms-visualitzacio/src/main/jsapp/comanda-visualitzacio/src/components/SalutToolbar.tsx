@@ -60,7 +60,7 @@ const toReportInterval = (intervalMinutes?: number) => {
 }
 
 const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChange: (minutes: number) => void; initialValue?: string }) => {
-    const { onChange, disabled, initialValue = 'PT1M' } = props;
+    const { onChange, disabled, initialValue = 'PT5M' } = props;
     const { t } = useTranslation();
 
     // Get the stored value from localStorage or use initialValue
@@ -100,6 +100,7 @@ const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChan
             startAdornment={<InputAdornment position="start"><Icon>update</Icon></InputAdornment>}
             sx={{ mr: 1, width: '10em' }}>
             <MenuItem value={"PT1M"}>{t('page.salut.refreshperiod.PT1M')}</MenuItem>
+            <MenuItem value={"PT5M"}>{t('page.salut.refreshperiod.PT5M')}</MenuItem>
             <MenuItem value={"PT10M"}>{t('page.salut.refreshperiod.PT10M')}</MenuItem>
             <MenuItem value={"PT30M"}>{t('page.salut.refreshperiod.PT30M')}</MenuItem>
             <MenuItem value={"PT1H"}>{t('page.salut.refreshperiod.PT1H')}</MenuItem>
