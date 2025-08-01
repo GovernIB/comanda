@@ -38,7 +38,7 @@ const agrupacioFromMinutes = (intervalMinutes: number) => {
     }
 }
 
-const useReportInterval = (intervalMinutes?: number) => {
+const toReportInterval = (intervalMinutes?: number) => {
     if (intervalMinutes != null && intervalMinutes > 0) {
         const dataFi = dayjs().set('second', 59).set('millisecond', 999);
         const dataInici = dataFi.subtract(intervalMinutes - 1, 'm').set('second', 0).set('millisecond', 0);
@@ -185,6 +185,33 @@ const useTimeUntilNextRefreshFormatted = (nextRefresh: Date | null) => {
     return timeUntilNextRefreshFormatted;
 };
 
+type UseIntervalOptions = {
+    tickCallback: () => void;
+    initCallback: () => void;
+    refreshTimeoutMs: number | null | undefined;
+};
+
+function useInterval({ tickCallback, initCallback, refreshTimeoutMs }: UseIntervalOptions) {
+    const savedCallback = React.useRef<() => void | null>(null);
+
+    React.useEffect(() => {
+        savedCallback.current = tickCallback;
+    }, [tickCallback]);
+
+    React.useEffect(() => {
+        if (refreshTimeoutMs && refreshTimeoutMs > 0) {
+            initCallback?.();
+
+            function tick() {
+                savedCallback.current?.();
+            }
+
+            const intervalId = setInterval(tick, refreshTimeoutMs);
+            return () => clearInterval(intervalId);
+        }
+    }, [refreshTimeoutMs]);
+}
+
 export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const {
         title,
@@ -202,16 +229,12 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const [lastRefresh, setLastRefresh] = React.useState<Date | null>(null);
     const [nextRefresh, setNextRefresh] = React.useState<Date | null>(null);
     const timeUntilNextRefreshFormatted = useTimeUntilNextRefreshFormatted(nextRefresh);
-    const {
-        dataInici,
-        dataFi,
-        agrupacio,
-    } = useReportInterval(appDataRangeMinutes);
     const refresh = (execAction?: boolean) => {
         setLastRefresh(new Date());
-        appDataRangeMinutes != null && onRefresh(dataInici, dataFi, agrupacio, execAction);
-    }
-    const updateNextRefresh = (refreshTimeout) => {
+        const { dataInici, dataFi, agrupacio } = toReportInterval(appDataRangeMinutes);
+        if (appDataRangeMinutes != null) onRefresh(dataInici, dataFi, agrupacio, execAction);
+    };
+    const updateNextRefresh = (refreshTimeout: number) => {
         const nextRequestDate = new Date();
         nextRequestDate.setTime(nextRequestDate.getTime() + refreshTimeout);
         setNextRefresh(nextRequestDate);
@@ -221,21 +244,18 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         if (ready) {
             refresh();
         }
-    }, [ready, dataInici, dataFi, agrupacio]);
-    React.useEffect(() => {
-        // Refresca la informació periòdicament
-        if (refreshTimeoutMinutes) {
-            const timeoutMs = refreshTimeoutMinutes * 60 * 1000;
-            updateNextRefresh(timeoutMs);
-            const intervalId = setInterval(() => {
-                updateNextRefresh(timeoutMs);
-                refresh();
-            }, timeoutMs);
-            return () => {
-                clearInterval(intervalId);
-            }
-        }
-    }, [refreshTimeoutMinutes, dataInici, dataFi, agrupacio]);
+    }, [ready, appDataRangeMinutes]);
+    const refreshTimeoutMs = refreshTimeoutMinutes !== undefined ? refreshTimeoutMinutes * 60 * 1000 : null;
+    useInterval({
+        tickCallback: () => {
+            // @ts-expect-error tickCallback només s'executa si refreshTimeoutMs no és null
+            updateNextRefresh(refreshTimeoutMs);
+            refresh();
+        },
+        // @ts-expect-error initCallback només s'executa si refreshTimeoutMs no és null
+        initCallback: () => updateNextRefresh(refreshTimeoutMs),
+        refreshTimeoutMs,
+    });
     const toolbarElementsWithPositions = [
         {
             position: 2,
