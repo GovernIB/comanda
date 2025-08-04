@@ -284,7 +284,7 @@ function WidgetsErrorAlert({ errorWidgets }) {
 
 const defaultSizeAndPosition = {
     posX: 0,
-    posY: 0,
+    // posY: 0, //Sense valor, el back el possicionara abaix de tot.
     width: 3,
     height: 3,
 };

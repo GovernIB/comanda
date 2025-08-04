@@ -2,6 +2,8 @@ package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -16,4 +18,8 @@ import java.util.List;
 public interface DashboardItemRepository extends BaseRepository<DashboardItemEntity, Long> {
 
     List<DashboardItemEntity> findByWidgetId(Long widgetId);
+
+    @Query("SELECT MAX(d.posY + d.height) FROM DashboardItemEntity d WHERE d.dashboard.id = :dashboardId")
+    Integer findMaxBottomPositionByDashboardId(@Param("dashboardId") Long dashboardId);
+
 }

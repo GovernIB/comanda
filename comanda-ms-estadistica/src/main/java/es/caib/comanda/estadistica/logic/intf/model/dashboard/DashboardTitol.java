@@ -48,8 +48,8 @@ public class DashboardTitol extends BaseResource<Long> {
 
     @NotNull
     private int posX;
-    @NotNull
-    private int posY;
+    /** Si es deixa null, es definirà a baix del dashboard. **/
+    private Integer posY;
     @NotNull
     private int width;
     @NotNull
