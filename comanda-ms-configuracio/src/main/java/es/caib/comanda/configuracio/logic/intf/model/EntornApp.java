@@ -40,7 +40,8 @@ import java.util.List;
 		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REFRESH, formClass = EntornApp.EntornAppParamAction.class),
 		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),
 		@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_PING_URL, formClass = String.class),
-		@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class)
+		@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class),
+		@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class)
 	}
 )
 @EntornAppExists
@@ -51,6 +52,7 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String ENTORN_APP_ACTION_REPROGRAMAR = "reprogramar";
 	public final static String ENTORN_APP_ACTION_PING_URL = "pingUrl";
 	public final static String ENTORN_APP_FILTER = "entornApp_filter";
+	public final static String SALUT_ENTORN_APP_FILTER = "salut_entornApp_filter";
 
 	@NotNull
 	@Transient
@@ -121,6 +123,16 @@ public class EntornApp extends BaseResource<Long> {
 	@NoArgsConstructor
 	public static class EntornAppParamAction implements Serializable {
 		private Long entornAppId;
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@FieldNameConstants
+	public static class SalutEntornAppFilter implements Serializable {
+		protected ResourceReference<App, Long> app;
+		protected ResourceReference<Entorn, Long> entorn;
 	}
 
 	@Getter
