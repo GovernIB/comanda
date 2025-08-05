@@ -115,33 +115,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         appInfoHelper.programarTasquesSalutEstadistica(entity);
     }
 
-    @Override
-    public <P extends Serializable> Map<String, Object> artifactOnChange(ResourceArtifactType type, String code, Serializable id, P previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
-        Map<String, Object> response = new HashMap<>();
-        if ((type == ResourceArtifactType.FILTER && Objects.equals(code, EntornApp.ENTORN_APP_FILTER))) {
-            EntornAppFilter previousFilter = (EntornAppFilter) previous;
-            ResourceReference<App, Long> appRef = previousFilter.getApp();
-            ResourceReference<Entorn, Long> entornRef = previousFilter.getEntorn();
-            if (EntornAppFilter.Fields.app.equals(fieldName)) {
-                appRef = (ResourceReference<App, Long>) fieldValue;
-            } else if (EntornAppFilter.Fields.entorn.equals(fieldName)) {
-                entornRef = (ResourceReference<Entorn, Long>) fieldValue;
-            }
-            ResourceReference<EntornApp, Long> newEntornAppRef = null;
-            if (appRef != null && entornRef != null) {
-                Optional<EntornAppEntity> entornAppOpt = entornAppRepository.findByEntornIdAndAppId(entornRef.getId(), appRef.getId());
-                final String entornAppDescripcion = appRef.getDescription() + " - " + entornRef.getDescription();
-                newEntornAppRef = entornAppOpt.<ResourceReference<EntornApp, Long>>map(
-                    entity -> ResourceReference.toResourceReference(entity.getId(), entornAppDescripcion)
-                ).orElse(null);
-            }
-            if (!Objects.equals(newEntornAppRef, previousFilter.getEntornApp())) {
-                response.put(EntornAppFilter.Fields.entornApp, newEntornAppRef);
-            }
-        }
-        return response;
-    }
-
     // ACCIONS
 
     public static class RefreshAction implements ActionExecutor<EntornAppEntity, EntornAppParamAction, EntornApp> {

@@ -49,7 +49,6 @@ public class DashboardItem extends BaseResource<Long> {
     private ResourceReference<Dashboard, Long> dashboard;
     @NotNull
     private ResourceReference<EstadisticaSimpleWidget, Long> widget;
-    /** Referencia a entornApp **/
     @NotNull
     private Long entornId;
 

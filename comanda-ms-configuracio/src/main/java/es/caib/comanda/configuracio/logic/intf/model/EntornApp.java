@@ -147,9 +147,6 @@ public class EntornApp extends BaseResource<Long> {
 		@NotNull
 		@ResourceField(onChangeActive = true)
 		protected ResourceReference<Entorn, Long> entorn;
-		@NotNull
-		@ResourceField(descriptionField = "entornAppDescription")
-		protected ResourceReference<EntornApp, Long> entornApp;
 	}
 
 	@Getter
