@@ -290,7 +290,10 @@ const translationCa = {
             title: "Taulers de control",
             edit: "Editar",
             dashboardView: "Anar al taulers de control",
-            cloneDashboard: "Clonar el tauler de control",
+            cloneDashboard: {
+                title: "Clonar el tauler de control",
+                success: "Tauler de controls clonat correctament",
+            },
             components: {
                 llistar: "Llistar components",
                 afegir: "Afegir component",

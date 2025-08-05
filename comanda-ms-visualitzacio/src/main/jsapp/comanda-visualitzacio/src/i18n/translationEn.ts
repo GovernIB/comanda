@@ -290,7 +290,10 @@ const translationEn = {
             title: "Dashboards",
             edit: "Edit",
             dashboardView: "Go to dashboard",
-            cloneDashboard: "Clone the dashboard",
+            cloneDashboard: {
+                title: "Clone the dashboard",
+                success: "Dashboard cloned correctly",
+            },
             components: {
                 llistar: "List components",
                 afegir: "Add component",
