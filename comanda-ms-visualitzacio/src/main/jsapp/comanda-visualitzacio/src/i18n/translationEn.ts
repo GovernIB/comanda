@@ -70,9 +70,11 @@ const translationEn = {
             },
             latencia: {
                 title: "Latency",
+                error: "There was an error displaying the chart",
             },
             estatLatencia: {
                 title: "State and latency",
+                noInfo: "No data to display.",
             },
             integracions: {
                 title: "Integrations",

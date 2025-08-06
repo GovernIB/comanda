@@ -70,9 +70,11 @@ const translationEs = {
             },
             latencia: {
                 title: "Latencia",
+                error: "Ha habido un error al mostrar el gráfico",
             },
             estatLatencia: {
                 title: "Estado y latencia",
+                noInfo: "No hay datos que mostrar",
             },
             integracions: {
                 title: "Integraciones",

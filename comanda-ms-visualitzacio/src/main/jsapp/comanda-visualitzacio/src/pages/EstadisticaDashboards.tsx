@@ -101,7 +101,7 @@ const useActions = () => {
                 temporalMessageShow(null, error.message, 'error');
             });
     }
-    const dashboardExport = (id:any) => report(id, 'dashboard_export', t('page.dashboard.action.export'), 'JSON')
+    const dashboardExport = (id:any) => report(id, 'dashboard_export', t('page.dashboards.action.export'), 'JSON')
 
     return {
         dashboardExport,

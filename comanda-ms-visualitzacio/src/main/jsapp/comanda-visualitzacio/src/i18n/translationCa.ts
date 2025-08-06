@@ -70,9 +70,11 @@ const translationCa = {
             },
             latencia: {
                 title: "Latència",
+                error: "Hi ha hagut un error al mostrar el gràfic",
             },
             estatLatencia: {
                 title: "Estat i latència",
+                noInfo: "No hi ha dades per mostrar",
             },
             integracions: {
                 title: "Integracions",
