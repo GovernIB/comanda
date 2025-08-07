@@ -13,7 +13,7 @@ import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
-import ProvaCalendari from './pages/ProvaCalendari';
+import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -54,7 +54,7 @@ const AppRoutes: React.FC = () => {
                 <Route index element={<EstadisticaWidget />} />
             </Route>
             <Route path="calendari">
-                <Route index element={<ProvaCalendari />} />
+                <Route index element={<CalendariEstadistiques />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

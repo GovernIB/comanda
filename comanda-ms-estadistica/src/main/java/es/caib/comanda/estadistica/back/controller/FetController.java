@@ -4,7 +4,7 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.service.FetService;
 import es.caib.comanda.estadistica.logic.service.EstadisticaSchedulerService;
-import es.caib.comanda.ms.back.controller.BaseReadonlyResourceController;
+import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.model.Resource;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @RestController("fetController")
 @RequestMapping(BaseConfig.API_PATH + "/fets")
 @Tag(name = "Fet", description = "Servei de consulta de fets")
-public class FetController extends BaseReadonlyResourceController<Fet, Long> {
+public class FetController extends BaseMutableResourceController<Fet, Long> {
 
     @Autowired
     private EstadisticaSchedulerService schedulerService;
@@ -186,6 +186,5 @@ public class FetController extends BaseReadonlyResourceController<Fet, Long> {
             return ResponseEntity.badRequest().body("ERROR: " + ex.getMessage());
         }
     }
-
 
 }

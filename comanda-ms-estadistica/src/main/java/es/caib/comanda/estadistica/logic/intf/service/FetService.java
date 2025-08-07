@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.Map;
  * - Un "Fet" encapsula dades estadístiques amb informació temporal, dimensions i indicadors. Aquesta interfície permet manipular
  *   i explotar aquestes dades segons necessitats específiques del sistema.
  */
-public interface FetService extends ReadonlyResourceService<Fet, Long> {
+public interface FetService extends MutableResourceService<Fet, Long> {
 
     /**
      * Obté les dades estadístiques d'ahir relacionades amb l'entorn especificat d'una aplicació.
@@ -27,7 +27,7 @@ public interface FetService extends ReadonlyResourceService<Fet, Long> {
      */
     void obtenirFets(Long entornAppId);
     void obtenirFets(Long entornAppId, int dies);
-
+    
     /**
      * Obté les estadístiques d'un entornAppId en un període.
      */
