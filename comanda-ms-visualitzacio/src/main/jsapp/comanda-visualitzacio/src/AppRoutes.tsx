@@ -22,7 +22,7 @@ const AppRoutes: React.FC = () => {
     return (
         <Routes>
             <Route index element={<Salut />} />
-            <Route path="/appinfo/:id" element={<SalutAppInfo />} />
+            <Route path="/appinfo/:id" element={<Salut />} />
             <Route path={DASHBOARDS_PATH}>
                 <Route index element={<EstadisticaDashboards />} />
                 <Route path=":id" element={<EstadisticaDashboardEdit />} />

@@ -472,11 +472,6 @@ const SalutAppInfo: React.FC = () => {
         salutCurrentApp,
         reportParams,
     } = useAppData(id);
-    const { setMarginsDisabled } = useBaseAppContext();
-    React.useEffect(() => {
-        setMarginsDisabled(true);
-        return () => setMarginsDisabled(false);
-    }, []);
     const dataLoaded = ready && loading != null && !loading;
     const toolbarState = salutCurrentApp?.appEstat ? <Chip
         label={salutCurrentApp.appEstat}

@@ -29,6 +29,8 @@ import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoR
 import { Icon, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { GridGroupingColDefOverride } from '@mui/x-data-grid-pro/models/gridGroupingColDefOverride';
+import { useParams } from 'react-router-dom';
+import SalutAppInfo from './SalutAppInfo';
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
 
@@ -528,12 +530,8 @@ const Salut: React.FC = () => {
         reportParams,
         springFilter,
     } = useAppData();
-    const { setMarginsDisabled } = useBaseAppContext();
     const [expansionState, setExpansionState] = React.useState<DefaultRowExpansionState>({});
-    React.useEffect(() => {
-        setMarginsDisabled(true);
-        return () => setMarginsDisabled(false);
-    }, []);
+    const { id } = useParams();
     const dataLoaded = ready && loading != null && !loading;
     const toolbar = (
         <SalutToolbar
@@ -549,6 +547,11 @@ const Salut: React.FC = () => {
             [id]: expanded,
         }));
     };
+
+    const isAppInfoRouteActive = id != null;
+
+    if (isAppInfoRouteActive) return <SalutAppInfo />;
+
     return (
         <BasePage toolbar={toolbar}>
             {salutLastItems == null || estats == null || reportParams == null ? (
