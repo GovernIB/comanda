@@ -24,6 +24,7 @@ export type SalutToolbarProps = {
     ready: boolean;
     onRefresh: (dataInici: string, dataFi: string, agrupacio: string, execAction?: boolean, springFilter?: string) => void;
     goBackActive?: boolean;
+    appDataLoading?: boolean;
 }
 
 const agrupacioFromMinutes = (intervalMinutes: number) => {
@@ -328,6 +329,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         ready,
         onRefresh,
         goBackActive,
+        appDataLoading,
     } = props;
     const { t } = useTranslation();
     const { goBack } = useBaseAppContext();
@@ -406,6 +408,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                     onClick={() => refresh(true)}
                     title={t('page.salut.refrescar')}
                     disabled={!ready}
+                    loading={appDataLoading}
                 >
                     <Icon>refresh</Icon>
                 </IconButton>

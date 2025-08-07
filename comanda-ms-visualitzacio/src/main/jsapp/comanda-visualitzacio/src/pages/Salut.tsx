@@ -12,7 +12,9 @@ import {
     useResourceApiService,
     useBaseAppContext,
     dateFormatLocale,
-    MuiDataGridColDef, springFilterBuilder, MuiDataGrid,
+    MuiDataGridColDef,
+    springFilterBuilder,
+    MuiDataGrid,
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
@@ -25,7 +27,7 @@ import {
 import { PieChart } from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
 import { Icon, IconButton } from '@mui/material';
-import {useState} from 'react';
+import { useState } from 'react';
 import { GridGroupingColDefOverride } from '@mui/x-data-grid-pro/models/gridGroupingColDefOverride';
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
@@ -35,11 +37,10 @@ interface DefaultRowExpansionState {
 }
 
 const useAppData = () => {
-    const {
-        isReady: appEntornApiIsReady,
-        artifactAction: appEntornApiAction,
-    } = useResourceApiService('entornApp');
-    const { isReady: salutApiIsReady, artifactReport: salutApiReport } = useResourceApiService('salut');
+    const { isReady: appEntornApiIsReady, artifactAction: appEntornApiAction } =
+        useResourceApiService('entornApp');
+    const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
+        useResourceApiService('salut');
     const [loading, setLoading] = React.useState<boolean>(true);
     const [estats, setEstats] = React.useState<Record<string, any>>({});
     const [salutLastItems, setSalutLastItems] = React.useState<any[]>();
@@ -50,18 +51,17 @@ const useAppData = () => {
         dataFi: string,
         agrupacio: string,
         actionExec?: boolean,
-        springFilter?:string,
+        springFilter?: string
     ) => {
-        if (springFilter!=null) setSpringFilter(springFilter)
-        const reportParams = {
-            dataInici,
-            dataFi,
-            agrupacio,
-        };
-        setReportParams(reportParams);
         if (appEntornApiIsReady && salutApiIsReady) {
             setLoading(true);
-            setEstats([])
+            let salutLastItemsResponse: any[] | null = null;
+            let estatsResponse: Record<string, any> | null = null;
+            const newReportParams = {
+                dataInici,
+                dataFi,
+                agrupacio,
+            };
             new Promise((resolve, reject) => {
                 if (actionExec) {
                     appEntornApiAction(null, { code: 'refresh' }).then(resolve).catch(reject);
@@ -73,27 +73,33 @@ const useAppData = () => {
                     return salutApiReport(null, { code: 'salut_last', data: springFilter });
                 })
                 .then((apiResponse) => {
-                    const salutLastItems = apiResponse as any[];
-                    setSalutLastItems(salutLastItems);
+                    salutLastItemsResponse = apiResponse as any[];
                     const reportData = {
-                        ...reportParams,
-                        entornAppIdList: salutLastItems.map(({ entornAppId }) => (entornAppId)),
+                        ...newReportParams,
+                        entornAppIdList: salutLastItemsResponse.map(
+                            ({ entornAppId }) => entornAppId
+                        ),
                     };
 
                     return new Promise((resolve, reject) => {
                         salutApiReport(null, { code: 'estats', data: reportData })
-                            .then((ii:any) => {
+                            .then((ii: any) => {
                                 // TODO: eliminar 'links' de respuesta
-                                const filteredMap = Object.fromEntries(
+                                estatsResponse = Object.fromEntries(
                                     Object.entries(ii[0]).filter(([key]) => key !== 'links')
                                 );
-                                setEstats(filteredMap);
                                 resolve(null);
                             })
                             .catch(reject);
                     });
                 })
-                .finally(() => setLoading(false));
+                .finally(() => {
+                    setSalutLastItems(salutLastItemsResponse as any[]);
+                    setEstats(estatsResponse as Record<string, any>);
+                    setLoading(false);
+                    if (springFilter != null) setSpringFilter(springFilter);
+                    setReportParams(newReportParams);
+                });
         }
     };
     return {
@@ -114,10 +120,18 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
 
     const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'UP').length;
     const warnValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'WARN').length;
-    const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'DOWN' || salutItem.appEstat === 'ERROR').length;
-    const degradedValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'DEGRADED').length;
-    const maintenanceValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'MAINTENANCE').length;
-    const unknownValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'UNKNOWN').length;
+    const downValue = salutLastItems.filter(
+        (salutItem) => salutItem.appEstat === 'DOWN' || salutItem.appEstat === 'ERROR'
+    ).length;
+    const degradedValue = salutLastItems.filter(
+        (salutItem) => salutItem.appEstat === 'DEGRADED'
+    ).length;
+    const maintenanceValue = salutLastItems.filter(
+        (salutItem) => salutItem.appEstat === 'MAINTENANCE'
+    ).length;
+    const unknownValue = salutLastItems.filter(
+        (salutItem) => salutItem.appEstat === 'UNKNOWN'
+    ).length;
 
     return (
         <PieChart
@@ -177,7 +191,7 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
 
 const ItemStateChip: React.FC<any> = (props: { up: boolean; date: string }) => {
     const { up, date } = props;
-    const { t } = useTranslation()
+    const { t } = useTranslation();
     return (
         <>
             {up ? (
@@ -208,9 +222,9 @@ const AppDataTable: React.FC<any> = (props: {
 
     React.useEffect(() => {
         if (appApiIsReady) {
-            appApiFind({ unpaged: true, filter: springFilterBuilder.eq('activa', true)})
+            appApiFind({ unpaged: true, filter: springFilterBuilder.eq('activa', true) })
                 .then((response) => setApps(response.rows))
-                .catch(() => setApps([]))
+                .catch(() => setApps([]));
         }
     }, [appApiIsReady]);
 
@@ -389,86 +403,89 @@ const AppDataTable: React.FC<any> = (props: {
         ];
     }, [findUpdownItem, getLinkComponent, renderItemStateChip, t]);
 
-    const groupingColDef: GridGroupingColDefOverride = React.useMemo(() => ({
-        flex: 1,
-        minWidth: 300,
-        renderHeader: (params:any) => {
-            return (
-                <Grid
-                    container
-                    display={'flex'}
-                    flexDirection={'row'}
-                    alignItems={'center'}
-                    justifyContent={'space-between'}
-                    width={'100%'}
-                >
-                    <Grid size={6}>{params?.colDef?.headerName}</Grid>
+    const groupingColDef: GridGroupingColDefOverride = React.useMemo(
+        () => ({
+            flex: 1,
+            minWidth: 300,
+            renderHeader: (params: any) => {
+                return (
+                    <Grid
+                        container
+                        display={'flex'}
+                        flexDirection={'row'}
+                        alignItems={'center'}
+                        justifyContent={'space-between'}
+                        width={'100%'}
+                    >
+                        <Grid size={6}>{params?.colDef?.headerName}</Grid>
 
-                    <Grid size={6}>
-                        <IconButton
-                            onClick={() => {
-                                setExpand(true);
-                                if (defaultRowExpansion != null) {
-                                    Object.keys(defaultRowExpansion).map((id) => {
-                                        onRowExpansionChange(id, true);
-                                    });
-                                }
-                            }}
-                        >
-                            <Icon>unfold_more</Icon>
-                        </IconButton>
+                        <Grid size={6}>
+                            <IconButton
+                                onClick={() => {
+                                    setExpand(true);
+                                    if (defaultRowExpansion != null) {
+                                        Object.keys(defaultRowExpansion).map((id) => {
+                                            onRowExpansionChange(id, true);
+                                        });
+                                    }
+                                }}
+                            >
+                                <Icon>unfold_more</Icon>
+                            </IconButton>
 
-                        <IconButton
-                            onClick={() => {
-                                setExpand(false);
-                                if (defaultRowExpansion != null) {
-                                    Object.keys(defaultRowExpansion).map((id) => {
-                                        onRowExpansionChange(id, false);
-                                    });
-                                }
-                            }}
-                        >
-                            <Icon>unfold_less</Icon>
-                        </IconButton>
+                            <IconButton
+                                onClick={() => {
+                                    setExpand(false);
+                                    if (defaultRowExpansion != null) {
+                                        Object.keys(defaultRowExpansion).map((id) => {
+                                            onRowExpansionChange(id, false);
+                                        });
+                                    }
+                                }}
+                            >
+                                <Icon>unfold_less</Icon>
+                            </IconButton>
+                        </Grid>
                     </Grid>
-                </Grid>
-            );
-        },
-        renderCell: (params:any) => {
-            if ( typeof params.id === 'number' ) {
-                return <GridTreeDataGroupingCell {...params} />;
-            }
-            const app = apps?.find((app) => app.id === params.formattedValue);
-            return (
-                <GridTreeDataGroupingCell
-                    {...params}
-                    formattedValue={
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                            }}
-                        >
-                            {app.logo && (
-                                <img
-                                    src={'data:image/png;base64,' + app.logo}
-                                    alt="Logo de l'aplicació"
-                                    style={{
-                                        height: '48px',
-                                    }}
-                                />
-                            )}
-                            {app.nom}
-                        </Box>
-                    }
-                />
-            );
-        },
-        colSpan: (_value:any, row:any) => {
-            if (isAutogeneratedRow(row)) return columns.length + 1;
-        },
-    }), [columns.length, defaultRowExpansion, onRowExpansionChange, apps]);
+                );
+            },
+            renderCell: (params: any) => {
+                if (typeof params.id === 'number') {
+                    return <GridTreeDataGroupingCell {...params} />;
+                }
+                const app = apps?.find((app) => app.id === params.formattedValue);
+                return (
+                    <GridTreeDataGroupingCell
+                        {...params}
+                        formattedValue={
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                }}
+                            >
+                                {app.logo && (
+                                    <img
+                                        src={'data:image/png;base64,' + app.logo}
+                                        alt="Logo de l'aplicació"
+                                        style={{
+                                            height: '48px',
+                                        }}
+                                    />
+                                )}
+                                {app.nom}
+                            </Box>
+                        }
+                    />
+                );
+            },
+            colSpan: (_value: any, row: any) => {
+                if (isAutogeneratedRow(row)) return columns.length + 1;
+            },
+        }),
+        [columns.length, defaultRowExpansion, onRowExpansionChange, apps]
+    );
 
     return (
         <MuiDataGrid
@@ -479,7 +496,7 @@ const AppDataTable: React.FC<any> = (props: {
             filter={springFilterBuilder.and(
                 springFilterBuilder.eq('activa', true),
                 springFilterBuilder.eq('app.activa', true),
-                springFilter,
+                springFilter
             )}
             toolbarHideQuickFilter
             toolbarHideRefresh
@@ -519,7 +536,12 @@ const Salut: React.FC = () => {
     }, []);
     const dataLoaded = ready && loading != null && !loading;
     const toolbar = (
-        <SalutToolbar title={t('page.salut.title')} ready={ready} onRefresh={appDataRefresh} />
+        <SalutToolbar
+            title={t('page.salut.title')}
+            ready={ready}
+            onRefresh={appDataRefresh}
+            appDataLoading={!dataLoaded}
+        />
     );
     const onRowExpansionChange: OnRowExpansionChangeFunction = (id, expanded) => {
         setExpansionState((prevState) => ({
@@ -529,7 +551,7 @@ const Salut: React.FC = () => {
     };
     return (
         <BasePage toolbar={toolbar}>
-            {loading ? (
+            {salutLastItems == null || estats == null || reportParams == null ? (
                 <Box
                     sx={{
                         display: 'flex',
@@ -552,27 +574,23 @@ const Salut: React.FC = () => {
                                 justifyContent: 'center',
                             }}
                         >
-                            {dataLoaded && <UpdownPieChart salutLastItems={salutLastItems} />}
+                            <UpdownPieChart salutLastItems={salutLastItems} />
                         </Box>
                     </Grid>
                     <Grid size={9} sx={{ height: '200px' }}>
-                        {dataLoaded && (
-                            <UpdownBarChart
-                                dataInici={reportParams?.dataInici}
-                                agrupacio={reportParams?.agrupacio}
-                                estats={estats}
-                            />
-                        )}
+                        <UpdownBarChart
+                            dataInici={reportParams.dataInici}
+                            agrupacio={reportParams.agrupacio}
+                            estats={estats}
+                        />
                     </Grid>
                     <Grid size={12}>
-                        {dataLoaded && (
-                            <AppDataTable
-                                springFilter={springFilter}
-                                salutLastItems={salutLastItems}
-                                onRowExpansionChange={onRowExpansionChange}
-                                defaultRowExpansion={expansionState}
-                            />
-                        )}
+                        <AppDataTable
+                            springFilter={springFilter}
+                            salutLastItems={salutLastItems}
+                            onRowExpansionChange={onRowExpansionChange}
+                            defaultRowExpansion={expansionState}
+                        />
                     </Grid>
                 </Grid>
             )}
