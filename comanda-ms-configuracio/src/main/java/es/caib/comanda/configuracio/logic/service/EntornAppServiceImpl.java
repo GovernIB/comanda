@@ -14,6 +14,7 @@ import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
@@ -37,6 +38,8 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
+
 /**
  * Implementació del servei de gestió d'aplicacions per entorn.
  *
@@ -52,6 +55,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final ContextRepository contextRepository;
     private final EntornAppRepository entornAppRepository;
     private final AppInfoHelper appInfoHelper;
+    private final CacheHelper cacheHelper;
     private final ConfiguracioSchedulerService schedulerService;
     private final RestTemplate restTemplate;
 
@@ -113,6 +117,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         schedulerService.programarTasca(entity);
         appInfoHelper.programarTasquesSalutEstadistica(entity);
+        cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
     }
 
     @Override

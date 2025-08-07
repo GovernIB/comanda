@@ -18,6 +18,7 @@ import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -49,10 +50,11 @@ public class EntornAppServiceImplTest {
                                           ContextRepository contextRepository,
                                           EntornAppRepository entornAppRepository,
                                           AppInfoHelper appInfoHelper,
+                                          CacheHelper cacheHeper,
                                           ConfiguracioSchedulerService schedulerService,
                                           RestTemplate restTemplate) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, 
-                  entornAppRepository, appInfoHelper, schedulerService, restTemplate);
+                  entornAppRepository, appInfoHelper, cacheHeper, schedulerService, restTemplate);
         }
 
         @Override
@@ -97,7 +99,10 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private ConfiguracioSchedulerService schedulerService;
-    
+
+    @Mock
+    private CacheHelper cacheHelper;
+
     @Mock
     private RestTemplate restTemplate;
 
@@ -117,6 +122,7 @@ public class EntornAppServiceImplTest {
             contextRepository,
             entornAppRepository,
             appInfoHelper,
+            cacheHelper,
             schedulerService,
             restTemplate
         );

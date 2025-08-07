@@ -10,6 +10,7 @@ import es.caib.comanda.configuracio.logic.mapper.AppExportMapper;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
@@ -35,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.APP_CACHE;
+
 /**
  * Implementació del servei de gestió d'aplicacions.
  *
@@ -47,6 +50,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 
 	private final AppInfoHelper appInfoHelper;
 	private final ConfiguracioSchedulerService schedulerService;
+	private final CacheHelper cacheHelper;
 	private final ObjectMapper objectMapper;
 	private final AppExportMapper appExportMapper;
 
@@ -211,6 +215,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	@Override
 	protected void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
 		super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+		cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
 
 		// Per assegurar que s'executin les tasques programades correctament, es programen de nou.
 		if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {

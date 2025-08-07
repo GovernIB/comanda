@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class SalutClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "entornAppCache", key = "#entornAppId")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,

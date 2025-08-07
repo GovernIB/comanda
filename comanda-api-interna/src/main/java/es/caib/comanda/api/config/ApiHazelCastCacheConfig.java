@@ -7,12 +7,12 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MaxSizePolicy;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
-@EnableCaching
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.*;
+
+//@Configuration
+//@EnableCaching
 public class ApiHazelCastCacheConfig {
 
     @Bean
@@ -26,10 +26,10 @@ public class ApiHazelCastCacheConfig {
         // O configuració TCP-IP explícita si multicast no funciona
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true).addMember("localhost");
 
-        config.addMapConfig(new MapConfig().setName("entornAppCache").setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName("appCache").setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName("entornCache").setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName("dashboardWidgetCache").setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
+        config.addMapConfig(new MapConfig().setName(ENTORN_APP_CACHE).setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName(APP_CACHE).setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName(ENTORN_CACHE).setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName(DASHBOARD_WIDGET_CACHE).setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
         return config;
     }
 

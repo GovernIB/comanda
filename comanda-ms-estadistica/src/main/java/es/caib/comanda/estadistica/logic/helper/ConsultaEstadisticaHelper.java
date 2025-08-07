@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.*;
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE;
 
 /**
  * Lògica comuna per a obtenir i consultar informació estadística de les apps.
@@ -136,7 +137,7 @@ public class ConsultaEstadisticaHelper {
         return toFets(fets);
     }
 
-    @Cacheable(value = "dashboardWidgetCache", key = "#dashboardItem.id + '_' + T(java.time.LocalDate).now()")
+    @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + T(java.time.LocalDate).now()")
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem) {
 
         try {

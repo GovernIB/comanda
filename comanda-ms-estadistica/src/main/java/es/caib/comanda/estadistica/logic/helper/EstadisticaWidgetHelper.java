@@ -8,6 +8,7 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEnt
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE;
 
 /**
  * Lògica comuna per a obtenir i consultar informació per als widgets estadístics.
@@ -90,7 +93,7 @@ public class EstadisticaWidgetHelper {
             if (dashboardIds == null || dashboardIds.isEmpty()) return;
 
             dashboardIds.forEach(dashboardItem -> {
-                cacheHelper.evictCacheItemByPrefix("dashboardWidgetCache", dashboardItem.getId() + "_");
+                cacheHelper.evictCacheItemByPrefix(DASHBOARD_WIDGET_CACHE, dashboardItem.getId() + "_");
             });
         } catch (Exception e) {
             log.error("Error en la crida a clearDashboardWidgetCacheByWidget: " + e.getMessage(), e);
@@ -98,7 +101,7 @@ public class EstadisticaWidgetHelper {
     }
 
     public void clearDashboardWidgetCache(Long dashboardItemId) {
-        cacheHelper.evictCacheItemByPrefix("dashboardWidgetCache", dashboardItemId + "_");
+        cacheHelper.evictCacheItemByPrefix(DASHBOARD_WIDGET_CACHE, dashboardItemId + "_");
     }
 
 }

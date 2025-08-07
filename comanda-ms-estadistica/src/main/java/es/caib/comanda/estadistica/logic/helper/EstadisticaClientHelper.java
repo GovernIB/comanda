@@ -20,6 +20,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.*;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class EstadisticaClientHelper {
     // Client App
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "appCache", key = "#appId")
+    @Cacheable(value = APP_CACHE, key = "#appId")
     public App appFindById(Long appId) {
         EntityModel<App> app = appServiceClient.getOne(
                 appId,
@@ -50,7 +52,7 @@ public class EstadisticaClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "entornAppCache", key = "#entornAppId")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
@@ -107,7 +109,7 @@ public class EstadisticaClientHelper {
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "entornCache", key = "#entornId")
+    @Cacheable(value = ENTORN_CACHE, key = "#entornId")
     public Entorn entornById(Long entornId) {
         EntityModel<Entorn> entorn = entornServiceClient.getOne(
                 entornId,
