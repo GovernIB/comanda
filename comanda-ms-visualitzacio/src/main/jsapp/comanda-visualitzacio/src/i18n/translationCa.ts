@@ -70,9 +70,11 @@ const translationCa = {
             },
             latencia: {
                 title: "Latència",
+                error: "Hi ha hagut un error al mostrar el gràfic",
             },
             estatLatencia: {
                 title: "Estat i latència",
+                noInfo: "No hi ha dades per mostrar",
             },
             integracions: {
                 title: "Integracions",
@@ -290,7 +292,10 @@ const translationCa = {
             title: "Taulers de control",
             edit: "Editar",
             dashboardView: "Anar al taulers de control",
-            cloneDashboard: "Clonar el tauler de control",
+            cloneDashboard: {
+                title: "Clonar el tauler de control",
+                success: "Tauler de controls clonat correctament",
+            },
             components: {
                 llistar: "Llistar components",
                 afegir: "Afegir component",

@@ -70,9 +70,11 @@ const translationEn = {
             },
             latencia: {
                 title: "Latency",
+                error: "There was an error displaying the chart",
             },
             estatLatencia: {
                 title: "State and latency",
+                noInfo: "No data to display.",
             },
             integracions: {
                 title: "Integrations",
@@ -290,7 +292,10 @@ const translationEn = {
             title: "Dashboards",
             edit: "Edit",
             dashboardView: "Go to dashboard",
-            cloneDashboard: "Clone the dashboard",
+            cloneDashboard: {
+                title: "Clone the dashboard",
+                success: "Dashboard cloned correctly",
+            },
             components: {
                 llistar: "List components",
                 afegir: "Add component",

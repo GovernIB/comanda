@@ -24,8 +24,9 @@ import java.util.List;
 @NoArgsConstructor
 @ResourceConfig(
 	artifacts = {
-		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST),
+		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST, formClass = String.class),
 		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTAT, formClass = SalutInformeParams.class),
+		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTATS, formClass = SalutInformeParams.class),
 		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
 		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_INTEGRACIONS),
 		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_SUBSISTEMES),
@@ -38,6 +39,7 @@ public class Salut extends BaseResource<Long> {
 
 	public final static String SALUT_REPORT_LAST = "salut_last";
 	public final static String SALUT_REPORT_ESTAT = "estat";
+	public final static String SALUT_REPORT_ESTATS = "estats";
 	public final static String SALUT_REPORT_LATENCIA = "latencia";
 	public static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
 	public static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";

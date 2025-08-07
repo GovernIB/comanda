@@ -10,8 +10,12 @@ import {
     springFilterBuilder,
     useResourceApiService,
     useBaseAppContext,
+    MuiFormDialogApi,
+    useMuiDataGridApiRef,
 } from 'reactlib';
 import { envVars } from '../main';
+import {iniciaDescargaJSON} from "../util/commonsActions.ts";
+import FormActionDialog from '../components/FormActionDialog.tsx';
 
 const fetchOptions = async (endpoint: string, listKey: string, q?: string, filter?: string) => {
     const url = new URL(`${envVar('VITE_API_URL', envVars)}/${endpoint}`);
@@ -53,10 +57,36 @@ const EstadisticaDashboardForm: React.FC = () => {
         </Grid>
     );
 };
-import {iniciaDescargaJSON} from "../util/commonsActions.ts";
-import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon.tsx";
 
-const useActions = (refresh?: () => void) => {
+const useCloneDashboardAction = (refresh?: () => void) => {
+    const { t } = useTranslation();
+    const apiRef = React.useRef<MuiFormDialogApi>(null);
+    const {temporalMessageShow} = useBaseAppContext();
+    const handleShow = (id:any, row:any) :void => {
+        apiRef.current?.show?.(id, row)
+    }
+    const onSuccess = () :void => {
+        refresh?.();
+        temporalMessageShow(null, t('page.dashboards.cloneDashboard.success'), 'success');
+    }
+    const formulario =
+        <FormActionDialog
+            resourceName={"dashboard"}
+            action={"clone_dashboard"}
+            apiRef={apiRef}
+            title={t('page.dashboards.cloneDashboard.title')}
+            onSuccess={onSuccess}
+            initialOnChange={false}
+        >
+            <EstadisticaDashboardForm/>
+        </FormActionDialog>;
+    return {
+        handleShow,
+        content: formulario
+    }
+}
+
+const useActions = () => {
     const { artifactReport: apiReport } = useResourceApiService('dashboard');
     const { temporalMessageShow } = useBaseAppContext();
     const { t } = useTranslation();
@@ -71,35 +101,44 @@ const useActions = (refresh?: () => void) => {
                 temporalMessageShow(null, error.message, 'error');
             });
     }
-    const dashboardExport = (id:any) => report(id, 'dashboard_export', t('page.dashboard.action.export'), 'JSON')
+    const dashboardExport = (id:any) => report(id, 'dashboard_export', t('page.dashboards.action.export'), 'JSON')
 
     return {
         dashboardExport,
     };
 };
 
+const columns = [
+    {
+        field: 'titol',
+        flex: 1,
+    },
+    {
+        field: 'descripcio',
+        flex: 3,
+    },
+];
+
 const EstadisticaDashboards: React.FC = () => {
     const { t } = useTranslation();
+    const gridApiRef = useMuiDataGridApiRef();
+    const refresh = () => {
+        gridApiRef?.current?.refresh?.();
+    }
     const { dashboardExport } = useActions();
-    const columns = [
-        {
-            field: 'titol',
-            flex: 1,
-        },
-        {
-            field: 'descripcio',
-            flex: 3,
-        },
-    ];
+    const {handleShow: showCloneDashboard, content: contentCloneDashboard} = useCloneDashboardAction(refresh);
     return (
         <GridPage disableMargins>
             <MuiGrid
                 title={t('page.dashboards.title')}
                 resourceName="dashboard"
                 columns={columns}
+                apiRef={gridApiRef}
                 toolbarType="upper"
                 paginationActive
                 rowHideUpdateButton
+                popupEditActive
+                popupEditFormContent={<EstadisticaDashboardForm/>}
                 rowAdditionalActions={[
                     {
                         title: t('page.dashboards.edit'),
@@ -119,15 +158,15 @@ const EstadisticaDashboards: React.FC = () => {
                         onClick: dashboardExport,
                     },
                     {
-                        title: t('page.dashboards.cloneDashboard'),
+                        title: t('page.dashboards.cloneDashboard.title'),
                         icon: 'file_copy',
                         showInMenu: true,
                         action: "clone_dashboard",
+                        onClick: showCloneDashboard,
                     },
                 ]}
-                popupEditActive
-                popupEditFormContent={<EstadisticaDashboardForm/>}
             />
+            {contentCloneDashboard}
         </GridPage>
     );
 };

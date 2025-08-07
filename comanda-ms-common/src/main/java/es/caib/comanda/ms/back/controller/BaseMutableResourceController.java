@@ -720,7 +720,7 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	private Link buildActionLink(ResourceArtifact artifact, Serializable id) {
 		String rel = "exec_" + artifact.getCode();
 		if (artifact.getRequiresId() != null && artifact.getRequiresId()) {
-			return linkTo(methodOn(getClass()).artifactActionExec(null, artifact.getCode(), null, null)).withRel(rel);
+			return linkTo(methodOn(getClass()).artifactActionExec(id, artifact.getCode(), null, null)).withRel(rel);
 		} else {
 			return linkTo(methodOn(getClass()).artifactActionExec(artifact.getCode(), null, null)).withRel(rel);
 		}

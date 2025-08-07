@@ -10,17 +10,19 @@ import Icon from '@mui/material/Icon';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import {
+    FormField, MuiDialog, MuiFilter, springFilterBuilder,
     Toolbar,
-    useBaseAppContext,
+    useBaseAppContext, useFilterApiRef, useFormContext,
 } from 'reactlib';
 import { Box } from '@mui/material';
+import Grid from "@mui/material/Grid";
 
 export type SalutToolbarProps = {
     title: string;
     subtitle?: string;
     state?: React.ReactElement;
     ready: boolean;
-    onRefresh: (dataInici: string, dataFi: string, agrupacio: string, execAction?: boolean) => void;
+    onRefresh: (dataInici: string, dataFi: string, agrupacio: string, execAction?: boolean, springFilter?: string) => void;
     goBackActive?: boolean;
 }
 
@@ -157,7 +159,7 @@ const AppDataRangeSelect: React.FC<any> = (props: { disabled?: boolean; onChange
     </FormControl>;
 }
 
-function formatTimeDifference(otherDate) {
+function formatTimeDifference(otherDate: any) {
     const now = new Date();
     const diffInMs = Math.abs(now.getTime() - otherDate.getTime());
     const diffInSeconds = Math.floor(diffInMs / 1000);
@@ -213,6 +215,111 @@ function useInterval({ tickCallback, initCallback, refreshTimeoutMs }: UseInterv
     }, [refreshTimeoutMs]);
 }
 
+const SalutEntornAppFilterForm: React.FC<any> = () => {
+    const { data } = useFormContext();
+
+    return <Grid container spacing={2}>
+        <Grid size={6}>
+            <FormField name="app" componentProps={{ size: 'small', }}
+                       filter={springFilterBuilder.exists(
+                           springFilterBuilder.and(springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id))
+                       )}
+            />
+        </Grid>
+        <Grid size={6}>
+            <FormField name="entorn" componentProps={{ size: 'small', }}
+                       filter={springFilterBuilder.exists(
+                           springFilterBuilder.and(springFilterBuilder.eq('entornAppEntities.app.id', data?.app?.id))
+                       )}
+            />
+        </Grid>
+    </Grid>
+}
+const SalutEntornAppFilter: React.FC<any> = (props:any) => {
+    const { data, setData, apiRef, onSpringFilterChange } = props;
+
+    return <MuiFilter
+        resourceName={"entornApp"}
+        code={"salut_entornApp_filter"}
+        springFilterBuilder={(data:any)=> {
+            setData(data)
+            return springFilterBuilder.and(
+                springFilterBuilder.eq('app.id', data.app?.id),
+                springFilterBuilder.eq('entorn.id', data.entorn?.id),
+            )}
+        }
+        initialData={data}
+        apiRef={apiRef}
+        onSpringFilterChange={onSpringFilterChange}
+        buttonControlled
+    >
+        <SalutEntornAppFilterForm/>
+    </MuiFilter>
+}
+
+const useSalutEntornAppFilter = () => {
+    const { t } = useTranslation()
+
+    const [open, setOpen] = React.useState<boolean>(false);
+    const [springFilter, setSpringFilter] = React.useState<string>('');
+    const [data, setData] = React.useState<any>({});
+    const filterRef = useFilterApiRef();
+
+    const cercar = ()=> {
+        filterRef?.current?.filter?.()
+    }
+    const netejar = ()=> {
+        filterRef?.current?.clear?.()
+    }
+
+    const handleOpen = () => {
+        setOpen(true)
+    }
+
+    const handleClose = () => {
+        setOpen(false)
+    }
+
+    const dialog = <MuiDialog
+        open={open}
+        closeCallback={handleClose}
+        // title={t('')}
+        componentProps={{fullWidth: true, maxWidth: 'sm'}}
+        buttons={[
+            {
+                value: 'clear',
+                text: t('components.clear'),
+                componentProps: {
+                    variant: "outlined",
+                    sx: { borderRadius: '4px' },
+                },
+            },
+            {
+                value: 'search',
+                text: t('components.search'),
+                icon: 'filter_alt',
+                componentProps: {
+                    variant: "contained",
+                    sx: { borderRadius: '4px' },
+                },
+            },
+        ]}
+        buttonCallback={(value: any): void => {
+            if (value === 'clear') netejar();
+            if (value === 'search') cercar();
+        }}
+    >
+        <SalutEntornAppFilter data={data} setData={setData} apiRef={filterRef} onSpringFilterChange={setSpringFilter}/>
+    </MuiDialog>
+
+    return {
+        springFilter,
+        handleOpen,
+        handleClose,
+        dialog,
+    }
+}
+
 export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const {
         title,
@@ -229,11 +336,14 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const [appDataRangeMinutes, setAppDataRangeMinutes] = React.useState<number>();
     const [lastRefresh, setLastRefresh] = React.useState<Date | null>(null);
     const [nextRefresh, setNextRefresh] = React.useState<Date | null>(null);
+
+    const {springFilter, handleOpen, dialog} = useSalutEntornAppFilter();
+
     const timeUntilNextRefreshFormatted = useTimeUntilNextRefreshFormatted(nextRefresh);
     const refresh = (execAction?: boolean) => {
         setLastRefresh(new Date());
         const { dataInici, dataFi, agrupacio } = toReportInterval(appDataRangeMinutes);
-        if (appDataRangeMinutes != null) onRefresh(dataInici, dataFi, agrupacio, execAction);
+        if (appDataRangeMinutes != null) onRefresh(dataInici, dataFi, agrupacio, execAction, springFilter);
     };
     const updateNextRefresh = (refreshTimeout: number) => {
         const nextRequestDate = new Date();
@@ -245,7 +355,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         if (ready) {
             refresh();
         }
-    }, [ready, appDataRangeMinutes]);
+    }, [ready, appDataRangeMinutes, springFilter]);
     const refreshTimeoutMs = refreshTimeoutMinutes !== undefined ? refreshTimeoutMinutes * 60 * 1000 : null;
     useInterval({
         tickCallback: () => {
@@ -287,6 +397,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         },
         {
             position: 2,
+            element: <IconButton onClick={()=>handleOpen()}><Icon>filter_alt</Icon></IconButton>
+        },
+        {
+            position: 2,
             element: (
                 <IconButton
                     onClick={() => refresh(true)}
@@ -321,11 +435,13 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             <Icon>arrow_back</Icon>
         </IconButton>
     });
-    return <Toolbar
+    return <><Toolbar
         title={title}
         //subtitle={subtitle}
         elementsWithPositions={toolbarElementsWithPositions}
-        upperToolbar />;
+        upperToolbar />
+        {dialog}
+    </>;
 }
 
 export default SalutToolbar;

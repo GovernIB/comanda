@@ -42,9 +42,14 @@ public class SalutClientHelper {
     }
 
     public List<EntornApp> entornAppFindByActivaTrue() {
+        return entornAppFindByActivaTrue("");
+    }
+
+    public List<EntornApp> entornAppFindByActivaTrue(String filter) {
+        String springFilter = (filter.isEmpty() ?"" : filter + " and ") + "activa:true and app.activa:true";
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
                 null,
-                "activa:true and app.activa:true",
+                springFilter,
                 null,
                 null,
                 "UNPAGED",

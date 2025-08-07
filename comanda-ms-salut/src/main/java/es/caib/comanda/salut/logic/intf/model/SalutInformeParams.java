@@ -7,6 +7,7 @@ import lombok.Setter;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Informació per a l'informe de latència del recurs salut.
@@ -20,6 +21,7 @@ public class SalutInformeParams implements Serializable {
 
 //	@NotNull
 	private Long entornAppId;
+    private List<Long> entornAppIdList;
 	@NotNull
 	private LocalDateTime dataInici;
 	@NotNull

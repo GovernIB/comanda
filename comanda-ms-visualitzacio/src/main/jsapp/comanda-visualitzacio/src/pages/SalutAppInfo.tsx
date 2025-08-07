@@ -17,7 +17,6 @@ import Button from '@mui/material/Button';
 import { MarkPlot } from '@mui/x-charts/LineChart';
 import {
     BasePage,
-    useMuiContentDialog,
     useResourceApiService,
     dateFormatLocale,
     useBaseAppContext,
@@ -39,13 +38,14 @@ import {
 import { useTheme } from '@mui/material/styles';
 
 export const ErrorBoundaryFallback = () => {
+    const { t } = useTranslation();
     return <Typography sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-    }} color="error">Hi ha hagut un error al mostrar el gràfic</Typography>
+    }} color="error">{t('page.salut.latencia.error')}</Typography>
 }
 
 interface AppDataState {
@@ -217,7 +217,7 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
                             alignItems: 'center',
                         }}
                     >
-                        No hi ha dades per mostrar
+                        {t('page.salut.estatLatencia.noInfo')}
                     </Typography>
                 </CardContent>
             </Card>
@@ -451,7 +451,7 @@ const DetallInfo: React.FC<any> = (props) => {
             {detalls?.length > 0 && <Table size="small">
                 <TableBody>
                     {detalls.map((d: any) => <TableRow key={d.id}>
-                        <TableCell sx={{minWidth: '170px'}}>{d.nom}</TableCell>
+                        <TableCell sx={{minWidth: '165px'}}>{d.nom}</TableCell>
                         <TableCell>{d.valor}</TableCell>
                     </TableRow>)}
                 </TableBody>
@@ -502,10 +502,10 @@ const SalutAppInfo: React.FC = () => {
     </Box> : null;
     const detailsComponent = (
         <Grid container spacing={2}>
-            <Grid size={{sm: 12, md: 3}}>
+            <Grid size={{sm: 12, lg: 3}}>
                 <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
             </Grid>
-            <Grid size={{sm: 12, md: 9}}>
+            <Grid size={{sm: 12, lg: 9}}>
                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
                     {dataLoaded && (
                         <LatenciaEstatsChart
@@ -517,16 +517,16 @@ const SalutAppInfo: React.FC = () => {
                     )}
                 </ErrorBoundary>
             </Grid>
-            <Grid size={{sm: 12, md: 3}}>
+            <Grid size={{sm: 12, lg: 3}}>
                 <DetallInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
-            <Grid size={{sm: 12, md: 9}}>
+            <Grid size={{sm: 12, lg: 9}}>
                 <Contexts salutCurrentApp={salutCurrentApp} />
             </Grid>
-            <Grid size={{sm: 12, md:6}}>
+            <Grid size={{sm: 12, lg:6}}>
                 <Integracions salutCurrentApp={salutCurrentApp} />
             </Grid>
-            <Grid size={{sm: 12, md:6}}>
+            <Grid size={{sm: 12, lg:6}}>
                 <Subsistemes salutCurrentApp={salutCurrentApp} />
             </Grid>
         </Grid>
