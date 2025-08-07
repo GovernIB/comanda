@@ -169,7 +169,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             )}
                             {/*<Grid size={4}><FormField name="tipusValors" /></Grid>*/}
 
-                            { (isBarTypeVisible || isLineTypeVisible || isSparkLineTypeVisible || isScatterTypeVisible) && (
+                            { (isBarTypeVisible || isLineTypeVisible || isScatterTypeVisible) && (
                                 <Grid size={12}><FormField name="llegendaX" /></Grid>
                             )}
                             {/*<Grid size={6}><FormField name="llegendaY" /></Grid>*/}
@@ -213,7 +213,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                 )}
                 {/*<Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" type="color" /></Grid>*/}
                 <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><ColorPaletteSelector initialColors={appPalette} onPaletteChange={handlePaletteChange} /></Grid>
-                { (isBarTypeVisible || isLineTypeVisible || isSparkLineTypeVisible || isScatterTypeVisible) && (
+                { (isBarTypeVisible || isLineTypeVisible || isScatterTypeVisible) && (
                     <Grid size={12}><FormField name="mostrarReticula" label={t('page.widget.atributsVisuals.mostrarReticula')} type="checkbox" /></Grid>)
                 }
 

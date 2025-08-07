@@ -322,14 +322,21 @@ public class ConsultaEstadisticaHelper {
         switch (tipusGrafic) {
             case BAR_CHART:
             case LINE_CHART:
+            case SPARK_LINE_CHART://Si se cambia la respuesta por el de una lista de valores en lugar de un mapa de {x: value, y: number} es necessario editar el front.
             case PIE_CHART:
+            case GAUGE_CHART:
                 boolean isSimpleMapping = files.get(0).size() == 2;
 
                 if (isSimpleMapping) {
                     String key = extractKeyExcluding(files.get(0), agrupacioKey);
-                    return tipusGrafic == TipusGraficEnum.PIE_CHART
-                            ? convertToPieChartSeriesSimple(files, agrupacioKey, key)
-                            : convertToChartSeriesSimple(files, agrupacioKey, key);
+                    switch (tipusGrafic) {
+                        case PIE_CHART:
+                            return convertToPieChartSeriesSimple(files, agrupacioKey, key);
+                        case GAUGE_CHART:
+                            return convertToGaugeChartSeriesSimple(files, agrupacioKey, key);
+                        default:
+                            return convertToChartSeriesSimple(files, agrupacioKey, key);
+                    }
                 }
 
                 List<String> keys = files.get(0).keySet().stream()
@@ -364,6 +371,18 @@ public class ConsultaEstadisticaHelper {
         return files.stream()
                 .map(f -> Map.of("label", f.get(agrupacioKey), "value", (Object) toDouble(f.get(valueKey))))
                 .collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> convertToGaugeChartSeriesSimple(List<Map<String, String>> files, String agrupacioKey, String valueKey) {
+        return files.stream()
+            .map(file -> {
+                double total = file.entrySet().stream()
+                    .filter(entry -> !entry.getKey().equals(agrupacioKey))
+                    .mapToDouble(entry -> toDouble(entry.getValue()))
+                    .sum();
+                return Map.of("value", (Object) total);
+            })
+            .collect(Collectors.toList());
     }
 
     private List<Map<String, Object>> convertToChartSeriesSimple(List<Map<String, String>> files, String agrupacioKey, String valueKey) {

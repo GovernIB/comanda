@@ -16,6 +16,9 @@ import {
     LinePlot,
     PieArcPlot,
     PieArcLabel,
+    SparkLineChart,
+    Gauge,
+    gaugeClasses,
 } from '@mui/x-charts';
 import estils from "./WidgetEstils.ts";
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
@@ -151,7 +154,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         gaugeMin = 0,
         gaugeMax = 100,
         gaugeColors = '#d4e6f1,#3498db,#1a5276',
-        gaugeRangs = '0,50,75,100',
+        gaugeRangs = '50,75,100',
 
         // Heatmap chart specific
         heatmapColors = '#d4e6f1,#3498db,#1a5276',
@@ -418,38 +421,64 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         );
     };
 
-    // Render a gauge chart (simplified version)
+    // Render a spark chart
     const renderSparkLineChart = () => {
-        // For preview, just show a placeholder
+        const numericKey = dades.length > 0
+            ? Object.keys(dades[0]).find((key) => key !== columnaAgregacio)
+            : null;
+        const numericData: number[] = numericKey
+            ? dades.map((item) => Number(item[numericKey])).filter((n) => !isNaN(n))
+            : [];
+
         return (
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: chartHeight,
-                color: theme.palette.text.secondary
-            }}>
-                <Typography sx={{color: theme.palette.error.main}}>
-                    SparkLine Chart (Pendent d'implementació)
-                </Typography>
-            </Box>
-        );
+            <Box sx={{ width: '100%', height: chartHeight }}>
+                <SparkLineChart
+                    data={numericData}
+                    height={chartHeight}
+                    showTooltip={lineShowPoints}
+                    showHighlight={lineShowPoints}
+                    curve={lineSmooth ? 'monotone' : 'linear'}
+                    area={area}
+                    sx={{
+                        '& .MuiLineElement-root': {
+                            strokeWidth: +lineWidth,
+                        },
+                    }}
+                />
+            </Box>);
     };
 
-    // Render a gauge chart (simplified version)
+    // Render a gauge chart
     const renderGaugeChart = () => {
-        // For preview, just show a placeholder
+        const valorGauge = Array.isArray(dades) && dades.length > 0 ? Number(dades[0].value) : 0;
+        const colors = gaugeColors.split(',').map(c => c.trim());
+        const rangs = gaugeRangs.split(',').map(r => Number(r.trim()));
+        const getColor = (value: number) => {
+            for (let i = 0; i < colors.length; i++) {
+                if (value < rangs[i]) {
+                    return colors[i];
+                }
+            }
+            return colors[colors.length - 1];//Si es superior al último rango devolveremos el mismo color.
+        };
+
         return (
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+            <Box sx={{ width: '100%',
                 height: chartHeight,
-                color: theme.palette.text.secondary
-            }}>
-                <Typography sx={{color: theme.palette.error.main}}>
-                    Gauge Chart (Pendent d'implementació)
-                </Typography>
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',}}>
+            <Gauge
+                value={valorGauge}
+                valueMin={gaugeMin}
+                valueMax={gaugeMax}
+                sx={() => ({
+                    [`& .${gaugeClasses.valueArc}`]: {
+                        fill: getColor(valorGauge),
+                    },
+                })}
+            />
             </Box>
         );
     };
@@ -559,6 +588,7 @@ const generateSampleData = (chartType?: string): Record<string, unknown>[] => {
                 {name: 'Mai', valor1: 189, valor2: 480},
             ];
         case 'LINE_CHART':
+        case 'SPARK_LINE_CHART':
             return [
                 {x: 'Gen', y: 2},
                 {x: 'Feb', y: 5.5},
@@ -616,6 +646,7 @@ const generateSampleAgregacio = (chartType?: string): string | undefined => {
         case 'BAR_CHART':
             return 'name';
         case 'LINE_CHART':
+        case 'SPARK_LINE_CHART':
             return 'x';
         case 'PIE_CHART':
             return 'name';
