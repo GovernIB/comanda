@@ -101,7 +101,7 @@ const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChan
             disabled={disabled}
             onChange={handleChange}
             startAdornment={<InputAdornment position="start"><Icon>update</Icon></InputAdornment>}
-            sx={{ mr: 1, width: '10em' }}>
+            sx={{ mr: 1 }}>
             <MenuItem value={"PT1M"}>{t('page.salut.refreshperiod.PT1M')}</MenuItem>
             <MenuItem value={"PT5M"}>{t('page.salut.refreshperiod.PT5M')}</MenuItem>
             <MenuItem value={"PT10M"}>{t('page.salut.refreshperiod.PT10M')}</MenuItem>
@@ -150,7 +150,7 @@ const AppDataRangeSelect: React.FC<any> = (props: { disabled?: boolean; onChange
             disabled={disabled}
             onChange={handleChange}
             startAdornment={<InputAdornment position="start"><Icon>date_range</Icon></InputAdornment>}
-            sx={{ mr: 1, width: '20em' }}>
+            sx={{ mr: 1 }}>
             <MenuItem value={"PT15M"}>{t('page.salut.timerange.PT15M')}</MenuItem>
             <MenuItem value={"PT1H"}>{t('page.salut.timerange.PT1H')}</MenuItem>
             <MenuItem value={"P1D"}>{t('page.salut.timerange.P1D')}</MenuItem>
@@ -391,11 +391,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         },
         {
             position: 2,
-            element: <RefreshTimeoutSelect onChange={setRefreshTimeoutMinutes} disabled={!ready} />,
-        },
-        {
-            position: 2,
-            element: <AppDataRangeSelect onChange={setAppDataRangeMinutes} disabled={!ready} />,
+            element: <Grid container display={"flex"} flexDirection={"row"} sx={{ flexBasis: { xs: 'calc(15rem)', sm: 'auto' } }}>
+                <Grid size={(state != null || subtitle != null) ?{lg: 5, sm: 12} :{sm: 5, xs: 12}}><RefreshTimeoutSelect onChange={setRefreshTimeoutMinutes} disabled={!ready} /></Grid>
+                <Grid size={(state != null || subtitle != null) ?{lg: 5, sm: 12} :{sm: 5, xs: 12}}><AppDataRangeSelect onChange={setAppDataRangeMinutes} disabled={!ready} /></Grid>
+            </Grid>,
         },
         {
             position: 2,
@@ -415,23 +414,23 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             ),
         },
     ];
-    state != null && toolbarElementsWithPositions.unshift({
-        position: 1,
-        element: state
-    });
-    subtitle != null && toolbarElementsWithPositions.unshift({
-        position: 1,
-        element: <Typography
-            variant="caption"
-            sx={{
-                position: 'relative',
-                top: '4px',
-                color: theme.palette.text.disabled,
-                ml: 1,
-            }}>
-            {subtitle}
-        </Typography>
-    });
+    // state != null && toolbarElementsWithPositions.unshift({
+    //     position: 1,
+    //     element: state
+    // });
+    // subtitle != null && toolbarElementsWithPositions.unshift({
+    //     position: 1,
+    //     element: <Typography
+    //         variant="caption"
+    //         sx={{
+    //             position: 'relative',
+    //             top: '4px',
+    //             color: theme.palette.text.disabled,
+    //             ml: 1,
+    //         }}>
+    //         {subtitle}
+    //     </Typography>
+    // });
     goBackActive && toolbarElementsWithPositions.unshift({
         position: 0,
         element: <IconButton onClick={() => goBack('/')} sx={{ mr: 1 }}>
@@ -439,7 +438,19 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         </IconButton>
     });
     return <><Toolbar
-        title={title}
+        title={<>
+            {title}{state}
+            {subtitle && <Typography
+                variant="caption"
+                sx={{
+                    position: 'relative',
+                    // top: '4px',
+                    color: theme.palette.text.disabled,
+                    ml: 1,
+                }}>
+                {subtitle}
+            </Typography>}
+        </>}
         //subtitle={subtitle}
         elementsWithPositions={toolbarElementsWithPositions}
         upperToolbar />
