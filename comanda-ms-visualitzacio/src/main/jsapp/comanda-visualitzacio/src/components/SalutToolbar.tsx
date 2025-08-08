@@ -303,7 +303,7 @@ const useSalutEntornAppFilter = () => {
     const dialog = <MuiDialog
         open={open}
         closeCallback={handleClose}
-        // title={t('')}
+        title={t('page.salut.filtrar')}
         componentProps={{fullWidth: true, maxWidth: 'sm'}}
         buttons={[
             {

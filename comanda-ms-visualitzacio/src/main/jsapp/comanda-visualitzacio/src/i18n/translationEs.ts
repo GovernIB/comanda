@@ -27,6 +27,7 @@ const translationEs = {
         salut: {
             title: "Salut",
             refrescar: "Refrescar",
+            filtrar: "Filtrar por aplicación/entorno",
             nd: "N/D",
             apps: {
                 column: {

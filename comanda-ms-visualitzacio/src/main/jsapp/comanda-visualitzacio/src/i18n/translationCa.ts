@@ -27,6 +27,7 @@ const translationCa = {
         salut: {
             title: "Salut",
             refrescar: "Refrescar",
+            filtrar: "Filtrar per aplicació/entorn",
             nd: "N/D",
             apps: {
                 column: {

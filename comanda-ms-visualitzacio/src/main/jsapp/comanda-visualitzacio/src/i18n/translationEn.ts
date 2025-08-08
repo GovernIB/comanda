@@ -27,6 +27,7 @@ const translationEn = {
         salut: {
             title: "Health",
             refrescar: "Refresh",
+            filtrar: "Filter by application/environment",
             nd: "N/A",
             apps: {
                 column: {
