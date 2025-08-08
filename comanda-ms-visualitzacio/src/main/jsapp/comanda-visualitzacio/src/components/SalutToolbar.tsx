@@ -392,7 +392,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         {
             position: 2,
             element: (
-                <Box sx={{ mr: 2 }}>
+                <Box sx={{ mr: 2, minWidth: { xs: '50px', sm: '135px'}, }}>
                     {lastRefresh != null && (
                         <Typography sx={{ display: 'block' }} variant="caption">
                             Últim refresc: <b>{lastRefresh.toLocaleTimeString()}</b>
@@ -410,18 +410,16 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         },
         {
             position: 2,
-            element: <Grid container display={"flex"} flexDirection={"row"} sx={{ flexBasis: { xs: 'calc(15rem)', sm: 'auto' } }}>
-                <Grid size={(state != null || subtitle != null) ?{lg: 5, sm: 12} :{sm: 5, xs: 12}}><RefreshTimeoutSelect onChange={setRefreshTimeoutMinutes} disabled={!ready} /></Grid>
-                <Grid size={(state != null || subtitle != null) ?{lg: 5, sm: 12} :{sm: 5, xs: 12}}><AppDataRangeSelect onChange={setAppDataRangeMinutes} disabled={!ready} /></Grid>
-            </Grid>,
-        },
-        {
-            position: 2,
-            element: <IconButton onClick={()=>handleOpen()}><Icon>filter_alt</Icon></IconButton>
+            element: <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, maxWidth:{ sm: '210px', lg: '400px'}}} minWidth={{xs: '110px'}}>
+                <RefreshTimeoutSelect onChange={setRefreshTimeoutMinutes} disabled={!ready} />
+                <AppDataRangeSelect onChange={setAppDataRangeMinutes} disabled={!ready} />
+            </Box>,
         },
         {
             position: 2,
             element: (
+                <>
+                {state == null && <IconButton onClick={()=>handleOpen()} color={springFilter ? 'primary' : 'default'}><Icon>filter_alt</Icon></IconButton>}
                 <IconButton
                     onClick={() => refresh(true)}
                     title={t('page.salut.refrescar')}
@@ -430,6 +428,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                 >
                     <Icon>refresh</Icon>
                 </IconButton>
+                </>
             ),
         },
     ];
