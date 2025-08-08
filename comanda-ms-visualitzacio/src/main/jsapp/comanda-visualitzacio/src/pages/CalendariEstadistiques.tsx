@@ -16,6 +16,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import {useTranslation} from "react-i18next";
 import * as React from "react";
 import ReactDOM from 'react-dom/client';
+import {useMessage} from "../components/MessageShow.tsx";
 
 interface ErrorInfo {
     date: string;
@@ -94,7 +95,7 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
     <>
         <Tooltip title={tooltip}>
         <Button
-            variant="outlined"
+            variant="contained"
             color={color}
             size="small"
             startIcon={ isLoading ? ( <CircularProgress size={16} color="inherit" /> ) : ( icon ) }
@@ -157,6 +158,7 @@ const CalendariEstadistiques: React.FC = () => {
     // Obtenir les accions
     const { isReady: apiFetIsReady, artifactAction: apiAction, artifactReport: apiReport } = useResourceApiService('fet');
     const { temporalMessageShow } = useBaseAppContext();
+    const { show: showMessage, component } = useMessage();
 
     // Definir les accions directament al component
     // Obtenir dades estadístiques per un dia concret
@@ -204,18 +206,18 @@ const CalendariEstadistiques: React.FC = () => {
             
             const data = await apiAction(null, { code: 'obtenir_per_interval', data: additionalData });
             if (data.success) {
-                temporalMessageShow(null, t('calendari.success_obtenir_dades'), 'success');
+                showMessage(null, t('calendari.success_obtenir_dades'), 'success');
                 // Actualitzar les dates disponibles després d'obtenir dades per interval
                 obtenirDatesDisponibles(additionalData.entornAppId);
             } else {
-                temporalMessageShow(null, t('calendari.error_obtenir_dades') + ": " + data.message, 'error');
+                showMessage(null, t('calendari.error_obtenir_dades') + ": " + data.message, 'error');
             }
             
             // Set global loading to false when done
             setGlobalLoading(false);
             return data.success;
         } catch (error: any) {
-            temporalMessageShow(null, error.message, 'error');
+            showMessage(null, error.message, 'error');
             // Set global loading to false in case of error
             setGlobalLoading(false);
             return false;
@@ -300,6 +302,16 @@ const CalendariEstadistiques: React.FC = () => {
                 await obtenirDatesDisponibles(entornAppId);
                 // Eliminar qualsevol error associat a aquesta data
                 setErrors(prev => prev.filter(error => error.date !== data));
+            } else {
+                const errorInfo: ErrorInfo = {
+                    date: data,
+                    message: ''
+                };
+                setErrors(prev => {
+                    // Eliminar errors anteriors per a aquesta data
+                    const filtered = prev.filter(e => e.date !== data);
+                    return [...filtered, errorInfo];
+                });
             }
         } catch (error: any) {
             console.error('Error en obtenir dades estadístiques:', error);
@@ -638,6 +650,11 @@ const CalendariEstadistiques: React.FC = () => {
                         //If the event has hasContent true, render StatusButton
                         if (arg.event.extendedProps.hasContent) {
                             const container = document.createElement('div');
+                            container.style.position = "absolute";
+                            container.style.bottom = "-20px";
+                            container.style.width = "100%";
+                            container.style.height = "100%";
+
                             const root = ReactDOM.createRoot(container);
                             root.render(<CalendarStatusButton
                                 hasError={arg.event.extendedProps.hasError}
@@ -866,6 +883,7 @@ const CalendariEstadistiques: React.FC = () => {
                     <Button onClick={() => setDadesDiaModalOpen(false)}>{t('calendari.tancar')}</Button>
                 </DialogActions>
             </Dialog>
+            {component}
         </GridPage>
     );
 };
