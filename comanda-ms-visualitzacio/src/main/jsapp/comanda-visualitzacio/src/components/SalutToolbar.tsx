@@ -236,20 +236,25 @@ const SalutEntornAppFilterForm: React.FC<any> = () => {
         </Grid>
     </Grid>
 }
+
+const salutEntornAppFilterBuilder = (data: any) => {
+    return springFilterBuilder.and(
+        springFilterBuilder.eq('app.id', data.app?.id),
+        springFilterBuilder.eq('entorn.id', data.entorn?.id),
+    )
+}
+
 const SalutEntornAppFilter: React.FC<any> = (props:any) => {
-    const { data, setData, apiRef, onSpringFilterChange } = props;
+    const { initialData, setData, apiRef, onSpringFilterChange } = props;
 
     return <MuiFilter
         resourceName={"entornApp"}
         code={"salut_entornApp_filter"}
         springFilterBuilder={(data:any)=> {
             setData(data)
-            return springFilterBuilder.and(
-                springFilterBuilder.eq('app.id', data.app?.id),
-                springFilterBuilder.eq('entorn.id', data.entorn?.id),
-            )}
-        }
-        initialData={data}
+            return salutEntornAppFilterBuilder(data);
+        }}
+        initialData={initialData}
         apiRef={apiRef}
         onSpringFilterChange={onSpringFilterChange}
         buttonControlled
@@ -258,13 +263,27 @@ const SalutEntornAppFilter: React.FC<any> = (props:any) => {
     </MuiFilter>
 }
 
+const FILTER_DATA_LOCALSTORAGE_KEY = 'filterDataSalut';
+
 const useSalutEntornAppFilter = () => {
     const { t } = useTranslation()
 
+    const getInitialData = () => {
+        const storedValue = localStorage.getItem(FILTER_DATA_LOCALSTORAGE_KEY);
+        return storedValue ? JSON.parse(storedValue) : {};
+    }
+
     const [open, setOpen] = React.useState<boolean>(false);
-    const [springFilter, setSpringFilter] = React.useState<string>('');
-    const [data, setData] = React.useState<any>({});
+    const [data, setData] = React.useState<any>(getInitialData);
+    const [springFilter, setSpringFilter] = React.useState<string>(
+        data != null ? salutEntornAppFilterBuilder(data) : ''
+    );
     const filterRef = useFilterApiRef();
+
+    const onFilterDataChange = (data: any) => {
+        setData(data);
+        localStorage.setItem(FILTER_DATA_LOCALSTORAGE_KEY, JSON.stringify(data));
+    }
 
     const cercar = ()=> {
         filterRef?.current?.filter?.()
@@ -310,7 +329,7 @@ const useSalutEntornAppFilter = () => {
             if (value === 'search') cercar();
         }}
     >
-        <SalutEntornAppFilter data={data} setData={setData} apiRef={filterRef} onSpringFilterChange={setSpringFilter}/>
+        <SalutEntornAppFilter initialData={data} setData={onFilterDataChange} apiRef={filterRef} onSpringFilterChange={setSpringFilter}/>
     </MuiDialog>
 
     return {
