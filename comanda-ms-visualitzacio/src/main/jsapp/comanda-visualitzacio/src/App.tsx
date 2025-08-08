@@ -14,12 +14,47 @@ export const App: React.FC = () => {
         icon: 'monitor_heart',
         resourceName: 'salut',
     };
-    const menuEstadistiques = {
+    const menuEstadistiquesReduit = {
         id: 'estadistiques',
         title: t('menu.estadistiques'),
         to: '/estadistiques',
         icon: 'bar_chart',
-        resourceName: 'fet',
+        resourceName: 'dashboard',
+    }
+    const menuEstadistiques = {
+        id: 'estadistiques',
+        title: t('menu.estadistiques'),
+        icon: 'bar_chart',
+        children: [
+            {
+                id: 'estadistiques',
+                title: t('menu.estadistiques'),
+                to: '/estadistiques',
+                icon: 'bar_chart',
+                resourceName: 'dashboard',
+            },
+            {
+                id: 'estadisticaWidget',
+                title: t('menu.widget'),
+                to: '/estadisticaWidget',
+                icon: 'widgets',
+                resourceName: 'dashboard',
+            },
+            {
+                id: 'dashboard',
+                title: t('menu.dashboard'),
+                to: '/dashboard',
+                icon: 'dashboardCustomize',
+                resourceName: 'dashboard',
+            },
+            {
+                id: 'calendari',
+                title: t('menu.calendari'),
+                to: '/calendari',
+                icon: 'calendar_month',
+                resourceName: 'fet',
+            },
+        ],
     };
     const menuConfiguracio = {
         id: 'configuracio',
@@ -54,20 +89,6 @@ export const App: React.FC = () => {
                 icon: 'integration_instructions',
                 resourceName: 'integracio',
             },
-            {
-                id: 'estadisticaWidget',
-                title: t('menu.widget'),
-                to: '/estadisticaWidget',
-                icon: 'widgets',
-                resourceName: 'entorn',
-            },
-            {
-                id: 'dashboard',
-                title: t('menu.dashboard'),
-                to: '/dashboard',
-                icon: 'dashboardCustomize',
-                resourceName: 'entorn',
-            },
         ]
     };
     const menuMonitor = {
@@ -93,7 +114,7 @@ export const App: React.FC = () => {
     ];
     const appMenuEntries = [
         menuSalut,
-        menuEstadistiques
+        menuEstadistiquesReduit
     ];
     return (
         <BaseApp

@@ -21,6 +21,7 @@ const translationEn = {
         dashboard: "Dashboards",
         cache: "Cache management",
         integracio: "Integrations",
+        calendari: "Calendar",
     },
     page: {
         salut: {

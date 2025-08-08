@@ -21,6 +21,7 @@ const translationCa = {
         dashboard: "Taulers de control",
         cache: "Gestió de cachés",
         integracio: "Integracions",
+        calendari: "Calendari",
     },
     page: {
         salut: {

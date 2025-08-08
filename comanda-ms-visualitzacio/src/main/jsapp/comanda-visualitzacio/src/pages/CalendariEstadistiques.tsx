@@ -5,7 +5,7 @@ import { useBaseAppContext, GridPage, useResourceApiService } from 'reactlib';
 import {useState, useEffect, useCallback} from "react";
 import dayjs from 'dayjs';
 import '../fullcalendar-custom.css';
-import {Button, Dialog, FormControl, InputLabel, MenuItem, Select, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper} from "@mui/material";
+import {Button, Dialog, FormControl, InputLabel, MenuItem, Select, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Icon, useTheme, useMediaQuery, Tooltip} from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import DialogContent from "@mui/material/DialogContent";
@@ -15,6 +15,7 @@ import DialogActions from "@mui/material/DialogActions";
 import ErrorIcon from '@mui/icons-material/Error';
 import {useTranslation} from "react-i18next";
 import * as React from "react";
+import ReactDOM from 'react-dom/client';
 
 interface ErrorInfo {
     date: string;
@@ -49,6 +50,68 @@ interface DadesDia {
     indicadorsJson: Record<string, number>;
     entornAppId: number;
 }
+
+interface CalendarStatusButtonProps {
+  hasError: boolean;
+  isLoading: boolean;
+  esDisponible: boolean;
+}
+
+export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
+  hasError,
+  isLoading,
+  esDisponible
+}) => {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('lg'));
+
+  const icon = hasError
+    ? <Icon>error</Icon>
+    : esDisponible
+    ? <Icon>check_circle</Icon>
+    : <Icon>download</Icon>;
+
+  const label = hasError
+    ? t('calendari.error_dades')
+    : esDisponible
+    ? t('calendari.dades_disponibles')
+    : t('calendari.obtenir_dades');
+
+  const tooltip = hasError
+    ? t('calendari.error_dades_tooltip')
+    : esDisponible
+    ? t('calendari.dades_disponibles_tooltip')
+    : t('calendari.obtenir_dades_tooltip');
+
+  const color: 'primary' | 'error' | 'success' = hasError
+    ? 'error'
+    : esDisponible
+    ? 'success'
+    : 'primary';
+
+  return (
+    <>
+        <Tooltip title={tooltip}>
+        <Button
+            variant="outlined"
+            color={color}
+            size="small"
+            startIcon={ isLoading ? ( <CircularProgress size={16} color="inherit" /> ) : ( icon ) }
+            disabled={isLoading}
+            sx={{
+            whiteSpace: 'nowrap',
+            textTransform: 'none',
+            width: '100%',
+            }}
+        >
+            {!isSmallScreen && label}
+        </Button>
+        </Tooltip>
+    </>
+  );
+
+};
 
 const CalendariEstadistiques: React.FC = () => {
     const { t } = useTranslation();
@@ -117,6 +180,8 @@ const CalendariEstadistiques: React.FC = () => {
                 } else {
                     setEmptyDates(prev => prev.filter(date => date !== additionalData.dataInici));
                 }
+            } else {
+                setEmptyDates(prev => [...prev, additionalData.dataInici]);
             }
             console.log('Dades buides:', emptyDates);
             
@@ -342,6 +407,7 @@ const CalendariEstadistiques: React.FC = () => {
                         esDisponible: false,
                         hasError: false,
                         isLoading: true,
+                        hasContent: true,
                         content: `<div class="material-button-container">
                             <div class="loading-indicator">
                                 <div class="spinner"></div>
@@ -373,13 +439,14 @@ const CalendariEstadistiques: React.FC = () => {
                 {
                     title: t('calendari.obtenir_dades'),
                     date,
-                    classNames: ['cal-event-download', 'material-download-button'],
+                    classNames: ['cal-event-download'],
                     textColor: '#888',
                     backgroundColor: '#fff',
                     extendedProps: {
                         esDisponible: false,
                         hasError: false,
                         isLoading: false,
+                        hasContent: true,
                         content: `<div class="material-button-container">
                             <button class="material-download-button" title="${t('calendari.obtenir_dades_tooltip')}">
                                 <span class="material-icon">download</span>
@@ -416,6 +483,7 @@ const CalendariEstadistiques: React.FC = () => {
                         esDisponible: hasDades,
                         hasError: hasError,
                         isLoading: false,
+                        hasContent: true,
                         content: hasError
                             ? `<div class="material-button-container">
                                 <button class="material-error-button" title="${t('calendari.error_dades_tooltip')}">
@@ -534,7 +602,18 @@ const CalendariEstadistiques: React.FC = () => {
                     events={(entornAppId !== '' && !datesDisponiblesError) ? events.filter(event => event !== null) : []}
                     eventClick={handleEventClick}
                     eventContent={(arg) => {
-                        // If the event has HTML content, render it
+                        //If the event has hasContent true, render StatusButton
+                        if (arg.event.extendedProps.hasContent) {
+                            const container = document.createElement('div');
+                            const root = ReactDOM.createRoot(container);
+                            root.render(<CalendarStatusButton  
+                                hasError={arg.event.extendedProps.hasError}
+                                esDisponible={arg.event.extendedProps.esDisponible}
+                                isLoading={arg.event.extendedProps.isLoading}
+                            />);
+                            return { domNodes: [container] };
+                        }
+                        //If the event has HTML content, render it
                         if (arg.event.extendedProps.content) {
                             const htmlContent = document.createElement('div');
                             htmlContent.innerHTML = arg.event.extendedProps.content;
