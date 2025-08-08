@@ -16,11 +16,14 @@ import {
 } from 'reactlib';
 import { Box } from '@mui/material';
 import Grid from "@mui/material/Grid";
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 export type SalutToolbarProps = {
     title: string;
     subtitle?: string;
     state?: React.ReactElement;
+    hideFilter?: boolean;
     ready: boolean;
     onRefresh: (dataInici: string, dataFi: string, agrupacio: string, execAction?: boolean, springFilter?: string) => void;
     goBackActive?: boolean;
@@ -344,6 +347,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const {
         title,
         subtitle,
+        hideFilter,
         state,
         ready,
         onRefresh,
@@ -419,15 +423,23 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             position: 2,
             element: (
                 <>
-                {state == null && <IconButton onClick={()=>handleOpen()} color={springFilter ? 'primary' : 'default'}><Icon>filter_alt</Icon></IconButton>}
-                <IconButton
-                    onClick={() => refresh(true)}
-                    title={t('page.salut.refrescar')}
-                    disabled={!ready}
-                    loading={appDataLoading}
-                >
-                    <Icon>refresh</Icon>
-                </IconButton>
+                    {!hideFilter && (
+                        <IconButton onClick={() => handleOpen()}>
+                            {springFilter ? (
+                                <FilterAltIcon fontSize="small" />
+                            ) : (
+                                <FilterAltOutlinedIcon fontSize="small" />
+                            )}
+                        </IconButton>
+                    )}
+                    <IconButton
+                        onClick={() => refresh(true)}
+                        title={t('page.salut.refrescar')}
+                        disabled={!ready}
+                        loading={appDataLoading}
+                    >
+                        <Icon>refresh</Icon>
+                    </IconButton>
                 </>
             ),
         },

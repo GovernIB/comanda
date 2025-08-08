@@ -472,6 +472,7 @@ const SalutAppInfo: React.FC = () => {
     const toolbar = <SalutToolbar
         title={entornApp != null ? `${entornApp.app.description} - ${entornApp.entorn.description}` : ""}
         subtitle={entornApp?.versio ? 'v' + entornApp?.versio : undefined}
+        hideFilter
         state={toolbarState}
         ready={ready}
         onRefresh={entornAppDataRefresh}
