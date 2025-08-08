@@ -51,8 +51,8 @@ export const ErrorBoundaryFallback = () => {
 interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
     entornApp: any;
-    estats: Record<string, any>;
-    latencies: Record<string, any>;
+    estats: Record<string, any> | null;
+    latencies: any[] | null;
     salutCurrentApp: any;
     reportParams: any;
 }
@@ -60,8 +60,8 @@ interface AppDataState {
 const appDataStateInitialValue = {
     loading: null,
     entornApp: null,
-    estats: {},
-    latencies: {},
+    estats: null,
+    latencies: null,
     salutCurrentApp: null,
     reportParams: null,
 };
@@ -85,51 +85,49 @@ const useAppData = (id: any) => {
             agrupacio,
         };
         if (ready) {
-            setAppDataState({
-                ...appDataStateInitialValue,
+            setAppDataState((prevState) => ({
+                ...prevState,
                 loading: true,
-                reportParams,
-            });
+            }));
             (async function () {
                 const entornApp = await entornAppGetOne(id);
-                setAppDataState((state) => ({
-                    ...state,
-                    entornApp,
-                }))
                 const entornAppId = entornApp.id;
                 const reportData = {
                     ...reportParams,
                     entornAppId,
                 };
-
-                const estatReportItems = await salutApiReport(null, { code: 'estat', data: reportData })
-                setAppDataState((state) => ({
-                    ...state,
-                    estats: { [entornAppId]: estatReportItems },
-                }))
-
-                const latenciaReportItems = await salutApiReport(null, { code: 'latencia', data: reportData })
-                setAppDataState((state) => ({
-                    ...state,
-                    latencies: latenciaReportItems as any[],
-                }))
+                const estatReportItems = await salutApiReport(null, {
+                    code: 'estat',
+                    data: reportData,
+                });
+                const latenciaReportItems = await salutApiReport(null, {
+                    code: 'latencia',
+                    data: reportData,
+                });
                 const findArgs = {
                     page: 0,
                     size: 1,
                     sorts: ['data,desc'],
-                    perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES', 'SAL_CONTEXTS', 'SAL_MISSATGES', 'SAL_DETALLS'],
+                    perspectives: [
+                        'SAL_INTEGRACIONS',
+                        'SAL_SUBSISTEMES',
+                        'SAL_CONTEXTS',
+                        'SAL_MISSATGES',
+                        'SAL_DETALLS',
+                    ],
                     filter: 'entornAppId : ' + entornAppId,
                 };
                 const { rows } = await salutApiFind(findArgs);
                 const salutCurrentApp = rows?.[0];
                 setAppDataState((state) => ({
                     ...state,
-                    salutCurrentApp,
-                }))
-                setAppDataState((state) => ({
-                    ...state,
                     loading: false,
-                }))
+                    entornApp,
+                    estats: { [entornAppId]: estatReportItems },
+                    latencies: latenciaReportItems as any[],
+                    salutCurrentApp,
+                    reportParams,
+                }));
             })();
         }
     }
@@ -477,51 +475,56 @@ const SalutAppInfo: React.FC = () => {
         state={toolbarState}
         ready={ready}
         onRefresh={entornAppDataRefresh}
-        goBackActive />;
-    const loadingComponent = loading ? <Box
-        sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: 'calc(100vh - 80px)',
-        }}>
-        <CircularProgress size={100} />
-    </Box> : null;
-    const detailsComponent = (
-        <Grid container spacing={2}>
-            <Grid size={{sm: 12, lg: 3}}>
-                <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
-            </Grid>
-            <Grid size={{sm: 12, lg: 9}}>
-                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                    {dataLoaded && (
-                        <LatenciaEstatsChart
-                            dataInici={reportParams.dataInici}
-                            agrupacio={reportParams.agrupacio}
-                            latencies={latencies}
-                            estats={estats}
-                        />
-                    )}
-                </ErrorBoundary>
-            </Grid>
-            <Grid size={{sm: 12, lg: 3}}>
-                <DetallInfo salutCurrentApp={salutCurrentApp} />
-            </Grid>
-            <Grid size={{sm: 12, lg: 9}}>
-                <Contexts salutCurrentApp={salutCurrentApp} />
-            </Grid>
-            <Grid size={{sm: 12, lg:6}}>
-                <Integracions salutCurrentApp={salutCurrentApp} />
-            </Grid>
-            <Grid size={{sm: 12, lg:6}}>
-                <Subsistemes salutCurrentApp={salutCurrentApp} />
-            </Grid>
-        </Grid>
+        goBackActive
+        appDataLoading={!dataLoaded}
+    />;
+    return (
+        <BasePage toolbar={toolbar}>
+            {(salutCurrentApp == null || entornApp == null) ? (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 'calc(100vh - 80px)',
+                    }}
+                >
+                    <CircularProgress size={100} />
+                </Box>
+            ) : (
+                <Grid container spacing={2}>
+                    <Grid size={{ sm: 12, lg: 3 }}>
+                        <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 9 }}>
+                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                            {reportParams != null && latencies != null && estats != null && (
+                                <LatenciaEstatsChart
+                                    dataInici={reportParams.dataInici}
+                                    agrupacio={reportParams.agrupacio}
+                                    latencies={latencies}
+                                    estats={estats}
+                                />
+                            )}
+                        </ErrorBoundary>
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 3 }}>
+                        <DetallInfo salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 9 }}>
+                        <Contexts salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Integracions salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Subsistemes salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                </Grid>
+            )}
+        </BasePage>
     );
-    return <BasePage toolbar={toolbar}>
-        {loading ? loadingComponent : detailsComponent}
-    </BasePage>;
 }
 
 export default SalutAppInfo;
