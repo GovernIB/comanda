@@ -1,7 +1,7 @@
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { useBaseAppContext, GridPage, useResourceApiService } from 'reactlib';
+import { useBaseAppContext, GridPage, useResourceApiService, Toolbar } from 'reactlib';
 import {useState, useEffect, useCallback} from "react";
 import dayjs from 'dayjs';
 import '../fullcalendar-custom.css';
@@ -557,38 +557,71 @@ const CalendariEstadistiques: React.FC = () => {
                     </Box>
                 </Box>
             )}
-            
-            <Box className="filter-controls-container">
-                <FormControl sx={{ minWidth: 250 }}>
-                    <InputLabel id="entorn-app-select-label">{t('calendari.seleccionar_entorn_app')}</InputLabel>
-                    <Select
-                        labelId="entorn-app-select-label"
-                        value={entornAppId}
-                        label={t('calendari.seleccionar_entorn_app')}
-                        onChange={(e) => {
-                            const newEntornAppId = e.target.value as number | '';
-                            setEntornAppId(newEntornAppId);
-                            // Netejar les dates disponibles quan canvia l'entorn
-                            setDatesAmbDades([]);
-                            // Si s'ha seleccionat un entorn, carregar les dates disponibles
-                            if (newEntornAppId !== '') {
-                                obtenirDatesDisponibles(newEntornAppId);
-                            }
-                        }}
-                    >
-                        <MenuItem value="">{t('calendari.seleccionar')}</MenuItem>
-                        {entornApps.map((entornApp) => (
-                            <MenuItem key={entornApp.id} value={entornApp.id}>
-                                {entornApp.app.description} - {entornApp.entorn.description}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                {/*{loading && <CircularProgress size={24} />}*/}
-            </Box>
+            <Toolbar
+                title={t('menu.calendari')} upperToolbar
+                elementsWithPositions={[
+                    {
+                        position: 2,
+                        element: <FormControl sx={{ minWidth: 250 }}>
+                            <InputLabel size={"small"} id="entorn-app-select-label">{t('calendari.seleccionar_entorn_app')}</InputLabel>
+                            <Select
+                                labelId="entorn-app-select-label"
+                                value={entornAppId}
+                                size={"small"}
+                                label={t('calendari.seleccionar_entorn_app')}
+                                onChange={(e) => {
+                                    const newEntornAppId = e.target.value as number | '';
+                                    setEntornAppId(newEntornAppId);
+                                    // Netejar les dates disponibles quan canvia l'entorn
+                                    setDatesAmbDades([]);
+                                    // Si s'ha seleccionat un entorn, carregar les dates disponibles
+                                    if (newEntornAppId !== '') {
+                                        obtenirDatesDisponibles(newEntornAppId);
+                                    }
+                                }}
+                            >
+                                <MenuItem value="">{t('calendari.seleccionar')}</MenuItem>
+                                {entornApps.map((entornApp) => (
+                                    <MenuItem key={entornApp.id} value={entornApp.id}>
+                                        {entornApp.app.description} - {entornApp.entorn.description}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    }
+                ]}
+            />
 
             {/* Sempre mostrem el calendari, però amb un missatge d'ajuda si no hi ha entorn seleccionat */}
-            {(
+            <Box
+                sx={{
+                    mt: 2,
+                    height: '100%',
+                    '& .fc-header-toolbar': {
+                        display: 'flex !important',
+                        justifyContent: 'space-between !important',
+                        alignItems: 'center',
+                    },
+
+                    /* Asegurar que cada chunk se alinee correctamente */
+                    '& .fc-toolbar-chunk': {
+                        display: 'flex',
+                        alignItems: 'center',
+                        alignSelf: 'center',
+                    },
+                    /* Cuando la pantalla sea estrecha */
+                    '@media (max-width: 768px)': {
+                        '.fc-header-toolbar': {
+                            flexDirection: 'column !important',
+                            alignItems: 'stretch', /* para que ocupen todo el ancho */
+                            gap: '8px', /* separación vertical */
+                        },
+                        '.fc-toolbar-chunk': {
+                            justifyContent: 'center', /* opcional, centra cada bloque */
+                        }
+                    }
+                }}
+            >
                 <FullCalendar
                     locale={currentLanguage}
                     firstDay={1}
@@ -606,7 +639,7 @@ const CalendariEstadistiques: React.FC = () => {
                         if (arg.event.extendedProps.hasContent) {
                             const container = document.createElement('div');
                             const root = ReactDOM.createRoot(container);
-                            root.render(<CalendarStatusButton  
+                            root.render(<CalendarStatusButton
                                 hasError={arg.event.extendedProps.hasError}
                                 esDisponible={arg.event.extendedProps.esDisponible}
                                 isLoading={arg.event.extendedProps.isLoading}
@@ -677,13 +710,16 @@ const CalendariEstadistiques: React.FC = () => {
                             }
                         }
                     }}
+                    buttonText={{
+                        today: t('calendari.today'),
+                    }}
                     headerToolbar={{
-                        left: 'prev,next today',
+                        start: 'prev,next today',
                         center: 'title',
-                        right: 'monthButton intervalButton'
+                        end: 'monthButton intervalButton'
                     }}
                 />
-            )}
+            </Box>
 
             {/* Dialog per carregar dades per interval */}
             <Dialog open={obrirDialog} onClose={() => setObrirDialog(false)}>

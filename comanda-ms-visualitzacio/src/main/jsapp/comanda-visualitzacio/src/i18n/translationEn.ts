@@ -379,6 +379,7 @@ const translationEn = {
         seleccionar_entorn_app_primer: "Select firs an application environment",
         carregar_interval: "Load data by interval",
         carregar_mes_actual: "Load data for the current month",
+        today: "Hoy",
         data_inici: "Start date",
         data_fi: "End date",
         cancelar: "Cancel",

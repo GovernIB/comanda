@@ -379,6 +379,7 @@ const translationCa = {
         seleccionar_entorn_app_primer: "Seleccioneu primer un entorn d'aplicació",
         carregar_interval: "Carregar dades per interval",
         carregar_mes_actual: "Carregar dades del mes actual",
+        today: "Avui",
         data_inici: "Data inici",
         data_fi: "Data fi",
         cancelar: "Cancel·lar",

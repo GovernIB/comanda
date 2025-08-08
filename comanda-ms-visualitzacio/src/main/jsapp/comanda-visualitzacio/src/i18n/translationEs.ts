@@ -379,6 +379,7 @@ const translationEs = {
         seleccionar_entorn_app_primer: "Seleccione primero un entorno de aplicación",
         carregar_interval: "Cargar datos por intervalo",
         carregar_mes_actual: "Cargar datos del mes actual",
+        today: "Today",
         data_inici: "Fecha inicio",
         data_fi: "Fecha fin",
         cancelar: "Cancelar",
