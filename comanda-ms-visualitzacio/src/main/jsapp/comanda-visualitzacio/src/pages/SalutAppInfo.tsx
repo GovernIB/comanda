@@ -90,33 +90,28 @@ const useAppData = (id: any) => {
                 loading: true,
                 reportParams,
             });
-            let entornAppId: any;
-            entornAppGetOne(id).then((entornApp) => {
+            (async function () {
+                const entornApp = await entornAppGetOne(id);
                 setAppDataState((state) => ({
                     ...state,
                     entornApp,
                 }))
-                entornAppId = entornApp.id;
-            }).then(() => {
+                const entornAppId = entornApp.id;
                 const reportData = {
                     ...reportParams,
                     entornAppId,
                 };
-                return salutApiReport(null, { code: 'estat', data: reportData })
-            }).then((items) => {
+
+                const estatReportItems = await salutApiReport(null, { code: 'estat', data: reportData })
                 setAppDataState((state) => ({
                     ...state,
-                    estats: { [entornAppId]: items },
+                    estats: { [entornAppId]: estatReportItems },
                 }))
-                const reportData = {
-                    ...reportParams,
-                    entornAppId
-                };
-                return salutApiReport(null, { code: 'latencia', data: reportData });
-            }).then((items) => {
+
+                const latenciaReportItems = await salutApiReport(null, { code: 'latencia', data: reportData })
                 setAppDataState((state) => ({
                     ...state,
-                    latencies: items,
+                    latencies: latenciaReportItems as any[],
                 }))
                 const findArgs = {
                     page: 0,
@@ -125,19 +120,17 @@ const useAppData = (id: any) => {
                     perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES', 'SAL_CONTEXTS', 'SAL_MISSATGES', 'SAL_DETALLS'],
                     filter: 'entornAppId : ' + entornAppId,
                 };
-                return salutApiFind(findArgs);
-            }).then(({ rows }) => {
+                const { rows } = await salutApiFind(findArgs);
                 const salutCurrentApp = rows?.[0];
                 setAppDataState((state) => ({
                     ...state,
                     salutCurrentApp,
                 }))
-            }).finally(() => {
                 setAppDataState((state) => ({
                     ...state,
                     loading: false,
                 }))
-            });
+            })();
         }
     }
     return {
