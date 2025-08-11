@@ -9,6 +9,7 @@
 	<modules>
 		<module>comanda-bom</module>
 		<module>comanda-bom-ms</module>
+		<module>comanda-lib</module>
 		<module>comanda-ms-common</module>
 		<module>comanda-ms-configuracio</module>
 		<module>comanda-ms-salut</module>
@@ -18,14 +19,13 @@
 		<module>comanda-ms-gateway</module>
 		<module>comanda-ms-client</module>
         <module>comanda-ms-broker</module>
-		<module>comanda-back</module>
-		<module>comanda-ear</module>
-		<module>comanda-lib</module>
-		<module>comanda-api-interna</module>
 		<module>comanda-ms-tasques</module>
 		<module>comanda-ms-avisos</module>
 		<module>comanda-ms-permisos</module>
 		<module>comanda-ms-usuaris</module>
+		<module>comanda-back</module>
+		<module>comanda-api-interna</module>
+		<module>comanda-ear</module>
 	</modules>
 	<build>
 		<plugins>

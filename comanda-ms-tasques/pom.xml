@@ -6,12 +6,12 @@
     <parent>
         <groupId>es.caib.comanda</groupId>
         <artifactId>comanda-bom-ms</artifactId>
-        <version>0.0.1</version>
+        <version>0.1.0</version>
         <relativePath>../comanda-bom-ms/pom.xml</relativePath>
     </parent>
 
     <artifactId>comanda-ms-tasques</artifactId>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
 
     <dependencies>
         <dependency>
@@ -27,6 +27,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>comanda-ms-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-lib</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
