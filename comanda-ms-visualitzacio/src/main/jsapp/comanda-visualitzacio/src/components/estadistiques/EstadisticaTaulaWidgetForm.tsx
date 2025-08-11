@@ -101,7 +101,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                     <Grid size={6}><FormField name="titolAgrupament" /></Grid>
                     <Grid size={12}>
                         <ColumnesTable name="columnes"
-                                       label="Columnes de la taula"
+                                       label={t('page.widget.taula.tableCols')}
                                        value={data.columnes}
                                        mostrarUnitat={true}
                                        onChange={(value) => {
@@ -115,10 +115,10 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
             </Grid>
 
             <Grid id={'cv'} size={{xs: 12, sm: 4}}>
-                <VisualAttributesPanel widgetType="taula" title="Configuració visual">
+                <VisualAttributesPanel widgetType="taula" title={t('page.widget.form.configVisual')}>
                     {/* Preview inside the panel */}
                     <Box sx={{ p: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 2 }}>Previsualització</Typography>
+                        <Typography variant="subtitle2" sx={{ mb: 2 }}>{t('page.widget.form.preview')}</Typography>
                         <Box sx={{ height: '240px' }}>
                             <TaulaWidgetVisualization
                                 preview={true}
@@ -136,51 +136,51 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
     function renderTaulaFormFields() {
         return (
             <Grid container spacing={2}>
-                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 0 }}>Configuració general</Typography></Grid>
-                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorText" label="Color de text" type="color" required={false} onChange={generateOnChange("colorText", "atributsVisuals")} /></Grid>
-                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorFons" label="Color de fons" type="color" required={false} onChange={generateOnChange("colorFons", "atributsVisuals")} /></Grid>
-                <Grid size={12}><FormField name="mostrarVora" label="Mostrar vora" type="checkbox" onChange={generateOnChange("mostrarVora", "atributsVisuals")} /></Grid>
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 0 }}>{t('page.widget.form.configGeneral')}</Typography></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorText" label={t('page.widget.atributsVisuals.colorText')} type="color" required={false} onChange={generateOnChange("colorText", "atributsVisuals")} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorFons" label={t('page.widget.atributsVisuals.colorFons')} type="color" required={false} onChange={generateOnChange("colorFons", "atributsVisuals")} /></Grid>
+                <Grid size={12}><FormField name="mostrarVora" label={t('page.widget.atributsVisuals.mostrarVora')} type="checkbox" onChange={generateOnChange("mostrarVora", "atributsVisuals")} /></Grid>
                 { isMostrarVora && (
                     <>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorVora" label="Color de la vora" type="color" required={false} onChange={generateOnChange("colorVora", "atributsVisuals")} /></Grid>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleVora" label="Ample de la vora" type="number" required={false} onChange={generateOnChange("ampleVora", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorVora" label={t('page.widget.atributsVisuals.colorVora')} type="color" required={false} onChange={generateOnChange("colorVora", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleVora" label={t('page.widget.atributsVisuals.ampleVora')} type="number" required={false} onChange={generateOnChange("ampleVora", "atributsVisuals")} /></Grid>
                     </>
                 )}
-                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 0 }}>Configuració taula</Typography></Grid>
-                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorTextTaula" label="Color de text de la taula" type="color" required={false} onChange={generateOnChange("colorTextTaula", "atributsVisuals")} /></Grid>
-                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorFonsTaula" label="Color de fons de la taula" type="color" required={false} onChange={generateOnChange("colorFonsTaula", "atributsVisuals")} /></Grid>
-                <Grid size={12}><FormField name="mostrarCapcalera" label="Mostrar capçalera" type="checkbox" onChange={generateOnChange("mostrarCapcalera", "atributsVisuals")} /></Grid>
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 0 }}>{t('page.widget.form.configTaula')}</Typography></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorTextTaula" label={t('page.widget.atributsVisuals.colorTextTaula')} type="color" required={false} onChange={generateOnChange("colorTextTaula", "atributsVisuals")} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorFonsTaula" label={t('page.widget.atributsVisuals.colorFonsTaula')} type="color" required={false} onChange={generateOnChange("colorFonsTaula", "atributsVisuals")} /></Grid>
+                <Grid size={12}><FormField name="mostrarCapcalera" label={t('page.widget.atributsVisuals.mostrarCapcalera')} type="checkbox" onChange={generateOnChange("mostrarCapcalera", "atributsVisuals")} /></Grid>
                 { isMostrarCapcalera && (
                     <>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorCapcalera" label="Color de text de la capçalera" type="color" required={false} onChange={generateOnChange("colorCapcalera", "atributsVisuals")} /></Grid>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorFonsCapcalera" label="Color de fons de la capçalera" type="color" required={false} onChange={generateOnChange("colorFonsCapcalera", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorCapcalera" label={t('page.widget.atributsVisuals.colorCapcalera')} type="color" required={false} onChange={generateOnChange("colorCapcalera", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorFonsCapcalera" label={t('page.widget.atributsVisuals.colorFonsCapcalera')} type="color" required={false} onChange={generateOnChange("colorFonsCapcalera", "atributsVisuals")} /></Grid>
                     </>
                 )}
-                <Grid size={6}><FormField name="mostrarAlternancia" label="Mostrar alternança de files" type="checkbox" onChange={generateOnChange("mostrarAlternancia", "atributsVisuals")} /></Grid>
+                <Grid size={6}><FormField name="mostrarAlternancia" label={t('page.widget.atributsVisuals.mostrarAlternancia')} type="checkbox" onChange={generateOnChange("mostrarAlternancia", "atributsVisuals")} /></Grid>
                 { isMostrarAlternancia && (
                     <>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorAlternancia" label="Color d'alternança" type="color" required={false} onChange={generateOnChange("colorAlternancia", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorAlternancia" label={t('page.widget.atributsVisuals.colorAlternancia')} type="color" required={false} onChange={generateOnChange("colorAlternancia", "atributsVisuals")} /></Grid>
                     </>
                 )}
-                <Grid size={12}><FormField name="mostrarVoraTaula" label="Mostrar vora de taula" type="checkbox" onChange={generateOnChange("mostrarVoraTaula", "atributsVisuals")} /></Grid>
+                <Grid size={12}><FormField name="mostrarVoraTaula" label={t('page.widget.atributsVisuals.mostrarVoraTaula')} type="checkbox" onChange={generateOnChange("mostrarVoraTaula", "atributsVisuals")} /></Grid>
                 { isMostrarVoraTaula && (
                 <>
-                    <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorVoraTaula" label="Color de la vora" type="color" required={false} onChange={generateOnChange("colorVoraTaula", "atributsVisuals")} /></Grid>
-                    <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleVoraTaula" label="Ample de la vora" type="number" required={false} onChange={generateOnChange("ampleVoraTaula", "atributsVisuals")} /></Grid>
+                    <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorVoraTaula" label={t('page.widget.atributsVisuals.colorVoraTaula')} type="color" required={false} onChange={generateOnChange("colorVoraTaula", "atributsVisuals")} /></Grid>
+                    <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleVoraTaula" label={t('page.widget.atributsVisuals.ampleVoraTaula')} type="number" required={false} onChange={generateOnChange("ampleVoraTaula", "atributsVisuals")} /></Grid>
                 </>
                 )}
-                <Grid size={12}><FormField name="mostrarSeparadorHoritzontal" label="Mostrar separador horitzontal" type="checkbox" onChange={generateOnChange("mostrarSeparadorHoritzontal", "atributsVisuals")} /></Grid>
+                <Grid size={12}><FormField name="mostrarSeparadorHoritzontal" label={t('page.widget.atributsVisuals.mostrarSeparadorHoritzontal')} type="checkbox" onChange={generateOnChange("mostrarSeparadorHoritzontal", "atributsVisuals")} /></Grid>
                 { isMostrarSeparadorHoritzontal && (
                     <>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorSeparadorHoritzontal" label="Color del separador" type="color" required={false} onChange={generateOnChange("colorSeparadorHoritzontal", "atributsVisuals")} /></Grid>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleSeparadorHoritzontal" label="Ample del separador" type="number" required={false} onChange={generateOnChange("ampleSeparadorHoritzontal", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorSeparadorHoritzontal" label={t('page.widget.atributsVisuals.colorSeparadorHoritzontal')} type="color" required={false} onChange={generateOnChange("colorSeparadorHoritzontal", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleSeparadorHoritzontal" label={t('page.widget.atributsVisuals.ampleSeparadorHoritzontal')} type="number" required={false} onChange={generateOnChange("ampleSeparadorHoritzontal", "atributsVisuals")} /></Grid>
                     </>
                 )}
-                <Grid size={12}><FormField name="mostrarSeparadorVertical" label="Mostrar separador vertical" type="checkbox" onChange={generateOnChange("mostrarSeparadorVertical", "atributsVisuals")} /></Grid>
+                <Grid size={12}><FormField name="mostrarSeparadorVertical" label={t('page.widget.atributsVisuals.mostrarSeparadorVertical')} type="checkbox" onChange={generateOnChange("mostrarSeparadorVertical", "atributsVisuals")} /></Grid>
                 { isMostrarSeparadorVertical && (
                     <>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorSeparadorVertical" label="Color del separador" type="color" required={false} onChange={generateOnChange("colorSeparadorVertical", "atributsVisuals")} /></Grid>
-                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleSeparadorVertical" label="Ample del separador" type="number" required={false} onChange={generateOnChange("ampleSeparadorVertical", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="colorSeparadorVertical" label={t('page.widget.atributsVisuals.colorSeparadorVertical')} type="color" required={false} onChange={generateOnChange("colorSeparadorVertical", "atributsVisuals")} /></Grid>
+                        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="ampleSeparadorVertical" label={t('page.widget.atributsVisuals.ampleSeparadorVertical')} type="number" required={false} onChange={generateOnChange("ampleSeparadorVertical", "atributsVisuals")} /></Grid>
                     </>
                 )}
                 {/*<Grid size={12}><FormField name="paginada" label="Taula paginada" type="checkbox" onChange={generateOnChange("paginada", "atributsVisuals")} /></Grid>*/}
@@ -203,9 +203,9 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                     <Typography variant="body2" color="#b71c1c">(Pendent de desenvolupament)</Typography>
                 </Grid>
 
-                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració de la mida de font</Typography></Grid>
-                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontTitol" label={"Mida de la font del títol"} type="number" required={false} /></Grid>
-                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontDescripcio" label={"Mida de la font de la descripció"} type="number" required={false} /></Grid>
+                <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t('page.widget.form.configFont')}</Typography></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontTitol" label={t('page.widget.atributsVisuals.midaFontTitol')} type="number" required={false} /></Grid>
+                <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="midaFontDescripcio" label={t('page.widget.atributsVisuals.midaFontDescripcio')} type="number" required={false} /></Grid>
             </Grid>
         );
     }

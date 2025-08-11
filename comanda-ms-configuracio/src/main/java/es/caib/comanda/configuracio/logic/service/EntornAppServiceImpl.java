@@ -1,40 +1,44 @@
 package es.caib.comanda.configuracio.logic.service;
 
-import es.caib.comanda.client.EstadisticaServiceClient;
-import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.logic.intf.model.App;
-import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
-import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
+import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppParamAction;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppFilter;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
+import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
 import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
+import es.caib.comanda.configuracio.persist.repository.ContextRepository;
+import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 
 /**
  * Implementació del servei de gestió d'aplicacions per entorn.
@@ -42,31 +46,24 @@ import java.util.stream.Collectors;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, Long, EntornAppEntity> implements EntornAppService {
 
-    @Autowired
-    private AppIntegracioRepository appIntegracioRepository;
-    @Autowired
-    private SubsistemaRepository subsistemaRepository;
-    @Autowired
-    private EntornAppRepository entornAppRepository;
-    @Autowired
-    private AppInfoHelper appInfoHelper;
-    @Autowired
-    private HttpAuthorizationHeaderHelper keycloakHelper;
-    @Autowired
-    private SalutServiceClient salutServiceClient;
-    @Autowired
-    private EstadisticaServiceClient estadisticaServiceClient;
-
-    @Autowired
-    private ConfiguracioSchedulerService schedulerService;
+    private final AppIntegracioRepository appIntegracioRepository;
+    private final SubsistemaRepository subsistemaRepository;
+    private final ContextRepository contextRepository;
+    private final EntornAppRepository entornAppRepository;
+    private final AppInfoHelper appInfoHelper;
+    private final CacheHelper cacheHelper;
+    private final ConfiguracioSchedulerService schedulerService;
+    private final RestTemplate restTemplate;
 
     @PostConstruct
     public void init() {
         register(EntornApp.ENTORN_APP_ACTION_REFRESH, new EntornAppServiceImpl.RefreshAction(entornAppRepository, appInfoHelper));
         register(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService));
+        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
     }
 
     @Override
@@ -90,6 +87,19 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                             s.isActiu(),
                             null)).collect(Collectors.toList()));
         }
+        List<AppContextEntity> contexts = contextRepository.findByEntornApp(entity);
+        if (!contexts.isEmpty()) {
+            resource.setContexts(
+                    contexts.stream().map(s -> new AppContext(
+                            s.getCodi(),
+                            s.getNom(),
+                            s.getPath(),
+//                            null,
+                            (s.getManuals() != null ? s.getManuals().stream().map(m -> new AppManual(m.getNom(), m.getPath(), null)).collect(Collectors.toList()) : null),
+                            s.getApi(),
+                            s.isActiu(),
+                            null)).collect(Collectors.toList()));
+        }
         resource.setEntornAppDescription((resource.getApp() != null ? resource.getApp().getDescription() : "")
                 + " - "
                 + (resource.getEntorn() != null ? resource.getEntorn().getDescription() : ""));
@@ -107,28 +117,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         schedulerService.programarTasca(entity);
         appInfoHelper.programarTasquesSalutEstadistica(entity);
-    }
-
-    @Override
-    public <P extends Serializable> Map<String, Object> artifactOnChange(ResourceArtifactType type, String code, Serializable id, P previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers) throws ArtifactNotFoundException, ResourceFieldNotFoundException, AnswerRequiredException {
-        Map<String, Object> response = new HashMap<>();
-        if (type == ResourceArtifactType.FILTER && Objects.equals(code, EntornApp.ENTORN_APP_FILTER) && fieldName != null) {
-            switch (fieldName) {
-                case EntornApp.EntornAppFilter.Fields.app:
-                    response.put(EntornApp.EntornAppFilter.Fields.entornApp, null);
-                    break;
-                case EntornApp.EntornAppFilter.Fields.entornApp:
-                    var entornAppReference = (ResourceReference<EntornApp, Long>) fieldValue;
-                    if (fieldValue == null) break;
-                    var previousEntornAppFilter = (EntornApp.EntornAppFilter) previous;
-                    ResourceReference<App, Long> appReference = getOne(entornAppReference.getId(), new String[]{}).getApp();
-                    if (!Objects.equals(appReference, previousEntornAppFilter.getApp())) {
-                        response.put(EntornApp.EntornAppFilter.Fields.app, appReference);
-                    }
-                    break;
-            }
-        }
-        return response;
+        cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
     }
 
     // ACCIONS
@@ -193,6 +182,63 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public void onChange(Serializable id, EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
+        }
+    }
+
+    public static class PingUrlAction implements ActionExecutor<EntornAppEntity, String, PingUrlResponse> {
+        private final RestTemplate restTemplate;
+
+        public PingUrlAction(RestTemplate restTemplate) {
+            this.restTemplate = restTemplate;
+        }
+
+        @Override
+        public PingUrlResponse exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
+            return isEndpointReachable(params);
+        }
+
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        }
+
+        public PingUrlResponse isEndpointReachable(String url) {
+            PingUrlResponse pingUrlResponse = new PingUrlResponse();
+            pingUrlResponse.setSuccess(false);
+            String message = null;
+            try {
+                ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.GET, null, Void.class);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    pingUrlResponse.setSuccess(true);
+                    message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
+                }
+            } catch (IllegalArgumentException e) {
+                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.illegalArgument");
+            } catch (ResourceAccessException e) {
+                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.timeout");
+            } catch (HttpStatusCodeException e) {
+                int statusCode = e.getRawStatusCode();
+                switch (statusCode) {
+                    case 401:
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.401");
+                        break;
+                    case 403 :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.403");
+                        break;
+                    case 404 :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.404");
+                        break;
+                    case 500 :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.500");
+                        break;
+                    default :
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.default", statusCode, e.getStatusText());
+                        break;
+                }
+            } catch (Exception e) {
+                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.unknown", e.getClass().getSimpleName());
+            }
+            pingUrlResponse.setMessage(message);
+            return pingUrlResponse;
         }
     }
 

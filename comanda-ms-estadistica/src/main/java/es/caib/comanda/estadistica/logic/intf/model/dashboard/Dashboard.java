@@ -1,14 +1,16 @@
 package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 
+import es.caib.comanda.estadistica.logic.intf.model.widget.AppResource;
+import es.caib.comanda.estadistica.logic.intf.model.widget.EntornResource;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
@@ -35,19 +37,30 @@ import java.util.List;
 @ResourceConfig(
         descriptionField = "titol",
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true),
+			@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_ACTION, requiresId = true, formClass = Dashboard.class),
+			@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true),
+            @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.DASHBOARD_EXPORT, requiresId = true),
+//            @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.DASHBOARD_IMPORT)
         }
 )
 public class Dashboard extends BaseResource<Long> {
 
+    public final static String CLONE_ACTION = "clone_dashboard";
     public final static String WIDGETS_REPORT = "widgets_data";
+    public final static String DASHBOARD_EXPORT = "dashboard_export";
+    public final static String DASHBOARD_IMPORT = "dashboard_import";
 
     @NotNull
     @Size(max = 64)
     private String titol;
     @Size(max = 1024)
     private String descripcio;
+    protected ResourceReference<AppResource, Long> aplicacio;
+    private Long appId;
+    protected ResourceReference<EntornResource, Long> entorn;
+    private Long entornId;
 
     private List<DashboardItem> items;
-    
+    private List<DashboardTitol> titols;
+
 }

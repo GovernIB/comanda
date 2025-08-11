@@ -12,9 +12,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import InputAdornment from "@mui/material/InputAdornment";
 import Icon from "@mui/material/Icon";
+import {useTranslation} from "react-i18next";
 
 // ColorPaletteSelector.jsx
 const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
+    const { t } = useTranslation();
     const [colors, setColors] = useState(initialColors?.split(',') || []);
     const [newColor, setNewColor] = useState('#000000'); // Valor per defecte negre per al nou color
 
@@ -30,7 +32,7 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
             }
             setNewColor('#000000'); // Reseteja el selector de color per al següent afegit
         } else {
-            alert('Aquest color ja existeix a la paleta!'); // O mostra un missatge més amigable
+            alert(t('page.widget.editorPaleta.exist')); // O mostra un missatge més amigable
         }
     }, [colors, newColor, onPaletteChange]);
 
@@ -60,13 +62,13 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
     // Renderitzat del component
     return (
         <Box sx={{ py: 1, px: 2, border: '1px solid #ccc', borderRadius: 2, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>Editor de Paleta de Colors</Typography>
+            <Typography variant="subtitle2" gutterBottom>{t('page.widget.editorPaleta.title')}</Typography>
 
             {/* Secció per afegir nous colors */}
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <TextField
                     type="color"
-                    label={"Color"}
+                    label={t('page.widget.editorPaleta.color')}
                     value={newColor}
                     onChange={(e) => setNewColor(e.target.value)}
                     fullWidth
@@ -82,7 +84,7 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
                     value={newColor}
                     onChange={(e) => setNewColor(e.target.value)}
                     size="small"
-                    label="Codi HEX"
+                    label={t('page.widget.editorPaleta.hex')}
                     sx={{ flexGrow: 1 }}
                 />
                 <Button
@@ -91,17 +93,17 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
                     startIcon={<AddCircleOutlineIcon />}
                     disabled={!newColor || colors.includes(newColor)} // Deshabilita si el color està buit o duplicat
                 >
-                    Afegir
+                    {t('page.widget.action.add.label')}
                 </Button>
             </Stack>
 
             {/* Visualització de la paleta de colors actual */}
             <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
-                Paleta actual:
+                {t('page.widget.editorPaleta.palet')}
             </Typography>
             {colors.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                    No hi ha colors a la paleta.
+                    {t('page.widget.editorPaleta.empty')}
                 </Typography>
             ) : (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

@@ -82,22 +82,18 @@ const Caches: React.FC = () => {
     const columns = [
         {
             field: 'id',
-            headerName: t('page.caches.columna.codi'),
             flex: 1,
         },
         {
             field: 'descripcio',
-            headerName: t('page.caches.columna.nom'),
             flex: 3,
         },
         {
             field: 'entrades',
-            headerName: t('page.caches.columna.entrades'),
             flex: 1,
         },
         {
             field: 'mida',
-            headerName: t('page.caches.columna.mida'),
             flex: 1,
         },
     ];

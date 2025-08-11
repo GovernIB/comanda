@@ -15,17 +15,19 @@ import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
+import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +44,19 @@ public class EntornAppServiceImplTest {
 
     // Test subclass to expose protected methods
     static class TestableEntornAppServiceImpl extends EntornAppServiceImpl {
+        
+        public TestableEntornAppServiceImpl(AppIntegracioRepository appIntegracioRepository,
+                                          SubsistemaRepository subsistemaRepository,
+                                          ContextRepository contextRepository,
+                                          EntornAppRepository entornAppRepository,
+                                          AppInfoHelper appInfoHelper,
+                                          CacheHelper cacheHeper,
+                                          ConfiguracioSchedulerService schedulerService,
+                                          RestTemplate restTemplate) {
+            super(appIntegracioRepository, subsistemaRepository, contextRepository, 
+                  entornAppRepository, appInfoHelper, cacheHeper, schedulerService, restTemplate);
+        }
+
         @Override
         public void afterConversion(EntornAppEntity entity, EntornApp resource) {
             super.afterConversion(entity, resource);
@@ -63,6 +78,9 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private SubsistemaRepository subsistemaRepository;
+    
+    @Mock
+    private ContextRepository contextRepository;
 
     @Mock
     private EntornAppRepository entornAppRepository;
@@ -82,7 +100,12 @@ public class EntornAppServiceImplTest {
     @Mock
     private ConfiguracioSchedulerService schedulerService;
 
-    @InjectMocks
+    @Mock
+    private CacheHelper cacheHelper;
+
+    @Mock
+    private RestTemplate restTemplate;
+
     private TestableEntornAppServiceImpl entornAppService;
 
     private EntornAppEntity entornAppEntity;
@@ -92,6 +115,18 @@ public class EntornAppServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize the service with mocked dependencies
+        entornAppService = new TestableEntornAppServiceImpl(
+            integracioRepository,
+            subsistemaRepository,
+            contextRepository,
+            entornAppRepository,
+            appInfoHelper,
+            cacheHelper,
+            schedulerService,
+            restTemplate
+        );
+        
         // Setup test data
         AppEntity appEntity = new AppEntity();
         appEntity.setId(1L);

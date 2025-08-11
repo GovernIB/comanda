@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class SalutClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "entornAppCache", key = "#entornAppId")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
@@ -40,9 +42,14 @@ public class SalutClientHelper {
     }
 
     public List<EntornApp> entornAppFindByActivaTrue() {
+        return entornAppFindByActivaTrue("");
+    }
+
+    public List<EntornApp> entornAppFindByActivaTrue(String filter) {
+        String springFilter = (filter.isEmpty() ?"" : filter + " and ") + "activa:true and app.activa:true";
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
                 null,
-                "activa:true and app.activa:true",
+                springFilter,
                 null,
                 null,
                 "UNPAGED",

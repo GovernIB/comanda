@@ -1,19 +1,21 @@
 package es.caib.comanda.ms.configuracio.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
+import es.caib.comanda.configuracio.logic.mapper.AppExportMapper;
 import es.caib.comanda.configuracio.logic.service.AppServiceImpl;
 import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,6 +32,15 @@ public class AppServiceImplTest {
 
     // Test subclass to expose protected methods
     static class TestableAppServiceImpl extends AppServiceImpl {
+        
+        public TestableAppServiceImpl(AppInfoHelper appInfoHelper,
+                                      ConfiguracioSchedulerService schedulerService,
+                                      CacheHelper cacheHelper,
+                                      ObjectMapper objectMapper,
+                                      AppExportMapper appExportMapper) {
+            super(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper);
+        }
+        
         @Override
         public void afterConversion(AppEntity entity, App resource) {
             super.afterConversion(entity, resource);
@@ -47,7 +58,15 @@ public class AppServiceImplTest {
     @Mock
     private ConfiguracioSchedulerService schedulerService;
 
-    @InjectMocks
+    @Mock
+    private CacheHelper cacheHelper;
+    
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private AppExportMapper appExportMapper;
+
     private TestableAppServiceImpl appService;
 
     private AppEntity appEntity;
@@ -57,6 +76,9 @@ public class AppServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize the service with mocked dependencies
+        appService = new TestableAppServiceImpl(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper);
+        
         // Setup test data
         appEntity = new AppEntity();
         appEntity.setId(1L);

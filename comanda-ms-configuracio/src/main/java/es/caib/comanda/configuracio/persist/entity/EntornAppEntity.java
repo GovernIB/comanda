@@ -58,6 +58,10 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	private LocalDateTime infoData;
 	@Column(name = "versio", length = 10)
 	private String versio;
+	@Column(name = "revisio", length = 64)
+	private String revisio;
+	@Column(name = "jdk_version", length = 10)
+	private String jdkVersion;
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
 
@@ -71,6 +75,8 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	private Set<AppIntegracioEntity> appIntegracions;
 	@OneToMany(mappedBy="entornApp", cascade = CascadeType.ALL)
 	private Set<AppSubsistemaEntity> appSubsistemes;
+	@OneToMany(mappedBy="entornApp", cascade = CascadeType.ALL)
+	private Set<AppContextEntity> appContexts;
 
 	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "app_integracio int where int.entorn_app_id = id)")
 	private Integer integracioCount;

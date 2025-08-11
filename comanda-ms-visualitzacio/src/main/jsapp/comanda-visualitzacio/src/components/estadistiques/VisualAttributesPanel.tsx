@@ -7,6 +7,7 @@ import {styled, useTheme} from '@mui/material/styles';
 import {FormField, useFormContext} from 'reactlib';
 import Grid from "@mui/material/Grid";
 import IconAutocompleteSelect from "../IconAutocompleteSelect.tsx";
+import {useTranslation} from "react-i18next";
 
 // Define the props for the VisualAttributesPanel component
 export interface VisualAttributesPanelProps {
@@ -25,6 +26,7 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
     widgetType,
     children,
   } = props;
+  const { t } = useTranslation();
 
   const { data } = useFormContext();
 
@@ -48,20 +50,20 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
   const renderSimpleFormFields = () => {
     return (
       <Grid container spacing={2}>
-          <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Configuració general</Typography></Grid>
-          <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><IconAutocompleteSelect name="atributsVisuals.icona" label={"Icona"}/></Grid>
+          <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t('page.widget.form.configGeneral')}</Typography></Grid>
+          <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><IconAutocompleteSelect name="atributsVisuals.icona" label={t('page.widget.atributsVisuals.icona')}/></Grid>
 
-          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorText" label="Color del text" type="color" required={false} /></Grid>
-          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFons" label="Color de fons" type="color" required={false} /></Grid>
-          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorIcona" label="Color de la icona" type="color" required={false} /></Grid>
-          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFonsIcona" label="Color de fons de la icona" type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorText" label={t('page.widget.atributsVisuals.colorText')} type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFons" label={t('page.widget.atributsVisuals.colorFons')} type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorIcona" label={t('page.widget.atributsVisuals.colorIcona')} type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFonsIcona" label={t('page.widget.atributsVisuals.colorFonsIcona')} type="color" required={false} /></Grid>
 
-          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorTextDestacat" label="Color del text destacat" type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorTextDestacat" label={t('page.widget.atributsVisuals.colorTextDestacat')} type="color" required={false} /></Grid>
           <Grid size={6} />
-          <Grid size={6}><FormField name="atributsVisuals.vora" label="Mostrar vora" type="checkbox" /></Grid>
+          <Grid size={6}><FormField name="atributsVisuals.vora" label={t('page.widget.atributsVisuals.mostrarVora')} type="checkbox" /></Grid>
           <Grid size={6} />
-          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorVora" label="Color de la vora" type="color" required={false} /></Grid>
-          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.ampleVora" label="Ample de la vora" type="number" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorVora" label={t('page.widget.atributsVisuals.colorVora')} type="color" required={false} /></Grid>
+          <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.ampleVora" label={t('page.widget.atributsVisuals.ampleVora')} type="number" required={false} /></Grid>
       </Grid>
     );
   };
@@ -70,33 +72,33 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
   const renderGraficFormFields = () => {
     return (
       <Box sx={{ p: 2 }}>
-        <Typography variant="subtitle2" sx={{ mb: 2 }}>Configuració general</Typography>
-        <FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" />
-        <FormField name="atributsVisuals.mostrarReticula" label="Mostrar retícula" type="checkbox" />
+        <Typography variant="subtitle2" sx={{ mb: 2 }}>{t('page.widget.form.configGeneral')}</Typography>
+        <FormField name="atributsVisuals.colorsPaleta" label={t('page.widget.atributsVisuals.colorsPaleta')} />
+        <FormField name="atributsVisuals.mostrarReticula" label={t('page.widget.atributsVisuals.mostrarReticula')} type="checkbox" />
 
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de barres</Typography>
-        <FormField name="atributsVisuals.barStacked" label="Barres apilades" type="checkbox" />
-        <FormField name="atributsVisuals.barHorizontal" label="Barres horitzontals" type="checkbox" />
+        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t('page.widget.form.graficBar')}</Typography>
+        <FormField name="atributsVisuals.barStacked" label={t('page.widget.atributsVisuals.barStacked')} type="checkbox" />
+        <FormField name="atributsVisuals.barHorizontal" label={t('page.widget.atributsVisuals.barHorizontal')} type="checkbox" />
 
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de línies</Typography>
-        <FormField name="atributsVisuals.lineShowPoints" label="Mostrar punts" type="checkbox" />
-        <FormField name="atributsVisuals.lineSmooth" label="Línies suaus" type="checkbox" />
-        <FormField name="atributsVisuals.lineWidth" label="Amplada de línia" type="number" required={false} />
+        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t('page.widget.form.graficLin')}</Typography>
+        <FormField name="atributsVisuals.lineShowPoints" label={t('page.widget.atributsVisuals.lineShowPoints')} type="checkbox" />
+        <FormField name="atributsVisuals.lineSmooth" label={t('page.widget.atributsVisuals.lineSmooth')} type="checkbox" />
+        <FormField name="atributsVisuals.lineWidth" label={t('page.widget.atributsVisuals.lineWidth')} type="number" required={false} />
 
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de pastís</Typography>
-        <FormField name="atributsVisuals.pieDonut" label="Tipus donut" type="checkbox" />
-        <FormField name="atributsVisuals.pieShowLabels" label="Mostrar etiquetes" type="checkbox" />
+        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t('page.widget.form.graficPst')}</Typography>
+        <FormField name="atributsVisuals.pieDonut" label={t('page.widget.atributsVisuals.pieDonut')} type="checkbox" />
+        <FormField name="atributsVisuals.pieShowLabels" label={t('page.widget.atributsVisuals.pieShowLabels')} type="checkbox" />
 
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de gauge</Typography>
-        <FormField name="atributsVisuals.gaugeMin" label="Valor mínim" type="number" required={false} />
-        <FormField name="atributsVisuals.gaugeMax" label="Valor màxim" type="number" required={false} />
-        <FormField name="atributsVisuals.gaugeColors" label="Colors (separats per comes)" />
-        <FormField name="atributsVisuals.gaugeRangs" label="Rangs (separats per comes)" />
+        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t('page.widget.form.graficGug')}</Typography>
+        <FormField name="atributsVisuals.gaugeMin" label={t('page.widget.atributsVisuals.gaugeMin')} type="number" required={false} />
+        <FormField name="atributsVisuals.gaugeMax" label={t('page.widget.atributsVisuals.gaugeMax')} type="number" required={false} />
+        <FormField name="atributsVisuals.gaugeColors" label={t('page.widget.atributsVisuals.gaugeColors')} />
+        <FormField name="atributsVisuals.gaugeRangs" label={t('page.widget.atributsVisuals.gaugeRangs')} />
 
-        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>Gràfic de heatmap</Typography>
-        <FormField name="atributsVisuals.heatmapColors" label="Colors (separats per comes)" />
-        <FormField name="atributsVisuals.heatmapMinValue" label="Valor mínim" type="number" required={false} />
-        <FormField name="atributsVisuals.heatmapMaxValue" label="Valor màxim" type="number" required={false} />
+        <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t('page.widget.form.graficMap')}</Typography>
+        <FormField name="atributsVisuals.heatmapColors" label={t('page.widget.atributsVisuals.gaugeColors')} />
+        <FormField name="atributsVisuals.heatmapMinValue" label={t('page.widget.atributsVisuals.heatmapMinValue')} type="number" required={false} />
+        <FormField name="atributsVisuals.heatmapMaxValue" label={t('page.widget.atributsVisuals.heatmapMaxValue')} type="number" required={false} />
       </Box>
     );
   };
@@ -105,13 +107,13 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
   const renderTaulaFormFields = () => {
     return (
       <Box sx={{ p: 2 }}>
-        <Typography variant="subtitle2" sx={{ mb: 2 }}>Configuració general</Typography>
-        <FormField name="atributsVisuals.mostrarCapcalera" label="Mostrar capçalera" type="checkbox" />
-        <FormField name="atributsVisuals.mostrarBordes" label="Mostrar vores" type="checkbox" />
-        <FormField name="atributsVisuals.mostrarAlternancia" label="Mostrar alternança de files" type="checkbox" />
+        <Typography variant="subtitle2" sx={{ mb: 2 }}>{t('page.widget.form.configGeneral')}</Typography>
+        <FormField name="atributsVisuals.mostrarCapcalera" label={t('page.widget.atributsVisuals.mostrarCapcalera')} type="checkbox" />
+        <FormField name="atributsVisuals.mostrarVora" label={t('page.widget.atributsVisuals.mostrarVora')} type="checkbox" />
+        <FormField name="atributsVisuals.mostrarAlternancia" label={t('page.widget.atributsVisuals.mostrarAlternancia')} type="checkbox" />
         <FormField
           name="atributsVisuals.colorAlternancia"
-          label="Color d'alternança"
+          label={t('page.widget.atributsVisuals.colorAlternancia')}
           type="color"
           required={false}
           disabled={!data?.atributsVisuals?.mostrarAlternancia}

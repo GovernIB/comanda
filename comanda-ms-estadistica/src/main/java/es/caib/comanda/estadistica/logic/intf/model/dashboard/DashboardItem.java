@@ -36,7 +36,6 @@ import javax.validation.constraints.NotNull;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-//        descriptionField = "titol",
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT, requiresId = true),
         }
@@ -55,8 +54,8 @@ public class DashboardItem extends BaseResource<Long> {
 
     @NotNull
     private int posX;
-    @NotNull
-    private int posY;
+    /** Si es deixa null, es definirà a baix del dashboard. **/
+    private Integer posY;
     @NotNull
     private int width;
     @NotNull

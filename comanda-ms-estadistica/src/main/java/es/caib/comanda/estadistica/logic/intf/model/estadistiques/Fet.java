@@ -1,13 +1,19 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Map;
 
 /**
@@ -42,7 +48,20 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ResourceConfig(
+        artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_DATES_DISPONIBLES, formClass = Long.class),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_DADES_DIA, formClass = Fet.FetObtenirParamAction.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_DATA, formClass = Fet.FetObtenirParamAction.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_INTERVAL, formClass = Fet.FetObtenirParamAction.class),
+        }
+)
 public class Fet extends BaseResource<Long> {
+
+    public final static String FET_REPORT_DATES_DISPONIBLES = "dates_disponibles";
+    public final static String FET_REPORT_DADES_DIA = "dades_dia";
+    public final static String FET_ACTION_OBTENIR_PER_DATA = "obtenir_per_data";
+    public final static String FET_ACTION_OBTENIR_PER_INTERVAL = "obtenir_per_interval";
 
     @NotNull
     private Temps temps;
@@ -52,4 +71,27 @@ public class Fet extends BaseResource<Long> {
     private Map<String, Double> indicadorsJson;
     @NotNull
     private Long entornAppId;
+
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FetObtenirParamAction implements Serializable {
+        private Long entornAppId;
+        private LocalDate dataInici;
+        private LocalDate dataFi;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class FetObtenirResponse implements Serializable {
+        private Boolean success;
+        private String message;
+        private Map<String, Boolean> diesAmbDades;
+    }
 }

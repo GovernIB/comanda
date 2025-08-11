@@ -42,125 +42,109 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     menuWidth?: number;
 };
 
-const baseFormFieldComponents = [
-    {
-        type: 'checkbox',
-        component: FormFieldCheckbox,
-    },
-    {
-        type: 'checkbox-select',
-        component: FormFieldCheckboxSelect,
-    },
-    {
-        type: 'color',
-        component: FormFieldColor,
-    },
-    {
-        type: 'date',
-        component: FormFieldDate,
-    },
-    {
-        type: 'datetime-local',
-        component: FormFieldDateTimeLocal,
-    },
-    {
-        type: 'decimal',
-        component: FormFieldNumber,
-    },
-    {
-        type: 'duration',
-        component: FormFieldDuration,
-    },
-    {
-        type: 'enum',
-        component: FormFieldEnum,
-    },
-    {
-        type: 'number',
-        component: FormFieldNumber,
-    },
-    {
-        type: 'reference',
-        component: FormFieldReference,
-    },
-    {
-        type: 'text',
-        component: FormFieldText,
-    },
-    {
-        type: 'textarea',
-        component: FormFieldText,
-    },
-    {
-        type: 'time',
-        component: FormFieldTime,
-    },
-    {
-        type: 'range',
-        component: FormFieldRange,
-    },
-    {
-        type: 'file',
-        component: FormFieldFile,
-    },
-];
+const baseFormFieldComponents = [{
+    type: 'checkbox',
+    component: FormFieldCheckbox,
+}, {
+    type: 'checkbox-select',
+    component: FormFieldCheckboxSelect,
+}, {
+    type: 'color',
+    component: FormFieldColor,
+}, {
+    type: 'date',
+    component: FormFieldDate,
+}, {
+    type: 'datetime-local',
+    component: FormFieldDateTimeLocal,
+}, {
+    type: 'decimal',
+    component: FormFieldNumber,
+}, {
+    type: 'duration',
+    component: FormFieldDuration,
+}, {
+    type: 'enum',
+    component: FormFieldEnum,
+}, {
+    type: 'number',
+    component: FormFieldNumber,
+}, {
+    type: 'reference',
+    component: FormFieldReference,
+}, {
+    type: 'text',
+    component: FormFieldText,
+}, {
+    type: 'textarea',
+    component: FormFieldText,
+}, {
+    type: 'time',
+    component: FormFieldTime,
+}, {
+    type: 'range',
+    component: FormFieldRange,
+}, {
+    type: 'file',
+    component: FormFieldFile,
+}, {
+    type: 'url',
+    component: FormFieldText,
+},];
 
 const MuiComponentsConfigurer: React.FC = () => {
     const [messageDialogShow, messageDialogComponent] = useMessageDialog();
     const [temporalMessageShow, temporalMessageComponent] = useTemporalMessage();
     const resourceApiContext = useOptionalResourceApiContext();
-    const { setMessageDialogShow, setTemporalMessageShow } = useBaseAppContext();
+    const {
+        setMessageDialogShow,
+        setTemporalMessageShow,
+    } = useBaseAppContext();
     const getAnswerRequiredButtons = useAnswerRequiredDialogButtons();
     const openAnswerRequiredDialog = (
         title: string | undefined,
         question: string,
         trueFalseAnswerRequired: boolean,
-        availableAnswers?: string[]
-    ) => {
+        availableAnswers?: string[]) => {
         return messageDialogShow(
             title ?? 'Atenció',
             question,
-            getAnswerRequiredButtons(trueFalseAnswerRequired, availableAnswers)
-        );
-    };
+            getAnswerRequiredButtons(trueFalseAnswerRequired, availableAnswers));
+    }
     React.useEffect(() => {
         setMessageDialogShow(messageDialogShow);
         setTemporalMessageShow(temporalMessageShow);
         if (resourceApiContext != null) {
             resourceApiContext.setOpenAnswerRequiredDialog(openAnswerRequiredDialog);
         }
-    }, []);
-    return (
-        <>
-            {messageDialogComponent}
-            {temporalMessageComponent}
-        </>
-    );
-};
+    }, [])
+    return <>
+        {messageDialogComponent}
+        {temporalMessageComponent}
+    </>;
+}
 
 const useMenu = (
     menuTitle: string | undefined,
     menuEntries: MenuEntry[] | undefined,
     menuOnTitleClose: (() => void) | undefined,
-    menuWidth: number | undefined
-) => {
-    const { shrink, iconClicked, buttonComponent: menuButton } = useToolbarMenuIcon();
-    const menuComponent =
-        menuEntries != null ? (
-            <Menu
-                title={menuTitle}
-                entries={menuEntries}
-                onTitleClose={menuOnTitleClose}
-                drawerWidth={menuWidth}
-                shrink={shrink}
-                iconClicked={iconClicked}
-            />
-        ) : undefined;
+    menuWidth: number | undefined) => {
+    const {
+        shrink,
+        iconClicked,
+        buttonComponent: menuButton } = useToolbarMenuIcon();
+    const menuComponent = menuEntries != null ? <Menu
+        title={menuTitle}
+        entries={menuEntries}
+        onTitleClose={menuOnTitleClose}
+        drawerWidth={menuWidth}
+        shrink={shrink}
+        iconClicked={iconClicked} /> : undefined;
     return {
         menuButton,
-        menuComponent,
-    };
-};
+        menuComponent
+    }
+}
 
 export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
     const {
@@ -184,43 +168,39 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         ...otherProps
     } = props;
     const mergedFormFieldComponents = [...baseFormFieldComponents, ...(formFieldComponents ?? [])];
-    const { menuButton, menuComponent } = useMenu(
+    const {
+        menuButton,
+        menuComponent
+    } = useMenu(
         menuTitle,
         menuEntries,
         menuOnTitleClose,
-        menuWidth
-    );
-    const appbarComponent =
-        headerTitle != null ? (
-            <AppBar
-                title={headerTitle}
-                version={headerVersion}
-                logo={headerLogo}
-                logoStyle={headerLogoStyle}
-                menuButton={!menuShrinkDisabled && menuEntries != null ? menuButton : undefined}
-                additionalToolbarComponents={headerAdditionalComponents}
-                additionalAuthComponents={headerAdditionalAuthComponents}
-                style={headerAppbarStyle}
-                backgroundColor={headerAppbarBackgroundColor}
-                backgroundImg={headerAppbarBackgroundImg}
-            />
-        ) : undefined;
+        menuWidth);
+    const appbarComponent = headerTitle != null ? <AppBar
+        title={headerTitle}
+        version={headerVersion}
+        logo={headerLogo}
+        logoStyle={headerLogoStyle}
+        menuButton={!menuShrinkDisabled && menuEntries != null ? menuButton : undefined}
+        additionalToolbarComponents={headerAdditionalComponents}
+        additionalAuthComponents={headerAdditionalAuthComponents}
+        style={headerAppbarStyle}
+        backgroundColor={headerAppbarBackgroundColor}
+        backgroundImg={headerAppbarBackgroundImg} /> : undefined;
     const offlineComponent = <OfflineMessage />;
-    return (
-        <BaseApp
-            formFieldComponents={mergedFormFieldComponents}
-            detailFieldComponent={MuiDetailField}
-            {...otherProps}
-            contentComponentSlots={{
-                appbar: appbarComponent,
-                footer,
-                menu: menuComponent,
-                offline: offlineComponent,
-            }}>
-            <MuiComponentsConfigurer />
-            {children}
-        </BaseApp>
-    );
-};
+    return <BaseApp
+        formFieldComponents={mergedFormFieldComponents}
+        detailFieldComponent={MuiDetailField}
+        {...otherProps}
+        contentComponentSlots={{
+            appbar: appbarComponent,
+            footer,
+            menu: menuComponent,
+            offline: offlineComponent,
+        }}>
+        <MuiComponentsConfigurer />
+        {children}
+    </BaseApp>;
+}
 
 export default MuiBaseApp;

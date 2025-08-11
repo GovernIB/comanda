@@ -81,7 +81,7 @@ const Entorns: React.FC = () => {
     }, [entorns]);
 
     return (
-        <GridPage>
+        <GridPage disableMargins>
             <MuiGrid
                 title={t('page.versionsEntorns.title')}
                 resourceName="app"

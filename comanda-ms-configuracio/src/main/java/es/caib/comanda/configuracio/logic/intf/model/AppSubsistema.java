@@ -29,6 +29,6 @@ public class AppSubsistema extends BaseResource<Long> {
 	private boolean actiu;
 
 	@Transient
-	private ResourceReference<App, Long> app;
+	private ResourceReference<EntornApp, Long> entornApp;
 
 }

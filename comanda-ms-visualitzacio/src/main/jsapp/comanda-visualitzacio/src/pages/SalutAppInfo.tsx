@@ -5,9 +5,6 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -20,7 +17,6 @@ import Button from '@mui/material/Button';
 import { MarkPlot } from '@mui/x-charts/LineChart';
 import {
     BasePage,
-    useMuiContentDialog,
     useResourceApiService,
     dateFormatLocale,
     useBaseAppContext,
@@ -42,20 +38,21 @@ import {
 import { useTheme } from '@mui/material/styles';
 
 export const ErrorBoundaryFallback = () => {
+    const { t } = useTranslation();
     return <Typography sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-    }} color="error">Hi ha hagut un error al mostrar el gràfic</Typography>
+    }} color="error">{t('page.salut.latencia.error')}</Typography>
 }
 
 interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
     entornApp: any;
-    estats: Record<string, any>;
-    latencies: Record<string, any>;
+    estats: Record<string, any> | null;
+    latencies: any[] | null;
     salutCurrentApp: any;
     reportParams: any;
 }
@@ -63,8 +60,8 @@ interface AppDataState {
 const appDataStateInitialValue = {
     loading: null,
     entornApp: null,
-    estats: {},
-    latencies: {},
+    estats: null,
+    latencies: null,
     salutCurrentApp: null,
     reportParams: null,
 };
@@ -88,59 +85,50 @@ const useAppData = (id: any) => {
             agrupacio,
         };
         if (ready) {
-            setAppDataState({
-                ...appDataStateInitialValue,
+            setAppDataState((prevState) => ({
+                ...prevState,
                 loading: true,
-                reportParams,
-            });
-            let entornAppId: any;
-            entornAppGetOne(id).then((entornApp) => {
-                setAppDataState((state) => ({
-                    ...state,
-                    entornApp,
-                }))
-                entornAppId = entornApp.id;
-            }).then(() => {
+            }));
+            (async function () {
+                const entornApp = await entornAppGetOne(id);
+                const entornAppId = entornApp.id;
                 const reportData = {
                     ...reportParams,
                     entornAppId,
                 };
-                return salutApiReport(null, { code: 'estat', data: reportData })
-            }).then((items) => {
-                setAppDataState((state) => ({
-                    ...state,
-                    estats: { [entornAppId]: items },
-                }))
-                const reportData = {
-                    ...reportParams,
-                    entornAppId
-                };
-                return salutApiReport(null, { code: 'latencia', data: reportData });
-            }).then((items) => {
-                setAppDataState((state) => ({
-                    ...state,
-                    latencies: items,
-                }))
+                const estatReportItems = await salutApiReport(null, {
+                    code: 'estat',
+                    data: reportData,
+                });
+                const latenciaReportItems = await salutApiReport(null, {
+                    code: 'latencia',
+                    data: reportData,
+                });
                 const findArgs = {
                     page: 0,
                     size: 1,
                     sorts: ['data,desc'],
-                    perspectives: ['SAL_INTEGRACIONS', 'SAL_SUBSISTEMES', 'SAL_MISSATGES', 'SAL_DETALLS'],
+                    perspectives: [
+                        'SAL_INTEGRACIONS',
+                        'SAL_SUBSISTEMES',
+                        'SAL_CONTEXTS',
+                        'SAL_MISSATGES',
+                        'SAL_DETALLS',
+                    ],
                     filter: 'entornAppId : ' + entornAppId,
                 };
-                return salutApiFind(findArgs);
-            }).then(({ rows }) => {
+                const { rows } = await salutApiFind(findArgs);
                 const salutCurrentApp = rows?.[0];
                 setAppDataState((state) => ({
                     ...state,
-                    salutCurrentApp,
-                }))
-            }).finally(() => {
-                setAppDataState((state) => ({
-                    ...state,
                     loading: false,
-                }))
-            });
+                    entornApp,
+                    estats: { [entornAppId]: estatReportItems },
+                    latencies: latenciaReportItems as any[],
+                    salutCurrentApp,
+                    reportParams,
+                }));
+            })();
         }
     }
     return {
@@ -153,9 +141,11 @@ const useAppData = (id: any) => {
 const AppInfo: React.FC<any> = (props) => {
     const {
         salutCurrentApp: app,
-        detailsDialogShow
+        entornApp: entornApp,
     } = props;
     const { t } = useTranslation();
+    const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
+    const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
     const bdEstat = app && <Typography><Chip label={app.bdEstat} size="small" color={app.bdEstat === 'UP' ? 'success' : 'error'} /></Typography>;
     const appLatencia = app && <Typography>{app.appLatencia != null ? app.appLatencia + ' ms' : t('page.salut.nd')}</Typography>;
@@ -164,39 +154,37 @@ const AppInfo: React.FC<any> = (props) => {
         <Chip label={app.missatgeWarnCount} size="small" color="warning" />&nbsp;/&nbsp;
         <Chip label={app.missatgeInfoCount} size="small" color="info" />
     </>;
-    const detalls = app?.detalls;
-    const detallsContent = detalls?.length ? <List sx={{ ml: 2 }}>
-        {detalls.map((d: any) => <ListItem secondaryAction={d.valor} disablePadding>
-            <ListItemText primary={d.nom} sx={{ '& span': { fontWeight: 'bold' } }} />
-        </ListItem>)}
-    </List> : null;
-    const detailsButton = detalls?.length ? <Button
-        size="small"
-        variant="contained"
-        onClick={() => detailsDialogShow(null, detallsContent, undefined, { fullWidth: true, maxWidth: 'md' })}
-        sx={{ mt: 8 }}>
-        {t('page.salut.info.detalls')}
-    </Button> : null;
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.info.title')}</Typography>
-            <List sx={{ ml: 2 }}>
-                <ListItem secondaryAction={data} disablePadding>
-                    <ListItemText primary={t('page.salut.info.data')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                <ListItem secondaryAction={bdEstat} disablePadding>
-                    <ListItemText primary={t('page.salut.info.bdEstat')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                <ListItem secondaryAction={appLatencia} disablePadding>
-                    <ListItemText primary={t('page.salut.info.appLatencia')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                <ListItem secondaryAction={missatges} disablePadding>
-                    <ListItemText primary={t('page.salut.info.missatges')} sx={{ '& span': { fontWeight: 'bold' } }} />
-                </ListItem>
-                {detalls?.length && <ListItem secondaryAction={detailsButton} disablePadding>
-                    <ListItemText />
-                </ListItem>}
-            </List>
+            <Table size="small">
+                <TableBody>
+                    <TableRow key={1}>
+                        <TableCell>{t('page.salut.info.revisio')}</TableCell>
+                        <TableCell>{revisio}</TableCell>
+                    </TableRow>
+                    <TableRow key={2}>
+                        <TableCell>{t('page.salut.info.jdk.versio')}</TableCell>
+                        <TableCell>{jdk}</TableCell>
+                    </TableRow>
+                    <TableRow key={3}>
+                        <TableCell>{t('page.salut.info.data')}</TableCell>
+                        <TableCell>{data}</TableCell>
+                    </TableRow>
+                    <TableRow key={4}>
+                        <TableCell>{t('page.salut.info.bdEstat')}</TableCell>
+                        <TableCell>{bdEstat}</TableCell>
+                    </TableRow>
+                    <TableRow key={5}>
+                        <TableCell>{t('page.salut.info.appLatencia')}</TableCell>
+                        <TableCell>{appLatencia}</TableCell>
+                    </TableRow>
+                    <TableRow key={6}>
+                        <TableCell>{t('page.salut.info.missatges')}</TableCell>
+                        <TableCell>{missatges}</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
         </CardContent>
     </Card>;
 }
@@ -220,7 +208,7 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
                             alignItems: 'center',
                         }}
                     >
-                        No hi ha dades per mostrar
+                        {t('page.salut.estatLatencia.noInfo')}
                     </Typography>
                 </CardContent>
             </Card>
@@ -335,7 +323,10 @@ const Integracions: React.FC<any> = (props) => {
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.integracions.title')}</Typography>
-            {integracions && <Table size="small">
+            {!integracions?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.integracions.noInfo')}
+            </Typography>}
+            {integracions?.length > 0 && <Table size="small">
                 <TableHead>
                     <TableRow>
                         {/*<TableCell>{t('page.salut.integracions.column.codi')}</TableCell>*/}
@@ -355,7 +346,10 @@ const Integracions: React.FC<any> = (props) => {
                             <Chip label={i.estat} size="small" color={getEstatColor(i.estat)} />
                         </TableCell>
                         <TableCell>{i.latencia != null ? i.latencia + ' ms' : t('page.salut.nd')}</TableCell>
-                        <TableCell>{i.latencia} ms</TableCell>
+                        <TableCell>
+                            <Chip label={i.totalOk} size="small" color={"success"} sx={{ minWidth: '35px', textAlign: 'center', mr:1 }} />
+                            <Chip label={i.totalError} size="small" color={"error"} sx={{ minWidth: '35px', textAlign: 'center' }} />
+                        </TableCell>
                     </TableRow>)}
                 </TableBody>
             </Table>}
@@ -370,7 +364,10 @@ const Subsistemes: React.FC<any> = (props) => {
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.subsistemes.title')}</Typography>
-            {subsistemes && <Table size="small">
+            {!subsistemes?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.subsistemes.noInfo')}
+            </Typography>}
+            {subsistemes?.length > 0 && <Table size="small">
                 <TableHead>
                     <TableRow>
                         <TableCell>{t('page.salut.subsistemes.column.codi')}</TableCell>
@@ -394,6 +391,66 @@ const Subsistemes: React.FC<any> = (props) => {
     </Card>;
 }
 
+const Contexts: React.FC<any> = (props) => {
+    const { salutCurrentApp } = props;
+    const { t } = useTranslation();
+    const contexts = salutCurrentApp?.contexts;
+    return <Card variant="outlined" sx={{ height: '100%' }}>
+        <CardContent>
+            <Typography gutterBottom variant="h5" component="div">{t('page.salut.contexts.title')}</Typography>
+            {!contexts?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.contexts.noInfo')}
+            </Typography>}
+            {contexts?.length > 0 && <Table size="small">
+            <TableHead>
+                    <TableRow>
+                        <TableCell>{t('page.salut.contexts.column.codi')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.nom')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.path')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.api')}</TableCell>
+                        <TableCell>{t('page.salut.contexts.column.manuals')}</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {contexts.map((s: any, key: number) => <TableRow key={key}>
+                        <TableCell>{s.codi}</TableCell>
+                        <TableCell>{s.nom}</TableCell>
+                        <TableCell>{s.path && <Button href={s.path} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{s.path}</Button>}</TableCell>
+                        <TableCell>{s.api && <Button href={s.api} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>API</Button>}</TableCell>
+                        <TableCell>
+                            {s.manuals && s.manuals.map((manual: any, index: number) => (
+                                <Button key={index} href={manual.path} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{manual.nom}</Button>
+                            ))}
+                        </TableCell>
+                    </TableRow>)}
+                </TableBody>
+            </Table>}
+        </CardContent>
+    </Card>;
+}
+
+const DetallInfo: React.FC<any> = (props) => {
+    const { salutCurrentApp } = props;
+    const { t } = useTranslation();
+    const detalls = salutCurrentApp?.detalls;
+    return <Card variant="outlined" sx={{ height: '100%' }}>
+        <CardContent>
+            <Typography gutterBottom variant="h5" component="div">{t('page.salut.detalls.title')}</Typography>
+            {!detalls?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.detalls.noInfo')}
+            </Typography>}
+            {detalls?.length > 0 && <Table size="small">
+                <TableBody>
+                    {detalls.map((d: any) => <TableRow key={d.id}>
+                        <TableCell sx={{minWidth: '165px'}}>{d.nom}</TableCell>
+                        <TableCell>{d.valor}</TableCell>
+                    </TableRow>)}
+                </TableBody>
+            </Table>}
+        </CardContent>
+    </Card>;
+}
+
 const SalutAppInfo: React.FC = () => {
     const { id } = useParams();
     const {
@@ -406,11 +463,6 @@ const SalutAppInfo: React.FC = () => {
         salutCurrentApp,
         reportParams,
     } = useAppData(id);
-    const { setMarginsDisabled } = useBaseAppContext();
-    React.useEffect(() => {
-        setMarginsDisabled(true);
-        return () => setMarginsDisabled(false);
-    }, []);
     const dataLoaded = ready && loading != null && !loading;
     const toolbarState = salutCurrentApp?.appEstat ? <Chip
         label={salutCurrentApp.appEstat}
@@ -420,50 +472,60 @@ const SalutAppInfo: React.FC = () => {
     const toolbar = <SalutToolbar
         title={entornApp != null ? `${entornApp.app.description} - ${entornApp.entorn.description}` : ""}
         subtitle={entornApp?.versio ? 'v' + entornApp?.versio : undefined}
+        hideFilter
         state={toolbarState}
         ready={ready}
         onRefresh={entornAppDataRefresh}
-        goBackActive />;
-    const loadingComponent = loading ? <Box
-        sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: 'calc(100vh - 80px)',
-        }}>
-        <CircularProgress size={100} />
-    </Box> : null;
-    const [detailsDialogShow, detailsDialogComponent] = useMuiContentDialog();
-    const detailsComponent = (
-        <Grid container spacing={2}>
-            <Grid size={3}>
-                <AppInfo salutCurrentApp={salutCurrentApp} detailsDialogShow={detailsDialogShow} />
-            </Grid>
-            <Grid size={9}>
-                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                    {dataLoaded && (
-                        <LatenciaEstatsChart
-                            dataInici={reportParams.dataInici}
-                            agrupacio={reportParams.agrupacio}
-                            latencies={latencies}
-                            estats={estats}
-                        />
-                    )}
-                </ErrorBoundary>
-            </Grid>
-            <Grid size={6}>
-                <Integracions salutCurrentApp={salutCurrentApp} />
-            </Grid>
-            <Grid size={6}>
-                <Subsistemes salutCurrentApp={salutCurrentApp} />
-            </Grid>
-        </Grid>
+        goBackActive
+        appDataLoading={!dataLoaded}
+    />;
+    return (
+        <BasePage toolbar={toolbar}>
+            {(salutCurrentApp == null || entornApp == null) ? (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 'calc(100vh - 80px)',
+                    }}
+                >
+                    <CircularProgress size={100} />
+                </Box>
+            ) : (
+                <Grid container spacing={2}>
+                    <Grid size={{ sm: 12, lg: 3 }}>
+                        <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 9 }}>
+                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                            {reportParams != null && latencies != null && estats != null && (
+                                <LatenciaEstatsChart
+                                    dataInici={reportParams.dataInici}
+                                    agrupacio={reportParams.agrupacio}
+                                    latencies={latencies}
+                                    estats={estats}
+                                />
+                            )}
+                        </ErrorBoundary>
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 3 }}>
+                        <DetallInfo salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 9 }}>
+                        <Contexts salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Integracions salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Subsistemes salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                </Grid>
+            )}
+        </BasePage>
     );
-    return <BasePage toolbar={toolbar}>
-        {loading ? loadingComponent : detailsComponent}
-        {detailsDialogComponent}
-    </BasePage>;
 }
 
 export default SalutAppInfo;

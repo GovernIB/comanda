@@ -33,6 +33,7 @@ public class EntornApp implements Serializable {
 
 	private List<AppIntegracio> integracions;
 	private List<AppSubsistema> subsistemes;
+	private List<AppContext> contexts;
 
 	private String estadisticaInfoUrl;
 	private String estadisticaUrl;

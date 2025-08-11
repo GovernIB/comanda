@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardItemTitolHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
@@ -26,6 +27,7 @@ import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Implementació del servei per gestionar la lògica de negoci relacionada amb els dashboards.
@@ -47,6 +49,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private final ConsultaEstadisticaHelper consultaEstadisticaHelper;
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final EstadisticaWidgetHelper estadisticaWidgetHelper;
+    private final DashboardItemTitolHelper dashboardItemTitolHelper;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     static {
@@ -59,6 +62,11 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     @PostConstruct
     public void init() {
         register(DashboardItem.WIDGET_REPORT, new InformeWidget());
+    }
+
+    @Override
+    protected void completeResource(DashboardItem resource) {
+        dashboardItemTitolHelper.completeResourceItemLogic(resource);
     }
 
     @Override

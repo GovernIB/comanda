@@ -24,7 +24,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class AppSubsistemaEntity extends BaseAuditableEntity<AppSubsistema> {
 
-	@Column(name = "codi", length = 10, unique = true, nullable = false)
+	@Column(name = "codi", length = 10, nullable = false)
 	private String codi;
 	@Column(name = "nom", length = 100, nullable = false)
 	private String nom;

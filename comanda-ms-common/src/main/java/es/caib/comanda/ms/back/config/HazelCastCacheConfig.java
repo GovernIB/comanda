@@ -1,4 +1,4 @@
-package es.caib.comanda.estadistica.back.config;
+package es.caib.comanda.ms.back.config;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.EvictionConfig;
@@ -10,12 +10,17 @@ import com.hazelcast.core.HazelcastInstance;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
-@Profile("!back")
+//@Profile("!back")
+//@ConditionalOnNotWarDeployment
 @Configuration
 @EnableCaching
 public class HazelCastCacheConfig {
+
+    public static final String ENTORN_APP_CACHE = "entornAppCache";
+    public static final String APP_CACHE = "appCache";
+    public static final String ENTORN_CACHE = "entornCache";
+    public static final String DASHBOARD_WIDGET_CACHE = "dashboardWidgetCache";
 
     @Bean
     public Config hazelcastConfig() {
@@ -28,10 +33,10 @@ public class HazelCastCacheConfig {
         // O configuració TCP-IP explícita si multicast no funciona
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true).addMember("localhost");
 
-        config.addMapConfig(new MapConfig().setName("entornAppCache").setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName("appCache").setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName("entornCache").setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName("dashboardWidgetCache").setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
+        config.addMapConfig(new MapConfig().setName(ENTORN_APP_CACHE).setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName(APP_CACHE).setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName(ENTORN_CACHE).setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName(DASHBOARD_WIDGET_CACHE).setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
         return config;
     }
 

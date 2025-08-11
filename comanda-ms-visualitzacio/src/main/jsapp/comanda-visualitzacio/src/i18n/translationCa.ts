@@ -1,4 +1,14 @@
 const translationCa = {
+    enum: {
+        appEstat: {
+            UP: "Actiu",
+            WARN: "Avís",
+            DOWN: "Inactiu",
+            DEGRADED: "Degradat",
+            MAINTENANCE: "Manteniment",
+            UNKNOWN: "Desconegut"
+        }
+    },
     menu: {
         configuracio: "Configuració",
         estadistiques: "Estadístiques",
@@ -11,12 +21,14 @@ const translationCa = {
         dashboard: "Taulers de control",
         cache: "Gestió de cachés",
         integracio: "Integracions",
+        calendari: "Calendari",
         broker: "Gestor de cues",
     },
     page: {
         salut: {
             title: "Salut",
             refrescar: "Refrescar",
+            filtrar: "Filtrar per aplicació/entorn",
             nd: "N/D",
             apps: {
                 column: {
@@ -24,6 +36,7 @@ const translationCa = {
                     codi: "Codi",
                     nom: "Nom",
                     versio: "Versió",
+                    revisio: "Revisió",
                     bd: "Base de dades",
                     latencia: "Latència",
                     integ: "Integracions",
@@ -34,6 +47,7 @@ const translationCa = {
             },
             refreshperiod: {
                 PT1M: "1 minut",
+                PT5M: "5 minuts",
                 PT10M: "10 minuts",
                 PT30M: "30 minuts",
                 PT1H: "1 hora",
@@ -47,6 +61,10 @@ const translationCa = {
             },
             info: {
                 title: "Informació",
+                revisio: "Revisió",
+                jdk: {
+                    versio: "Versió JDK",
+                },
                 data: "Darrera actualització",
                 bdEstat: "Base de dades",
                 appLatencia: "Latència",
@@ -55,12 +73,15 @@ const translationCa = {
             },
             latencia: {
                 title: "Latència",
+                error: "Hi ha hagut un error al mostrar el gràfic",
             },
             estatLatencia: {
                 title: "Estat i latència",
+                noInfo: "No hi ha dades per mostrar",
             },
             integracions: {
                 title: "Integracions",
+                noInfo: "No hi ha informació de integracions",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
@@ -71,12 +92,28 @@ const translationCa = {
             },
             subsistemes: {
                 title: "Subsistemes",
+                noInfo: "No hi ha informació de subsistemes",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
                     estat: "Estat",
                     latencia: "Latència",
                 },
+            },
+            contexts: {
+                title: "Contexts",
+                noInfo: "No hi ha informació de contexts",
+                column: {
+                    codi: "Códi",
+                    nom: "Nom",
+                    path: "Ruta",
+                    api: "Api",
+                    manuals: "Manuals",
+                },
+            },
+            detalls: {
+                title: "Detalls",
+                noInfo: "No hi ha informació sobre detalls de l'aplicació",
             },
             estats: {
                 title: "Estats",
@@ -92,6 +129,9 @@ const translationCa = {
             uploadLogo: "Pujar logo",
             changeLogo: "Canviar logo",
             removeLogo: "Eliminar logo",
+            action: {
+                export: "Exportar aplicació",
+            },
         },
         entorns: {
             title: "Entorns",
@@ -127,6 +167,7 @@ const translationCa = {
             modulEnum: {
                 salut: "Salut",
                 estadistica: "Estadística",
+                configuracio: "Configuració",
             },
         },
         widget: {
@@ -140,6 +181,16 @@ const translationCa = {
                 simple: "Widget simple",
                 grafic: "Widget gràfic",
                 taula: "Widget taula",
+                preview: "Previsualització",
+                configVisual: "Configuració visual",
+                configGeneral: "Configuració general",
+                configTaula: "Configuració taula",
+                configFont: "Configuració de la mida de font",
+                graficBar: "Gràfic de barres",
+                graficLin: "Gràfic de línies",
+                graficPst: "Gràfic de pastís",
+                graficGug: "Gràfic de gauge",
+                graficMap: "Gràfic de heatmap",
             },
             simple: {
                 tab: {
@@ -154,6 +205,7 @@ const translationCa = {
                 },
                 title: "Widgets estadístics gràfics",
                 resourceTitle: "widget gràfic",
+                indicadors: "Indicadors",
             },
             taula: {
                 tab: {
@@ -161,6 +213,7 @@ const translationCa = {
                 },
                 title: "Widgets estadístics tipus taula",
                 resourceTitle: "widget tipus taula",
+                tableCols: "Columnes de la taula",
                 columna: {
                     indicador: "Indicador",
                     titolIndicador: "Títol",
@@ -170,16 +223,82 @@ const translationCa = {
                     arrossega: "Arrossega per reordenar",
                 },
             },
+            atributsVisuals: {
+                colorText: "Color del text",
+                colorFons: "Color de fons",
+                icona: "Icona",
+                colorIcona: "Color de la icona",
+                colorFonsIcona: "Color de fons de la icona",
+                colorTextDestacat: "Color del text destacat",
+                mostrarVora: "Mostrar vora",
+                colorVora: "Color de la vora",
+                ampleVora: "Ample de la vora",
+                midaFontTitol: "Mida de la font del títol",
+                midaFontDescripcio: "Mida de la font de la descripció",
+                midaFontValor: "Mida de la font del valor",
+                midaFontUnitats: "Mida de la font de les unitats",
+                midaFontCanviPercentual: "Mida de la font del canvi percentual",
+                colorsPaleta: "Colors de la paleta",
+                mostrarReticula: "Mostrar retícula",
+                barStacked: "Barres apilades",
+                barHorizontal: "Barres horitzontals",
+                lineShowPoints: "Mostrar punts",
+                area: "Emplenar area",
+                lineSmooth: "Línies suaus",
+                lineWidth: "Amplada de línia",
+                outerRadius: "Radi exterior",
+                pieDonut: "Tipus donut",
+                innerRadius: "Radi interior",
+                pieShowLabels: "Mostrar etiquetes",
+                labelSize: "Mida etiquetes",
+                gaugeMin: "Valor mínim",
+                gaugeMax: "Valor màxim",
+                gaugeColors: "Colors (separats per comes)",
+                gaugeRangs: "Rangs (separats per comes)",
+                heatmapMinValue: "Valor mínim",
+                heatmapMaxValue: "Valor màxim",
+                colorTextTaula: "Color de text de la taula",
+                colorFonsTaula: "Color de fons de la taula",
+                mostrarCapcalera: "Mostrar capçalera",
+                colorCapcalera: "Color de text de la capçalera",
+                colorFonsCapcalera: "Color de fons de la capçalera",
+                mostrarAlternancia: "Mostrar alternança de files",
+                colorAlternancia: "Color d'alternança",
+                mostrarVoraTaula: "Mostrar vora de taula",
+                colorVoraTaula: "Color de la vora",
+                ampleVoraTaula: "Ample de la vora",
+                mostrarSeparadorHoritzontal: "Mostrar separador horitzontal",
+                colorSeparadorHoritzontal: "Color del separador",
+                ampleSeparadorHoritzontal: "Ample del separador",
+                mostrarSeparadorVertical: "Mostrar separador vertical",
+                colorSeparadorVertical: "Color del separador",
+                ampleSeparadorVertical: "Ample del separador",
+            },
+            editorPaleta: {
+                title: "Editor de Paleta de Colors",
+                color: "Color",
+                hex: "Codi HEX",
+                palet: "Paleta actual:",
+                empty: "No hi ha colors a la paleta.",
+                exist: "Aquest color ja existeix a la paleta!",
+            },
             action: {
                 add: {
                     label: "Afegir",
                 },
+                addColumn: {
+                    label: "Afegir columna",
+                }
             },
         },
         dashboards: {
             title: "Taulers de control",
             edit: "Editar",
-            dashboardView: "Anar al dashboard",
+            dashboardView: "Anar al taulers de control",
+            cloneDashboard: {
+                title: "Clonar el tauler de control",
+                success: "Tauler de controls clonat correctament",
+            },
             components: {
                 llistar: "Llistar components",
                 afegir: "Afegir component",
@@ -211,7 +330,8 @@ const translationCa = {
                 afegirTitle: {
                     label: "Afegir títol",
                     title: "Afegir títol",
-                }
+                },
+                export: "Exportar tauler",
             },
             alert: {
                 tornarLlistat: "Tornar al llistat",
@@ -223,12 +343,6 @@ const translationCa = {
         },
         caches: {
             title: "Caches",
-            columna: {
-                codi: "Codi",
-                nom: "Nom",
-                entrades: "Núm. elements",
-                mida: "Mida (bytes)",
-            },
             buidar: {
                 label: "Buidar",
                 titol: "Buidar cache",
@@ -349,6 +463,43 @@ const translationCa = {
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
+    },
+    calendari: {
+        seleccionar_entorn_app: "Seleccionar entorn d'aplicació",
+        seleccionar: "Seleccionar",
+        seleccionar_entorn_app_primer: "Seleccioneu primer un entorn d'aplicació",
+        carregar_interval: "Carregar dades per interval",
+        carregar_mes_actual: "Carregar dades del mes actual",
+        today: "Avui",
+        data_inici: "Data inici",
+        data_fi: "Data fi",
+        cancelar: "Cancel·lar",
+        carregar: "Carregar",
+        sense_dades: "Sense dades estadístiques",
+        dades_buides: "L'aplicació no disposa de dades estadístiques",
+        dades_disponibles: "Dades disponibles",
+        dades_disponibles_tooltip: "Clica per veure les dades disponibles",
+        obtenir_dades: "Obtenir dades",
+        obtenir_dades_tooltip: "Clica per obtenir les dades destadístiques del dia",
+        error_dades: "Error en obtenir dades",
+        error_dades_tooltip: "S'ha produït un error al intentar obtenir les dades estadístiques de l'aplicació",
+        error_titol: "Error en obtenir dades estadístiques",
+        data: "Data",
+        missatge: "Missatge",
+        traca: "Traça",
+        tancar: "Tancar",
+        success_obtenir_dades: "Les dades estadístiques s'han obtingut correctament",
+        error_obtenir_dades: "Error en obtenir dades estadístiques",
+        success_carregar_interval: "Les dades estadístiques s'han obtingut correctament",
+        error_carregar_interval: "Error en obtenir dades estadístiques dades per interval",
+        error_dades_disponibles: "Error al obtenir els dies amb dades estadístiques disponibles",
+        error_dades_dia: "Error al obtenir les dades estadístiques del dia",
+        error_obtenir_dates_mes: "No s'han pogut determinar les dates del mes actual",
+        carregant: "Carregant",
+        carregant_dades: "Carregant dades estadístiques...",
+        modal_dades_dia: "Dades disponibles del dia",
+        dimensions: "Dimensions",
+        indicadors: "Indicadors",
     },
 };
 

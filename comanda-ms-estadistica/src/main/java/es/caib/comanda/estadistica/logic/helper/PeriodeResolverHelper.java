@@ -206,7 +206,7 @@ public class PeriodeResolverHelper {
             case DATE_RANGE:
                 return PeriodeDates.builder()
                         .start(periode.getAbsolutDataInici())
-                        .end(periode.getAbsolutDataFi())
+                        .end(periode.getAbsolutDataFi() != null ? periode.getAbsolutDataFi() : LocalDate.now())
                         .build();
             case SPECIFIC_PERIOD_OF_YEAR:
                 int year = calculateYear(periode.getAbsolutAnyReferencia(), periode.getAbsolutAnyValor());

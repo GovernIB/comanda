@@ -127,6 +127,7 @@ const generateMenuItems = (appMenuEntries: MenuEntry[] | undefined) => {
                 color="inherit"
                 component={Link}
                 to={entry.to} // Navegació amb React Router
+                sx={{display: {xs: 'none', md: 'inline'}}}
             >
                 {entry.title}
             </Button>
@@ -138,7 +139,7 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
     return availableLanguages?.length
         ? [
             <HeaderLanguageSelector
-                sx={{ml: '42px'}}
+                sx={{ml: {xs: 1, md: '42px'}}}
                 key="sel_lang"
                 languages={availableLanguages}
             />,

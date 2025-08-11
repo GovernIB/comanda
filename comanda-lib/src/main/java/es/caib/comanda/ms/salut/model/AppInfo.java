@@ -17,6 +17,9 @@ public class AppInfo {
     private String nom;
     private String versio;
     private Date data;
+    private String revisio;
+    private String jdkVersion;
     private List<IntegracioInfo> integracions;
     private List<AppInfo> subsistemes;
+    private List<ContextInfo> contexts;
 }

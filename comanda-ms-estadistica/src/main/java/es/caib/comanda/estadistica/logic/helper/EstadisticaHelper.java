@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
@@ -28,12 +29,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -51,10 +56,10 @@ public class EstadisticaHelper {
     private final IndicadorRepository indicadorRepository;
     private final TempsRepository tempsRepository;
     private final FetRepository fetRepository;
-
     private final EstadisticaClientHelper estadisticaClientHelper;
-
     private final RestTemplate restTemplate;
+
+    private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
     // OBTENCIÓ i DESAT D'ESTADISTIQUES
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +74,7 @@ public class EstadisticaHelper {
     public void getEstadisticaInfoDades(EntornApp entornApp) {
         getEstadisticaInfoDades(entornApp, null);
     }
+
     @Transactional
     public void getEstadisticaInfoDades(EntornApp entornApp, Integer dies) {
         log.debug("Obtenint informació i dades estadístiques de l'app {}, entorn {}",
@@ -86,6 +92,33 @@ public class EstadisticaHelper {
         }
     }
 
+    /**
+     * Obté i processa informació estadística d'una aplicació a partir d'una URL específica.
+     * La informació inclou indicadors, dimensions i registres estadístics que es creen i es guarden en el sistema a partir de les dades rebudes.
+     *
+     * @param entornApp      Objecte que representa l'aplicació i l'entorn per als quals es recupera informació estadística.
+     * @param estadisticaUrl URL específica per obtenir les dades estadístiques.
+     * @param multiplesDies  Indica si s'espera rebre múltiples dies de dades estadístiques.
+     */
+    @Transactional
+    public FetObtenirResponse getEstadisticaInfoDadesAmbUrl(EntornApp entornApp, String estadisticaUrl, boolean multiplesDies) {
+        log.debug("Obtenint informació i dades estadístiques de l'app {}, entorn {} amb URL específica: {}",
+                entornApp.getApp().getNom(),
+                entornApp.getEntorn().getNom(),
+                estadisticaUrl);
+
+        MonitorEstadistica monitorEstadistica = initializeMonitor(entornApp, estadisticaUrl);
+
+        try {
+            processEstadisticaInfo(entornApp, restTemplate, monitorEstadistica);
+            var result = processEstadisticaDades(entornApp, estadisticaUrl, restTemplate, monitorEstadistica, multiplesDies);
+            return FetObtenirResponse.builder().success(true).diesAmbDades(result).build();
+        } catch (RestClientException ex) {
+            handleEstadisticaException(entornApp, monitorEstadistica, ex);
+            return FetObtenirResponse.builder().success(false).message(ex.getLocalizedMessage()).build();
+        }
+    }
+
     private String buildEstadisticaUrl(EntornApp entornApp, Integer dies) {
         return dies != null ? entornApp.getEstadisticaUrl() + "/" + dies : entornApp.getEstadisticaUrl();
     }
@@ -98,33 +131,52 @@ public class EstadisticaHelper {
                 estadisticaClientHelper);
     }
 
+
     // Obtenir informació estadística de l'app i dimensions
     private void processEstadisticaInfo(EntornApp entornApp, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica) throws RestClientException {
-        monitorEstadistica.startInfoAction();
-        EstadistiquesInfo estadistiquesInfo = restTemplate.getForObject(entornApp.getEstadisticaInfoUrl(), EstadistiquesInfo.class);
-        monitorEstadistica.endInfoAction();
-        // Guardar la inforció de l'estructura de les dades estadístiques
-        crearIndicadorsIDimensions(estadistiquesInfo, entornApp.getId());
+        Object lock = LOCKS.computeIfAbsent(entornApp.getId(), k -> new Object());
+        synchronized (lock) {
+            monitorEstadistica.startInfoAction();
+            EstadistiquesInfo estadistiquesInfo = restTemplate.getForObject(entornApp.getEstadisticaInfoUrl(), EstadistiquesInfo.class);
+            monitorEstadistica.endInfoAction();
+            // Guardar la inforció de l'estructura de les dades estadístiques
+            crearIndicadorsIDimensions(estadistiquesInfo, entornApp.getId());
+        }
     }
 
     // Obtenir les dades estadístiques
-    private void processEstadisticaDades(EntornApp entornApp, String estadisticaUrl, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica, boolean multiplesDies) throws RestClientException {
-        monitorEstadistica.startDadesAction();
-        if (multiplesDies) {
-            List<RegistresEstadistics> registresEstadistics = restTemplate.exchange(
-                    estadisticaUrl,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<RegistresEstadistics>>() {}).getBody();
-            monitorEstadistica.endDadesAction();
-            // Guardar les dades estadístiques
-            registresEstadistics.forEach(r -> crearEstadistiques(r, entornApp.getId()));
-        } else {
-            RegistresEstadistics registresEstadistics = restTemplate.getForObject(estadisticaUrl, RegistresEstadistics.class);
-            monitorEstadistica.endDadesAction();
-            // Guardar les dades estadístiques
-            crearEstadistiques(registresEstadistics, entornApp.getId());
+    private Map<String, Boolean> processEstadisticaDades(EntornApp entornApp, String estadisticaUrl, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica, boolean multiplesDies) throws RestClientException {
+        Object lock = LOCKS.computeIfAbsent(entornApp.getId(), k -> new Object());
+        Map<String, Boolean> result = new HashMap<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        synchronized (lock) {
+            monitorEstadistica.startDadesAction();
+            if (multiplesDies) {
+                List<RegistresEstadistics> registresEstadistics = restTemplate.exchange(
+                        estadisticaUrl,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<List<RegistresEstadistics>>() {
+                        }).getBody();
+                monitorEstadistica.endDadesAction();
+                // Guardar les dades estadístiques
+                registresEstadistics.forEach(r -> {
+                    crearEstadistiques(r, entornApp.getId());
+                    result.put(sdf.format(r.getTemps().getData()), getRegistreEstadisticMessage(r));
+                });
+            } else {
+                RegistresEstadistics registresEstadistics = restTemplate.getForObject(estadisticaUrl, RegistresEstadistics.class);
+                monitorEstadistica.endDadesAction();
+                // Guardar les dades estadístiques
+                crearEstadistiques(registresEstadistics, entornApp.getId());
+                result.put(sdf.format(registresEstadistics.getTemps().getData()), getRegistreEstadisticMessage(registresEstadistics));
+            }
         }
+        return result;
+    }
+
+    private Boolean getRegistreEstadisticMessage(RegistresEstadistics registresEstadistics) {
+        return !(registresEstadistics.getFets() == null || registresEstadistics.getFets().isEmpty());
     }
 
     private void handleEstadisticaException(EntornApp entornApp, MonitorEstadistica monitorEstadistica, RestClientException ex) {
@@ -197,34 +249,65 @@ public class EstadisticaHelper {
      * @param entornAppId Identificador de l'entorn d'aplicació amb el qual s'associen les dimensions.
      */
     private void crearDimensions(List<DimensioDesc> dimensions, Long entornAppId) {
-        if (dimensions != null) {
-            dimensions.forEach(d -> {
-                if (Strings.isBlank(d.getNom()))
-                    return;
+        if (dimensions == null) return;
 
-                DimensioEntity dimensio = dimensioRepository.findByCodiAndEntornAppId(d.getCodi(), entornAppId)
-                        .orElseGet(() -> new DimensioEntity());
+        for (DimensioDesc d : dimensions) {
+            if (Strings.isBlank(d.getNom())) continue;
 
-                dimensio.setCodi(d.getCodi());
-                dimensio.setNom(d.getNom());
-                dimensio.setEntornAppId(entornAppId);
-                if (!Strings.isBlank(d.getDescripcio())) {
-                    dimensio.setDescripcio(d.getDescripcio());
+            DimensioEntity dimensio = dimensioRepository.findByCodiAndEntornAppId(d.getCodi(), entornAppId)
+                    .orElseGet(DimensioEntity::new);
+
+            dimensio.setCodi(d.getCodi());
+            dimensio.setNom(d.getNom());
+            dimensio.setEntornAppId(entornAppId);
+            if (!Strings.isBlank(d.getDescripcio())) {
+                dimensio.setDescripcio(d.getDescripcio());
+            }
+            DimensioEntity dimensioSaved = dimensioRepository.save(dimensio);
+
+            if (d.getValors() != null && !d.getValors().isEmpty()) {
+                Set<String> uniqueValues = new HashSet<>(d.getValors());
+                Set<String> existingValues = new HashSet<>();
+
+                List<List<String>> valueBatches = splitIntoBatches(new ArrayList<>(uniqueValues), 900);
+                for (List<String> batch : valueBatches) {
+                    List<DimensioValorEntity> existing = findExistingDimensioValors(dimensioSaved, batch);
+                    existingValues.addAll(existing.stream()
+                            .map(DimensioValorEntity::getValor)
+                            .collect(Collectors.toSet()));
                 }
-                DimensioEntity dimensioSaved = dimensioRepository.save(dimensio);
 
-                if (d.getValors() != null) {
-                    d.getValors().forEach(v -> {
-                        if (!dimensioValorRepository.findByDimensioAndValor(dimensioSaved, ("".equals(v) ? null : v)).isPresent()) {
-                            DimensioValorEntity valor = new DimensioValorEntity();
-                            valor.setDimensio(dimensioSaved);
-                            valor.setValor(v);
-                            dimensioValorRepository.save(valor);
-                        }
-                    });
-                }
-            });
+                createMissingDimensioValors(dimensioSaved, uniqueValues, existingValues);
+            }
         }
+    }
+
+    private void createMissingDimensioValors(DimensioEntity dimensio, Set<String> values, Set<String> existingValues) {
+        List<DimensioValorEntity> newValues = values.stream()
+                .filter(v -> !existingValues.contains(v))
+                .map(v -> {
+                    DimensioValorEntity valor = new DimensioValorEntity();
+                    valor.setDimensio(dimensio);
+                    valor.setValor("".equals(v) ? null : v);
+                    return valor;
+                })
+                .collect(Collectors.toList());
+
+        if (!newValues.isEmpty()) {
+            dimensioValorRepository.saveAll(newValues);
+        }
+    }
+
+    private List<DimensioValorEntity> findExistingDimensioValors(DimensioEntity dimensio, List<String> values) {
+        return dimensioValorRepository.findByDimensioAndValorIn(dimensio, values);
+    }
+
+    private <T> List<List<T>> splitIntoBatches(List<T> list, int batchSize) {
+        List<List<T>> batches = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += batchSize) {
+            batches.add(list.subList(i, Math.min(i + batchSize, list.size())));
+        }
+        return batches;
     }
 
     /**
@@ -246,15 +329,22 @@ public class EstadisticaHelper {
      * @param temps l'objecte Temps que conté la informació temporal necessària per crear o recuperar un TempsEntity.
      * @return l'entitat TempsEntity corresponent a la data proporcionada, o null si l'objecte Temps és null.
      */
+    private static final ConcurrentHashMap<LocalDate, Object> TIME_LOCKS = new ConcurrentHashMap<>();
+
     private TempsEntity crearTemps(es.caib.comanda.ms.estadistica.model.Temps temps) {
         if (temps == null)
             return null;
 
         LocalDate data = LocalDate.from(temps.getData().toInstant().atZone(ZoneId.systemDefault()));
-        TempsEntity tempsEntity = tempsRepository.findByData(data);
-        if (tempsEntity == null)
-            tempsEntity = tempsRepository.save(new TempsEntity(data));
-        return tempsEntity;
+        Object lock = TIME_LOCKS.computeIfAbsent(data, k -> new Object());
+
+        synchronized (lock) {
+            TempsEntity tempsEntity = tempsRepository.findByData(data);
+            if (tempsEntity == null) {
+                tempsEntity = tempsRepository.save(new TempsEntity(data));
+            }
+            return tempsEntity;
+        }
     }
 
     /**

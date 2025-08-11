@@ -55,37 +55,42 @@ import ListItemText from '@mui/material/ListItemText';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
 
-const EntornAppFilterContent = () => {
+const EntornAppFilterContent = (props: any) => {
+    const { initialData } = props;
     const { data } = useFormContext();
     return (
         <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid size={6}>
                 <FormField
                     name="app"
-                    componentProps={{
-                        size: 'small',
-                    }}
+                    componentProps={{ size: 'small' }}
+                    readOnly={initialData?.app}
+                    disabled={initialData?.app}
+                    filter={springFilterBuilder.exists(
+                        springFilterBuilder.and(
+                            springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id)
+                        )
+                    )}
                 />
             </Grid>
-
             <Grid size={6}>
                 <FormField
-                    name="entornApp"
-                    filter={
-                        data.app?.id != null
-                            ? springFilterBuilder.eq('app.id', data.app?.id)
-                            : undefined
-                    }
-                    componentProps={{
-                        size: 'small',
-                    }}
+                    name="entorn"
+                    componentProps={{ size: 'small' }}
+                    readOnly={initialData?.entorn}
+                    disabled={initialData?.entorn}
+                    filter={springFilterBuilder.exists(
+                        springFilterBuilder.and(
+                            springFilterBuilder.eq('entornAppEntities.app.id', data?.app?.id)
+                        )
+                    )}
                 />
             </Grid>
         </Grid>
     );
 };
 
-const EntornAppFilter = ({ onDataChange, onSpringFilterChange }) => {
+const EntornAppFilter = ({ onDataChange, onSpringFilterChange, initialData }) => {
     return (
         <MuiFilter
             resourceName="entornApp"
@@ -95,8 +100,10 @@ const EntornAppFilter = ({ onDataChange, onSpringFilterChange }) => {
             }}
             onSpringFilterChange={onSpringFilterChange}
             onDataChange={onDataChange}
+            // initialData={initialData} TODO Deberia bastar con settear initialData, pero al hacerlo el componente da un error de link no incializado, debuggear componente lib
+            additionalData={initialData}
         >
-            <EntornAppFilterContent />
+            <EntornAppFilterContent initialData={initialData} />
         </MuiFilter>
     );
 };
@@ -139,10 +146,11 @@ const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
 type AddWidgetDialogProps = {
     open: boolean;
     onClose: () => void;
-    onAdd: (widgetId: any, entornAppId: any) => void;
+    onAdd: (widgetId: any, entornId: any) => void;
+    initialData?: any;
 };
 
-const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd }) => {
+const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd, initialData }) => {
     const { t } = useTranslation();
     const [tab, setTab] = React.useState(0);
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -152,7 +160,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd 
     const [filterString, setFilterString] = useState<string | null>(null);
 
     const onAddClick = (id) => {
-        onAdd(id, filterData.entornApp.id);
+        onAdd(id, filterData.entorn.id);
     };
 
     return (
@@ -184,8 +192,9 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd 
                 <EntornAppFilter
                     onDataChange={setFilterData}
                     onSpringFilterChange={setFilterString}
+                    initialData={initialData}
                 />
-                {filterData?.app && filterData?.entornApp && (
+                {filterData?.app && filterData?.entorn && (
                     <>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                             <Tabs value={tab} onChange={handleChange}>
@@ -276,7 +285,7 @@ function WidgetsErrorAlert({ errorWidgets }) {
 
 const defaultSizeAndPosition = {
     posX: 0,
-    posY: 0,
+    // posY: 0, //Sense valor, el back el possicionara abaix de tot.
     width: 3,
     height: 3,
 };
@@ -471,12 +480,12 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const openAddWidgetDialog = () => setAddWidgetDialogOpen(true);
     const closeAddWidgetDialog = () => setAddWidgetDialogOpen(false);
 
-    const addWidget = (widgetId: any, entornAppId: any) => {
+    const addWidget = (widgetId: any, entornId: any) => {
         createDashboardItem({
             data: {
                 dashboard: { id: dashboardId },
                 widget: { id: widgetId },
-                entornId: entornAppId,
+                entornId,
                 ...defaultSizeAndPosition,
             },
         })
@@ -661,7 +670,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 </ButtonMenu>
                                 <ButtonMenu
                                     title={t('page.dashboards.components.afegir')}
-                                    disabled={!apiDashboardItemIsReady}
+                                    disabled={!apiDashboardItemIsReady || !dashboard}
                                     buttonIcon={<AddIcon />}
                                 >
                                     <MenuItem onClick={openAddWidgetDialog}>
@@ -702,6 +711,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
                 open={addWidgetDialogOpen}
                 onClose={closeAddWidgetDialog}
                 onAdd={addWidget}
+                initialData={{
+                    app: dashboard?.aplicacio,
+                    entorn: dashboard?.entorn
+                }}
             />
         </>
     );

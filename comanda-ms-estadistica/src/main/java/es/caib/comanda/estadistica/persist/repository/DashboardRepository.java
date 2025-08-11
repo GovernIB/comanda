@@ -14,4 +14,12 @@ import es.caib.comanda.ms.persist.repository.BaseRepository;
  */
 public interface DashboardRepository extends BaseRepository<DashboardEntity, Long> {
 
+    /**
+     * Cerca un dashboard pel seu títol.
+     * 
+     * @param titol Títol del dashboard
+     * @return L'entitat del dashboard o null si no existeix
+     */
+    DashboardEntity findByTitol(String titol);
+
 }

@@ -1,4 +1,14 @@
 const translationEn = {
+    enum: {
+        appEstat: {
+            UP: "Up",
+            WARN: "Warn",
+            DOWN: "Down",
+            DEGRADED: "Degraded",
+            MAINTENANCE: "Maintenance",
+            UNKNOWN: "Unknown",
+        },
+    },
     menu: {
         configuracio: "Configuration",
         estadistiques: "Statistics",
@@ -11,12 +21,14 @@ const translationEn = {
         dashboard: "Dashboards",
         cache: "Cache management",
         integracio: "Integrations",
+        calendari: "Calendar",
         broker: "Queue Manager",
     },
     page: {
         salut: {
             title: "Health",
             refrescar: "Refresh",
+            filtrar: "Filter by application/environment",
             nd: "N/A",
             apps: {
                 column: {
@@ -24,6 +36,7 @@ const translationEn = {
                     codi: "Code",
                     nom: "Name",
                     versio: "Version",
+                    revisio: "Revision",
                     bd: "Database",
                     latencia: "Latency",
                     integ: "Integrations",
@@ -34,6 +47,7 @@ const translationEn = {
             },
             refreshperiod: {
                 PT1M: "1 minute",
+                PT5M: "5 minutes",
                 PT10M: "10 minutes",
                 PT30M: "30 minutes",
                 PT1H: "1 hour",
@@ -47,6 +61,10 @@ const translationEn = {
             },
             info: {
                 title: "Information",
+                revisio: "Revision",
+                jdk: {
+                    versio: "JDK versin",
+                },
                 data: "Last update",
                 bdEstat: "Database",
                 appLatencia: "Latency",
@@ -55,12 +73,15 @@ const translationEn = {
             },
             latencia: {
                 title: "Latency",
+                error: "There was an error displaying the chart",
             },
             estatLatencia: {
                 title: "State and latency",
+                noInfo: "No data to display.",
             },
             integracions: {
                 title: "Integrations",
+                noInfo: "There is no information about integrations",
                 column: {
                     codi: "Code",
                     nom: "Name",
@@ -71,12 +92,28 @@ const translationEn = {
             },
             subsistemes: {
                 title: "Subsystems",
+                noInfo: "There is no information about subsystems",
                 column: {
                     codi: "Code",
                     nom: "Name",
                     estat: "State",
                     latencia: "Latency",
                 },
+            },
+            contexts: {
+                title: "Contexts",
+                noInfo: "There is no information about contexts",
+                column: {
+                    codi: "Code",
+                    nom: "Name",
+                    path: "Path",
+                    api: "Api",
+                    manuals: "Manuals",
+                },
+            },
+            detalls: {
+                title: "Details",
+                noInfo: "There is no information about application details",
             },
             estats: {
                 title: "States",
@@ -92,6 +129,9 @@ const translationEn = {
             uploadLogo: "Upload logo",
             changeLogo: "Change logo",
             removeLogo: "Remove logo",
+            action: {
+                export: "Export application",
+            },
         },
         entorns: {
             title: "Environments",
@@ -125,8 +165,9 @@ const translationEn = {
                 excepcioStacktrace: "Exception stack trace",
             },
             modulEnum: {
-                salut: "Salud",
-                estadistica: "Estadística",
+                salut: "Health",
+                estadistica: "Statistics",
+                configuracio: "Configuration",
             },
         },
         widget: {
@@ -140,6 +181,16 @@ const translationEn = {
                 simple: "Simple widget",
                 grafic: "Graphic widget",
                 taula: "Table widget",
+                preview: "Preview",
+                configVisual: "Visual configuration",
+                configGeneral: "General configuration",
+                configTaula: "Table configuration",
+                configFont: "Font size configuration",
+                graficBar: "Bar chart",
+                graficLin: "Line chart",
+                graficPst: "Pie chart",
+                graficGug: "Gauge chart",
+                graficMap: "Heatmap chart",
             },
             simple: {
                 tab: {
@@ -154,6 +205,7 @@ const translationEn = {
                 },
                 title: "Statistic chart widgets",
                 resourceTitle: "chart widget",
+                indicadors: "Indicators",
             },
             taula: {
                 tab: {
@@ -161,6 +213,7 @@ const translationEn = {
                 },
                 title: "Statistic table widgets",
                 resourceTitle: "table widget",
+                tableCols: "Table columns",
                 columna: {
                     indicador: "Indicator",
                     titolIndicador: "Title",
@@ -170,9 +223,71 @@ const translationEn = {
                     arrossega: "Drag to reorder",
                 },
             },
+            atributsVisuals: {
+                colorText: "Text color",
+                colorFons: "Background color",
+                icona: "Icon",
+                colorIcona: "Icon color",
+                colorFonsIcona: "Icon background color",
+                colorTextDestacat: "Highlighted text color",
+                mostrarVora: "Show border",
+                colorVora: "Border color",
+                ampleVora: "Border width",
+                midaFontTitol: "Title font size",
+                midaFontDescripcio: "Description font size",
+                midaFontValor: "Value font size",
+                midaFontUnitats: "Units font size",
+                midaFontCanviPercentual: "Percentual change font size",
+                colorsPaleta: "Palette colors",
+                mostrarReticula: "Show grid",
+                barStacked: "Stacked bars",
+                barHorizontal: "Horizontal bars",
+                lineShowPoints: "Show points",
+                area: "Fill area",
+                lineSmooth: "Smooth lines",
+                lineWidth: "Line width",
+                outerRadius: "Outer radius",
+                pieDonut: "Donut type",
+                innerRadius: "Inner radius",
+                pieShowLabels: "Show labels",
+                labelSize: "Label size",
+                gaugeMin: "Minimum value",
+                gaugeMax: "Maximum value",
+                gaugeColors: "Colors (comma-separated)",
+                gaugeRangs: "Ranges (comma separated)",
+                heatmapMinValue: "Minimum value",
+                heatmapMaxValue: "Maximum value",
+                colorTextTaula: "Table text color",
+                colorFonsTaula: "Table background color",
+                mostrarCapcalera: "Show header",
+                colorCapcalera: "Header text color",
+                colorFonsCapcalera: "Header background color",
+                mostrarAlternancia: "Show row alternation",
+                colorAlternancia: "Alternation color",
+                mostrarVoraTaula: "Show table border",
+                colorVoraTaula: "Border color",
+                ampleVoraTaula: "Border width",
+                mostrarSeparadorHoritzontal: "Show horizontal separator",
+                colorSeparadorHoritzontal: "Separator color",
+                ampleSeparadorHoritzontal: "Separator width",
+                mostrarSeparadorVertical: "Show vertical separator",
+                colorSeparadorVertical: "Separator color",
+                ampleSeparadorVertical: "Separator width",
+            },
+            editorPaleta: {
+                title: "Color Palette Editor",
+                color: "Color",
+                hex: "HEX Code",
+                palet: "Current palette:",
+                empty: "There are no colors in the palette.",
+                exist: "This color already exists in the palette!",
+            },
             action: {
                 add: {
                     label: "Add",
+                },
+                addColumn: {
+                    label: "Add column",
                 },
             },
         },
@@ -180,6 +295,10 @@ const translationEn = {
             title: "Dashboards",
             edit: "Edit",
             dashboardView: "Go to dashboard",
+            cloneDashboard: {
+                title: "Clone the dashboard",
+                success: "Dashboard cloned correctly",
+            },
             components: {
                 llistar: "List components",
                 afegir: "Add component",
@@ -211,7 +330,8 @@ const translationEn = {
                 afegirTitle: {
                     label: "Add title",
                     title: "Add title",
-                }
+                },
+                export: "Export dashboard",
             },
             alert: {
                 tornarLlistat: "Return to list",
@@ -223,12 +343,6 @@ const translationEn = {
         },
         caches: {
             title: "Caches",
-            columna: {
-                codi: "Code",
-                nom: "Name",
-                entrades: "Elements",
-                mida: "Size (bytes)",
-            },
             buidar: {
                 label: "Clear",
                 titol: "Clear cache",
@@ -349,6 +463,43 @@ const translationEn = {
         copiarContingut: "Copy content",
         copiarContingutTitle: "Copy the content",
         copiarContingutSuccess: "Content copied to clipboard",
+    },
+    calendari: {
+        seleccionar_entorn_app: "Select application environment",
+        seleccionar: "Select",
+        seleccionar_entorn_app_primer: "Select firs an application environment",
+        carregar_interval: "Load data by interval",
+        carregar_mes_actual: "Load data for the current month",
+        today: "Hoy",
+        data_inici: "Start date",
+        data_fi: "End date",
+        cancelar: "Cancel",
+        carregar: "Load",
+        sense_dades: "No statistical data",
+        dades_buides: "The application has no statistical data",
+        dades_disponibles: "Data available",
+        dades_disponibles_tooltip: "Click to see the available statistical data",
+        obtenir_dades: "Get data",
+        obtenir_dades_tooltip: "Click to get the statistical data for this day",
+        error_dades: "Error getting data",
+        error_dades_tooltip: "An error occurred while trying to get the statistical data of the application",
+        error_titol: "Error getting statistical data",
+        data: "Date",
+        missatge: "Message",
+        traca: "Trace",
+        tancar: "Close",
+        success_obtenir_dades: "Statistics data obtained successfully",
+        error_obtenir_dades: "Error getting statistical data",
+        success_carregar_interval: " Statistics data loaded successfully",
+        error_carregar_interval: "Error loading data by interval",
+        error_dades_disponibles: "Error getting available statistical data days",
+        error_dades_dia: "Error getting statistical data for the day",
+        error_obtenir_dates_mes: "Could not determine the dates for the current month",
+        carregant: "Loading",
+        carregant_dades: "Loading statistical data...",
+        modal_dades_dia: "Available data for the day",
+        dimensions: "Dimensions",
+        indicadors: "Indicators",
     },
 };
 

@@ -26,17 +26,14 @@ import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -45,27 +42,25 @@ import java.util.stream.Collectors;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, SalutEntity> implements SalutService {
 
-	@Autowired
-	private SalutIntegracioRepository salutIntegracioRepository;
-	@Autowired
-	private SalutSubsistemaRepository salutSubsistemaRepository;
-	@Autowired
-	private SalutMissatgeRepository salutMissatgeRepository;
-	@Autowired
-	private SalutDetallRepository salutDetallRepository;
-    @Autowired
-    private SalutClientHelper salutClientHelper;
+	private final SalutIntegracioRepository salutIntegracioRepository;
+	private final SalutSubsistemaRepository salutSubsistemaRepository;
+	private final SalutMissatgeRepository salutMissatgeRepository;
+	private final SalutDetallRepository salutDetallRepository;
+    private final SalutClientHelper salutClientHelper;
 
 	@PostConstruct
 	public void init() {
 		register(Salut.SALUT_REPORT_LAST, new InformeSalutLast());
 		register(Salut.SALUT_REPORT_ESTAT, new InformeEstat());
+		register(Salut.SALUT_REPORT_ESTATS, new InformeEstats());
 		register(Salut.SALUT_REPORT_LATENCIA, new InformeLatencia());
 		register(Salut.PERSP_INTEGRACIONS, new PerspectiveIntegracions());
 		register(Salut.PERSP_SUBSISTEMES, new PerspectiveSubsistemes());
+		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
 	}
@@ -119,6 +114,14 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 	}
 
+	public class PerspectiveContexts implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
+			resource.setContexts(entornAppForEntity.getContexts());
+		}
+	}
+
 	public class PerspectiveMissatges implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
@@ -156,10 +159,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	/**
 	 * Darrera informació de salut de cada aplicació/entorn.
 	 */
-	public class InformeSalutLast implements ReportGenerator<SalutEntity, Serializable, Salut> {
+	public class InformeSalutLast implements ReportGenerator<SalutEntity, String, Salut> {
 		@Override
-		public List<Salut> generateData(String code, SalutEntity entity, Serializable params) throws ReportGenerationException {
-			List<EntornApp> entornApps = salutClientHelper.entornAppFindByActivaTrue();
+		public List<Salut> generateData(String code, SalutEntity entity, String params) throws ReportGenerationException {
+			List<EntornApp> entornApps = salutClientHelper.entornAppFindByActivaTrue(params);
 			List<Long> entornAppIds = entornApps.stream()
 					.filter(Objects::nonNull)
 					.map(EntornApp::getId)
@@ -173,10 +176,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			return entitiesToResources(saluts);
 		}
 
-		@Override
-		public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
-		}
-	}
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        }
+    }
 
 	/**
 	 * Històric d'estats d'una aplicació entre dues dates.
@@ -232,6 +235,29 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		public void onChange(Serializable id, SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
 		}
 	}
+
+    public class InformeEstats implements ReportGenerator<SalutEntity, SalutInformeParams, HashMap<String, Object>> {
+
+        @Override
+		public List<HashMap<String, Object>> generateData(String code, SalutEntity entity, SalutInformeParams params) throws ReportGenerationException {
+            List<HashMap<String, Object>> result = new ArrayList<>();
+            HashMap<String, Object> map = new HashMap<>();
+            InformeEstat informeEstat = new InformeEstat();
+
+            params.getEntornAppIdList().forEach( id -> {
+                params.setEntornAppId(id);
+                List<SalutInformeEstatItem> list = informeEstat.generateData(code, entity, params);
+                map.put(String.valueOf(id), list);
+            });
+
+            result.add(map);
+			return result;
+		}
+
+        @Override
+        public void onChange(Serializable id, SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
+        }
+    }
 
 	/**
 	 * Mitja de la latencia agrupada d'una aplicació entre dues dates.

@@ -1,4 +1,14 @@
 const translationEs = {
+    enum: {
+        appEstat: {
+            UP: "Activo",
+            WARN: "Advertencia",
+            DOWN: "Inactivo",
+            DEGRADED: "Degradado",
+            MAINTENANCE: "Mantenimiento",
+            UNKNOWN: "Desconocido"
+        }
+    },
     menu: {
         configuracio: "Configuración",
         estadistiques: "Estadísticas",
@@ -11,12 +21,14 @@ const translationEs = {
         dashboard: "Cuadros de control",
         cache: "Gestión de cachés",
         integracio: "Integraciones",
+        calendari: "Calendario",
         broker: "Gestor de colas",
     },
     page: {
         salut: {
             title: "Salut",
             refrescar: "Refrescar",
+            filtrar: "Filtrar por aplicación/entorno",
             nd: "N/D",
             apps: {
                 column: {
@@ -24,6 +36,7 @@ const translationEs = {
                     codi: "Código",
                     nom: "Nombre",
                     versio: "Versión",
+                    revisio: "Revisión",
                     bd: "Base de datos",
                     latencia: "Latencia",
                     integ: "Integraciones",
@@ -34,6 +47,7 @@ const translationEs = {
             },
             refreshperiod: {
                 PT1M: "1 minuto",
+                PT5M: "5 minutos",
                 PT10M: "10 minutos",
                 PT30M: "30 minutos",
                 PT1H: "1 hora",
@@ -47,6 +61,10 @@ const translationEs = {
             },
             info: {
                 title: "Información",
+                revisio: "Revisión",
+                jdk: {
+                    versio: "Versión JDK",
+                },
                 data: "Última actualización",
                 bdEstat: "Base de datos",
                 appLatencia: "Latencia",
@@ -55,12 +73,15 @@ const translationEs = {
             },
             latencia: {
                 title: "Latencia",
+                error: "Ha habido un error al mostrar el gráfico",
             },
             estatLatencia: {
                 title: "Estado y latencia",
+                noInfo: "No hay datos que mostrar",
             },
             integracions: {
                 title: "Integraciones",
+                noInfo: "No hay información de integraciones",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -71,12 +92,28 @@ const translationEs = {
             },
             subsistemes: {
                 title: "Subsistemas",
+                noInfo: "No hay información de subsistemas",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
                     estat: "Estado",
                     latencia: "Latencia",
                 },
+            },
+            contexts: {
+                title: "Contextos",
+                noInfo: "No hay información de contextos",
+                column: {
+                    codi: "Código",
+                    nom: "Nombre",
+                    path: "Ruta",
+                    api: "Api",
+                    manuals: "Manuales",
+                },
+            },
+            detalls: {
+                title: "Detalles",
+                noInfo: "No hay información sobre detalles de la aplicación",
             },
             estats: {
                 title: "Estados",
@@ -92,6 +129,9 @@ const translationEs = {
             uploadLogo: "Subir logo",
             changeLogo: "Cambiar logo",
             removeLogo: "Eliminar logo",
+            action: {
+                export: "Exportar aplicación",
+            },
         },
         entorns: {
             title: "Entornos",
@@ -125,8 +165,9 @@ const translationEs = {
                 excepcioStacktrace: "Traza de la excepción",
             },
             modulEnum: {
-                salut: "Health",
-                estadistica: "Statistics",
+                salut: "Salud",
+                estadistica: "Estadística",
+                configuracio: "Configuración",
             },
         },
         widget: {
@@ -136,10 +177,20 @@ const translationEs = {
                 size: "Tamaño",
             },
             form: {
-                periode: "Period",
+                periode: "Periodo",
                 simple: "Widget simple",
                 grafic: "Widget gráfico",
                 taula: "Widget tabla",
+                preview: "Previsualización",
+                configVisual: "Configuración visual",
+                configGeneral: "Configuración general",
+                configTaula: "Configuración tabla",
+                configFont: "Configuración del tamaño de fuente",
+                graficBar: "Gráfico de barras",
+                graficLin: "Gráfico de líneas",
+                graficPst: "Gráfico de pastel",
+                graficGug: "Gráfico de gauge",
+                graficMap: "Gráfico de heatmap",
             },
             simple: {
                 tab: {
@@ -154,6 +205,7 @@ const translationEs = {
                 },
                 title: "Widgets estadísticos gráficos",
                 resourceTitle: "widget gráfico",
+                indicadors: "Indicadores",
             },
             taula: {
                 tab: {
@@ -161,6 +213,7 @@ const translationEs = {
                 },
                 title: "Widgets estadísticos tipo tabla",
                 resourceTitle: "widget tipo tabla",
+                tableCols: "Columnas de la tabla",
                 columna: {
                     indicador: "Indicador",
                     titolIndicador: "Título",
@@ -170,9 +223,71 @@ const translationEs = {
                     arrossega: "Arrastra para reordenar",
                 },
             },
+            atributsVisuals: {
+                colorText: "Color del texto",
+                colorFons: "Color de fondo",
+                icona: "Icono",
+                colorIcona: "Color del icono",
+                colorFonsIcona: "Color de fondo del icono",
+                colorTextDestacat: "Color del texto destacado",
+                mostrarVora: "Mostrar borde",
+                colorVora: "Color del borde",
+                ampleVora: "Ancho del borde",
+                midaFontTitol: "Tamaño de fuente del título",
+                midaFontDescripcio: "Tamaño de fuente de la descripción",
+                midaFontValor: "Tamaño de fuente del valor",
+                midaFontUnitats: "Tamaño de fuente de las unidades",
+                midaFontCanviPercentual: "Tamaño de fuente del cambio porcentual",
+                colorsPaleta: "Colores de la paleta",
+                mostrarReticula: "Mostrar cuadrícula",
+                barStacked: "Barras apiladas",
+                barHorizontal: "Barras horizontales",
+                lineShowPoints: "Mostrar puntos",
+                area: "Rellenar área",
+                lineSmooth: "Líneas suaves",
+                lineWidth: "Ancho de línea",
+                outerRadius: "Radio exterior",
+                pieDonut: "Tipo donut",
+                innerRadius: "Radio interior",
+                pieShowLabels: "Mostrar etiquetas",
+                labelSize: "Tamaño de etiquetas",
+                gaugeMin: "Valor mínimo",
+                gaugeMax: "Valor máximo",
+                gaugeColors: "Colores (separados por comas)",
+                gaugeRangs: "Rangos (separados por comas)",
+                heatmapMinValue: "Valor mínimo",
+                heatmapMaxValue: "Valor máximo",
+                colorTextTaula: "Color de texto de la tabla",
+                colorFonsTaula: "Color de fondo de la tabla",
+                mostrarCapcalera: "Mostrar cabecera",
+                colorCapcalera: "Color de texto de la cabecera",
+                colorFonsCapcalera: "Color de fondo de la cabecera",
+                mostrarAlternancia: "Mostrar alternancia de filas",
+                colorAlternancia: "Color de alternancia",
+                mostrarVoraTaula: "Mostrar borde de la tabla",
+                colorVoraTaula: "Color del borde",
+                ampleVoraTaula: "Ancho del borde",
+                mostrarSeparadorHoritzontal: "Mostrar separador horizontal",
+                colorSeparadorHoritzontal: "Color del separador",
+                ampleSeparadorHoritzontal: "Ancho del separador",
+                mostrarSeparadorVertical: "Mostrar separador vertical",
+                colorSeparadorVertical: "Color del separador",
+                ampleSeparadorVertical: "Ancho del separador",
+            },
+            editorPaleta: {
+                title: "Editor de paleta de colores",
+                color: "Color",
+                hex: "Código HEX",
+                palet: "Paleta actual:",
+                empty: "No hay colores en la paleta.",
+                exist: "¡Este color ya existe en la paleta!",
+            },
             action: {
                 add: {
                     label: "Añadir",
+                },
+                addColumn: {
+                    label: "Añadir columna",
                 },
             },
         },
@@ -180,6 +295,10 @@ const translationEs = {
             title: "Cuadros de control",
             edit: "Editar",
             dashboardView: "Ir al panel de control",
+            cloneDashboard: {
+                title: "Clonar el panel de control",
+                success: "Panel de control clonado correctamente",
+            },
             components: {
                 llistar: "Listar componentes",
                 afegir: "Añadir componente",
@@ -211,7 +330,8 @@ const translationEs = {
                 afegirTitle: {
                     label: "Añadir título",
                     title: "Añadir título",
-                }
+                },
+                export: "Exportar tablero",
             },
             alert: {
                 tornarLlistat: "Volver al listado",
@@ -223,12 +343,6 @@ const translationEs = {
         },
         caches: {
             title: "Caches",
-            columna: {
-                codi: "Código",
-                nom: "Nombre",
-                entrades: "Núm. elementos",
-                mida: "Tamaño (bytes)",
-            },
             buidar: {
                 label: "Vaciar",
                 titol: "Vaciar cache",
@@ -349,6 +463,43 @@ const translationEs = {
         copiarContingut: "Copiar contenido",
         copiarContingutTitle: "Copiar el contenido",
         copiarContingutSuccess: "Contenido copiado al portapapeles",
+    },
+    calendari: {
+        seleccionar_entorn_app: "Seleccionar entorno de aplicación",
+        seleccionar: "Seleccionar",
+        seleccionar_entorn_app_primer: "Seleccione primero un entorno de aplicación",
+        carregar_interval: "Cargar datos por intervalo",
+        carregar_mes_actual: "Cargar datos del mes actual",
+        today: "Today",
+        data_inici: "Fecha inicio",
+        data_fi: "Fecha fin",
+        cancelar: "Cancelar",
+        carregar: "Cargar",
+        sense_dades: "No hay datos estadísticos",
+        dades_buides: "La aplicación no dispone de datos estadísticos",
+        dades_disponibles: "Datos disponibles",
+        dades_disponibles_tooltip: "Clica para ver los datos disponibles",
+        obtenir_dades: "Obtener datos",
+        obtenir_dades_tooltip: "Haz clic para obtener los datos estadísticos del día",
+        error_dades: "Error al obtener datos",
+        error_dades_tooltip: "Se ha producido un error al intentar obtener los datos estadísticos de la aplicación",
+        error_titol: "Error al obtener datos estadísticos",
+        data: "Fecha",
+        missatge: "Mensaje",
+        traca: "Traza",
+        tancar: "Cerrar",
+        success_obtenir_dades: "Los datos estadísticos se han obtenido correctamente",
+        error_obtenir_dades: "Error al obtener datos estadísticos",
+        success_carregar_interval: "Los datos estadísticos se han obtenido correctamente",
+        error_carregar_interval: "Error al cargar datos por intervalo",
+        error_dades_disponibles: "Error al obtener los dias con datos estadísticos disponibles",
+        error_dades_dia: "Error al obtener los datos estadísticos del dia",
+        error_obtenir_dates_mes: "No se han podido determinar las fechas del mes actual",
+        carregant: "Cargando",
+        carregant_dades: "Cargando datos estadísticos...",
+        modal_dades_dia: "Datos disponibles del día",
+        dimensions: "Dimensiones",
+        indicadors: "Indicadores",
     },
 };
 

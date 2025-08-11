@@ -2,8 +2,10 @@ package es.caib.comanda.ms.salut.service;
 
 import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
+import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -17,7 +19,6 @@ import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,8 +31,42 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SalutServiceImplTest {
 
     // Test subclass to expose protected methods if needed
-        // Override protected methods here if needed for testing
     static class TestableSalutServiceImpl extends SalutServiceImpl {
+        
+        public TestableSalutServiceImpl(SalutRepository entityRepository,
+                                      ResourceEntityMappingHelper resourceEntityMappingHelper,
+                                      ObjectMappingHelper objectMappingHelper,
+                                      JasperReportsHelper jasperReportsHelper,
+                                      SalutIntegracioRepository salutIntegracioRepository,
+                                      SalutSubsistemaRepository salutSubsistemaRepository,
+                                      SalutMissatgeRepository salutMissatgeRepository,
+                                      SalutDetallRepository salutDetallRepository,
+                                      SalutClientHelper salutClientHelper) {
+            super(salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, 
+                  salutDetallRepository, salutClientHelper);
+            
+            // Set the parent class fields using reflection
+            try {
+                java.lang.reflect.Field entityRepositoryField = BaseReadonlyResourceService.class.getDeclaredField("entityRepository");
+                entityRepositoryField.setAccessible(true);
+                entityRepositoryField.set(this, entityRepository);
+                
+                java.lang.reflect.Field resourceEntityMappingHelperField = BaseReadonlyResourceService.class.getDeclaredField("resourceEntityMappingHelper");
+                resourceEntityMappingHelperField.setAccessible(true);
+                resourceEntityMappingHelperField.set(this, resourceEntityMappingHelper);
+                
+                java.lang.reflect.Field objectMappingHelperField = BaseReadonlyResourceService.class.getDeclaredField("objectMappingHelper");
+                objectMappingHelperField.setAccessible(true);
+                objectMappingHelperField.set(this, objectMappingHelper);
+                
+                java.lang.reflect.Field jasperReportsHelperField = BaseReadonlyResourceService.class.getDeclaredField("jasperReportsHelper");
+                jasperReportsHelperField.setAccessible(true);
+                jasperReportsHelperField.set(this, jasperReportsHelper);
+            } catch (Exception e) {
+                throw new RuntimeException("Error setting parent class fields", e);
+            }
+        }
+        
         public SalutRepository getRepository() {
             return (SalutRepository) this.entityRepository;
         }
@@ -42,11 +77,17 @@ public class SalutServiceImplTest {
 
     }
 
-    @Spy
-    private ResourceEntityMappingHelper resourceEntityMappingHelper = new ResourceEntityMappingHelper(new ObjectMappingHelper());
-
     @Mock
     private SalutRepository entityRepository;
+    
+    @Spy
+    private ResourceEntityMappingHelper resourceEntityMappingHelper = new ResourceEntityMappingHelper(new ObjectMappingHelper());
+    
+    @Mock
+    private ObjectMappingHelper objectMappingHelper;
+    
+    @Mock
+    private JasperReportsHelper jasperReportsHelper;
 
     @Mock
     private SalutIntegracioRepository salutIntegracioRepository;
@@ -66,7 +107,6 @@ public class SalutServiceImplTest {
     @Mock
     private EntornAppServiceClient entornAppServiceClient;
 
-    @InjectMocks
     private TestableSalutServiceImpl salutService;
 
     private SalutEntity salutEntity;
@@ -75,6 +115,19 @@ public class SalutServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize the service with mocked dependencies
+        salutService = new TestableSalutServiceImpl(
+            entityRepository,
+            resourceEntityMappingHelper,
+            objectMappingHelper,
+            jasperReportsHelper,
+            salutIntegracioRepository,
+            salutSubsistemaRepository,
+            salutMissatgeRepository,
+            salutDetallRepository,
+            salutClientHelper
+        );
+        
         // Setup test data
         salutEntity = new SalutEntity();
         salutEntity.setId(1L);

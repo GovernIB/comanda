@@ -24,7 +24,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 			"COUNT((CASE WHEN (s.appEstat = 'UP') THEN 1 ELSE NULL END)), " +
 			"COUNT((CASE WHEN (s.appEstat = 'WARN') THEN 1 ELSE NULL END)), " +
 			"COUNT((CASE WHEN (s.appEstat = 'DEGRADED') THEN 1 ELSE NULL END)), " +
-			"COUNT((CASE WHEN (s.appEstat = 'DOWN') THEN 1 ELSE NULL END)), " +
+			"COUNT((CASE WHEN (s.appEstat = 'DOWN') OR (s.appEstat = 'ERROR') THEN 1 ELSE NULL END)), " +
 			"COUNT((CASE WHEN (s.appEstat = 'MAINTENANCE') THEN 1 ELSE NULL END)), " +
 			"COUNT((CASE WHEN (s.appEstat = 'UNKNOWN') THEN 1 ELSE NULL END))) ";
 	String SALUT_LATENCIA_ITEM_SELECT = "AVG(s.appLatencia)) ";

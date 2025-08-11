@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repositori per a la gestió d'aplicacions per entorn.
@@ -17,6 +18,8 @@ public interface EntornAppRepository extends BaseRepository<EntornAppEntity, Lon
 
 	@EntityGraph(attributePaths = {"app.codi", "entorn.codi"}, type = EntityGraph.EntityGraphType.LOAD)
 	List<EntornAppEntity> findByActivaTrueAndAppActivaTrue();
+
+	Optional<EntornAppEntity> findByEntornIdAndAppId(Long entornId, Long appId);
 
 	@Query("SELECT ae.id " +
 		"FROM EntornAppEntity ae " +

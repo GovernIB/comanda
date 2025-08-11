@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Salut from './pages/Salut';
-import SalutAppInfo from './pages/SalutAppInfo';
 import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
@@ -15,6 +14,7 @@ import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
 import Broker from './pages/Broker';
 import QueueMessages from './pages/QueueMessages';
+import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -23,7 +23,7 @@ const AppRoutes: React.FC = () => {
     return (
         <Routes>
             <Route index element={<Salut />} />
-            <Route path="/appinfo/:id" element={<SalutAppInfo />} />
+            <Route path="/appinfo/:id" element={<Salut />} />
             <Route path={DASHBOARDS_PATH}>
                 <Route index element={<EstadisticaDashboards />} />
                 <Route path=":id" element={<EstadisticaDashboardEdit />} />
@@ -53,6 +53,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="estadisticaWidget">
                 <Route index element={<EstadisticaWidget />} />
+            </Route>
+            <Route path="calendari">
+                <Route index element={<CalendariEstadistiques />} />
             </Route>
             <Route path="broker">
                 <Route index element={<Broker />} />

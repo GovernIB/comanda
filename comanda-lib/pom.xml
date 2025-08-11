@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>es.caib.comanda</groupId>
 	<artifactId>comanda-lib</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
 
 	<properties>

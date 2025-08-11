@@ -100,7 +100,7 @@ public class EstadisticaGraficWidgetHelper {
                         columnaResource.setUnitatAgregacio(columna.getUnitatAgregacio());
                         columnaResource.setIndicador(ResourceReference.toResourceReference(
                                 columna.getIndicador().getId(),
-                                columna.getIndicador().getCodi()));
+                                columna.getIndicador().getCodiNomDescription()));
                         return columnaResource;
                     }).collect(Collectors.toList());
             resource.setIndicadorsInfo(indicadorsResource);
@@ -108,7 +108,7 @@ public class EstadisticaGraficWidgetHelper {
             if (entity.getIndicadorsInfo() != null && !entity.getIndicadorsInfo().isEmpty() && entity.getIndicadorsInfo().get(0) != null) {
                 IndicadorTaulaEntity indicadorTaula = entity.getIndicadorsInfo().get(0);
                 IndicadorEntity indicador = indicadorTaula.getIndicador();
-                resource.setIndicador(ResourceReference.toResourceReference(indicador.getId(), indicador.getCodi()));
+                resource.setIndicador(ResourceReference.toResourceReference(indicador.getId(), indicador.getCodiNomDescription()));
                 resource.setTitolIndicador(indicadorTaula.getTitol());
                 resource.setAgregacio(indicadorTaula.getAgregacio());
                 resource.setUnitatAgregacio(indicadorTaula.getUnitatAgregacio());
