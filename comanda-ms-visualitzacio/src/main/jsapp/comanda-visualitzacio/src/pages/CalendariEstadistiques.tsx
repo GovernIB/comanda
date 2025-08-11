@@ -559,7 +559,7 @@ const CalendariEstadistiques: React.FC = () => {
     };
 
     return (
-        <GridPage>
+        <GridPage disableMargins>
             {/* Global loading overlay */}
             {globalLoading && (
                 <Box className="global-loading-overlay">
@@ -607,7 +607,7 @@ const CalendariEstadistiques: React.FC = () => {
             {/* Sempre mostrem el calendari, però amb un missatge d'ajuda si no hi ha entorn seleccionat */}
             <Box
                 sx={{
-                    mt: 2,
+                    margin: '16px 24px',
                     height: '100%',
                     '& .fc-header-toolbar': {
                         display: 'flex !important',
