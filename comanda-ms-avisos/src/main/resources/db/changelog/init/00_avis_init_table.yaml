@@ -21,6 +21,16 @@ databaseChangeLog:
             type: BIGINT
         - column:
             constraints:
+              nullable: false
+            name: app_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: entorn_id
+            type: BIGINT
+        - column:
+            constraints:
                 nullable: false
             name: identificador
             type: VARCHAR(64 ${varcharUnit})
