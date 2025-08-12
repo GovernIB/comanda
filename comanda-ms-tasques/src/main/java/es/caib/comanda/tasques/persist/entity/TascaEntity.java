@@ -34,6 +34,10 @@ public class TascaEntity extends BaseAuditableEntity<Tasca> {
 
     @Column(name = "entorn_app_id", nullable = false)
     private Long entornAppId;
+    @Column(name = "entorn_id", nullable = false)
+    private Long entornId;
+    @Column(name = "app_id", nullable = false)
+    private Long appId;
 
     @Column(name = "identificador", length = 64, nullable = false)
     private String identificador;

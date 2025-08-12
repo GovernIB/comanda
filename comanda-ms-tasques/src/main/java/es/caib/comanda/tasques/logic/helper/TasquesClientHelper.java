@@ -52,6 +52,34 @@ public class TasquesClientHelper {
                 findFirst();
     }
 
+    public Optional<EntornApp> entornAppFindByApp(Long appId) {
+        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                null,
+                "and app.id:" + appId,
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        return entornApps.getContent().stream().
+                map(EntityModel::getContent).
+                findFirst();
+    }
+
+    public Optional<EntornApp> entornAppFindByEntorn(Long entornId) {
+        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                null,
+                "entorn.id:" + entornId,
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        return entornApps.getContent().stream().
+                map(EntityModel::getContent).
+                findFirst();
+    }
+
 
     // Client Monitor
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
