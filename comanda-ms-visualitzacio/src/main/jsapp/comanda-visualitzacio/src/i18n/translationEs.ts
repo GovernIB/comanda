@@ -117,6 +117,7 @@ const translationEs = {
             estats: {
                 title: "Estados",
             },
+            senseFiltres: "Sin filtros",
         },
         apps: {
             title: "Aplicaciones",

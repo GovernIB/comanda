@@ -340,13 +340,13 @@ const useSalutEntornAppFilter = () => {
         handleOpen,
         handleClose,
         dialog,
+        data,
     }
 }
 
 export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const {
         title,
-        subtitle,
         hideFilter,
         state,
         ready,
@@ -362,7 +362,16 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const [lastRefresh, setLastRefresh] = React.useState<Date | null>(null);
     const [nextRefresh, setNextRefresh] = React.useState<Date | null>(null);
 
-    const {springFilter, handleOpen, dialog} = useSalutEntornAppFilter();
+    const {springFilter, handleOpen, dialog, data: filterData} = useSalutEntornAppFilter();
+
+    const computedSubtitle = React.useMemo(() => {
+        const appName = filterData?.app?.description;
+        const envName = filterData?.entorn?.description;
+        if (!appName && !envName) return t('page.salut.senseFiltres');
+        if (appName && !envName) return appName as string;
+        if (!appName && envName) return envName as string;
+        return `${appName} - ${envName}`;
+    }, [filterData, t]);
 
     const timeUntilNextRefreshFormatted = useTimeUntilNextRefreshFormatted(nextRefresh);
     const refresh = (execAction?: boolean) => {
@@ -470,7 +479,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     return <><Toolbar
         title={<>
             {title}{state}
-            {subtitle && <Typography
+            <Typography
                 variant="caption"
                 sx={{
                     position: 'relative',
@@ -478,10 +487,9 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                     color: theme.palette.text.disabled,
                     ml: 1,
                 }}>
-                {subtitle}
-            </Typography>}
+                {computedSubtitle}
+            </Typography>
         </>}
-        //subtitle={subtitle}
         elementsWithPositions={toolbarElementsWithPositions}
         upperToolbar />
         {dialog}

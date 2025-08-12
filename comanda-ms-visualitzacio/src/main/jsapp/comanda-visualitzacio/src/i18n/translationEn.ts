@@ -117,6 +117,7 @@ const translationEn = {
             estats: {
                 title: "States",
             },
+            senseFiltres: "No filters",
         },
         apps: {
             title: "Applications",
