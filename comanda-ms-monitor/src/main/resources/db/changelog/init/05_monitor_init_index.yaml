@@ -1,0 +1,30 @@
+databaseChangeLog:
+- changeSet:
+    id: monitor-init-index-1
+    author: limit
+    changes:
+    - createIndex:
+        tableName: ${db_prefix}monitor
+        indexName: ${db_prefix}mon_codi_i
+        columns:
+            - column:
+                name: codi
+    - createIndex:
+        tableName: ${db_prefix}monitor
+        indexName: ${db_prefix}mon_usuari_i
+        columns:
+            - column:
+                name: codi_usuari
+    - createIndex:
+        tableName: ${db_prefix}monitor
+        indexName: ${db_prefix}mon_data_i
+        columns:
+            - column:
+                name: data
+    - createIndex:
+        tableName: ${db_prefix}monitor
+        indexName: ${db_prefix}mon_estat_i
+        columns:
+            - column:
+                name: estat
+
