@@ -63,7 +63,7 @@ const AppEntornForm: React.FC = () => {
     return (
         <Grid container spacing={2}>
             <Grid size={12}>
-                <FormField name="entorn" disabled={data?.id != null} filter={entornFilter}/>
+                <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter}/>
             </Grid>
             <Grid size={12}>
                 <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} onClick={pingUrl}/>}}}} />
