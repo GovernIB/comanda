@@ -66,6 +66,29 @@ const appDataStateInitialValue = {
     reportParams: null,
 };
 
+const useAppEstatLabel = () => {
+  const { t } = useTranslation();
+  
+  return (estat?: string) => {
+    switch (estat) {
+      case 'UP':
+        return t('enum.appEstat.UP');
+      case 'WARN':
+        return t('enum.appEstat.WARN');
+      case 'DOWN':
+        return t('enum.appEstat.DOWN');
+      case 'DEGRADED':
+        return t('enum.appEstat.DEGRADED');
+      case 'MAINTENANCE':
+        return t('enum.appEstat.MAINTENANCE');
+      case 'UNKNOWN':
+        return t('enum.appEstat.UNKNOWN');
+      default:
+        return estat;
+    }
+  };
+};
+
 const useAppData = (id: any) => {
     const {
         isReady: entornAppApiIsReady,
@@ -144,10 +167,11 @@ const AppInfo: React.FC<any> = (props) => {
         entornApp: entornApp,
     } = props;
     const { t } = useTranslation();
+    const getAppEstatLabel = useAppEstatLabel();
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
     const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
-    const bdEstat = app && <Typography><Chip label={app.bdEstat} size="small" color={app.bdEstat === 'UP' ? 'success' : 'error'} /></Typography>;
+    const bdEstat = app && <Typography><Chip label={getAppEstatLabel(app.bdEstat)} size="small" color={app.bdEstat === 'UP' ? 'success' : 'error'} /></Typography>;
     const appLatencia = app && <Typography>{app.appLatencia != null ? app.appLatencia + ' ms' : t('page.salut.nd')}</Typography>;
     const missatges = app && <>
         <Chip label={app.missatgeErrorCount} size="small" color="error" />&nbsp;/&nbsp;
@@ -320,6 +344,7 @@ const Integracions: React.FC<any> = (props) => {
             case 'UNKNOWN': return 'warning';
         }
     }
+    const getAppEstatLabel = useAppEstatLabel();
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.integracions.title')}</Typography>
@@ -343,7 +368,7 @@ const Integracions: React.FC<any> = (props) => {
                         <TableCell sx={{width: '50px'}}>{i.logo && <img src={`data:image/png;base64,${i.logo}`} alt="logo" style={{ maxHeight: '32px' }}/>}</TableCell>
                         <TableCell>{i.nom}</TableCell>
                         <TableCell>
-                            <Chip label={i.estat} size="small" color={getEstatColor(i.estat)} />
+                            <Chip label={getAppEstatLabel(i.estat)} size="small" color={getEstatColor(i.estat)} />
                         </TableCell>
                         <TableCell>{i.latencia != null ? i.latencia + ' ms' : t('page.salut.nd')}</TableCell>
                         <TableCell>
@@ -361,6 +386,7 @@ const Subsistemes: React.FC<any> = (props) => {
     const { salutCurrentApp } = props;
     const { t } = useTranslation();
     const subsistemes = salutCurrentApp?.subsistemes;
+    const getAppEstatLabel = useAppEstatLabel();
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.subsistemes.title')}</Typography>
@@ -381,7 +407,7 @@ const Subsistemes: React.FC<any> = (props) => {
                         <TableCell>{s.codi}</TableCell>
                         <TableCell>{s.nom}</TableCell>
                         <TableCell>
-                            <Chip label={s.estat} size="small" color={s.estat === 'UP' ? 'success' : 'error'} />
+                            <Chip label={getAppEstatLabel(s.estat)} size="small" color={s.estat === 'UP' ? 'success' : 'error'} />
                         </TableCell>
                         <TableCell>{s.latencia} ms</TableCell>
                     </TableRow>)}
@@ -463,9 +489,10 @@ const SalutAppInfo: React.FC = () => {
         salutCurrentApp,
         reportParams,
     } = useAppData(id);
+    const getAppEstatLabel = useAppEstatLabel();
     const dataLoaded = ready && loading != null && !loading;
     const toolbarState = salutCurrentApp?.appEstat ? <Chip
-        label={salutCurrentApp.appEstat}
+        label={getAppEstatLabel(salutCurrentApp.appEstat)}
         size="small"
         color={salutCurrentApp.appEstat === 'UP' ? 'success' : 'error'}
         sx={{ ml: 1 }} /> : undefined;

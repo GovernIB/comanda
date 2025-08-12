@@ -191,7 +191,7 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
     );
 };
 
-const ItemStateChip: React.FC<any> = (props: { up: boolean; date: string }) => {
+const ItemStateChip: React.FC<any> = (props: { up: boolean; date?: string }) => {
     const { up, date } = props;
     const { t } = useTranslation();
     return (
@@ -201,8 +201,8 @@ const ItemStateChip: React.FC<any> = (props: { up: boolean; date: string }) => {
             ) : (
                 <Chip label={t('enum.appEstat.DOWN')} size="small" color="error" />
             )}
-            <br />
-            <Typography variant="caption">{date}</Typography>
+            {date && (<><br />
+            <Typography variant="caption">{date}</Typography></>)}
         </>
     );
 };
@@ -253,7 +253,6 @@ const AppDataTable: React.FC<any> = (props: {
             return (
                 <ItemStateChip
                     up={updownItem[upField]}
-                    date={dateFormatLocale(updownItem.data, true)}
                 />
             );
         },
@@ -268,6 +267,12 @@ const AppDataTable: React.FC<any> = (props: {
                 headerName: t('page.salut.apps.column.estat'),
                 minWidth: 100,
                 renderCell: ({ id }) => renderItemStateChip(id, 'appUp'),
+            },
+            {
+                flex: 0.3,
+                field: 'infoData',
+                description: t('page.salut.apps.column.infoData'),
+                minWidth: 150,
             },
             {
                 flex: 0.3,
