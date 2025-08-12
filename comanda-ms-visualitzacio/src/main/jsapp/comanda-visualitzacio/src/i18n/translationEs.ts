@@ -23,6 +23,8 @@ const translationEs = {
         integracio: "Integraciones",
         calendari: "Calendario",
         broker: "Gestor de colas",
+        tasca: "Tarea",
+        avis: "Aviso",
     },
     page: {
         salut: {

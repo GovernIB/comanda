@@ -16,6 +16,7 @@ import Broker from './pages/Broker';
 import QueueMessages from './pages/QueueMessages';
 import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
 import Tasca from "./pages/Tasca.tsx";
+import Avis from "./pages/Avis.tsx";
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -60,6 +61,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="tasca">
                 <Route index element={<Tasca />} />
+            </Route>
+            <Route path="avis">
+                <Route index element={<Avis />} />
             </Route>
             <Route path="broker">
                 <Route index element={<Broker />} />

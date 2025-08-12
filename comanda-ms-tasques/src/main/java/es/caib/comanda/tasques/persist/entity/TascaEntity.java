@@ -17,7 +17,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.net.URL;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -51,11 +51,11 @@ public class TascaEntity extends BaseAuditableEntity<Tasca> {
     @Enumerated(EnumType.STRING)
     private Prioritat prioritat;
     @Column(name = "data_inici")
-    private LocalDate dataInici;
+    private LocalDateTime dataInici;
     @Column(name = "data_fi")
-    private LocalDate dataFi;
+    private LocalDateTime dataFi;
     @Column(name = "data_caducitat")
-    private LocalDate dataCaducitat;
+    private LocalDateTime dataCaducitat;
     @Column(name = "url", length = 255, nullable = false)
     private URL url;
     @Column(name = "responsable", length = 128)

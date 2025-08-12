@@ -14,7 +14,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -45,8 +45,8 @@ public class AvisEntity extends BaseAuditableEntity<Avis> {
         @Column(name = "descripcio", length = 1024)
         private String descripcio;
         @Column(name = "data_inici")
-        private LocalDate dataInici;
+        private LocalDateTime dataInici;
         @Column(name = "data_fi")
-        private LocalDate dataFi;
+        private LocalDateTime dataFi;
 
 }

@@ -2,6 +2,7 @@ import {GridPage, MuiFilter, MuiGrid, springFilterBuilder, Toolbar, useFilterApi
 import {Box, Grid, Typography, Icon, Button} from "@mui/material";
 import {useState} from "react";
 import {useTranslation} from "react-i18next";
+import {formatEndOfDay, formatStartOfDay} from "../util/dateUtils.ts";
 
 const labelStyle = {padding: '1px 4px', fontSize: '11px', fontWeight: '500', borderRadius: '2px', display: 'flex', alignItems: 'center', width: 'max-content'}
 const obertStyle = {border: '1px dashed #AAA'}
@@ -81,6 +82,9 @@ const tascaFilterBuilder = (data:any) :string => {
         springFilterBuilder.like('descripcio', data?.descripcio),
         springFilterBuilder.eq('prioritat', `'${data?.prioritat}'`),
         data?.acabat && springFilterBuilder.eq('dataFi', null),
+
+        springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici)}'`),
+        springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataFi)}'`),
     )
 }
 
@@ -119,16 +123,18 @@ const TascaFilterForm = (props:any) => {
                     return ''
                 }}
             >
-                <Grid container sx={{ minWidth: 250 }} spacing={1}>
+                <Grid container spacing={1}>
                     <Grid size={6}><FormField name={'app'}/></Grid>
                     <Grid size={6}><FormField name={'entorn'}/></Grid>
                 </Grid>
             </MuiFilter>
         </Grid>
 
-        <Grid size={{xs:6, sm:3}}><FormField name={'nom'}/></Grid>
-        <Grid size={{xs:6, sm:3}}><FormField name={'descripcio'}/></Grid>
-        <Grid size={{xs:6, sm:3}}><FormField name={'prioritat'}/></Grid>
+        <Grid size={{xs:6, sm:4}}><FormField name={'nom'}/></Grid>
+        <Grid size={{xs:6, sm:4}}><FormField name={'descripcio'}/></Grid>
+        <Grid size={{xs:6, sm:4}}><FormField name={'prioritat'}/></Grid>
+        <Grid size={{xs:6, sm:4.5}}><FormField name={'dataInici'}/></Grid>
+        <Grid size={{xs:6, sm:4.5}}><FormField name={'dataFi'}/></Grid>
 
         <GridButtonField size={{xs:2, sm:1}} name={'acabat'} icon={"update"}/>
     </>
@@ -170,10 +176,22 @@ const TascaFilter = (props:any) => {
 const perspectives = ["PATH", "EXPIRATION"]
 const sortModel:any = [{field: 'dataCaducitat', sort: 'asc'}]
 const Tasca = () => {
+    const { t } = useTranslation()
     const [filter, setFilter] = useState<string>('')
 
+    const actions = [
+        {
+            title: "",
+            icon: "info",
+            showInMenu: false,
+            onClick: (id:any, row:any) => window.location.href = row?.url,
+            disabled: (row:any) => !row?.url,
+            hidden: (row:any) => !row?.id,
+        }
+    ]
+
     return <GridPage disableMargins>
-        <Toolbar title={"Tasca"} upperToolbar/>
+        <Toolbar title={t('menu.tasca')} upperToolbar/>
 
         <Box sx={{
             margin: '16px 24px',
@@ -209,8 +227,7 @@ const Tasca = () => {
                 }}
 
                 toolbarHide
-                // onRowClick={(params:any) => {if (params?.row?.url) window.location.href = params?.row?.url} }
-
+                rowAdditionalActions={actions}
                 readOnly
             />
         </Box>

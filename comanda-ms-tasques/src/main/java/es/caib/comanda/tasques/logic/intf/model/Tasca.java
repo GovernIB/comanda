@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.net.URL;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -48,9 +48,9 @@ public class Tasca extends BaseResource<Long> {
     @Size(max = 1024)
     private String descripcio;
     private Prioritat prioritat;
-    private LocalDate dataInici;
-    private LocalDate dataFi;
-    private LocalDate dataCaducitat;
+    private LocalDateTime dataInici;
+    private LocalDateTime dataFi;
+    private LocalDateTime dataCaducitat;
     @NotNull @Size(max = 255)
     private URL url;
     @Size(max = 128)
@@ -74,6 +74,8 @@ public class Tasca extends BaseResource<Long> {
         private String nom;
         private String descripcio;
         private Prioritat prioritat;
+        private LocalDateTime dataInici;
+        private LocalDateTime dataFi;
         private Boolean acabat = true;
     }
 }

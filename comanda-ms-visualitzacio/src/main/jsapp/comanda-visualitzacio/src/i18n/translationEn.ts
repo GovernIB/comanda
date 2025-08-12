@@ -23,6 +23,8 @@ const translationEn = {
         integracio: "Integrations",
         calendari: "Calendar",
         broker: "Queue Manager",
+        tasca: "Task",
+        avis: "Notice",
     },
     page: {
         salut: {

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -87,8 +88,8 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         @Override
         public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
             if (resource.getDataFi() == null) {
-                LocalDate hoy = LocalDate.now();
-                LocalDate fechaCaducidad = resource.getDataCaducitat(); // Ejemplo
+                LocalDateTime hoy = LocalDateTime.now();
+                LocalDateTime fechaCaducidad = resource.getDataCaducitat(); // Ejemplo
 
                 long diasRestantes = ChronoUnit.DAYS.between(hoy, fechaCaducidad);
                 resource.setDiesPerCaducar(diasRestantes);

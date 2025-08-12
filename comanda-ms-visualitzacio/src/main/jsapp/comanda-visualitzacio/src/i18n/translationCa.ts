@@ -23,6 +23,8 @@ const translationCa = {
         integracio: "Integracions",
         calendari: "Calendari",
         broker: "Gestor de cues",
+        tasca: "Tasca",
+        avis: "Avis",
     },
     page: {
         salut: {
