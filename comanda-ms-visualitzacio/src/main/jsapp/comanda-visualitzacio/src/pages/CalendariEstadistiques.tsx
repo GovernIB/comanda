@@ -821,8 +821,8 @@ const CalendariEstadistiques: React.FC = () => {
                 </DialogTitle>
                 <DialogContent>
                     {currentDadesDia.length > 0 ? (
-                        <TableContainer component={Paper}>
-                            <Table>
+                        <TableContainer component={Paper} sx={{ maxHeight: 600 }}>
+                            <Table stickyHeader aria-label="sticky table">
                                 <TableHead>
                                     <TableRow>
                                         <TableCell colSpan={Object.keys(currentDadesDia[0]?.dimensionsJson || {}).length}>

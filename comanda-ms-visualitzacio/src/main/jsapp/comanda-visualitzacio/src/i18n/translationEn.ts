@@ -32,6 +32,7 @@ const translationEn = {
             apps: {
                 column: {
                     estat: "State",
+                    infoData: "Date of last information consultation",
                     codi: "Code",
                     nom: "Name",
                     versio: "Version",
