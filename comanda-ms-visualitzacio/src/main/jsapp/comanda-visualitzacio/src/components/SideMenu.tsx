@@ -62,7 +62,7 @@ const closedMixin = (theme: Theme): CSSObject => ({
     },
 });
 
-const ShrinkableDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'width' })(
+export const ShrinkableDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' && prop !== 'width' })(
     ({ theme, open, ...otherProps }) => {
         const width = (otherProps as any)?.['width'];
         const shrinkableStyles = {
