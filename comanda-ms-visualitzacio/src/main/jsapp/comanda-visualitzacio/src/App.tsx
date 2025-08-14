@@ -105,12 +105,20 @@ export const App: React.FC = () => {
         icon: 'storage',
         resourceName: 'comandaCache',
     }
+    const menuParametre = {
+        id: 'parametre',
+        title: t('menu.parametre'),
+        to: '/parametre',
+        icon: 'settings',
+        resourceName: 'parametre',
+    }
     const menuEntries = [
         menuSalut,
         menuEstadistiques,
         menuConfiguracio,
         menuMonitor,
-        menuCache
+        menuCache,
+        menuParametre,
     ];
     const appMenuEntries = [
         menuSalut,

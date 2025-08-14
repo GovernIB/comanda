@@ -14,6 +14,7 @@ import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
 import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
+import Parametres from './pages/Parametres.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -55,6 +56,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="calendari">
                 <Route index element={<CalendariEstadistiques />} />
+            </Route>
+            <Route path="parametre">
+                <Route index element={<Parametres />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

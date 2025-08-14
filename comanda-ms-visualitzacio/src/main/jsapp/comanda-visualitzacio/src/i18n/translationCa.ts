@@ -22,6 +22,7 @@ const translationCa = {
         cache: "Gestió de cachés",
         integracio: "Integracions",
         calendari: "Calendari",
+        parametre: "Paràmetres",
     },
     page: {
         salut: {
@@ -357,6 +358,9 @@ const translationCa = {
                     error: "Error buidant caches",
                 },
             },
+        },
+        parametres: {
+            title: "Paràmetres",
         },
         notFound: "No trobat",
     },

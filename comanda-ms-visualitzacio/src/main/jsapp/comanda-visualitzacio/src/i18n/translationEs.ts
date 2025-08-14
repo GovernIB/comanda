@@ -22,6 +22,7 @@ const translationEs = {
         cache: "Gestión de cachés",
         integracio: "Integraciones",
         calendari: "Calendario",
+        parametre: "Parámetros",
     },
     page: {
         salut: {
@@ -357,6 +358,9 @@ const translationEs = {
                     error: "Error vaciando caches",
                 },
             },
+        },
+        parametres: {
+            title: "Parámetros",
         },
         notFound: "No encontrado",
     },

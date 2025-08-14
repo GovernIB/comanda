@@ -22,6 +22,7 @@ const translationEn = {
         cache: "Cache management",
         integracio: "Integrations",
         calendari: "Calendar",
+        parametre: "Parameters",
     },
     page: {
         salut: {
@@ -357,6 +358,9 @@ const translationEn = {
                     error: "Error clearing caches",
                 },
             },
+        },
+        parametres: {
+            title: "Parameters",
         },
         notFound: "Not found",
     },
