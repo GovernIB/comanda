@@ -19,7 +19,9 @@ import {
     SparkLineChart,
     Gauge,
     gaugeClasses,
+    ScatterChart,
 } from '@mui/x-charts';
+// import { Heatmap } from '@mui/x-charts-pro/Heatmap';
 import estils from "./WidgetEstils.ts";
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
 import {TaulaWidgetVisualizationProps} from "./TaulaWidgetVisualization.tsx";
@@ -291,9 +293,9 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     // Render a line chart
     const renderLineChart = () => {
         // Extract data keys
-        const datakey: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
+        const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
         const dataKeys = dades.length > 0
-            ? Object.keys(dades[0]).filter(key => key !== datakey)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
+            ? Object.keys(dades[0]).filter(key => key !== discriminador)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
             : [];
         // Prepare series for MUI X-Charts
         const series = dataKeys.map((key, index) => ({
@@ -307,7 +309,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
         // Prepare xAxis categories from data
         const xAxisData = [{
-            dataKey: datakey,
+            dataKey: discriminador,
             scaleType: 'band',
             label: llegendaX,
             // data: dades.map(d => d[datakey]),
@@ -403,9 +405,34 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         );
     };
 
-    // Render a gauge chart (simplified version)
+    // Render a gauge chart (Line version) //TODO Modificar back para devolver multiples valores para el valor X 
     const renderScatterChart = () => {
-        // For preview, just show a placeholder
+        // //Opciones graficas
+        // const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
+        // const paletaColors = colorsPaleta.split(',');
+        // const grid = mostrarReticula ? { horizontal: true, } : { horizontal: false, };
+        // //Valores
+        // const indexed = dades.map((d, i) => ({ ...d, index: i }));
+        // const keys = Object.keys(indexed[0]).filter(
+        //     (k) => k !== discriminador && k !== "index"
+        //     );
+        // const series = keys.map((key, index) => ({
+        //     label: labels?.find((label) => label.id === key)?.label || key,
+        //     data: indexed.map((row:any) => ({ x: row.index, y: row[key] })),
+        //     color: paletaColors[index % paletaColors.length],
+        //     }));
+        // //Componente
+        // return (
+        //     <Box sx={{ width: '100%', height: chartHeight }}>
+        //     <ScatterChart
+        //         height={chartHeight}
+        //         xAxis={[{ label: "Día", min: 0 }]}
+        //         yAxis={[{ label: "Valor" }]}
+        //         series={series}
+        //         grid={grid}
+        //     />
+        //     </Box>
+        // );
         return (
             <Box sx={{
                 display: 'flex',
@@ -419,12 +446,13 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 </Typography>
             </Box>
         );
-    };
+    }
 
     // Render a spark chart
     const renderSparkLineChart = () => {
+        const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
         const numericKey = dades.length > 0
-            ? Object.keys(dades[0]).find((key) => key !== columnaAgregacio)
+            ? Object.keys(dades[0]).find((key) => key !== discriminador)
             : null;
         const numericData: number[] = numericKey
             ? dades.map((item) => Number(item[numericKey])).filter((n) => !isNaN(n))
@@ -451,15 +479,16 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     // Render a gauge chart
     const renderGaugeChart = () => {
         const valorGauge = Array.isArray(dades) && dades.length > 0 ? Number(dades[0].value) : 0;
-        const colors = gaugeColors.split(',').map(c => c.trim());
-        const rangs = gaugeRangs.split(',').map(r => Number(r.trim()));
+        // const colors = gaugeColors ? gaugeColors.split(',').map(c => c.trim()) : ["#000000"];
+        const colors = colorsPaleta ? colorsPaleta.split(',').map(c => c.trim()) : ["#000000"];
+        const rangs = gaugeRangs ? gaugeRangs.split(',').map(r => Number(r.trim())).filter(v => !isNaN(v)) : [];
         const getColor = (value: number) => {
-            for (let i = 0; i < colors.length; i++) {
+            for (let i = 0; i < colors.length && i < rangs.length; i++) {
                 if (value < rangs[i]) {
                     return colors[i];
                 }
             }
-            return colors[colors.length - 1];//Si es superior al último rango devolveremos el mismo color.
+            return colors[colors.length - 1];//Por defecto devolvemos el ultimo valor.
         };
 
         return (
@@ -485,6 +514,41 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
     // Render a heatmap chart (simplified version)
     const renderHeatmapChart = () => {
+    // const colorArray = heatmapColors.split(',').map(c => c.trim());
+
+    // const xCategories = Array.from(new Set(dades.map(d => d.x)));
+    // const yCategories = Array.from(new Set(dades.map(d => d.y)));
+
+    // const heatmapData = dades.map(d => [
+    //         xCategories.indexOf(d.x),
+    //         yCategories.indexOf(d.y),
+    //         d.value
+    //     ]);
+
+
+    // return (
+    //     <Box sx={{ width: '100%', height: chartHeight }}>
+    //     <Heatmap
+    //         height={chartHeight}
+    //         xAxis={[{ scaleType: 'band', data: xCategories }]}
+    //         yAxis={[{ scaleType: 'band', data: yCategories }]}
+    //         series={[
+    //         {
+    //             type: 'heatmap',
+    //             data: heatmapData,
+    //             colorMap: {
+    //             type: 'continuous',
+    //             min: heatmapMinValue,
+    //             max: heatmapMaxValue,
+    //             colors: colorArray,
+    //             },
+    //         },
+    //         ]}
+    //     />
+    //     </Box>
+    // );
+    // };
+
         // For preview, just show a placeholder
         return (
             <Box sx={{
@@ -597,6 +661,15 @@ const generateSampleData = (chartType?: string): Record<string, unknown>[] => {
                 {x: 'Mai', y: 1.5},
                 {x: 'Jun', y: 5},
             ];
+        case 'SCATTER_CHART':
+            return [
+                {name: "A", valor1: 1.645, valor2: 1.797, valor3: 2.0},
+                {name: "B", valor1: 1.645, valor2: 1.597, valor3: 1.0},
+                {name: "C", valor1: 1.945, valor2: 1.797, valor3: 0.0},
+                {name: "D", valor1: 2.045, valor2: 0.997, valor3: -1.0},
+                {name: "E", valor1: 2.945, valor2: 0.797, valor3: 0.5},
+                {name: "F", valor1: 1.945, valor2: -0.797, valor3: 2.5},
+            ];
         case 'PIE_CHART':
             return [
                 {label: 'Grup A', value: 400},
@@ -637,6 +710,13 @@ const generateSampleLabels = (chartType?: string): ColumnLabel[] | undefined => 
                 {id: 'x', label: 'X'},
                 {id: 'y', label: 'Y'},
             ];
+        case 'SCATTER_CHART':
+            return [
+                {id: "name", label: "Dia"},
+                {id: "valor1", label: "Valor 1"},
+                {id: "valor2", label: "Valor 2"},
+                {id: "valor3", label: "Valor 3"}
+            ];
         default:
             return undefined;
     }
@@ -649,6 +729,8 @@ const generateSampleAgregacio = (chartType?: string): string | undefined => {
         case 'SPARK_LINE_CHART':
             return 'x';
         case 'PIE_CHART':
+            return 'name';
+        case 'SCATTER_CHART':
             return 'name';
         default:
             return undefined;
