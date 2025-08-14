@@ -457,10 +457,10 @@ const AppDataTable: React.FC<any> = (props: {
                 );
             },
             renderCell: (params: any) => {
-                if (typeof params.id === 'number') {
+                const app = apps?.find((app) => app.id === params.formattedValue);
+                if (typeof params.id === 'number' || app == null) {
                     return <GridTreeDataGroupingCell {...params} />;
                 }
-                const app = apps?.find((app) => app.id === params.formattedValue);
                 return (
                     <GridTreeDataGroupingCell
                         {...params}
