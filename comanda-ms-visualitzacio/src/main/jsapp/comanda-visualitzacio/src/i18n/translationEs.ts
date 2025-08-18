@@ -361,6 +361,16 @@ const translationEs = {
         },
         parametres: {
             title: "Parámetros",
+            detail: {
+                title: "Detalles del parámetro",
+                grup: "Grupo",
+                subGrup: "Subgrupo",
+                tipus: "Tipo",
+                codi: "Código",
+                nom: "Nombre",
+                descripcio: "Descripción",
+                valor: "Valor"
+            },
         },
         notFound: "No encontrado",
     },

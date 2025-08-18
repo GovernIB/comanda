@@ -361,6 +361,16 @@ const translationCa = {
         },
         parametres: {
             title: "Paràmetres",
+            detail: {
+                title: "Detalls del paràmetre",
+                grup: "Grup",
+                subGrup: "Subgrup",
+                tipus: "Tipus",
+                codi: "Codi",
+                nom: "Nom",
+                descripcio: "Descripció",
+                valor: "Valor",
+            },
         },
         notFound: "No trobat",
     },

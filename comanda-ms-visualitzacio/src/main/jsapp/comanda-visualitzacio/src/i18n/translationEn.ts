@@ -361,6 +361,16 @@ const translationEn = {
         },
         parametres: {
             title: "Parameters",
+            detail: {
+                title: "Parameter details",
+                grup: "Group",
+                subGrup: "Subgroup",
+                tipus: "Type",
+                codi: "Code",
+                nom: "Name",
+                descripcio: "Description",
+                valor: "Value"
+            },
         },
         notFound: "Not found",
     },

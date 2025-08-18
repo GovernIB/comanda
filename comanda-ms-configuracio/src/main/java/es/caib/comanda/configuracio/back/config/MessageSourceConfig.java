@@ -13,4 +13,12 @@ import org.springframework.context.annotation.Profile;
 @Profile("!back")
 public class MessageSourceConfig extends BaseMessageSourceConfig {
 
+	@Override
+	protected String[] getBasenames() {
+		return new String[] {
+			getBasename(),
+			"comanda.configuracio-messages",
+		};
+	}
+
 }

@@ -17,6 +17,7 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 			getBasename(),
 			"comanda.client-messages",
 			"comanda.estadistica-messages",
+			"comanda.configuracio-messages",
 		};
 	}
 
