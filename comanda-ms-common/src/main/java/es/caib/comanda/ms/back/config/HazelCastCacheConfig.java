@@ -21,6 +21,7 @@ public class HazelCastCacheConfig {
     public static final String APP_CACHE = "appCache";
     public static final String ENTORN_CACHE = "entornCache";
     public static final String DASHBOARD_WIDGET_CACHE = "dashboardWidgetCache";
+    public static final String PARAMETRE_CACHE = "parametreCache";
 
     @Bean
     public Config hazelcastConfig() {
@@ -33,10 +34,11 @@ public class HazelCastCacheConfig {
         // O configuració TCP-IP explícita si multicast no funciona
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true).addMember("localhost");
 
-        config.addMapConfig(new MapConfig().setName(ENTORN_APP_CACHE).setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName(APP_CACHE).setTimeToLiveSeconds(3600));
-        config.addMapConfig(new MapConfig().setName(ENTORN_CACHE).setTimeToLiveSeconds(3600));
+        config.addMapConfig(new MapConfig().setName(ENTORN_APP_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
+        config.addMapConfig(new MapConfig().setName(APP_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
+        config.addMapConfig(new MapConfig().setName(ENTORN_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(DASHBOARD_WIDGET_CACHE).setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
+        config.addMapConfig(new MapConfig().setName(PARAMETRE_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         return config;
     }
 
