@@ -45,6 +45,22 @@ public class BaseConfig {
 	public static final String PROP_SECURITY_MAPPABLE_ROLES = PROPERTY_PREFIX + "security.mappableRoles";
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
 
+    // Propietats de CONFIGURACIO
+    public static final String PROP_CONFIG_PREFIX = PROPERTY_PREFIX + "config.";
+
+    // Propietats de SALUT
+    public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";
+
+    // Propietats de ESTADISTIQUES
+    public static final String PROP_STATS_PREFIX = PROPERTY_PREFIX + "stats.";
+
+    // Propietats de MONITOR
+    public static final String PROP_MONITOR_PREFIX = PROPERTY_PREFIX + "monitor.";
+    public static final String PROP_MONITOR_BUIDAT_ACTIU = PROP_MONITOR_PREFIX + "buidat.actiu";
+    public static final String PROP_MONITOR_BUIDAT_RETENCIO_DIES = PROP_MONITOR_PREFIX + "buidat.retencio.dies";
+    public static final String PROP_MONITOR_BUIDAT_PERIODE_MINUTS = PROP_MONITOR_PREFIX + "buidat.periode.minuts";
+
+    // Propietats de FRONT
 	public static final String PROP_FRONT_API_URL = PROPERTY_PREFIX_FRONT + "api.url";
 	public static final String PROP_FRONT_AUTH_PROVIDER_URL = PROPERTY_PREFIX_FRONT + "auth.provider.url";
 	public static final String PROP_FRONT_AUTH_PROVIDER_REALM = PROPERTY_PREFIX_FRONT + "auth.provider.realm";
