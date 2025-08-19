@@ -22,4 +22,7 @@ public interface MonitorServiceClient {
 			@RequestBody final Monitor monitor,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
+    @PostMapping("/programarBorrat")
+    ResponseEntity<EntityModel<Monitor>> programarBorrat(@RequestHeader("Authorization") final String authorizationHeader);
+
 }
