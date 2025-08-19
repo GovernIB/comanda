@@ -40,7 +40,8 @@ export type UseFormDialogFn = (
     defaultFormContent?: React.ReactNode,
     defaultDialogComponentProps?: any,
     defaultFormComponentProps?: any,
-    closeFn?: (reason?: string) => boolean) => [FormDialogShowFn, React.ReactElement, FormDialogCloseFn];
+    closeFn?: (reason?: string) => boolean
+) => [FormDialogShowFn, React.ReactElement, FormDialogCloseFn];
 
 export const useFormDialog: UseFormDialogFn = (
     resourceName: string,
@@ -52,21 +53,31 @@ export const useFormDialog: UseFormDialogFn = (
     defaultFormContent?: React.ReactNode,
     defaultDialogComponentProps?: any,
     defaultFormComponentProps?: any,
-    closeFn?: (reason?: string) => boolean) => {
+    closeFn?: (reason?: string) => boolean
+) => {
     const formApiRef = React.useRef<FormApi | any>({});
     const formDialogButtons = useFormDialogButtons();
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string | null>();
     const [id, setId] = React.useState<any>();
     const [additionalData, setAdditionalData] = React.useState<any>();
-    const [dialogComponentProps, setDialogComponentProps] = React.useState<any>(defaultDialogComponentProps);
-    const {initOnChangeRequestProp, ...otherFormComponentProps} = defaultFormComponentProps ?? {};
-    const [initOnChangeRequest, setInitOnChangeRequest] = React.useState<boolean>(initOnChangeRequestProp);
-    const [formComponentProps, setFormComponentProps] = React.useState<any>(otherFormComponentProps);
+    const [dialogComponentProps, setDialogComponentProps] = React.useState<any>(
+        defaultDialogComponentProps
+    );
+    const { initOnChangeRequest: initOnChangeRequestProp, ...otherFormComponentProps } =
+        defaultFormComponentProps ?? {};
+    const [initOnChangeRequest, setInitOnChangeRequest] =
+        React.useState<boolean>(initOnChangeRequestProp);
+    const [formComponentProps, setFormComponentProps] =
+        React.useState<any>(otherFormComponentProps);
     const [resolveFn, setResolveFn] = React.useState<(value?: any) => void>();
     const [rejectFn, setRejectFn] = React.useState<(value: any) => void>();
-    const [formContent, setFormContent] = React.useState<React.ReactNode | undefined>(defaultFormContent);
-    const [submitReturnedContent, setSubmitReturnedContent] = React.useState<React.ReactNode | undefined>();
+    const [formContent, setFormContent] = React.useState<React.ReactNode | undefined>(
+        defaultFormContent
+    );
+    const [submitReturnedContent, setSubmitReturnedContent] = React.useState<
+        React.ReactNode | undefined
+    >();
     const show = (id: any, args?: FormDialogShowArgs) => {
         setId(id);
         setTitle(args?.title);
@@ -81,39 +92,43 @@ export const useFormDialog: UseFormDialogFn = (
             setResolveFn(() => resolve);
             setRejectFn(() => reject);
         });
-    }
+    };
     const buttonCallback = (value: any) => {
         if (value) {
             const isCustomSubmit = customSubmit != null;
-            const result = isCustomSubmit ? customSubmit(formApiRef.current.getId(), formApiRef.current.getData()) : formApiRef.current.save();
-            result.then((value: any) => {
-                if (isCustomSubmit) {
-                    // S'ha fet click al botó executar/generar i s'ha executat/generat correctament
-                    if (value != null) {
-                        // Si el mètode submit ha retornat alguna cosa es mostra com a contingut del diàleg
-                        setSubmitReturnedContent(value);
+            const result = isCustomSubmit
+                ? customSubmit(formApiRef.current.getId(), formApiRef.current.getData())
+                : formApiRef.current.save();
+            result
+                .then((value: any) => {
+                    if (isCustomSubmit) {
+                        // S'ha fet click al botó executar/generar i s'ha executat/generat correctament
+                        if (value != null) {
+                            // Si el mètode submit ha retornat alguna cosa es mostra com a contingut del diàleg
+                            setSubmitReturnedContent(value);
+                        } else {
+                            // Si el mètode submit no retorna res es tanca el diàleg
+                            setOpen(false);
+                            resolveFn?.(value);
+                        }
                     } else {
-                        // Si el mètode submit no retorna res es tanca el diàleg
+                        // S'ha fet click al botó desar i s'ha desat correctament
                         setOpen(false);
                         resolveFn?.(value);
                     }
-                } else {
-                    // S'ha fet click al botó desar i s'ha desat correctament
-                    setOpen(false);
-                    resolveFn?.(value);
-                }
-            }).catch((error: any) => {
-                // S'ha fet click al botó desar i s'han produit errors
-                if (isCustomSubmit) {
-                    formApiRef.current.handleSubmissionErrors(error, customSubmitErrorMessage);
-                }
-            });
+                })
+                .catch((error: any) => {
+                    // S'ha fet click al botó desar i s'han produit errors
+                    if (isCustomSubmit) {
+                        formApiRef.current.handleSubmissionErrors(error, customSubmitErrorMessage);
+                    }
+                });
         } else {
             // S'ha fet clic al botó de cancel·lar
             rejectFn?.(undefined);
             setOpen(false);
         }
-    }
+    };
     const closeCallback = (reason: string) => {
         // S'ha tancat la modal amb la 'x' o s'ha fet click a fora de la finestra
         const doClose = closeFn != null ? closeFn(reason) : true;
@@ -121,28 +136,30 @@ export const useFormDialog: UseFormDialogFn = (
             rejectFn?.(undefined);
             setOpen(false);
         }
-    }
+    };
     const close = () => setOpen(false);
-    const dialogComponent = <FormDialog
-        resourceName={resourceName}
-        resourceType={resourceType}
-        resourceTypeCode={resourceTypeCode}
-        id={id}
-        additionalData={additionalData}
-        initOnChangeRequest={initOnChangeRequest}
-        apiRef={formApiRef}
-        open={open}
-        buttonCallback={buttonCallback}
-        closeCallback={closeCallback}
-        title={title}
-        buttons={dialogButtons ?? formDialogButtons}
-        dialogComponentProps={dialogComponentProps}
-        formComponentProps={formComponentProps}
-        noForm={submitReturnedContent != null}>
-        {submitReturnedContent ?? formContent}
-    </FormDialog>;
+    const dialogComponent = (
+        <FormDialog
+            resourceName={resourceName}
+            resourceType={resourceType}
+            resourceTypeCode={resourceTypeCode}
+            id={id}
+            additionalData={additionalData}
+            initOnChangeRequest={initOnChangeRequest}
+            apiRef={formApiRef}
+            open={open}
+            buttonCallback={buttonCallback}
+            closeCallback={closeCallback}
+            title={title}
+            buttons={dialogButtons ?? formDialogButtons}
+            dialogComponentProps={dialogComponentProps}
+            formComponentProps={formComponentProps}
+            noForm={submitReturnedContent != null}>
+            {submitReturnedContent ?? formContent}
+        </FormDialog>
+    );
     return [show, dialogComponent, close];
-}
+};
 
 export const FormDialog: React.FC<FormDialogProps> = (props) => {
     const {
@@ -159,20 +176,26 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
         children,
         ...otherProps
     } = props;
-    return <Dialog componentProps={dialogComponentProps} {...otherProps}>
-        {noForm ? children : <MuiForm
-            {...formComponentProps}
-            resourceName={resourceName}
-            resourceType={resourceType}
-            resourceTypeCode={resourceTypeCode}
-            id={id}
-            additionalData={additionalData}
-            initOnChangeRequest={initOnChangeRequest}
-            apiRef={apiRef}
-            hiddenToolbar>
-            {children}
-        </MuiForm>}
-    </Dialog>;
-}
+    return (
+        <Dialog componentProps={dialogComponentProps} {...otherProps}>
+            {noForm ? (
+                children
+            ) : (
+                <MuiForm
+                    {...formComponentProps}
+                    resourceName={resourceName}
+                    resourceType={resourceType}
+                    resourceTypeCode={resourceTypeCode}
+                    id={id}
+                    additionalData={additionalData}
+                    initOnChangeRequest={initOnChangeRequest}
+                    apiRef={apiRef}
+                    hiddenToolbar>
+                    {children}
+                </MuiForm>
+            )}
+        </Dialog>
+    );
+};
 
 export default FormDialog;

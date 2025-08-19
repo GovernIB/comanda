@@ -32,14 +32,7 @@ export type DetailProps = React.PropsWithChildren & {
  * @returns Element JSX dels detalls.
  */
 export const Detail: React.FC<DetailProps> = (props) => {
-    const {
-        resourceName,
-        id,
-        perspectives,
-        fieldTypeMap,
-        debug = false,
-        children,
-    } = props;
+    const { resourceName, id, perspectives, fieldTypeMap, debug = false, children } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
     const {
         isReady: apiIsReady,
@@ -77,8 +70,7 @@ export const Detail: React.FC<DetailProps> = (props) => {
     }, [apiCurrentError]);
     React.useEffect(() => {
         if (apiIsReady) {
-            debug &&
-                logConsole.debug('Loading fields from resource', resourceName);
+            debug && logConsole.debug('Loading fields from resource', resourceName);
             setFields(apiCurrentFields);
         }
     }, [apiIsReady]);
@@ -94,15 +86,12 @@ export const Detail: React.FC<DetailProps> = (props) => {
             fields,
             fieldTypeMap,
             data,
-            dataGetFieldValue: (fieldName: string) =>
-                dataGetValue((state) => state?.[fieldName]),
+            dataGetFieldValue: (fieldName: string) => dataGetValue((state) => state?.[fieldName]),
         }),
         [isLoading, fields, data]
     );
     return (
-        <DetailContext.Provider value={context}>
-            {isReady ? children : null}
-        </DetailContext.Provider>
+        <DetailContext.Provider value={context}>{isReady ? children : null}</DetailContext.Provider>
     );
 };
 

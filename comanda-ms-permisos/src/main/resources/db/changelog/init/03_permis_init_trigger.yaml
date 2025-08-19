@@ -1,0 +1,49 @@
+databaseChangeLog:
+- changeSet:
+    id: permis-init-trigger-1
+    author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}objecte_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}objecte_trg
+#                    BEFORE INSERT ON ${db_prefix}objecte
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}objecte_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+- changeSet:
+    id: permis-init-trigger-2
+    author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}usuari_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}usuari_trg
+#                    BEFORE INSERT ON ${db_prefix}usuari
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}usuari_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;
+- changeSet:
+    id: permis-init-trigger-3
+    author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}permis_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}permis_trg
+#                    BEFORE INSERT ON ${db_prefix}permis
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}permis_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;

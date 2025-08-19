@@ -14,11 +14,22 @@ export type TemporalMessageShowFn = (
     title: string | null,
     message: string,
     severity?: TemporalMessageSeverity,
-    additionalComponents?: React.ReactElement[]) => void;
+    additionalComponents?: React.ReactElement[]
+) => void;
 
 export type DialogVariant = 'text' | 'outlined' | 'contained';
-export type ContentDialogShowFn = (title: string | null, content: React.ReactElement, dialogButtons?: DialogButton[], componentProps?: any) => Promise<any>;
-export type MessageDialogShowFn = (title: string | null, message: string | React.ReactElement, dialogButtons?: DialogButton[], componentProps?: any) => Promise<string>;
+export type ContentDialogShowFn = (
+    title: string | null,
+    content: React.ReactElement,
+    dialogButtons?: DialogButton[],
+    componentProps?: any
+) => Promise<any>;
+export type MessageDialogShowFn = (
+    title: string | null,
+    message: string | React.ReactElement,
+    dialogButtons?: DialogButton[],
+    componentProps?: any
+) => Promise<string>;
 export type DialogButton = {
     value: any;
     text: string;
@@ -63,10 +74,10 @@ export const useBaseAppContext = () => {
         throw new Error('useAppContext must be used within an AppProvider');
     }
     return context;
-}
+};
 
 export const useOptionalBaseAppContext = (): BaseAppContextType | undefined => {
     return React.useContext(BaseAppContext);
-}
+};
 
 export default BaseAppContext;

@@ -1,7 +1,7 @@
 package es.caib.comanda.configuracio.persist.entity;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.AppManual;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

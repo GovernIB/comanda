@@ -1,0 +1,4 @@
+databaseChangeLog:
+- changeSet:
+    id: avis-init-data-1
+    author: limit

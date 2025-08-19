@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.entity.widget;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
@@ -7,7 +8,6 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,7 +23,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.util.List;
-
 
 /**
  * Representa una entitat destinada a emmagatzemar les característiques d'un widget estadístic de tipus gràfic. Aquesta classe hereta de

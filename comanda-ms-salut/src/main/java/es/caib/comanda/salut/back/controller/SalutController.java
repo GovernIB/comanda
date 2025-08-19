@@ -1,8 +1,8 @@
 package es.caib.comanda.salut.back.controller;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.back.controller.BaseReadonlyResourceController;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.model.Resource;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.service.SalutSchedulerService;

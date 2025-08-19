@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.logic.helper;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,12 +28,12 @@ import java.util.Map;
 @Component
 public class HttpAuthorizationHeaderHelper {
 
-	@Value("${" + BaseConfig.PROP_HTTPAUTH_KEYCLOAK_BASE_URL + ":#{null}}")
-	private String keycloakBaseUrl;
-	@Value("${" + BaseConfig.PROP_HTTPAUTH_KEYCLOAK_REALM + ":#{null}}")
-	private String keycloakRealm;
-	@Value("${" + BaseConfig.PROP_HTTPAUTH_KEYCLOAK_CLIENT_ID + ":#{null}}")
-	private String keycloakClientId;
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_PROVIDER_BASE_URL + ":#{null}}")
+	private String providerBaseUrl;
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_PROVIDER_REALM + ":#{null}}")
+	private String providerRealm;
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_PROVIDER_CLIENT_ID + ":#{null}}")
+	private String providerClientId;
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_USERNAME + ":#{null}}")
 	private String authUsername;
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_PASSWORD + ":#{null}}")
@@ -43,7 +43,7 @@ public class HttpAuthorizationHeaderHelper {
 	private final RestTemplate restTemplate;
 
 	public String getAuthorizationHeader() {
-		if (isKeycloakConfigured()) {
+		if (isProviderConfigured()) {
 			String accessToken = getAccessTokenWithUsernamePassword(
 					authUsername,
 					authPassword);
@@ -55,14 +55,14 @@ public class HttpAuthorizationHeaderHelper {
 		}
 	}
 
-	private boolean isKeycloakConfigured() {
-		return keycloakBaseUrl != null &&
-				keycloakRealm != null &&
-				keycloakClientId != null;
+	private boolean isProviderConfigured() {
+		return providerBaseUrl != null &&
+				providerRealm != null &&
+				providerClientId != null;
 	}
 
 	private String getAccessTokenWithUsernamePassword(String username, String password) {
-		if (isKeycloakConfigured()) {
+		if (isProviderConfigured()) {
 			try {
 				return getAccessToken(
 						"password",
@@ -85,7 +85,7 @@ public class HttpAuthorizationHeaderHelper {
 			String password,
 			String clientSecret) {
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("client_id", keycloakClientId);
+		map.add("client_id", providerClientId);
 		map.add("grant_type", grantType);
 		if (username != null) map.add("username", username);
 		if (password != null) map.add("password", password);
@@ -98,7 +98,7 @@ public class HttpAuthorizationHeaderHelper {
 	}
 
 	private String getAuthUrl() {
-		return keycloakBaseUrl + "/realms/" + keycloakRealm + "/protocol/openid-connect/token";
+		return providerBaseUrl + "/realms/" + providerRealm + "/protocol/openid-connect/token";
 	}
 
 }

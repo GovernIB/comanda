@@ -1,4 +1,4 @@
-package es.caib.comanda.ms.logic.intf.config;
+package es.caib.comanda.base.config;
 
 import java.util.AbstractMap;
 import java.util.Map;
@@ -32,18 +32,23 @@ public class BaseConfig {
 
 	public static final String DEFAULT_LOCALE = "ca";
 
+	public static final String PROP_FILES = PROPERTY_PREFIX + "fitxers";
 	public static final String PROP_DEFAULT_AUDITOR = PROPERTY_PREFIX + "default.auditor";
 	public static final String PROP_HTTP_HEADER_ANSWERS = PROPERTY_PREFIX + "http.header.answers";
 	public static final String PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED = PROPERTY_PREFIX + "persist.container-transactions-disabled";
 	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
-	public static final String PROP_HTTPAUTH_KEYCLOAK_BASE_URL = PROPERTY_PREFIX + "httpauth.keycloak.base.url";
-	public static final String PROP_HTTPAUTH_KEYCLOAK_REALM = PROPERTY_PREFIX + "httpauth.keycloak.realm";
-	public static final String PROP_HTTPAUTH_KEYCLOAK_CLIENT_ID = PROPERTY_PREFIX + "httpauth.keycloak.client.id";
+	public static final String PROP_HTTPAUTH_PROVIDER_BASE_URL = PROPERTY_PREFIX + "httpauth.provider.base.url";
+	public static final String PROP_HTTPAUTH_PROVIDER_REALM = PROPERTY_PREFIX + "httpauth.provider.realm";
+	public static final String PROP_HTTPAUTH_PROVIDER_CLIENT_ID = PROPERTY_PREFIX + "httpauth.provider.client.id";
 	public static final String PROP_HTTPAUTH_USERNAME = PROPERTY_PREFIX + "httpauth.username";
 	public static final String PROP_HTTPAUTH_PASSWORD = PROPERTY_PREFIX + "httpauth.password";
 	public static final String PROP_SECURITY_MAPPABLE_ROLES = PROPERTY_PREFIX + "security.mappableRoles";
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
+
+	public static final String PROP_BROKER_PORT = PROPERTY_PREFIX + "broker.port";
+	public static final String PROP_BROKER_USERNAME = PROPERTY_PREFIX + "broker.username";
+	public static final String PROP_BROKER_PASSWORD = PROPERTY_PREFIX + "broker.password";
 
 	public static final String PROP_FRONT_API_URL = PROPERTY_PREFIX_FRONT + "api.url";
 	public static final String PROP_FRONT_AUTH_PROVIDER_URL = PROPERTY_PREFIX_FRONT + "auth.provider.url";

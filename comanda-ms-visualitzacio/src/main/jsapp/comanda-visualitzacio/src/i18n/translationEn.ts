@@ -23,6 +23,9 @@ const translationEn = {
         integracio: "Integrations",
         calendari: "Calendar",
         parametre: "Parameters",
+        broker: "Queue Manager",
+        tasca: "Task",
+        avis: "Notice",
     },
     page: {
         salut: {
@@ -33,7 +36,6 @@ const translationEn = {
             apps: {
                 column: {
                     estat: "State",
-                    infoData: "Date of last information consultation",
                     codi: "Code",
                     nom: "Name",
                     versio: "Version",
@@ -119,7 +121,6 @@ const translationEn = {
             estats: {
                 title: "States",
             },
-            senseFiltres: "No filters",
         },
         apps: {
             title: "Applications",
@@ -353,10 +354,99 @@ const translationEn = {
                 error: "Error clearing cache",
                 totes: {
                     titol: "Clear all caches",
-                    confirm: "Are you sure ypu want to clear oll caches?",
+                    confirm: "Are you sure you want to clear all caches?",
                     success: "Caches cleared",
                     error: "Error clearing caches",
                 },
+            },
+        },
+        broker: {
+            title: "Queue Manager",
+            error: {
+                fetchFailed: "Error fetching broker data",
+            },
+            detail: {
+                title: "Broker Information",
+                version: "Version",
+                name: "Name",
+                status: "Status",
+                uptime: "Uptime",
+                memoryUsage: "Memory Usage",
+                diskUsage: "Disk Usage",
+                totalConnections: "Total Connections",
+                totalQueues: "Total Queues",
+                totalMessages: "Total Messages",
+            },
+            queues: {
+                title: "Queues",
+            },
+            queue: {
+                address: "Address",
+                routingType: "Routing Type",
+                durable: "Durable",
+                messageCount: "Message Count",
+                consumerCount: "Consumer Count",
+                viewMessages: "View Messages",
+            },
+        },
+        queue: {
+            title: "Queue: {{name}}",
+            error: {
+                fetchFailed: "Error fetching queue data",
+                purgeFailed: "Error purging queue",
+            },
+            detail: {
+                title: "Queue Details",
+                name: "Name",
+                address: "Address",
+                routingType: "Routing Type",
+                durable: "Durable",
+                messageCount: "Message Count",
+                consumerCount: "Consumer Count",
+                deliveringCount: "Delivering Count",
+                messagesAdded: "Messages Added",
+                messagesAcknowledged: "Messages Acknowledged",
+                filter: "Filter",
+                temporary: "Temporary",
+                autoCreated: "Auto Created",
+                purgeOnNoConsumers: "Purge On No Consumers",
+                maxConsumers: "Max Consumers",
+            },
+            actions: {
+                purge: "Purge Queue",
+            },
+            purge: {
+                title: "Purge Queue",
+                confirmation: "Are you sure you want to remove all messages from queue {{name}}?",
+            },
+        },
+        message: {
+            title: "Messages",
+            error: {
+                deleteFailed: "Error deleting message",
+            },
+            detail: {
+                title: "Message Details",
+                messageID: "Message ID",
+                queueName: "Queue Name",
+                timestamp: "Timestamp",
+                type: "Type",
+                durable: "Durable",
+                priority: "Priority",
+                size: "Size",
+                redelivered: "Redelivered",
+                deliveryCount: "Delivery Count",
+                expirationTime: "Expiration Time",
+                properties: "Properties",
+                content: "Content",
+            },
+            grid: {
+                messageID: "Message ID",
+                timestamp: "Timestamp",
+                type: "Type",
+                priority: "Priority",
+                size: "Size",
+                actions: "Actions",
             },
         },
         parametres: {

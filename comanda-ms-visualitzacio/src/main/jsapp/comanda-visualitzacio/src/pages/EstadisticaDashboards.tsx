@@ -128,7 +128,7 @@ const EstadisticaDashboards: React.FC = () => {
     const { dashboardExport } = useActions();
     const {handleShow: showCloneDashboard, content: contentCloneDashboard} = useCloneDashboardAction(refresh);
     return (
-        <GridPage disableMargins>
+        <GridPage>
             <MuiGrid
                 title={t('page.dashboards.title')}
                 resourceName="dashboard"

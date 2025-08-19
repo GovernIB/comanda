@@ -10,7 +10,8 @@ type DataGridActionItemProps = {
     icon?: string;
     linkTo?: string;
     linkState?: any;
-    onClick?: DataGridActionItemOnClickFn;
+    onClick?: any;
+    onClickCustom?: DataGridActionItemOnClickFn;
     showInMenu?: boolean;
     disabled?: boolean;
 };
@@ -26,18 +27,22 @@ export const toDataGridActionItem = (
     linkState?: any,
     onClick?: DataGridActionItemOnClickFn,
     showInMenu?: boolean,
-    disabled?: boolean): React.ReactElement => {
-    return <DataGridActionItem
-        id={id}
-        title={title}
-        row={row}
-        icon={icon}
-        linkTo={linkTo}
-        linkState={linkState}
-        onClick={onClick}
-        showInMenu={showInMenu}
-        disabled={disabled} />;
-}
+    disabled?: boolean
+): React.ReactElement => {
+    return (
+        <DataGridActionItem
+            id={id}
+            title={title}
+            row={row}
+            icon={icon}
+            linkTo={linkTo}
+            linkState={linkState}
+            onClickCustom={onClick}
+            showInMenu={showInMenu}
+            disabled={disabled}
+        />
+    );
+};
 
 const DataGridActionItem: React.FC<DataGridActionItemProps> = (props) => {
     const {
@@ -48,6 +53,7 @@ const DataGridActionItem: React.FC<DataGridActionItemProps> = (props) => {
         linkTo,
         linkState,
         onClick,
+        onClickCustom,
         showInMenu,
         disabled,
     } = props;
@@ -56,13 +62,16 @@ const DataGridActionItem: React.FC<DataGridActionItemProps> = (props) => {
     linkTo && (additionalProps['component'] = getLinkComponent());
     linkTo && (additionalProps['to'] = linkTo);
     linkState && (additionalProps['state'] = linkState);
-    return <GridActionsCellItem
-        label={title}
-        title={!showInMenu ? title : undefined}
-        icon={icon ? <Icon>{icon}</Icon> : undefined}
-        onClick={event => onClick?.(id, row, event)}
-        disabled={disabled}
-        {...additionalProps} />;
-}
+    return (
+        <GridActionsCellItem
+            label={title}
+            title={!showInMenu ? title : undefined}
+            icon={icon ? <Icon>{icon}</Icon> : undefined}
+            onClick={(event) => (onClickCustom ? onClickCustom?.(id, row, event) : onClick(event))}
+            disabled={disabled}
+            {...additionalProps}
+        />
+    );
+};
 
 export default DataGridActionItem;

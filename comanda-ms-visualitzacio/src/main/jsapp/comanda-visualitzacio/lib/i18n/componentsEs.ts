@@ -12,7 +12,7 @@ const componentsEs = {
         },
         offline: {
             message: 'Sin conexión con el servidor',
-        }
+        },
     },
     datacommon: {
         details: {
@@ -28,7 +28,8 @@ const componentsEs = {
             title: 'Borrar',
             single: {
                 title: 'Confirmación',
-                confirm: '¿Está seguro de que desea borrar este elemento (esta acción no se puede deshacer)?',
+                confirm:
+                    '¿Está seguro de que desea borrar este elemento (esta acción no se puede deshacer)?',
                 success: 'Elemento borrado',
                 error: 'Error borrando elemento',
             },
@@ -70,11 +71,13 @@ const componentsEs = {
             title: 'Modificar',
             success: 'Elemento modificado',
             error: 'Error modificando elemento',
-            wrong_resource_type: 'No es posible guardar los formularios con tipo de recurso "{{resourceType}}"',
+            wrong_resource_type:
+                'No es posible guardar los formularios con tipo de recurso "{{resourceType}}"',
         },
         delete: {
             title: 'Borrar',
-            confirm: '¿Está seguro de que desea borrar este elemento (esta acción no se puede deshacer)?',
+            confirm:
+                '¿Está seguro de que desea borrar este elemento (esta acción no se puede deshacer)?',
             success: 'Elemento borrado',
             error: 'Error borrando elemento',
         },
@@ -87,8 +90,8 @@ const componentsEs = {
                 noOptions: 'Sin opciones',
                 page: 'Mostrando {{size}} de {{totalElements}} elementos',
                 advanced: {
-                    title: 'Seleccionar valor'
-                }
+                    title: 'Seleccionar valor',
+                },
             },
             checkboxSelect: {
                 true: 'Si',
@@ -101,19 +104,20 @@ const componentsEs = {
         },
         validate: {
             error: 'Error de validación',
+            saveErrors: 'Hay errores de validación',
         },
     },
     actionreport: {
         action: {
             confirm: {
                 title: 'Confirmación',
-                message: '¿Está seguro de que desea ejecutar la acción {{action}}?'
+                message: '¿Está seguro de que desea ejecutar la acción {{action}}?',
             },
-            error: 'Error ejecutando la acción'
+            error: 'Error ejecutando la acción',
         },
         report: {
-            error: 'Error generando el informe'
-        }
+            error: 'Error generando el informe',
+        },
     },
     buttons: {
         answerRequired: {

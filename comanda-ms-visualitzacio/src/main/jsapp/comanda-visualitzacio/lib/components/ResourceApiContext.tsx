@@ -5,7 +5,8 @@ export type OpenAnswerRequiredDialogFn = (
     title: string | undefined,
     question: string,
     trueFalseAnswerRequired: boolean,
-    availableAnswers: string[]) => Promise<string>;
+    availableAnswers: string[]
+) => Promise<string>;
 
 export type ResourceApiUserSessionValuePair = {
     attribute: string;
@@ -14,7 +15,16 @@ export type ResourceApiUserSessionValuePair = {
 
 export type ResourceType = 'ACTION' | 'REPORT' | 'FILTER';
 export type ExportFileType = 'CSV' | 'ODS' | 'ODT' | 'XLSX' | 'DOCX' | 'PDF';
-export type ReportOutputFormat = 'PDF' | 'XLS' | 'CSV' | 'ODS' | 'XLSX' | 'ODT' | 'RTF' | 'DOCX' | 'PPTX';
+export type ReportOutputFormat =
+    | 'PDF'
+    | 'XLS'
+    | 'CSV'
+    | 'ODS'
+    | 'XLSX'
+    | 'ODT'
+    | 'RTF'
+    | 'DOCX'
+    | 'PPTX';
 
 export type ResourceApiContextType = {
     isLoading: boolean;
@@ -37,18 +47,22 @@ export type ResourceApiContextType = {
     setOpenAnswerRequiredDialog: (openAnswerRequiredDialog: OpenAnswerRequiredDialogFn) => void;
 };
 
-export const ResourceApiContext = React.createContext<ResourceApiContextType | undefined>(undefined);
+export const ResourceApiContext = React.createContext<ResourceApiContextType | undefined>(
+    undefined
+);
 
 export const useResourceApiContext = (hookName?: string): ResourceApiContextType => {
     const context = React.useContext(ResourceApiContext);
     if (context === undefined) {
-        throw new Error((hookName ?? 'useResourceApiContext') + ' must be used within a ResourceApiProvider');
+        throw new Error(
+            (hookName ?? 'useResourceApiContext') + ' must be used within a ResourceApiProvider'
+        );
     }
     return context;
-}
+};
 
 export const useOptionalResourceApiContext = (): ResourceApiContextType | undefined => {
     return React.useContext(ResourceApiContext);
-}
+};
 
 export default ResourceApiContext;

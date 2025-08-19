@@ -77,7 +77,7 @@ const EstadisticaWidget: React.FC = () => {
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTab(newValue);
     };
-    return <GridPage disableMargins>
+    return <GridPage>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
             <Tabs value={tab} onChange={handleChange}>
                 <Tab label={t('page.widget.simple.tab.title')} />

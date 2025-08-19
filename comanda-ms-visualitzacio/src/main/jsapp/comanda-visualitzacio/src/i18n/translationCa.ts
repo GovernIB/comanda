@@ -23,6 +23,9 @@ const translationCa = {
         integracio: "Integracions",
         calendari: "Calendari",
         parametre: "Paràmetres",
+        broker: "Gestor de cues",
+        tasca: "Tasca",
+        avis: "Avis",
     },
     page: {
         salut: {
@@ -33,7 +36,6 @@ const translationCa = {
             apps: {
                 column: {
                     estat: "Estat",
-                    infoData: "Data darrera consulta informació",
                     codi: "Codi",
                     nom: "Nom",
                     versio: "Versió",
@@ -119,7 +121,6 @@ const translationCa = {
             estats: {
                 title: "Estats",
             },
-            senseFiltres: "Sense filtres",
         },
         apps: {
             title: "Aplicacions",
@@ -357,6 +358,95 @@ const translationCa = {
                     success: "Caches buidades",
                     error: "Error buidant caches",
                 },
+            },
+        },
+        broker: {
+            title: "Gestor de cues",
+            error: {
+                fetchFailed: "Error en obtenir les dades del broker",
+            },
+            detail: {
+                title: "Informació del broker",
+                version: "Versió",
+                name: "Nom",
+                status: "Estat",
+                uptime: "Temps d'activitat",
+                memoryUsage: "Ús de memòria",
+                diskUsage: "Ús de disc",
+                totalConnections: "Connexions totals",
+                totalQueues: "Cues totals",
+                totalMessages: "Missatges totals",
+            },
+            queues: {
+                title: "Cues",
+            },
+            queue: {
+                address: "Adreça",
+                routingType: "Tipus d'enrutament",
+                durable: "Durable",
+                messageCount: "Nombre de missatges",
+                consumerCount: "Nombre de consumidors",
+                viewMessages: "Veure missatges",
+            },
+        },
+        queue: {
+            title: "Cua: {{name}}",
+            error: {
+                fetchFailed: "Error en obtenir les dades de la cua",
+                purgeFailed: "Error en purgar la cua",
+            },
+            detail: {
+                title: "Detalls de la cua",
+                name: "Nom",
+                address: "Adreça",
+                routingType: "Tipus d'enrutament",
+                durable: "Durable",
+                messageCount: "Nombre de missatges",
+                consumerCount: "Nombre de consumidors",
+                deliveringCount: "Missatges en entrega",
+                messagesAdded: "Missatges afegits",
+                messagesAcknowledged: "Missatges confirmats",
+                filter: "Filtre",
+                temporary: "Temporal",
+                autoCreated: "Creació automàtica",
+                purgeOnNoConsumers: "Purgar sense consumidors",
+                maxConsumers: "Màxim de consumidors",
+            },
+            actions: {
+                purge: "Purgar cua",
+            },
+            purge: {
+                title: "Purgar cua",
+                confirmation: "Estau segur que voleu eliminar tots els missatges de la cua {{name}}?",
+            },
+        },
+        message: {
+            title: "Missatges",
+            error: {
+                deleteFailed: "Error en eliminar el missatge",
+            },
+            detail: {
+                title: "Detalls del missatge",
+                messageID: "ID del missatge",
+                queueName: "Nom de la cua",
+                timestamp: "Data i hora",
+                type: "Tipus",
+                durable: "Durable",
+                priority: "Prioritat",
+                size: "Mida",
+                redelivered: "Reentregat",
+                deliveryCount: "Nombre d'entregues",
+                expirationTime: "Data d'expiració",
+                properties: "Propietats",
+                content: "Contingut",
+            },
+            grid: {
+                messageID: "ID del missatge",
+                timestamp: "Data i hora",
+                type: "Tipus",
+                priority: "Prioritat",
+                size: "Mida",
+                actions: "Accions",
             },
         },
         parametres: {

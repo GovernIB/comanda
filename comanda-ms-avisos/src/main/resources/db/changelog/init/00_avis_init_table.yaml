@@ -1,0 +1,74 @@
+databaseChangeLog:
+- changeSet:
+    id: avis-init-table-1
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}avis
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}avis_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: entorn_app_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: app_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: entorn_id
+            type: BIGINT
+        - column:
+            constraints:
+                nullable: false
+            name: identificador
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: tipus
+            type: VARCHAR(16 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: nom
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            name: descripcio
+            type: VARCHAR(1024 ${varcharUnit})
+        - column:
+            name: data_inici
+            type: DATE
+        - column:
+            name: data_fi
+            type: DATE
+        - column:
+              constraints:
+                  nullable: false
+              name: created_by
+              type: VARCHAR(64 ${varcharUnit})
+        - column:
+              constraints:
+                  nullable: false
+              name: created_date
+              type: TIMESTAMP
+        - column:
+              name: lastmod_by
+              type: VARCHAR(64 ${varcharUnit})
+        - column:
+              name: lastmod_date
+              type: TIMESTAMP
+        - column:
+              name: v
+              type: BIGINT

@@ -14,6 +14,8 @@ export type DetailFieldCommonProps = {
     name: string;
     /** Etiqueta del camp (si no s'especifica s'utilitzarà l'etiqueta del backend) */
     label?: string;
+    /** Valor del camp (si no s'especifica s'utilitzarà el valor del backend) */
+    value?: any;
 };
 
 /**
@@ -28,7 +30,6 @@ export type DetailFieldProps = DetailFieldCommonProps & {
 };
 
 export type DetailFieldCustomProps = DetailFieldCommonProps & {
-    value: any;
     field: any;
     inline?: true;
     fieldTypeMap?: Map<string, string>;
@@ -46,9 +47,7 @@ const useDetailFieldComponent = (
     fieldTypeMap?: Map<string, string>
 ) => {
     const { getDetailFieldComponent } = useBaseAppContext();
-    const fieldType = field?.type
-        ? (fieldTypeMap?.get(field?.type) ?? field?.type)
-        : field?.type;
+    const fieldType = field?.type ? (fieldTypeMap?.get(field?.type) ?? field?.type) : field?.type;
     const processedType = processType(field, type ?? fieldType);
     return {
         type: processedType,
@@ -69,15 +68,12 @@ const DetailFieldRenderer: React.FC<DetailFieldRendererProps> = (props) => {
     } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
     const label = labelProp ?? field?.label ?? name;
-    debug &&
-        logConsole.debug(
-            'Field',
-            name,
-            'rendered',
-            value ? 'with value: ' + value : 'empty'
-        );
-    const { type: formFieldType, DetailFieldComponent } =
-        useDetailFieldComponent(type, field, fieldTypeMap);
+    debug && logConsole.debug('Field', name, 'rendered', value ? 'with value: ' + value : 'empty');
+    const { type: formFieldType, DetailFieldComponent } = useDetailFieldComponent(
+        type,
+        field,
+        fieldTypeMap
+    );
     return DetailFieldComponent ? (
         <DetailFieldComponent
             name={name}
@@ -101,13 +97,8 @@ const Renderer = React.memo(DetailFieldRenderer);
  * @returns Element JSX del camp.
  */
 export const DetailField: React.FC<DetailFieldProps> = (props) => {
-    const { name, type, debug, ...otherProps } = props;
-    const {
-        isReady: isFormReady,
-        fields,
-        fieldTypeMap,
-        dataGetFieldValue,
-    } = useDetailContext();
+    const { name, type, value, debug, ...otherProps } = props;
+    const { isReady: isFormReady, fields, fieldTypeMap, dataGetFieldValue } = useDetailContext();
     const field = React.useMemo(() => {
         if (fields) {
             const field = fields.find((f) => f.name === name);
@@ -115,11 +106,10 @@ export const DetailField: React.FC<DetailFieldProps> = (props) => {
         }
     }, [fields, name]);
     const isReady = isFormReady && field !== undefined;
-    const value = dataGetFieldValue(name);
     return isReady ? (
         <Renderer
             name={name}
-            value={value}
+            value={value ?? dataGetFieldValue(name)}
             field={field}
             fieldTypeMap={fieldTypeMap}
             type={type}

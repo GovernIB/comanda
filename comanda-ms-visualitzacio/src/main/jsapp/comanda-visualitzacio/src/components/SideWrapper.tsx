@@ -1,6 +1,9 @@
+import { CSSProperties } from "react";
+
 interface SideWrapperProps {
     children: React.ReactNode;
     onOutsideClick: () => void;
+    style?: CSSProperties;
 }
 
 const overlayStyle = {
@@ -13,10 +16,10 @@ const overlayStyle = {
     zIndex: -1,
 };
 
-function SideWrapper ({children, onOutsideClick}: SideWrapperProps) {
+function SideWrapper ({children, onOutsideClick, style}: SideWrapperProps) {
     return (
         <>
-            <div style={overlayStyle} onClick={onOutsideClick} />
+            <div style={{...overlayStyle, ...style}} onClick={onOutsideClick} />
             <div>{children}</div>
         </>
     );

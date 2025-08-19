@@ -18,7 +18,11 @@ type DataGridDialogProps = DialogProps & {
     height?: number | null;
 };
 
-export type DataGridDialogShowFn = (title: string | null, height?: number | null, componentProps?: any) => Promise<string>;
+export type DataGridDialogShowFn = (
+    title: string | null,
+    height?: number | null,
+    componentProps?: any
+) => Promise<string>;
 
 export type UseDataGridDialogFn = (
     resourceName: string,
@@ -29,7 +33,8 @@ export type UseDataGridDialogFn = (
     staticFilter?: string,
     staticSortModel?: GridSortModel,
     namedQueries?: string[],
-    perspectives?: string[]) => [DataGridDialogShowFn, React.ReactElement];
+    perspectives?: string[]
+) => [DataGridDialogShowFn, React.ReactElement];
 
 export const useDataGridDialog: UseDataGridDialogFn = (
     resourceName: string,
@@ -40,7 +45,8 @@ export const useDataGridDialog: UseDataGridDialogFn = (
     staticFilter?: string,
     staticSortModel?: GridSortModel,
     namedQueries?: string[],
-    perspectives?: string[]) => {
+    perspectives?: string[]
+) => {
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string | null>();
     const [height, setHeight] = React.useState<number | undefined | null>();
@@ -56,34 +62,37 @@ export const useDataGridDialog: UseDataGridDialogFn = (
             setResolveFn(() => resolve);
             setRejectFn(() => reject);
         });
-    }
+    };
     const closeCallback = () => {
         // S'ha tancat la modal o s'ha fet click a fora de la finestra
         rejectFn?.(undefined);
         setOpen(false);
-    }
+    };
     const handleRowClick = (params: GridRowParams) => {
         resolveFn?.(params.row);
         setOpen(false);
-    }
-    const dialogComponent = <DataGridDialog
-        resourceName={resourceName}
-        columns={columns}
-        resourceType={resourceType}
-        resourceTypeCode={resourceTypeCode}
-        resourceFieldName={resourceFieldName}
-        staticFilter={staticFilter}
-        staticSortModel={staticSortModel}
-        namedQueries={namedQueries}
-        perspectives={perspectives}
-        onRowClick={handleRowClick}
-        height={height}
-        open={open}
-        closeCallback={closeCallback}
-        title={title}
-        componentProps={componentProps} />;
+    };
+    const dialogComponent = (
+        <DataGridDialog
+            resourceName={resourceName}
+            columns={columns}
+            resourceType={resourceType}
+            resourceTypeCode={resourceTypeCode}
+            resourceFieldName={resourceFieldName}
+            staticFilter={staticFilter}
+            staticSortModel={staticSortModel}
+            namedQueries={namedQueries}
+            perspectives={perspectives}
+            onRowClick={handleRowClick}
+            height={height}
+            open={open}
+            closeCallback={closeCallback}
+            title={title}
+            componentProps={componentProps}
+        />
+    );
     return [showDialog, dialogComponent];
-}
+};
 
 export const DataGridDialog: React.FC<DataGridDialogProps> = (props) => {
     const {
@@ -101,26 +110,29 @@ export const DataGridDialog: React.FC<DataGridDialogProps> = (props) => {
         children,
         ...otherProps
     } = props;
-    return <Dialog {...otherProps}>
-        <MuiDataGrid
-            columns={columns}
-            resourceName={resourceName}
-            resourceType={resourceType}
-            resourceTypeCode={resourceTypeCode}
-            resourceFieldName={resourceFieldName}
-            paginationActive
-            titleDisabled
-            quickFilterSetFocus
-            quickFilterFullWidth
-            toolbarHideRefresh
-            readOnly
-            staticFilter={staticFilter}
-            staticSortModel={staticSortModel}
-            namedQueries={namedQueries}
-            perspectives={perspectives}
-            onRowClick={onRowClick}
-            height={height ?? 370} />
-    </Dialog>;
-}
+    return (
+        <Dialog {...otherProps}>
+            <MuiDataGrid
+                columns={columns}
+                resourceName={resourceName}
+                resourceType={resourceType}
+                resourceTypeCode={resourceTypeCode}
+                resourceFieldName={resourceFieldName}
+                paginationActive
+                titleDisabled
+                quickFilterSetFocus
+                quickFilterFullWidth
+                toolbarHideRefresh
+                readOnly
+                staticFilter={staticFilter}
+                staticSortModel={staticSortModel}
+                namedQueries={namedQueries}
+                perspectives={perspectives}
+                onRowClick={onRowClick}
+                height={height ?? 370}
+            />
+        </Dialog>
+    );
+};
 
 export default DataGridDialog;

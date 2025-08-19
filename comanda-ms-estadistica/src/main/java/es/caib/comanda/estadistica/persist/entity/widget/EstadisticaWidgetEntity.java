@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.entity.widget;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAbsolutTipus;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAlineacio;
@@ -9,7 +10,6 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.Setter;

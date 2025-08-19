@@ -22,18 +22,30 @@ type FormFieldReferenceRendererArgs = {
 };
 
 type FormFieldRefProps = FormFieldCustomProps & {
-    filter?: string;
-    sortModel?: GridSortModel;
-    namedQueries?: string[];
-    perspectives?: string[];
-    advancedSearchColumns?: GridColDef[];
-    optionsPageSize?: number;
-    optionsUnpaged?: boolean;
-    optionsRequest?: (q: string) => AdvancedSearchOptionsRequestType,
-    optionRenderer?: (args: FormFieldReferenceRendererArgs) => React.ReactElement;
+    /** Indica si el camp permet múltiples valors */
     multiple?: boolean;
-    dialogHeight?: number;
-    dialogComponentProps?: any;
+    /** Filtre en format Spring Filter per a consultar els valors al backend */
+    filter?: string;
+    /** Model per a l'ordenació dels resultats */
+    sortModel?: GridSortModel;
+    /** Paràmetre per a consultar els valors al backend */
+    namedQueries?: string[];
+    /** Paràmetre per a consultar els valors al backend */
+    perspectives?: string[];
+    /** Mida de pàgina per a consultar els valors al backend */
+    optionsPageSize?: number;
+    /** Indica que la consulta de valors al backend s'ha de fer sense paginació */
+    optionsUnpaged?: boolean;
+    /** Configuració de columnes pel grid de la finestra emergent de consulta avançada */
+    advancedSearchColumns?: GridColDef[];
+    /** Alçada per a la finestra emergent de consulta avançada */
+    advancedSearchDialogHeight?: number;
+    /** Propietats del component Dialog per a la finestra emergent de consulta avançada */
+    advancedSearchDialogComponentProps?: any;
+    /** Callback per a substituir la funció que fa la consulta de resultats */
+    optionsRequest?: (q: string) => AdvancedSearchOptionsRequestType;
+    /** Callback per personalitzar cada element de la llista de resultats */
+    optionRenderer?: (args: FormFieldReferenceRendererArgs) => React.ReactElement;
 };
 
 type AdvancedSearchDialogApi = {
@@ -56,12 +68,11 @@ type AdvancedSearchDialogProps = React.PropsWithChildren & {
 export type FormFieldRefOptionsResponse = {
     options: any[];
     page?: any;
-}
+};
 
-type AdvancedSearchOptionsRequestType = Promise<FormFieldRefOptionsResponse> | [
-    Promise<FormFieldRefOptionsResponse>,
-    () => void,
-];
+type AdvancedSearchOptionsRequestType =
+    | Promise<FormFieldRefOptionsResponse>
+    | [Promise<FormFieldRefOptionsResponse>, () => void];
 
 const AdvancedSearchDialog: React.FC<AdvancedSearchDialogProps> = (props) => {
     const {
@@ -74,13 +85,9 @@ const AdvancedSearchDialog: React.FC<AdvancedSearchDialogProps> = (props) => {
         perspectives,
         apiRef,
         dialogHeight,
-        dialogComponentProps
+        dialogComponentProps,
     } = props;
-    const {
-        resourceName,
-        resourceType,
-        resourceTypeCode,
-    } = useFormContext();
+    const { resourceName, resourceType, resourceTypeCode } = useFormContext();
     const [gridDialogShow, gridDialogComponent] = useDataGridDialog(
         resourceName,
         columns,
@@ -90,28 +97,29 @@ const AdvancedSearchDialog: React.FC<AdvancedSearchDialogProps> = (props) => {
         filter,
         sortModel,
         namedQueries,
-        perspectives);
+        perspectives
+    );
     const show = () => {
-        return gridDialogShow(
-            title,
-            dialogHeight,
-            { fullWidth: true, maxWidth: 'md', ...dialogComponentProps });
-    }
+        return gridDialogShow(title, dialogHeight, {
+            fullWidth: true,
+            maxWidth: 'md',
+            ...dialogComponentProps,
+        });
+    };
     apiRef.current = { show };
-    return <>
-        {gridDialogComponent}
-    </>;
-}
+    return <>{gridDialogComponent}</>;
+};
 
 const useFieldOptions = (
     open: boolean,
     inputValue: string | undefined,
-    optionsRequest: (q: string) => AdvancedSearchOptionsRequestType) => {
+    optionsRequest: (q: string) => AdvancedSearchOptionsRequestType
+) => {
     const [loading, setLoading] = React.useState<boolean>(false);
     const [options, setOptions] = React.useState<any[]>([]);
     const [page, setPage] = React.useState<any>();
     const [error, setError] = React.useState<any>();
-    const debouncedInputValue = useDebounce(inputValue);
+    const debouncedInputValue = useDebounce(inputValue, undefined, true);
     React.useEffect(() => {
         if (open) {
             const q = debouncedInputValue?.length ? debouncedInputValue : null;
@@ -120,20 +128,20 @@ const useFieldOptions = (
             const optionsRequestPromise = Array.isArray(or) ? or[0] : or;
             const optionsRequestCancel = Array.isArray(or) ? or[1] : undefined;
             setError(undefined);
-            optionsRequestPromise.
-                then((response) => {
+            optionsRequestPromise
+                .then((response) => {
                     setOptions(response.options);
                     setPage(response?.page);
-                }).
-                catch(setError).
-                finally(() => {
+                })
+                .catch(setError)
+                .finally(() => {
                     setLoading(false);
                 });
             return () => optionsRequestCancel?.();
         }
     }, [open, optionsRequest, debouncedInputValue]);
     return { loading, options, page, error };
-}
+};
 
 export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
     const {
@@ -158,235 +166,316 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
         optionsRequest: optionsRequestProp,
         optionRenderer,
         multiple: multipleProp,
-        dialogHeight,
-        dialogComponentProps,
+        advancedSearchDialogHeight,
+        advancedSearchDialogComponentProps,
     } = props;
     const { t } = useBaseAppContext();
     const { requestHref } = useResourceApiContext();
     const advancedSearchApiRef = React.useRef<AdvancedSearchDialogApi>(undefined);
     const multiple = (field?.multiple || multipleProp) ?? false;
-    const isEmptyValue = multiple ? !(value?.length) : value == null;
+    const isEmptyValue = multiple ? !value?.length : value == null;
     const [open, setOpen] = React.useState<boolean>(false);
     const [inputValue, setInputValue] = React.useState<string>('');
     const [optionsQuickFilter, setOptionsQuickFilter] = React.useState<string>('');
-    const changeValue = (value: any) => {
+    const [ignoreOnInputChangeEvent, setIgnoreOnInputChangeEvent] = React.useState<boolean>(false);
+    const processValueChange = (value: any) => {
         onChange(value);
         setInputValue(value?.description ?? '');
         setOptionsQuickFilter('');
-    }
-    React.useEffect(() => {
-        setInputValue(value?.description ?? '');
-        setOptionsQuickFilter('');
-    }, [value]);
-    const optionsRequest = React.useCallback((q: string) => {
-        if (optionsRequestProp != null) {
-            return optionsRequestProp(q);
-        } else {
-            return new Promise<FormFieldRefOptionsResponse>((resolve, reject) => {
-                const dataSource = field.dataSource;
-                const valueField = dataSource.valueField;
-                const labelField = dataSource.labelField;
-                const pageArgs = optionsUnpaged ? { page: 'UNPAGED' } : { page: 0, size: optionsPageSize };
-                const sorts = sortModel && sortModel.length ? sortModel.map(sm => sm.field + ',' + sm.sort) : undefined;
-                const templateData = {
-                    quickFilter: q,
-                    filter,
-                    sorts,
-                    namedQuery: namedQueries,
-                    perspective: perspectives,
-                    ...pageArgs
-                };
-                requestHref(dataSource.href, templateData).then((state) => {
-                    const options = state.getEmbedded().map(e => ({
-                        id: e.data[valueField],
-                        description: e.data[labelField],
-                    }));
-                    const response = {
-                        options,
-                        page: state.data.page
+    };
+    const optionsRequest = React.useCallback(
+        (q: string) => {
+            if (optionsRequestProp != null) {
+                return optionsRequestProp(q);
+            } else {
+                return new Promise<FormFieldRefOptionsResponse>((resolve, reject) => {
+                    const dataSource = field.dataSource;
+                    const valueField = dataSource.valueField;
+                    const labelField = dataSource.labelField;
+                    const pageArgs = optionsUnpaged
+                        ? { page: 'UNPAGED' }
+                        : { page: 0, size: optionsPageSize };
+                    const sorts =
+                        sortModel && sortModel.length
+                            ? sortModel.map((sm) => sm.field + ',' + sm.sort)
+                            : undefined;
+                    const templateData = {
+                        quickFilter: q,
+                        filter,
+                        sorts,
+                        namedQuery: namedQueries,
+                        perspective: perspectives,
+                        ...pageArgs,
                     };
-                    resolve(response);
-                }).catch(reject);
-            });
-        }
-    }, [optionsRequestProp, filter, sortModel, namedQueries, perspectives]);
+                    requestHref(dataSource.href, templateData)
+                        .then((state) => {
+                            const options = state.getEmbedded().map((e) => ({
+                                id: e.data[valueField],
+                                description: e.data[labelField],
+                            }));
+                            const response = {
+                                options,
+                                page: state.data.page,
+                            };
+                            resolve(response);
+                        })
+                        .catch(reject);
+                });
+            }
+        },
+        [optionsRequestProp, filter, sortModel, namedQueries, perspectives]
+    );
     const {
         loading: optionsLoading,
         options,
         page: optionsPage,
         error: optionsError,
-    } = useFieldOptions(
-        open,
-        optionsQuickFilter,
-        optionsRequest);
+    } = useFieldOptions(open, optionsQuickFilter, optionsRequest);
     const handleOnChange = (_event: Event, value: any, reason: AutocompleteChangeReason): void => {
         if (reason === 'clear') {
             setOpen(true);
         }
-        changeValue(value);
-    }
+        processValueChange(value);
+    };
     const handleOnInputChange = (_event: any, newValue: string) => {
-        if (isEmptyValue || multiple) {
+        if (ignoreOnInputChangeEvent) {
+            setIgnoreOnInputChangeEvent(false);
+            return;
+        }
+        if (isEmptyValue || multiple || newValue?.length == 0) {
             setInputValue(newValue);
             setOptionsQuickFilter(newValue);
-        }
-    }
-    const handleAdvancedSearchClick = () => {
-        advancedSearchApiRef.current?.show().then((row: any) => {
-            const valueField = field.dataSource.valueField;
-            const labelField = field.dataSource.labelField;
-            const valueReference = {
-                id: row[valueField],
-                description: row[labelField],
-            };
-            const valueReferenceWithData = valueReference ? { ...valueReference, data: row } : null;
-            if (multiple) {
-                const currentValues = Array.isArray(value) ? value : [value];
-                const currentValueFound = currentValues.find(v => v.id === valueReferenceWithData?.id);
-                changeValue(currentValueFound ? currentValues : [...currentValues, valueReferenceWithData]);
+        } else {
+            setIgnoreOnInputChangeEvent(true);
+            onChange(null);
+            if (
+                newValue.startsWith(value.description) &&
+                newValue.length > value.description.length
+            ) {
+                const newChar = newValue.slice(-1);
+                setInputValue(newChar);
+                setOptionsQuickFilter(newChar);
             } else {
-                changeValue(valueReferenceWithData);
+                setInputValue(newValue);
+                setOptionsQuickFilter(newValue);
             }
-        }).catch(() => { });
-    }
+        }
+    };
+    const handleAdvancedSearchClick = () => {
+        advancedSearchApiRef.current
+            ?.show()
+            .then((row: any) => {
+                const valueField = field.dataSource.valueField;
+                const labelField = field.dataSource.labelField;
+                const valueReference = {
+                    id: row[valueField],
+                    description: row[labelField],
+                };
+                const valueReferenceWithData = valueReference
+                    ? { ...valueReference, data: row }
+                    : null;
+                if (multiple) {
+                    if (value != null) {
+                        const currentValues = Array.isArray(value) ? value : [value];
+                        const currentValueFound = currentValues.find(
+                            (v) => v.id === valueReferenceWithData?.id
+                        );
+                        processValueChange(
+                            currentValueFound
+                                ? currentValues
+                                : [...currentValues, valueReferenceWithData]
+                        );
+                    } else {
+                        processValueChange([valueReferenceWithData]);
+                    }
+                } else {
+                    processValueChange(valueReferenceWithData);
+                }
+            })
+            .catch(() => {});
+    };
     const autoFocus = componentProps?.autoFocus;
     const startAdornmentIcons: React.ReactElement[] = [];
-    const optionsErrorIconElement = optionsError != null ? <Icon fontSize="small" color="error" title={optionsError.message} sx={{ ml: 1 }}>
-        warning
-    </Icon> : null;
+    const optionsErrorIconElement =
+        optionsError != null ? (
+            <Icon fontSize="small" color="error" title={optionsError.message} sx={{ ml: 1 }}>
+                warning
+            </Icon>
+        ) : null;
     const advancedSearchButtonActive = advancedSearchColumns != null && !disabled && !readOnly;
-    const advancedSearchButtonElement = advancedSearchButtonActive ? <IconButton
-        onClick={handleAdvancedSearchClick}
-        size="small"
-        tabIndex={-1}>
-        <Icon fontSize="small">manage_search</Icon>
-    </IconButton> : null;
+    const advancedSearchButtonElement = advancedSearchButtonActive ? (
+        <IconButton onClick={handleAdvancedSearchClick} size="small" tabIndex={-1}>
+            <Icon fontSize="small">manage_search</Icon>
+        </IconButton>
+    ) : null;
     optionsErrorIconElement != null && startAdornmentIcons.push(optionsErrorIconElement);
     advancedSearchButtonElement != null && startAdornmentIcons.push(advancedSearchButtonElement);
-    const {
-        helperText,
-        title,
-        startAdornment,
-    } = useFormFieldCommon(field, fieldError, inline, componentProps, startAdornmentIcons);
+    const { helperText, title, startAdornment } = useFormFieldCommon(
+        field,
+        fieldError,
+        inline,
+        componentProps,
+        startAdornmentIcons
+    );
     const loadingElement = <CircularProgress color="inherit" size={20} />;
-    const endAdornment = optionsLoading ? loadingElement : componentProps?.slotProps?.input?.endAdornment;
-    const valueMultipleAdapted = React.useMemo(() => {
-        return multiple ? (value != null ? (Array.isArray(value) ? value : [value]) : []) : (value ?? null);
+    const endAdornment = optionsLoading
+        ? loadingElement
+        : componentProps?.slotProps?.input?.endAdornment;
+    const valueAdapted = React.useMemo(() => {
+        return multiple
+            ? value != null
+                ? Array.isArray(value)
+                    ? value
+                    : [value]
+                : []
+            : (value ?? null);
     }, [multiple, value]);
-    return <>
-        {advancedSearchButtonActive && <AdvancedSearchDialog
-            title={t('form.field.reference.advanced.title')}
-            fieldName={field.name}
-            columns={advancedSearchColumns}
-            filter={filter}
-            sortModel={sortModel}
-            namedQueries={namedQueries}
-            perspectives={perspectives}
-            apiRef={advancedSearchApiRef}
-            dialogHeight={dialogHeight}
-            dialogComponentProps={dialogComponentProps} />}
-        <Autocomplete
-            name={name}
-            value={valueMultipleAdapted}
-            readOnly={readOnly}
-            inputValue={inputValue}
-            options={options}
-            multiple={multiple}
-            open={open}
-            onOpen={() => setOpen(true)}
-            onClose={(event: Event, reason) => {
-                reason === 'escape' && handleOnInputChange(event, value?.description ?? '');
-                setOpen(false);
-            }}
-            onChange={handleOnChange}
-            onInputChange={handleOnInputChange}
-            getOptionLabel={(option: any) => option?.description}
-            isOptionEqualToValue={(option: any, value: any) => option.id === value?.id}
-            renderOption={(props, option: any, { selected }) => {
-                const optionRendererArgs = {
-                    id: option.id,
-                    description: option.description,
-                };
-                const optionDescription = optionRenderer ? optionRenderer(optionRendererArgs) : option.description;
-                if (multiple) {
-                    const { key, ...optionProps } = props;
-                    return <li key={key} {...optionProps}>
-                        <Checkbox
-                            checked={selected}
-                            icon={<Icon>check_box_outline_blank</Icon>}
-                            checkedIcon={<Icon>check_box</Icon>}
-                            sx={{ mr: 1 }} />
-                        {optionDescription}
-                    </li>;
-                } else {
-                    return <li {...props} key={option.id}>{optionDescription}</li>;
-                }
-            }}
-            filterOptions={(options) => {
-                if (!optionsUnpaged) {
-                    const currentPageSize = optionsPage?.size ?? DEFAULT_PAGE_SIZE;
-                    if (optionsPage?.totalElements > currentPageSize) {
-                        options.push({
-                            id: '___pageLabel',
-                            description: t('form.field.reference.page', {
-                                size: currentPageSize,
-                                totalElements: optionsPage?.totalElements,
-                            }),
-                            disabled: true,
-                        });
+    const inputValueAdapted = React.useMemo(() => {
+        return multiple ? inputValue : value != null ? value.description : inputValue;
+    }, [multiple, value, inputValue]);
+    return (
+        <>
+            {advancedSearchButtonActive && (
+                <AdvancedSearchDialog
+                    title={t('form.field.reference.advanced.title')}
+                    fieldName={field.name}
+                    columns={advancedSearchColumns}
+                    filter={filter}
+                    sortModel={sortModel}
+                    namedQueries={namedQueries}
+                    perspectives={perspectives}
+                    apiRef={advancedSearchApiRef}
+                    dialogHeight={advancedSearchDialogHeight}
+                    dialogComponentProps={advancedSearchDialogComponentProps}
+                />
+            )}
+            <Autocomplete
+                name={name}
+                value={valueAdapted}
+                onChange={handleOnChange}
+                inputValue={inputValueAdapted}
+                onInputChange={handleOnInputChange}
+                options={options}
+                multiple={multiple}
+                readOnly={readOnly}
+                disableCloseOnSelect={multiple}
+                open={open}
+                onOpen={() => !disabled && !readOnly && setOpen(true)}
+                onClose={(event: Event, reason) => {
+                    reason === 'escape' && handleOnInputChange(event, value?.description ?? '');
+                    setOpen(false);
+                }}
+                getOptionLabel={(option: any) => option?.description}
+                isOptionEqualToValue={(option: any, value: any) => option.id === value?.id}
+                renderOption={(props, option: any, { selected }) => {
+                    const optionRendererArgs = {
+                        id: option.id,
+                        description: option.description,
+                    };
+                    const optionDescription = optionRenderer
+                        ? optionRenderer(optionRendererArgs)
+                        : option.description;
+                    if (multiple) {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Checkbox
+                                    checked={selected}
+                                    icon={<Icon>check_box_outline_blank</Icon>}
+                                    checkedIcon={<Icon>check_box</Icon>}
+                                    sx={{ mr: 1 }}
+                                />
+                                {optionDescription}
+                            </li>
+                        );
+                    } else {
+                        return (
+                            <li {...props} key={option.id}>
+                                {optionDescription}
+                            </li>
+                        );
                     }
+                }}
+                filterOptions={(options) => {
+                    if (!optionsUnpaged) {
+                        const currentPageSize = optionsPage?.size ?? DEFAULT_PAGE_SIZE;
+                        if (optionsPage?.totalElements > currentPageSize) {
+                            options.push({
+                                id: '___pageLabel',
+                                description: t('form.field.reference.page', {
+                                    size: currentPageSize,
+                                    totalElements: optionsPage?.totalElements,
+                                }),
+                                disabled: true,
+                            });
+                        }
+                    }
+                    return options;
+                }}
+                getOptionDisabled={(option) => option.disabled}
+                fullWidth
+                {...componentProps}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        label={!inline ? label : undefined}
+                        placeholder={componentProps?.placeholder ?? (inline ? label : undefined)}
+                        disabled={disabled}
+                        required={required ?? field.required}
+                        error={fieldError != null}
+                        title={componentProps?.title ?? title}
+                        helperText={helperText}
+                        autoFocus={autoFocus}
+                        sx={{
+                            // Sin esto, si la columna no tiene suficiente espacio para el texto y el icono,
+                            // coloca uno encima del otro y se ve cortado por la mitad.
+                            '& .MuiAutocomplete-inputRoot': {
+                                flexWrap: inline ? 'nowrap' : undefined,
+                            },
+                        }}
+                        InputProps={{
+                            ...params.InputProps,
+                            startAdornment: params.InputProps.startAdornment ? (
+                                <>
+                                    {startAdornment}
+                                    {params.InputProps.startAdornment}
+                                </>
+                            ) : (
+                                startAdornment
+                            ),
+                            endAdornment: params.InputProps.endAdornment ? (
+                                <>
+                                    {params.InputProps.endAdornment}
+                                    {endAdornment}
+                                </>
+                            ) : (
+                                endAdornment
+                            ),
+                        }}
+                        inputProps={params.inputProps}
+                    />
+                )}
+                slotProps={{
+                    popper: {
+                        sx: {
+                            minWidth: '300px',
+                        },
+                    },
+                }}
+                // The next prop fixes a bug in Firefox where the focus was put into the Listbox
+                // container, and then lost focus of the form completely when navigating to the next input
+                ListboxProps={{ tabIndex: '-1' }}
+                openText={t('form.field.reference.open')}
+                closeText={t('form.field.reference.close')}
+                clearText={t('form.field.reference.clear')}
+                loadingText={t('form.field.reference.loading')}
+                noOptionsText={
+                    optionsLoading
+                        ? t('form.field.reference.loading')
+                        : t('form.field.reference.noOptions')
                 }
-                return options;
-            }}
-            getOptionDisabled={(option) => option.disabled}
-            fullWidth
-            {...componentProps}
-            renderInput={(params) => <TextField
-                {...params}
-                label={!inline ? label : undefined}
-                placeholder={componentProps?.placeholder ?? (inline ? label : undefined)}
-                disabled={disabled}
-                required={required ?? field.required}
-                error={fieldError != null}
-                title={componentProps?.title ?? title}
-                helperText={helperText}
-                autoFocus={autoFocus}
-                sx={{
-                    // Sin esto, si la columna no tiene suficiente espacio para el texto y el icono,
-                    // coloca uno encima del otro y se ve cortado por la mitad.
-                    '& .MuiAutocomplete-inputRoot': {
-                        flexWrap: inline ? 'nowrap' : undefined,
-                    },
-                }}
-                InputProps={{
-                    ...params.InputProps,
-                    startAdornment: params.InputProps.startAdornment ? <>
-                        {startAdornment}
-                        {params.InputProps.startAdornment}
-                    </> : startAdornment,
-                    endAdornment: params.InputProps.endAdornment ? <>
-                        {params.InputProps.endAdornment}
-                        {endAdornment}
-                    </> : endAdornment,
-                }}
-                inputProps={params.inputProps}
-            />}
-            slotProps={{
-                popper: {
-                    sx: {
-                        minWidth: '300px',
-                    },
-                },
-            }}
-            // The next prop fixes a bug in Firefox where the focus was put into the Listbox
-            // container, and then lost focus of the form completely when navigating to the next input
-            ListboxProps={{ tabIndex: '-1' }}
-            openText={t('form.field.reference.open')}
-            closeText={t('form.field.reference.close')}
-            clearText={t('form.field.reference.clear')}
-            loadingText={t('form.field.reference.loading')}
-            noOptionsText={optionsLoading ? t('form.field.reference.loading') : t('form.field.reference.noOptions')}
-        />
-    </>;
-}
+            />
+        </>
+    );
+};
 export default FormFieldReference;

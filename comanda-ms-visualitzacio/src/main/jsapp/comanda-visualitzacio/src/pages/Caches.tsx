@@ -97,7 +97,7 @@ const Caches: React.FC = () => {
             flex: 1,
         },
     ];
-    return <GridPage disableMargins>
+    return <GridPage>
         <MuiGrid
             apiRef={gridApiRef}
             title={t('page.caches.title')}

@@ -19,10 +19,10 @@ export const useDetailContext = () => {
         throw new Error('useDetailContext must be used within a DetailProvider');
     }
     return context;
-}
+};
 
 export const useOptionalDetailContext = (): DetailContextType | undefined => {
     return React.useContext(DetailContext);
-}
+};
 
 export default DetailContext;
