@@ -113,10 +113,12 @@ public interface DashboardExportMapper {
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple) atributsVisualsHelper.getAtributsVisuals(widget)
             );
         } else if (result instanceof EstadisticaGraficWidgetExport) {
+            // TODO: afegir mapeig de indicadorInfo, descomposicioDimensioCodi, unitatAgregacio?
             ((EstadisticaGraficWidgetExport) result).setAtributsVisuals(
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic) atributsVisualsHelper.getAtributsVisuals(widget)
             );
         } else if (result instanceof EstadisticaTaulaWidgetExport) {
+            // TODO: afegir mapeig de dimensioAgrupacioCodi?
             ((EstadisticaTaulaWidgetExport) result).setAtributsVisuals(
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula) atributsVisualsHelper.getAtributsVisuals(widget)
             );

@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.intf.model.export;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.io.Serializable;
  * @author Límit Tecnologies
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class EstadisticaSimpleWidgetExport extends EstadisticaWidgetExport implements Serializable {

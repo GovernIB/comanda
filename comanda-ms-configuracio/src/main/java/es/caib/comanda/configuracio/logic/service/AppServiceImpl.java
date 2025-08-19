@@ -57,7 +57,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	@PostConstruct
 	public void init() {
 		register(App.APP_EXPORT, new AppExportReportGenerator());
-		register(App.APP_IMPORT, new AppImportActionExecutor());
+//		register(App.APP_IMPORT, new AppImportActionExecutor());
 	}
 	
 	/**

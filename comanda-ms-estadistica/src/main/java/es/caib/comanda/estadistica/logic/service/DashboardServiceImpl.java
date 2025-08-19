@@ -82,7 +82,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     public void init() {
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
-        register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
+//        register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
         register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository));
     }
 

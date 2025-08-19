@@ -56,7 +56,7 @@ public class CacheServiceImpl extends BaseMutableResourceService<ComandaCache, S
     }
 
     private ComandaCache getComandaCache(String id) {
-        String descripcio = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.cache." + id, null);
+        String descripcio = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.cache." + id, (Object[]) null);
         var cache = cacheHelper.getCache(id);
         if (cache == null) {
             return ComandaCache.builder()

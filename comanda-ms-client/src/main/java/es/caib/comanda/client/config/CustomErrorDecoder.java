@@ -13,8 +13,9 @@ public class CustomErrorDecoder implements ErrorDecoder {
     public Exception decode(String methodKey, Response response) {
         Exception exception = defaultErrorDecoder.decode(methodKey, response);
 
-        // Si és un error 5xx o de connexió, permetem el reintent
-        if (response.status() >= 500 || exception instanceof RetryableException) {
+        // Només consideram retryable les excepcions que REALMENT són de connectivitat (timeouts, etc.)
+        // No convertim qualsevol 5xx en RetryableException per evitar reintents innecessaris i bloquejos.
+        if (exception instanceof RetryableException) {
             return new RetryableException(
                     response.status(),
                     exception.getMessage(),
@@ -23,6 +24,8 @@ public class CustomErrorDecoder implements ErrorDecoder {
                     response.request());
         }
 
+        // Per a 5xx retornam l'excepció per defecte de Feign (FeignException),
+        // que no és retryable, i permet un maneig més ràpid al codi que crida.
         return exception;
     }
 }

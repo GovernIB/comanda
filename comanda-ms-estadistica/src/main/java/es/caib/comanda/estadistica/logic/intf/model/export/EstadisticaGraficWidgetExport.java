@@ -6,6 +6,7 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -17,6 +18,7 @@ import java.util.List;
  * @author Límit Tecnologies
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class EstadisticaGraficWidgetExport extends EstadisticaWidgetExport implements Serializable {
