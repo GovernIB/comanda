@@ -35,7 +35,11 @@ public class SalutSchedulerService {
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
 
+    private static final Integer PERIODE_CONSULTA_SALUT = 1;
+
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
+    // Emmagatzemam l'interval programat per a cada entornApp per poder detectar canvis
+    private final Map<Long, Integer> intervalsActius = new ConcurrentHashMap<>();
 
     public SalutSchedulerService(
             @Qualifier("salutTaskScheduler") TaskScheduler taskScheduler,
@@ -62,10 +66,10 @@ public class SalutSchedulerService {
     }
 
     public void programarTasca(EntornApp entornApp) {
-        if (entornApp.getSalutInterval() == null || entornApp.getSalutInterval() <= 0) {
-            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getSalutInterval() + " no és un període vàlid.");
-            return;
-        }
+//        if (entornApp.getSalutInterval() == null || entornApp.getSalutInterval() <= 0) {
+//            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getSalutInterval() + " no és un període vàlid.");
+//            return;
+//        }
 
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
@@ -76,9 +80,11 @@ public class SalutSchedulerService {
         }
 
         try {
-            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getSalutInterval()), TimeUnit.MILLISECONDS);
-            long initialDelay = TimeUnit.SECONDS.toMillis(new Random().nextInt(60));
-            periodicTrigger.setInitialDelay(initialDelay); // Entre 0 i 60 segons
+//            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getSalutInterval()), TimeUnit.MILLISECONDS);
+            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_SALUT), TimeUnit.MILLISECONDS);
+            long initialDelay = TimeUnit.SECONDS.toMillis(new Random().nextInt(20));
+            periodicTrigger.setInitialDelay(initialDelay); // Entre 0 i 20 segons
+            periodicTrigger.setFixedRate(true);
 
             ScheduledFuture<?> futuraTasca = taskScheduler.schedule(
                     () -> executarProces(entornApp),
@@ -86,6 +92,7 @@ public class SalutSchedulerService {
             );
 
             tasquesActives.put(entornApp.getId(), futuraTasca);
+            intervalsActius.put(entornApp.getId(), entornApp.getSalutInterval());
             log.info("Tasca programada de obtenció de informació de salut per l'entornApp: {}, amb període: {}",
                     entornApp.getId(),
                     entornApp.getSalutInterval());
@@ -116,6 +123,7 @@ public class SalutSchedulerService {
         if (tasca != null) {
             tasca.cancel(false);
             tasquesActives.remove(entornAppId);
+            intervalsActius.remove(entornAppId);
             log.info("Tasca de obtenció de informació de salut cancel·lada per l'entornAppId: {}", entornAppId);
         }
     }
@@ -125,8 +133,6 @@ public class SalutSchedulerService {
         return schedulerLeader;
     }
 
-
-
     // Cada hora comprovarem que no hi hagi cap aplicacio-entorn que no s'estigui actualitzant
     @Scheduled(cron = "0 5 */1 * * *")
     public void comprovarRefrescInfo() {
@@ -134,7 +140,11 @@ public class SalutSchedulerService {
         List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(ea -> {
             ScheduledFuture<?> tasca = tasquesActives.get(ea.getId());
+            Integer intervalActual = intervalsActius.get(ea.getId());
             if (tasca == null) {
+                programarTasca(ea);
+            } else if (ea.getSalutInterval() != null && !ea.getSalutInterval().equals(intervalActual)) {
+                log.info("Detectat canvi d'interval de salut per l'entornApp {}: {} -> {}. Reprogramant tasca...", ea.getId(), intervalActual, ea.getSalutInterval());
                 programarTasca(ea);
             }
         });

@@ -16,4 +16,6 @@ public interface SalutMissatgeRepository extends BaseRepository<SalutMissatgeEnt
 
 	List<SalutMissatgeEntity> findBySalut(SalutEntity salut);
 
+	void deleteBySalut(SalutEntity salut);
+    void deleteAllBySalutIdIn(List<Long> salutIds);
 }

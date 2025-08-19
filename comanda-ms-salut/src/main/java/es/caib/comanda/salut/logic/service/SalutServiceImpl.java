@@ -33,7 +33,12 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +56,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
     private final SalutClientHelper salutClientHelper;
+
+
 
 	@PostConstruct
 	public void init() {

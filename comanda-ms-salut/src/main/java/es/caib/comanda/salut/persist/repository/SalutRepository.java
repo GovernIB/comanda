@@ -3,6 +3,7 @@ package es.caib.comanda.salut.persist.repository;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem;
+import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +17,18 @@ import java.util.List;
  * @author Límit Tecnologies
  */
 public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
+
+    SalutEntity findTopByEntornAppIdAndTipusRegistreOrderByIdDesc(Long entornAppId, TipusRegistreSalut tipusRegistre);
+	List<SalutEntity> findByEntornAppIdAndTipusRegistreAndDataBefore(Long entornAppId, TipusRegistreSalut tipusRegistre, LocalDateTime data);
+    @Query("SELECT s.id FROM SalutEntity s WHERE s.entornAppId = :entornAppId AND s.tipusRegistre = :tipusRegistre AND s.data < :data")
+    List<Long> findIdsByEntornAppIdAndTipusRegistreAndDataBefore(
+            @Param("entornAppId") Long entornAppId,
+            @Param("tipusRegistre") TipusRegistreSalut tipusRegistre,
+            @Param("data") LocalDateTime data
+    );
+
+	void deleteByDataBefore(LocalDateTime data);
+
 
 	String SALUT_ESTAT_ITEM_CLASS = "SELECT new es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem( ";
 	String SALUT_LATENCIA_ITEM_CLASS = "SELECT new es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem( ";

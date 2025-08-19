@@ -16,4 +16,6 @@ public interface SalutSubsistemaRepository extends BaseRepository<SalutSubsistem
 
 	List<SalutSubsistemaEntity> findBySalut(SalutEntity salut);
 
+	void deleteBySalut(SalutEntity salut);
+    void deleteAllBySalutIdIn(List<Long> saludIds);
 }

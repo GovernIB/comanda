@@ -16,4 +16,6 @@ public interface SalutDetallRepository extends BaseRepository<SalutDetallEntity,
 
 	List<SalutDetallEntity> findBySalut(SalutEntity salut);
 
+	void deleteBySalut(SalutEntity salut);
+	void deleteAllBySalutIdIn(List<Long> salutIds);
 }
