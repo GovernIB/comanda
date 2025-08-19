@@ -1,6 +1,6 @@
 package es.caib.comanda.configuracio.persist.entity;
 
-import es.caib.comanda.configuracio.logic.intf.model.ParamTipus;
+import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
 import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;

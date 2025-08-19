@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
+import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import lombok.Getter;
