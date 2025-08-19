@@ -1,9 +1,9 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.back.config;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.ApplicationContext;

@@ -1,6 +1,6 @@
 package es.caib.comanda.permisos.persist.entity;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.permisos.logic.intf.model.Permis;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package es.caib.comanda.usuaris.back.controller;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.usuaris.logic.intf.model.Usuari;
 import es.caib.comanda.usuaris.logic.intf.service.UsuariService;
 import io.swagger.v3.oas.annotations.Operation;

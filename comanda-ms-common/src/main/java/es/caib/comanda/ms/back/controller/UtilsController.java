@@ -1,7 +1,7 @@
 package es.caib.comanda.ms.back.controller;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.back.config.WebSecurityConfig;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

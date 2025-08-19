@@ -1,7 +1,7 @@
 package es.caib.comanda.permisos.back.controller;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.permisos.logic.intf.model.Objecte;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;

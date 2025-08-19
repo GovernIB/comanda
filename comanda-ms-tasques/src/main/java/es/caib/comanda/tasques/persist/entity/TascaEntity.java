@@ -1,7 +1,7 @@
 package es.caib.comanda.tasques.persist.entity;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.broker.model.Prioritat;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package es.caib.comanda.salut.persist.entity;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.SalutIntegracio;

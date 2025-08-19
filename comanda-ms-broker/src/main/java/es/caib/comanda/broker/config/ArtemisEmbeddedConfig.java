@@ -1,5 +1,6 @@
 package es.caib.comanda.broker.config;
 
+import es.caib.comanda.base.config.BaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
@@ -28,14 +29,14 @@ import static es.caib.comanda.ms.broker.model.Cues.*;
 @Configuration
 public class ArtemisEmbeddedConfig {
 
-    @Value("${es.caib.comanda.broker.port:61616}")
-    private String BROKER_PORT;
-    @Value("${es.caib.comanda.broker.user:jmsUser}")
-    private String BROKER_USER;
-    @Value("${es.caib.comanda.broker.pass:jmsPass}")
-    private String BROKER_PASS;
-    @Value("${es.caib.comanda.fitxers:comanda_files}")
-    private String comandaFiles;
+    @Value("${" + BaseConfig.PROP_BROKER_PORT + ":61616}")
+    private String brokerPort;
+    @Value("${" + BaseConfig.PROP_BROKER_USERNAME + ":jms_user}")
+    private String brokerUsername;
+    @Value("${" + BaseConfig.PROP_BROKER_PASSWORD + ":jms_pass}")
+    private String brokerPassword;
+    @Value("${" + BaseConfig.PROP_FILES + "}")
+    private String propFiles;
 
     private EmbeddedActiveMQ embedded;
 
@@ -45,9 +46,12 @@ public class ArtemisEmbeddedConfig {
         log.info("Iniciant broker Artemis...");
         ConfigurationImpl config = new ConfigurationImpl()
                 .setPersistenceEnabled(true)
-                .setJournalDirectory(comandaFiles + "/broker")
+                .setJournalDirectory(propFiles + "/broker/journal")
+                .setBindingsDirectory(propFiles + "/broker/bindings")
+                .setLargeMessagesDirectory(propFiles + "/broker/large-messages")
+                .setPagingDirectory(propFiles + "/broker/paging")
                 .setSecurityEnabled(true)
-                .addAcceptorConfiguration("tcp", "tcp://0.0.0.0:" + BROKER_PORT);
+                .addAcceptorConfiguration("tcp", "tcp://0.0.0.0:" + brokerPort);
 
         embedded = new EmbeddedActiveMQ();
         embedded.setConfiguration(config);
@@ -63,21 +67,15 @@ public class ArtemisEmbeddedConfig {
                     .setRoutingType(RoutingType.ANYCAST)
                     .setDurable(true));
         }
-        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_TASQUES)).isExists()) {
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_AVISOS)).isExists()) {
             embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_AVISOS)
                     .setAddress(CUA_AVISOS)
                     .setRoutingType(RoutingType.ANYCAST)
                     .setDurable(true));
         }
-        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_TASQUES)).isExists()) {
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_PERMISOS)).isExists()) {
             embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_PERMISOS)
                     .setAddress(CUA_PERMISOS)
-                    .setRoutingType(RoutingType.ANYCAST)
-                    .setDurable(true));
-        }
-        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_TASQUES)).isExists()) {
-            embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_INTEGRACIONS)
-                    .setAddress(CUA_INTEGRACIONS)
                     .setRoutingType(RoutingType.ANYCAST)
                     .setDurable(true));
         }
@@ -85,6 +83,7 @@ public class ArtemisEmbeddedConfig {
         // Configurar AddressSettings amb TTL per defecte
         AddressSettings addressSettings = new AddressSettings()
                 .setMaxSizeBytes(1048576L)          // 1MB límit
+                .setPageSizeBytes(512000)    // 500 KB per pàgina
                 .setMaxExpiryDelay(300000L)         // TTL per defecte: 300 segons
                 .setDefaultLastValueQueue(false)    // comportament estàndard
                 .setDefaultExclusiveQueue(false)    // permet múltiples consumidors
@@ -139,7 +138,7 @@ public class ArtemisEmbeddedConfig {
 
         @Override
         public boolean validateUser(String user, String password) {
-            return BROKER_USER.equals(user) && BROKER_PASS.equals(password);
+            return brokerUsername.equals(user) && brokerPassword.equals(password);
         }
 
         @Override

@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.back.controller;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.ConfigurableEnvironment;

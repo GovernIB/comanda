@@ -1,8 +1,8 @@
 package es.caib.comanda.avisos.persist.entity;
 
 import es.caib.comanda.avisos.logic.intf.model.Avis;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.broker.model.AvisTipus;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

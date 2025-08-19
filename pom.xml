@@ -6,6 +6,11 @@
 	<artifactId>comanda</artifactId>
 	<version>0.1.0</version>
 	<packaging>pom</packaging>
+	<properties>
+		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<modules>
 		<module>comanda-bom</module>
 		<module>comanda-bom-ms</module>
@@ -26,6 +31,7 @@
 		<module>comanda-back</module>
 		<module>comanda-api-interna</module>
 		<module>comanda-ear</module>
+		<module>comanda-base</module>
 	</modules>
 	<build>
 		<plugins>

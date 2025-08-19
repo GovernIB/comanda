@@ -1,7 +1,6 @@
 package es.caib.comanda.broker.controller;
 
 import es.caib.comanda.ms.broker.model.Avis;
-import es.caib.comanda.ms.broker.model.Integracio;
 import es.caib.comanda.ms.broker.model.Permis;
 import es.caib.comanda.ms.broker.model.Tasca;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +36,6 @@ public class CuaRestController {
     public ResponseEntity<String> sendToPermisosQueue(@RequestBody Permis permis) {
         jmsTemplate.convertAndSend(CUA_PERMISOS, permis);
         return ResponseEntity.ok("Missatge enviat a " + CUA_PERMISOS);
-    }
-
-    @PostMapping("/integracions")
-    public ResponseEntity<String> sendToIntegracionsQueue(@RequestBody Integracio integracio) {
-        jmsTemplate.convertAndSend(CUA_INTEGRACIONS, integracio);
-        return ResponseEntity.ok("Missatge enviat a " + CUA_INTEGRACIONS);
     }
 
 }
