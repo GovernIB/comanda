@@ -35,6 +35,8 @@ public class ConfiguracioSchedulerService {
     private Boolean schedulerLeader;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
+    // Emmagatzemam l'interval programat per a cada entornApp per poder detectar canvis
+    private final Map<Long, Integer> intervalsActius = new ConcurrentHashMap<>();
 
     public ConfiguracioSchedulerService(
             @Qualifier("configuracioTaskScheduler") TaskScheduler taskScheduler,
@@ -47,7 +49,7 @@ public class ConfiguracioSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
-        // Esperarem 1 minut a inicialitzar les tasques en segon pla
+        // Esperarem mig minut a inicialitzar les tasques en segon pla
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         executor.schedule(() -> {
             try {
@@ -56,7 +58,7 @@ public class ConfiguracioSchedulerService {
             } finally {
                 executor.shutdown();
             }
-        }, 1, TimeUnit.MINUTES);
+        }, 30, TimeUnit.SECONDS);
     }
 
     public void programarTasca(EntornAppEntity entornApp) {
@@ -84,6 +86,7 @@ public class ConfiguracioSchedulerService {
             );
 
             tasquesActives.put(entornApp.getId(), futuraTasca);
+            intervalsActius.put(entornApp.getId(), entornApp.getInfoInterval());
             log.info("Tasca programada de refresc de la informació per l'entornApp: {}, amb període: {}",
                     entornApp.getId(),
                     entornApp.getInfoInterval());
@@ -114,6 +117,7 @@ public class ConfiguracioSchedulerService {
         if (tasca != null) {
             tasca.cancel(false);
             tasquesActives.remove(entornAppId);
+            intervalsActius.remove(entornAppId);
             log.info("Tasca de refresc de la informació cancel·lada per l'entornAppId: {}", entornAppId);
         }
     }
@@ -131,7 +135,11 @@ public class ConfiguracioSchedulerService {
         List<EntornAppEntity> entornAppsActives = entornAppRepository.findByActivaTrueAndAppActivaTrue();
         entornAppsActives.forEach(ea -> {
             ScheduledFuture<?> tasca = tasquesActives.get(ea.getId());
+            Integer intervalActual = intervalsActius.get(ea.getId());
             if (tasca == null) {
+                programarTasca(ea);
+            } else if (ea.getInfoInterval() != null && !ea.getInfoInterval().equals(intervalActual)) {
+                log.info("Detectat canvi d'interval de info per l'entornApp {}: {} -> {}. Reprogramant tasca...", ea.getId(), intervalActual, ea.getInfoInterval());
                 programarTasca(ea);
             }
         });
