@@ -7,6 +7,7 @@ const translationEn = {
             DEGRADED: "Degraded",
             MAINTENANCE: "Maintenance",
             UNKNOWN: "Unknown",
+            ERROR: "Error",
         },
     },
     menu: {

@@ -6,7 +6,8 @@ const translationCa = {
             DOWN: "Inactiu",
             DEGRADED: "Degradat",
             MAINTENANCE: "Manteniment",
-            UNKNOWN: "Desconegut"
+            UNKNOWN: "Desconegut",
+            ERROR: "Erreur",
         }
     },
     menu: {

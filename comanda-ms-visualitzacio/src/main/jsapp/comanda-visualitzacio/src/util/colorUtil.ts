@@ -1,3 +1,8 @@
+export enum ChipColor {
+    WHITE = "white",
+    INFO = "info"
+}
+
 export const createTransparentColor = (color: string, opacity: number = 0.8): string => {
     // If the color is in hex format (#RRGGBB), convert it to rgba
     if (color.startsWith('#')) {

@@ -6,7 +6,8 @@ const translationEs = {
             DOWN: "Inactivo",
             DEGRADED: "Degradado",
             MAINTENANCE: "Mantenimiento",
-            UNKNOWN: "Desconocido"
+            UNKNOWN: "Desconocido",
+            ERROR: "Error",
         }
     },
     menu: {
