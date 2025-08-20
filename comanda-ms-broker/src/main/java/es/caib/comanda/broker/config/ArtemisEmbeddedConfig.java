@@ -144,8 +144,6 @@ public class ArtemisEmbeddedConfig {
         @Override
         public boolean validateUserAndRole(String user, String password, Set<Role> roles, CheckType checkType) {
             return validateUser(user, password); // ignora els rols
-//            if (!validateUser(user, password)) return false;
-//
 //            return roles.stream()
 //                    .anyMatch(role -> role.getName().equals("amq") && checkType.hasRole(role));
         }
