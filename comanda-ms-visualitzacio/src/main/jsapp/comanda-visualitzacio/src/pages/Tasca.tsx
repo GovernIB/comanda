@@ -87,23 +87,6 @@ const columns = [{
     },
 }];
 
-/*const GridButtonField = (props:any) => {
-    const { name, icon, size, ...other } = props;
-    const { data, apiRef, fields } = useFormContext();
-    return <Grid title={fields?.find?.(item => item?.name === name)?.label || ''} size={size}>
-        <Button
-            onClick={()=>{
-                apiRef?.current?.setFieldValue(name, !data?.[name])
-            }}
-            variant={ data?.[name] ? 'contained' : 'outlined' }
-            sx={{ borderRadius: '4px', width: '100%', height: '100%' }}
-            style={{ margin: 0 }}
-            {...other}>
-            <Icon sx={{ m: 0 }}>{icon}</Icon>
-        </Button>
-    </Grid>;
-}*/
-
 const TascaFilter = (props:any) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
@@ -113,8 +96,8 @@ const TascaFilter = (props:any) => {
     const moreFilterApiRef = useFilterApiRef();
     const moreFormApiRef = useFormApiRef();
     const netejar = () => {
-        appEntornFilterApiRef?.current?.clear?.();
-        moreFilterApiRef?.current?.clear?.();
+        appEntornFilterApiRef?.current?.clear();
+        moreFilterApiRef?.current?.clear({ finalitzada: finishedOnly });
     }
     React.useEffect(() => {
         moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
@@ -170,10 +153,15 @@ const TascaFilter = (props:any) => {
                 springFilterBuilder.eq('entornId', data?.entornId?.id),
                 springFilterBuilder.like('nom', data?.nom),
                 springFilterBuilder.like('descripcio', data?.descripcio),
+                springFilterBuilder.like('tipus', data?.tipus),
                 springFilterBuilder.eq('prioritat', `'${data?.prioritat}'`),
+                data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
+                data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
+                data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
+                data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
+                data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1)}'`),
+                data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2)}'`),
                 data?.finalitzada && springFilterBuilder.eq('dataFi', null),
-                springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici)}'`),
-                springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataFi)}'`),
             )}
             onSpringFilterChange={onSpringFilterChange}
             commonFieldComponentProps={{ size: 'small' }}>
@@ -182,9 +170,12 @@ const TascaFilter = (props:any) => {
                 <Grid size={3}><FormField name={'descripcio'}/></Grid>
                 <Grid size={3}><FormField name={'tipus'}/></Grid>
                 <Grid size={3}><FormField name={'prioritat'}/></Grid>
-                <Grid size={4}><FormField name={'dataInici'}/></Grid>
-                <Grid size={4}><FormField name={'dataFi'}/></Grid>
-                <Grid size={4}><FormField name={'dataCaducitat'}/></Grid>
+                <Grid size={2}><FormField name={'dataInici1'}/></Grid>
+                <Grid size={2}><FormField name={'dataInici2'}/></Grid>
+                <Grid size={2}><FormField name={'dataFi1'}/></Grid>
+                <Grid size={2}><FormField name={'dataFi2'}/></Grid>
+                <Grid size={2}><FormField name={'dataCaducitat1'}/></Grid>
+                <Grid size={2}><FormField name={'dataCaducitat2'}/></Grid>
             </Grid>
         </MuiFilter>
     </>;
