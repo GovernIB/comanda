@@ -124,7 +124,8 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
 
     const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UP).length;
     const warnValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.WARN).length;
-    const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DOWN || salutItem.appEstat === SalutEstatEnum.ERROR).length;
+    const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DOWN).length;
+    const errorValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.ERROR).length;
     const degradedValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DEGRADED).length;
     const maintenanceValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.MAINTENANCE).length;
     const unknownValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UNKNOWN).length;
@@ -155,16 +156,22 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
                             color: getColorByStatEnum(SalutEstatEnum.WARN),
                         },
                         {
+                            id: SalutEstatEnum.DEGRADED,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED)} (${degradedValue})`,
+                            value: degradedValue,
+                            color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
+                        },
+                        {
                             id: SalutEstatEnum.DOWN,
                             label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN)} (${downValue})`,
                             value: downValue,
                             color: getColorByStatEnum(SalutEstatEnum.DOWN),
                         },
                         {
-                            id: SalutEstatEnum.DEGRADED,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED)} (${degradedValue})`,
-                            value: degradedValue,
-                            color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
+                            id: SalutEstatEnum.ERROR,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR)} (${errorValue})`,
+                            value: errorValue,
+                            color: getColorByStatEnum(SalutEstatEnum.ERROR),
                         },
                         {
                             id: SalutEstatEnum.MAINTENANCE,
