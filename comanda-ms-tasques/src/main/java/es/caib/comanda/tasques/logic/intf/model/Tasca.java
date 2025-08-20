@@ -68,14 +68,15 @@ public class Tasca extends BaseResource<Long> {
     @AllArgsConstructor
     @FieldNameConstants
     public static class TascaFilter implements Serializable {
-//        private ResourceReference<App, Long> app;
-//        private ResourceReference<Entorn, Long> entorn;
-
+        private Long appId;
+        private Long entornId;
         private String nom;
         private String descripcio;
+        private String tipus;
         private Prioritat prioritat;
         private LocalDateTime dataInici;
         private LocalDateTime dataFi;
-        private Boolean acabat = true;
+        private LocalDateTime dataCaducitat;
+        private Boolean finalitzada = true;
     }
 }
