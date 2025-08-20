@@ -6,26 +6,28 @@ const translationCa = {
             DOWN: "Inactiu",
             DEGRADED: "Degradat",
             MAINTENANCE: "Manteniment",
-            UNKNOWN: "Desconegut"
+            UNKNOWN: "Desconegut",
+            ERROR: "Erreur",
         }
     },
     menu: {
-        configuracio: "Configuració",
-        estadistiques: "Estadístiques",
         salut: "Salut",
+        estadistiques: "Estadístiques",
+        tasca: "Tasques",
+        avis: "Avisos",
+        monitoritzacio: "Monitorització",
         monitor: "Monitor",
+        cache: "Gestió de cachés",
+        broker: "Gestor de cues",
+        configuracio: "Configuració",
         app: "Aplicacions",
         entorn: "Entorns",
         versionsEntorn: "Versions per entorn",
+        integracio: "Integracions",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
-        cache: "Gestió de cachés",
-        integracio: "Integracions",
         calendari: "Calendari",
         parametre: "Paràmetres",
-        broker: "Gestor de cues",
-        tasca: "Tasques",
-        avis: "Avisos",
     },
     page: {
         salut: {
@@ -34,6 +36,10 @@ const translationCa = {
             filtrar: "Filtrar per aplicació/entorn",
             senseFiltres: "Sense filtres",
             nd: "N/D",
+            refresh: {
+                last: "Darrer refresc",
+                next: "Proper refresc en",
+            },
             apps: {
                 column: {
                     group: "Aplicació / entorn",

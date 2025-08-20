@@ -1,35 +1,39 @@
 import * as React from 'react';
-import { useTranslation } from 'react-i18next';
+import {useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useTheme } from '@mui/material/styles';
+import {useTheme} from '@mui/material/styles';
 import {
     BasePage,
-    useResourceApiService,
-    useBaseAppContext,
+    MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
-    MuiDataGrid,
+    useBaseAppContext,
+    useResourceApiService,
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
 import {
+    GridColumnHeaderTitle,
+    GridGroupingColDefOverride,
+    GridRowId,
     GridSlots,
     GridTreeDataGroupingCell,
-    GridColumnHeaderTitle,
     useGridApiRef,
 } from '@mui/x-data-grid-pro';
-import { PieChart } from '@mui/x-charts';
+import {PieChart} from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
-import { Icon, IconButton } from '@mui/material';
-import { useState } from 'react';
-import { GridGroupingColDefOverride } from '@mui/x-data-grid-pro';
-import { useParams } from 'react-router-dom';
+import {Icon, IconButton} from '@mui/material';
+import {useParams} from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
+import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, SalutModel} from "../types/salut.model.ts";
+import {BaseEntity} from "../types/base-entity.model.ts";
+import {ChipColor} from "../util/colorUtil.ts";
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
 
@@ -56,7 +60,7 @@ const useAppData = () => {
     ) => {
         if (appEntornApiIsReady && salutApiIsReady) {
             setLoading(true);
-            let salutLastItemsResponse: any[] | null = null;
+            let salutLastItemsResponse: SalutModel[] | null = null;
             let estatsResponse: Record<string, any> | null = null;
             const newReportParams = {
                 dataInici,
@@ -74,7 +78,7 @@ const useAppData = () => {
                     return salutApiReport(null, { code: 'salut_last', data: springFilter });
                 })
                 .then((apiResponse) => {
-                    salutLastItemsResponse = apiResponse as any[];
+                    salutLastItemsResponse = (apiResponse as SalutModel[]).map(item => new SalutModel(item));
                     const reportData = {
                         ...newReportParams,
                         entornAppIdList: salutLastItemsResponse.map(
@@ -84,10 +88,10 @@ const useAppData = () => {
 
                     return new Promise((resolve, reject) => {
                         salutApiReport(null, { code: 'estats', data: reportData })
-                            .then((ii: any) => {
+                            .then((response: any) => {
                                 // TODO: eliminar 'links' de respuesta
                                 estatsResponse = Object.fromEntries(
-                                    Object.entries(ii[0]).filter(([key]) => key !== 'links')
+                                    Object.entries(response[0]).filter(([key]) => key !== BaseEntity.LINKS)
                                 );
                                 resolve(null);
                             })
@@ -95,7 +99,7 @@ const useAppData = () => {
                     });
                 })
                 .finally(() => {
-                    setSalutLastItems(salutLastItemsResponse as any[]);
+                    setSalutLastItems(salutLastItemsResponse as SalutModel[]);
                     setEstats(estatsResponse as Record<string, any>);
                     setLoading(false);
                     if (springFilter != null) setSpringFilter(springFilter);
@@ -114,25 +118,17 @@ const useAppData = () => {
     };
 };
 
-const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
+const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) => {
     const { salutLastItems } = props;
     const { t } = useTranslation();
-    const theme = useTheme();
 
-    const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'UP').length;
-    const warnValue = salutLastItems.filter((salutItem) => salutItem.appEstat === 'WARN').length;
-    const downValue = salutLastItems.filter(
-        (salutItem) => salutItem.appEstat === 'DOWN' || salutItem.appEstat === 'ERROR'
-    ).length;
-    const degradedValue = salutLastItems.filter(
-        (salutItem) => salutItem.appEstat === 'DEGRADED'
-    ).length;
-    const maintenanceValue = salutLastItems.filter(
-        (salutItem) => salutItem.appEstat === 'MAINTENANCE'
-    ).length;
-    const unknownValue = salutLastItems.filter(
-        (salutItem) => salutItem.appEstat === 'UNKNOWN'
-    ).length;
+    const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UP).length;
+    const warnValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.WARN).length;
+    const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DOWN).length;
+    const errorValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.ERROR).length;
+    const degradedValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DEGRADED).length;
+    const maintenanceValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.MAINTENANCE).length;
+    const unknownValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UNKNOWN).length;
 
     return (
         <PieChart
@@ -148,40 +144,46 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
                     cornerRadius: 5,
                     data: [
                         {
-                            id: 'UP',
-                            label: `${t('enum.appEstat.UP')} (${upValue})`,
+                            id: SalutEstatEnum.UP,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP)} (${upValue})`,
                             value: upValue,
-                            color: theme.palette.success.main,
+                            color: getColorByStatEnum(SalutEstatEnum.UP),
                         },
                         {
-                            id: 'WARN',
-                            label: `${t('enum.appEstat.WARN')} (${warnValue})`,
+                            id: SalutEstatEnum.WARN,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN)} (${warnValue})`,
                             value: warnValue,
-                            color: theme.palette.warning.light,
+                            color: getColorByStatEnum(SalutEstatEnum.WARN),
                         },
                         {
-                            id: 'DOWN',
-                            label: `${t('enum.appEstat.DOWN')} (${downValue})`,
-                            value: downValue,
-                            color: theme.palette.error.main,
-                        },
-                        {
-                            id: 'DEGRADED',
-                            label: `${t('enum.appEstat.DEGRADED')} (${degradedValue})`,
+                            id: SalutEstatEnum.DEGRADED,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED)} (${degradedValue})`,
                             value: degradedValue,
-                            color: theme.palette.warning.dark,
+                            color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
                         },
                         {
-                            id: 'MAINTENANCE',
-                            label: `${t('enum.appEstat.MAINTENANCE')} (${maintenanceValue})`,
+                            id: SalutEstatEnum.DOWN,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN)} (${downValue})`,
+                            value: downValue,
+                            color: getColorByStatEnum(SalutEstatEnum.DOWN),
+                        },
+                        {
+                            id: SalutEstatEnum.ERROR,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR)} (${errorValue})`,
+                            value: errorValue,
+                            color: getColorByStatEnum(SalutEstatEnum.ERROR),
+                        },
+                        {
+                            id: SalutEstatEnum.MAINTENANCE,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE)} (${maintenanceValue})`,
                             value: maintenanceValue,
-                            color: theme.palette.primary.main,
+                            color: getColorByStatEnum(SalutEstatEnum.MAINTENANCE),
                         },
                         {
-                            id: 'UNKNOWN',
-                            label: `${t('enum.appEstat.UNKNOWN')} (${unknownValue})`,
+                            id: SalutEstatEnum.UNKNOWN,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN)} (${unknownValue})`,
                             value: unknownValue,
-                            color: theme.palette.grey[600],
+                            color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
                         },
                     ],
                 },
@@ -190,15 +192,28 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: any[] }) => {
     );
 };
 
-const ItemStateChip: React.FC<any> = (props: { up: boolean; date?: string }) => {
-    const { up, date } = props;
+const ItemStateChip: React.FC<any> = (props: { salutStatEnum: SalutEstatEnum; date?: string }) => {
+    const { salutStatEnum, date } = props;
     const { t } = useTranslation();
     return (
         <>
-            {up ? (
-                <Chip label={t('enum.appEstat.UP')} size="small" color="success" />
-            ) : (
-                <Chip label={t('enum.appEstat.DOWN')} size="small" color="error" />
+            {salutStatEnum && (
+                <Chip sx={{ bgcolor: getColorByStatEnum(salutStatEnum), color: ChipColor.WHITE,
+                    "& .MuiChip-label": {
+                        fontSize: "0.7rem !important",
+                    }}}
+                      label={t(ENUM_APP_ESTAT_PREFIX + salutStatEnum)}
+                      size="small"
+                />
+            )}
+            {!salutStatEnum && (
+                <Chip sx={{ bgcolor: getColorByStatEnum(SalutEstatEnum.UNKNOWN), color: ChipColor.WHITE,
+                    "& .MuiChip-label": {
+                        fontSize: "0.7rem !important",
+                    }}}
+                      label={t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN)}
+                      size="small"
+                />
             )}
             {date && (<><br />
             <Typography variant="caption">{date}</Typography></>)}
@@ -206,7 +221,12 @@ const ItemStateChip: React.FC<any> = (props: { up: boolean; date?: string }) => 
     );
 };
 
-const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastItems: any[]; }) => {
+const AppDataTable: React.FC<any> = (props: {
+    springFilter?: string;
+    salutLastItems: SalutModel[];
+    onRowExpansionChange: OnRowExpansionChangeFunction;
+    defaultRowExpansion: DefaultRowExpansionState;
+}) => {
     const { springFilter, salutLastItems } = props;
     const { t } = useTranslation();
     const { getLinkComponent } = useBaseAppContext();
@@ -240,26 +260,27 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
             });
         }
     }, [gridApiRef, gridApiRef.current, onRowExpansionChange]);
-    const findUpdownItem = React.useCallback(
-        (id: any) => {
-            return salutLastItems?.find((entry) => entry.entornAppId === id);
+    const findSalutItem:(id: GridRowId) => SalutModel | null = React.useCallback(
+        (id: GridRowId) => {
+            const itemFounded = salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id)
+            return itemFounded !== undefined ? itemFounded : null;
         },
         [salutLastItems]
     );
 
     const renderItemStateChip = React.useCallback(
-        (id: any, upField: string) => {
-            const updownItem = findUpdownItem(id);
-            if (updownItem == null) {
+        (id: GridRowId, stateEnum: keyof SalutModel) => {
+            const salutItem: SalutModel | null = findSalutItem(id);
+            if (salutItem == null) {
                 return undefined;
             }
             return (
                 <ItemStateChip
-                    up={updownItem[upField]}
+                    salutStatEnum={salutItem[stateEnum]}
                 />
             );
         },
-        [findUpdownItem]
+        [findSalutItem]
     );
 
     const columns: MuiDataGridColDef[] = React.useMemo(() => {
@@ -269,7 +290,7 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
                 field: 'estat',
                 headerName: t('page.salut.apps.column.estat'),
                 minWidth: 100,
-                renderCell: ({ id }) => renderItemStateChip(id, 'appUp'),
+                renderCell: ({ row }) => renderItemStateChip(row.id, SalutModel.APP_ESTAT),
             },
             {
                 flex: 0.3,
@@ -294,7 +315,7 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
                 field: 'bd',
                 headerName: t('page.salut.apps.column.bd'),
                 minWidth: 100,
-                renderCell: ({ id }) => renderItemStateChip(id, 'bdUp'),
+                renderCell: ({ row }) => renderItemStateChip(row.id, SalutModel.BD_ESTAT),
             },
             {
                 flex: 0.3,
@@ -302,40 +323,40 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
                 headerName: t('page.salut.apps.column.latencia'),
                 minWidth: 100,
                 valueGetter: (_value, row) => {
-                    const updownItem = findUpdownItem(row.id);
-                    return updownItem?.appLatencia != null
-                        ? updownItem.appLatencia + ' ms'
+                    const salutItem: SalutModel | null = findSalutItem(row.id);
+                    return salutItem?.appLatencia != null
+                        ? salutItem.appLatencia + ' ms'
                         : t('page.salut.nd');
                 },
             },
             {
                 flex: 0.5,
-                field: 'integracions',
+                field: SalutModel.INTEGRACIONS,
                 // headerName: t('page.salut.apps.column.integ'),
                 minWidth: 100,
-                renderCell: ({ id }) => {
-                    const updownItem = findUpdownItem(id);
+                renderCell: ({ row }) => {
+                    const salutItem: SalutModel | null = findSalutItem(row.id);
 
-                    if (!updownItem) {
+                    if (!salutItem) {
                         return null;
                     }
 
                     return (
                         <>
                             <Chip
-                                label={updownItem.integracioUpCount}
+                                label={salutItem.integracioUpCount}
                                 size="small"
                                 color="success"
                             />
                             &nbsp;/&nbsp;
                             <Chip
-                                label={updownItem.integracioDownCount}
+                                label={salutItem.integracioDownCount}
                                 size="small"
                                 color="error"
                             />
                             &nbsp;/&nbsp;
-                            <Chip sx={{ bgcolor: theme.palette.grey[600], color: 'white' }}
-                                label={updownItem.integracioDesconegutCount}
+                            <Chip sx={{ bgcolor: theme.palette.grey[600], color: ChipColor.WHITE }}
+                                label={salutItem.integracioDesconegutCount}
                                 size="small"
                             />
                         </>
@@ -344,25 +365,25 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
             },
             {
                 flex: 0.5,
-                field: 'subsistemes',
+                field: SalutModel.SUBSISTEMES,
                 // headerName: t('page.salut.apps.column.subsis'),
                 minWidth: 100,
                 renderCell: ({ id }) => {
-                    const updownItem = findUpdownItem(id);
+                    const salutItem: SalutModel | null = findSalutItem(id);
 
-                    if (!updownItem) {
+                    if (!salutItem) {
                         return null;
                     }
                     return (
                         <>
                             <Chip
-                                label={updownItem.subsistemaUpCount}
+                                label={salutItem.subsistemaUpCount}
                                 size="small"
                                 color="success"
                             />
                             &nbsp;/&nbsp;
                             <Chip
-                                label={updownItem.subsistemaDownCount}
+                                label={salutItem.subsistemaDownCount}
                                 size="small"
                                 color="error"
                             />
@@ -376,26 +397,26 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
                 headerName: t('page.salut.apps.column.msgs'),
                 minWidth: 150,
                 renderCell: ({ id }) => {
-                    const updownItem = findUpdownItem(id);
+                    const salutItem: SalutModel | null = findSalutItem(id);
 
-                    if (!updownItem) {
+                    if (!salutItem) {
                         return null;
                     }
                     return (
                         <>
                             <Chip
-                                label={updownItem.missatgeErrorCount}
+                                label={salutItem.missatgeErrorCount}
                                 size="small"
                                 color="error"
                             />
                             &nbsp;/&nbsp;
                             <Chip
-                                label={updownItem.missatgeWarnCount}
+                                label={salutItem.missatgeWarnCount}
                                 size="small"
                                 color="warning"
                             />
                             &nbsp;/&nbsp;
-                            <Chip label={updownItem.missatgeInfoCount} size="small" color="info" />
+                            <Chip label={salutItem.missatgeInfoCount} size="small" color={ChipColor.INFO} />
                         </>
                     );
                 },
@@ -404,19 +425,16 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
                 field: 'detalls',
                 headerName: '',
                 minWidth: 100,
-                renderCell: ({ id }) => (
-                    <Button
-                        variant="contained"
-                        size="small"
-                        component={getLinkComponent()}
-                        to={'appinfo/' + id}
-                    >
-                        {t('page.salut.apps.detalls')}
-                    </Button>
-                ),
+                renderCell: (params) => params.rowNode.type !== 'group' && <Button
+                    variant="contained"
+                    size="small"
+                    component={getLinkComponent()}
+                    to={'appinfo/' + params.id}>
+                    {t('page.salut.apps.detalls')}
+                </Button>,
             },
         ];
-    }, [findUpdownItem, getLinkComponent, renderItemStateChip, t]);
+    }, [findSalutItem, getLinkComponent, renderItemStateChip, t]);
 
     const groupingColDef: GridGroupingColDefOverride = React.useMemo(() => ({
         flex: 1,

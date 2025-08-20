@@ -1,5 +1,6 @@
 package es.caib.comanda.usuaris.logic.config;
 
+import es.caib.comanda.base.config.BaseConfig;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,20 +17,19 @@ import javax.jms.ConnectionFactory;
 @Profile("!back")
 public class JmsClientConfig {
 
-    @Value("${es.caib.comanda.broker.port:61616}")
-    private int BROKER_PORT;
-    @Value("${es.caib.comanda.broker.user:jmsUser}")
-    private String BROKER_USER;
-    @Value("${es.caib.comanda.broker.pass:jmsPass}")
-    private String BROKER_PASS;
-
+    @Value("${" + BaseConfig.PROP_BROKER_PORT + ":61616}")
+    private int brokerPort;
+    @Value("${" + BaseConfig.PROP_BROKER_USERNAME + ":jms_user}")
+    private String brokerUsername;
+    @Value("${" + BaseConfig.PROP_BROKER_PASSWORD + ":jms_pass}")
+    private String brokerPassword;
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        String brokerUrl = "tcp://localhost:" + BROKER_PORT;
+        String brokerUrl = "tcp://localhost:" + brokerPort;
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
-        connectionFactory.setUser(BROKER_USER);
-        connectionFactory.setPassword(BROKER_PASS);
+        connectionFactory.setUser(brokerUsername);
+        connectionFactory.setPassword(brokerPassword);
         return connectionFactory;
     }
 

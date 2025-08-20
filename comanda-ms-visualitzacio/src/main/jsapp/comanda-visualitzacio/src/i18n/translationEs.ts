@@ -6,26 +6,28 @@ const translationEs = {
             DOWN: "Inactivo",
             DEGRADED: "Degradado",
             MAINTENANCE: "Mantenimiento",
-            UNKNOWN: "Desconocido"
+            UNKNOWN: "Desconocido",
+            ERROR: "Error",
         }
     },
     menu: {
-        configuracio: "Configuración",
-        estadistiques: "Estadísticas",
         salut: "Salud",
-        app: "Aplicaciones",
-        entorn: "Entornos",
-        monitor: "Monitor",
-        versionsEntorn: "Versiones por entorno",
-        widget: "Widgets estadísticos",
-        dashboard: "Cuadros de control",
-        cache: "Gestión de cachés",
-        integracio: "Integraciones",
-        calendari: "Calendario",
-        parametre: "Parámetros",
-        broker: "Gestor de colas",
+        estadistiques: "Estadísticas",
         tasca: "Tareas",
         avis: "Avisos",
+        monitoritzacio: "Monitorización",
+        monitor: "Monitor",
+        cache: "Gestión de cachés",
+        broker: "Gestor de colas",
+        configuracio: "Configuración",
+        app: "Aplicaciones",
+        entorn: "Entornos",
+        versionsEntorn: "Versiones por entorno",
+        integracio: "Integraciones",
+        widget: "Widgets estadísticos",
+        dashboard: "Cuadros de control",
+        calendari: "Calendario",
+        parametre: "Parámetros",
     },
     page: {
         salut: {
@@ -34,6 +36,10 @@ const translationEs = {
             filtrar: "Filtrar por aplicación/entorno",
             senseFiltres: "Sin filtros",
             nd: "N/D",
+            refresh: {
+                last: "Último refresco",
+                next: "Próximo refresco en",
+            },
             apps: {
                 column: {
                     group: "Aplicación / entorno",

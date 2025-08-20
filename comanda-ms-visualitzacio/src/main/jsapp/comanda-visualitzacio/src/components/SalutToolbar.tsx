@@ -408,14 +408,14 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                 <Box sx={{ mr: 2, minWidth: { xs: '50px', sm: '135px'}, }}>
                     {lastRefresh != null && (
                         <Typography sx={{ display: 'block' }} variant="caption">
-                            Últim refresc: <b>{lastRefresh.toLocaleTimeString()}</b>
+                            {t('page.salut.refresh.last')}: <b>{lastRefresh.toLocaleTimeString()}</b>
                         </Typography>
                     )}
                     {nextRefresh != null &&
                         nextRefresh > new Date() &&
                         timeUntilNextRefreshFormatted && (
                             <Typography sx={{ display: 'block' }} variant="caption">
-                                Pròxim refresc en: <b>{timeUntilNextRefreshFormatted}</b>
+                                {t('page.salut.refresh.next')}: <b>{timeUntilNextRefreshFormatted}</b>
                             </Typography>
                         )}
                 </Box>
