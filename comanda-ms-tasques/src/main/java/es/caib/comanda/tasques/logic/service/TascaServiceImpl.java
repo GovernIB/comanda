@@ -88,11 +88,10 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         @Override
         public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
             if (resource.getDataFi() == null) {
-                LocalDateTime hoy = LocalDateTime.now();
-                LocalDateTime fechaCaducidad = resource.getDataCaducitat(); // Ejemplo
-
-                long diasRestantes = ChronoUnit.DAYS.between(hoy, fechaCaducidad);
-                resource.setDiesPerCaducar(diasRestantes);
+                long diesPerCaducar = ChronoUnit.DAYS.between(
+                        LocalDateTime.now(),
+                        resource.getDataCaducitat());
+                resource.setDiesPerCaducar(diesPerCaducar);
             }
         }
     }

@@ -441,11 +441,11 @@ const AppDataTable: React.FC<any> = (props: {
         headerName: t('page.salut.apps.column.group'),
         renderHeader: (params: any) => (<Box
             sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-            flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                flex: 1,
             }}>
             <GridColumnHeaderTitle label={params?.colDef?.headerName} columnWidth={params.colDef.computedWidth} />
             <Box sx={{ display: 'flex', gap: 1, ml: 1 }}>

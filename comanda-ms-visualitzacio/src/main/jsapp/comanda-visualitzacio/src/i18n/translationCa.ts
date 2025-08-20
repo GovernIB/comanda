@@ -482,7 +482,7 @@ const translationCa = {
         },
     },
     components: {
-        clear: "Netetjar",
+        clear: "Netejar",
         search: "Cercar",
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
