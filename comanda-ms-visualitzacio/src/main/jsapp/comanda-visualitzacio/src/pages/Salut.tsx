@@ -404,16 +404,13 @@ const AppDataTable: React.FC<any> = (props: { springFilter?: string; salutLastIt
                 field: 'detalls',
                 headerName: '',
                 minWidth: 100,
-                renderCell: ({ id }) => (
-                    <Button
-                        variant="contained"
-                        size="small"
-                        component={getLinkComponent()}
-                        to={'appinfo/' + id}
-                    >
-                        {t('page.salut.apps.detalls')}
-                    </Button>
-                ),
+                renderCell: (params) => params.rowNode.type !== 'group' && <Button
+                    variant="contained"
+                    size="small"
+                    component={getLinkComponent()}
+                    to={'appinfo/' + params.id}>
+                    {t('page.salut.apps.detalls')}
+                </Button>,
             },
         ];
     }, [findUpdownItem, getLinkComponent, renderItemStateChip, t]);

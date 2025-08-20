@@ -35,6 +35,10 @@ const translationCa = {
             filtrar: "Filtrar per aplicació/entorn",
             senseFiltres: "Sense filtres",
             nd: "N/D",
+            refresh: {
+                last: "Darrer refresc",
+                next: "Proper refresc en",
+            },
             apps: {
                 column: {
                     group: "Aplicació / entorn",

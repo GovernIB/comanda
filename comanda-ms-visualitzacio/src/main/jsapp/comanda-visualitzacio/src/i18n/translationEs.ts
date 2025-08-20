@@ -35,6 +35,10 @@ const translationEs = {
             filtrar: "Filtrar por aplicación/entorno",
             senseFiltres: "Sin filtros",
             nd: "N/D",
+            refresh: {
+                last: "Último refresco",
+                next: "Próximo refresco en",
+            },
             apps: {
                 column: {
                     group: "Aplicación / entorno",

@@ -35,6 +35,10 @@ const translationEn = {
             filtrar: "Filter by application/environment",
             senseFiltres: "No filters",
             nd: "N/A",
+            refresh: {
+                last: "Last refresh",
+                next: "Next refresh in",
+            },
             apps: {
                 column: {
                     group: "Application / environment",
