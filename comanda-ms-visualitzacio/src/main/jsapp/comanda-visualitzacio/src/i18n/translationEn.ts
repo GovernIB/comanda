@@ -24,17 +24,19 @@ const translationEn = {
         calendari: "Calendar",
         parametre: "Parameters",
         broker: "Queue Manager",
-        tasca: "Task",
-        avis: "Notice",
+        tasca: "Tasks",
+        avis: "Warnings",
     },
     page: {
         salut: {
             title: "Health",
             refrescar: "Refresh",
             filtrar: "Filter by application/environment",
+            senseFiltres: "No filters",
             nd: "N/A",
             apps: {
                 column: {
+                    group: "Application / environment",
                     estat: "State",
                     codi: "Code",
                     nom: "Name",

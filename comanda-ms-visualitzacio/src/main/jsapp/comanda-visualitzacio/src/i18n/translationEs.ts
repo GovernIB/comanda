@@ -24,17 +24,19 @@ const translationEs = {
         calendari: "Calendario",
         parametre: "Parámetros",
         broker: "Gestor de colas",
-        tasca: "Tarea",
-        avis: "Aviso",
+        tasca: "Tareas",
+        avis: "Avisos",
     },
     page: {
         salut: {
             title: "Salut",
             refrescar: "Refrescar",
             filtrar: "Filtrar por aplicación/entorno",
+            senseFiltres: "Sin filtros",
             nd: "N/D",
             apps: {
                 column: {
+                    group: "Aplicación / entorno",
                     estat: "Estado",
                     infoData: "Fecha última consulta de información",
                     codi: "Código",
