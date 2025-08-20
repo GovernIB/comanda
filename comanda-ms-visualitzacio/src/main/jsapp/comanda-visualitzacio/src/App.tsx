@@ -119,15 +119,30 @@ export const App: React.FC = () => {
         icon: 'send_time_extension',
         resourceName: 'broker',
     }
+    const menuTasca = {
+        id: 'tasca',
+        title: t('menu.tasca'),
+        to: '/tasca',
+        icon: 'assignment',
+        resourceName: 'tasca',
+    }
+    const menuAvis = {
+        id: 'avis',
+        title: t('menu.avis'),
+        to: '/avis',
+        icon: 'warning',
+        resourceName: 'avis',
+    }
     const menuEntries = [
         menuSalut,
         menuEstadistiques,
         menuConfiguracio,
         menuMonitor,
-        menuCache,
         menuParametre,
         menuCache,
-        menuBroker
+        menuBroker,
+        menuTasca,
+        menuAvis
     ];
     const appMenuEntries = [
         menuSalut,
