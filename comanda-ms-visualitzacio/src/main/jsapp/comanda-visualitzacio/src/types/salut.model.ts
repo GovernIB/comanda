@@ -1,5 +1,4 @@
 import {BaseEntity, IBaseEntity} from "./base-entity.model.ts";
-import theme from "../theme.ts";
 
 export const ENUM_APP_ESTAT_PREFIX: string = 'enum.appEstat.';
 
@@ -101,18 +100,26 @@ export enum SalutEstatEnum {
 export function getColorByStatEnum(salutEstatEnum: SalutEstatEnum): string {
     switch (salutEstatEnum) {
         case SalutEstatEnum.UP:
-            return theme.palette.success.main;
+            // Verde suave, transmite "todo ok"
+            return "#5ec562"; // pastel green
         case SalutEstatEnum.WARN:
-            return theme.palette.warning.light;
+            // Amarillo claro, alerta ligera
+            return "#FFF59D"; // pastel yellow
         case SalutEstatEnum.DEGRADED:
-            return theme.palette.warning.dark;
+            // Naranja suave, indica problema moderado
+            return "#FFCC80"; // pastel orange
         case SalutEstatEnum.MAINTENANCE:
-            return theme.palette.info.main;
+            // Azul claro, estado informativo
+            return "#90CAF9"; // pastel blue
         case SalutEstatEnum.UNKNOWN:
-            return theme.palette.grey[600];
+            // Gris claro, estado desconocido
+            return "#9c9c9c"; // light grey
         case SalutEstatEnum.DOWN:
+            // Rojo claro, crítico
+            return "#EF9A9A"; // pastel red
         case SalutEstatEnum.ERROR:
         default:
-            return theme.palette.error.main;
+            // Rojo más intenso que DOWN, para diferenciarlo
+            return "#e64646"; // light red
     }
 }

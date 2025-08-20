@@ -27,6 +27,8 @@ public class SalutInformeEstatItem implements Serializable {
 	private long degradedCount;
 	@JsonIgnore
 	private long downCount;
+    @JsonIgnore
+    private long errorCount;
 	@JsonIgnore
 	private long maintenanceCount;
 	@JsonIgnore
@@ -38,6 +40,7 @@ public class SalutInformeEstatItem implements Serializable {
 			long warnCount,
 			long degradedCount,
 			long downCount,
+            long errorCount,
 			long maintenanceCount,
 			long unknownCount) {
 		this.data = dataAgrupacio.toInstant()
@@ -47,17 +50,18 @@ public class SalutInformeEstatItem implements Serializable {
 		this.warnCount = warnCount;
 		this.degradedCount = degradedCount;
 		this.downCount = downCount;
+        this.errorCount = errorCount;
 		this.maintenanceCount = maintenanceCount;
 		this.unknownCount = unknownCount;
 	}
 
 	@JsonIgnore
 	public long getNotUpCount() {
-		return downCount + maintenanceCount + unknownCount;
+		return downCount + errorCount + maintenanceCount + unknownCount;
 	}
 
 	public long getTotalCount() {
-		return upCount + warnCount + degradedCount + downCount + maintenanceCount + unknownCount;
+		return upCount + warnCount + degradedCount + downCount + errorCount + maintenanceCount + unknownCount;
 	}
 
 	public boolean isAlwaysUp() {
@@ -68,28 +72,23 @@ public class SalutInformeEstatItem implements Serializable {
 		return upCount == 0;
 	}
 
-	public double getUpPercent() {
-		return Math.round(((double) upCount / getTotalCount()) * 10000.0) / 100.0;
-	}
+	public double getUpPercent() {return round(upCount);}
 
-	public double getWarnPercent() {
-		return Math.round(((double) warnCount / getTotalCount()) * 10000.0) / 100.0;
-	}
+	public double getWarnPercent() {return round(warnCount);}
 
-	public double getDegradedPercent() {
-		return Math.round(((double) degradedCount / getTotalCount()) * 10000.0) / 100.0;
-	}
+	public double getDegradedPercent() {return round(degradedCount);}
 
-	public double getDownPercent() {
-		return Math.round(((double) downCount / getTotalCount()) * 10000.0) / 100.0;
-	}
+	public double getDownPercent() {return round(downCount);}
 
-	public double getMaintenancePercent() {
-		return Math.round(((double) maintenanceCount / getTotalCount()) * 10000.0) / 100.0;
-	}
+    public double getErrorPercent() {return round(errorCount);}
+
+	public double getMaintenancePercent() {return round(maintenanceCount);}
 
 	public double getUnknownPercent() {
-		return Math.round(((double) unknownCount / getTotalCount()) * 10000.0) / 100.0;
+		return round(unknownCount);
 	}
 
+    private double round(long value) {
+        return Math.round(((double) value / getTotalCount()) * 10000.0) / 100.0;
+    }
 }
