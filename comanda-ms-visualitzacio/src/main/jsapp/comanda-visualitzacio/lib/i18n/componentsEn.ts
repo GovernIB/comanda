@@ -12,7 +12,7 @@ const componentsEn = {
         },
         offline: {
             message: 'Server connection lost',
-        }
+        },
     },
     datacommon: {
         details: {
@@ -28,7 +28,7 @@ const componentsEn = {
             title: 'Delete',
             single: {
                 title: 'Confirmation',
-                confirm: 'Are you sure you want to delete this item (this action can\'t be undone)?',
+                confirm: "Are you sure you want to delete this item (this action can't be undone)?",
                 success: 'Deleted items',
                 error: 'Error deleting items',
             },
@@ -74,7 +74,7 @@ const componentsEn = {
         },
         delete: {
             title: 'Delete',
-            confirm: 'Are you sure you want to delete this item (this action can\'t be undone)?',
+            confirm: "Are you sure you want to delete this item (this action can't be undone)?",
             success: 'Element deleted',
             error: 'Error deleting element',
         },
@@ -87,8 +87,8 @@ const componentsEn = {
                 noOptions: 'No options',
                 page: 'Showing {{size}} out of {{totalElements}} elements',
                 advanced: {
-                    title: 'Select value'
-                }
+                    title: 'Select value',
+                },
             },
             checkboxSelect: {
                 true: 'Yes',
@@ -101,19 +101,20 @@ const componentsEn = {
         },
         validate: {
             error: 'Validation error',
+            saveErrors: 'There are validation errors',
         },
     },
     actionreport: {
         action: {
             confirm: {
                 title: 'Confirmation',
-                message: 'Are you sure you want to execute the action {{action}}?'
+                message: 'Are you sure you want to execute the action {{action}}?',
             },
-            error: 'Error executing action'
+            error: 'Error executing action',
         },
         report: {
-            error: 'Error generating report'
-        }
+            error: 'Error generating report',
+        },
     },
     buttons: {
         answerRequired: {

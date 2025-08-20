@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.back.error;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;

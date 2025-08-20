@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {useTranslation} from 'react-i18next';
-import {useParams} from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {FormField, FormPage, GridPage, MuiForm, MuiFormTabContent, MuiGrid, springFilterBuilder, useBaseAppContext, useFormContext, useResourceApiService} from 'reactlib';
 import {Box, Tab, Tabs} from '@mui/material';
@@ -63,7 +63,7 @@ const AppEntornForm: React.FC = () => {
     return (
         <Grid container spacing={2}>
             <Grid size={12}>
-                <FormField name="entorn" disabled={data?.id != null} filter={entornFilter}/>
+                <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter}/>
             </Grid>
             <Grid size={12}>
                 <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} onClick={pingUrl}/>}}}} />
@@ -202,7 +202,7 @@ export const AppForm: React.FC = () => {
 const Apps: React.FC = () => {
     const { t } = useTranslation();
     const { appActions } = useActions();
-    
+
     const columns = [
         {
             field: 'logo',
@@ -220,8 +220,7 @@ const Apps: React.FC = () => {
                     <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
                 </span>
                 );
-            }
-            ,
+            },
         },
         {
             field: 'codi',

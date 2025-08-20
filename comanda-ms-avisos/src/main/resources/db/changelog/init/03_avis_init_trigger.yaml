@@ -1,0 +1,17 @@
+databaseChangeLog:
+- changeSet:
+    id: avis-init-trigger-1
+    author: limit
+#    changes:
+#        - createProcedure:
+#            procedureName: ${db_prefix}avis_trg
+#            relativeToChangelogFile: true
+#            procedureBody: |
+#                CREATE OR REPLACE TRIGGER ${db_prefix}avis_trg
+#                    BEFORE INSERT ON ${db_prefix}avis
+#                    FOR EACH ROW
+#                BEGIN
+#                    IF :NEW.id IS NULL THEN
+#                        SELECT ${db_prefix}avis_seq.NEXTVAL INTO :NEW.id FROM DUAL;
+#                    END IF;
+#                END;

@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.back.controller;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.model.Resource;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;

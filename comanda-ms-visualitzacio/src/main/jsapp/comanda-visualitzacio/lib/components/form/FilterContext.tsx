@@ -21,10 +21,10 @@ export const useFilterContext = () => {
         throw new Error('useFilterContext must be used within a FilterProvider');
     }
     return context;
-}
+};
 
 export const useOptionalFilterContext = (): FilterContextType | undefined => {
     return React.useContext(FilterContext);
-}
+};
 
 export default FilterContext;

@@ -8,7 +8,7 @@ export type BasePageProps = React.PropsWithChildren & {
     /** Component toolbar de la pàgina */
     toolbar?: React.ReactElement;
     /** Indica que s'han de desactivar els marges */
-    disableMargins?: true;
+    disableMargins?: boolean;
     /** Indica que s'ha d'expandir l'alçada de la pàgina al 100% */
     expandHeight?: true;
     /** Estils addicionals per l'element contenidor */
@@ -22,15 +22,8 @@ export type BasePageProps = React.PropsWithChildren & {
  * @returns Element JSX de la pàgina.
  */
 export const BasePage: React.FC<BasePageProps> = (props) => {
-    const {
-        toolbar,
-        disableMargins = true,
-        expandHeight = false,
-        style,
-        children,
-    } = props;
-    const { setMarginsDisabled, setContentExpandsToAvailableHeight } =
-        useBaseAppContext();
+    const { toolbar, disableMargins = true, expandHeight = false, style, children } = props;
+    const { setMarginsDisabled, setContentExpandsToAvailableHeight } = useBaseAppContext();
     React.useEffect(() => {
         setMarginsDisabled(disableMargins);
         return () => setMarginsDisabled(false);

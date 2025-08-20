@@ -1,0 +1,141 @@
+databaseChangeLog:
+- changeSet:
+    id: permis-init-table-1
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}objecte
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}objecte_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: tipus
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: nom
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: identificador
+            type: VARCHAR(64 ${varcharUnit})
+- changeSet:
+    id: permis-init-table-2
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}acces
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}acces_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            name: acces
+            type: VARCHAR(64 ${varcharUnit})
+- changeSet:
+    id: permis-init-table-3
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}permis
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}permis_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: entorn_app_id
+            type: BIGINT
+        - column:
+            name: usuari
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            name: grup
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: objecte_id
+            type: BIGINT
+        - column:
+              constraints:
+                  nullable: false
+              name: created_by
+              type: VARCHAR(64 ${varcharUnit})
+        - column:
+              constraints:
+                  nullable: false
+              name: created_date
+              type: TIMESTAMP
+        - column:
+              name: lastmod_by
+              type: VARCHAR(64 ${varcharUnit})
+        - column:
+              name: lastmod_date
+              type: TIMESTAMP
+        - column:
+              name: v
+              type: BIGINT
+- changeSet:
+    id: permis-init-table-4
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}permis_acces
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}permis_acces_pk
+            name: permis_id
+            type: BIGINT
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}permis_acces_pk
+            name: acces_id
+            type: BIGINT
+- changeSet:
+    id: permis-init-table-5
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}permis_hereus
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}permis_hereus_pk
+            name: permis_id
+            type: BIGINT
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}permis_hereus_pk
+            name: hereu_id
+            type: BIGINT

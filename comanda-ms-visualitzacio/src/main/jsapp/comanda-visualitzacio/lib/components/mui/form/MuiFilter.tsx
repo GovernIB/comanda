@@ -18,8 +18,7 @@ type MuiFilterProps = FilterProps & {
  * @returns Element JSX del filtre.
  */
 export const MuiFilter: React.FC<MuiFilterProps> = (props) => {
-    const { componentProps, onSpringFilterChange, children, ...otherProps } =
-        props;
+    const { componentProps, onSpringFilterChange, children, ...otherProps } = props;
     const gridContext = useOptionalDataGridContext();
     const handleSpringFilterChange = (filter: string | undefined) => {
         if (gridContext != null) {
@@ -29,9 +28,7 @@ export const MuiFilter: React.FC<MuiFilterProps> = (props) => {
     };
     return (
         <Box {...componentProps}>
-            <Filter
-                onSpringFilterChange={handleSpringFilterChange}
-                {...otherProps}>
+            <Filter onSpringFilterChange={handleSpringFilterChange} {...otherProps}>
                 {children}
             </Filter>
         </Box>

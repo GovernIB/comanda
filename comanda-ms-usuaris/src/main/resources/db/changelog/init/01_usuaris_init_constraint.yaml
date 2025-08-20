@@ -1,0 +1,9 @@
+databaseChangeLog:
+- changeSet:
+    id: usuaris-init-constraint-1
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        tableName: ${db_prefix}usuari
+        columnNames: codi
+        constraintName: ${db_prefix}usuari_codi_uk

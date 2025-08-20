@@ -13,7 +13,11 @@ import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
+import Broker from './pages/Broker';
+import QueueMessages from './pages/QueueMessages';
 import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
+import Tasca from "./pages/Tasca.tsx";
+import Avis from "./pages/Avis.tsx";
 import Parametres from './pages/Parametres.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
@@ -56,6 +60,16 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="calendari">
                 <Route index element={<CalendariEstadistiques />} />
+            </Route>
+            <Route path="tasca">
+                <Route index element={<Tasca />} />
+            </Route>
+            <Route path="avis">
+                <Route index element={<Avis />} />
+            </Route>
+            <Route path="broker">
+                <Route index element={<Broker />} />
+                <Route path="queue/:queueName" element={<QueueMessages />} />
             </Route>
             <Route path="parametre">
                 <Route index element={<Parametres />} />

@@ -45,8 +45,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
     const formApiRef = useFormApiContext();
     const { t, goBack, anyHistoryEntryExist, contentExpandsToAvailableHeight } =
         useBaseAppContext();
-    const { modified, isSaveActionPresent, isDeleteActionPresent } =
-        useFormContext();
+    const { modified, isSaveActionPresent, isDeleteActionPresent } = useFormContext();
     const backButtonDisabled = !anyHistoryEntryExist() && !goBackLink;
     const toolbarNodes: ReactElementWithPosition[] = [];
     !hiddenBackButton &&
@@ -75,9 +74,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
         toolbarNodes.push({
             position: 2,
             element: toToolbarIcon('save', {
-                title: t(
-                    id != null ? 'form.update.title' : 'form.create.title'
-                ),
+                title: t(id != null ? 'form.update.title' : 'form.create.title'),
                 onClick: () => formApiRef.current?.save(),
             }),
         });

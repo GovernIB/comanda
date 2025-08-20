@@ -37,15 +37,22 @@ const DataGridFooterSelection: React.FC<DataGridFooterSelectionProps> = (props) 
     const selectedRowCount = useGridSelector(apiRef, gridRowSelectionCountSelector);
     const handleClearClick = () => {
         setRowSelectionModel(DEFAULT_ROW_SELECTION);
-    }
-    const selectedMessage = selectedRowCount > 1 ? t('grid.selection.multiple', { count: selectedRowCount }) : t('grid.selection.one');
-    return <Box sx={{ ml: 2 }}>
-        {selectedRowCount ? selectedMessage : null}
-        {selectedRowCount ? <IconButton onClick={handleClearClick} size="small">
-            <Icon fontSize="small">clear</Icon>
-        </IconButton> : null}
-    </Box>;
-}
+    };
+    const selectedMessage =
+        selectedRowCount > 1
+            ? t('grid.selection.multiple', { count: selectedRowCount })
+            : t('grid.selection.one');
+    return (
+        <Box sx={{ ml: 2 }}>
+            {selectedRowCount ? selectedMessage : null}
+            {selectedRowCount ? (
+                <IconButton onClick={handleClearClick} size="small">
+                    <Icon fontSize="small">clear</Icon>
+                </IconButton>
+            ) : null}
+        </Box>
+    );
+};
 
 const GridFooterPagination: React.FC<DataGridFooterPaginationProps> = (props) => {
     const { pageInfo } = props;
@@ -53,39 +60,49 @@ const GridFooterPagination: React.FC<DataGridFooterPaginationProps> = (props) =>
     const apiRef = useGridApiContext();
     const page = useGridSelector(apiRef, gridPageSelector);
     const pageSize = useGridSelector(apiRef, gridPageSizeSelector);
-    const pageCount = pageInfo?.totalElements && pageSize ? Math.ceil(pageInfo.totalElements / pageSize) : undefined;
-	const pageRowCount = pageInfo?.totalElements <= pageSize 
-	    ? pageInfo?.totalElements 
-	    : page === (pageCount ?? 0) - 1 
-	        ? pageInfo?.totalElements % pageSize || pageSize 
-	        : pageSize;
-	const firstElementIndex = page * pageSize + 1;
-	const lastElement = Math.min(firstElementIndex + pageRowCount - 1, pageInfo?.totalElements);
+    const pageCount =
+        pageInfo?.totalElements && pageSize
+            ? Math.ceil(pageInfo.totalElements / pageSize)
+            : undefined;
+    const pageRowCount =
+        pageInfo?.totalElements <= pageSize
+            ? pageInfo?.totalElements
+            : page === (pageCount ?? 0) - 1
+              ? pageInfo?.totalElements % pageSize || pageSize
+              : pageSize;
+    const firstElementIndex = page * pageSize + 1;
+    const lastElement = Math.min(firstElementIndex + pageRowCount - 1, pageInfo?.totalElements);
     const boxStyle = { display: 'flex', justifContent: 'flex-end', alignItems: 'center' };
-    return <Box style={boxStyle}>
-        <Box>
-            {pageInfo != null ? t('grid.pageInfo', { from: firstElementIndex, to: lastElement, count: pageInfo.totalElements }) : ''}
+    return (
+        <Box style={boxStyle}>
+            <Box>
+                {pageInfo != null
+                    ? t('grid.pageInfo', {
+                          from: firstElementIndex,
+                          to: lastElement,
+                          count: pageInfo.totalElements,
+                      })
+                    : ''}
+            </Box>
+            <Pagination
+                color="primary"
+                count={pageSize ? pageCount : 0}
+                page={page + 1}
+                onChange={(_event, value) => apiRef.current.setPage(value - 1)}
+            />
         </Box>
-        <Pagination
-            color="primary"
-            count={pageSize ? pageCount : 0}
-            page={page + 1}
-            onChange={(_event, value) => apiRef.current.setPage(value - 1)} />
-    </Box>;
-}
+    );
+};
 
 const DataGridFooter: React.FC<DataGridFooterProps> = (props) => {
-    const {
-        selectionActive,
-        setRowSelectionModel,
-        paginationActive,
-        pageInfo,
-    } = props;
+    const { selectionActive, setRowSelectionModel, paginationActive, pageInfo } = props;
     const showFooter = selectionActive || paginationActive;
-    return showFooter ? <GridFooterContainer>
-        <DataGridFooterSelection setRowSelectionModel={setRowSelectionModel} />
-        {paginationActive && <GridFooterPagination pageInfo={pageInfo} />}
-    </GridFooterContainer> : null;
-}
+    return showFooter ? (
+        <GridFooterContainer>
+            <DataGridFooterSelection setRowSelectionModel={setRowSelectionModel} />
+            {paginationActive && <GridFooterPagination pageInfo={pageInfo} />}
+        </GridFooterContainer>
+    ) : null;
+};
 
 export default DataGridFooter;

@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity.estadistiques;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

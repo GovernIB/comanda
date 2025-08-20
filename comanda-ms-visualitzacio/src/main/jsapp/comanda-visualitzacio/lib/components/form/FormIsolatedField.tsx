@@ -2,7 +2,11 @@ import React from 'react';
 import { FormFieldCommonProps } from './FormField';
 import ResourceApiFormContext, { FormFieldDataAction, FormFieldError } from './FormContext';
 import { useBaseAppContext } from '../BaseAppContext';
-import { useResourceApiService, ResourceApiBlobResponse, ResourceApiError } from '../ResourceApiProvider';
+import {
+    useResourceApiService,
+    ResourceApiBlobResponse,
+    ResourceApiError,
+} from '../ResourceApiProvider';
 import { processType } from '../../util/fields';
 
 type FormIsolatedFieldProps = FormFieldCommonProps & {
@@ -16,14 +20,10 @@ type FormIsolatedFieldProps = FormFieldCommonProps & {
 };
 
 export const FormIsolatedField: React.FC<FormIsolatedFieldProps> = (props) => {
-    const {
-        resourceName,
-        name,
-        field: fieldProp,
-        ...otherProps
-    } = props;
+    const { resourceName, name, field: fieldProp, ...otherProps } = props;
     const { getFormFieldComponent } = useBaseAppContext();
-    const { isReady: apiIsReady, currentFields: apiCurrentFields } = useResourceApiService(resourceName);
+    const { isReady: apiIsReady, currentFields: apiCurrentFields } =
+        useResourceApiService(resourceName);
     const [fields, setFields] = React.useState<any>();
     const [field, setField] = React.useState<any>();
     const fieldType = processType(field, fieldProp?.type);
@@ -37,23 +37,28 @@ export const FormIsolatedField: React.FC<FormIsolatedFieldProps> = (props) => {
     }, [apiIsReady, fieldProp]);
     const mockFormApi = {
         getId: () => null,
-        getData: () => { },
-        refresh: () => { },
-        reset: (_data?: any, _id?: any) => { },
+        getData: () => {},
+        refresh: () => {},
+        reset: (_data?: any, _id?: any) => {},
         revert: (_unconfirmed?: boolean) => null,
         save: () => new Promise((resolve) => resolve(null)),
         execAction: (_code: string) => new Promise((resolve) => resolve(null)),
-        generateReport: (_code: string) => new Promise<ResourceApiBlobResponse>((resolve) => resolve({
-            blob: new Blob(),
-            fileName: '',
-        })),
+        generateReport: (_code: string) =>
+            new Promise<ResourceApiBlobResponse>((resolve) =>
+                resolve({
+                    blob: new Blob(),
+                    fileName: '',
+                })
+            ),
         validate: () => new Promise<void>((resolve) => resolve()),
         delete: () => null,
         setFieldValue: (_name: string, _value: any) => null,
-        handleSubmissionErrors: (_error: ResourceApiError,
-                                 _temporalMessageTitle?: string,
-                                 _reject?: (reason: any) => void) => null,
-    }
+        handleSubmissionErrors: (
+            _error: ResourceApiError,
+            _temporalMessageTitle?: string,
+            _reject?: (reason: any) => void
+        ) => null,
+    };
     const formContext = {
         resourceName,
         fields,
@@ -64,13 +69,14 @@ export const FormIsolatedField: React.FC<FormIsolatedFieldProps> = (props) => {
         modified: false,
         apiRef: { current: mockFormApi },
         dataGetFieldValue: (_fieldName: string) => null,
-        dataDispatchAction: (_action: FormFieldDataAction) => { }
+        dataDispatchAction: (_action: FormFieldDataAction) => {},
     };
-    return FormFieldComponent != null ? <ResourceApiFormContext.Provider value={formContext}>
-        {(fieldProp != null || field != null) && <FormFieldComponent
-            {...otherProps}
-            name={name}
-            field={fieldProp ?? field} />}
-    </ResourceApiFormContext.Provider> : null;
-}
+    return FormFieldComponent != null ? (
+        <ResourceApiFormContext.Provider value={formContext}>
+            {(fieldProp != null || field != null) && (
+                <FormFieldComponent {...otherProps} name={name} field={fieldProp ?? field} />
+            )}
+        </ResourceApiFormContext.Provider>
+    ) : null;
+};
 export default FormIsolatedField;

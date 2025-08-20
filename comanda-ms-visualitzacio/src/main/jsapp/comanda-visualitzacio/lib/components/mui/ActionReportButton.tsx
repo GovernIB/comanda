@@ -3,11 +3,7 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import Badge from '@mui/material/Badge';
-import {
-    useFormDialog,
-    FormDialogSubmitFn,
-    FormDialogCloseFn,
-} from './form/FormDialog';
+import { useFormDialog, FormDialogSubmitFn, FormDialogCloseFn } from './form/FormDialog';
 import {
     useActionDialogButtons,
     useReportDialogButtons,
@@ -88,10 +84,7 @@ export type ActionReportLogicResult = {
     close: FormDialogCloseFn;
 };
 
-const getActionReportLink = (
-    action: string | undefined,
-    report: string | undefined
-) => {
+const getActionReportLink = (action: string | undefined, report: string | undefined) => {
     if (action != null) {
         return 'exec_' + action;
     } else if (report != null) {
@@ -111,11 +104,7 @@ const ButtonWithBadge: React.FC<any & React.PropsWithChildren> = (props) => {
 const IconCustomButton: React.FC<IconCustomButtonProps> = (props) => {
     const { disabled, onClick, title, children, ...otherProps } = props;
     return (
-        <IconButton
-            disabled={disabled}
-            onClick={onClick}
-            title={title}
-            {...otherProps}>
+        <IconButton disabled={disabled} onClick={onClick} title={title} {...otherProps}>
             {children}
         </IconButton>
     );
@@ -214,28 +203,21 @@ export const useActionReportLogic = (
             }
         });
     const dialogDisabled = formDialogContent == null;
-    const [formDialogShow, formDialogComponent, formDialogClose] =
-        useFormDialog(
-            resourceName,
-            action ? 'ACTION' : report ? 'REPORT' : undefined,
-            action ? action : report ? report : undefined,
-            action
-                ? actionDialogButtons
-                : report
-                  ? reportDialogButtons
-                  : undefined,
-            action ? execAction : generateReport,
-            action
-                ? t('actionreport.action.error')
-                : t('actionreport.report.error'),
-            formDialogContent,
-            null,
-            {
-                resourceType: action ? 'action' : 'report',
-                resourceTypeCode: action ?? report,
-            },
-            dialogCloseCallback
-        );
+    const [formDialogShow, formDialogComponent, formDialogClose] = useFormDialog(
+        resourceName,
+        action ? 'ACTION' : report ? 'REPORT' : undefined,
+        action ? action : report ? report : undefined,
+        action ? actionDialogButtons : report ? reportDialogButtons : undefined,
+        action ? execAction : generateReport,
+        action ? t('actionreport.action.error') : t('actionreport.report.error'),
+        formDialogContent,
+        null,
+        {
+            resourceType: action ? 'action' : 'report',
+            resourceTypeCode: action ?? report,
+        },
+        dialogCloseCallback
+    );
     const exec = (
         id: any,
         dialogTitle?: any,
@@ -244,8 +226,7 @@ export const useActionReportLogic = (
     ) => {
         if (hasForm && !dialogDisabled) {
             const formDialogTitle =
-                apiLink?.title ??
-                (action != null ? 'Exec ' + action : 'Generate ' + report);
+                apiLink?.title ?? (action != null ? 'Exec ' + action : 'Generate ' + report);
             formDialogShow(id, {
                 title: dialogTitle ?? formDialogTitle,
                 additionalData: formAdditionalData ?? formAdditionalDataArg,
@@ -287,30 +268,20 @@ export const useActionReportLogic = (
     const hasForm = artifact != null && artifact.formClassActive;
     React.useEffect(() => {
         if (action == null && report == null) {
-            console.error(
-                '[ActionReportButton] No action or report prop specified'
-            );
+            console.error('[ActionReportButton] No action or report prop specified');
         }
     }, []);
     React.useEffect(() => {
-        if (
-            resourceName != null &&
-            (action != null || report != null) &&
-            apiIsReady
-        ) {
+        if (resourceName != null && (action != null || report != null) && apiIsReady) {
             apiArtifacts({ includeLinks: true }).then((artifacts) => {
                 const artifactType = action != null ? 'ACTION' : 'REPORT';
                 const artifactCode = action ?? report;
                 const artifact = artifacts.find(
-                    (a: any) =>
-                        a.type === artifactType && a.code === artifactCode
+                    (a: any) => a.type === artifactType && a.code === artifactCode
                 );
                 if (artifact != null) {
                     setArtifact(artifact);
-                    const actionReportLink = getActionReportLink(
-                        action,
-                        report
-                    );
+                    const actionReportLink = getActionReportLink(action, report);
                     actionReportLink != null &&
                         setApiLink((artifact as any)._links[actionReportLink]);
                 } else {
@@ -342,9 +313,7 @@ export const useActionReportLogic = (
  * @param props - Propietats del component.
  * @returns Element JSX del botó.
  */
-export const ActionReportButton: React.FC<ActionReportButtonProps> = (
-    props
-) => {
+export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => {
     const {
         resourceName,
         action,
@@ -388,8 +357,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (
     );
     const buttonTitle = title ?? apiLink?.title ?? action ?? report;
     const ButtonComponent =
-        buttonComponentProp ??
-        (icon != null ? IconCustomButton : TextCustomButton);
+        buttonComponentProp ?? (icon != null ? IconCustomButton : TextCustomButton);
     const { onClick: onClickFromComponentProps, ...otherButtonComponentProps } =
         buttonComponentProps ?? {};
     const button = (
@@ -407,9 +375,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (
     return initialized ? (
         <>
             {selectedCount ? (
-                <ButtonWithBadge selectedCount={selectedCount}>
-                    {button}
-                </ButtonWithBadge>
+                <ButtonWithBadge selectedCount={selectedCount}>{button}</ButtonWithBadge>
             ) : (
                 button
             )}

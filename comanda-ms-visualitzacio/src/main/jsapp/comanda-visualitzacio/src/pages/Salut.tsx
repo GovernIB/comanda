@@ -218,6 +218,7 @@ const AppDataTable: React.FC<any> = (props: {
     const { getLinkComponent } = useBaseAppContext();
     const gridApiRef = useGridApiRef();
     const [expand, setExpand] = useState<boolean>(true);
+    const theme = useTheme();
 
     const { isReady: appApiIsReady, find: appApiFind } = useResourceApiService('app');
     const [apps, setApps] = React.useState<any[]>();
@@ -329,6 +330,11 @@ const AppDataTable: React.FC<any> = (props: {
                                 label={updownItem.integracioDownCount}
                                 size="small"
                                 color="error"
+                            />
+                            &nbsp;/&nbsp;
+                            <Chip sx={{ bgcolor: theme.palette.grey[600], color: 'white' }}
+                                label={updownItem.integracioDesconegutCount}
+                                size="small"
                             />
                         </>
                     );

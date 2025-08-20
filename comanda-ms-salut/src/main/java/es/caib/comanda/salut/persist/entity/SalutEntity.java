@@ -1,6 +1,6 @@
 package es.caib.comanda.salut.persist.entity;
 
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -124,20 +124,22 @@ public class SalutEntity extends BaseEntity<Salut> {
     @Formula("(CASE WHEN (bd_estat = 'UP') THEN 1 ELSE 0 END)")
     private Boolean bdUp;
 
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'UP')")
-    private Integer integracioUpCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'DOWN')")
-    private Integer integracioDownCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'UP')")
-    private Integer subsistemaUpCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'DOWN')")
-    private Integer subsistemaDownCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'ERROR')")
-    private Integer missatgeErrorCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'WARN')")
-    private Integer missatgeWarnCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'INFO')")
-    private Integer missatgeInfoCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'UP')")
+	private Integer integracioUpCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'DOWN')")
+	private Integer integracioDownCount;
+    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'UNKNOWN')")
+    private Integer integracioDesconegutCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'UP')")
+	private Integer subsistemaUpCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'DOWN')")
+	private Integer subsistemaDownCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'ERROR')")
+	private Integer missatgeErrorCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'WARN')")
+	private Integer missatgeWarnCount;
+	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'INFO')")
+	private Integer missatgeInfoCount;
 
     @Formula("TO_CHAR(data, 'YYYY')")
     private String year;

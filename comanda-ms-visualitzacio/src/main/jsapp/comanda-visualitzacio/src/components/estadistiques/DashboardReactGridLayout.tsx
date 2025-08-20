@@ -9,10 +9,13 @@ import TaulaWidgetVisualization from './TaulaWidgetVisualization.tsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorBoundaryFallback } from '../../pages/SalutAppInfo.tsx';
-import { Box } from '@mui/material';
+import { Box, Icon, Menu, MenuItem } from '@mui/material';
 import 'react-grid-layout/css/styles.css';
 import './react-resizable-custom.css';
 import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
+import {MuiFormDialog, MuiFormDialogApi, useBaseAppContext, useConfirmDialogButtons, useResourceApiService} from "reactlib";
+import {useTranslation} from "react-i18next";
+import {AfegirTitolFormContent} from "../../pages/EstadisticaDashboardEdit.tsx";
 
 const CustomGridLayout = WidthProvider(Responsive);
 
@@ -21,7 +24,8 @@ const SimpleChartWrapper = React.memo(({ dashboardWidget }) => {
 });
 
 const GraficChartWrapper = React.memo(({ dashboardWidget }) => {
-    return <GraficWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
+    return <GraficWidgetVisualization {...dashboardWidget}
+    />;
 });
 
 const TaulaChartWrapper = React.memo(({ dashboardWidget }) => {
@@ -68,12 +72,146 @@ function PieChartDemo(props) {
     );
 }
 
+const useMenu = (props:any) => {
+    const { entity, actions } = props;
+
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const content = <Menu
+        id={`menu-button-${entity?.id}`}
+        MenuListProps={{
+            'aria-labelledby': 'demo-customized-button',
+        }}
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+
+        elevation={0}
+        anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+        }}
+        transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+        }}
+    >
+        {actions?.map?.((action:any, index:number) =>
+                !(typeof action.hidden === 'function' ? action.hidden(entity) : action.hidden)
+                && <div key={`action-${index}`} title={ typeof action.title == 'function' ?action.title?.(entity) :action.title}>
+                    <MenuItem onClick={()=>action?.onClick?.(entity?.id, entity)}
+                              disabled={typeof action?.disabled === 'function' ? action?.disabled(entity) : action?.disabled}
+                    >
+                        {action.icon && <Icon>{action.icon}</Icon>}{action.label}
+                    </MenuItem>
+                </div>
+        )}
+    </Menu>
+
+    return {
+        handleOpen,
+        handleClose,
+        content
+    }
+}
+
+const useCustomGridItemActions = (refresh?: () => void) => {
+    const { t } = useTranslation();
+    const formApiRef = React.useRef<MuiFormDialogApi>()
+    const {messageDialogShow, temporalMessageShow} = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = {maxWidth: 'sm', fullWidth: true};
+
+    const { delete: deleteDashboardItem } = useResourceApiService('dashboardItem');
+    const { delete: deleteDashboardTitol } = useResourceApiService('dashboardTitol');
+
+    const check = (action: () => void) => {
+        messageDialogShow(
+            'Confirmació',
+            'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
+            confirmDialogButtons,
+            confirmDialogComponentProps)
+            .then((value: any) => {
+                if (value) {
+                    action()
+                }
+            });
+    }
+
+    const deleteDashboardItemCheck = (id:any) => {
+        check(() => {
+            deleteDashboardItem(id)
+                .then(() => {
+                    refresh?.()
+                    temporalMessageShow(null, '', 'success');
+                })
+                .catch((error) => {
+                    error?.message && temporalMessageShow(null, error?.message, 'error');
+                });
+        });
+    }
+    const deleteDashboardTitolCheck = (id:any) => {
+        check(() => {
+            deleteDashboardTitol(id)
+                .then(() => {
+                    refresh?.()
+                    temporalMessageShow(null, '', 'success');
+                })
+                .catch((error) => {
+                    error?.message && temporalMessageShow(null, error?.message, 'error');
+                });
+        });
+    }
+
+    const actions = [
+        {
+            label: "Editar",
+            icon: 'edit',
+            showInMenu: true,
+            onClick: (id:any, row:any) => {
+                if (row.tipus === 'TITOL') { formApiRef?.current?.show(id).then(()=>refresh?.()) }
+            },
+            hidden: (row:any) => row.tipus !== 'TITOL', // TODO: implementar formulario para otros tipos
+        },
+        {
+            label: "Borrar",
+            icon: 'delete',
+            showInMenu: true,
+            onClick: (id:any, row:any) => {
+                if (row.tipus === 'TITOL') { deleteDashboardTitolCheck(id) }
+                else { deleteDashboardItemCheck(id) }
+            },
+        },
+    ]
+
+    const content = <>
+        <MuiFormDialog
+            resourceName={'dashboardTitol'}
+            title={t('page.dashboards.action.llistarTitle.label')}
+            apiRef={formApiRef}
+        >
+            <AfegirTitolFormContent/>
+        </MuiFormDialog>
+    </>
+
+    return { actions, content }
+}
+
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
     (
-        { style, className, onMouseDown, onMouseUp, onTouchEnd, editable, children, ...props },
+        { entity, refresh, style, className, onMouseDown, onMouseUp, onTouchEnd, editable, children, ...props },
         ref
     ) => {
-        return (
+        const { actions, content: contentActions } = useCustomGridItemActions(()=>refresh?.())
+        const { handleOpen, content } = useMenu({entity, actions})
+        return (<>
             <div
                 style={{
                     ...style,
@@ -83,6 +221,12 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
                 onMouseDown={onMouseDown}
                 onMouseUp={onMouseUp}
                 onTouchEnd={onTouchEnd}
+                onContextMenu={(event) => {
+                    if(editable){
+                        event.preventDefault()
+                        handleOpen(event)
+                    }
+                }}
             >
                 <div
                     style={{
@@ -95,7 +239,9 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
                     {children}
                 </div>
             </div>
-        );
+            {content}
+            {contentActions}
+        </>);
     }
 );
 
@@ -146,6 +292,7 @@ type DashboardReactGridLayoutProps = {
     gridLayoutItems: GridLayoutItem[];
     onGridLayoutItemsChange?: (gridLayoutItems: GridLayoutItem[]) => void;
     editable: boolean;
+    refresh?: () => void;
 };
 
 export const useMapDashboardItems = (dashboardWidgets) => {
@@ -169,6 +316,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     editable,
     gridLayoutItems,
     onGridLayoutItemsChange,
+    refresh,
 }) => {
     const canvasRef = useRef();
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
@@ -315,11 +463,13 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         const dashboardWidget = dashboardWidgets.find(
                             (dashboardWidget) => String(dashboardWidget.dashboardItemId) === item.id
                         );
+                        if (dashboardWidget) dashboardWidget.id = dashboardWidget?.dashboardItemId;
                         const dashboardTitol = dashboardWidgets.find(
                             (dashboardWidget) => String(dashboardWidget.dashboardTitolId) === item.id
                         );
+                        if(dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
                         return (
-                            <CustomGridItemComponent key={item.id} editable={editable}>
+                            <CustomGridItemComponent key={item.id} refresh={refresh} entity={dashboardWidget ?? dashboardTitol} editable={editable}>
                                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
                                     {(() => {
                                         switch (item.type) {

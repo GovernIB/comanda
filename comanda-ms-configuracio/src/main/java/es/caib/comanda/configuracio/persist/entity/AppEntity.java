@@ -1,18 +1,14 @@
 package es.caib.comanda.configuracio.persist.entity;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.App;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
-import java.util.Arrays;
 
 /**
  * Entitat de base de dades que representa una aplicació a monitoritzar.

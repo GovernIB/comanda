@@ -11,6 +11,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import liquibase.pro.packaged.T;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
             String atributsVisualsJson = atributsVisualsHelper.getAtributsVisualsJson(resource.getAtributsVisuals());
             entity.setAtributsVisualsJson(atributsVisualsJson);
         } catch (Exception e) {
+
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotCreatedException(resource.getClass(), "Error convertint atributs visuals a JSON");
         }

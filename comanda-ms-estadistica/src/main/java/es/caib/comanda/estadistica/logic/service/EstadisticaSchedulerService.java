@@ -1,9 +1,9 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

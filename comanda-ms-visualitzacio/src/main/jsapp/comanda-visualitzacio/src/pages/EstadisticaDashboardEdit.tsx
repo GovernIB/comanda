@@ -13,7 +13,7 @@ import {
     useConfirmDialogButtons,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import {
     DashboardReactGridLayout,
     GridLayoutItem,
@@ -24,7 +24,10 @@ import {
     Alert,
     Box,
     Button,
+    Collapse,
     Dialog,
+    List,
+    ListItemButton,
     ListItemIcon,
     Paper,
     Tab,
@@ -54,6 +57,11 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
+import SideWrapper from "../components/SideWrapper.tsx";
+import {ShrinkableDrawer} from "../components/SideMenu.tsx";
+import SimpleWidgetVisualization from "../components/estadistiques/SimpleWidgetVisualization.tsx";
+import GraficWidgetVisualization from "../components/estadistiques/GraficWidgetVisualization.tsx";
+import TaulaWidgetVisualization from "../components/estadistiques/TaulaWidgetVisualization.tsx";
 
 const EntornAppFilterContent = (props: any) => {
     const { initialData } = props;
@@ -387,7 +395,7 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
     );
 };
 
-const AfegirTitolFormContent = () => {
+export const AfegirTitolFormContent = () => {
     const { data } = useFormContext();
     const { t } = useTranslation();
 
@@ -690,6 +698,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         </ListItemText>
                                     </MenuItem>
                                 </ButtonMenu>
+                                <DashboardSideMenu dashboard={dashboard} addAction={addWidget}/>
                             </Box>
                         </MuiToolbar>
                     }
@@ -702,6 +711,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             gridLayoutItems={mappedDashboardItems}
                             onGridLayoutItemsChange={onGridLayoutItemsChange}
                             editable
+                            refresh={forceRefreshDashboardWidgets}
                         />
                     )}
                 </BasePage>
@@ -719,5 +729,126 @@ const EstadisticaDashboardEdit: React.FC = () => {
         </>
     );
 };
+
+const DashboardSideMenu = (props:any) => {
+    const { dashboard, addAction } = props
+    const { t } = useTranslation()
+
+    const [open, setOpen] = React.useState<boolean>(false);
+    const handelOpen = () => setOpen(true)
+    const handelClose = () => setOpen(false)
+
+    const [filterData, setFilterData] = useState<any>(null);
+    const [filterString, setFilterString] = useState<string>('');
+    const [widgetsSimple, setWidgetsSimple] = useState<any[]>([]);
+    const [widgetsGrafic, setWidgetsGrafic] = useState<any[]>([]);
+    const [widgetsTaula , setWidgetsTaula ] = useState<any[]>([]);
+
+    const { isReady: isReadySimple , find: findSimple } = useResourceApiService('estadisticaSimpleWidget');
+    const { isReady: isReadyGrafic , find: findGrafic } = useResourceApiService('estadisticaGraficWidget');
+    const { isReady: isReadyTaula  , find: findTaula  } = useResourceApiService('estadisticaTaulaWidget');
+
+    const refreshSimple = () => {
+        if(isReadySimple) {
+            findSimple({unpaged: true, filter: filterString})
+                .then((data:any) => setWidgetsSimple(data?.rows ?? []))
+        }
+    }
+    const refreshGrafic = () => {
+        if(isReadyGrafic) {
+            findGrafic({unpaged: true, filter: filterString})
+                .then((data:any) => setWidgetsGrafic(data?.rows ?? []))
+        }
+    }
+    const refreshTaula = () => {
+        if(isReadyTaula) {
+            findTaula({unpaged: true, filter: filterString})
+                .then((data:any) => setWidgetsTaula(data?.rows ?? []))
+        }
+    }
+
+    useEffect(() => {
+        if (filterString) {
+            refreshSimple()
+            refreshGrafic()
+            refreshTaula()
+        }
+    }, [filterString]);
+
+    const width = 400
+    return <>
+        <IconButton
+            color="inherit"
+            aria-label="open menu"
+            onClick={handelOpen}
+            edge="start"
+            sx={{ mr: 2 }}
+        >
+            <Icon sx={{ fontSize: '24px'}} fontSize={'medium'}>menu</Icon>
+        </IconButton>
+        {open && <ShrinkableDrawer
+            className={"side-menu"}
+            variant={'permanent'}
+            open={true}
+            {...{ width: width }}
+            sx={{
+                '& .MuiDrawer-paper': { right: 0, left: 'auto', backgroundColor: '#ef955e', color: '#fff', pt: '64px' },
+            }}>
+            <SideWrapper style={{width: `calc(100% - ${width}px)`}} onOutsideClick={handelClose}>
+                <Box sx={{p: 1}}>
+                    <Typography variant={'h5'} color={'white'}>{t('page.dashboards.action.addWidget.title')}</Typography>
+
+                    <EntornAppFilter
+                        onDataChange={setFilterData}
+                        onSpringFilterChange={setFilterString}
+                        initialData={{
+                            app: dashboard?.aplicacio,
+                            entorn: dashboard?.entorn
+                        }}
+                    />
+
+                    <List hidden={!filterData?.entorn?.id}>
+                        <ExpandElementList label={t('page.widget.simple.tab.title')} icon={'border_clear'}>
+                            {widgetsSimple.map((widget:any) => <Box key={`simple-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+                                <SimpleWidgetVisualization {...widget}/>
+                            </Box>)}
+                        </ExpandElementList>
+                        <ExpandElementList label={t('page.widget.grafic.tab.title')} icon={'align_vertical_bottom'}>
+                            {widgetsGrafic.map((widget:any) => <Box key={`grafic-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+                                <GraficWidgetVisualization {...widget}/>
+                            </Box>)}
+                        </ExpandElementList>
+                        <ExpandElementList label={t('page.widget.taula.tab.title')} icon={'table_view'}>
+                            {widgetsTaula.map((widget:any) => <Box key={`taula-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+                                <TaulaWidgetVisualization {...widget}/>
+                            </Box>)}
+                        </ExpandElementList>
+                    </List>
+                </Box>
+            </SideWrapper>
+        </ShrinkableDrawer>}
+    </>
+}
+
+const ExpandElementList = (props:any) => {
+    const {label, icon, children} = props;
+    const [open, setOpen] = React.useState(false);
+
+    const handleClick = () => {
+        setOpen(!open);
+    };
+    return <>
+        <ListItemButton onClick={handleClick}>
+            {icon && <Icon sx={{mr: 1}}>{icon}</Icon>}
+            <ListItemText primary={label} />
+            {open ? <Icon>expand_less</Icon> : <Icon>expand_more</Icon>}
+        </ListItemButton>
+        <Collapse in={open} timeout="auto" unmountOnExit>
+            <Box sx={{ ml: 2 }}>
+                {children}
+            </Box>
+        </Collapse>
+    </>
+}
 
 export default EstadisticaDashboardEdit;
