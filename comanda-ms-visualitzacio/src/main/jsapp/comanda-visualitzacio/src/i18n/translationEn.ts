@@ -1,13 +1,34 @@
 const translationEn = {
     enum: {
         appEstat: {
-            UP: "Up",
-            WARN: "Warn",
-            DOWN: "Down",
-            DEGRADED: "Degraded",
-            MAINTENANCE: "Maintenance",
-            UNKNOWN: "Unknown",
-            ERROR: "Error",
+            UP: {
+                title: "Up",
+                tooltip: "The application is working <bold>correctly</bold>. <br> The rate of <italic>detected errors</italic> is <underline>less than 5%</underline>."
+            },
+            WARN: {
+                title: "Warn",
+                tooltip: "The rate of <italic>detected errors</italic> is <underline>between 5% and 10%</underline>."
+            },
+            DOWN: {
+                title: "Down",
+                tooltip: "<bold>Errors have been detected</bold>. <br> The <italic>errors detected</italic> rate is <underline>greater than 30%</underline>."
+            },
+            DEGRADED: {
+                title: "Degraded",
+                tooltip: "<bold>There are occasional errors</bold>. <br> The <italic>rate of detected errors</italic> is <underline>between 10% and 30%</underline>."
+            },
+            MAINTENANCE: {
+                title: "Maintenance",
+                tooltip: "The application <bold>is unavailable</bold> due to <underline>maintenance</underline>."
+            },
+            UNKNOWN: {
+                title: "Unknown",
+                tooltip: "<bold>No information available</bold> about the application status."
+            },
+            ERROR: {
+                title: "Error",
+                tooltip: "The application <bold>is unavailable</bold> due to <underline>serious operational errors</underline>."
+            },
         },
     },
     menu: {

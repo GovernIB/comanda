@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useTheme } from '@mui/material/styles';
 import {
     BasePage,
     MuiDataGrid,
@@ -23,14 +22,23 @@ import {
     GridTreeDataGroupingCell,
     useGridApiRef,
 } from '@mui/x-data-grid-pro';
-import { PieChart } from '@mui/x-charts';
+import {PieChart} from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
-import { useParams } from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
-import { ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, SalutModel } from '../types/salut.model';
-import { BaseEntity } from '../types/base-entity.model';
-import { ChipColor } from '../util/colorUtil';
-import { useTreeData } from '../hooks/treeData';
+import {
+    ENUM_APP_ESTAT_PREFIX, getColorByIntegracio,
+    getColorByStatEnum,
+    getMaterialIconByState,
+    SalutEstatEnum,
+    SalutModel,
+    TITLE
+} from "../types/salut.model.tsx";
+import {BaseEntity} from "../types/base-entity.model.ts";
+import {ChipColor} from "../util/colorUtil.ts";
+import {SalutChipTooltip} from "../components/SalutChipTooltip.tsx";
+import {useTreeData} from "../hooks/treeData.tsx";
+import {Tooltip} from "@mui/material";
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
 
@@ -142,43 +150,43 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
                     data: [
                         {
                             id: SalutEstatEnum.UP,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP)} (${upValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP + TITLE)} (${upValue})`,
                             value: upValue,
                             color: getColorByStatEnum(SalutEstatEnum.UP),
                         },
                         {
                             id: SalutEstatEnum.WARN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN)} (${warnValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN + TITLE)} (${warnValue})`,
                             value: warnValue,
                             color: getColorByStatEnum(SalutEstatEnum.WARN),
                         },
                         {
                             id: SalutEstatEnum.DEGRADED,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED)} (${degradedValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED + TITLE)} (${degradedValue})`,
                             value: degradedValue,
                             color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
                         },
                         {
                             id: SalutEstatEnum.DOWN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN)} (${downValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE)} (${downValue})`,
                             value: downValue,
                             color: getColorByStatEnum(SalutEstatEnum.DOWN),
                         },
                         {
                             id: SalutEstatEnum.ERROR,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR)} (${errorValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE)} (${errorValue})`,
                             value: errorValue,
                             color: getColorByStatEnum(SalutEstatEnum.ERROR),
                         },
                         {
                             id: SalutEstatEnum.MAINTENANCE,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE)} (${maintenanceValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE + TITLE)} (${maintenanceValue})`,
                             value: maintenanceValue,
                             color: getColorByStatEnum(SalutEstatEnum.MAINTENANCE),
                         },
                         {
                             id: SalutEstatEnum.UNKNOWN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN)} (${unknownValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE)} (${unknownValue})`,
                             value: unknownValue,
                             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
                         },
@@ -189,28 +197,35 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
     );
 };
 
-const ItemStateChip: React.FC<any> = (props: { salutStatEnum: SalutEstatEnum; date?: string }) => {
-    const { salutStatEnum, date } = props;
+const ItemStateChip: React.FC<any> = (props: { salutField: keyof SalutModel; salutStatEnum: SalutEstatEnum; date?: string }) => {
+    const { salutField, salutStatEnum, date } = props;
     const { t } = useTranslation();
     return (
         <>
             {salutStatEnum && (
-                <Chip sx={{ bgcolor: getColorByStatEnum(salutStatEnum), color: ChipColor.WHITE,
-                    "& .MuiChip-label": {
-                        fontSize: "0.7rem !important",
-                    }}}
-                      label={t(ENUM_APP_ESTAT_PREFIX + salutStatEnum)}
-                      size="small"
-                />
+                <SalutChipTooltip stateEnum={salutStatEnum} salutField={salutField}>
+                    <Chip sx={{ bgcolor: getColorByStatEnum(salutStatEnum), color: ChipColor.WHITE,
+                        "& .MuiChip-label": {
+                            fontSize: "0.7rem !important",
+                        }}}
+                          icon={getMaterialIconByState(salutStatEnum)}
+                          label={t(ENUM_APP_ESTAT_PREFIX + salutStatEnum + TITLE)}
+                          size="small"
+                    />
+                </SalutChipTooltip>
+
             )}
             {!salutStatEnum && (
-                <Chip sx={{ bgcolor: getColorByStatEnum(SalutEstatEnum.UNKNOWN), color: ChipColor.WHITE,
-                    "& .MuiChip-label": {
-                        fontSize: "0.7rem !important",
-                    }}}
-                      label={t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN)}
-                      size="small"
-                />
+                <SalutChipTooltip stateEnum={SalutEstatEnum.UNKNOWN} salutField={salutField}>
+                    <Chip sx={{ bgcolor: getColorByStatEnum(SalutEstatEnum.UNKNOWN), color: ChipColor.WHITE,
+                        "& .MuiChip-label": {
+                            fontSize: "0.7rem !important",
+                        }}}
+                          icon={getMaterialIconByState(SalutEstatEnum.UNKNOWN)}
+                          label={t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE)}
+                          size="small"
+                    />
+                </SalutChipTooltip>
             )}
             {date && (<><br />
             <Typography variant="caption">{date}</Typography></>)}
@@ -229,7 +244,6 @@ const AppDataTable: React.FC<any> = (props: {
     const { getLinkComponent } = useBaseAppContext();
     const gridApiRef = useGridApiRef();
     const [apps, setApps] = React.useState<any[]>();
-    const theme = useTheme();
 
     const { isReady: appApiIsReady, find: appApiFind } = useResourceApiService('app');
 
@@ -249,14 +263,15 @@ const AppDataTable: React.FC<any> = (props: {
     );
 
     const renderItemStateChip = React.useCallback(
-        (id: GridRowId, stateEnum: keyof SalutModel) => {
+        (id: GridRowId, salutField: keyof SalutModel) => {
             const salutItem: SalutModel | null = findSalutItem(id);
             if (salutItem == null) {
                 return undefined;
             }
             return (
                 <ItemStateChip
-                    salutStatEnum={salutItem[stateEnum]}
+                    salutField={salutField}
+                    salutStatEnum={salutItem[salutField]}
                 />
             );
         },
@@ -323,19 +338,31 @@ const AppDataTable: React.FC<any> = (props: {
 
                     return (
                         <>
-                            <Chip
-                                label={salutItem.integracioUpCount}
-                                size="small"
-                                color="success"
-                            />
+                            <Tooltip title="Integraciones activas">
+                                <Chip
+                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_UP_COUNT), color: ChipColor.WHITE,
+                                        "& .MuiChip-label": {
+                                            // fontSize: "0.7rem !important",
+                                        }}}
+                                    label={salutItem.integracioUpCount}
+                                    size="small"
+                                />
+                            </Tooltip>
                             &nbsp;/&nbsp;
                             <Chip
+                                sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DOWN_COUNT), color: ChipColor.WHITE,
+                                    "& .MuiChip-label": {
+                                        // fontSize: "0.7rem !important",
+                                    }}}
                                 label={salutItem.integracioDownCount}
                                 size="small"
-                                color="error"
                             />
                             &nbsp;/&nbsp;
-                            <Chip sx={{ bgcolor: theme.palette.grey[600], color: ChipColor.WHITE }}
+                            <Chip
+                                sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DESCONEGUT_COUNT), color: ChipColor.WHITE,
+                                    "& .MuiChip-label": {
+                                        // fontSize: "0.7rem !important",
+                                    }}}
                                 label={salutItem.integracioDesconegutCount}
                                 size="small"
                             />

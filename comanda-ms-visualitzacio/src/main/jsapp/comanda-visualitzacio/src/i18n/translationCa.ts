@@ -1,13 +1,34 @@
 const translationCa = {
     enum: {
         appEstat: {
-            UP: "Actiu",
-            WARN: "Avís",
-            DOWN: "Inactiu",
-            DEGRADED: "Degradat",
-            MAINTENANCE: "Manteniment",
-            UNKNOWN: "Desconegut",
-            ERROR: "Erreur",
+            UP: {
+                title: "Actiu",
+                tooltip: "L'aplicació funciona <bold>correctament</bold>. <br> La taxa de <italic>errors detectats</italic> és <underline>inferior al 5%</underline>."
+            },
+            WARN: {
+                title: "Avís",
+                tooltip: "La taxa <italic>errors detectats</italic> està <underline>entre el 5% i el 10%</underline>."
+            },
+            DOWN: {
+                title: "Inactiu",
+                tooltip: "<bold>S'han detectat errors</bold>. <br> La <italic>taxa de errors detectats</italic> és <underline>superior al 30%</underline>."
+            },
+            DEGRADED: {
+                title: "Degradat",
+                tooltip: "<bold>Hi ha errors puntuals</bold>. <br> La <italic>taxa d'errors detectats</italic> està <underline>entre el 10% i el 30%</underline>."
+            },
+            MAINTENANCE: {
+                title: "Manteniment",
+                tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>tasques de manteniment</underline>."
+            },
+            UNKNOWN: {
+                title: "Desconegut",
+                tooltip: "<bold>No teniu informació</bold> sobre l'estat de l'aplicació."
+            },
+            ERROR: {
+                title: "Erreur",
+                tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>errors greus en el funcionament</underline>."
+            },
         }
     },
     menu: {

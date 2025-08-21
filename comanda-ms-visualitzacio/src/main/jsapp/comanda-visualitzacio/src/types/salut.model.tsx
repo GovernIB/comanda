@@ -1,6 +1,11 @@
 import {BaseEntity, IBaseEntity} from "./base-entity.model.ts";
+import Icon from "@mui/material/Icon";
+import {JSX} from "react";
 
 export const ENUM_APP_ESTAT_PREFIX: string = 'enum.appEstat.';
+export const ENUM_BD_ESTAT_PREFIX: string = 'enum.bdEstat.';
+export const TITLE = ".title";
+export const TOOLTIP = ".tooltip";
 
 export interface ISalut extends IBaseEntity {
     entornAppId: number | undefined;
@@ -42,6 +47,9 @@ export class SalutModel extends BaseEntity implements Required<ISalut> {
     static readonly BD_ESTAT: keyof SalutModel = "bdEstat";
     static readonly INTEGRACIONS: keyof SalutModel = "integracions";
     static readonly SUBSISTEMES: keyof SalutModel = "subsistemes";
+    static readonly INTEGRACIO_UP_COUNT: keyof SalutModel = "integracioUpCount";
+    static readonly INTEGRACIO_DOWN_COUNT: keyof SalutModel = "integracioDownCount";
+    static readonly INTEGRACIO_DESCONEGUT_COUNT: keyof SalutModel = "integracioDesconegutCount";
 
     entornAppId: number | undefined;
     data: string | undefined;
@@ -100,11 +108,11 @@ export enum SalutEstatEnum {
 export function getColorByStatEnum(salutEstatEnum: SalutEstatEnum): string {
     switch (salutEstatEnum) {
         case SalutEstatEnum.UP:
-            // Verde suave, transmite "todo ok"
-            return "#5ec562"; // pastel green
+            // Verde suave, transmite "ok"
+            return "#72bd75"; // pastel green
         case SalutEstatEnum.WARN:
             // Amarillo claro, alerta ligera
-            return "#FFF59D"; // pastel yellow
+            return "#efe271"; // pastel yellow
         case SalutEstatEnum.DEGRADED:
             // Naranja suave, indica problema moderado
             return "#FFCC80"; // pastel orange
@@ -120,6 +128,46 @@ export function getColorByStatEnum(salutEstatEnum: SalutEstatEnum): string {
         case SalutEstatEnum.ERROR:
         default:
             // Rojo más intenso que DOWN, para diferenciarlo
-            return "#e64646"; // light red
+            return "#e36161"; // light red
+    }
+}
+
+export function getColorByIntegracio(integracioField: keyof SalutModel): string {
+    if (SalutModel.INTEGRACIO_UP_COUNT === integracioField) {
+        // Verde suave, transmite "ok"
+        return "#72bd75"; // pastel green
+    } else if (SalutModel.INTEGRACIO_DOWN_COUNT === integracioField) {
+        // Rojo más intenso
+        return "#e36161"; // light red
+    } else if (SalutModel.INTEGRACIO_DESCONEGUT_COUNT === integracioField) {
+        // Gris claro, estado desconocido
+        return "#9c9c9c"; // light grey
+    } else {
+        // Rojo más intenso
+        return "#e36161"; // light red
+    }
+}
+
+/**
+ * Devuelve un icono de Material UI para un estado dado
+ * @param state El estado de tipo SalutEstatEnum
+ */
+export function getMaterialIconByState(state: SalutEstatEnum): JSX.Element {
+    switch (state) {
+        case SalutEstatEnum.UP:
+            return <Icon color={"inherit"}>check_circle</Icon>;
+        case SalutEstatEnum.WARN:
+            return <Icon color={"inherit"}>warning_amber</Icon>;
+        case SalutEstatEnum.DEGRADED:
+            return <Icon color={"inherit"}>trending_down</Icon>;
+        case SalutEstatEnum.MAINTENANCE:
+            return <Icon color={"inherit"}>build_circle</Icon>;
+        case SalutEstatEnum.UNKNOWN:
+            return <Icon color={"inherit"}>help_outline</Icon>;
+        case SalutEstatEnum.DOWN:
+            return <Icon fontSize="inherit">highlight_off</Icon>;
+        case SalutEstatEnum.ERROR:
+        default:
+            return <Icon color={"inherit"}>error</Icon>;
     }
 }
