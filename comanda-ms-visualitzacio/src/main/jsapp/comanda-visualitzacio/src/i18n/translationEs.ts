@@ -1,13 +1,34 @@
 const translationEs = {
     enum: {
         appEstat: {
-            UP: "Activo",
-            WARN: "Advertencia",
-            DOWN: "Inactivo",
-            DEGRADED: "Degradado",
-            MAINTENANCE: "Mantenimiento",
-            UNKNOWN: "Desconocido",
-            ERROR: "Error",
+            UP: {
+                title: "Activo",
+                tooltip: "La aplicación funciona <bold>correctamente</bold>. <br> La tasa de <italic>errores detectados</italic> es <underline>inferior al 5%</underline>."
+            },
+            WARN: {
+                title: "Advertencia",
+                tooltip: "La tasa de <italic>errores detectados</italic> está <underline>entre el 5% y el 10%</underline>."
+            },
+            DOWN: {
+                title: "Inactivo",
+                tooltip: "<bold>Se han detectado errores</bold>. <br> La <italic>tasa de errores detectados</italic> es <underline>superior al 30%</underline>."
+            },
+            DEGRADED: {
+                title: "Degradado",
+                tooltip: "<bold>Existen errores puntuales</bold>. <br> La <italic>tasa de errores detectados</italic> está <underline>entre el 10% y el 30%</underline>."
+            },
+            MAINTENANCE: {
+                title: "Mantenimiento",
+                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>tareas de mantenimiento</underline>."
+            },
+            UNKNOWN: {
+                title: "Desconocido",
+                tooltip: "<bold>No se dispone de información</bold> acerca del estado de la aplicación."
+            },
+            ERROR: {
+                title: "Error",
+                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>errores graves en el funcionamiento</underline>."
+            },
         }
     },
     menu: {
