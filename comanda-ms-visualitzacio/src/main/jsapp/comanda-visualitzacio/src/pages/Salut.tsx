@@ -451,6 +451,7 @@ const AppDataTable: React.FC<any> = (props: {
         (row) => [row.app.id, row.entorn.description],
         t('page.salut.apps.column.group'),
         1,
+        true,
         { renderCell: treeDataRenderCell });
 
     return (

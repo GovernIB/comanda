@@ -161,6 +161,77 @@ const translationEn = {
                 title: "States",
             },
         },
+        dashboards: {
+            title: "Dashboards",
+            edit: "Edit",
+            dashboardView: "Go to dashboard",
+            cloneDashboard: {
+                title: "Clone the dashboard",
+                success: "Dashboard cloned correctly",
+            },
+            components: {
+                llistar: "List components",
+                afegir: "Add component",
+            },
+            action: {
+                select: {
+                    title: "Select the dashboard to display...",
+                },
+                llistarWidget: {
+                    label: "List widgets",
+                    title: "List widgets",
+                },
+                llistarTitle: {
+                    label: "List titles",
+                    title: "List titles",
+                },
+                patchItem: {
+                    success: "Saved successfully",
+                    warning: "Could not find newDashboardItem with id {{id}}, the update will not propagate.",
+                    error: "Error while saving",
+                    saveError: "Save error",
+                },
+                addWidget: {
+                    label: "Add widget",
+                    title: "Add widget",
+                    success: "Widget added successfully",
+                    error: "Error while adding the widget",
+                },
+                afegirTitle: {
+                    label: "Add title",
+                    title: "Add title",
+                },
+                export: "Export dashboard",
+            },
+            alert: {
+                tornarLlistat: "Return to list",
+                tornarTauler: "Return to default dashboard",
+                notExists: "The dashboard does not exist.",
+                notDefined: "No dashboard is defined.",
+                carregar: "Error loading the dashboard.",
+            }
+        },
+        tasques: {
+            filter: {
+                more: "More fields",
+                finished: "Finished only",
+            },
+            grid: {
+                groupHeader: "Name",
+                action: {
+                    obrir: "Open task",
+                }
+            }
+        },
+        avisos: {
+            filter: {
+                more: "More fields",
+                finished: "Finished only",
+            },
+            grid: {
+                groupHeader: "Name",
+            }
+        },
         apps: {
             title: "Applications",
             create: "Create application",
@@ -332,56 +403,6 @@ const translationEn = {
                     label: "Add column",
                 },
             },
-        },
-        dashboards: {
-            title: "Dashboards",
-            edit: "Edit",
-            dashboardView: "Go to dashboard",
-            cloneDashboard: {
-                title: "Clone the dashboard",
-                success: "Dashboard cloned correctly",
-            },
-            components: {
-                llistar: "List components",
-                afegir: "Add component",
-            },
-            action: {
-                select: {
-                    title: "Select the dashboard to display...",
-                },
-                llistarWidget: {
-                    label: "List widgets",
-                    title: "List widgets",
-                },
-                llistarTitle: {
-                    label: "List titles",
-                    title: "List titles",
-                },
-                patchItem: {
-                    success: "Saved successfully",
-                    warning: "Could not find newDashboardItem with id {{id}}, the update will not propagate.",
-                    error: "Error while saving",
-                    saveError: "Save error",
-                },
-                addWidget: {
-                    label: "Add widget",
-                    title: "Add widget",
-                    success: "Widget added successfully",
-                    error: "Error while adding the widget",
-                },
-                afegirTitle: {
-                    label: "Add title",
-                    title: "Add title",
-                },
-                export: "Export dashboard",
-            },
-            alert: {
-                tornarLlistat: "Return to list",
-                tornarTauler: "Return to default dashboard",
-                notExists: "The dashboard does not exist.",
-                notDefined: "No dashboard is defined.",
-                carregar: "Error loading the dashboard.",
-            }
         },
         caches: {
             title: "Caches",
@@ -555,6 +576,9 @@ const translationEn = {
         modal_dades_dia: "Available data for the day",
         dimensions: "Dimensions",
         indicadors: "Indicators",
+    },
+    treeData: {
+        treeView: "Tree view"
     },
 };
 

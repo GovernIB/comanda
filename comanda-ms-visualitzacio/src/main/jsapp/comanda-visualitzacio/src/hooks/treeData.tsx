@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import FormGroup from '@mui/material/FormGroup';
@@ -10,20 +11,21 @@ import {
     GridGroupNode,
     GridTreeDataGroupingCell,
 } from '@mui/x-data-grid-pro';
-
 import { useResourceApiService } from 'reactlib';
 
 export const useTreeData = (
     getTreeDataPath: (row: any) => string[],
     headerName?: string,
     headerFlex?: number,
+    expandedByDefault?: boolean,
     groupingColDefAdditionalProps?: any) => {
+    const { t } = useTranslation();
     const [treeView, setTreeView] = React.useState<boolean>(true);
-    const [expandAll, setExpandAll] = React.useState<boolean>(true);
+    const [expandAll, setExpandAll] = React.useState<boolean>(expandedByDefault ?? false);
     const [expansionState, setExpansionState] = React.useState<any>({});
     const treeViewSwitch = <FormGroup sx={{ ml: 2 }}>
         <FormControlLabel
-            label="Vista en arbre"
+            label={t('treeData.treeView')}
             control={
                 <Switch
                     checked={treeView}
@@ -46,10 +48,10 @@ export const useTreeData = (
             flex: headerFlex,
             renderHeader: (params: any) => (<Box
                 sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    width: "100%",
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
                     flex: 1,
                 }}>
                 <GridColumnHeaderTitle label={params?.colDef?.headerName} columnWidth={params.colDef.computedWidth} />
@@ -118,7 +120,7 @@ export const useTreeDataEntornAppRenderCell = () => {
                     }}>
                     {app.logo && <img
                         src={'data:image/png;base64,' + app.logo}
-                        alt="Logo de l'aplicació"
+                        alt="Logo"
                         style={{ height: '48px' }}/>}
                     {app.nom}
                 </Box>

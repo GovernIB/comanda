@@ -11,10 +11,12 @@ import es.caib.comanda.tasques.logic.helper.TasquesClientHelper;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import es.caib.comanda.tasques.logic.intf.service.TascaService;
 import es.caib.comanda.tasques.persist.entity.TascaEntity;
+import es.caib.comanda.tasques.persist.repository.TascaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -39,6 +41,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     }
 
     @JmsListener(destination = CUA_TASQUES)
+    @Transactional
     public void receiveMessage(es.caib.comanda.ms.broker.model.Tasca tascaBroker) {
         log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker);
         Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
@@ -49,23 +52,40 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
                     EntornApp.class,
                     "(entornCodi=" + tascaBroker.getEntornCodi() + ", appCodi=" + tascaBroker.getAppCodi() + ")");
         }
-        Tasca tasca = new Tasca();
-        tasca.setEntornAppId(entornApp.get().getId());
-        tasca.setEntornId(entornApp.get().getEntorn().getId());
-        tasca.setAppId(entornApp.get().getApp().getId());
-        tasca.setIdentificador(tascaBroker.getIdentificador());
-        tasca.setTipus(tascaBroker.getTipus());
-        tasca.setNom(tascaBroker.getNom());
-        tasca.setDescripcio(tascaBroker.getDescripcio());
-        tasca.setPrioritat(tascaBroker.getPrioritat());
-        tasca.setDataInici(tascaBroker.getDataInici());
-        tasca.setDataFi(tascaBroker.getDataFi());
-        tasca.setDataCaducitat(tascaBroker.getDataCaducitat());
-        tasca.setUrl(tascaBroker.getRedireccio());
-        tasca.setResponsable(tascaBroker.getResponsable());
-        tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
-        tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
-        entityRepository.save(TascaEntity.builder().tasca(tasca).build());
+        Optional<TascaEntity> tascaExistent = ((TascaRepository)entityRepository).findByEntornAppIdAndIdentificador(
+                entornApp.get().getId(),
+                tascaBroker.getIdentificador());
+        if (tascaExistent.isEmpty()) {
+            Tasca tasca = new Tasca();
+            tasca.setEntornAppId(entornApp.get().getId());
+            tasca.setEntornId(entornApp.get().getEntorn().getId());
+            tasca.setAppId(entornApp.get().getApp().getId());
+            tasca.setIdentificador(tascaBroker.getIdentificador());
+            tasca.setTipus(tascaBroker.getTipus());
+            tasca.setNom(tascaBroker.getNom());
+            tasca.setDescripcio(tascaBroker.getDescripcio());
+            tasca.setPrioritat(tascaBroker.getPrioritat());
+            tasca.setDataInici(tascaBroker.getDataInici());
+            tasca.setDataFi(tascaBroker.getDataFi());
+            tasca.setDataCaducitat(tascaBroker.getDataCaducitat());
+            tasca.setUrl(tascaBroker.getRedireccio());
+            tasca.setResponsable(tascaBroker.getResponsable());
+            tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
+            tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
+            entityRepository.save(TascaEntity.builder().tasca(tasca).build());
+        } else {
+            tascaExistent.get().setTipus(tascaBroker.getTipus());
+            tascaExistent.get().setNom(tascaBroker.getNom());
+            tascaExistent.get().setDescripcio(tascaBroker.getDescripcio());
+            tascaExistent.get().setPrioritat(tascaBroker.getPrioritat());
+            tascaExistent.get().setDataInici(tascaBroker.getDataInici());
+            tascaExistent.get().setDataFi(tascaBroker.getDataFi());
+            tascaExistent.get().setDataCaducitat(tascaBroker.getDataCaducitat());
+            tascaExistent.get().setUrl(tascaBroker.getRedireccio());
+            tascaExistent.get().setResponsable(tascaBroker.getResponsable());
+            tascaExistent.get().setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
+            tascaExistent.get().setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
+        }
     }
 
     @Override
@@ -118,4 +138,5 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
             }
         }
     }
+
 }

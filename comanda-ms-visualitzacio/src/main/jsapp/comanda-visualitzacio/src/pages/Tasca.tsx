@@ -9,19 +9,14 @@ import {
     useFormApiRef,
     useFilterApiRef,
 } from 'reactlib';
-import {
-    Box,
-    Grid,
-    Typography,
-    Icon,
-    Button,
-    IconButton,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Icon from '@mui/material/Icon';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
-
-const perspectives = ['PATH', 'EXPIRATION'];
-const sortModel: any = [{field: 'dataInici', sort: 'asc'}];
 
 export const StyledPrioritat = (props: any) => {
     const {entity, children} = props;
@@ -54,7 +49,101 @@ export const StyledPrioritat = (props: any) => {
         }}>{children}</Typography>;
 }
 
-const gridCommonColumns = [{
+const TascaFilter = (props: any) => {
+    const { onSpringFilterChange } = props;
+    const { t } = useTranslation();
+    const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
+    const [moreFields, setMoreFields] = React.useState<boolean>(false);
+    const appEntornFilterApiRef = useFilterApiRef();
+    const moreFilterApiRef = useFilterApiRef();
+    const moreFormApiRef = useFormApiRef();
+    const netejar = () => {
+        appEntornFilterApiRef?.current?.clear();
+        moreFilterApiRef?.current?.clear({ finalitzada: finishedOnly });
+    }
+    React.useEffect(() => {
+        moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
+    }, [finishedOnly]);
+    return <>
+        <MuiFilter
+            apiRef={appEntornFilterApiRef}
+            resourceName="entornApp"
+            code="salut_entornApp_filter"
+            commonFieldComponentProps={{ size: 'small' }}
+            springFilterBuilder={data => {
+                moreFormApiRef.current?.setFieldValue('appId', data.app);
+                moreFormApiRef.current?.setFieldValue('entornId', data.entorn);
+                return '';
+            }}>
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+            }}>
+                <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
+                    <Grid size={6}><FormField name={'app'} /></Grid>
+                    <Grid size={6}><FormField name={'entorn'} /></Grid>
+                </Grid>
+                <Button
+                    onClick={() => setFinishedOnly(fo => !fo)}
+                    variant={finishedOnly ? 'contained' : 'outlined'}
+                    title={t('page.tasques.filter.finished')}
+                    sx={{ mr: 2 }}>
+                    <Icon>done_all</Icon>
+                </Button>
+                <IconButton
+                    onClick={netejar}
+                    title={t('components.clear')}
+                    sx={{ mr: 1 }}>
+                    <Icon>filter_alt_off</Icon>
+                </IconButton>
+                <IconButton
+                    onClick={() => setMoreFields((mf) => !mf)}
+                    title={t('page.tasques.filter.more')}>
+                    <Icon>filter_list</Icon>
+                </IconButton>
+            </Box>
+        </MuiFilter>
+        <MuiFilter
+            apiRef={moreFilterApiRef}
+            formApiRef={moreFormApiRef}
+            resourceName="tasca"
+            code="FILTER"
+            initialData={{ finalitzada: finishedOnly }}
+            springFilterBuilder={data => springFilterBuilder.and(
+                springFilterBuilder.eq('appId', data?.appId?.id),
+                springFilterBuilder.eq('entornId', data?.entornId?.id),
+                springFilterBuilder.like('nom', data?.nom),
+                springFilterBuilder.like('descripcio', data?.descripcio),
+                springFilterBuilder.like('tipus', data?.tipus),
+                springFilterBuilder.eq('prioritat', `'${data?.prioritat}'`),
+                data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
+                data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
+                data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
+                data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
+                data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1)}'`),
+                data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2)}'`),
+                data?.finalitzada && springFilterBuilder.eq('dataFi', null),
+            )}
+            onSpringFilterChange={onSpringFilterChange}
+            commonFieldComponentProps={{ size: 'small' }}>
+            <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
+                <Grid size={3}><FormField name="nom" /></Grid>
+                <Grid size={3}><FormField name="descripcio" /></Grid>
+                <Grid size={3}><FormField name="tipus" /></Grid>
+                <Grid size={3}><FormField name="prioritat" /></Grid>
+                <Grid size={2}><FormField name="dataInici1" /></Grid>
+                <Grid size={2}><FormField name="dataInici2" /></Grid>
+                <Grid size={2}><FormField name="dataFi1" /></Grid>
+                <Grid size={2}><FormField name="dataFi2" /></Grid>
+                <Grid size={2}><FormField name="dataCaducitat1" /></Grid>
+                <Grid size={2}><FormField name="dataCaducitat2" /></Grid>
+            </Grid>
+        </MuiFilter>
+    </>;
+}
+
+const dataGridCommonColumns = [{
     field: 'descripcio',
     flex: 2,
 }, {
@@ -84,100 +173,8 @@ const gridCommonColumns = [{
     field: 'dataFi',
     flex: 1,
 }];
-
-const TascaFilter = (props:any) => {
-    const { onSpringFilterChange } = props;
-    const { t } = useTranslation();
-    const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
-    const [moreFields, setMoreFields] = React.useState<boolean>(false);
-    const appEntornFilterApiRef = useFilterApiRef();
-    const moreFilterApiRef = useFilterApiRef();
-    const moreFormApiRef = useFormApiRef();
-    const netejar = () => {
-        appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear({ finalitzada: finishedOnly });
-    }
-    React.useEffect(() => {
-        moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
-    }, [finishedOnly]);
-    return <>
-        <MuiFilter
-            apiRef={appEntornFilterApiRef}
-            resourceName={'entornApp'}
-            code={'salut_entornApp_filter'}
-            commonFieldComponentProps={{ size: 'small' }}
-            springFilterBuilder={data => {
-                moreFormApiRef.current?.setFieldValue('appId', data.app);
-                moreFormApiRef.current?.setFieldValue('entornId', data.entorn);
-                return '';
-            }}>
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-            }}>
-                <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                    <Grid size={6}><FormField name={'app'} /></Grid>
-                    <Grid size={6}><FormField name={'entorn'} /></Grid>
-                </Grid>
-                <Button
-                    onClick={() => setFinishedOnly(fo => !fo)}
-                    variant={finishedOnly ? 'contained' : 'outlined'}
-                    title="Només finalitzades"
-                    sx={{ mr: 2 }}>
-                    <Icon>done_all</Icon>
-                </Button>
-                <IconButton
-                    onClick={netejar}
-                    title={t('components.clear')}
-                    sx={{ mr: 1 }}>
-                    <Icon>filter_alt_off</Icon>
-                </IconButton>
-                <IconButton
-                    onClick={() => setMoreFields((mf) => !mf)}
-                    title="Més camps">
-                    <Icon>filter_list</Icon>
-                </IconButton>
-            </Box>
-        </MuiFilter>
-        <MuiFilter
-            apiRef={moreFilterApiRef}
-            formApiRef={moreFormApiRef}
-            resourceName={'tasca'}
-            code={'FILTER'}
-            initialData={{ finalitzada: finishedOnly }}
-            springFilterBuilder={data => springFilterBuilder.and(
-                springFilterBuilder.eq('appId', data?.appId?.id),
-                springFilterBuilder.eq('entornId', data?.entornId?.id),
-                springFilterBuilder.like('nom', data?.nom),
-                springFilterBuilder.like('descripcio', data?.descripcio),
-                springFilterBuilder.like('tipus', data?.tipus),
-                springFilterBuilder.eq('prioritat', `'${data?.prioritat}'`),
-                data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
-                data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
-                data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
-                data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
-                data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1)}'`),
-                data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2)}'`),
-                data?.finalitzada && springFilterBuilder.eq('dataFi', null),
-            )}
-            onSpringFilterChange={onSpringFilterChange}
-            commonFieldComponentProps={{ size: 'small' }}>
-            <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
-                <Grid size={3}><FormField name={'nom'}/></Grid>
-                <Grid size={3}><FormField name={'descripcio'}/></Grid>
-                <Grid size={3}><FormField name={'tipus'}/></Grid>
-                <Grid size={3}><FormField name={'prioritat'}/></Grid>
-                <Grid size={2}><FormField name={'dataInici1'}/></Grid>
-                <Grid size={2}><FormField name={'dataInici2'}/></Grid>
-                <Grid size={2}><FormField name={'dataFi1'}/></Grid>
-                <Grid size={2}><FormField name={'dataFi2'}/></Grid>
-                <Grid size={2}><FormField name={'dataCaducitat1'}/></Grid>
-                <Grid size={2}><FormField name={'dataCaducitat2'}/></Grid>
-            </Grid>
-        </MuiFilter>
-    </>;
-}
+const dataGridPerspectives = ['PATH', 'EXPIRATION'];
+const dataGridSortModel: any = [{ field: 'dataInici', sort: 'asc' }];
 
 const Tasca = () => {
     const { t } = useTranslation();
@@ -188,32 +185,33 @@ const Tasca = () => {
         dataGridProps: treeDataGridProps,
     } = useTreeData(
         (row) => row?.treePath,
-        'Nom',
+        t('page.tasques.grid.groupHeader'),
         1.5,
+        true,
         { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
     const columns = [
         ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
-        ...(filter?.includes('dataFi is null') ? gridCommonColumns.slice(0, -1) : gridCommonColumns),
+        ...(filter?.includes('dataFi is null') ? dataGridCommonColumns.slice(0, -1) : dataGridCommonColumns),
     ];
     const actions = [{
         icon: 'open_in_new',
-        label: 'Obrir tasca',
+        label: t('page.tasques.grid.action.obrir'),
         showInMenu: false,
         linkTo: (row: any) => row?.url,
         linkTarget: '_blank',
         disabled: (row: any) => !row?.url,
         hidden: (row: any) => !row?.id,
     }];
-    const filterElement =<TascaFilter onSpringFilterChange={setFilter}/>;
+    const filterElement = <TascaFilter onSpringFilterChange={setFilter}/>;
     return <GridPage>
         <MuiDataGrid
             title={t('menu.tasca')}
-            resourceName={'tasca'}
-            perspectives={perspectives}
-            sortModel={sortModel}
+            resourceName="tasca"
+            columns={columns}
+            perspectives={dataGridPerspectives}
+            sortModel={dataGridSortModel}
             findDisabled={filter == null}
             filter={filter}
-            columns={columns}
             readOnly
             toolbarType="upper"
             toolbarHideQuickFilter

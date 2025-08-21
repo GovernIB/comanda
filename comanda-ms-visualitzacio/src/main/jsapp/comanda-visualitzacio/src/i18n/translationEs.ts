@@ -162,6 +162,77 @@ const translationEs = {
                 title: "Estados",
             },
         },
+        dashboards: {
+            title: "Cuadros de control",
+            edit: "Editar",
+            dashboardView: "Ir al panel de control",
+            cloneDashboard: {
+                title: "Clonar el panel de control",
+                success: "Panel de control clonado correctamente",
+            },
+            components: {
+                llistar: "Listar componentes",
+                afegir: "Añadir componente",
+            },
+            action: {
+                select: {
+                    title: "Seleccione el tablero a mostrar...",
+                },
+                llistarWidget: {
+                    label: "Listar widgets",
+                    title: "Listar widgets",
+                },
+                llistarTitle: {
+                    label: "Listar títulos",
+                    title: "Listar títulos",
+                },
+                patchItem: {
+                    success: "Guardado correctamente",
+                    warning: "No se pudo encontrar newDashboardItem con id {{id}}, la actualización no se propagará.",
+                    error: "Error al guardar",
+                    saveError: "Error al guardar",
+                },
+                addWidget: {
+                    label: "Añadir widget",
+                    title: "Añadir widget",
+                    success: "Widget añadido correctamente",
+                    error: "Error al añadir el widget",
+                },
+                afegirTitle: {
+                    label: "Añadir título",
+                    title: "Añadir título",
+                },
+                export: "Exportar tablero",
+            },
+            alert: {
+                tornarLlistat: "Volver al listado",
+                tornarTauler: "Volver al tablero por defecto",
+                notExists: "El panel de control no existe.",
+                notDefined: "No hay ningún panel de control definido.",
+                carregar: "Error al cargar el panel de control.",
+            }
+        },
+        tasques: {
+            filter: {
+                more: "Más campos",
+                finished: "Sólo finalizadas",
+            },
+            grid: {
+                groupHeader: "Nombre",
+                action: {
+                    obrir: "Obrir tasca",
+                }
+            }
+        },
+        avisos: {
+            filter: {
+                more: "Más campos",
+                finished: "Sólo finalitzados",
+            },
+            grid: {
+                groupHeader: "Nombre",
+            }
+        },
         apps: {
             title: "Aplicaciones",
             create: "Crear aplicación",
@@ -333,56 +404,6 @@ const translationEs = {
                     label: "Añadir columna",
                 },
             },
-        },
-        dashboards: {
-            title: "Cuadros de control",
-            edit: "Editar",
-            dashboardView: "Ir al panel de control",
-            cloneDashboard: {
-                title: "Clonar el panel de control",
-                success: "Panel de control clonado correctamente",
-            },
-            components: {
-                llistar: "Listar componentes",
-                afegir: "Añadir componente",
-            },
-            action: {
-                select: {
-                    title: "Seleccione el tablero a mostrar...",
-                },
-                llistarWidget: {
-                    label: "Listar widgets",
-                    title: "Listar widgets",
-                },
-                llistarTitle: {
-                    label: "Listar títulos",
-                    title: "Listar títulos",
-                },
-                patchItem: {
-                    success: "Guardado correctamente",
-                    warning: "No se pudo encontrar newDashboardItem con id {{id}}, la actualización no se propagará.",
-                    error: "Error al guardar",
-                    saveError: "Error al guardar",
-                },
-                addWidget: {
-                    label: "Añadir widget",
-                    title: "Añadir widget",
-                    success: "Widget añadido correctamente",
-                    error: "Error al añadir el widget",
-                },
-                afegirTitle: {
-                    label: "Añadir título",
-                    title: "Añadir título",
-                },
-                export: "Exportar tablero",
-            },
-            alert: {
-                tornarLlistat: "Volver al listado",
-                tornarTauler: "Volver al tablero por defecto",
-                notExists: "El panel de control no existe.",
-                notDefined: "No hay ningún panel de control definido.",
-                carregar: "Error al cargar el panel de control.",
-            }
         },
         caches: {
             title: "Caches",
@@ -556,6 +577,9 @@ const translationEs = {
         modal_dades_dia: "Datos disponibles del día",
         dimensions: "Dimensiones",
         indicadors: "Indicadores",
+    },
+    treeData: {
+        treeView: "Vista en árbol"
     },
 };
 
