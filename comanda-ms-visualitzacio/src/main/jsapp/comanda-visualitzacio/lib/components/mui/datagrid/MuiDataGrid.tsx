@@ -308,12 +308,22 @@ const rowActionsToGridActionsCellItems = (
             typeof rowAction.linkState === 'function'
                 ? rowAction.linkState?.(params.row)
                 : rowAction.linkState;
+        const rowActionLinkTarget =
+            typeof rowAction.linkTarget === 'function'
+                ? rowAction.linkTarget?.(params.row)
+                : rowAction.linkTarget;
         const rowActionOnClick = getRowActionOnClick(
             rowAction,
             showCreateDialog,
             showUpdateDialog,
             triggerDelete
         );
+        const label =
+            typeof rowAction.label === 'function' ? rowAction.label(params.row) : rowAction.label;
+        const title =
+            typeof rowAction.title === 'function' ? rowAction.title(params.row) : rowAction.title;
+        const icon =
+            typeof rowAction.icon === 'function' ? rowAction.icon(params.row) : rowAction.icon;
         const showInMenu =
             typeof rowAction.showInMenu === 'function'
                 ? rowAction.showInMenu(params.row)
@@ -333,11 +343,13 @@ const rowActionsToGridActionsCellItems = (
             actions.push(
                 toDataGridActionItem(
                     params.id,
-                    rowAction.title ?? (rowLink != null ? rowLink?.title : rowAction),
+                    label ?? (rowLink != null ? rowLink?.title : rowAction),
+                    title,
+                    icon,
                     params.row,
-                    rowAction.icon,
                     rowActionLinkTo,
                     rowActionLinkState,
+                    rowActionLinkTarget,
                     rowActionOnClick,
                     showInMenu,
                     disabled

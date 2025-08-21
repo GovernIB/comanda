@@ -141,24 +141,24 @@ const EstadisticaDashboards: React.FC = () => {
                 popupEditFormContent={<EstadisticaDashboardForm/>}
                 rowAdditionalActions={[
                     {
-                        title: t('page.dashboards.edit'),
+                        label: t('page.dashboards.edit'),
                         icon: 'edit',
                         clickShowUpdateDialog: true,
                     },
                     {
-                        title: t('page.dashboards.dashboardView'),
+                        label: t('page.dashboards.dashboardView'),
                         icon: 'dashboard',
                         showInMenu: false,
                         linkTo: '{{id}}',
                     },
                     {
-                        title: t('page.dashboards.action.export'),
+                        label: t('page.dashboards.action.export'),
                         icon: 'download',
                         showInMenu: true,
                         onClick: dashboardExport,
                     },
                     {
-                        title: t('page.dashboards.cloneDashboard.title'),
+                        label: t('page.dashboards.cloneDashboard.title'),
                         icon: 'file_copy',
                         showInMenu: true,
                         action: "clone_dashboard",

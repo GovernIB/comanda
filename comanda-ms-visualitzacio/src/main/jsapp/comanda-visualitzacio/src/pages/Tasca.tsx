@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     MuiFilter,
     FormField,
     springFilterBuilder,
@@ -24,6 +24,42 @@ import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
 
 const perspectives = ['PATH', 'EXPIRATION'];
 const sortModel: any = [{field: 'dataInici', sort: 'asc'}];
+
+const useTreeData = (headerName: string, headerFlex: number) => {
+    const [treeView, setTreeView] = React.useState<boolean>(true);
+    const treeViewSwitch = <FormGroup sx={{ ml: 2 }}>
+        <FormControlLabel
+            label="Vista en arbre"
+            control={
+                <Switch
+                    checked={treeView}
+                    onChange={event => setTreeView(event.target.checked)}/>
+            }/>
+    </FormGroup>;
+    const dataGridProps = treeView ? {
+        treeData: true as true,
+        autoHeight: true as true,
+        isGroupExpandedByDefault: () => true,
+        getTreeDataPath: (row: any) => row?.treePath,
+        groupingColDef: {
+            headerName,
+            flex: headerFlex,
+            valueFormatter: (value: any, row: any) => {
+                if (row?.id) {
+                    return <>{row?.nom}</>
+                }
+                return value;
+            },
+        }
+    } : {
+        paginationActive: true as true,
+    };
+    return {
+        treeView,
+        treeViewSwitch,
+        dataGridProps,
+    };
+}
 
 export const StyledPrioritat = (props: any) => {
     const {entity, children} = props;
@@ -56,25 +92,22 @@ export const StyledPrioritat = (props: any) => {
         }}>{children}</Typography>;
 }
 
-const columns = [{
+const gridCommonColumns = [{
     field: 'descripcio',
-    flex: 1,
+    flex: 2,
 }, {
     field: 'tipus',
-    flex: 1,
+    flex: .5,
 }, {
     field: 'prioritat',
     flex: 0.5,
     renderCell: (param:any) => <StyledPrioritat entity={param.row}>{param?.formattedValue}</StyledPrioritat>,
 }, {
     field: 'dataInici',
-    flex: 0.5,
-}, {
-    field: 'dataFi',
-    flex: 0.5,
+    flex: 1,
 }, {
     field: 'dataCaducitat',
-    flex: 0.5,
+    flex: 1,
     renderCell: (param:any) => {
         const style = param?.row?.diesPerCaducar == null ? {} :
         param?.row?.diesPerCaducar <= 0 ? { color: 'white', backgroundColor: '#6b0707' } :
@@ -85,6 +118,9 @@ const columns = [{
             {param?.formattedValue}
         </Typography>
     },
+}, {
+    field: 'dataFi',
+    flex: 1,
 }];
 
 const TascaFilter = (props:any) => {
@@ -183,47 +219,28 @@ const TascaFilter = (props:any) => {
 
 const Tasca = () => {
     const { t } = useTranslation();
-    const [treeView, setTreeView] = React.useState<boolean>(true);
     const [filter, setFilter] = React.useState<string>();
+    const {
+        treeView,
+        treeViewSwitch,
+        dataGridProps: treeDataGridProps,
+    } = useTreeData('Nom', 1.5);
+    const columns = [
+        ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
+        ...(filter?.includes('dataFi is null') ? gridCommonColumns.slice(0, -1) : gridCommonColumns),
+    ];
     const actions = [{
-        title: '',
         icon: 'open_in_new',
-        //title: 'Obrir tasca',
+        label: 'Obrir tasca',
         showInMenu: false,
-        onClick: (_id: any, row: any) => window.location.href = row?.url,
+        linkTo: (row: any) => row?.url,
+        linkTarget: '_blank',
         disabled: (row: any) => !row?.url,
         hidden: (row: any) => !row?.id,
     }];
-    const treeDataProps = treeView ? {
-        treeData: true as true,
-        autoHeight: true as true,
-        isGroupExpandedByDefault: () => true,
-        getTreeDataPath: (row: any) => row?.treePath,
-        groupingColDef: {
-            headerName: 'Nom',
-            flex: 1.5,
-            valueFormatter: (value: any, row: any) => {
-                if (row?.id) {
-                    return <>{row?.nom}</>
-                }
-                return value;
-            },
-        }
-    } : {
-        paginationActive: true as true,
-    };
     const filterElement =<TascaFilter onSpringFilterChange={setFilter}/>;
-    const treeViewSwitch = <FormGroup sx={{ ml: 2 }}>
-        <FormControlLabel
-            label="Vista en arbre"
-            control={
-                <Switch
-                    checked={treeView}
-                    onChange={event => setTreeView(event.target.checked)}/>
-            }/>
-    </FormGroup>;
     return <GridPage>
-        <MuiGrid
+        <MuiDataGrid
             title={t('menu.tasca')}
             resourceName={'tasca'}
             perspectives={perspectives}
@@ -237,7 +254,7 @@ const Tasca = () => {
             toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
             toolbarAdditionalRow={filterElement}
             rowAdditionalActions={actions}
-            {...treeDataProps}
+            {...treeDataGridProps}
         />
     </GridPage>;
 }

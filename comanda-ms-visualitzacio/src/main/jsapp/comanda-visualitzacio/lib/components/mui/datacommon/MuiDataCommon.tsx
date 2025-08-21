@@ -10,19 +10,37 @@ import { useConfirmDialogButtons } from '../../AppButtons';
 export type DataCommonFindArgs = ResourceApiFindCommonArgs;
 
 export type DataCommonAdditionalAction = {
-    title?: string;
-    icon?: string;
+    /** Text de l'acció */
+    label?: string | ((row: any) => string);
+    /** Tooltip de l'acció */
+    title?: string | ((row: any) => string);
+    /** Icona de l'acció */
+    icon?: string | ((row: any) => string);
+    /** Indica si l'acció s'ha de mostrar a dins el menú dels tres puntets */
     showInMenu?: boolean | ((row: any) => boolean);
+    /** Indica si l'acció s'ha de mostrar deshabilitada */
     disabled?: boolean | ((row: any) => boolean);
+    /** Indica si l'acció s'ha d'ocultar */
     hidden?: boolean | ((row: any) => boolean);
+    /** Enllaç a on s'ha d'anar al fer clic sobre l'acció */
     linkTo?: ((row: any) => string) | string;
+    /** Estat que s'ha de passar al router quan es carregui l'enllaç indicat a linkTo */
     linkState?: ((row: any) => any) | any;
+    /** Especifica la finestra o pipella a on es carrega l'enllaç indicat a linkTo */
+    linkTarget?: ((row: any) => string) | string;
+    /** Indica el link HAL de la fila que s'ha d'utilitzar per a mostrar o executar aquesta acció */
     rowLink?: string;
+    /** Indica que aquesta acció ha d'executar una acció del recurs */
     action?: string;
+    /** Indica que aquesta acció ha de generar un informa del recurs */
     report?: string;
+    /** Indica que al fer clic sobre aquesta acció s'ha d'obrir un diàleg de creació de recurs */
     clickShowCreateDialog?: boolean;
+    /** Indica que al fer clic sobre aquesta acció s'ha d'obrir un diàleg de modificació de recurs */
     clickShowUpdateDialog?: boolean;
+    /** Indica que al fer clic sobre aquesta acció s'ha d'eliminar el recurs */
     clickTriggerDelete?: boolean;
+    /** Handler per a l'event onClick de l'acció */
     onClick?: (id: any, row: any, event: React.MouseEvent) => void;
 };
 
