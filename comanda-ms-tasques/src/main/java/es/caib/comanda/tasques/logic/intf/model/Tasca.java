@@ -12,6 +12,7 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Transient;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -38,6 +39,8 @@ public class Tasca extends BaseResource<Long> {
 
     @NotNull
     private Long entornAppId;
+    private Long entornId;
+    private Long appId;
 
     @NotNull @Size(max = 64)
     private String identificador;

@@ -5,6 +5,7 @@ import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.tasques.logic.helper.TasquesClientHelper;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
@@ -16,7 +17,6 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -39,10 +39,33 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     }
 
     @JmsListener(destination = CUA_TASQUES)
-    public void receiveMessage(es.caib.comanda.ms.broker.model.Tasca tasca) {
-        log.debug("Tasca rebuda: " + tasca);
-
-        // TODO: Desar tasca a BBDD
+    public void receiveMessage(es.caib.comanda.ms.broker.model.Tasca tascaBroker) {
+	    log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker);
+        Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
+                tascaBroker.getEntornCodi(),
+                tascaBroker.getAppCodi());
+        if (entornApp.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    EntornApp.class,
+                    "(entornCodi=" + tascaBroker.getEntornCodi() + ", appCodi=" + tascaBroker.getAppCodi() + ")");
+        }
+        Tasca tasca = new Tasca();
+        tasca.setEntornAppId(entornApp.get().getId());
+        tasca.setEntornId(entornApp.get().getEntorn().getId());
+        tasca.setAppId(entornApp.get().getApp().getId());
+        tasca.setIdentificador(tascaBroker.getIdentificador());
+        tasca.setTipus(tascaBroker.getTipus());
+        tasca.setNom(tascaBroker.getNom());
+        tasca.setDescripcio(tascaBroker.getDescripcio());
+        tasca.setPrioritat(tascaBroker.getPrioritat());
+        tasca.setDataInici(tascaBroker.getDataInici());
+        tasca.setDataFi(tascaBroker.getDataFi());
+        tasca.setDataCaducitat(tascaBroker.getDataCaducitat());
+        tasca.setUrl(tascaBroker.getRedireccio());
+        tasca.setResponsable(tascaBroker.getResponsable());
+        tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
+        tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
+        entityRepository.save(TascaEntity.builder().tasca(tasca).build());
     }
 
     @Override
