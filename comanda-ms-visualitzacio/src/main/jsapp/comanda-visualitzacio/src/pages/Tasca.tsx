@@ -16,50 +16,12 @@ import {
     Icon,
     Button,
     IconButton,
-    FormGroup,
-    FormControlLabel,
-    Switch
 } from '@mui/material';
-import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
+import { useTreeData } from '../hooks/treeData';
+import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
 
 const perspectives = ['PATH', 'EXPIRATION'];
 const sortModel: any = [{field: 'dataInici', sort: 'asc'}];
-
-const useTreeData = (headerName: string, headerFlex: number) => {
-    const [treeView, setTreeView] = React.useState<boolean>(true);
-    const treeViewSwitch = <FormGroup sx={{ ml: 2 }}>
-        <FormControlLabel
-            label="Vista en arbre"
-            control={
-                <Switch
-                    checked={treeView}
-                    onChange={event => setTreeView(event.target.checked)}/>
-            }/>
-    </FormGroup>;
-    const dataGridProps = treeView ? {
-        treeData: true as true,
-        autoHeight: true as true,
-        isGroupExpandedByDefault: () => true,
-        getTreeDataPath: (row: any) => row?.treePath,
-        groupingColDef: {
-            headerName,
-            flex: headerFlex,
-            valueFormatter: (value: any, row: any) => {
-                if (row?.id) {
-                    return <>{row?.nom}</>
-                }
-                return value;
-            },
-        }
-    } : {
-        paginationActive: true as true,
-    };
-    return {
-        treeView,
-        treeViewSwitch,
-        dataGridProps,
-    };
-}
 
 export const StyledPrioritat = (props: any) => {
     const {entity, children} = props;
@@ -224,7 +186,12 @@ const Tasca = () => {
         treeView,
         treeViewSwitch,
         dataGridProps: treeDataGridProps,
-    } = useTreeData('Nom', 1.5);
+    } = useTreeData(
+        (row) => row?.treePath,
+        'Nom',
+        1.5, {
+            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value
+        });
     const columns = [
         ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
         ...(filter?.includes('dataFi is null') ? gridCommonColumns.slice(0, -1) : gridCommonColumns),
