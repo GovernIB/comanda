@@ -31,6 +31,10 @@ interface SalutTooltipProps extends Omit<TooltipProps, "title"> {
     children: React.ReactElement;
 }
 
+interface SalutGenericTooltipProps extends TooltipProps {
+    children: React.ReactElement;
+}
+
 export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salutField, children, ...props }) => {
     const { t } = useTranslation();
 
@@ -39,7 +43,6 @@ export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salut
 
     const titleContent: React.ReactNode = (
         <React.Fragment>
-            {/*<span className="material-icons">check_circle</span>*/}
             <Box display="flex" alignItems="center" gap={1} color={getColorByStatEnum(stateEnum)}>
                 {getMaterialIconByState(stateEnum)}
                 <Typography color="inherit" fontWeight={800}>
@@ -65,35 +68,10 @@ export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salut
     );
 };
 
-export const SalutGenericTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salutField, children, ...props }) => {
-    const { t } = useTranslation();
-
-    const prefix = salutField === SalutModel.APP_ESTAT ? ENUM_APP_ESTAT_PREFIX : ENUM_BD_ESTAT_PREFIX;
-    const existTranslation: boolean = !(t(prefix + stateEnum + TOOLTIP) === (prefix + stateEnum + TOOLTIP));
-
-    const titleContent: React.ReactNode = (
-        <React.Fragment>
-            {/*<span className="material-icons">check_circle</span>*/}
-            <Box display="flex" alignItems="center" gap={1} color={getColorByStatEnum(stateEnum)}>
-                {getMaterialIconByState(stateEnum)}
-                <Typography color="inherit" fontWeight={800}>
-                    {t(ENUM_APP_ESTAT_PREFIX + stateEnum + TITLE)}
-                </Typography>
-            </Box>
-            {existTranslation &&
-                <Trans
-                    i18nKey={prefix + stateEnum + TOOLTIP}
-                    components={{
-                        bold: <b/>,
-                        underline: <u/>,
-                        italic: <em/>
-                    }}
-                />}
-        </React.Fragment>
-    );
+export const SalutGenericTooltip: React.FC<SalutGenericTooltipProps> = ({ children, ...props }) => {
 
     return (
-        <StyledTooltip title={titleContent} {...props}>
+        <StyledTooltip {...props}>
             {children}
         </StyledTooltip>
     );

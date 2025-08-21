@@ -26,8 +26,8 @@ import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoR
 import {useParams} from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
 import {
-    ENUM_APP_ESTAT_PREFIX, getColorByIntegracio,
-    getColorByStatEnum,
+    ENUM_APP_ESTAT_PREFIX, getColorByIntegracio, getColorByMissatge,
+    getColorByStatEnum, getColorBySubsistema,
     getMaterialIconByState,
     SalutEstatEnum,
     SalutModel,
@@ -35,9 +35,8 @@ import {
 } from "../types/salut.model.tsx";
 import {BaseEntity} from "../types/base-entity.model.ts";
 import {ChipColor} from "../util/colorUtil.ts";
-import {SalutChipTooltip} from "../components/SalutChipTooltip.tsx";
+import {SalutChipTooltip, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
-import {Tooltip} from "@mui/material";
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
 
@@ -327,7 +326,7 @@ const AppDataTable: React.FC<any> = (props: {
 
                     return (
                         <>
-                            <Tooltip title="Integraciones activas">
+                            <SalutGenericTooltip title={t('page.salut.integracions.integracioUpCount')}>
                                 <Chip
                                     sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_UP_COUNT), color: ChipColor.WHITE,
                                         "& .MuiChip-label": {
@@ -336,25 +335,26 @@ const AppDataTable: React.FC<any> = (props: {
                                     label={salutItem.integracioUpCount}
                                     size="small"
                                 />
-                            </Tooltip>
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip
-                                sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DOWN_COUNT), color: ChipColor.WHITE,
-                                    "& .MuiChip-label": {
-                                        // fontSize: "0.7rem !important",
-                                    }}}
-                                label={salutItem.integracioDownCount}
-                                size="small"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.integracions.integracioDownCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DOWN_COUNT), color: ChipColor.WHITE,
+                                        "& .MuiChip-label": {
+                                            // fontSize: "0.7rem !important",
+                                        }}}
+                                    label={salutItem.integracioDownCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip
-                                sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DESCONEGUT_COUNT), color: ChipColor.WHITE,
-                                    "& .MuiChip-label": {
-                                        // fontSize: "0.7rem !important",
-                                    }}}
-                                label={salutItem.integracioDesconegutCount}
-                                size="small"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.integracions.integracioDesconegutCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DESCONEGUT_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.integracioDesconegutCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                         </>
                     );
                 },
@@ -372,17 +372,21 @@ const AppDataTable: React.FC<any> = (props: {
                     }
                     return (
                         <>
-                            <Chip
-                                label={salutItem.subsistemaUpCount}
-                                size="small"
-                                color="success"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaUpCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_UP_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.subsistemaUpCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip
-                                label={salutItem.subsistemaDownCount}
-                                size="small"
-                                color="error"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaDownCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_DOWN_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.subsistemaDownCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                         </>
                     );
                 },
@@ -400,19 +404,29 @@ const AppDataTable: React.FC<any> = (props: {
                     }
                     return (
                         <>
-                            <Chip
-                                label={salutItem.missatgeErrorCount}
-                                size="small"
-                                color="error"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeErrorCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_ERROR_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.missatgeErrorCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip
-                                label={salutItem.missatgeWarnCount}
-                                size="small"
-                                color="warning"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeWarnCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.missatgeWarnCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip label={salutItem.missatgeInfoCount} size="small" color={ChipColor.INFO} />
+                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeInfoCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_INFO_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.missatgeInfoCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                         </>
                     );
                 },

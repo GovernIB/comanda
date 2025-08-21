@@ -113,6 +113,9 @@ const translationCa = {
             },
             integracions: {
                 title: "Integracions",
+                integracioUpCount: "Actives",
+                integracioDownCount: "Inactives",
+                integracioDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de integracions",
                 column: {
                     codi: "Codi",
@@ -124,6 +127,8 @@ const translationCa = {
             },
             subsistemes: {
                 title: "Subsistemes",
+                subsistemaUpCount: "Actives",
+                subsistemaDownCount: "Inactives",
                 noInfo: "No hi ha informació de subsistemes",
                 column: {
                     codi: "Codi",
@@ -131,6 +136,11 @@ const translationCa = {
                     estat: "Estat",
                     latencia: "Latència",
                 },
+            },
+            msgs: {
+                missatgeErrorCount: "Errors",
+                missatgeWarnCount: "Alertes",
+                missatgeInfoCount: "Informació"
             },
             contexts: {
                 title: "Contexts",

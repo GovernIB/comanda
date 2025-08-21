@@ -50,6 +50,11 @@ export class SalutModel extends BaseEntity implements Required<ISalut> {
     static readonly INTEGRACIO_UP_COUNT: keyof SalutModel = "integracioUpCount";
     static readonly INTEGRACIO_DOWN_COUNT: keyof SalutModel = "integracioDownCount";
     static readonly INTEGRACIO_DESCONEGUT_COUNT: keyof SalutModel = "integracioDesconegutCount";
+    static readonly SUBSISTEMA_UP_COUNT: keyof SalutModel = "subsistemaUpCount";
+    static readonly SUBSISTEMA_DOWN_COUNT: keyof SalutModel = "subsistemaDownCount";
+    static readonly MISSATGE_ERROR_COUNT: keyof SalutModel = "missatgeErrorCount";
+    static readonly MISSATGE_WARN_COUNT: keyof SalutModel = "missatgeWarnCount";
+    static readonly MISSATGE_INFO_COUNT: keyof SalutModel = "missatgeInfoCount";
 
     entornAppId: number | undefined;
     data: string | undefined;
@@ -101,6 +106,15 @@ export enum SalutEstatEnum {
     ERROR='ERROR'
 }
 
+export const GREEN: string = "#72bd75"  // Verde suave, transmite "ok"
+export const YELLOW: string = "#efe271" // Amarillo claro, alerta ligera
+export const ORANGE: string = "#FFCC80" // Naranja suave, indica problema moderado
+export const BLUE: string = "#90CAF9" // Azul claro, estado informativo
+export const GRAY: string = "#9c9c9c" // Gris claro, estado desconocido
+export const RED_LIGHT: string = "#EF9A9A" // Rojo claro, grave
+export const RED_DARK: string = "#e36161" // Rojo intenso, crítico
+
+
 /**
  * Devuelve el color predeterminado en función del estado
  * @param salutEstatEnum
@@ -108,43 +122,54 @@ export enum SalutEstatEnum {
 export function getColorByStatEnum(salutEstatEnum: SalutEstatEnum): string {
     switch (salutEstatEnum) {
         case SalutEstatEnum.UP:
-            // Verde suave, transmite "ok"
-            return "#72bd75"; // pastel green
+            return GREEN;
         case SalutEstatEnum.WARN:
-            // Amarillo claro, alerta ligera
-            return "#efe271"; // pastel yellow
+            return YELLOW;
         case SalutEstatEnum.DEGRADED:
-            // Naranja suave, indica problema moderado
-            return "#FFCC80"; // pastel orange
+            return ORANGE;
         case SalutEstatEnum.MAINTENANCE:
-            // Azul claro, estado informativo
-            return "#90CAF9"; // pastel blue
+            return BLUE;
         case SalutEstatEnum.UNKNOWN:
-            // Gris claro, estado desconocido
-            return "#9c9c9c"; // light grey
+            return GRAY;
         case SalutEstatEnum.DOWN:
-            // Rojo claro, crítico
-            return "#EF9A9A"; // pastel red
+            return RED_LIGHT;
         case SalutEstatEnum.ERROR:
         default:
-            // Rojo más intenso que DOWN, para diferenciarlo
-            return "#e36161"; // light red
+            return RED_DARK;
     }
 }
 
 export function getColorByIntegracio(integracioField: keyof SalutModel): string {
     if (SalutModel.INTEGRACIO_UP_COUNT === integracioField) {
-        // Verde suave, transmite "ok"
-        return "#72bd75"; // pastel green
+        return GREEN;
     } else if (SalutModel.INTEGRACIO_DOWN_COUNT === integracioField) {
-        // Rojo más intenso
-        return "#e36161"; // light red
+        return RED_DARK;
     } else if (SalutModel.INTEGRACIO_DESCONEGUT_COUNT === integracioField) {
-        // Gris claro, estado desconocido
-        return "#9c9c9c"; // light grey
+        return GRAY
     } else {
-        // Rojo más intenso
-        return "#e36161"; // light red
+        return RED_DARK;
+    }
+}
+
+export function getColorBySubsistema(subsistemaField: keyof SalutModel): string {
+    if (SalutModel.SUBSISTEMA_UP_COUNT === subsistemaField) {
+        return GREEN;
+    } else if (SalutModel.SUBSISTEMA_DOWN_COUNT === subsistemaField) {
+        return RED_DARK;
+    } else {
+        return RED_DARK;
+    }
+}
+
+export function getColorByMissatge(missatgeField: keyof SalutModel): string {
+    if (SalutModel.MISSATGE_ERROR_COUNT === missatgeField) {
+        return RED_DARK;
+    } else if (SalutModel.MISSATGE_WARN_COUNT === missatgeField) {
+        return ORANGE;
+    } else if (SalutModel.MISSATGE_INFO_COUNT === missatgeField) {
+        return BLUE;
+    } else {
+        return RED_DARK;
     }
 }
 

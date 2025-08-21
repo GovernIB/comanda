@@ -113,6 +113,9 @@ const translationEn = {
             },
             integracions: {
                 title: "Integrations",
+                integracioUpCount: "Active",
+                integracioDownCount: "Inactive",
+                integracioDesconegutCount: "Unknown state",
                 noInfo: "There is no information about integrations",
                 column: {
                     codi: "Code",
@@ -124,6 +127,8 @@ const translationEn = {
             },
             subsistemes: {
                 title: "Subsystems",
+                subsistemaUpCount: "Active",
+                subsistemaDownCount: "Inactive",
                 noInfo: "There is no information about subsystems",
                 column: {
                     codi: "Code",
@@ -131,6 +136,11 @@ const translationEn = {
                     estat: "State",
                     latencia: "Latency",
                 },
+            },
+            msgs: {
+                missatgeErrorCount: "Errors",
+                missatgeWarnCount: "Warnings",
+                missatgeInfoCount: "Info"
             },
             contexts: {
                 title: "Contexts",
