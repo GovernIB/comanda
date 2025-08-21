@@ -189,9 +189,8 @@ const Tasca = () => {
     } = useTreeData(
         (row) => row?.treePath,
         'Nom',
-        1.5, {
-            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value
-        });
+        1.5,
+        { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
     const columns = [
         ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
         ...(filter?.includes('dataFi is null') ? gridCommonColumns.slice(0, -1) : gridCommonColumns),

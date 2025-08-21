@@ -19,7 +19,6 @@ import UpdownBarChart from '../components/UpdownBarChart';
 import {
     GridRowId,
     GridSlots,
-    GridTreeDataGroupingCell,
     useGridApiRef,
 } from '@mui/x-data-grid-pro';
 import {PieChart} from '@mui/x-charts';
@@ -37,7 +36,7 @@ import {
 import {BaseEntity} from "../types/base-entity.model.ts";
 import {ChipColor} from "../util/colorUtil.ts";
 import {SalutChipTooltip} from "../components/SalutChipTooltip.tsx";
-import {useTreeData} from "../hooks/treeData.tsx";
+import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
 import {Tooltip} from "@mui/material";
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
@@ -243,17 +242,7 @@ const AppDataTable: React.FC<any> = (props: {
     const { t } = useTranslation();
     const { getLinkComponent } = useBaseAppContext();
     const gridApiRef = useGridApiRef();
-    const [apps, setApps] = React.useState<any[]>();
 
-    const { isReady: appApiIsReady, find: appApiFind } = useResourceApiService('app');
-
-    React.useEffect(() => {
-        if (appApiIsReady) {
-            appApiFind({ unpaged: true, filter: springFilterBuilder.eq('activa', true) })
-                .then((response) => setApps(response.rows))
-                .catch(() => setApps([]));
-        }
-    }, [appApiIsReady]);
     const findSalutItem:(id: GridRowId) => SalutModel | null = React.useCallback(
         (id: GridRowId) => {
             const itemFounded = salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id)
@@ -443,35 +432,12 @@ const AppDataTable: React.FC<any> = (props: {
         ];
     }, [findSalutItem, getLinkComponent, renderItemStateChip, t]);
 
+    const treeDataRenderCell = useTreeDataEntornAppRenderCell();
     const { dataGridProps: treeDataGridProps } = useTreeData(
         (row) => [row.app.id, row.entorn.description],
         t('page.salut.apps.column.group'),
-        1, {
-            renderCell: (params: any) => {
-                const app = apps?.find((app) => app.id === params.formattedValue);
-                if (typeof params.id === 'number' || app == null) {
-                    return <GridTreeDataGroupingCell {...params} />;
-                }
-                return (
-                    <GridTreeDataGroupingCell
-                        {...params}
-                        formattedValue={
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                }}>
-                                {app.logo && <img
-                                    src={'data:image/png;base64,' + app.logo}
-                                    alt="Logo de l'aplicació"
-                                    style={{ height: '48px' }}/>}
-                                {app.nom}
-                            </Box>
-                        }/>
-                );
-            }
-        });
+        1,
+        { renderCell: treeDataRenderCell });
 
     return (
         <MuiDataGrid
