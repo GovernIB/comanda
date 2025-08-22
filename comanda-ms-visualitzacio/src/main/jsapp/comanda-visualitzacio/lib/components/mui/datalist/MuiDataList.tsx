@@ -23,6 +23,7 @@ import {
     ReactElementWithPosition,
     joinReactElementsWithPositionWithReactElementsWithPositions,
 } from '../../../util/reactNodePosition';
+import { DialogButton } from '../../BaseAppContext';
 import { ResourceType } from '../../ResourceApiContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
 
@@ -74,6 +75,7 @@ export type MuiDataListProps = {
     popupEditFormContent?: React.ReactElement;
     popupEditFormDialogTitle?: string;
     popupEditFormDialogResourceTitle?: string;
+    popupEditFormDialogButtons: DialogButton[] | undefined;
     popupEditFormDialogComponentProps?: any;
     popupEditFormDialogOnClose?: (reason?: string) => boolean;
     popupEditFormComponentProps?: any;
@@ -202,6 +204,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         popupEditFormContent,
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
+        popupEditFormDialogButtons,
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,
@@ -265,6 +268,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         popupEditFormContent,
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
+        popupEditFormDialogButtons,
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,

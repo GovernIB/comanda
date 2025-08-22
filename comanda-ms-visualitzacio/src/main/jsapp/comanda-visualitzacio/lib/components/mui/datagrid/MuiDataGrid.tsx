@@ -30,8 +30,9 @@ import {
     joinReactElementsWithPositionWithReactElementsWithPositions,
 } from '../../../util/reactNodePosition';
 import { FormI18nKeys } from '../../form/Form';
-import { useResourceApiContext, ResourceType, ExportFileType } from '../../ResourceApiContext';
+import { DialogButton } from '../../BaseAppContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
+import { useResourceApiContext, ResourceType, ExportFileType } from '../../ResourceApiContext';
 import { toDataGridActionItem, DataGridActionItemOnClickFn } from './DataGridActionItem';
 import {
     useApiDataCommon,
@@ -193,6 +194,8 @@ export type MuiDataGridProps = {
     popupEditFormDialogTitle?: string;
     /** Nom del recurs per la finestra emergent (s'afegeix al títol per defecte) */
     popupEditFormDialogResourceTitle?: string;
+    /** Botons pel component Dialog de la finestra emergent */
+    popupEditFormDialogButtons?: DialogButton[];
     /** Propietats pel component Dialog de la finestra emergent */
     popupEditFormDialogComponentProps?: any;
     /** Event onClose pel component Dialog de la finestra emergent */
@@ -531,6 +534,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         popupEditFormContent,
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
+        popupEditFormDialogButtons,
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,
@@ -688,6 +692,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         popupEditFormContent,
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
+        popupEditFormDialogButtons,
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,

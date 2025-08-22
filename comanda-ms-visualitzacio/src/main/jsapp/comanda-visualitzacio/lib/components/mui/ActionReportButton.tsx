@@ -9,7 +9,7 @@ import {
     useReportDialogButtons,
     useConfirmDialogButtons,
 } from '../AppButtons';
-import { useBaseAppContext } from '../BaseAppContext';
+import { useBaseAppContext, DialogButton } from '../BaseAppContext';
 import { ExportFileType } from '../ResourceApiContext';
 import { useResourceApiService } from '../ResourceApiProvider';
 import { useFormDialog, FormDialogSubmitFn, FormDialogCloseFn } from './form/FormDialog';
@@ -58,6 +58,8 @@ export type ActionReportButtonProps = {
     formInitOnChangeRequest?: true;
     /** Component amb el contingut (camps) del formulari */
     formDialogContent?: React.ReactElement;
+    /** Botons pel component de diàleg */
+    formDialogButtons?: DialogButton[];
     /** Propietats pel component de diàleg */
     formDialogComponentProps?: any;
     /** Funció que processa els resultats d'executar l'artefacte i retorna un element per a mostrar al diàleg com a resultat (només per a artefactes de tipus acció) */
@@ -134,6 +136,7 @@ const TextCustomButton: React.FC<TextCustomButtonProps> = (props) => {
    @param formI18nKeys - Claus de traducció personalitzades pel component Form.
  * @param formInitOnChangeRequest - Indica si el formulari ha de fer una petició onChange inicial.
  * @param formDialogContent - Contingut (camps) pel formulari del diàleg.
+ * @param formDialogButtons - Botons pel component de diàleg.
  * @param formDialogComponentPropsArg - Propietats pel component del diàleg.
  * @param formDialogResultProcessor - Funció que processa els resultats d'executar l'artefacte i retorna un element per a mostrar al diàleg com a resultat (només per a artefactes de tipus acció).
  * @param onSuccess - Event que es llença quan l'execució de l'artefacte finalitza sense errors.
@@ -151,6 +154,7 @@ export const useActionReportLogic = (
     formI18nKeys?: FormI18nKeys,
     formInitOnChangeRequest?: boolean,
     formDialogContent?: React.ReactElement,
+    formDialogButtons?: DialogButton[],
     formDialogComponentPropsArg?: any,
     formDialogResultProcessor?: (result?: any) => React.ReactElement,
     onSuccess?: (result?: any) => void,
@@ -212,7 +216,8 @@ export const useActionReportLogic = (
         resourceName,
         action ? 'ACTION' : report ? 'REPORT' : undefined,
         action ? action : report ? report : undefined,
-        action ? actionDialogButtons : report ? reportDialogButtons : undefined,
+        formDialogButtons ??
+            (action ? actionDialogButtons : report ? reportDialogButtons : undefined),
         action ? execAction : generateReport,
         action ? t('actionreport.action.error') : t('actionreport.report.error'),
         formDialogContent,
@@ -336,6 +341,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formI18nKeys,
         formInitOnChangeRequest,
         formDialogContent,
+        formDialogButtons,
         formDialogComponentProps,
         formDialogResultProcessor,
         onSuccess,
@@ -358,6 +364,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formI18nKeys,
         formInitOnChangeRequest,
         formDialogContent,
+        formDialogButtons,
         formDialogComponentProps,
         formDialogResultProcessor,
         onSuccess,

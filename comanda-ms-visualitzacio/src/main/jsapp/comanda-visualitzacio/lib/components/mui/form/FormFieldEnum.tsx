@@ -164,12 +164,13 @@ export const FormFieldEnum: React.FC<FormFieldEnumProps> = (props) => {
                         multiple,
                         textFieldOpen,
                         readOnly,
-                        displayEmpty: !isRequired && !multiple,
+                        // displayEmpty: !isRequired && !multiple, TODO Se ha desactivado ya que causaba bugs visuales en todos los enums y no tenemos un ejemplo claro para probar la funcionalidad
                         onClose: () => setTextFieldOpen(false),
                         onOpen: () => setTextFieldOpen(true),
                         renderValue: (value: any) => {
                             const selectedText = (v: any) => {
                                 const found = enumOptions.find((o) =>
+                                    // Diría que los enumValues vacíos vienen definidos como string vacío en lugar de null
                                     v === '' ? o.value == null : o.value === v
                                 );
                                 return found?.description ?? found?.value;
@@ -180,6 +181,7 @@ export const FormFieldEnum: React.FC<FormFieldEnumProps> = (props) => {
                         },
                     },
                 }}>
+                {/* Diría que los enumValues vacíos vienen definidos como string vacío en lugar de null */}
                 {!isRequired && !multiple && enumOptions?.find((o) => o.value == null) == null && (
                     <MenuItem key="" value="">
                         &nbsp;

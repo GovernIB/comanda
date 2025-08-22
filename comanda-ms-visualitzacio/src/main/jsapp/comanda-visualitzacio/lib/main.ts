@@ -74,6 +74,7 @@ export { toBase64 } from './util/files';
 export { useDebounce } from './util/useDebounce';
 export * as springFilterBuilder from './util/springFilterBuilder';
 
+export type { DialogButton } from './components/BaseAppContext';
 export type { MenuEntry } from './components/mui/Menu';
 export type { MuiDataGridProps, MuiDataGridColDef } from './components/mui/datagrid/MuiDataGrid';
 export type { MuiDataGridApi, MuiDataGridApiRef } from './components/mui/datagrid/DataGridContext';
