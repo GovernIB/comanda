@@ -45,8 +45,6 @@ interface DefaultRowExpansionState {
 }
 
 const useAppData = () => {
-    const { isReady: appEntornApiIsReady, artifactAction: appEntornApiAction } =
-        useResourceApiService('entornApp');
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
         useResourceApiService('salut');
     const [loading, setLoading] = React.useState<boolean>(true);
@@ -58,10 +56,9 @@ const useAppData = () => {
         dataInici: string,
         dataFi: string,
         agrupacio: string,
-        actionExec?: boolean,
         springFilter?: string
     ) => {
-        if (appEntornApiIsReady && salutApiIsReady) {
+        if (salutApiIsReady) {
             setLoading(true);
             let salutLastItemsResponse: SalutModel[] | null = null;
             let estatsResponse: Record<string, any> | null = null;
@@ -70,16 +67,7 @@ const useAppData = () => {
                 dataFi,
                 agrupacio,
             };
-            new Promise((resolve, reject) => {
-                if (actionExec) {
-                    appEntornApiAction(null, { code: 'refresh' }).then(resolve).catch(reject);
-                } else {
-                    resolve(null);
-                }
-            })
-                .then(() => {
-                    return salutApiReport(null, { code: 'salut_last', data: springFilter });
-                })
+            salutApiReport(null, { code: 'salut_last', data: springFilter })
                 .then((apiResponse) => {
                     salutLastItemsResponse = (apiResponse as SalutModel[]).map(item => new SalutModel(item));
                     const reportData = {
@@ -111,7 +99,7 @@ const useAppData = () => {
         }
     };
     return {
-        ready: appEntornApiIsReady && salutApiIsReady,
+        ready: salutApiIsReady,
         loading,
         refresh,
         springFilter,

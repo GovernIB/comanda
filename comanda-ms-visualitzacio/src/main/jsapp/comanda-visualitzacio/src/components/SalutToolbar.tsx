@@ -25,7 +25,7 @@ export type SalutToolbarProps = {
     state?: React.ReactElement;
     hideFilter?: boolean;
     ready: boolean;
-    onRefresh: (dataInici: string, dataFi: string, agrupacio: string, execAction?: boolean, springFilter?: string) => void;
+    onRefresh: (dataInici: string, dataFi: string, agrupacio: string, springFilter?: string) => void;
     goBackActive?: boolean;
     appDataLoading?: boolean;
 }
@@ -374,10 +374,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     }, [filterData, t]);
 
     const timeUntilNextRefreshFormatted = useTimeUntilNextRefreshFormatted(nextRefresh);
-    const refresh = (execAction?: boolean) => {
+    const refresh = () => {
         setLastRefresh(new Date());
         const { dataInici, dataFi, agrupacio } = toReportInterval(appDataRangeMinutes);
-        if (appDataRangeMinutes != null) onRefresh(dataInici, dataFi, agrupacio, execAction, springFilter);
+        if (appDataRangeMinutes != null) onRefresh(dataInici, dataFi, agrupacio, springFilter);
     };
     const updateNextRefresh = (refreshTimeout: number) => {
         const nextRequestDate = new Date();
@@ -442,7 +442,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                         </IconButton>
                     )}
                     <IconButton
-                        onClick={() => refresh(true)}
+                        onClick={() => refresh()}
                         title={t('page.salut.refrescar')}
                         disabled={!ready}
                         loading={appDataLoading}
