@@ -2,13 +2,27 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
-import {FormField, FormPage, GridPage, MuiForm, MuiFormTabContent, MuiGrid, springFilterBuilder, useBaseAppContext, useFormContext, useResourceApiService} from 'reactlib';
+import {
+    FormField,
+    FormPage,
+    GridPage,
+    MuiDataGrid,
+    MuiForm,
+    MuiFormTabContent,
+    MuiFormTabs,
+    springFilterBuilder,
+    useBaseAppContext,
+    useFormContext,
+    useResourceApiService,
+} from 'reactlib';
 import {Box, Tab, Tabs} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import BlockIcon from "@mui/icons-material/Block";
 import UrlPingAdornment from '../components/UrlPingAdornment';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
+// TODO Debería añadirse un export de este tipo
+import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -113,8 +127,8 @@ const AppsEntorns: React.FC = () => {
         },
     ];
     return (
-        <GridPage disableMargins>
-            <MuiGrid
+        <GridPage>
+            <MuiDataGrid
                 title={t('page.appsEntorns.title')}
                 resourceName="entornApp"
                 staticFilter={`app.id : ${appId}`}
@@ -135,66 +149,59 @@ const AppsEntorns: React.FC = () => {
 export const AppForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
-    const [tabValue, setTabValue] = React.useState(0);
-    const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-        setTabValue(newValue);
-    };
+    const { setMarginsDisabled } = useBaseAppContext();
+    React.useEffect(() => {
+        setMarginsDisabled(true);
+        return () => setMarginsDisabled(false);
+    }, []);
 
-    function a11yProps(index: number) {
-        return {
-            id: `tab-${index}`,
-            'aria-controls': `tabpanel-${index}`,
-        };
-    }
-
-    const isCreation = id == null;
+    const formTabs: FormTabsValue[] = [
+        {
+            label: t('page.apps.general'),
+        },
+        {
+            label: t('page.apps.entornApp'),
+        },
+    ];
 
     return (
         <MuiForm
+            key={id} // TODO No debería ser necesario, parece un bug de la librería
             id={id}
             title={id ? t('page.apps.update') : t('page.apps.create')}
             resourceName="app"
             goBackLink="/app"
             createLink="form/{{id}}"
         >
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs
-                    value={tabValue}
-                    onChange={handleChange}
-                    aria-label="Tabs formulario de aplicacion"
+            <MuiFormTabs tabs={formTabs} tabIndexesWithGrids={[1]}>
+                <MuiFormTabContent index={0} showOnCreate>
+                    <FormPage>
+                        <Grid container spacing={2}>
+                            <Grid size={4}>
+                                <FormField name="codi" />
+                            </Grid>
+                            <Grid size={8}></Grid>
+                            <Grid size={12}>
+                                <FormField name="nom" />
+                            </Grid>
+                            <Grid size={12}>
+                                <FormField name="descripcio" type="textarea" />
+                            </Grid>
+                            <Grid size={12}>
+                                <LogoUpload />
+                            </Grid>
+                            <Grid size={12}>
+                                <FormField name="activa" />
+                            </Grid>
+                        </Grid>
+                    </FormPage>
+                </MuiFormTabContent>
+                <MuiFormTabContent
+                    index={1}
                 >
-                    <Tab label={t('page.apps.general')} {...a11yProps(0)} />
-                    <Tab label={t('page.apps.entornApp')} disabled={isCreation} {...a11yProps(1)} />
-                </Tabs>
-            </Box>
-            <MuiFormTabContent currentIndex={tabValue} index={0} showOnCreate>
-                <FormPage>
-                    <Grid container spacing={2}>
-                        <Grid size={4}>
-                            <FormField name="codi" />
-                        </Grid>
-                        <Grid size={8}></Grid>
-                        <Grid size={12}>
-                            <FormField name="nom" />
-                        </Grid>
-                        <Grid size={12}>
-                            <FormField name="descripcio" type="textarea" />
-                        </Grid>
-                        <Grid size={12}>
-                            <LogoUpload />
-                        </Grid>
-                        <Grid size={12}>
-                            <FormField name="activa" />
-                        </Grid>
-                    </Grid>
-                </FormPage>
-            </MuiFormTabContent>
-            <MuiFormTabContent
-                currentIndex={tabValue}
-                index={1}
-            >
-                <AppsEntorns />
-            </MuiFormTabContent>
+                    <AppsEntorns />
+                </MuiFormTabContent>
+            </MuiFormTabs>
         </MuiForm>
     );
 };
@@ -236,8 +243,8 @@ const Apps: React.FC = () => {
         },
     ];
     return (
-        <GridPage disableMargins>
-            <MuiGrid
+        <GridPage>
+            <MuiDataGrid
                 title={t('page.apps.title')}
                 resourceName="app"
                 columns={columns}

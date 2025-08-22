@@ -70,6 +70,7 @@ export const FormIsolatedField: React.FC<FormIsolatedFieldProps> = (props) => {
         apiRef: { current: mockFormApi },
         dataGetFieldValue: (_fieldName: string) => null,
         dataDispatchAction: (_action: FormFieldDataAction) => {},
+        validationSetFieldErrors: (_fieldName: string, _errors?: FormFieldError[]) => {},
     };
     return FormFieldComponent != null ? (
         <ResourceApiFormContext.Provider value={formContext}>

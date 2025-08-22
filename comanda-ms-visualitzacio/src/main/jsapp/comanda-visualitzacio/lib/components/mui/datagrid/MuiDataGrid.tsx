@@ -29,6 +29,7 @@ import {
     ReactElementWithPosition,
     joinReactElementsWithPositionWithReactElementsWithPositions,
 } from '../../../util/reactNodePosition';
+import { FormI18nKeys } from '../../form/Form';
 import { useResourceApiContext, ResourceType, ExportFileType } from '../../ResourceApiContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
 import { toDataGridActionItem, DataGridActionItemOnClickFn } from './DataGridActionItem';
@@ -112,9 +113,11 @@ export type MuiDataGridProps = {
     selectionActive?: true;
     /** Activa la persistència de l'estat (paginació, ordenació, selecció, ...) */
     persistentState?: true;
-    /** Ordenació que s'ha d'aplicar al consulta la informació al backend */
+    /** Model de paginació inicial */
+    paginationModel?: GridPaginationModel;
+    /** Model d'ordenació inicial */
     sortModel?: GridSortModel;
-    /** Ordenació que s'aplicarà sempre en les consultes d'informació al backend (deshabilita sortModel) */
+    /** Model d'ordenació que s'aplicarà sempre (ignorant el valor de sortModel) */
     staticSortModel?: GridSortModel;
     /** Valor inicial pel filtre ràpid */
     quickFilterInitialValue?: string;
@@ -196,6 +199,8 @@ export type MuiDataGridProps = {
     popupEditFormDialogOnClose?: (reason?: string) => boolean;
     /** Propietats pel component Form de la finestra emergent */
     popupEditFormComponentProps?: any;
+    /** Claus de traducció personalitzades pel component Form de la finestra emergent */
+    popupEditFormI18nKeys?: FormI18nKeys;
     /** Event que es llença quan es fa clic sobre una fila de la graella */
     onRowClick?: (params: GridRowParams, event: MuiEvent, details: GridCallbackDetails) => void;
     /** Event que es llença quan hi ha canvis en les files que mostra la graella */
@@ -486,6 +491,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         paginationActive,
         selectionActive,
         persistentState,
+        paginationModel: paginationModelProp,
         sortModel,
         staticSortModel,
         quickFilterInitialValue,
@@ -528,6 +534,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,
+        popupEditFormI18nKeys,
         onRowClick,
         onRowsChange,
         onRowOrderChange,
@@ -554,7 +561,9 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         sortModel ?? []
     );
     const [internalFilter, setInternalFilter] = React.useState<string | undefined>(filterProp);
-    const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel>();
+    const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel | undefined>(
+        paginationModelProp
+    );
     const [rowSelectionModel, setRowSelectionModel] =
         React.useState<GridRowSelectionModel>(rowSelectionModelProp);
     const [additionalRows, setAdditionalRows] = React.useState<any[]>(
@@ -682,6 +691,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,
+        popupEditFormI18nKeys,
         apiCurrentActions,
         apiDelete,
         refresh
@@ -832,8 +842,10 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                     footer: {
                         paginationActive,
                         selectionActive,
+                        paginationModel,
                         pageInfo,
                         setRowSelectionModel,
+                        pageSizeOptions: otherProps?.pageSizeOptions,
                     },
                     noRowsOverlay: { findDisabled },
                 }}

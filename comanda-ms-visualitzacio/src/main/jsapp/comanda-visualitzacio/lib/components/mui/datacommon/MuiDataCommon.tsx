@@ -1,11 +1,12 @@
 import React from 'react';
 import { useResourceApiService, ResourceApiFindCommonArgs } from '../../ResourceApiProvider';
 import { ResourceType, ExportFileType } from '../../ResourceApiContext';
-import { useDataQuickFilter } from './DataQuickFilter';
-import { toToolbarIcon } from '../ToolbarIcon';
-import DataFormDialog, { DataFormDialogApi } from './DataFormDialog';
+import { FormI18nKeys } from '../../form/Form';
 import { useBaseAppContext } from '../../BaseAppContext';
 import { useConfirmDialogButtons } from '../../AppButtons';
+import { toToolbarIcon } from '../ToolbarIcon';
+import { useDataQuickFilter } from './DataQuickFilter';
+import DataFormDialog, { DataFormDialogApi } from './DataFormDialog';
 
 export type DataCommonFindArgs = ResourceApiFindCommonArgs;
 
@@ -229,6 +230,7 @@ export const useDataCommonEditable = (
     popupEditFormDialogComponentProps: any,
     popupEditFormDialogOnClose: ((reason?: string) => boolean) | undefined,
     popupEditFormComponentProps: any,
+    popupEditFormI18nKeys: FormI18nKeys | undefined,
     apiCurrentActions: any,
     apiDelete: (id: any) => Promise<any>,
     refresh: () => void
@@ -277,7 +279,7 @@ export const useDataCommonEditable = (
     };
     const triggerDelete = (id: any) => {
         messageDialogShow(
-            t('datacommon.delete.single.title'),
+            t('datacommon.delete.single.label'),
             t('datacommon.delete.single.confirm'),
             confirmDialogButtons,
             confirmDialogComponentProps
@@ -311,7 +313,7 @@ export const useDataCommonEditable = (
     const toolbarAddElement =
         isCreateLinkPresent && !readOnly
             ? toToolbarIcon('add', {
-                  title: t('datacommon.create.title'),
+                  title: t('datacommon.create.label'),
                   linkTo: toolbarCreateLink,
                   linkState: formAdditionalData
                       ? { additionalData: formAdditionalData }
@@ -324,7 +326,7 @@ export const useDataCommonEditable = (
     const updateLinkConfigError = !readOnly && !isPopupEditUpdate && rowUpdateLink == null;
     !readOnly &&
         rowEditActions.push({
-            title: t('datacommon.update.title'),
+            label: t('datacommon.update.label'),
             rowLink: 'update',
             icon: 'edit',
             linkTo: rowUpdateLink,
@@ -338,7 +340,7 @@ export const useDataCommonEditable = (
         });
     !readOnly &&
         rowEditActions.push({
-            title: t('datacommon.delete.title'),
+            label: t('datacommon.delete.label'),
             icon: 'delete',
             onClick: triggerDelete,
             disabled: rowDisableDeleteButton,
@@ -348,7 +350,7 @@ export const useDataCommonEditable = (
         });
     rowDetailLink &&
         rowEditActions.push({
-            title: t('datacommon.details.title'),
+            label: t('datacommon.details.label'),
             icon: 'info',
             linkTo: rowDetailLink,
             disabled: rowDisableDetailsButton,
@@ -378,6 +380,7 @@ export const useDataCommonEditable = (
                 resourceTitle={popupEditFormDialogResourceTitle}
                 dialogComponentProps={popupEditFormDialogComponentProps}
                 formComponentProps={popupEditFormComponentProps}
+                formI18nKeys={popupEditFormI18nKeys}
                 onClose={popupEditFormDialogOnClose}
                 apiRef={dataDialogPopupApiRef}>
                 {popupEditFormContent}

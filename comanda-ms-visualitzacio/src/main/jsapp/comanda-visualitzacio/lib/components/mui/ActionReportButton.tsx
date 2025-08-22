@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import Badge from '@mui/material/Badge';
-import { useFormDialog, FormDialogSubmitFn, FormDialogCloseFn } from './form/FormDialog';
+import { FormI18nKeys } from '../form/Form';
 import {
     useActionDialogButtons,
     useReportDialogButtons,
@@ -12,6 +12,7 @@ import {
 import { useBaseAppContext } from '../BaseAppContext';
 import { ExportFileType } from '../ResourceApiContext';
 import { useResourceApiService } from '../ResourceApiProvider';
+import { useFormDialog, FormDialogSubmitFn, FormDialogCloseFn } from './form/FormDialog';
 
 export type ActionReportCustomButton = {
     disabled?: boolean;
@@ -51,6 +52,8 @@ export type ActionReportButtonProps = {
     buttonComponent?: React.FC<ActionReportCustomButton>;
     /** Dades addicionals pel formulari de l'artefacte */
     formAdditionalData?: any;
+    /** Claus de traducció personalitzades pel component Form */
+    formI18nKeys?: FormI18nKeys;
     /** Indica que el formulari ha de fer una petició onChange inicial */
     formInitOnChangeRequest?: true;
     /** Component amb el contingut (camps) del formulari */
@@ -128,6 +131,7 @@ const TextCustomButton: React.FC<TextCustomButtonProps> = (props) => {
  * @param reportFileType - Tipus d'arxiu generat per l'informe (només per als informes).
  * @param confirm - Indica si l'execució de l'acció requereix confirmació de l'usuari (només per a les accions).
  * @param formAdditionalDataArg - Dades addicionals pel formulari.
+   @param formI18nKeys - Claus de traducció personalitzades pel component Form.
  * @param formInitOnChangeRequest - Indica si el formulari ha de fer una petició onChange inicial.
  * @param formDialogContent - Contingut (camps) pel formulari del diàleg.
  * @param formDialogComponentPropsArg - Propietats pel component del diàleg.
@@ -144,6 +148,7 @@ export const useActionReportLogic = (
     reportFileType?: ExportFileType,
     confirm?: boolean,
     formAdditionalDataArg?: any,
+    formI18nKeys?: FormI18nKeys,
     formInitOnChangeRequest?: boolean,
     formDialogContent?: React.ReactElement,
     formDialogComponentPropsArg?: any,
@@ -216,6 +221,7 @@ export const useActionReportLogic = (
             resourceType: action ? 'action' : 'report',
             resourceTypeCode: action ?? report,
         },
+        formI18nKeys,
         dialogCloseCallback
     );
     const exec = (
@@ -327,6 +333,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         selectedCount,
         buttonComponent: buttonComponentProp,
         formAdditionalData,
+        formI18nKeys,
         formInitOnChangeRequest,
         formDialogContent,
         formDialogComponentProps,
@@ -348,6 +355,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         reportFileType,
         confirm,
         formAdditionalData,
+        formI18nKeys,
         formInitOnChangeRequest,
         formDialogContent,
         formDialogComponentProps,

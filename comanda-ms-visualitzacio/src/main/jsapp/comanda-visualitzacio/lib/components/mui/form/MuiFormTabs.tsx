@@ -99,23 +99,25 @@ export const MuiFormTabs: React.FC<FormTabsProps> = (props) => {
     }, [index]);
     const tabsHeightFix = { minHeight: '48px' };
     const context = { index };
-    return id != null ? (
+    return (
         <FormTabsContext.Provider value={context}>
-            <Tabs
-                value={index}
-                onChange={handleIndexChange}
-                sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.23)' }}>
-                {tabs.map((t, i) => {
-                    if (typeof t === 'string') {
-                        return <Tab key={i} value={i} label={t} sx={tabsHeightFix} />;
-                    } else {
-                        return <Tab {...(t as any)} key={i} value={i} sx={tabsHeightFix} />;
-                    }
-                })}
-            </Tabs>
+            {id != null ? (
+                <Tabs
+                    value={index}
+                    onChange={handleIndexChange}
+                    sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.23)' }}>
+                    {tabs.map((t, i) => {
+                        if (typeof t === 'string') {
+                            return <Tab key={i} value={i} label={t} sx={tabsHeightFix} />;
+                        } else {
+                            return <Tab {...(t as any)} key={i} value={i} sx={tabsHeightFix} />;
+                        }
+                    })}
+                </Tabs>
+            ) : null}
             {children}
         </FormTabsContext.Provider>
-    ) : null;
+    );
 };
 
 export default MuiFormTabs;

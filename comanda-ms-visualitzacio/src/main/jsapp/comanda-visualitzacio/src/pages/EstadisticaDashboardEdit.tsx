@@ -308,7 +308,7 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
     const onDeleteClick = (id: any) => {
         messageDialogShow(
-            tLib('datacommon.delete.single.title'),
+            tLib('datacommon.delete.single.label'),
             tLib('datacommon.delete.single.confirm'),
             confirmDialogButtons,
             confirmDialogComponentProps
@@ -377,13 +377,13 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                 rowActionsColumnProps={{ width: 10 }}
                 rowAdditionalActions={[
                     {
-                        label: tLib('datacommon.update.title'),
+                        label: tLib('datacommon.update.label'),
                         icon: 'edit',
                         clickShowUpdateDialog: true,
                         hidden: !form,
                     },
                     {
-                        label: tLib('datacommon.delete.title'),
+                        label: tLib('datacommon.delete.label'),
                         icon: 'delete',
                         onClick: onDeleteClick,
                     },

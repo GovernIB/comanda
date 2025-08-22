@@ -32,7 +32,7 @@ const mapParamTipusToInputType = (tipus: String): string => {
     }
 };
 
-const ParametreForm: React.FC = () => {    
+const ParametreForm: React.FC = () => {
     const { data } = useFormContext();
     const valor = data?.tipus === "BOOLEAN"
         ? data?.valor?.toString().toLowerCase() === 'true'
@@ -170,13 +170,13 @@ const ParametresGrid: React.FC<{
         rowAdditionalActions={
             [
                 {
-                    label: tLib('datacommon.update.title'),
+                    label: tLib('datacommon.update.label'),
                     icon: 'edit',
                     clickShowUpdateDialog: true,
                     hidden: (row) => !row?.id || !row?.editable,
                 },
                 {
-                    label: tLib('datacommon.details.title'),
+                    label: tLib('datacommon.details.label'),
                     icon: 'info',
                     showInMenu: true,//TODO Al actualizar la libreria se quitara del menu para no tener que hacer dos clicks. El motivo es un error de boton de accion inline.
                     onClick: showDetail,

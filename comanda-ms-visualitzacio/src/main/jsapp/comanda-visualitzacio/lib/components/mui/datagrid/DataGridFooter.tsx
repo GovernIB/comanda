@@ -9,8 +9,12 @@ import {
     gridPageSelector,
     gridPageSizeSelector,
     gridRowSelectionCountSelector,
+    GridPaginationModel,
     GridRowSelectionModel,
 } from '@mui/x-data-grid-pro';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import Pagination from '@mui/material/Pagination';
 import { useBaseAppContext } from '../../BaseAppContext';
 import { DEFAULT_ROW_SELECTION } from './DataGridContext';
@@ -20,13 +24,17 @@ type DataGridFooterSelectionProps = {
 };
 
 type DataGridFooterPaginationProps = {
+    paginationModel: GridPaginationModel;
     pageInfo: any;
+    pageSizeOptions: any;
 };
 
 type DataGridFooterProps = {
     selectionActive: boolean;
     paginationActive: boolean;
+    paginationModel: GridPaginationModel;
     pageInfo: any;
+    pageSizeOptions: number[];
     setRowSelectionModel: (rowSelectionModel: GridRowSelectionModel) => void;
 };
 
@@ -55,7 +63,7 @@ const DataGridFooterSelection: React.FC<DataGridFooterSelectionProps> = (props) 
 };
 
 const GridFooterPagination: React.FC<DataGridFooterPaginationProps> = (props) => {
-    const { pageInfo } = props;
+    const { paginationModel, pageInfo, pageSizeOptions } = props;
     const { t } = useBaseAppContext();
     const apiRef = useGridApiContext();
     const page = useGridSelector(apiRef, gridPageSelector);
@@ -73,8 +81,27 @@ const GridFooterPagination: React.FC<DataGridFooterPaginationProps> = (props) =>
     const firstElementIndex = page * pageSize + 1;
     const lastElement = Math.min(firstElementIndex + pageRowCount - 1, pageInfo?.totalElements);
     const boxStyle = { display: 'flex', justifContent: 'flex-end', alignItems: 'center' };
+    const currentPageSize = paginationModel?.pageSize;
     return (
         <Box style={boxStyle}>
+            {pageSizeOptions && (
+                <Box sx={{ mr: 4 }}>
+                    <FormControl size="small">
+                        <Select
+                            value={currentPageSize}
+                            onChange={(event) =>
+                                apiRef.current.setPaginationModel({
+                                    page,
+                                    pageSize: event.target.value as number,
+                                })
+                            }>
+                            {pageSizeOptions.map((o: number) => (
+                                <MenuItem value={o}>{o}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </Box>
+            )}
             <Box>
                 {pageInfo != null
                     ? t('grid.pageInfo', {
@@ -95,12 +122,25 @@ const GridFooterPagination: React.FC<DataGridFooterPaginationProps> = (props) =>
 };
 
 const DataGridFooter: React.FC<DataGridFooterProps> = (props) => {
-    const { selectionActive, setRowSelectionModel, paginationActive, pageInfo } = props;
+    const {
+        selectionActive,
+        paginationActive,
+        paginationModel,
+        pageInfo,
+        pageSizeOptions,
+        setRowSelectionModel,
+    } = props;
     const showFooter = selectionActive || paginationActive;
     return showFooter ? (
         <GridFooterContainer>
             <DataGridFooterSelection setRowSelectionModel={setRowSelectionModel} />
-            {paginationActive && <GridFooterPagination pageInfo={pageInfo} />}
+            {paginationActive && (
+                <GridFooterPagination
+                    paginationModel={paginationModel}
+                    pageInfo={pageInfo}
+                    pageSizeOptions={pageSizeOptions}
+                />
+            )}
         </GridFooterContainer>
     ) : null;
 };

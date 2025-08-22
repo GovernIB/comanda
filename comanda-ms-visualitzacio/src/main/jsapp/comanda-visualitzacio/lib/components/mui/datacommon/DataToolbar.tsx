@@ -41,7 +41,7 @@ export const useDataToolbar = (
         elementsWithPosition.push({
             position: toolbarNodesPosition,
             element: toToolbarIcon('file_download', {
-                title: t('datacommon.export.title'),
+                title: t('datacommon.export.label'),
                 onClick: () => doExport(),
             }),
         });
@@ -49,7 +49,7 @@ export const useDataToolbar = (
         elementsWithPosition.push({
             position: toolbarNodesPosition,
             element: toToolbarIcon('refresh', {
-                title: t('datacommon.refresh.title'),
+                title: t('datacommon.refresh.label'),
                 onClick: () => doRefresh(),
             }),
         });

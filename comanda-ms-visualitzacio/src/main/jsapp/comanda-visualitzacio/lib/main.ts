@@ -22,6 +22,9 @@ export { DetailPage } from './components/DetailPage';
 
 export {
     MuiDataGrid,
+    /**
+     * @deprecated use MuiDataGrid instead
+     */
     MuiDataGrid as MuiGrid,
     useMuiDataGridApiRef,
     useMuiDataGridApiContext,
