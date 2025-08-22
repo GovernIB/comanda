@@ -166,13 +166,13 @@ const ParametresGrid: React.FC<{
         rowAdditionalActions={
             [
                 {
-                    label: tLib('datacommon.update.title'),
+                    label: tLib('datacommon.update.label'),
                     icon: 'edit',
                     clickShowUpdateDialog: true,
                     hidden: (row) => !row?.id || !row?.editable,
                 },
                 {
-                    label: tLib('datacommon.details.title'),
+                    label: tLib('datacommon.details.label'),
                     icon: 'info',
                     onClick: showDetail,
                     hidden: (row) => !row?.id || row?.editable,
