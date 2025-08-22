@@ -16,11 +16,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 
 import javax.annotation.PostConstruct;
+import javax.jms.ConnectionFactory;
 import java.util.Set;
 
 import static es.caib.comanda.ms.broker.model.Cues.*;
@@ -107,6 +109,19 @@ public class ArtemisEmbeddedConfig {
     }
 
     @Bean
+    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
+            ConnectionFactory connectionFactory,
+            MessageConverter messageConverter) {
+        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setSessionAcknowledgeMode(javax.jms.Session.CLIENT_ACKNOWLEDGE);
+        factory.setConcurrency("5-50");
+        factory.setPubSubDomain(false); // false per cues (anycast), true per temes (multicast)
+        factory.setMessageConverter(messageConverter);
+        return factory;
+    }
+
+    @Bean
     public ActiveMQServer activeMQServer() {
         return embedded.getActiveMQServer();
     }
@@ -116,38 +131,17 @@ public class ArtemisEmbeddedConfig {
         return new CustomSecurityManager();
     }
 
-//    @Bean
-//    public JmsTemplate jmsTemplate(ConnectionFactory connectionFactory) {
-//        JmsTemplate template = new JmsTemplate();
-//        template.setConnectionFactory(connectionFactory);
-//        template.setPubSubDomain(false); // cues
-//        template.setDeliveryPersistent(true); // missatges persistents
-//        return template;
-//    }
-
-    @Profile("!back")
-    @Bean
-    public MessageConverter jacksonJmsMessageConverter() {
-        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-        converter.setTargetType(MessageType.TEXT);
-        converter.setTypeIdPropertyName("_type");
-        return converter;
-    }
-
     public class CustomSecurityManager implements ActiveMQSecurityManager {
-
         @Override
         public boolean validateUser(String user, String password) {
             return brokerUsername.equals(user) && brokerPassword.equals(password);
         }
-
         @Override
         public boolean validateUserAndRole(String user, String password, Set<Role> roles, CheckType checkType) {
             return validateUser(user, password); // ignora els rols
 //            return roles.stream()
 //                    .anyMatch(role -> role.getName().equals("amq") && checkType.hasRole(role));
         }
-
     }
 
 }

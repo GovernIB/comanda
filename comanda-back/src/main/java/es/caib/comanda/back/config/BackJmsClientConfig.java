@@ -32,29 +32,11 @@ public class BackJmsClientConfig {
     }
 
     @Bean
-    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory connectionFactory) {
-        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory);
-        factory.setSessionAcknowledgeMode(javax.jms.Session.CLIENT_ACKNOWLEDGE);
-        factory.setConcurrency("5-50");
-        factory.setPubSubDomain(false); // false per cues (anycast), true per temes (multicast)
-        return factory;
-    }
-
-//    @Bean
-//    public JmsTemplate jmsTemplate(ConnectionFactory connectionFactory) {
-//        JmsTemplate template = new JmsTemplate();
-//        template.setConnectionFactory(connectionFactory);
-//        template.setPubSubDomain(false); // cues
-//        template.setDeliveryPersistent(true); // missatges persistents
-//        return template;
-//    }
-
-    @Bean
     public MessageConverter jacksonJmsMessageConverter() {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
         converter.setTargetType(MessageType.TEXT);
         converter.setTypeIdPropertyName("_type");
         return converter;
     }
+
 }
