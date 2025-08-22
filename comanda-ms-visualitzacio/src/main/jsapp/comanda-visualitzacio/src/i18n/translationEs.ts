@@ -1,13 +1,34 @@
 const translationEs = {
     enum: {
         appEstat: {
-            UP: "Activo",
-            WARN: "Advertencia",
-            DOWN: "Inactivo",
-            DEGRADED: "Degradado",
-            MAINTENANCE: "Mantenimiento",
-            UNKNOWN: "Desconocido",
-            ERROR: "Error",
+            UP: {
+                title: "Activo",
+                tooltip: "La aplicación funciona <bold>correctamente</bold>. <br> La tasa de <italic>errores detectados</italic> es <underline>inferior al 5%</underline>."
+            },
+            WARN: {
+                title: "Advertencia",
+                tooltip: "La tasa de <italic>errores detectados</italic> está <underline>entre el 5% y el 10%</underline>."
+            },
+            DOWN: {
+                title: "Inactivo",
+                tooltip: "<bold>Se han detectado errores</bold>. <br> La <italic>tasa de errores detectados</italic> es <underline>superior al 30%</underline>."
+            },
+            DEGRADED: {
+                title: "Degradado",
+                tooltip: "<bold>Existen errores puntuales</bold>. <br> La <italic>tasa de errores detectados</italic> está <underline>entre el 10% y el 30%</underline>."
+            },
+            MAINTENANCE: {
+                title: "Mantenimiento",
+                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>tareas de mantenimiento</underline>."
+            },
+            UNKNOWN: {
+                title: "Desconocido",
+                tooltip: "<bold>No se dispone de información</bold> acerca del estado de la aplicación."
+            },
+            ERROR: {
+                title: "Error",
+                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>errores graves en el funcionamiento</underline>."
+            },
         }
     },
     menu: {
@@ -93,6 +114,9 @@ const translationEs = {
             },
             integracions: {
                 title: "Integraciones",
+                integracioUpCount: "Activas",
+                integracioDownCount: "Inactivas",
+                integracioDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de integraciones",
                 column: {
                     codi: "Código",
@@ -104,6 +128,8 @@ const translationEs = {
             },
             subsistemes: {
                 title: "Subsistemas",
+                subsistemaUpCount: "Activos",
+                subsistemaDownCount: "Inactivos",
                 noInfo: "No hay información de subsistemas",
                 column: {
                     codi: "Código",
@@ -111,6 +137,11 @@ const translationEs = {
                     estat: "Estado",
                     latencia: "Latencia",
                 },
+            },
+            msgs: {
+                missatgeErrorCount: "Errores",
+                missatgeWarnCount: "Alertas",
+                missatgeInfoCount: "Información"
             },
             contexts: {
                 title: "Contextos",
@@ -130,6 +161,77 @@ const translationEs = {
             estats: {
                 title: "Estados",
             },
+        },
+        dashboards: {
+            title: "Cuadros de control",
+            edit: "Editar",
+            dashboardView: "Ir al panel de control",
+            cloneDashboard: {
+                title: "Clonar el panel de control",
+                success: "Panel de control clonado correctamente",
+            },
+            components: {
+                llistar: "Listar componentes",
+                afegir: "Añadir componente",
+            },
+            action: {
+                select: {
+                    title: "Seleccione el tablero a mostrar...",
+                },
+                llistarWidget: {
+                    label: "Listar widgets",
+                    title: "Listar widgets",
+                },
+                llistarTitle: {
+                    label: "Listar títulos",
+                    title: "Listar títulos",
+                },
+                patchItem: {
+                    success: "Guardado correctamente",
+                    warning: "No se pudo encontrar newDashboardItem con id {{id}}, la actualización no se propagará.",
+                    error: "Error al guardar",
+                    saveError: "Error al guardar",
+                },
+                addWidget: {
+                    label: "Añadir widget",
+                    title: "Añadir widget",
+                    success: "Widget añadido correctamente",
+                    error: "Error al añadir el widget",
+                },
+                afegirTitle: {
+                    label: "Añadir título",
+                    title: "Añadir título",
+                },
+                export: "Exportar tablero",
+            },
+            alert: {
+                tornarLlistat: "Volver al listado",
+                tornarTauler: "Volver al tablero por defecto",
+                notExists: "El panel de control no existe.",
+                notDefined: "No hay ningún panel de control definido.",
+                carregar: "Error al cargar el panel de control.",
+            }
+        },
+        tasques: {
+            filter: {
+                more: "Más campos",
+                finished: "Sólo finalizadas",
+            },
+            grid: {
+                groupHeader: "Nombre",
+                action: {
+                    obrir: "Obrir tasca",
+                }
+            }
+        },
+        avisos: {
+            filter: {
+                more: "Más campos",
+                finished: "Sólo finalitzados",
+            },
+            grid: {
+                groupHeader: "Nombre",
+            }
         },
         apps: {
             title: "Aplicaciones",
@@ -303,56 +405,6 @@ const translationEs = {
                 },
             },
         },
-        dashboards: {
-            title: "Cuadros de control",
-            edit: "Editar",
-            dashboardView: "Ir al panel de control",
-            cloneDashboard: {
-                title: "Clonar el panel de control",
-                success: "Panel de control clonado correctamente",
-            },
-            components: {
-                llistar: "Listar componentes",
-                afegir: "Añadir componente",
-            },
-            action: {
-                select: {
-                    title: "Seleccione el tablero a mostrar...",
-                },
-                llistarWidget: {
-                    label: "Listar widgets",
-                    title: "Listar widgets",
-                },
-                llistarTitle: {
-                    label: "Listar títulos",
-                    title: "Listar títulos",
-                },
-                patchItem: {
-                    success: "Guardado correctamente",
-                    warning: "No se pudo encontrar newDashboardItem con id {{id}}, la actualización no se propagará.",
-                    error: "Error al guardar",
-                    saveError: "Error al guardar",
-                },
-                addWidget: {
-                    label: "Añadir widget",
-                    title: "Añadir widget",
-                    success: "Widget añadido correctamente",
-                    error: "Error al añadir el widget",
-                },
-                afegirTitle: {
-                    label: "Añadir título",
-                    title: "Añadir título",
-                },
-                export: "Exportar tablero",
-            },
-            alert: {
-                tornarLlistat: "Volver al listado",
-                tornarTauler: "Volver al tablero por defecto",
-                notExists: "El panel de control no existe.",
-                notDefined: "No hay ningún panel de control definido.",
-                carregar: "Error al cargar el panel de control.",
-            }
-        },
         caches: {
             title: "Caches",
             buidar: {
@@ -525,6 +577,9 @@ const translationEs = {
         modal_dades_dia: "Datos disponibles del día",
         dimensions: "Dimensiones",
         indicadors: "Indicadores",
+    },
+    treeData: {
+        treeView: "Vista en árbol"
     },
 };
 

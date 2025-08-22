@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -7,7 +6,6 @@ import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import {useTheme} from '@mui/material/styles';
 import {
     BasePage,
     MuiDataGrid,
@@ -19,21 +17,26 @@ import {
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
 import {
-    GridColumnHeaderTitle,
-    GridGroupingColDefOverride,
     GridRowId,
     GridSlots,
-    GridTreeDataGroupingCell,
     useGridApiRef,
 } from '@mui/x-data-grid-pro';
 import {PieChart} from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
-import {Icon, IconButton} from '@mui/material';
 import {useParams} from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
-import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, SalutModel} from "../types/salut.model.ts";
+import {
+    ENUM_APP_ESTAT_PREFIX, getColorByIntegracio, getColorByMissatge,
+    getColorByStatEnum, getColorBySubsistema,
+    getMaterialIconByState,
+    SalutEstatEnum,
+    SalutModel,
+    TITLE
+} from "../types/salut.model.tsx";
 import {BaseEntity} from "../types/base-entity.model.ts";
 import {ChipColor} from "../util/colorUtil.ts";
+import {SalutChipTooltip, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
+import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
 
@@ -145,43 +148,43 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
                     data: [
                         {
                             id: SalutEstatEnum.UP,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP)} (${upValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP + TITLE)} (${upValue})`,
                             value: upValue,
                             color: getColorByStatEnum(SalutEstatEnum.UP),
                         },
                         {
                             id: SalutEstatEnum.WARN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN)} (${warnValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN + TITLE)} (${warnValue})`,
                             value: warnValue,
                             color: getColorByStatEnum(SalutEstatEnum.WARN),
                         },
                         {
                             id: SalutEstatEnum.DEGRADED,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED)} (${degradedValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED + TITLE)} (${degradedValue})`,
                             value: degradedValue,
                             color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
                         },
                         {
                             id: SalutEstatEnum.DOWN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN)} (${downValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE)} (${downValue})`,
                             value: downValue,
                             color: getColorByStatEnum(SalutEstatEnum.DOWN),
                         },
                         {
                             id: SalutEstatEnum.ERROR,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR)} (${errorValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE)} (${errorValue})`,
                             value: errorValue,
                             color: getColorByStatEnum(SalutEstatEnum.ERROR),
                         },
                         {
                             id: SalutEstatEnum.MAINTENANCE,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE)} (${maintenanceValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE + TITLE)} (${maintenanceValue})`,
                             value: maintenanceValue,
                             color: getColorByStatEnum(SalutEstatEnum.MAINTENANCE),
                         },
                         {
                             id: SalutEstatEnum.UNKNOWN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN)} (${unknownValue})`,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE)} (${unknownValue})`,
                             value: unknownValue,
                             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
                         },
@@ -192,28 +195,35 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
     );
 };
 
-const ItemStateChip: React.FC<any> = (props: { salutStatEnum: SalutEstatEnum; date?: string }) => {
-    const { salutStatEnum, date } = props;
+const ItemStateChip: React.FC<any> = (props: { salutField: keyof SalutModel; salutStatEnum: SalutEstatEnum; date?: string }) => {
+    const { salutField, salutStatEnum, date } = props;
     const { t } = useTranslation();
     return (
         <>
             {salutStatEnum && (
-                <Chip sx={{ bgcolor: getColorByStatEnum(salutStatEnum), color: ChipColor.WHITE,
-                    "& .MuiChip-label": {
-                        fontSize: "0.7rem !important",
-                    }}}
-                      label={t(ENUM_APP_ESTAT_PREFIX + salutStatEnum)}
-                      size="small"
-                />
+                <SalutChipTooltip stateEnum={salutStatEnum} salutField={salutField}>
+                    <Chip sx={{ bgcolor: getColorByStatEnum(salutStatEnum), color: ChipColor.WHITE,
+                        "& .MuiChip-label": {
+                            fontSize: "0.7rem !important",
+                        }}}
+                          icon={getMaterialIconByState(salutStatEnum)}
+                          label={t(ENUM_APP_ESTAT_PREFIX + salutStatEnum + TITLE)}
+                          size="small"
+                    />
+                </SalutChipTooltip>
+
             )}
             {!salutStatEnum && (
-                <Chip sx={{ bgcolor: getColorByStatEnum(SalutEstatEnum.UNKNOWN), color: ChipColor.WHITE,
-                    "& .MuiChip-label": {
-                        fontSize: "0.7rem !important",
-                    }}}
-                      label={t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN)}
-                      size="small"
-                />
+                <SalutChipTooltip stateEnum={SalutEstatEnum.UNKNOWN} salutField={salutField}>
+                    <Chip sx={{ bgcolor: getColorByStatEnum(SalutEstatEnum.UNKNOWN), color: ChipColor.WHITE,
+                        "& .MuiChip-label": {
+                            fontSize: "0.7rem !important",
+                        }}}
+                          icon={getMaterialIconByState(SalutEstatEnum.UNKNOWN)}
+                          label={t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE)}
+                          size="small"
+                    />
+                </SalutChipTooltip>
             )}
             {date && (<><br />
             <Typography variant="caption">{date}</Typography></>)}
@@ -231,35 +241,7 @@ const AppDataTable: React.FC<any> = (props: {
     const { t } = useTranslation();
     const { getLinkComponent } = useBaseAppContext();
     const gridApiRef = useGridApiRef();
-    const [apps, setApps] = React.useState<any[]>();
-    const [expandAll, setExpandAll] = useState<boolean>(true);
-    const [expansionState, setExpansionState] = React.useState<DefaultRowExpansionState>({});
-    const theme = useTheme();
 
-    const { isReady: appApiIsReady, find: appApiFind } = useResourceApiService('app');
-
-    const onRowExpansionChange: OnRowExpansionChangeFunction = (id, expanded) => {
-        setExpansionState((prevState) => ({
-            ...prevState,
-            [id]: expanded,
-        }));
-    };
-
-    React.useEffect(() => {
-        if (appApiIsReady) {
-            appApiFind({ unpaged: true, filter: springFilterBuilder.eq('activa', true) })
-                .then((response) => setApps(response.rows))
-                .catch(() => setApps([]));
-        }
-    }, [appApiIsReady]);
-
-    React.useEffect(() => {
-        if (gridApiRef.current) {
-            gridApiRef.current.subscribeEvent?.('rowExpansionChange', (node) => {
-                onRowExpansionChange(node.id, !!node.childrenExpanded);
-            });
-        }
-    }, [gridApiRef, gridApiRef.current, onRowExpansionChange]);
     const findSalutItem:(id: GridRowId) => SalutModel | null = React.useCallback(
         (id: GridRowId) => {
             const itemFounded = salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id)
@@ -269,14 +251,15 @@ const AppDataTable: React.FC<any> = (props: {
     );
 
     const renderItemStateChip = React.useCallback(
-        (id: GridRowId, stateEnum: keyof SalutModel) => {
+        (id: GridRowId, salutField: keyof SalutModel) => {
             const salutItem: SalutModel | null = findSalutItem(id);
             if (salutItem == null) {
                 return undefined;
             }
             return (
                 <ItemStateChip
-                    salutStatEnum={salutItem[stateEnum]}
+                    salutField={salutField}
+                    salutStatEnum={salutItem[salutField]}
                 />
             );
         },
@@ -343,22 +326,35 @@ const AppDataTable: React.FC<any> = (props: {
 
                     return (
                         <>
-                            <Chip
-                                label={salutItem.integracioUpCount}
-                                size="small"
-                                color="success"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.integracions.integracioUpCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_UP_COUNT), color: ChipColor.WHITE,
+                                        "& .MuiChip-label": {
+                                            // fontSize: "0.7rem !important",
+                                        }}}
+                                    label={salutItem.integracioUpCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip
-                                label={salutItem.integracioDownCount}
-                                size="small"
-                                color="error"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.integracions.integracioDownCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DOWN_COUNT), color: ChipColor.WHITE,
+                                        "& .MuiChip-label": {
+                                            // fontSize: "0.7rem !important",
+                                        }}}
+                                    label={salutItem.integracioDownCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip sx={{ bgcolor: theme.palette.grey[600], color: ChipColor.WHITE }}
-                                label={salutItem.integracioDesconegutCount}
-                                size="small"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.integracions.integracioDesconegutCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DESCONEGUT_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.integracioDesconegutCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                         </>
                     );
                 },
@@ -376,17 +372,21 @@ const AppDataTable: React.FC<any> = (props: {
                     }
                     return (
                         <>
-                            <Chip
-                                label={salutItem.subsistemaUpCount}
-                                size="small"
-                                color="success"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaUpCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_UP_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.subsistemaUpCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip
-                                label={salutItem.subsistemaDownCount}
-                                size="small"
-                                color="error"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaDownCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_DOWN_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.subsistemaDownCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                         </>
                     );
                 },
@@ -404,19 +404,29 @@ const AppDataTable: React.FC<any> = (props: {
                     }
                     return (
                         <>
-                            <Chip
-                                label={salutItem.missatgeErrorCount}
-                                size="small"
-                                color="error"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeErrorCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_ERROR_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.missatgeErrorCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip
-                                label={salutItem.missatgeWarnCount}
-                                size="small"
-                                color="warning"
-                            />
+                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeWarnCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.missatgeWarnCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <Chip label={salutItem.missatgeInfoCount} size="small" color={ChipColor.INFO} />
+                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeInfoCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_INFO_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.missatgeInfoCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                         </>
                     );
                 },
@@ -436,70 +446,13 @@ const AppDataTable: React.FC<any> = (props: {
         ];
     }, [findSalutItem, getLinkComponent, renderItemStateChip, t]);
 
-    const groupingColDef: GridGroupingColDefOverride = React.useMemo(() => ({
-        flex: 1,
-        headerName: t('page.salut.apps.column.group'),
-        renderHeader: (params: any) => (<Box
-            sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                flex: 1,
-            }}>
-            <GridColumnHeaderTitle label={params?.colDef?.headerName} columnWidth={params.colDef.computedWidth} />
-            <Box sx={{ display: 'flex', gap: 1, ml: 1 }}>
-                <IconButton
-                    size="small"
-                    onClick={() => {
-                        setExpandAll(true);
-                        if (expansionState != null) {
-                            Object.keys(expansionState).map((id) => {
-                                onRowExpansionChange(id, true);
-                            });
-                        }
-                    }}>
-                    <Icon fontSize="small">unfold_more</Icon>
-                </IconButton>
-                <IconButton
-                    size="small"
-                    onClick={() => {
-                        setExpandAll(false);
-                        if (expansionState != null) {
-                            Object.keys(expansionState).map((id) => {
-                                onRowExpansionChange(id, false);
-                            });
-                        }
-                    }}>
-                    <Icon fontSize="small">unfold_less</Icon>
-                </IconButton>
-            </Box>
-        </Box>),
-        renderCell: (params: any) => {
-            const app = apps?.find((app) => app.id === params.formattedValue);
-            if (typeof params.id === 'number' || app == null) {
-                return <GridTreeDataGroupingCell {...params} />;
-            }
-            return (
-                <GridTreeDataGroupingCell
-                    {...params}
-                    formattedValue={
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                            }}>
-                            {app.logo && <img
-                                src={'data:image/png;base64,' + app.logo}
-                                alt="Logo de l'aplicació"
-                                style={{ height: '48px' }}/>}
-                            {app.nom}
-                        </Box>
-                    }/>
-            );
-        },
-    }), [columns.length, expansionState, onRowExpansionChange, apps]);
+    const treeDataRenderCell = useTreeDataEntornAppRenderCell();
+    const { dataGridProps: treeDataGridProps } = useTreeData(
+        (row) => [row.app.id, row.entorn.description],
+        t('page.salut.apps.column.group'),
+        1,
+        true,
+        { renderCell: treeDataRenderCell });
 
     return (
         <MuiDataGrid
@@ -515,15 +468,11 @@ const AppDataTable: React.FC<any> = (props: {
             toolbarHideQuickFilter
             toolbarHideRefresh
             readOnly
-            treeData
-            getTreeDataPath={(row) => [row.app.id, row.entorn.description]}
-            groupingColDef={groupingColDef}
-            isGroupExpandedByDefault={(node) => expansionState[node.id] != null ? expansionState[node.id] : expandAll}
+            {...treeDataGridProps}
             hideFooter
             slots={{
                 noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],
             }}
-            autoHeight
         />
     );
 };

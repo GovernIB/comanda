@@ -72,7 +72,7 @@ const useAppEstatLabel = () => {
   return (estat?: string) => {
     switch (estat) {
       case 'UP':
-        return t('enum.appEstat.UP');
+        return t('enum.appEstat.UP.title');
       case 'WARN':
         return t('enum.appEstat.WARN');
       case 'DOWN':

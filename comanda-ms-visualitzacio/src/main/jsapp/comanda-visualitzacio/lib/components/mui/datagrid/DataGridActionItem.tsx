@@ -5,11 +5,13 @@ import { useBaseAppContext } from '../../BaseAppContext';
 
 type DataGridActionItemProps = {
     id: any;
+    label: string;
     title?: string;
-    row?: any;
     icon?: string;
+    row?: any;
     linkTo?: string;
     linkState?: any;
+    linkTarget?: string;
     onClick?: any;
     onClickCustom?: DataGridActionItemOnClickFn;
     showInMenu?: boolean;
@@ -20,11 +22,13 @@ export type DataGridActionItemOnClickFn = (id: any, row: any, event: React.Mouse
 
 export const toDataGridActionItem = (
     id: any,
-    title: string,
-    row?: any,
+    label: string,
+    title?: string,
     icon?: string,
+    row?: any,
     linkTo?: string,
     linkState?: any,
+    linkTarget?: string,
     onClick?: DataGridActionItemOnClickFn,
     showInMenu?: boolean,
     disabled?: boolean
@@ -32,11 +36,13 @@ export const toDataGridActionItem = (
     return (
         <DataGridActionItem
             id={id}
+            label={label}
             title={title}
-            row={row}
             icon={icon}
+            row={row}
             linkTo={linkTo}
             linkState={linkState}
+            linkTarget={linkTarget}
             onClickCustom={onClick}
             showInMenu={showInMenu}
             disabled={disabled}
@@ -47,11 +53,13 @@ export const toDataGridActionItem = (
 const DataGridActionItem: React.FC<DataGridActionItemProps> = (props) => {
     const {
         id,
-        title,
-        row,
+        label,
+        title: titleProp,
         icon,
+        row,
         linkTo,
         linkState,
+        linkTarget,
         onClick,
         onClickCustom,
         showInMenu,
@@ -62,16 +70,21 @@ const DataGridActionItem: React.FC<DataGridActionItemProps> = (props) => {
     linkTo && (additionalProps['component'] = getLinkComponent());
     linkTo && (additionalProps['to'] = linkTo);
     linkState && (additionalProps['state'] = linkState);
-    return (
+    linkTarget && (additionalProps['target'] = linkTarget);
+    const title = !showInMenu ? label : titleProp;
+    const actionCellItem = (
         <GridActionsCellItem
-            label={title}
-            title={!showInMenu ? title : undefined}
+            label={label}
+            title={title}
             icon={icon ? <Icon>{icon}</Icon> : undefined}
-            onClick={(event) => (onClickCustom ? onClickCustom?.(id, row, event) : onClick(event))}
+            onClick={(event) => {
+                onClickCustom ? onClickCustom?.(id, row, event) : onClick(event);
+            }}
             disabled={disabled}
             {...additionalProps}
         />
     );
+    return title && disabled ? <div title={title}>{actionCellItem}</div> : actionCellItem;
 };
 
 export default DataGridActionItem;

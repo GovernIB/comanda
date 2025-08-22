@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Builder
 @Getter
@@ -17,11 +18,11 @@ public class Avis implements Serializable {
     private String appCodi;
     private String entornCodi;
 
-    private Long identificador;
+    private String identificador;
     private AvisTipus tipus;
     private String nom;
     private String descripcio;
-    private LocalDate dataInici;
-    private LocalDate dataFi;
+    private LocalDateTime dataInici;
+    private LocalDateTime dataFi;
 
 }

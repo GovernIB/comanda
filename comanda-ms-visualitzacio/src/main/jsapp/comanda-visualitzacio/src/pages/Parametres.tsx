@@ -170,13 +170,13 @@ const ParametresGrid: React.FC<{
         rowAdditionalActions={
             [
                 {
-                    title: tLib('datacommon.update.title'),
+                    label: tLib('datacommon.update.title'),
                     icon: 'edit',
                     clickShowUpdateDialog: true,
                     hidden: (row) => !row?.id || !row?.editable,
                 },
                 {
-                    title: tLib('datacommon.details.title'),
+                    label: tLib('datacommon.details.title'),
                     icon: 'info',
                     showInMenu: true,//TODO Al actualizar la libreria se quitara del menu para no tener que hacer dos clicks. El motivo es un error de boton de accion inline.
                     onClick: showDetail,

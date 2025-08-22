@@ -3,7 +3,9 @@ package es.caib.comanda.avisos.persist.entity;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.broker.model.AvisTipus;
+import es.caib.comanda.ms.broker.model.Tasca;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -48,5 +50,18 @@ public class AvisEntity extends BaseAuditableEntity<Avis> {
         private LocalDateTime dataInici;
         @Column(name = "data_fi")
         private LocalDateTime dataFi;
+
+        @Builder
+        public AvisEntity(Avis avis) {
+                this.entornAppId = avis.getEntornAppId();
+                this.entornId = avis.getEntornId();
+                this.appId = avis.getAppId();
+                this.identificador = avis.getIdentificador();
+                this.tipus = avis.getTipus();
+                this.nom = avis.getNom();
+                this.descripcio = avis.getDescripcio();
+                this.dataInici = avis.getDataInici();
+                this.dataFi = avis.getDataFi();
+        }
 
 }

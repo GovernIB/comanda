@@ -1,13 +1,34 @@
 const translationEn = {
     enum: {
         appEstat: {
-            UP: "Up",
-            WARN: "Warn",
-            DOWN: "Down",
-            DEGRADED: "Degraded",
-            MAINTENANCE: "Maintenance",
-            UNKNOWN: "Unknown",
-            ERROR: "Error",
+            UP: {
+                title: "Up",
+                tooltip: "The application is working <bold>correctly</bold>. <br> The rate of <italic>detected errors</italic> is <underline>less than 5%</underline>."
+            },
+            WARN: {
+                title: "Warn",
+                tooltip: "The rate of <italic>detected errors</italic> is <underline>between 5% and 10%</underline>."
+            },
+            DOWN: {
+                title: "Down",
+                tooltip: "<bold>Errors have been detected</bold>. <br> The <italic>errors detected</italic> rate is <underline>greater than 30%</underline>."
+            },
+            DEGRADED: {
+                title: "Degraded",
+                tooltip: "<bold>There are occasional errors</bold>. <br> The <italic>rate of detected errors</italic> is <underline>between 10% and 30%</underline>."
+            },
+            MAINTENANCE: {
+                title: "Maintenance",
+                tooltip: "The application <bold>is unavailable</bold> due to <underline>maintenance</underline>."
+            },
+            UNKNOWN: {
+                title: "Unknown",
+                tooltip: "<bold>No information available</bold> about the application status."
+            },
+            ERROR: {
+                title: "Error",
+                tooltip: "The application <bold>is unavailable</bold> due to <underline>serious operational errors</underline>."
+            },
         },
     },
     menu: {
@@ -92,6 +113,9 @@ const translationEn = {
             },
             integracions: {
                 title: "Integrations",
+                integracioUpCount: "Active",
+                integracioDownCount: "Inactive",
+                integracioDesconegutCount: "Unknown state",
                 noInfo: "There is no information about integrations",
                 column: {
                     codi: "Code",
@@ -103,6 +127,8 @@ const translationEn = {
             },
             subsistemes: {
                 title: "Subsystems",
+                subsistemaUpCount: "Active",
+                subsistemaDownCount: "Inactive",
                 noInfo: "There is no information about subsystems",
                 column: {
                     codi: "Code",
@@ -110,6 +136,11 @@ const translationEn = {
                     estat: "State",
                     latencia: "Latency",
                 },
+            },
+            msgs: {
+                missatgeErrorCount: "Errors",
+                missatgeWarnCount: "Warnings",
+                missatgeInfoCount: "Info"
             },
             contexts: {
                 title: "Contexts",
@@ -129,6 +160,77 @@ const translationEn = {
             estats: {
                 title: "States",
             },
+        },
+        dashboards: {
+            title: "Dashboards",
+            edit: "Edit",
+            dashboardView: "Go to dashboard",
+            cloneDashboard: {
+                title: "Clone the dashboard",
+                success: "Dashboard cloned correctly",
+            },
+            components: {
+                llistar: "List components",
+                afegir: "Add component",
+            },
+            action: {
+                select: {
+                    title: "Select the dashboard to display...",
+                },
+                llistarWidget: {
+                    label: "List widgets",
+                    title: "List widgets",
+                },
+                llistarTitle: {
+                    label: "List titles",
+                    title: "List titles",
+                },
+                patchItem: {
+                    success: "Saved successfully",
+                    warning: "Could not find newDashboardItem with id {{id}}, the update will not propagate.",
+                    error: "Error while saving",
+                    saveError: "Save error",
+                },
+                addWidget: {
+                    label: "Add widget",
+                    title: "Add widget",
+                    success: "Widget added successfully",
+                    error: "Error while adding the widget",
+                },
+                afegirTitle: {
+                    label: "Add title",
+                    title: "Add title",
+                },
+                export: "Export dashboard",
+            },
+            alert: {
+                tornarLlistat: "Return to list",
+                tornarTauler: "Return to default dashboard",
+                notExists: "The dashboard does not exist.",
+                notDefined: "No dashboard is defined.",
+                carregar: "Error loading the dashboard.",
+            }
+        },
+        tasques: {
+            filter: {
+                more: "More fields",
+                finished: "Finished only",
+            },
+            grid: {
+                groupHeader: "Name",
+                action: {
+                    obrir: "Open task",
+                }
+            }
+        },
+        avisos: {
+            filter: {
+                more: "More fields",
+                finished: "Finished only",
+            },
+            grid: {
+                groupHeader: "Name",
+            }
         },
         apps: {
             title: "Applications",
@@ -302,56 +404,6 @@ const translationEn = {
                 },
             },
         },
-        dashboards: {
-            title: "Dashboards",
-            edit: "Edit",
-            dashboardView: "Go to dashboard",
-            cloneDashboard: {
-                title: "Clone the dashboard",
-                success: "Dashboard cloned correctly",
-            },
-            components: {
-                llistar: "List components",
-                afegir: "Add component",
-            },
-            action: {
-                select: {
-                    title: "Select the dashboard to display...",
-                },
-                llistarWidget: {
-                    label: "List widgets",
-                    title: "List widgets",
-                },
-                llistarTitle: {
-                    label: "List titles",
-                    title: "List titles",
-                },
-                patchItem: {
-                    success: "Saved successfully",
-                    warning: "Could not find newDashboardItem with id {{id}}, the update will not propagate.",
-                    error: "Error while saving",
-                    saveError: "Save error",
-                },
-                addWidget: {
-                    label: "Add widget",
-                    title: "Add widget",
-                    success: "Widget added successfully",
-                    error: "Error while adding the widget",
-                },
-                afegirTitle: {
-                    label: "Add title",
-                    title: "Add title",
-                },
-                export: "Export dashboard",
-            },
-            alert: {
-                tornarLlistat: "Return to list",
-                tornarTauler: "Return to default dashboard",
-                notExists: "The dashboard does not exist.",
-                notDefined: "No dashboard is defined.",
-                carregar: "Error loading the dashboard.",
-            }
-        },
         caches: {
             title: "Caches",
             buidar: {
@@ -524,6 +576,9 @@ const translationEn = {
         modal_dades_dia: "Available data for the day",
         dimensions: "Dimensions",
         indicadors: "Indicators",
+    },
+    treeData: {
+        treeView: "Tree view"
     },
 };
 

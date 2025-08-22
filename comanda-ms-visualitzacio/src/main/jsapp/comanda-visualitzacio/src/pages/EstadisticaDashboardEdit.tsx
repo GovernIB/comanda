@@ -141,7 +141,7 @@ const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
             filter={filter}
             rowAdditionalActions={[
                 {
-                    title: t('page.widget.action.add.label'),
+                    label: t('page.widget.action.add.label'),
                     icon: 'add',
                     onClick: onAddClick,
                 },
@@ -377,13 +377,13 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                 rowActionsColumnProps={{ width: 10 }}
                 rowAdditionalActions={[
                     {
-                        title: tLib('datacommon.update.title'),
+                        label: tLib('datacommon.update.title'),
                         icon: 'edit',
                         clickShowUpdateDialog: true,
                         hidden: !form,
                     },
                     {
-                        title: tLib('datacommon.delete.title'),
+                        label: tLib('datacommon.delete.title'),
                         icon: 'delete',
                         onClick: onDeleteClick,
                     },

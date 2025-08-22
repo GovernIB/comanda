@@ -34,8 +34,10 @@ public class Avis extends BaseResource<Long> {
 
     @NotNull
     private Long entornAppId;
+    private Long entornId;
+    private Long appId;
 
-    @NotNull @Size(max = 64)
+    @NotNull
     private String identificador;
     @NotNull
     private AvisTipus tipus;
@@ -54,13 +56,12 @@ public class Avis extends BaseResource<Long> {
     @AllArgsConstructor
     @FieldNameConstants
     public static class AvisFilter implements Serializable {
-//        private ResourceReference<App, Long> app;
-//        private ResourceReference<Entorn, Long> entorn;
-
         private String nom;
         private String descripcio;
         private AvisTipus tipus;
-        private LocalDateTime dataInici;
-        private LocalDateTime dataFi;
+        private LocalDateTime dataInici1;
+        private LocalDateTime dataInici2;
+        private LocalDateTime dataFi1;
+        private LocalDateTime dataFi2;
     }
 }

@@ -1,13 +1,34 @@
 const translationCa = {
     enum: {
         appEstat: {
-            UP: "Actiu",
-            WARN: "Avís",
-            DOWN: "Inactiu",
-            DEGRADED: "Degradat",
-            MAINTENANCE: "Manteniment",
-            UNKNOWN: "Desconegut",
-            ERROR: "Erreur",
+            UP: {
+                title: "Actiu",
+                tooltip: "L'aplicació funciona <bold>correctament</bold>. <br> La taxa de <italic>errors detectats</italic> és <underline>inferior al 5%</underline>."
+            },
+            WARN: {
+                title: "Avís",
+                tooltip: "La taxa <italic>errors detectats</italic> està <underline>entre el 5% i el 10%</underline>."
+            },
+            DOWN: {
+                title: "Inactiu",
+                tooltip: "<bold>S'han detectat errors</bold>. <br> La <italic>taxa de errors detectats</italic> és <underline>superior al 30%</underline>."
+            },
+            DEGRADED: {
+                title: "Degradat",
+                tooltip: "<bold>Hi ha errors puntuals</bold>. <br> La <italic>taxa d'errors detectats</italic> està <underline>entre el 10% i el 30%</underline>."
+            },
+            MAINTENANCE: {
+                title: "Manteniment",
+                tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>tasques de manteniment</underline>."
+            },
+            UNKNOWN: {
+                title: "Desconegut",
+                tooltip: "<bold>No teniu informació</bold> sobre l'estat de l'aplicació."
+            },
+            ERROR: {
+                title: "Erreur",
+                tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>errors greus en el funcionament</underline>."
+            },
         }
     },
     menu: {
@@ -92,6 +113,9 @@ const translationCa = {
             },
             integracions: {
                 title: "Integracions",
+                integracioUpCount: "Actives",
+                integracioDownCount: "Inactives",
+                integracioDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de integracions",
                 column: {
                     codi: "Codi",
@@ -103,6 +127,8 @@ const translationCa = {
             },
             subsistemes: {
                 title: "Subsistemes",
+                subsistemaUpCount: "Actives",
+                subsistemaDownCount: "Inactives",
                 noInfo: "No hi ha informació de subsistemes",
                 column: {
                     codi: "Codi",
@@ -110,6 +136,11 @@ const translationCa = {
                     estat: "Estat",
                     latencia: "Latència",
                 },
+            },
+            msgs: {
+                missatgeErrorCount: "Errors",
+                missatgeWarnCount: "Alertes",
+                missatgeInfoCount: "Informació"
             },
             contexts: {
                 title: "Contexts",
@@ -129,6 +160,77 @@ const translationCa = {
             estats: {
                 title: "Estats",
             },
+        },
+        dashboards: {
+            title: "Taulers de control",
+            edit: "Editar",
+            dashboardView: "Anar al taulers de control",
+            cloneDashboard: {
+                title: "Clonar el tauler de control",
+                success: "Tauler de controls clonat correctament",
+            },
+            components: {
+                llistar: "Llistar components",
+                afegir: "Afegir component",
+            },
+            action: {
+                select: {
+                    title: "Seleccioni el tauler a mostrar...",
+                },
+                llistarWidget: {
+                    label: "Llistar widgets",
+                    title: "Llistar widgets",
+                },
+                llistarTitle: {
+                    label: "Llistar títols",
+                    title: "Llistar títols",
+                },
+                patchItem: {
+                    success: "Desat correctament",
+                    warning: "No s'ha pogut trobar el newDashboardItem amb l'id {{id}}, l'actualització no es propagarà.",
+                    error: "Error en desar",
+                    saveError: "Error en desar",
+                },
+                addWidget: {
+                    label: "Afegir widget",
+                    title: "Afegir widget",
+                    success: "Widget afegit correctament",
+                    error: "Error en afegir el widget",
+                },
+                afegirTitle: {
+                    label: "Afegir títol",
+                    title: "Afegir títol",
+                },
+                export: "Exportar tauler",
+            },
+            alert: {
+                tornarLlistat: "Tornar al llistat",
+                tornarTauler: "Tornar al tauler per defecte",
+                notExists: "El tauler de control no existeix.",
+                notDefined: "No hi ha cap tauler de control definit.",
+                carregar: "Error en carregar el tauler de control.",
+            }
+        },
+        tasques: {
+            filter: {
+                more: "Més camps",
+                finished: "Només finalitzades",
+            },
+            grid: {
+                groupHeader: "Nom",
+                action: {
+                    obrir: "Obrir tasca",
+                }
+            }
+        },
+        avisos: {
+            filter: {
+                more: "Més camps",
+                finished: "Només finalitzats",
+            },
+            grid: {
+                groupHeader: "Nom",
+            }
         },
         apps: {
             title: "Aplicacions",
@@ -302,56 +404,6 @@ const translationCa = {
                 }
             },
         },
-        dashboards: {
-            title: "Taulers de control",
-            edit: "Editar",
-            dashboardView: "Anar al taulers de control",
-            cloneDashboard: {
-                title: "Clonar el tauler de control",
-                success: "Tauler de controls clonat correctament",
-            },
-            components: {
-                llistar: "Llistar components",
-                afegir: "Afegir component",
-            },
-            action: {
-                select: {
-                    title: "Seleccioni el tauler a mostrar...",
-                },
-                llistarWidget: {
-                    label: "Llistar widgets",
-                    title: "Llistar widgets",
-                },
-                llistarTitle: {
-                    label: "Llistar títols",
-                    title: "Llistar títols",
-                },
-                patchItem: {
-                    success: "Desat correctament",
-                    warning: "No s'ha pogut trobar el newDashboardItem amb l'id {{id}}, l'actualització no es propagarà.",
-                    error: "Error en desar",
-                    saveError: "Error en desar",
-                },
-                addWidget: {
-                    label: "Afegir widget",
-                    title: "Afegir widget",
-                    success: "Widget afegit correctament",
-                    error: "Error en afegir el widget",
-                },
-                afegirTitle: {
-                    label: "Afegir títol",
-                    title: "Afegir títol",
-                },
-                export: "Exportar tauler",
-            },
-            alert: {
-                tornarLlistat: "Tornar al llistat",
-                tornarTauler: "Tornar al tauler per defecte",
-                notExists: "El tauler de control no existeix.",
-                notDefined: "No hi ha cap tauler de control definit.",
-                carregar: "Error en carregar el tauler de control.",
-            }
-        },
         caches: {
             title: "Caches",
             buidar: {
@@ -524,6 +576,9 @@ const translationCa = {
         modal_dades_dia: "Dades disponibles del dia",
         dimensions: "Dimensions",
         indicadors: "Indicadors",
+    },
+    treeData: {
+        treeView: "Vista en arbre"
     },
 };
 

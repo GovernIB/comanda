@@ -4,6 +4,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.broker.model.Prioritat;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -69,5 +70,24 @@ public class TascaEntity extends BaseAuditableEntity<Tasca> {
     @CollectionTable(name = BaseConfig.DB_PREFIX + "tasca_grup")
     @Column(name = "grup")
     private List<String> grupsAmbPermis;
+
+    @Builder
+    public TascaEntity(Tasca tasca) {
+        this.entornAppId = tasca.getEntornAppId();
+        this.entornId = tasca.getEntornId();
+        this.appId = tasca.getAppId();
+        this.identificador = tasca.getIdentificador();
+        this.tipus = tasca.getTipus();
+        this.nom = tasca.getNom();
+        this.descripcio = tasca.getDescripcio();
+        this.prioritat = tasca.getPrioritat();
+        this.dataInici = tasca.getDataInici();
+        this.dataFi = tasca.getDataFi();
+        this.dataCaducitat = tasca.getDataCaducitat();
+        this.url = tasca.getUrl();
+        this.responsable = tasca.getResponsable();
+        this.usuarisAmbPermis = tasca.getUsuarisAmbPermis();
+        this.grupsAmbPermis = tasca.getGrupsAmbPermis();
+    }
 
 }

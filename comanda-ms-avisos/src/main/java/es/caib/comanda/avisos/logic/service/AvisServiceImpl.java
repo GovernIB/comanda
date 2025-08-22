@@ -4,8 +4,10 @@ import es.caib.comanda.avisos.logic.helper.AvisClientHelper;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.avisos.logic.intf.service.AvisService;
 import es.caib.comanda.avisos.persist.entity.AvisEntity;
+import es.caib.comanda.avisos.persist.repository.AvisRepository;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +16,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
+import java.util.Optional;
+
 import static es.caib.comanda.ms.broker.model.Cues.CUA_AVISOS;
+import static es.caib.comanda.ms.broker.model.Cues.CUA_TASQUES;
 
 @Slf4j
 @Service
@@ -29,10 +34,38 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
 
     @JmsListener(destination = CUA_AVISOS)
-    public void receiveMessage(es.caib.comanda.ms.broker.model.Avis avis) {
-        log.debug("Avís rebut: " + avis);
-
-        // TODO: Desar avís a BBDD
+    public void receiveMessage(es.caib.comanda.ms.broker.model.Avis avisBroker) {
+        log.debug("Processat avís de la cua " + CUA_TASQUES + " (avís={})", avisBroker);
+        Optional<EntornApp> entornApp = avisClientHelper.entornAppFindByEntornCodiAndAppCodi(
+                avisBroker.getEntornCodi(),
+                avisBroker.getAppCodi());
+        if (entornApp.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    EntornApp.class,
+                    "(entornCodi=" + avisBroker.getEntornCodi() + ", appCodi=" + avisBroker.getAppCodi() + ")");
+        }
+        Optional<AvisEntity> avisExistent = ((AvisRepository)entityRepository).findByEntornAppIdAndIdentificador(
+                entornApp.get().getId(),
+                avisBroker.getIdentificador());
+        if (avisExistent.isEmpty()) {
+            Avis avis = new Avis();
+            avis.setEntornAppId(entornApp.get().getId());
+            avis.setEntornId(entornApp.get().getEntorn().getId());
+            avis.setAppId(entornApp.get().getApp().getId());
+            avis.setIdentificador(avisBroker.getIdentificador());
+            avis.setTipus(avisBroker.getTipus());
+            avis.setNom(avisBroker.getNom());
+            avis.setDescripcio(avisBroker.getDescripcio());
+            avis.setDataInici(avisBroker.getDataInici());
+            avis.setDataFi(avisBroker.getDataFi());
+            entityRepository.save(AvisEntity.builder().avis(avis).build());
+        } else {
+            avisExistent.get().setTipus(avisBroker.getTipus());
+            avisExistent.get().setNom(avisBroker.getNom());
+            avisExistent.get().setDescripcio(avisBroker.getDescripcio());
+            avisExistent.get().setDataInici(avisBroker.getDataInici());
+            avisExistent.get().setDataFi(avisBroker.getDataFi());
+        }
     }
 
     public class PathPerspectiveApplicator implements PerspectiveApplicator<AvisEntity, Avis> {
@@ -42,4 +75,5 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
             resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
         }
     }
+
 }

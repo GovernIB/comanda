@@ -41,7 +41,7 @@ const useActions = (refresh?: () => void) => {
     const appExport = (id:any) => report(id, 'app_export', t('page.apps.action.export'), 'JSON')
     const appActions: DataCommonAdditionalAction[] = [
         {
-            title: t('page.apps.action.export'),
+            label: t('page.apps.action.export'),
             icon: 'download',
             showInMenu: true,
             onClick: appExport,

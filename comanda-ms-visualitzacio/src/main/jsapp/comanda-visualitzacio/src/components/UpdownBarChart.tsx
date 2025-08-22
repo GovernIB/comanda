@@ -2,7 +2,7 @@ import * as React from 'react';
 import {BarChart} from '@mui/x-charts/BarChart';
 import {generateDataGroups, isDataInGroup, toXAxisDataGroups} from '../util/dataGroup';
 import {useTranslation} from "react-i18next";
-import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum} from "../types/salut.model.ts";
+import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, TITLE} from "../types/salut.model.tsx";
 
 export type UpdownBarChartProps = {
     dataInici: string;
@@ -72,43 +72,43 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const series = [
         {
             data: seriesUp,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP),
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.UP),
         },
         {
             data: seriesWarn,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN),
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.WARN),
         },
         {
             data: seriesDegraded,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED),
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
         },
         {
             data: seriesDown,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN),
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.DOWN),
         },
         {
             data: seriesError,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR),
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.ERROR),
         },
         {
             data: seriesMaintenance,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE),
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.MAINTENANCE),
         },
         {
             data: seriesUnknown,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN),
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
         }

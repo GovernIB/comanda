@@ -2,28 +2,21 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     MuiFilter,
     FormField,
     springFilterBuilder,
     useFormApiRef,
     useFilterApiRef,
 } from 'reactlib';
-import {
-    Box,
-    Grid,
-    Typography,
-    Icon,
-    Button,
-    IconButton,
-    FormGroup,
-    FormControlLabel,
-    Switch
-} from '@mui/material';
-import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
-
-const perspectives = ['PATH', 'EXPIRATION'];
-const sortModel: any = [{field: 'dataInici', sort: 'asc'}];
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Icon from '@mui/material/Icon';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import { useTreeData } from '../hooks/treeData';
+import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
 
 export const StyledPrioritat = (props: any) => {
     const {entity, children} = props;
@@ -56,38 +49,7 @@ export const StyledPrioritat = (props: any) => {
         }}>{children}</Typography>;
 }
 
-const columns = [{
-    field: 'descripcio',
-    flex: 1,
-}, {
-    field: 'tipus',
-    flex: 1,
-}, {
-    field: 'prioritat',
-    flex: 0.5,
-    renderCell: (param:any) => <StyledPrioritat entity={param.row}>{param?.formattedValue}</StyledPrioritat>,
-}, {
-    field: 'dataInici',
-    flex: 0.5,
-}, {
-    field: 'dataFi',
-    flex: 0.5,
-}, {
-    field: 'dataCaducitat',
-    flex: 0.5,
-    renderCell: (param:any) => {
-        const style = param?.row?.diesPerCaducar == null ? {} :
-        param?.row?.diesPerCaducar <= 0 ? { color: 'white', backgroundColor: '#6b0707' } :
-        param?.row?.diesPerCaducar <= 3 ? { color: 'white', backgroundColor: 'error.main' } :
-        param?.row?.diesPerCaducar <= 5 ? { color: 'white', backgroundColor: 'warning.main' } :
-        {};
-        return <Typography variant={'inherit'} sx={{p: 1, borderRadius: '4px', ...style}}>
-            {param?.formattedValue}
-        </Typography>
-    },
-}];
-
-const TascaFilter = (props:any) => {
+const TascaFilter = (props: any) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
     const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
@@ -105,8 +67,8 @@ const TascaFilter = (props:any) => {
     return <>
         <MuiFilter
             apiRef={appEntornFilterApiRef}
-            resourceName={'entornApp'}
-            code={'salut_entornApp_filter'}
+            resourceName="entornApp"
+            code="salut_entornApp_filter"
             commonFieldComponentProps={{ size: 'small' }}
             springFilterBuilder={data => {
                 moreFormApiRef.current?.setFieldValue('appId', data.app);
@@ -125,7 +87,7 @@ const TascaFilter = (props:any) => {
                 <Button
                     onClick={() => setFinishedOnly(fo => !fo)}
                     variant={finishedOnly ? 'contained' : 'outlined'}
-                    title="Només finalitzades"
+                    title={t('page.tasques.filter.finished')}
                     sx={{ mr: 2 }}>
                     <Icon>done_all</Icon>
                 </Button>
@@ -137,7 +99,7 @@ const TascaFilter = (props:any) => {
                 </IconButton>
                 <IconButton
                     onClick={() => setMoreFields((mf) => !mf)}
-                    title="Més camps">
+                    title={t('page.tasques.filter.more')}>
                     <Icon>filter_list</Icon>
                 </IconButton>
             </Box>
@@ -145,8 +107,8 @@ const TascaFilter = (props:any) => {
         <MuiFilter
             apiRef={moreFilterApiRef}
             formApiRef={moreFormApiRef}
-            resourceName={'tasca'}
-            code={'FILTER'}
+            resourceName="tasca"
+            code="FILTER"
             initialData={{ finalitzada: finishedOnly }}
             springFilterBuilder={data => springFilterBuilder.and(
                 springFilterBuilder.eq('appId', data?.appId?.id),
@@ -166,78 +128,97 @@ const TascaFilter = (props:any) => {
             onSpringFilterChange={onSpringFilterChange}
             commonFieldComponentProps={{ size: 'small' }}>
             <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
-                <Grid size={3}><FormField name={'nom'}/></Grid>
-                <Grid size={3}><FormField name={'descripcio'}/></Grid>
-                <Grid size={3}><FormField name={'tipus'}/></Grid>
-                <Grid size={3}><FormField name={'prioritat'}/></Grid>
-                <Grid size={2}><FormField name={'dataInici1'}/></Grid>
-                <Grid size={2}><FormField name={'dataInici2'}/></Grid>
-                <Grid size={2}><FormField name={'dataFi1'}/></Grid>
-                <Grid size={2}><FormField name={'dataFi2'}/></Grid>
-                <Grid size={2}><FormField name={'dataCaducitat1'}/></Grid>
-                <Grid size={2}><FormField name={'dataCaducitat2'}/></Grid>
+                <Grid size={3}><FormField name="nom" /></Grid>
+                <Grid size={3}><FormField name="descripcio" /></Grid>
+                <Grid size={3}><FormField name="tipus" /></Grid>
+                <Grid size={3}><FormField name="prioritat" /></Grid>
+                <Grid size={2}><FormField name="dataInici1" /></Grid>
+                <Grid size={2}><FormField name="dataInici2" /></Grid>
+                <Grid size={2}><FormField name="dataFi1" /></Grid>
+                <Grid size={2}><FormField name="dataFi2" /></Grid>
+                <Grid size={2}><FormField name="dataCaducitat1" /></Grid>
+                <Grid size={2}><FormField name="dataCaducitat2" /></Grid>
             </Grid>
         </MuiFilter>
     </>;
 }
 
+const dataGridCommonColumns = [{
+    field: 'descripcio',
+    flex: 2,
+}, {
+    field: 'tipus',
+    flex: .5,
+}, {
+    field: 'prioritat',
+    flex: 0.5,
+    renderCell: (param:any) => <StyledPrioritat entity={param.row}>{param?.formattedValue}</StyledPrioritat>,
+}, {
+    field: 'dataInici',
+    flex: 1,
+}, {
+    field: 'dataCaducitat',
+    flex: 1,
+    renderCell: (param:any) => {
+        const style = param?.row?.diesPerCaducar == null ? {} :
+        param?.row?.diesPerCaducar <= 0 ? { color: 'white', backgroundColor: '#6b0707' } :
+        param?.row?.diesPerCaducar <= 3 ? { color: 'white', backgroundColor: 'error.main' } :
+        param?.row?.diesPerCaducar <= 5 ? { color: 'white', backgroundColor: 'warning.main' } :
+        {};
+        return <Typography variant={'inherit'} sx={{p: 1, borderRadius: '4px', ...style}}>
+            {param?.formattedValue}
+        </Typography>
+    },
+}, {
+    field: 'dataFi',
+    flex: 1,
+}];
+const dataGridPerspectives = ['PATH', 'EXPIRATION'];
+const dataGridSortModel: any = [{ field: 'dataInici', sort: 'asc' }];
+
 const Tasca = () => {
     const { t } = useTranslation();
-    const [treeView, setTreeView] = React.useState<boolean>(true);
     const [filter, setFilter] = React.useState<string>();
+    const {
+        treeView,
+        treeViewSwitch,
+        dataGridProps: treeDataGridProps,
+    } = useTreeData(
+        (row) => row?.treePath,
+        t('page.tasques.grid.groupHeader'),
+        1.5,
+        true,
+        { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
+    const columns = [
+        ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
+        ...(filter?.includes('dataFi is null') ? dataGridCommonColumns.slice(0, -1) : dataGridCommonColumns),
+    ];
     const actions = [{
-        title: '',
         icon: 'open_in_new',
-        //title: 'Obrir tasca',
+        label: t('page.tasques.grid.action.obrir'),
         showInMenu: false,
-        onClick: (_id: any, row: any) => window.location.href = row?.url,
+        linkTo: (row: any) => row?.url,
+        linkTarget: '_blank',
         disabled: (row: any) => !row?.url,
         hidden: (row: any) => !row?.id,
     }];
-    const treeDataProps = treeView ? {
-        treeData: true as true,
-        autoHeight: true as true,
-        isGroupExpandedByDefault: () => true,
-        getTreeDataPath: (row: any) => row?.treePath,
-        groupingColDef: {
-            headerName: 'Nom',
-            flex: 1.5,
-            valueFormatter: (value: any, row: any) => {
-                if (row?.id) {
-                    return <>{row?.nom}</>
-                }
-                return value;
-            },
-        }
-    } : {
-        paginationActive: true as true,
-    };
-    const filterElement =<TascaFilter onSpringFilterChange={setFilter}/>;
-    const treeViewSwitch = <FormGroup sx={{ ml: 2 }}>
-        <FormControlLabel
-            label="Vista en arbre"
-            control={
-                <Switch
-                    checked={treeView}
-                    onChange={event => setTreeView(event.target.checked)}/>
-            }/>
-    </FormGroup>;
+    const filterElement = <TascaFilter onSpringFilterChange={setFilter}/>;
     return <GridPage>
-        <MuiGrid
+        <MuiDataGrid
             title={t('menu.tasca')}
-            resourceName={'tasca'}
-            perspectives={perspectives}
-            sortModel={sortModel}
+            resourceName="tasca"
+            columns={columns}
+            perspectives={dataGridPerspectives}
+            sortModel={dataGridSortModel}
             findDisabled={filter == null}
             filter={filter}
-            columns={columns}
             readOnly
             toolbarType="upper"
             toolbarHideQuickFilter
             toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
             toolbarAdditionalRow={filterElement}
             rowAdditionalActions={actions}
-            {...treeDataProps}
+            {...treeDataGridProps}
         />
     </GridPage>;
 }

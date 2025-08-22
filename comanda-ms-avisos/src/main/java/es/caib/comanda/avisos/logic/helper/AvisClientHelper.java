@@ -38,6 +38,20 @@ public class AvisClientHelper {
         return null;
     }
 
+    public Optional<EntornApp> entornAppFindByEntornCodiAndAppCodi(String entornCodi, String appCodi) {
+        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                null,
+                "entorn.codi:" + entornCodi + " and app.codi:" + appCodi,
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        return entornApps.getContent().stream().
+                map(EntityModel::getContent).
+                findFirst();
+    }
+
     public Optional<EntornApp> entornAppFindByEntornAndApp(Long entornId, Long appId) {
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
                 null,
