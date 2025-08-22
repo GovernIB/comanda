@@ -41,7 +41,7 @@ public class AvisClientHelper {
     public Optional<EntornApp> entornAppFindByEntornCodiAndAppCodi(String entornCodi, String appCodi) {
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
                 null,
-                "entorn.codi:" + entornCodi + " and app.codi:" + appCodi,
+                "entorn.codi:'" + entornCodi + "' and app.codi:'" + appCodi + "'",
                 null,
                 null,
                 "UNPAGED",
