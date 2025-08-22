@@ -222,8 +222,6 @@ const ItemStateChip: React.FC<any> = (props: { salutField: keyof SalutModel; sal
 const AppDataTable: React.FC<any> = (props: {
     springFilter?: string;
     salutLastItems: SalutModel[];
-    onRowExpansionChange: OnRowExpansionChangeFunction;
-    defaultRowExpansion: DefaultRowExpansionState;
 }) => {
     const { springFilter, salutLastItems } = props;
     const { t } = useTranslation();
@@ -232,8 +230,7 @@ const AppDataTable: React.FC<any> = (props: {
 
     const findSalutItem:(id: GridRowId) => SalutModel | null = React.useCallback(
         (id: GridRowId) => {
-            const itemFounded = salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id)
-            return itemFounded !== undefined ? itemFounded : null;
+            return salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id) ?? null;
         },
         [salutLastItems]
     );
