@@ -435,12 +435,20 @@ const AppDataTable: React.FC<any> = (props: {
     }, [findSalutItem, getLinkComponent, renderItemStateChip, t]);
 
     const treeDataRenderCell = useTreeDataEntornAppRenderCell();
+    const getTreeDataPath = React.useCallback(
+        (row: any) => [row.app.id, row.entorn.description],
+        []
+    );
+    const groupingColDefAdditionalProps = React.useMemo(
+        () => ({ renderCell: treeDataRenderCell }),
+        [treeDataRenderCell]
+    );
     const { dataGridProps: treeDataGridProps } = useTreeData(
-        (row) => [row.app.id, row.entorn.description],
+        getTreeDataPath,
         t('page.salut.apps.column.group'),
         1,
         true,
-        { renderCell: treeDataRenderCell });
+        groupingColDefAdditionalProps);
 
     return (
         <MuiDataGrid
