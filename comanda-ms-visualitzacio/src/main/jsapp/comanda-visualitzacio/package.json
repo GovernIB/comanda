@@ -21,7 +21,7 @@
         "@fullcalendar/react": "^6.1.18",
         "@mui/icons-material": "^7.1.0",
         "@mui/material": "^7.1.0",
-        "@mui/x-charts": "^8.4.0",
+        "@mui/x-charts": "^8.5.2",
         "@mui/x-data-grid-pro": "^8.4.0",
         "@mui/x-date-pickers": "^8.4.0",
         "dayjs": "^1.11.13",

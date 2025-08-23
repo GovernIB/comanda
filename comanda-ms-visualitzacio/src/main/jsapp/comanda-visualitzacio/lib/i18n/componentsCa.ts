@@ -16,18 +16,18 @@ const componentsCa = {
     },
     datacommon: {
         details: {
-            title: 'Detalls',
+            label: 'Detalls',
         },
         create: {
-            title: 'Crear',
+            label: 'Crear',
         },
         update: {
-            title: 'Modificar',
+            label: 'Modificar',
         },
         delete: {
-            title: 'Esborrar',
+            label: 'Esborrar',
             single: {
-                title: 'Confirmació',
+                label: 'Confirmació',
                 confirm:
                     'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
                 success: 'Element esborrat',
@@ -35,10 +35,10 @@ const componentsCa = {
             },
         },
         export: {
-            title: 'Exportar',
+            label: 'Exportar',
         },
         refresh: {
-            title: 'Refrescar',
+            label: 'Refrescar',
         },
         toolbar: {
             error: "S'ha produit un error",
@@ -82,6 +82,10 @@ const componentsCa = {
             error: 'Error esborrant element',
         },
         field: {
+            enum: {
+                clear: 'Esborrar',
+                noOptions: 'Sense opcions',
+            },
             reference: {
                 open: 'Obrir',
                 close: 'Tancar',

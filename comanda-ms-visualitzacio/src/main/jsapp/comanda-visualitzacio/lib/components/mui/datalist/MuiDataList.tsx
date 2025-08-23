@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
+import { FormI18nKeys } from '../../form/Form';
 import { capitalize } from '../../../util/text';
 import { formattedFieldValue } from '../../../util/fields';
 import {
@@ -22,6 +23,7 @@ import {
     ReactElementWithPosition,
     joinReactElementsWithPositionWithReactElementsWithPositions,
 } from '../../../util/reactNodePosition';
+import { DialogButton } from '../../BaseAppContext';
 import { ResourceType } from '../../ResourceApiContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
 
@@ -73,9 +75,11 @@ export type MuiDataListProps = {
     popupEditFormContent?: React.ReactElement;
     popupEditFormDialogTitle?: string;
     popupEditFormDialogResourceTitle?: string;
+    popupEditFormDialogButtons: DialogButton[] | undefined;
     popupEditFormDialogComponentProps?: any;
     popupEditFormDialogOnClose?: (reason?: string) => boolean;
     popupEditFormComponentProps?: any;
+    popupEditFormI18nKeys: FormI18nKeys | undefined;
 };
 
 const fieldDescription = (name: string, value: any, fields: any[] | undefined) => {
@@ -89,13 +93,15 @@ const rowActionToIconButton = (
     handleRowActionClick: any,
     key: any
 ) => {
+    const title = typeof rowAction.title === 'function' ? rowAction.title(row) : rowAction.title;
+    const icon = typeof rowAction.icon === 'function' ? rowAction.icon(row) : rowAction.icon;
     return (
         <IconButton
             key={key}
             onClick={(event) => handleRowActionClick(rowAction, row, event)}
-            title={rowAction.title}
+            title={title}
             size="small">
-            <Icon fontSize="small">{rowAction.icon ?? 'question_mark'}</Icon>
+            <Icon fontSize="small">{icon ?? 'question_mark'}</Icon>
         </IconButton>
     );
 };
@@ -128,14 +134,20 @@ const ListItemSecondaryActions: React.FC<any> = (props) => {
                     <Icon fontSize="small">more_vert</Icon>
                 </IconButton>
                 <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
-                    {showInMenuRowActions.map((ra, i) => (
-                        <MenuItem key={i} onClick={(event) => handleRowActionClick(ra, row, event)}>
-                            <Icon color="action" sx={{ mr: 1.5 }}>
-                                {ra.icon ?? 'question_mark'}
-                            </Icon>
-                            {ra.title}
-                        </MenuItem>
-                    ))}
+                    {showInMenuRowActions.map((ra, i) => {
+                        const label = typeof ra.label === 'function' ? ra.label(row) : ra.label;
+                        const icon = typeof ra.icon === 'function' ? ra.icon(row) : ra.icon;
+                        return (
+                            <MenuItem
+                                key={i}
+                                onClick={(event) => handleRowActionClick(ra, row, event)}>
+                                <Icon color="action" sx={{ mr: 1.5 }}>
+                                    {icon ?? 'question_mark'}
+                                </Icon>
+                                {label}
+                            </MenuItem>
+                        );
+                    })}
                 </Menu>
             </>
         ) : null;
@@ -192,9 +204,11 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         popupEditFormContent,
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
+        popupEditFormDialogButtons,
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,
+        popupEditFormI18nKeys,
     } = props;
     const theme = useTheme();
     const {
@@ -254,9 +268,11 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         popupEditFormContent,
         popupEditFormDialogTitle,
         popupEditFormDialogResourceTitle,
+        popupEditFormDialogButtons,
         popupEditFormDialogComponentProps,
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,
+        popupEditFormI18nKeys,
         apiCurrentActions,
         apiDelete,
         refresh

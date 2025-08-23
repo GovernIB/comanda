@@ -16,18 +16,18 @@ const componentsEs = {
     },
     datacommon: {
         details: {
-            title: 'Detalles',
+            label: 'Detalles',
         },
         create: {
-            title: 'Crear',
+            label: 'Crear',
         },
         update: {
-            title: 'Modificar',
+            label: 'Modificar',
         },
         delete: {
-            title: 'Borrar',
+            label: 'Borrar',
             single: {
-                title: 'Confirmación',
+                label: 'Confirmación',
                 confirm:
                     '¿Está seguro de que desea borrar este elemento (esta acción no se puede deshacer)?',
                 success: 'Elemento borrado',
@@ -35,10 +35,10 @@ const componentsEs = {
             },
         },
         export: {
-            title: 'Exportar',
+            label: 'Exportar',
         },
         refresh: {
-            title: 'Refrescar',
+            label: 'Refrescar',
         },
         toolbar: {
             error: 'Se ha producido un error',
@@ -82,6 +82,10 @@ const componentsEs = {
             error: 'Error borrando elemento',
         },
         field: {
+            enum: {
+                clear: 'Borrar',
+                noOptions: 'Sin opciones',
+            },
             reference: {
                 open: 'Abrir',
                 close: 'Cerrar',

@@ -2,6 +2,7 @@ import React from 'react';
 import { DialogButton } from '../../BaseAppContext';
 import { ResourceType } from '../../ResourceApiContext';
 import { useFormDialogButtons } from '../../AppButtons';
+import { FormI18nKeys } from '../../form/Form';
 import { FormApi } from '../../form/FormContext';
 import Dialog, { DialogProps } from '../Dialog';
 import MuiForm from './MuiForm';
@@ -16,6 +17,7 @@ type FormDialogProps = DialogProps & {
     apiRef?: React.RefObject<FormApi>;
     dialogComponentProps?: any;
     formComponentProps?: any;
+    formI18nKeys?: FormI18nKeys;
     noForm?: boolean;
 };
 
@@ -40,6 +42,7 @@ export type UseFormDialogFn = (
     defaultFormContent?: React.ReactNode,
     defaultDialogComponentProps?: any,
     defaultFormComponentProps?: any,
+    formI18nKeys?: FormI18nKeys,
     closeFn?: (reason?: string) => boolean
 ) => [FormDialogShowFn, React.ReactElement, FormDialogCloseFn];
 
@@ -53,6 +56,7 @@ export const useFormDialog: UseFormDialogFn = (
     defaultFormContent?: React.ReactNode,
     defaultDialogComponentProps?: any,
     defaultFormComponentProps?: any,
+    formI18nKeys?: FormI18nKeys,
     closeFn?: (reason?: string) => boolean
 ) => {
     const formApiRef = React.useRef<FormApi | any>({});
@@ -154,6 +158,7 @@ export const useFormDialog: UseFormDialogFn = (
             buttons={dialogButtons ?? formDialogButtons}
             dialogComponentProps={dialogComponentProps}
             formComponentProps={formComponentProps}
+            formI18nKeys={formI18nKeys}
             noForm={submitReturnedContent != null}>
             {submitReturnedContent ?? formContent}
         </FormDialog>
@@ -172,6 +177,7 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
         apiRef,
         dialogComponentProps,
         formComponentProps,
+        formI18nKeys,
         noForm,
         children,
         ...otherProps
@@ -189,6 +195,7 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
                     id={id}
                     additionalData={additionalData}
                     initOnChangeRequest={initOnChangeRequest}
+                    i18nKeys={formI18nKeys}
                     apiRef={apiRef}
                     hiddenToolbar>
                     {children}

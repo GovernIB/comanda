@@ -21,30 +21,26 @@ interface DefaultRowExpansionState {
     [id: string | number]: boolean;
 }
 
-const mapParamTipusToInputType = (tipus: String): string => {
+const getTipusValue = (tipus: String): string => {
     switch (tipus) {
         case "NUMERIC":
-            return 'number';
+            return 'valorNumeric';
         case "BOOLEAN":
-            return 'checkbox';
+            return 'valorBoolean';
         default:
-            return 'text';
+            return 'valor';
     }
 };
 
-const ParametreForm: React.FC = () => {    
+const ParametreForm: React.FC = () => {
     const { data } = useFormContext();
-    const valor = data?.tipus === "BOOLEAN"
-        ? data?.valor?.toString().toLowerCase() === 'true'
-        : data?.valor;
-    //TODO para el campo valor se necessitara logica de back para complementar todas las opciones
     return (
         <Grid container spacing={2}>
-            <Grid size={4}><FormField name="codi" readOnly disabled /></Grid>
+            <Grid size={4}><FormField name="codi" readOnly disabled/></Grid>
             <Grid size={8}><FormField name="nom" /></Grid>
             <Grid size={12}><FormField name="descripcio" /></Grid>
             <Grid size={4}><FormField name="tipus" readOnly disabled/></Grid>
-            <Grid size={8}><FormField name="valor" type={mapParamTipusToInputType(data?.tipus)} value={valor} /></Grid>
+            <Grid size={8}><FormField name={getTipusValue(data?.tipus)} /></Grid>
         </Grid>
     );
 }
@@ -170,15 +166,14 @@ const ParametresGrid: React.FC<{
         rowAdditionalActions={
             [
                 {
-                    label: tLib('datacommon.update.title'),
+                    label: tLib('datacommon.update.label'),
                     icon: 'edit',
                     clickShowUpdateDialog: true,
                     hidden: (row) => !row?.id || !row?.editable,
                 },
                 {
-                    label: tLib('datacommon.details.title'),
+                    label: tLib('datacommon.details.label'),
                     icon: 'info',
-                    showInMenu: true,//TODO Al actualizar la libreria se quitara del menu para no tener que hacer dos clicks. El motivo es un error de boton de accion inline.
                     onClick: showDetail,
                     hidden: (row) => !row?.id || row?.editable,
                 },

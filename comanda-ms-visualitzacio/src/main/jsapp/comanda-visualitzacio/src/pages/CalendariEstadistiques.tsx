@@ -857,14 +857,19 @@ const CalendariEstadistiques: React.FC = () => {
                                         <TableRow key={index}>
                                             {/* Dimensions values */}
                                             {Object.values(fet.dimensionsJson || {}).map((value, i) => (
-                                                <TableCell key={`dim-val-${index}-${i}`}>
+                                                <TableCell
+                                                    key={`dim-val-${index}-${i}`}
+                                                    sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50", }}
+                                                >
                                                     {value}
                                                 </TableCell>
                                             ))}
                                             
                                             {/* Indicators values */}
                                             {Object.values(fet.indicadorsJson || {}).map((value, i) => (
-                                                <TableCell key={`ind-val-${index}-${i}`}>
+                                                <TableCell key={`ind-val-${index}-${i}`}
+                                                    align="right"
+                                                    sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50", }}>
                                                     {value}
                                                 </TableCell>
                                             ))}

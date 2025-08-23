@@ -26,7 +26,7 @@ const translationCa = {
                 tooltip: "<bold>No teniu informació</bold> sobre l'estat de l'aplicació."
             },
             ERROR: {
-                title: "Erreur",
+                title: "Error",
                 tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>errors greus en el funcionament</underline>."
             },
         }

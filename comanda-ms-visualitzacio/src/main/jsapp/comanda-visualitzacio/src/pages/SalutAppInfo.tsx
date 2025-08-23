@@ -68,7 +68,7 @@ const appDataStateInitialValue = {
 
 const useAppEstatLabel = () => {
   const { t } = useTranslation();
-  
+
   return (estat?: string) => {
     switch (estat) {
       case 'UP':
@@ -239,7 +239,7 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
         );
 
     const latenciaMaxValue = latencies.map((latencia: any) => latencia.latenciaMitja).reduce((accumulator: any, currentValue: any) => {
-        return Math.max(accumulator, currentValue);
+        return Math.max(accumulator, currentValue ?? null); // Si uno de los dos parámetros de Math.max es undefined, devuelve NaN
     }, latencies[0].latenciaMitja);
 
     const mapPercentToLatenciaMaxValue = (percent: number) => (percent / 100) * latenciaMaxValue*1.5;

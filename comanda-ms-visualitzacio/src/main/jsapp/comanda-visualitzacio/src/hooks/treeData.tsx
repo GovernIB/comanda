@@ -38,12 +38,12 @@ export const useTreeData = (
             [id]: expanded,
         }));
     };
-    const dataGridProps = treeView ? {
-        treeData: true as true,
-        autoHeight: true as true,
-        isGroupExpandedByDefault: (node: GridGroupNode) => expansionState[node.id] != null ? expansionState[node.id] : expandAll,
-        getTreeDataPath,
-        groupingColDef: {
+    const isGroupExpandedByDefault = React.useCallback(
+        (node: GridGroupNode) =>
+            expansionState[node.id] != null ? expansionState[node.id] : expandAll,
+        [expandAll, expansionState]
+    );
+    const groupingColDef = React.useMemo(() => ({
             headerName,
             flex: headerFlex,
             renderHeader: (params: any) => (<Box
@@ -84,6 +84,13 @@ export const useTreeData = (
             </Box>),
             ...groupingColDefAdditionalProps
         }
+    ), [expansionState, groupingColDefAdditionalProps, headerFlex, headerName]);
+    const dataGridProps = treeView ? {
+        treeData: true as true,
+        autoHeight: true as true,
+        isGroupExpandedByDefault,
+        getTreeDataPath,
+        groupingColDef,
     } : {
         paginationActive: true as true,
     };
@@ -104,7 +111,7 @@ export const useTreeDataEntornAppRenderCell = () => {
                 .catch(() => setApps([]));
         }
     }, [appApiIsReady]);
-    return (params: any) => {
+    return React.useCallback((params: any) => {
         const app = apps?.find((app) => app.id === parseInt(params.formattedValue));
         if (typeof params.id === 'number' || app == null) {
             return <GridTreeDataGroupingCell {...params} />;
@@ -126,5 +133,5 @@ export const useTreeDataEntornAppRenderCell = () => {
                 </Box>
             }
         />;
-    }
+    }, [apps]);
 }

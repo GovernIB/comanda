@@ -45,8 +45,6 @@ interface DefaultRowExpansionState {
 }
 
 const useAppData = () => {
-    const { isReady: appEntornApiIsReady, artifactAction: appEntornApiAction } =
-        useResourceApiService('entornApp');
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
         useResourceApiService('salut');
     const [loading, setLoading] = React.useState<boolean>(true);
@@ -58,10 +56,9 @@ const useAppData = () => {
         dataInici: string,
         dataFi: string,
         agrupacio: string,
-        actionExec?: boolean,
         springFilter?: string
     ) => {
-        if (appEntornApiIsReady && salutApiIsReady) {
+        if (salutApiIsReady) {
             setLoading(true);
             let salutLastItemsResponse: SalutModel[] | null = null;
             let estatsResponse: Record<string, any> | null = null;
@@ -70,16 +67,7 @@ const useAppData = () => {
                 dataFi,
                 agrupacio,
             };
-            new Promise((resolve, reject) => {
-                if (actionExec) {
-                    appEntornApiAction(null, { code: 'refresh' }).then(resolve).catch(reject);
-                } else {
-                    resolve(null);
-                }
-            })
-                .then(() => {
-                    return salutApiReport(null, { code: 'salut_last', data: springFilter });
-                })
+            salutApiReport(null, { code: 'salut_last', data: springFilter })
                 .then((apiResponse) => {
                     salutLastItemsResponse = (apiResponse as SalutModel[]).map(item => new SalutModel(item));
                     const reportData = {
@@ -111,7 +99,7 @@ const useAppData = () => {
         }
     };
     return {
-        ready: appEntornApiIsReady && salutApiIsReady,
+        ready: salutApiIsReady,
         loading,
         refresh,
         springFilter,
@@ -234,8 +222,6 @@ const ItemStateChip: React.FC<any> = (props: { salutField: keyof SalutModel; sal
 const AppDataTable: React.FC<any> = (props: {
     springFilter?: string;
     salutLastItems: SalutModel[];
-    onRowExpansionChange: OnRowExpansionChangeFunction;
-    defaultRowExpansion: DefaultRowExpansionState;
 }) => {
     const { springFilter, salutLastItems } = props;
     const { t } = useTranslation();
@@ -244,8 +230,7 @@ const AppDataTable: React.FC<any> = (props: {
 
     const findSalutItem:(id: GridRowId) => SalutModel | null = React.useCallback(
         (id: GridRowId) => {
-            const itemFounded = salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id)
-            return itemFounded !== undefined ? itemFounded : null;
+            return salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id) ?? null;
         },
         [salutLastItems]
     );
@@ -447,12 +432,20 @@ const AppDataTable: React.FC<any> = (props: {
     }, [findSalutItem, getLinkComponent, renderItemStateChip, t]);
 
     const treeDataRenderCell = useTreeDataEntornAppRenderCell();
+    const getTreeDataPath = React.useCallback(
+        (row: any) => [row.app.id, row.entorn.description],
+        []
+    );
+    const groupingColDefAdditionalProps = React.useMemo(
+        () => ({ renderCell: treeDataRenderCell }),
+        [treeDataRenderCell]
+    );
     const { dataGridProps: treeDataGridProps } = useTreeData(
-        (row) => [row.app.id, row.entorn.description],
+        getTreeDataPath,
         t('page.salut.apps.column.group'),
         1,
         true,
-        { renderCell: treeDataRenderCell });
+        groupingColDefAdditionalProps);
 
     return (
         <MuiDataGrid

@@ -120,7 +120,7 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         borderRadius={6}
         grid={{
             horizontal: true,
-            // vertical: true TODO No funciona amb versió @mui/x-charts@8.5.1
+            vertical: true
         }}
     />;
 }

@@ -61,7 +61,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @PostConstruct
     public void init() {
-        register(EntornApp.ENTORN_APP_ACTION_REFRESH, new EntornAppServiceImpl.RefreshAction(entornAppRepository, appInfoHelper));
         register(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService));
         register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
     }
@@ -121,45 +120,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     // ACCIONS
-
-    public static class RefreshAction implements ActionExecutor<EntornAppEntity, EntornAppParamAction, EntornApp> {
-        private final EntornAppRepository entornAppRepository;
-        private final AppInfoHelper appInfoHelper;
-
-        public RefreshAction(EntornAppRepository entornAppRepository, AppInfoHelper appInfoHelper) {
-            this.entornAppRepository = entornAppRepository;
-            this.appInfoHelper = appInfoHelper;
-        }
-
-        @Transactional
-        @Override
-        public EntornApp exec(String code, EntornAppEntity entity, EntornAppParamAction params) throws ActionExecutionException {
-            Long entornAppId = Objects.nonNull(params) ? params.getEntornAppId() : null;
-            if (Objects.nonNull(entornAppId)) {
-                try {
-                    log.info("Executant procés per l'entornApp {}", entornAppId);
-                    // Refrescar informació per a un únic entorn-app
-                    appInfoHelper.refreshAppInfo(params.getEntornAppId());
-                } catch (Exception e) {
-                    log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornAppId, e);
-                }
-            } else {
-                try {
-                    log.info("Executant procés per a tots els entorns-app");
-                    // Refrescar informació de TOTS els entorns-app.
-                    // Si una d'elles falla, es captura i es continua (cada entorn ja gestiona el seu propi error internament).
-                    appInfoHelper.refreshAppInfo();
-                } catch (Exception e) {
-                    log.error("Error inesperat durant l'execució global del refresc d'informació d'entorns-app", e);
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public void onChange(Serializable id, EntornAppParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppParamAction target) {
-        }
-    }
 
     public static class ReprogramarAction implements ActionExecutor<EntornAppEntity, EntornAppParamAction, EntornApp> {
         private final EntornAppRepository entornAppRepository;
