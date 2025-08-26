@@ -520,7 +520,15 @@ const translationEs = {
                 codi: "Código",
                 nom: "Nombre",
                 descripcio: "Descripción",
-                valor: "Valor"
+                valor: "Valor",
+                tipusEnum: {
+                    NUMERIC: "Numérico",
+                    TEXT: "Texto",
+                    BOOLEAN: "Verdadero o falso",
+                    PASSWORD: "Contraseña",
+                    CRON: "Cron",
+                    SELECT: "Selección",
+                },
             },
         },
         notFound: "No encontrado",

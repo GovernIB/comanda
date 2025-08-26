@@ -40,7 +40,12 @@ const ParametreForm: React.FC = () => {
             <Grid size={8}><FormField name="nom" /></Grid>
             <Grid size={12}><FormField name="descripcio" /></Grid>
             <Grid size={4}><FormField name="tipus" readOnly disabled/></Grid>
-            <Grid size={8}><FormField name={getTipusValue(data?.tipus)} /></Grid>
+            <Grid size={8}>
+              <FormField 
+                name={getTipusValue(data?.tipus)} 
+                overrideTextFieldProps={data?.tipus === "PASSWORD" && {type: 'password'}}
+              />
+            </Grid>
         </Grid>
     );
 }
@@ -53,33 +58,26 @@ const columns = [
   { field: 'editable', flex: 0.5 },
 ];
 
+const translateTipus = (t: any, tipus?: string) => {
+  if (!tipus) return '';
+  const key = `page.parametres.detail.tipusEnum.${tipus}`;
+  const translated = t(key);
+  return translated === key ? tipus : translated; 
+};
+
 const ParametresDetails: React.FC<any> = (props) => {
-    const { data } = props;
-    const { t } = useTranslation();
-    const elementsDetail = [{
-        label: t('page.parametres.detail.grup'),
-        value: data?.grup
-    }, {
-        label: t('page.parametres.detail.subGrup'),
-        value: data?.subGrup
-    }, {
-        label: t('page.parametres.detail.tipus'),
-        value: data?.tipus
-    }, {
-        label: t("page.parametres.detail.codi"),
-        value: data?.codi
-    }, {
-        label: t("page.parametres.detail.nom"),
-        value: data?.nom
-    }, {
-        label: t("page.parametres.detail.descripcio"),
-        value: data?.descripcio
-    }, {
-        label: t("page.parametres.detail.valor"),
-        value: data?.valor
-    },
-]
-    return <ContentDetail title={""} elements={elementsDetail} />;
+  const { data } = props;
+  const { t } = useTranslation();
+  const elementsDetail = [
+    { label: t('page.parametres.detail.grup'), value: data?.grup },
+    { label: t('page.parametres.detail.subGrup'), value: data?.subGrup },
+    { label: t('page.parametres.detail.tipus'), value: translateTipus(t, data?.tipus) },
+    { label: t('page.parametres.detail.codi'), value: data?.codi },
+    { label: t('page.parametres.detail.nom'), value: data?.nom },
+    { label: t('page.parametres.detail.descripcio'), value: data?.descripcio },
+    { label: t('page.parametres.detail.valor'), value: data?.valor },
+  ];
+  return <ContentDetail title={""} elements={elementsDetail} />;
 }
 
 const ExpandCollapseButtons: React.FC<{
