@@ -104,6 +104,7 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
             whiteSpace: 'nowrap',
             textTransform: 'none',
             width: '100%',
+            minWidth: 0,
             }}
         >
             {!isSmallScreen && label}
@@ -614,7 +615,10 @@ const CalendariEstadistiques: React.FC = () => {
                         justifyContent: 'space-between !important',
                         alignItems: 'center',
                     },
-
+                    /* Alinea el texto del mes en el centro */
+                    '& .fc-toolbar-title': {
+                        textAlign: 'center',
+                    },
                     /* Asegurar que cada chunk se alinee correctamente */
                     '& .fc-toolbar-chunk': {
                         display: 'flex',
@@ -812,7 +816,7 @@ const CalendariEstadistiques: React.FC = () => {
             {/* Dialog per mostrar les dades del dia */}
             <Dialog 
                 open={dadesDiaModalOpen} 
-                onClose={() => setDadesDiaModalOpen(false)} 
+                onClose={() => setDadesDiaModalOpen(false)}
                 maxWidth="xl" 
                 fullWidth
             >
