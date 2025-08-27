@@ -50,8 +50,6 @@ public class Parametre extends BaseResource<Long> {
     private String descripcioI18Key;
 
     @Transient
-    private BigDecimal valorNumeric;
-    @Transient
     private Boolean valorBoolean;
 
     @Getter

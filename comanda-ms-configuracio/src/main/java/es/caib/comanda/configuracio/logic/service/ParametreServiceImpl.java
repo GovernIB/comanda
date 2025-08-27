@@ -33,9 +33,6 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
 	@Override
 	protected void afterConversion(ParametreEntity entity, Parametre resource) {
 		switch (resource.getTipus()){
-			case NUMERIC:
-				resource.setValorNumeric(new BigDecimal(resource.getValor()));
-				break;
 			case BOOLEAN:
 				resource.setValorBoolean(Objects.isNull(resource.getValor()) ? null : resource.getValor().equalsIgnoreCase("true"));
 				break;
@@ -48,9 +45,6 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
 	@Override
 	protected void completeResource(Parametre resource) {
 		switch (resource.getTipus()) {
-			case NUMERIC:
-				resource.setValor(resource.getValorNumeric().toString());
-				break;
 			case BOOLEAN:
 				resource.setValor(Objects.isNull(resource.getValorBoolean()) ? null : resource.getValorBoolean() ? "true" : "false");
 				break;
