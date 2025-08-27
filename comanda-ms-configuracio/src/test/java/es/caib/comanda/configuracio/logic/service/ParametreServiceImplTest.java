@@ -1,11 +1,11 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
 import es.caib.comanda.configuracio.persist.entity.ParametreEntity;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

@@ -60,7 +60,7 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
             case BOOLEAN:
                 resource.setValorBoolean(Objects.isNull(resource.getValor()) ? null : resource.getValor().equalsIgnoreCase("true"));
                 break;
-            case PASSWORD://Si un parametro es de tipo Password no enviaremos ese valor desde el api.
+            case PASSWORD:
                 if (!Objects.equals(httpAuthorizationHeaderHelper.getAuthUsername(), authenticationHelper.getCurrentUserName())) {
                     resource.setValor(PASSWORD_LABEL);
                 }
@@ -68,36 +68,36 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
         }
     }
 
-	@Override
-	protected void completeResource(Parametre resource) {
-		switch (resource.getTipus()) {
-			case BOOLEAN:
-				resource.setValor(Objects.isNull(resource.getValorBoolean()) ? null : resource.getValorBoolean() ? "true" : "false");
-				break;
-		}
-	}
+    @Override
+    protected void completeResource(Parametre resource) {
+        switch (resource.getTipus()) {
+            case BOOLEAN:
+                resource.setValor(Objects.isNull(resource.getValorBoolean()) ? null : resource.getValorBoolean() ? "true" : "false");
+                break;
+        }
+    }
 
-	@Override
-	protected void beforeCreateEntity(ParametreEntity entity, Parametre resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
-		throw new ResourceNotCreatedException(getResourceClass(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeCreateEntity.disabled"));
-	}
+    @Override
+    protected void beforeCreateEntity(ParametreEntity entity, Parametre resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
+        throw new ResourceNotCreatedException(getResourceClass(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeCreateEntity.disabled"));
+    }
 
-	@Override
-	protected void beforeUpdateEntity(ParametreEntity entity, Parametre resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
-		resource.setEditable(entity.isEditable());
-		if (!entity.isEditable()) {
-			throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeUpdateEntity.disabled"));
-		}
-		if (Objects.equals(ParamTipus.PASSWORD, resource.getTipus())) {
-			if (Objects.equals(PASSWORD_LABEL, resource.getValor())) {
-				resource.setValor(entity.getValor());
-			}
-		}
-	}
+    @Override
+    protected void beforeUpdateEntity(ParametreEntity entity, Parametre resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        resource.setEditable(entity.isEditable());
+        if (!entity.isEditable()) {
+            throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeUpdateEntity.disabled"));
+        }
+        if (Objects.equals(ParamTipus.PASSWORD, resource.getTipus())) {
+            if (Objects.equals(PASSWORD_LABEL, resource.getValor())) {
+                resource.setValor(entity.getValor());
+            }
+        }
+    }
 
-	@Override
-	protected void beforeDelete(ParametreEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotDeletedException {
-		throw new ResourceNotDeletedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeUpdateEntity.disabled"));
-	}
+    @Override
+    protected void beforeDelete(ParametreEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotDeletedException {
+        throw new ResourceNotDeletedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeUpdateEntity.disabled"));
+    }
 
 }

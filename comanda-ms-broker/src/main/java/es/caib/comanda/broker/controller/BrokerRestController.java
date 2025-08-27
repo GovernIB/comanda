@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static es.caib.comanda.ms.broker.model.Cues.*;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -46,6 +48,8 @@ public class BrokerRestController {
 
     private final ActiveMQServer activeMQServer;
     private final JmsTemplate jmsTemplate;
+
+    private static final String[] QUEUE_NAMES = { CUA_TASQUES, CUA_AVISOS, CUA_PERMISOS };
 
     /**
      * Get broker information
@@ -75,11 +79,7 @@ public class BrokerRestController {
             Set<Queue> queues = new HashSet<>();
             try {
                 // Get predefined queues from ArtemisEmbeddedConfig
-                String[] queueNames = {
-                    "tasquesQueue", "avisosQueue", "permisosQueue", "integracionsQueue"
-                };
-
-                for (String queueName : queueNames) {
+                for (String queueName : QUEUE_NAMES) {
                     Queue queue = activeMQServer.locateQueue(SimpleString.toSimpleString(queueName));
                     if (queue != null) {
                         queues.add(queue);
@@ -124,11 +124,7 @@ public class BrokerRestController {
             List<QueueInfoDTO> queueInfos = new ArrayList<>();
 
             // Get predefined queues from ArtemisEmbeddedConfig
-            String[] queueNames = {
-                "tasquesQueue", "avisosQueue", "permisosQueue", "integracionsQueue"
-            };
-
-            for (String queueName : queueNames) {
+            for (String queueName : QUEUE_NAMES) {
                 Queue queue = activeMQServer.locateQueue(SimpleString.toSimpleString(queueName));
                 if (queue != null) {
                     queueInfos.add(mapQueueToDTO(queue));
