@@ -29,10 +29,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -107,20 +107,26 @@ public class SalutInfoHelper {
 	private Long crearSalut(SalutInfo info, Long entornAppId, LocalDateTime currentMinuteTime) {
 		if (info != null) {
 			// Si es desconeix l'estat de l'aplicació, entenem que està DOWN
-			SalutEstat appEstat = toSalutEstat(info.getEstat().getEstat());
-			if (appEstat == null) {
-				appEstat = SalutEstat.UNKNOWN;
-			}
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornAppId);
             salut.setData(currentMinuteTime);
 			salut.setDataApp(toLocalDateTime(info.getData()));
-			salut.setAppEstat(appEstat);
-			salut.setAppLatencia(info.getEstat().getLatencia());
-			salut.setBdEstat(toSalutEstat(info.getBd().getEstat()));
-			salut.setBdLatencia(info.getBd().getLatencia());
 			salut.setTipusRegistre(TipusRegistreSalut.MINUT);
+
+			SalutEstat appEstat = toSalutEstat(info.getEstat().getEstat());
+			salut.setAppEstat(appEstat);
+            salut.updateAppCountByEstat(appEstat);
+            SalutEstat bdEstat = toSalutEstat(info.getBd().getEstat());
+            salut.setBdEstat(bdEstat);
+            salut.updateBdCountByEstat(bdEstat);
+
+            salut.setAppLatencia(info.getEstat().getLatencia());
+			salut.setAppLatenciaMitjana(info.getEstat().getLatencia());
+			salut.setBdLatencia(info.getBd().getLatencia());
+			salut.setBdLatenciaMitjana(info.getBd().getLatencia());
+            salut.setNumElements(1);
 			SalutEntity saved = salutRepository.save(salut);
+
 			crearSalutIntegracions(saved, info.getIntegracions());
 			crearSalutSubsistemes(saved, info.getSubsistemes());
 			crearSalutMissatges(saved, info.getMissatges());
@@ -135,8 +141,9 @@ public class SalutInfoHelper {
 			integracions.forEach(i -> {
 				SalutIntegracioEntity salutIntegracio = new SalutIntegracioEntity();
 				salutIntegracio.setCodi(i.getCodi());
-				salutIntegracio.setEstat(toSalutEstat(i.getEstat()));
+                salutIntegracio.setEstat(toSalutEstat(i.getEstat()));
 				salutIntegracio.setLatencia(i.getLatencia());
+                salutIntegracio.setLatenciaMitjana(i.getLatencia());
 				salutIntegracio.setTotalOk(i.getPeticions() != null ? i.getPeticions().getTotalOk() : 0L);
 				salutIntegracio.setTotalError(i.getPeticions() != null ? i.getPeticions().getTotalError() : 0L);
 				salutIntegracio.setSalut(salut);
@@ -152,6 +159,7 @@ public class SalutInfoHelper {
 				salutSubsistema.setCodi(s.getCodi());
 				salutSubsistema.setEstat(toSalutEstat(s.getEstat()));
 				salutSubsistema.setLatencia(s.getLatencia());
+                salutSubsistema.setLatenciaMitjana(s.getLatencia());
 				salutSubsistema.setTotalOk(s.getTotalOk() != null ? s.getTotalOk() : 0L);
 				salutSubsistema.setTotalError(s.getTotalError() != null ? s.getTotalError() : 0L);
 				salutSubsistema.setSalut(salut);
@@ -187,7 +195,13 @@ public class SalutInfoHelper {
 	}
 
 	private SalutEstat toSalutEstat(EstatSalutEnum estatSalut) {
-		return estatSalut != null ? SalutEstat.valueOf(estatSalut.name()) : null;
+        if (estatSalut == null) return SalutEstat.UNKNOWN;
+
+        try {
+            return SalutEstat.valueOf(estatSalut.name());
+        } catch (IllegalArgumentException e) {}
+
+        return SalutEstat.UNKNOWN;
 	}
 
 	private SalutNivell toSalutNivell(String nivell) {
@@ -223,8 +237,8 @@ public class SalutInfoHelper {
         }
     }
 
-	@Transactional
-	public void buidatIcompactat(Long entornAppId, Long salutId, int numeroDiesAgrupacio) {
+    @Transactional
+    public void buidatIcompactat(Long entornAppId, Long salutId, int numeroDiesAgrupacio) {
 
         Object lock = ENTORN_LOCKS.computeIfAbsent(entornAppId, k -> new Object());
         synchronized (lock) {
@@ -232,6 +246,10 @@ public class SalutInfoHelper {
                 log.info("Executant buidat i compactat de dades de salut. EntonrAooId: {}, salutId: {}, numeroDiesAgrupacio: {}.",
                         entornAppId, salutId, numeroDiesAgrupacio);
                 SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);
+                if (dadesSalut == null) {
+                    log.warn("No s'ha trobat el registre de salut amb id {} per a l'entorn {}. Possiblement la transacció encara no està confirmada.", salutId, entornAppId);
+                    return;
+                }
                 // Crear agregats per grups de minuts, hores i dies
                 agregarGrupMinuts(entornAppId, dadesSalut, numeroDiesAgrupacio);
                 agregarHora(entornAppId, dadesSalut);
@@ -239,22 +257,35 @@ public class SalutInfoHelper {
 
                 // Eliminar registres de minuts més antics que 15 minuts
                 LocalDateTime menys15m = dadesSalut.getData().minusMinutes(15);
-                eliminarDadesSalutAntigues(entornAppId, TipusRegistreSalut.MINUT, menys15m);
+                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.MINUT, menys15m);
+
                 // Eliminar registres de grups de minuts més antics que 1 hora
                 LocalDateTime menys1h = dadesSalut.getData().minusHours(1).minusMinutes(3);
-                eliminarDadesSalutAntigues(entornAppId, TipusRegistreSalut.MINUTS, menys1h);
+                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.MINUTS, menys1h);
+
                 // Eliminar registres de hores més antics que 1 dia
                 LocalDateTime menys1d = dadesSalut.getData().minusDays(1).minusMinutes(59);
-                eliminarDadesSalutAntigues(entornAppId, TipusRegistreSalut.HORA, menys1d);
+                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.HORA, menys1d);
+
                 // Eliminar rgistres de dies més antics que 1 mes
                 LocalDateTime menys1M = dadesSalut.getData().minusMonths(1).minusHours(23).minusMinutes(59);
-                eliminarDadesSalutAntigues(entornAppId, TipusRegistreSalut.DIA, menys1M);
+                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.DIA, menys1M);
             } catch (Exception e) {
                 log.error("Error durant el procés de buidat i compactat de salut", e);
                 throw e;
             }
         }
-	}
+    }
+
+    private void eliminarAntiguesSenseRollback(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime dataLlindar) {
+        try {
+            eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
+        } catch (Exception ex) {
+            log.warn("Error eliminant dades antigues ({}). Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", tipus.name(), entornAppId, dataLlindar, ex.getMessage(), ex
+            );
+        }
+    }
+
 
     private void eliminarDadesSalutAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime data) {
         log.debug("Eliminant dades de salut antigues. EntornAppId: {}, tipus: {}, data: {}", entornAppId, tipus, data);
@@ -353,15 +384,22 @@ public class SalutInfoHelper {
     public SalutEntity creaAgregatSalut(Long entornAppId, TipusRegistreSalut tipus, SalutEntity salut) {
         if (salut == null) return null;
 
+        
         SalutEntity agregat = new SalutEntity();
         agregat.setEntornAppId(entornAppId);
-        agregat.setData(salut.getData());
+        LocalDateTime data = salut.getData();
+        if (tipus == TipusRegistreSalut.HORA) {
+            data = data.withMinute(0).withSecond(0).withNano(0);
+        } else if (tipus == TipusRegistreSalut.DIA) {
+            data = data.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        }
+        agregat.setData(data);
         agregat.setTipusRegistre(tipus);
 
         agregat.setAppEstat(salut.getAppEstat());
-        agregat.updateAppPctByEstat(salut.getAppEstat());
+        agregat.updateAppCountByEstat(salut.getAppEstat());
         agregat.setBdEstat(salut.getBdEstat());
-        agregat.updateBdPctByEstat(salut.getBdEstat());
+        agregat.updateBdCountByEstat(salut.getBdEstat());
 
         agregat.setAppLatencia(salut.getAppLatencia());
         agregat.setAppLatenciaMitjana(salut.getAppLatencia());
@@ -388,9 +426,9 @@ public class SalutInfoHelper {
 
         // Mantenim el darrer valor de l'estat de App i BBDD
         agregat.setAppEstat(salut.getAppEstat());
-        agregat.updateAppPctByEstat(salut.getAppEstat());
+        agregat.updateAppCountByEstat(salut.getAppEstat());
         agregat.setBdEstat(salut.getBdEstat());
-        agregat.updateBdPctByEstat(salut.getBdEstat());
+        agregat.updateBdCountByEstat(salut.getBdEstat());
 
         agregat.setAppLatencia(salut.getAppLatencia());
         agregat.addAppLatenciaMitjana(salut.getAppLatencia());
@@ -428,7 +466,7 @@ public class SalutInfoHelper {
             si.setEstat(SalutEstat.UNKNOWN);
         }
         integracio.setEstat(si.getEstat());
-        integracio.updatePctByEstat(si.getEstat());
+        integracio.updateCountByEstat(si.getEstat());
         salutIntegracioRepository.save(integracio);
     }
 
@@ -447,7 +485,7 @@ public class SalutInfoHelper {
                         }
                         if (si.getEstat() != null) {
                             integracio.setEstat(si.getEstat());
-                            integracio.updatePctByEstat(si.getEstat());
+                            integracio.updateCountByEstat(si.getEstat());
                         }
                         salutIntegracioRepository.save(integracio);
                     }, () -> {
@@ -478,7 +516,7 @@ public class SalutInfoHelper {
             ss.setEstat(SalutEstat.UNKNOWN);
         }
         subsistema.setEstat(ss.getEstat());
-        subsistema.updatePctByEstat(ss.getEstat());
+        subsistema.updateCountByEstat(ss.getEstat());
         salutSubsistemaRepository.save(subsistema);
     }
 
@@ -497,7 +535,7 @@ public class SalutInfoHelper {
                         }
                         if (ss.getEstat() != null) {
                             subsistema.setEstat(ss.getEstat());
-                            subsistema.updatePctByEstat(ss.getEstat());
+                            subsistema.updateCountByEstat(ss.getEstat());
                         }
                         salutSubsistemaRepository.save(subsistema);
                     }, () -> {

@@ -6,9 +6,9 @@ package es.caib.comanda.salut.logic.intf.model;
  * @author Límit Tecnologies
  */
 public enum SalutInformeAgrupacio {
-	ANY,
-	MES,
-	DIA,
-	HORA,
-	MINUT
+    MINUT,
+    MINUTS_HORA,
+    HORA,
+    DIA_SETMANA,
+	DIA_MES
 }

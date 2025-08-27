@@ -31,23 +31,23 @@ export type SalutToolbarProps = {
 }
 
 const agrupacioFromMinutes = (intervalMinutes: number) => {
-    if (intervalMinutes <= 60) {
+    if (intervalMinutes <= 15) {
         return 'MINUT';
+    } else if (intervalMinutes <= 60) {
+        return 'MINUTS_HORA';
     } else if (intervalMinutes <= 24 * 60) {
         return 'HORA';
-    } else if (intervalMinutes <= 24 * 60 * 30 * 2) {
-        return 'DIA';
-    } else if (intervalMinutes <= 24 * 60 * 30 * 12 * 2) {
-        return 'MES';
+    } else if (intervalMinutes <= 24 * 60 * 7) {
+        return 'DIA_SETMANA';
     } else {
-        return 'ANY';
+        return 'DIA_MES';
     }
 }
 
 const toReportInterval = (intervalMinutes?: number) => {
     if (intervalMinutes != null && intervalMinutes > 0) {
-        const dataFi = dayjs().set('second', 59).set('millisecond', 999);
-        const dataInici = dataFi.subtract(intervalMinutes - 1, 'm').set('second', 0).set('millisecond', 0);
+        const dataFi = dayjs().set('second', 0).set('millisecond', 0);
+        const dataInici = dataFi.subtract(intervalMinutes, 'm').set('second', 0).set('millisecond', 0);
         const dataIniciFormat = dataInici.format('YYYY-MM-DDTHH:mm:ss');
         const dataFiFormat = dataFi.format('YYYY-MM-DDTHH:mm:ss');
         const agrupacio = agrupacioFromMinutes(intervalMinutes);

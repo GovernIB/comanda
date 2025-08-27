@@ -55,6 +55,10 @@ public class SalutSchedulerService {
     public void inicialitzarTasques() {
         // Esperarem 1 minut a inicialitzar les tasques en segon pla
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        long currentTimeMillis = System.currentTimeMillis();
+        long nextMinute = (currentTimeMillis / 60000 + 1) * 60000;
+        long delayMillis = nextMinute - currentTimeMillis;
+
         executor.schedule(() -> {
             try {
                 List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
@@ -62,7 +66,7 @@ public class SalutSchedulerService {
             } finally {
                 executor.shutdown();
             }
-        }, 1, TimeUnit.MINUTES);
+        }, delayMillis, TimeUnit.MILLISECONDS);
     }
 
     public void programarTasca(EntornApp entornApp) {

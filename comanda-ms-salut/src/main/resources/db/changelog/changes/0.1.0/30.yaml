@@ -34,41 +34,47 @@ databaseChangeLog:
         tableName: ${db_prefix}salut
         columns:
         - column:
-            name: app_pct_up
-            type: DECIMAL(5,2)
+            name: app_count_up
+            type: INTEGER
         - column:
-            name: app_pct_warn
-            type: DECIMAL(5,2)
+            name: app_count_warn
+            type: INTEGER
         - column:
-            name: app_pct_degraded
-            type: DECIMAL(5,2)
+            name: app_count_degraded
+            type: INTEGER
         - column:
-            name: app_pct_down
-            type: DECIMAL(5,2)
+            name: app_count_down
+            type: INTEGER
         - column:
-            name: app_pct_maintenance
-            type: DECIMAL(5,2)
+            name: app_count_error
+            type: INTEGER
         - column:
-            name: app_pct_unknown
-            type: DECIMAL(5,2)
+            name: app_count_maintenance
+            type: INTEGER
         - column:
-            name: bd_pct_up
-            type: DECIMAL(5,2)
+            name: app_count_unknown
+            type: INTEGER
         - column:
-            name: bd_pct_warn
-            type: DECIMAL(5,2)
+            name: bd_count_up
+            type: INTEGER
         - column:
-            name: bd_pct_degraded
-            type: DECIMAL(5,2)
+            name: bd_count_warn
+            type: INTEGER
         - column:
-            name: bd_pct_down
-            type: DECIMAL(5,2)
+            name: bd_count_degraded
+            type: INTEGER
         - column:
-            name: bd_pct_maintenance
-            type: DECIMAL(5,2)
+            name: bd_count_down
+            type: INTEGER
         - column:
-            name: bd_pct_unknown
-            type: DECIMAL(5,2)
+            name: bd_count_error
+            type: INTEGER
+        - column:
+            name: bd_count_maintenance
+            type: INTEGER
+        - column:
+            name: bd_count_unknown
+            type: INTEGER
         - column:
             name: app_latencia_mitjana
             type: INTEGER
@@ -96,23 +102,26 @@ databaseChangeLog:
         tableName: ${db_prefix}salut_integracio
         columns:
         - column:
-            name: pct_up
-            type: DECIMAL(5,2)
+            name: count_up
+            type: INTEGER
         - column:
-            name: pct_warn
-            type: DECIMAL(5,2)
+            name: count_warn
+            type: INTEGER
         - column:
-            name: pct_degraded
-            type: DECIMAL(5,2)
+            name: count_degraded
+            type: INTEGER
         - column:
-            name: pct_down
-            type: DECIMAL(5,2)
+            name: count_down
+            type: INTEGER
         - column:
-            name: pct_maintenance
-            type: DECIMAL(5,2)
+            name: count_error
+            type: INTEGER
         - column:
-            name: pct_unknown
-            type: DECIMAL(5,2)
+            name: count_maintenance
+            type: INTEGER
+        - column:
+            name: count_unknown
+            type: INTEGER
         - column:
             name: estat_num_elements
             type: INTEGER
@@ -130,23 +139,26 @@ databaseChangeLog:
         tableName: ${db_prefix}salut_subsistema
         columns:
         - column:
-            name: pct_up
-            type: DECIMAL(5,2)
+            name: count_up
+            type: INTEGER
         - column:
-            name: pct_warn
-            type: DECIMAL(5,2)
+            name: count_warn
+            type: INTEGER
         - column:
-            name: pct_degraded
-            type: DECIMAL(5,2)
+            name: count_degraded
+            type: INTEGER
         - column:
-            name: pct_down
-            type: DECIMAL(5,2)
+            name: count_down
+            type: INTEGER
         - column:
-            name: pct_maintenance
-            type: DECIMAL(5,2)
+            name: count_error
+            type: INTEGER
         - column:
-            name: pct_unknown
-            type: DECIMAL(5,2)
+            name: count_maintenance
+            type: INTEGER
+        - column:
+            name: count_unknown
+            type: INTEGER
         - column:
             name: estat_num_elements
             type: INTEGER

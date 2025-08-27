@@ -1,9 +1,9 @@
 package es.caib.comanda.ms.salut.controller;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
-import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.salut.back.controller.SalutController;
 import es.caib.comanda.salut.logic.service.SalutSchedulerService;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,5 +1,6 @@
 package es.caib.comanda.salut.logic.intf.model;
 
+import es.caib.comanda.salut.persist.entity.SalutEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -18,15 +19,32 @@ import java.util.Date;
 public class SalutInformeLatenciaItem implements Serializable {
 
 	private LocalDateTime data;
-	private Double latenciaMitja;
+	private Integer latenciaMitja;
 
 	public SalutInformeLatenciaItem(
 			Date dataAgrupacio,
-			Double latenciaMitja) {
+			Integer latenciaMitja) {
 		this.data = dataAgrupacio.toInstant()
 				.atZone(ZoneId.systemDefault())
 				.toLocalDateTime();
 		this.latenciaMitja = latenciaMitja;
 	}
+
+    public SalutInformeLatenciaItem(SalutEntity salutEntity, Integer minuteOffset) {
+        switch (salutEntity.getTipusRegistre()) {
+            case HORA:
+                this.data = salutEntity.getData().withMinute(0).withSecond(0);
+                break;
+            case DIA:
+                this.data = salutEntity.getData().withHour(0).withMinute(0).withSecond(0);
+                break;
+            case MINUTS:
+                this.data = salutEntity.getData().plusMinutes(minuteOffset).withSecond(0);
+                break;
+            default:
+                this.data = salutEntity.getData().withSecond(0);
+        }
+        this.latenciaMitja = salutEntity.getAppLatenciaMitjana();
+    }
 
 }

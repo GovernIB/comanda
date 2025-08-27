@@ -2,6 +2,7 @@ package es.caib.comanda.ms.salut.helper;
 
 import es.caib.comanda.ms.salut.model.EstatSalutEnum;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
+import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.SalutNivell;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,8 +44,8 @@ class SalutInfoHelperPrivateMethodsTest {
             assertEquals(e.name(), res.toString());
         }
         // null -> null
-        Object nullRes = invokePrivate("toSalutEstat", new Class[]{EstatSalutEnum.class}, new Object[]{null});
-        assertNull(nullRes);
+        Object unknownRes = invokePrivate("toSalutEstat", new Class[]{EstatSalutEnum.class}, new Object[]{null});
+        assertEquals(SalutEstat.UNKNOWN, unknownRes);
     }
 
     @Test

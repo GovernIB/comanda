@@ -19,23 +19,20 @@ import {
     BasePage,
     useResourceApiService,
     dateFormatLocale,
-    useBaseAppContext,
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
-import { calculateEstatsSeries, getEstatsMaxData } from '../components/UpdownBarChart';
+import UpdownBarChart, { getEstatsMaxData } from '../components/UpdownBarChart';
 import { generateDataGroups, isDataInGroup, toXAxisDataGroups } from '../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
 import {
-    BarPlot,
-    BarSeriesType,
-    ChartsLegend,
     ChartsXAxis,
     ChartsYAxis,
     LinePlot,
     LineSeriesType,
     ChartContainer,
+    ChartsTooltip,
 } from '@mui/x-charts';
-import { useTheme } from '@mui/material/styles';
+import {getColorByNivellEnum, getColorByStatEnum, NivellEnum, SalutEstatEnum} from "../types/salut.model.tsx";
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -74,15 +71,15 @@ const useAppEstatLabel = () => {
       case 'UP':
         return t('enum.appEstat.UP.title');
       case 'WARN':
-        return t('enum.appEstat.WARN');
+        return t('enum.appEstat.WARN.title');
       case 'DOWN':
-        return t('enum.appEstat.DOWN');
+        return t('enum.appEstat.DOWN.title');
       case 'DEGRADED':
-        return t('enum.appEstat.DEGRADED');
+        return t('enum.appEstat.DEGRADED.title');
       case 'MAINTENANCE':
-        return t('enum.appEstat.MAINTENANCE');
+        return t('enum.appEstat.MAINTENANCE.title');
       case 'UNKNOWN':
-        return t('enum.appEstat.UNKNOWN');
+        return t('enum.appEstat.UNKNOWN.title');
       default:
         return estat;
     }
@@ -171,12 +168,12 @@ const AppInfo: React.FC<any> = (props) => {
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
     const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
-    const bdEstat = app && <Typography><Chip label={getAppEstatLabel(app.bdEstat)} size="small" color={app.bdEstat === 'UP' ? 'success' : 'error'} /></Typography>;
+    const bdEstat = app && <Typography><Chip label={getAppEstatLabel(app.bdEstat)} size="small" sx={{backgroundColor: getColorByStatEnum(app.bdEstat as SalutEstatEnum), color: 'white'}} /></Typography>;
     const appLatencia = app && <Typography>{app.appLatencia != null ? app.appLatencia + ' ms' : t('page.salut.nd')}</Typography>;
     const missatges = app && <>
-        <Chip label={app.missatgeErrorCount} size="small" color="error" />&nbsp;/&nbsp;
-        <Chip label={app.missatgeWarnCount} size="small" color="warning" />&nbsp;/&nbsp;
-        <Chip label={app.missatgeInfoCount} size="small" color="info" />
+        <Chip label={app.missatgeErrorCount} size="small" sx={{backgroundColor: getColorByStatEnum(SalutEstatEnum.ERROR), color: 'white'}} />&nbsp;/&nbsp;
+        <Chip label={app.missatgeWarnCount} size="small" sx={{backgroundColor: getColorByStatEnum(SalutEstatEnum.DEGRADED), color: 'white'}} />&nbsp;/&nbsp;
+        <Chip label={app.missatgeInfoCount} size="small" sx={{backgroundColor: getColorByStatEnum(SalutEstatEnum.MAINTENANCE), color: 'white'}} />
     </>;
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
@@ -213,16 +210,15 @@ const AppInfo: React.FC<any> = (props) => {
     </Card>;
 }
 
-const LatenciaEstatsChart: React.FC<any> = (props) => {
+const LatenciaLineChart: React.FC<any> = (props) => {
     const { dataInici, agrupacio, latencies, estats } = props;
     const { t } = useTranslation();
-    const theme = useTheme();
 
-    if (latencies.length === 0)
+    if (!latencies || latencies.length === 0)
         return (
             <Card variant="outlined" sx={{ height: '300px' }}>
                 <CardContent sx={{ height: '100%' }}>
-                    <Typography gutterBottom variant="h5" component="div">{t('page.salut.estatLatencia.title')}</Typography>
+                    <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>
                     <Typography
                         sx={{
                             height: '100%',
@@ -238,20 +234,8 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
             </Card>
         );
 
-    const latenciaMaxValue = latencies.map((latencia: any) => latencia.latenciaMitja).reduce((accumulator: any, currentValue: any) => {
-        return Math.max(accumulator, currentValue ?? null); // Si uno de los dos parámetros de Math.max es undefined, devuelve NaN
-    }, latencies[0].latenciaMitja);
-
-    const mapPercentToLatenciaMaxValue = (percent: number) => (percent / 100) * latenciaMaxValue*1.5;
-
     const estatsMaxData = getEstatsMaxData(estats);
     const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
-    const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "upPercent").map(mapPercentToLatenciaMaxValue);
-    const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "warnPercent").map(mapPercentToLatenciaMaxValue);
-    const seriesDegraded = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "degradedPercent").map(mapPercentToLatenciaMaxValue);
-    const seriesMaintenance = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "maintenancePercent").map(mapPercentToLatenciaMaxValue);
-    const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent").map(mapPercentToLatenciaMaxValue);
-    const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent").map(mapPercentToLatenciaMaxValue);
 
     const seriesDataLatencia = baseDataGroups.map((group) => {
         return latencies.find((latenciaData: any) => {
@@ -260,74 +244,65 @@ const LatenciaEstatsChart: React.FC<any> = (props) => {
         })?.latenciaMitja;
     });
 
-    const barSeries: BarSeriesType[] = [
-        {
-            data: seriesUp,
-            label: 'up',
-            stack: 'total',
-            color: theme.palette.success.main,
-            type: 'bar',
-        },
-        {
-            data: seriesWarn,
-            label: 'warn',
-            stack: 'total',
-            color: theme.palette.warning.light,
-            type: 'bar',
-        },
-        {
-            data: seriesDegraded,
-            label: 'degraded',
-            stack: 'total',
-            color: theme.palette.warning.dark,
-            type: 'bar',
-        },
-        {
-            data: seriesMaintenance,
-            label: 'maintenance',
-            stack: 'total',
-            color: theme.palette.primary.main,
-            type: 'bar',
-        },
-        {
-            data: seriesDown,
-            label: 'down',
-            stack: 'total',
-            color: theme.palette.error.main,
-            type: 'bar',
-        },
-        {
-            data: seriesUnknown,
-            label: 'unknown',
-            stack: 'total',
-            color: theme.palette.grey[600],
-            type: 'bar',
-        }
-    ];
     const lineSeries: LineSeriesType[] = [
-        { data: seriesDataLatencia, type: 'line', showMark: true },
+        {
+            data: seriesDataLatencia,
+            type: 'line',
+            showMark: true,
+            valueFormatter: (v) => (v == null ? '' : `${v} ms`),
+        },
     ];
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
 
-    // TODO Añadir efecto "hover" para ver el número exacto de ms para la latencia
     return (
         <Card variant="outlined" sx={{ height: '300px' }}>
             <CardContent sx={{ height: '100%' }}>
                 <Typography gutterBottom variant="h5" component="div">
-                    {t('page.salut.estatLatencia.title')}
+                    {t('page.salut.latencia.title')}
                 </Typography>
                 <ChartContainer
-                    series={[...lineSeries, ...barSeries]}
-                    xAxis={[{ scaleType: 'band', data: dataGroups, id: 'latenciaEstat-x-axis-id', }]}
-                    yAxis={[{ label: ' ms', id: 'latenciaEstat-y-axis-id', }]}
+                    series={[...lineSeries]}
+                    xAxis={[{ scaleType: 'band', data: dataGroups, id: 'latencia-x-axis-id', }]}
+                    yAxis={[{ label: ' ms', id: 'latencia-y-axis-id', }]}
                 >
-                    <ChartsLegend />
-                    <BarPlot />
                     <LinePlot />
                     <MarkPlot />
-                    <ChartsYAxis axisId="latenciaEstat-y-axis-id" />
-                    <ChartsXAxis axisId="latenciaEstat-x-axis-id" />
+                    <ChartsTooltip />
+                    <ChartsYAxis axisId="latencia-y-axis-id" />
+                    <ChartsXAxis axisId="latencia-x-axis-id" />
                 </ChartContainer>
+            </CardContent>
+        </Card>
+    );
+}
+
+const EstatsBarCard: React.FC<any> = (props) => {
+    const { dataInici, agrupacio, estats } = props;
+    const { t } = useTranslation();
+
+    const hasData = estats && Object.keys(estats).length > 0;
+
+    return (
+        <Card variant="outlined" sx={{ height: '300px' }}>
+            <CardContent sx={{ height: '100%' }}>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t('page.salut.estats.title')}
+                </Typography>
+                {!hasData ? (
+                    <Typography
+                        sx={{
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        {t('page.salut.estatLatencia.noInfo')}
+                    </Typography>
+                ) : (
+                    <UpdownBarChart dataInici={dataInici} agrupacio={agrupacio} estats={estats} />
+                )}
             </CardContent>
         </Card>
     );
@@ -337,13 +312,6 @@ const Integracions: React.FC<any> = (props) => {
     const { salutCurrentApp } = props;
     const { t } = useTranslation();
     const integracions = salutCurrentApp?.integracions;
-    const getEstatColor = (estat: string) => {
-        switch (estat) {
-            case 'UP': return 'success';
-            case 'DOWN': return 'error';
-            case 'UNKNOWN': return 'warning';
-        }
-    }
     const getAppEstatLabel = useAppEstatLabel();
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
@@ -368,12 +336,12 @@ const Integracions: React.FC<any> = (props) => {
                         <TableCell sx={{width: '50px'}}>{i.logo && <img src={`data:image/png;base64,${i.logo}`} alt="logo" style={{ maxHeight: '32px' }}/>}</TableCell>
                         <TableCell>{i.nom}</TableCell>
                         <TableCell>
-                            <Chip label={getAppEstatLabel(i.estat)} size="small" color={getEstatColor(i.estat)} />
+                            <Chip label={getAppEstatLabel(i.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white'}}/>
                         </TableCell>
                         <TableCell>{i.latencia != null ? i.latencia + ' ms' : t('page.salut.nd')}</TableCell>
                         <TableCell>
-                            <Chip label={i.totalOk} size="small" color={"success"} sx={{ minWidth: '35px', textAlign: 'center', mr:1 }} />
-                            <Chip label={i.totalError} size="small" color={"error"} sx={{ minWidth: '35px', textAlign: 'center' }} />
+                            <Chip label={i.totalOk} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
+                            <Chip label={i.totalError} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
                         </TableCell>
                     </TableRow>)}
                 </TableBody>
@@ -407,7 +375,7 @@ const Subsistemes: React.FC<any> = (props) => {
                         <TableCell>{s.codi}</TableCell>
                         <TableCell>{s.nom}</TableCell>
                         <TableCell>
-                            <Chip label={getAppEstatLabel(s.estat)} size="small" color={s.estat === 'UP' ? 'success' : 'error'} />
+                            <Chip label={getAppEstatLabel(s.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white'}} />
                         </TableCell>
                         <TableCell>{s.latencia} ms</TableCell>
                     </TableRow>)}
@@ -455,6 +423,36 @@ const Contexts: React.FC<any> = (props) => {
     </Card>;
 }
 
+const Missatges: React.FC<any> = (props) => {
+    const { salutCurrentApp } = props;
+    const { t } = useTranslation();
+    const missatges = salutCurrentApp?.missatges;
+    return <Card variant="outlined" sx={{ height: '100%' }}>
+        <CardContent>
+            <Typography gutterBottom variant="h5" component="div">{t('page.salut.missatges.title')}</Typography>
+            {!missatges?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                {t('page.salut.missatges.noInfo')}
+            </Typography>}
+            {missatges?.length > 0 && <Table size="small">
+                <TableHead>
+                    <TableRow>
+                        <TableCell>{t('page.salut.missatges.column.data')}</TableCell>
+                        <TableCell>{t('page.salut.missatges.column.nivell')}</TableCell>
+                        <TableCell>{t('page.salut.missatges.column.missatge')}</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {missatges.map((m: any, key: number) => <TableRow key={key}>
+                        <TableCell><Typography>{dateFormatLocale(m.data, true)}</Typography></TableCell>
+                        <TableCell><Chip label={m.nivell} size="small" sx={{backgroundColor: getColorByNivellEnum(m.nivell as NivellEnum), color: 'white'}} /></TableCell>
+                        <TableCell>{m.missatge}</TableCell>
+                    </TableRow>)}
+                </TableBody>
+            </Table>}
+        </CardContent>
+    </Card>;
+}
+
 const DetallInfo: React.FC<any> = (props) => {
     const { salutCurrentApp } = props;
     const { t } = useTranslation();
@@ -494,8 +492,8 @@ const SalutAppInfo: React.FC = () => {
     const toolbarState = salutCurrentApp?.appEstat ? <Chip
         label={getAppEstatLabel(salutCurrentApp.appEstat)}
         size="small"
-        color={salutCurrentApp.appEstat === 'UP' ? 'success' : 'error'}
-        sx={{ ml: 1 }} /> : undefined;
+        sx={{backgroundColor: getColorByStatEnum(salutCurrentApp.appEstat as SalutEstatEnum), color: 'white', ml: 1}}
+        /> : undefined;
     const toolbar = <SalutToolbar
         title={entornApp != null ? `${entornApp.app.description} - ${entornApp.entorn.description}` : ""}
         subtitle={entornApp?.versio ? 'v' + entornApp?.versio : undefined}
@@ -527,11 +525,10 @@ const SalutAppInfo: React.FC = () => {
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
                         <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            {reportParams != null && latencies != null && estats != null && (
-                                <LatenciaEstatsChart
+                            {reportParams != null && estats != null && (
+                                <EstatsBarCard
                                     dataInici={reportParams.dataInici}
                                     agrupacio={reportParams.agrupacio}
-                                    latencies={latencies}
                                     estats={estats}
                                 />
                             )}
@@ -541,13 +538,30 @@ const SalutAppInfo: React.FC = () => {
                         <DetallInfo salutCurrentApp={salutCurrentApp} />
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
-                        <Contexts salutCurrentApp={salutCurrentApp} />
+                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                            {reportParams != null && latencies != null && estats != null && (
+                                <>
+                                    <LatenciaLineChart
+                                        dataInici={reportParams.dataInici}
+                                        agrupacio={reportParams.agrupacio}
+                                        latencies={latencies}
+                                        estats={estats}
+                                    />
+                                </>
+                            )}
+                        </ErrorBoundary>
                     </Grid>
                     <Grid size={{ sm: 12, lg: 6 }}>
                         <Integracions salutCurrentApp={salutCurrentApp} />
                     </Grid>
                     <Grid size={{ sm: 12, lg: 6 }}>
                         <Subsistemes salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Contexts salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Missatges salutCurrentApp={salutCurrentApp} />
                     </Grid>
                 </Grid>
             )}

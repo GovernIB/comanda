@@ -106,6 +106,12 @@ export enum SalutEstatEnum {
     ERROR='ERROR'
 }
 
+export enum NivellEnum {
+    INFO='INFO',
+    WARN='WARN',
+    ERROR='ERROR'
+}
+
 export const GREEN: string = "#72bd75"  // Verde suave, transmite "ok"
 export const YELLOW: string = "#efe271" // Amarillo claro, alerta ligera
 export const ORANGE: string = "#FFCC80" // Naranja suave, indica problema moderado
@@ -134,6 +140,18 @@ export function getColorByStatEnum(salutEstatEnum: SalutEstatEnum): string {
         case SalutEstatEnum.DOWN:
             return RED_LIGHT;
         case SalutEstatEnum.ERROR:
+        default:
+            return RED_DARK;
+    }
+}
+
+export function getColorByNivellEnum(nivellEnum: NivellEnum): string {
+    switch (nivellEnum) {
+        case NivellEnum.INFO:
+            return BLUE;
+        case NivellEnum.WARN:
+            return YELLOW;
+        case NivellEnum.ERROR:
         default:
             return RED_DARK;
     }

@@ -5,7 +5,6 @@ import es.caib.comanda.ms.persist.entity.BaseEntity;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,6 +22,8 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import static lombok.AccessLevel.NONE;
+
 /**
  * Entitat de base de dades que emmagatzema les informacions de salut
  * retornades per les apps.
@@ -36,88 +37,47 @@ import java.util.Set;
 @NoArgsConstructor
 public class SalutEntity extends BaseEntity<Salut> {
 
-	@Column(name = "entorn_app_id", nullable = false)
-	private Long entornAppId;
-    @Column(name = "data", nullable = false)
-    private LocalDateTime data;
-	@Column(name = "data_app", nullable = false)
-	private LocalDateTime dataApp;
+	@Column(name = "entorn_app_id", nullable = false)	        private Long entornAppId;
+    @Column(name = "data", nullable = false)                    private LocalDateTime data;
+	@Column(name = "data_app", nullable = false)            	private LocalDateTime dataApp;
 	@Enumerated(EnumType.STRING)
-	@Column(name = "app_estat", nullable = false)
-	private SalutEstat appEstat;
-	@Column(name = "app_latencia")
-	private Integer appLatencia;
+	@Column(name = "app_estat", nullable = false)           	private SalutEstat appEstat;
+	@Column(name = "app_latencia")                          	private Integer appLatencia;
 	@Enumerated(EnumType.STRING)
-	@Column(name = "bd_estat")
-	private SalutEstat bdEstat;
-	@Column(name = "bd_latencia")
-	private Integer bdLatencia;
+	@Column(name = "bd_estat")                              	private SalutEstat bdEstat;
+	@Column(name = "bd_latencia")                              	private Integer bdLatencia;
 
-	// Camps d'agregació (percentatges i mitjanes)
-	@Setter(AccessLevel.NONE)
-    @Column(name = "app_pct_up", precision = 5, scale = 2)
-	private java.math.BigDecimal appPctUp;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "app_pct_warn", precision = 5, scale = 2)
-	private java.math.BigDecimal appPctWarn;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "app_pct_degraded", precision = 5, scale = 2)
-	private java.math.BigDecimal appPctDegraded;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "app_pct_down", precision = 5, scale = 2)
-	private java.math.BigDecimal appPctDown;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "app_pct_maintenance", precision = 5, scale = 2)
-	private java.math.BigDecimal appPctMaintenance;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "app_pct_unknown", precision = 5, scale = 2)
-	private java.math.BigDecimal appPctUnknown;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "bd_pct_up", precision = 5, scale = 2)
-	private java.math.BigDecimal bdPctUp;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "bd_pct_warn", precision = 5, scale = 2)
-	private java.math.BigDecimal bdPctWarn;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "bd_pct_degraded", precision = 5, scale = 2)
-	private java.math.BigDecimal bdPctDegraded;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "bd_pct_down", precision = 5, scale = 2)
-	private java.math.BigDecimal bdPctDown;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "bd_pct_maintenance", precision = 5, scale = 2)
-	private java.math.BigDecimal bdPctMaintenance;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "bd_pct_unknown", precision = 5, scale = 2)
-	private java.math.BigDecimal bdPctUnknown;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "app_latencia_mitjana")
-	private Integer appLatenciaMitjana;
-    @Setter(AccessLevel.NONE)
-    @Column(name = "app_latencia_num_elements")
-    private Integer appLatenciaNumElements;
-	@Setter(AccessLevel.NONE)
-    @Column(name = "bd_latencia_mitjana")
-	private Integer bdLatenciaMitjana;
-    @Setter(AccessLevel.NONE)
-    @Column(name = "bd_latencia_num_elements")
-    private Integer bdLatenciaNumElements;
+	// Camps d'agregació (comptadors i mitjanes)
+    @Setter(NONE) @Column(name = "app_count_up")                private int appCountUp = 0;
+    @Setter(NONE) @Column(name = "app_count_warn")              private int appCountWarn = 0;
+    @Setter(NONE) @Column(name = "app_count_degraded")          private int appCountDegraded = 0;
+    @Setter(NONE) @Column(name = "app_count_down")              private int appCountDown = 0;
+    @Setter(NONE) @Column(name = "app_count_error")             private int appCountError = 0;
+    @Setter(NONE) @Column(name = "app_count_maintenance")       private int appCountMaintenance = 0;
+    @Setter(NONE) @Column(name = "app_count_unknown")           private int appCountUnknown = 0;
 
-    @Column(name = "num_elements")
-    private Integer numElements;
+    @Setter(NONE) @Column(name = "bd_count_up")                 private int bdCountUp = 0;
+    @Setter(NONE) @Column(name = "bd_count_warn")               private int bdCountWarn = 0;
+    @Setter(NONE) @Column(name = "bd_count_degraded")           private int bdCountDegraded = 0;
+    @Setter(NONE) @Column(name = "bd_count_down")               private int bdCountDown = 0;
+    @Setter(NONE) @Column(name = "bd_count_error")              private int bdCountError = 0;
+    @Setter(NONE) @Column(name = "bd_count_maintenance")        private int bdCountMaintenance = 0;
+    @Setter(NONE) @Column(name = "bd_count_unknown")            private int bdCountUnknown = 0;
 
+	@Setter(NONE) @Column(name = "app_latencia_mitjana")        private Integer appLatenciaMitjana;
+    @Setter(NONE) @Column(name = "app_latencia_num_elements")   private int appLatenciaNumElements = 0;
+	@Setter(NONE) @Column(name = "bd_latencia_mitjana")         private Integer bdLatenciaMitjana;
+    @Setter(NONE) @Column(name = "bd_latencia_num_elements")    private int bdLatenciaNumElements = 0;
+
+    @Column(name = "num_elements")                              private int numElements = 0;
 	@Enumerated(EnumType.STRING)
-	@Column(name = "tipus_registre", nullable = false)
-	private TipusRegistreSalut tipusRegistre = TipusRegistreSalut.MINUT;
+	@Column(name = "tipus_registre", nullable = false)      	private TipusRegistreSalut tipusRegistre = TipusRegistreSalut.MINUT;
 
-    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)
-    private Set<SalutIntegracioEntity> salutIntegracions;
-    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)
-    private Set<SalutSubsistemaEntity> salutSubsistemes;
-    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)
-    private Set<SalutMissatgeEntity> salutMissatges;
-    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)
-    private Set<SalutDetallEntity> salutDetalls;
+    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)     private Set<SalutIntegracioEntity> salutIntegracions;
+    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)     private Set<SalutSubsistemaEntity> salutSubsistemes;
+    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)     private Set<SalutMissatgeEntity> salutMissatges;
+    @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)     private Set<SalutDetallEntity> salutDetalls;
+
 
     @Formula("(CASE WHEN (app_estat = 'UP') THEN 1 ELSE 0 END)")
     private Boolean appUp;
@@ -153,7 +113,7 @@ public class SalutEntity extends BaseEntity<Salut> {
     private String yearMonthDayHourMinute;
 
 
-    // Mètodes per actualitzar percentatges d'estats i latències mitjanes
+    // Mètodes per actualitzar comptadors, percentatges d'estats i latències mitjanes
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public void setAppLatenciaMitjana(Integer novaLatencia) {
         if (novaLatencia == null) return;
@@ -165,7 +125,7 @@ public class SalutEntity extends BaseEntity<Salut> {
     public void addAppLatenciaMitjana(Integer novaLatencia) {
         if (novaLatencia == null) return;
 
-        if (this.appLatenciaNumElements == null || this.appLatenciaNumElements == 0) {
+        if (this.appLatenciaNumElements == 0) {
             this.appLatenciaMitjana = novaLatencia;
             this.appLatenciaNumElements = 1;
         } else {
@@ -186,7 +146,7 @@ public class SalutEntity extends BaseEntity<Salut> {
     public void addBdLatenciaMitjana(Integer novaLatencia) {
         if (novaLatencia == null) return;
 
-        if (this.bdLatenciaNumElements == null || this.bdLatenciaNumElements == 0) {
+        if (this.bdLatenciaNumElements == 0) {
             this.bdLatenciaMitjana = novaLatencia;
             this.bdLatenciaNumElements = 1;
         } else {
@@ -197,68 +157,49 @@ public class SalutEntity extends BaseEntity<Salut> {
         }
     }
 
-    public void updateAppPctByEstat(SalutEstat estat) {
-        if (numElements == null) this.numElements = 0;
-        int newTotal = numElements + 1;
-
-        int currentUpElements = this.appPctUp == null ? 0 : getElementsByPercentage(this.appPctUp);
-        int currentWarnElements = this.appPctWarn == null ? 0 : getElementsByPercentage(this.appPctWarn);
-        int currentDegradedElements = this.appPctDegraded == null ? 0 : getElementsByPercentage(this.appPctDegraded);
-        int currentDownElements = this.appPctDown == null ? 0 : getElementsByPercentage(this.appPctDown);
-        int currentMaintenanceElements = this.appPctMaintenance == null ? 0 : getElementsByPercentage(this.appPctMaintenance);
-        int currentUnknownElements = this.appPctUnknown == null ? 0 : getElementsByPercentage(this.appPctUnknown);
-
-        int newUpElements = currentUpElements + (SalutEstat.UP.equals(estat) ? 1 : 0);
-        int newWarnElements = currentWarnElements + (SalutEstat.WARN.equals(estat) ? 1 : 0);
-        int newDegradedElements = currentDegradedElements + (SalutEstat.DEGRADED.equals(estat) ? 1 : 0);
-        int newDownElements = currentDownElements + (SalutEstat.DOWN.equals(estat) || SalutEstat.ERROR.equals(estat) ? 1 : 0);
-        int newMaintenanceElements = currentMaintenanceElements + (SalutEstat.MAINTENANCE.equals(estat) ? 1 : 0);
-        int newUnknownElements = currentUnknownElements + (SalutEstat.UNKNOWN.equals(estat) ? 1 : 0);
-
-        this.appPctUp = percent(newUpElements, newTotal);
-        this.appPctWarn = percent(newWarnElements, newTotal);
-        this.appPctDegraded = percent(newDegradedElements, newTotal);
-        this.appPctDown = percent(newDownElements, newTotal);
-        this.appPctMaintenance = percent(newMaintenanceElements, newTotal);
-        this.appPctUnknown = percent(newUnknownElements, newTotal);
+    public void updateAppCountByEstat(SalutEstat estat) {
+        this.appCountUp          = nextCount(this.appCountUp,          estat == SalutEstat.UP);
+        this.appCountWarn        = nextCount(this.appCountWarn,        estat == SalutEstat.WARN);
+        this.appCountDegraded    = nextCount(this.appCountDegraded,    estat == SalutEstat.DEGRADED);
+        this.appCountDown        = nextCount(this.appCountDown,        estat == SalutEstat.DOWN);
+        this.appCountError       = nextCount(this.appCountError,       estat == SalutEstat.ERROR);
+        this.appCountMaintenance = nextCount(this.appCountMaintenance, estat == SalutEstat.MAINTENANCE);
+        this.appCountUnknown     = nextCount(this.appCountUnknown,     estat == SalutEstat.UNKNOWN);
     }
 
-    public void updateBdPctByEstat(SalutEstat estat) {
-        if (numElements == null) this.numElements = 0;
-        int newTotal = numElements + 1;
-
-        int currentUpElements = this.bdPctUp == null ? 0 : getElementsByPercentage(this.bdPctUp);
-        int currentWarnElements = this.bdPctWarn == null ? 0 : getElementsByPercentage(this.bdPctWarn);
-        int currentDegradedElements = this.bdPctDegraded == null ? 0 : getElementsByPercentage(this.bdPctDegraded);
-        int currentDownElements = this.bdPctDown == null ? 0 : getElementsByPercentage(this.bdPctDown);
-        int currentMaintenanceElements = this.bdPctMaintenance == null ? 0 : getElementsByPercentage(this.bdPctMaintenance);
-        int currentUnknownElements = this.bdPctUnknown == null ? 0 : getElementsByPercentage(this.bdPctUnknown);
-
-        int newUpElements = currentUpElements + (SalutEstat.UP.equals(estat) ? 1 : 0);
-        int newWarnElements = currentWarnElements + (SalutEstat.WARN.equals(estat) ? 1 : 0);
-        int newDegradedElements = currentDegradedElements + (SalutEstat.DEGRADED.equals(estat) ? 1 : 0);
-        int newDownElements = currentDownElements + (SalutEstat.DOWN.equals(estat) || SalutEstat.ERROR.equals(estat) ? 1 : 0);
-        int newMaintenanceElements = currentMaintenanceElements + (SalutEstat.MAINTENANCE.equals(estat) ? 1 : 0);
-        int newUnknownElements = currentUnknownElements + (SalutEstat.UNKNOWN.equals(estat) ? 1 : 0);
-
-        this.bdPctUp = percent(newUpElements, newTotal);
-        this.bdPctWarn = percent(newWarnElements, newTotal);
-        this.bdPctDegraded = percent(newDegradedElements, newTotal);
-        this.bdPctDown = percent(newDownElements, newTotal);
-        this.bdPctMaintenance = percent(newMaintenanceElements, newTotal);
-        this.bdPctUnknown = percent(newUnknownElements, newTotal);
+    public void updateBdCountByEstat(SalutEstat estat) {
+        this.bdCountUp           = nextCount(this.bdCountUp,           estat == SalutEstat.UP);
+        this.bdCountWarn         = nextCount(this.bdCountWarn,         estat == SalutEstat.WARN);
+        this.bdCountDegraded     = nextCount(this.bdCountDegraded,     estat == SalutEstat.DEGRADED);
+        this.bdCountDown         = nextCount(this.bdCountDown,         estat == SalutEstat.DOWN);
+        this.bdCountError        = nextCount(this.bdCountError,        estat == SalutEstat.ERROR);
+        this.bdCountMaintenance  = nextCount(this.bdCountMaintenance,  estat == SalutEstat.MAINTENANCE);
+        this.bdCountUnknown      = nextCount(this.bdCountUnknown,      estat == SalutEstat.UNKNOWN);
     }
 
-    private int getElementsByPercentage(BigDecimal percentatge) {
-        return Math.round(percentatge.multiply(BigDecimal.valueOf(numElements))
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
-                .floatValue());
+    private Integer nextCount(int currentCount, boolean matches) {
+        return currentCount + (matches ? 1 : 0);
     }
+
+    public BigDecimal getAppPctUp() { return percent(appCountUp, numElements); }
+    public BigDecimal getAppPctWarn() { return percent(appCountWarn, numElements); }
+    public BigDecimal getAppPctDegraded() { return percent(appCountDegraded, numElements); }
+    public BigDecimal getAppPctDown() { return percent(appCountDown, numElements); }
+    public BigDecimal getAppPctError() { return percent(appCountError, numElements); }
+    public BigDecimal getAppPctMaintenance() { return percent(appCountMaintenance, numElements); }
+    public BigDecimal getAppPctUnknown() { return percent(appCountUnknown, numElements); }
+
+    public BigDecimal getBdPctUp() { return percent(bdCountUp, numElements); }
+    public BigDecimal getBdPctWarn() { return percent(bdCountWarn, numElements); }
+    public BigDecimal getBdPctDegraded() { return percent(bdCountDegraded, numElements); }
+    public BigDecimal getBdPctDown() { return percent(bdCountDown, numElements); }
+    public BigDecimal getBdPctError() { return percent(bdCountError, numElements); }
+    public BigDecimal getBdPctMaintenance() { return percent(bdCountMaintenance, numElements); }
+    public BigDecimal getBdPctUnknown() { return percent(bdCountUnknown, numElements); }
 
     private BigDecimal percent(int part, int total) {
         if (total <= 0) return null;
-        return BigDecimal.valueOf((part * 100.0) / total)
-                .setScale(2, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf((part * 100.0) / total).setScale(2, RoundingMode.HALF_UP);
     }
 
 }

@@ -138,6 +138,15 @@ const translationCa = {
                     latencia: "Latència",
                 },
             },
+            missatges: {
+                title: "Missatges",
+                noInfo: "No hi ha informació",
+                column: {
+                    data: "Data",
+                    nivell: "Nivell",
+                    missatge: "Missatge",
+                },
+            },
             msgs: {
                 missatgeErrorCount: "Errors",
                 missatgeWarnCount: "Alertes",

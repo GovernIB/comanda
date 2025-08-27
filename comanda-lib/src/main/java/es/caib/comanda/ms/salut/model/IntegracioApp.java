@@ -5,6 +5,7 @@ public enum IntegracioApp {
     AFI ("Afirma"),
     ARX ("Arxiu"),
     CAR ("Carpeta"),
+    CIE ("Cie"),
     DIB ("DigitalIB"),
     DIR ("Dir3Caib"),
     DIS ("Distribucio"),

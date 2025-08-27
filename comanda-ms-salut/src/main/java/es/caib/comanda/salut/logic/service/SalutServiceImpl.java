@@ -8,13 +8,13 @@ import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutDetall;
-import es.caib.comanda.salut.logic.intf.model.SalutInformeAgrupacio;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeParams;
 import es.caib.comanda.salut.logic.intf.model.SalutIntegracio;
 import es.caib.comanda.salut.logic.intf.model.SalutMissatge;
 import es.caib.comanda.salut.logic.intf.model.SalutSubsistema;
+import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.logic.intf.service.SalutService;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
@@ -33,12 +33,15 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -202,40 +205,27 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				String code,
 				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
-			List<SalutInformeEstatItem> data;
-			if (SalutInformeAgrupacio.ANY == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeEstatAny(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.MES == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeEstatMes(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.DIA == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeEstatDia(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.HORA == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeEstatHora(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.MINUT == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeEstatMinut(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else {
-				throw new ReportGenerationException(
-						Salut.class,
-						null,
-						code,
-						"Unknown agrupacio value: " + params.getAgrupacio());
-			}
-			return data;
+			final List<SalutInformeEstatItem> data = new ArrayList<>();
+
+            TipusRegistreSalut tipus = mapTipusAgrupacio(params);
+            LocalDateTime dataInici = calculaDataIniciAmbMarge(params.getDataInici(), tipus);
+
+            List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                    params.getEntornAppId(),
+                    dataInici,
+                    tipus);
+
+            if (tipus == TipusRegistreSalut.MINUTS) {
+                return generaPerFranges4Minuts(salutEntityList, params, SalutInformeEstatItem::new);
+            }
+
+            // Comportament per defecte per a altres agrupacions
+            Integer minuteOffset = null;
+            salutEntityList.forEach(salutEntity -> {
+                data.add(new SalutInformeEstatItem(salutEntity, minuteOffset));
+            });
+
+            return data;
 		}
 
 		@Override
@@ -280,45 +270,115 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				String code,
 				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
-			List<SalutInformeLatenciaItem> data;
-			if (SalutInformeAgrupacio.ANY == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeLatenciaAny(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.MES == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeLatenciaMes(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.DIA == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeLatenciaDia(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.HORA == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeLatenciaHora(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else if (SalutInformeAgrupacio.MINUT == params.getAgrupacio()) {
-				data = ((SalutRepository)entityRepository).informeLatenciaMinut(
-						params.getEntornAppId(),
-						params.getDataInici(),
-						params.getDataFi());
-			} else {
-				throw new ReportGenerationException(
-						Salut.class,
-						null,
-						code,
-						"Unknown agrupacio value: " + params.getAgrupacio());
-			}
-			return data;
+			final List<SalutInformeLatenciaItem> data = new ArrayList<>();
+
+            TipusRegistreSalut tipus = mapTipusAgrupacio(params);
+            LocalDateTime dataInici = calculaDataIniciAmbMarge(params.getDataInici(), tipus);
+
+            List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataAfterAndTipusRegistreOrderById(
+                    params.getEntornAppId(),
+                    dataInici,
+                    tipus);
+
+            if (tipus == TipusRegistreSalut.MINUTS) {
+                return generaPerFranges4Minuts(salutEntityList, params, SalutInformeLatenciaItem::new);
+            }
+
+            // Comportament per defecte per a altres agrupacions
+            Integer minuteOffset = null;
+            salutEntityList.forEach(salutEntity -> {
+                data.add(new SalutInformeLatenciaItem(salutEntity, minuteOffset));
+            });
+
+            return data;
 		}
 
 		@Override
 		public void onChange(Serializable id, SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
 		}
 	}
+
+    // --------------------------------------------------------------------------------------------
+    // Mètodes auxiliars per evitar duplicació entre informes
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * Converteix l'agrupació de l'informe al TipusRegistreSalut corresponent.
+     */
+    private TipusRegistreSalut mapTipusAgrupacio(SalutInformeParams params) throws ReportGenerationException {
+        switch (params.getAgrupacio()) {
+            case MINUT: return TipusRegistreSalut.MINUT;
+            case MINUTS_HORA: return TipusRegistreSalut.MINUTS;
+            case HORA: return TipusRegistreSalut.HORA;
+            case DIA_SETMANA:
+            case DIA_MES: return TipusRegistreSalut.DIA;
+            default:
+                throw new ReportGenerationException(Salut.class, null, null, "Unknown agrupacio value: " + params.getAgrupacio());
+        }
+    }
+
+    /**
+     * Aplica un petit marge de -3 minuts només per MINUTS.
+     */
+    private LocalDateTime calculaDataIniciAmbMarge(LocalDateTime dataInici, TipusRegistreSalut tipus) {
+        if (tipus == TipusRegistreSalut.MINUTS) {
+            return dataInici.minusMinutes(3);
+        } else if (tipus == TipusRegistreSalut.DIA) {
+            return dataInici.plusMinutes(60);
+        }
+        return dataInici;
+    }
+
+    /**
+     * Genera una llista d'ítems per franges de 4 minuts a partir de params.getDataInici() fins a params.getDataFi().
+     * Per cada franja s'agafa com a màxim una entitat i es calcula el desfasament (minuteOffset) per fixar la data
+     * de l'ítem exactament al límit de franja. En franges buides no s'afegeix cap ítem.
+     */
+    private <T> List<T> generaPerFranges4Minuts(List<SalutEntity> salutEntityList,
+                                                SalutInformeParams params,
+                                                BiFunction<SalutEntity, Integer, T> constructor) {
+        final List<T> resultat = new ArrayList<>();
+        if (salutEntityList == null || salutEntityList.isEmpty()) {
+            return resultat;
+        }
+
+        salutEntityList.sort(Comparator.comparing(SalutEntity::getData));
+
+        LocalDateTime dataInici = params.getDataInici().withSecond(0);
+        LocalDateTime dataFi = params.getDataFi();
+        if (dataFi == null || !dataFi.isAfter(dataInici)) {
+            return resultat;
+        }
+
+        LocalDateTime iniciFranja = params.getDataInici().withSecond(0).minusMinutes(3);
+        LocalDateTime fiFranja = params.getDataInici();
+        int pos = 0;
+        final int total = salutEntityList.size();
+
+        while (!dataFi.isBefore(iniciFranja)) {
+            SalutEntity seleccionat = null;
+
+            while (pos < total && salutEntityList.get(pos).getData().isBefore(iniciFranja)) {
+                pos++;
+            }
+            int k = pos;
+            while (k < total && !salutEntityList.get(k).getData().isBefore(iniciFranja)
+                    && salutEntityList.get(k).getData().isBefore(fiFranja)) {
+                seleccionat = salutEntityList.get(k);
+                k++;
+            }
+            pos = k;
+
+            if (seleccionat != null) {
+                int desfasamentMinuts = (int) ChronoUnit.MINUTES.between(seleccionat.getData().withSecond(0), fiFranja);
+                resultat.add(constructor.apply(seleccionat, desfasamentMinuts));
+            }
+
+            iniciFranja = iniciFranja.plusMinutes(4);
+            fiFranja = fiFranja.plusMinutes(4);
+        }
+
+        return resultat;
+    }
 
 }

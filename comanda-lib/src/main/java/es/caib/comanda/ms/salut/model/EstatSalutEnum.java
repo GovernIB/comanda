@@ -6,5 +6,6 @@ public enum EstatSalutEnum {
     DEGRADED,
     DOWN,
     MAINTENANCE,
-    UNKNOWN
+    UNKNOWN,
+    ERROR
 }

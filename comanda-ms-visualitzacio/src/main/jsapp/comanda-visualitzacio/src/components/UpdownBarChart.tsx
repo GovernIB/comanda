@@ -29,26 +29,19 @@ export const calculateEstatsSeries = (
     percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "maintenancePercent" | "downPercent" | "errorPercent" | "unknownPercent"
 ): number[] => {
     return baseDataGroups.map((group) => {
-        let valueSum = 0.0;
-        let valueCount = 0;
 
         const estatApps = Object.keys(estats);
+        let estatPercent: number = 0;
         estatApps.forEach((appKey) => {
-            const estatForGroup = estats[appKey].find((estat) => isDataInGroup(estat.data, group, agrupacio));
-            valueSum += estatForGroup != null ? estatForGroup[percentKey] || 0 : 0;
-            valueCount += estatForGroup != null ? 1 : 0;
+            const estatsData = estats[appKey];
+            const estat = estatsData.find((e: any) => e?.data === group);
+            if (estat && isDataInGroup(estat.data, group, agrupacio)) {
+                estatPercent += estat[percentKey];
+            }
         });
-
-        // if (valueSum != 0 &&
-        //     (percentKey === "degradedPercent" ||
-        //      percentKey === "maintenancePercent" ||
-        //      percentKey === "downPercent")) {
-        //     valueSum = -valueSum;
-        // }
-        return valueCount !== 0 ? valueSum / valueCount : 0.0;
+        return estatPercent / estatApps.length;
     });
 };
-
 
 const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const {
@@ -69,6 +62,8 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent");
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
+    console.log("dataGroups", dataGroups);
+
     const series = [
         {
             data: seriesUp,
@@ -113,11 +108,13 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
         }
     ];
+    console.log("series", series);
 
     return estats != null && <BarChart
         xAxis={[{ scaleType: 'band', data: dataGroups }]}
+        yAxis={[{ max: 100 }]}
         series={series}
-        borderRadius={6}
+        // borderRadius={6}
         grid={{
             horizontal: true,
             vertical: true

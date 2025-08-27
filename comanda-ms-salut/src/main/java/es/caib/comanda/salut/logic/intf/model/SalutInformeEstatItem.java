@@ -1,13 +1,14 @@
 package es.caib.comanda.salut.logic.intf.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import es.caib.comanda.salut.persist.entity.SalutEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 
 /**
  * Informació per a l'informe històric d'estat del recurs salut.
@@ -19,76 +20,72 @@ import java.util.Date;
 public class SalutInformeEstatItem implements Serializable {
 
 	private LocalDateTime data;
-	@JsonIgnore
-	private long upCount;
-	@JsonIgnore
-	private long warnCount;
-	@JsonIgnore
-	private long degradedCount;
-	@JsonIgnore
-	private long downCount;
-    @JsonIgnore
-    private long errorCount;
-	@JsonIgnore
-	private long maintenanceCount;
-	@JsonIgnore
-	private long unknownCount;
+    @JsonIgnore	private int upCount;
+    @JsonIgnore	private int warnCount;
+    @JsonIgnore	private int degradedCount;
+    @JsonIgnore	private int downCount;
+    @JsonIgnore private int errorCount;
+    @JsonIgnore	private int maintenanceCount;
+    @JsonIgnore	private int unknownCount;
 
-	public SalutInformeEstatItem(
-			Date dataAgrupacio,
-			long upCount,
-			long warnCount,
-			long degradedCount,
-			long downCount,
-            long errorCount,
-			long maintenanceCount,
-			long unknownCount) {
-		this.data = dataAgrupacio.toInstant()
-				.atZone(ZoneId.systemDefault())
-				.toLocalDateTime();
-		this.upCount = upCount;
-		this.warnCount = warnCount;
-		this.degradedCount = degradedCount;
-		this.downCount = downCount;
-        this.errorCount = errorCount;
-		this.maintenanceCount = maintenanceCount;
-		this.unknownCount = unknownCount;
-	}
+    @JsonIgnore private int totalCount;
 
-	@JsonIgnore
-	public long getNotUpCount() {
-		return downCount + errorCount + maintenanceCount + unknownCount;
-	}
+    private double upPercent;
+    private double warnPercent;
+    private double degradedPercent;
+    private double downPercent;
+    private double errorPercent;
+    private double maintenancePercent;
+    private double unknownPercent;
 
-	public long getTotalCount() {
-		return upCount + warnCount + degradedCount + downCount + errorCount + maintenanceCount + unknownCount;
-	}
 
-	public boolean isAlwaysUp() {
-		return getNotUpCount() == 0;
-	}
+    public SalutInformeEstatItem(SalutEntity salutEntity, Integer minuteOffset) {
 
-	public boolean isAlwaysDown() {
-		return upCount == 0;
-	}
+        switch (salutEntity.getTipusRegistre()) {
+            case HORA:
+                this.data = salutEntity.getData().withMinute(0).withSecond(0);
+                break;
+            case DIA:
+                this.data = salutEntity.getData().withHour(0).withMinute(0).withSecond(0);
+                break;
+            case MINUTS:
+                this.data = salutEntity.getData().plusMinutes(minuteOffset).withSecond(0);
+                break;
+            default:
+                this.data = salutEntity.getData().withSecond(0);
+        }
 
-	public double getUpPercent() {return round(upCount);}
+        this.upCount = salutEntity.getAppCountUp();
+        this.warnCount = salutEntity.getAppCountWarn();
+        this.degradedCount = salutEntity.getAppCountDegraded();
+        this.downCount = salutEntity.getAppCountDown();
+        this.errorCount = salutEntity.getAppCountError();
+        this.maintenanceCount = salutEntity.getAppCountMaintenance();
+        this.unknownCount = salutEntity.getAppCountUnknown();
 
-	public double getWarnPercent() {return round(warnCount);}
+        this.totalCount = salutEntity.getNumElements();
 
-	public double getDegradedPercent() {return round(degradedCount);}
+        this.upPercent = getPercent(upCount, totalCount);
+        this.warnPercent = getPercent(warnCount, totalCount);
+        this.degradedPercent = getPercent(degradedCount, totalCount);
+        this.downPercent = getPercent(downCount, totalCount);
+        this.errorPercent = getPercent(errorCount, totalCount);
+        this.maintenancePercent = getPercent(maintenanceCount, totalCount);
+        this.unknownPercent = getPercent(unknownCount, totalCount);
+    }
 
-	public double getDownPercent() {return round(downCount);}
+                                 @JsonIgnore
+	public long getNotUpCount() { return downCount + errorCount + maintenanceCount + unknownCount; }
+	public boolean isAlwaysUp() { return getNotUpCount() == 0; }
+	public boolean isAlwaysDown() { return getNotUpCount() == 100; }
 
-    public double getErrorPercent() {return round(errorCount);}
+    private long getCount(double pct) {
+        if (totalCount == 0) return 0;
+        return Math.round(pct * totalCount / 100);
+    }
 
-	public double getMaintenancePercent() {return round(maintenanceCount);}
-
-	public double getUnknownPercent() {
-		return round(unknownCount);
-	}
-
-    private double round(long value) {
-        return Math.round(((double) value / getTotalCount()) * 10000.0) / 100.0;
+    private double getPercent(long part, long total) {
+        if (total <= 0) return 0.0;
+        return BigDecimal.valueOf((part * 100.0) / total).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }
