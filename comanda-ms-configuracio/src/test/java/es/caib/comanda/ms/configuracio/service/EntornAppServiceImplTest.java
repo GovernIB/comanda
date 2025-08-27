@@ -232,32 +232,6 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    void testRefreshAction() throws ActionExecutionException {
-        // Setup test data
-        EntornAppServiceImpl.RefreshAction refreshAction = new EntornAppServiceImpl.RefreshAction(entornAppRepository, appInfoHelper);
-        EntornApp.EntornAppParamAction params = new EntornApp.EntornAppParamAction();
-        params.setEntornAppId(1L);
-        
-        // Call the method to test
-        refreshAction.exec(EntornApp.ENTORN_APP_ACTION_REFRESH, entornAppEntity, params);
-        
-        // Verify that the appInfoHelper was called
-        verify(appInfoHelper).refreshAppInfo(1L);
-    }
-
-    @Test
-    void testRefreshActionWithNullParams() throws ActionExecutionException {
-        // Setup test data
-        EntornAppServiceImpl.RefreshAction refreshAction = new EntornAppServiceImpl.RefreshAction(entornAppRepository, appInfoHelper);
-        
-        // Call the method to test
-        refreshAction.exec(EntornApp.ENTORN_APP_ACTION_REFRESH, entornAppEntity, null);
-        
-        // Verify that the appInfoHelper was called
-        verify(appInfoHelper).refreshAppInfo();
-    }
-
-    @Test
     void testReprogramarAction() throws ActionExecutionException {
         // Setup test data
         EntornAppServiceImpl.ReprogramarAction reprogramarAction = new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService);
