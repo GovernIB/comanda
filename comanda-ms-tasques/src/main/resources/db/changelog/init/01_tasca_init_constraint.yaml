@@ -5,7 +5,7 @@ databaseChangeLog:
     changes:
     - addForeignKeyConstraint:
         baseTableName: ${db_prefix}tasca_usuari
-        baseColumnNames: tasca_entity_id
+        baseColumnNames: tasca_id
         referencedTableName: ${db_prefix}tasca
         referencedColumnNames: id
         constraintName: ${db_prefix}tascausr_tasca_fk
@@ -15,7 +15,7 @@ databaseChangeLog:
     changes:
     - addForeignKeyConstraint:
         baseTableName: ${db_prefix}tasca_grup
-        baseColumnNames: tasca_entity_id
+        baseColumnNames: tasca_id
         referencedTableName: ${db_prefix}tasca
         referencedColumnNames: id
         constraintName: ${db_prefix}tascagrp_tasca_fk
