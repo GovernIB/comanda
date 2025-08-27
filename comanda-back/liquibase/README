@@ -14,9 +14,9 @@
 ------------------------------
 1.- Crear el archivo liquibase/databasechangelog.csv con el contenido de uno de los archivos de la carpeta liquibase/databasechangelogs.
     Este archivo representa el punto de partida para generar el script de actualización.
-2.- Ejecutar el siguiente comando: (a on DBTYPE pot agafar els valors: oracle):
+2.- Ejecutar el siguiente comando:
     $ mvn -pl comanda-back liquibase:updateSQL
-3.- La ejecución de este pedido generará el script de actualización dentro de liquibase/script.sql
+3.- La ejecución de este comando generará el script de actualización dentro de liquibase/script.sql
 4.- También actualizará el contenido del archivo liquibase/databasechangelog.csv que se podrá guardar dentro de liquibase/databasechangelogs para futuras actualizaciones.
 
 - Generar script de creación de la base de dades
