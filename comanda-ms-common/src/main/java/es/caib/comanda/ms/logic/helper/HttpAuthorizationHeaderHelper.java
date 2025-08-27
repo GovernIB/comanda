@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.base.config.BaseConfig;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ public class HttpAuthorizationHeaderHelper {
 	private String providerRealm;
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_PROVIDER_CLIENT_ID + ":#{null}}")
 	private String providerClientId;
+	@Getter
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_USERNAME + ":#{null}}")
 	private String authUsername;
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_PASSWORD + ":#{null}}")

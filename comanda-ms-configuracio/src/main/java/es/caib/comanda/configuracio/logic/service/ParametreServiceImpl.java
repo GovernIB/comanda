@@ -4,6 +4,8 @@ import es.caib.comanda.configuracio.logic.intf.model.ParamTipus;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
 import es.caib.comanda.configuracio.logic.intf.service.ParametreService;
 import es.caib.comanda.configuracio.persist.entity.ParametreEntity;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotDeletedException;
@@ -14,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,6 +31,9 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
 
 	private final String PASSWORD_LABEL = "********";
 
+	private final AuthenticationHelper authenticationHelper;
+	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+
 	@Override
 	protected void afterConversion(ParametreEntity entity, Parametre resource) {
 		switch (resource.getTipus()){
@@ -37,7 +41,9 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
 				resource.setValorBoolean(Objects.isNull(resource.getValor()) ? null : resource.getValor().equalsIgnoreCase("true"));
 				break;
 			case PASSWORD://Si un parametro es de tipo Password no enviaremos ese valor desde el api.
-				resource.setValor(PASSWORD_LABEL);
+				if (!Objects.equals(httpAuthorizationHeaderHelper.getAuthUsername(), authenticationHelper.getCurrentUserName())) {
+					resource.setValor(PASSWORD_LABEL);
+				}
 				break;
 		}
 	}
