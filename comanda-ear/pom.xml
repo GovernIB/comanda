@@ -23,8 +23,7 @@
 		<profile>
 			<id>jboss74</id>
 			<properties>
-<!--				<docker.image.from>280421/jboss-eap-caib-7.4</docker.image.from>-->
-				<docker.image.from>jboss-eap-7.4</docker.image.from>
+				<docker.image.from>280421/jboss-eap-caib-7.4</docker.image.from>
 				<docker.assembly.dir>${basedir}/src/main/docker/jboss74</docker.assembly.dir>
 			</properties>
 		</profile>
