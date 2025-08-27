@@ -519,7 +519,15 @@ const translationEn = {
                 codi: "Code",
                 nom: "Name",
                 descripcio: "Description",
-                valor: "Value"
+                valor: "Value",
+                tipusEnum: {
+                    NUMERIC: "Numeric",
+                    TEXT: "Text",
+                    BOOLEAN: "True or false",
+                    PASSWORD: "Password",
+                    CRON: "Cron",
+                    SELECT: "Selection",
+                },
             },
         },
         notFound: "Not found",

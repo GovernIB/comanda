@@ -2,6 +2,7 @@ package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.MonitorServiceClient;
+import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
 import es.caib.comanda.configuracio.logic.intf.service.ParametreService;
 import es.caib.comanda.configuracio.persist.entity.ParametreEntity;
@@ -37,6 +38,8 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
     private final CacheHelper cacheHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
+    private static final String PASSWORD_LABEL = "********";
+
     @Override
     protected void afterUpdateSave(ParametreEntity entity, Parametre resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
@@ -58,6 +61,10 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
                 break;
             case BOOLEAN:
                 resource.setValorBoolean(Objects.isNull(resource.getValor()) ? null : resource.getValor().equalsIgnoreCase("true"));
+                break;
+            // TODO: I quan es consulta des d'una altre microservei?
+            case PASSWORD://Si un parametro es de tipo Password no enviaremos ese valor desde el api.
+                resource.setValor(PASSWORD_LABEL);
                 break;
         }
     }
@@ -84,6 +91,11 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
         resource.setEditable(entity.isEditable());
         if (!entity.isEditable()) {
             throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeUpdateEntity.disabled"));
+        }
+        if (Objects.equals(ParamTipus.PASSWORD, resource.getTipus())) {
+            if (Objects.equals(PASSWORD_LABEL, resource.getValor())) {
+                resource.setValor(entity.getValor());
+            }
         }
     }
 
