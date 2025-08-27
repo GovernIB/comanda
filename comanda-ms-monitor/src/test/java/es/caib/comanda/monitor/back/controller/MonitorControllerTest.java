@@ -5,7 +5,7 @@ import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
 import es.caib.comanda.monitor.logic.intf.model.Monitor;
 import es.caib.comanda.monitor.logic.intf.service.MonitorService;
-import es.caib.comanda.ms.logic.intf.config.BaseConfig;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;

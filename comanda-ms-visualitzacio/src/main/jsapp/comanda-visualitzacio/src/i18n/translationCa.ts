@@ -65,6 +65,7 @@ const translationCa = {
                 column: {
                     group: "Aplicació / entorn",
                     estat: "Estat",
+                    infoData: "Data darrera consulta d'informació",
                     codi: "Codi",
                     nom: "Nom",
                     versio: "Versió",
