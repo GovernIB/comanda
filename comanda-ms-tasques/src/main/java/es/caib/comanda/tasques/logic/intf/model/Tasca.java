@@ -1,6 +1,7 @@
 package es.caib.comanda.tasques.logic.intf.model;
 
 import es.caib.comanda.ms.broker.model.Prioritat;
+import es.caib.comanda.ms.broker.model.TascaEstat;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
@@ -50,6 +51,10 @@ public class Tasca extends BaseResource<Long> {
     private String nom;
     @Size(max = 1024)
     private String descripcio;
+    @NotNull
+    private TascaEstat estat;
+    @Size(max = 1024)
+    private String estatDescripcio;
     private Prioritat prioritat;
     private LocalDateTime dataInici;
     private LocalDateTime dataFi;
@@ -58,6 +63,8 @@ public class Tasca extends BaseResource<Long> {
     private URL url;
     @Size(max = 128)
     private String responsable;
+    @Size(max = 128)
+    private String grup;
 
     private List<String> usuarisAmbPermis;
     private List<String> grupsAmbPermis;

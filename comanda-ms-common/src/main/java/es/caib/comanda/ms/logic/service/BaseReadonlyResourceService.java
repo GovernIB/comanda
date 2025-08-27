@@ -441,21 +441,24 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	protected E getEntity(ID id, String[] perspectives) throws ResourceNotFoundException {
-		Optional<E> result;
-		Specification<E> pkSpec = new PkSpec<>(id);
+		Specification<E> processedSpecification = new PkSpec<>(id);
 		String additionalSpringFilter = additionalSpringFilter(null, null);
-		if (additionalSpringFilter != null && !additionalSpringFilter.trim().isEmpty()) {
-			result = entityRepository.findOne(pkSpec.and(getSpringFilterSpecification(additionalSpringFilter)));
-		} else {
-			result = entityRepository.findOne(pkSpec);
-		}
+		processedSpecification = appendSpecificationWithAnd(
+				processedSpecification,
+				getSpringFilterSpecification(additionalSpringFilter));
+		Specification<E> additionalSpecification = additionalSpecification(null);
+		processedSpecification = appendSpecificationWithAnd(processedSpecification, additionalSpecification);
+		Optional<E> result = entityRepository.findOne(processedSpecification);
 		if (result.isPresent()) {
 			return result.get();
 		} else {
 			String idToString = id != null ? id.toString() : "<null>";
 			String idMessage = idToString;
 			if (additionalSpringFilter != null && !additionalSpringFilter.trim().isEmpty()) {
-				idMessage = "{id=" + idToString + ", springFilter=" + additionalSpringFilter + "}";
+				idMessage = "{" +
+						"id=" + idToString + ", " +
+						"springFilter=" + additionalSpringFilter + ", " +
+						"specification=" + processedSpecification + "}";
 			}
 			throw new ResourceNotFoundException(getResourceClass(), idMessage);
 		}
@@ -561,6 +564,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				processedSpecification,
 				getSpringFilterSpecification(
 						additionalSpringFilter(filter, namedFilters)));
+		processedSpecification = appendSpecificationWithAnd(
+				processedSpecification,
+				(Specification<P>)additionalSpecification(namedFilters));
 		if (namedFilters != null) {
 			for (String namedFilter: namedFilters) {
 				Specification<P> namedSpecification = null;
@@ -783,6 +789,11 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
+			String[] namedQueries) {
+		return null;
+	}
+
+	protected Specification<E> additionalSpecification(
 			String[] namedQueries) {
 		return null;
 	}

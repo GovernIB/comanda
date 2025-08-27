@@ -23,6 +23,13 @@ public class AuthenticationHelper {
 		return auth.getName();
 	}
 
+	public String[] getCurrentUserRoles() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		return auth.getAuthorities().stream().
+				map(GrantedAuthority::getAuthority).
+				toArray(String[]::new);
+	}
+
 	/**
 	 * Retorna true si l'usuari actual te el rol especificat.
 	 *
