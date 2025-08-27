@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,12 +23,16 @@ public class Tasca implements Serializable {
     private String tipus;
     private String nom;
     private String descripcio;
+    private TascaEstat estat;
+    private String estatDescripcio;
+    private String numeroExpedient;
     private Prioritat prioritat;
     private LocalDateTime dataInici;
     private LocalDateTime dataFi;
     private LocalDateTime dataCaducitat;
     private URL redireccio;
     private String responsable;
+    private String grup;
     private List<String> usuarisAmbPermis;
     private List<String> grupsAmbPermis;
 

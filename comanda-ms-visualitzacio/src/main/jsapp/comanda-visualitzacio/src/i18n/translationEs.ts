@@ -529,6 +529,11 @@ const translationEs = {
                     CRON: "Cron",
                     SELECT: "Selección",
                 },
+                valuesTootip: {
+                    true: "Verdadero",
+                    false: "Falso",
+                    null: "Indefinido",
+                },
             },
         },
         notFound: "No encontrado",

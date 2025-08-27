@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.SimpleAttributes2GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.SimpleMappableAttributesRetriever;
@@ -29,7 +29,7 @@ import java.util.*;
  * @author Límit Tecnologies
  */
 @Slf4j
-@EnableWebSecurity
+@Configuration
 public class WebSecurityConfig extends BaseWebSecurityConfig {
 
 	private static final String ROLE_PREFIX = "";
@@ -75,9 +75,7 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 	}
 
 	protected RequestMatcher[] publicRequestMatchers() {
-		return new RequestMatcher[] {
-			new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
-		};
+		return new RequestMatcher[0];
 	}
 
 	protected RequestMatcher[] privateRequestMatchers() {

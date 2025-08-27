@@ -48,6 +48,14 @@ databaseChangeLog:
             name: descripcio
             type: VARCHAR(1024 ${varcharUnit})
         - column:
+            constraints:
+                nullable: false
+            name: estat
+            type: VARCHAR(16 ${varcharUnit})
+        - column:
+            name: estat_desc
+            type: VARCHAR(1024 ${varcharUnit})
+        - column:
             name: prioritat
             type: VARCHAR(16 ${varcharUnit})
         - column:
@@ -66,6 +74,9 @@ databaseChangeLog:
             type: VARCHAR(255 ${varcharUnit})
         - column:
             name: responsable
+            type: VARCHAR(128 ${varcharUnit})
+        - column:
+            name: grup
             type: VARCHAR(128 ${varcharUnit})
         - column:
               constraints:
@@ -98,7 +109,7 @@ databaseChangeLog:
                 nullable: false
                 primaryKey: true
                 primaryKeyName: ${db_prefix}tasca_usuari_pk
-            name: tasca_entity_id
+            name: tasca_id
             type: BIGINT
         - column:
             constraints:
@@ -117,7 +128,7 @@ databaseChangeLog:
                 nullable: false
                 primaryKey: true
                 primaryKeyName: ${db_prefix}tasca_grup_pk
-            name: tasca_entity_id
+            name: tasca_id
             type: BIGINT
         - column:
             constraints:

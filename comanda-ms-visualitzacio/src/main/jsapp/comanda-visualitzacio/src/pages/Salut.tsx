@@ -38,12 +38,6 @@ import {ChipColor} from "../util/colorUtil.ts";
 import {SalutChipTooltip, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
 
-type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
-
-interface DefaultRowExpansionState {
-    [id: string | number]: boolean;
-}
-
 const useAppData = () => {
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
         useResourceApiService('salut');
@@ -450,7 +444,7 @@ const AppDataTable: React.FC<any> = (props: {
     return (
         <MuiDataGrid
             titleDisabled
-            resourceName={'entornApp'}
+            resourceName="entornApp"
             datagridApiRef={gridApiRef}
             columns={columns}
             filter={springFilterBuilder.and(

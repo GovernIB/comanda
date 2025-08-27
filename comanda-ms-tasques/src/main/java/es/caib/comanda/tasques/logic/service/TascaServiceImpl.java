@@ -1,7 +1,5 @@
 package es.caib.comanda.tasques.logic.service;
 
-import com.turkraft.springfilter.FilterBuilder;
-import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
@@ -12,17 +10,20 @@ import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import es.caib.comanda.tasques.logic.intf.service.TascaService;
 import es.caib.comanda.tasques.persist.entity.TascaEntity;
 import es.caib.comanda.tasques.persist.repository.TascaRepository;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.broker.model.Cues.CUA_TASQUES;
 
@@ -36,7 +37,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
 
     @PostConstruct
     public void init() {
-        register(Tasca.PERSPECTIVE_PATH, new PathPerspectiveApplicator());
+        register(Tasca.PERSPECTIVE_PATH, new PathPerspectiveApplicator(tasquesClientHelper));
         register(Tasca.PERSPECTIVE_EXPIRATION, new ExpirationPerspectiveApplicator());
     }
 
@@ -55,71 +56,109 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         Optional<TascaEntity> tascaExistent = ((TascaRepository)entityRepository).findByEntornAppIdAndIdentificador(
                 entornApp.get().getId(),
                 tascaBroker.getIdentificador());
+        Tasca tasca = new Tasca();
+        tasca.setEntornAppId(entornApp.get().getId());
+        tasca.setEntornId(entornApp.get().getEntorn().getId());
+        tasca.setAppId(entornApp.get().getApp().getId());
+        tasca.setIdentificador(tascaBroker.getIdentificador());
+        tasca.setTipus(tascaBroker.getTipus());
+        tasca.setNom(tascaBroker.getNom());
+        tasca.setDescripcio(tascaBroker.getDescripcio());
+        tasca.setEstat(tascaBroker.getEstat());
+        tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
+        tasca.setPrioritat(tascaBroker.getPrioritat());
+        tasca.setDataInici(tascaBroker.getDataInici());
+        tasca.setDataFi(tascaBroker.getDataFi());
+        tasca.setDataCaducitat(tascaBroker.getDataCaducitat());
+        tasca.setUrl(tascaBroker.getRedireccio());
+        tasca.setResponsable(tascaBroker.getResponsable());
+        tasca.setGrup(tascaBroker.getGrup());
+        tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
+        tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
         if (tascaExistent.isEmpty()) {
-            Tasca tasca = new Tasca();
-            tasca.setEntornAppId(entornApp.get().getId());
-            tasca.setEntornId(entornApp.get().getEntorn().getId());
-            tasca.setAppId(entornApp.get().getApp().getId());
-            tasca.setIdentificador(tascaBroker.getIdentificador());
-            tasca.setTipus(tascaBroker.getTipus());
-            tasca.setNom(tascaBroker.getNom());
-            tasca.setDescripcio(tascaBroker.getDescripcio());
-            tasca.setPrioritat(tascaBroker.getPrioritat());
-            tasca.setDataInici(tascaBroker.getDataInici());
-            tasca.setDataFi(tascaBroker.getDataFi());
-            tasca.setDataCaducitat(tascaBroker.getDataCaducitat());
-            tasca.setUrl(tascaBroker.getRedireccio());
-            tasca.setResponsable(tascaBroker.getResponsable());
-            tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
-            tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
-            entityRepository.save(TascaEntity.builder().tasca(tasca).build());
+            TascaEntity entity = TascaEntity.builder().tasca(tasca).build();
+            entityRepository.save(entity);
         } else {
-            tascaExistent.get().setTipus(tascaBroker.getTipus());
-            tascaExistent.get().setNom(tascaBroker.getNom());
-            tascaExistent.get().setDescripcio(tascaBroker.getDescripcio());
-            tascaExistent.get().setPrioritat(tascaBroker.getPrioritat());
-            tascaExistent.get().setDataInici(tascaBroker.getDataInici());
-            tascaExistent.get().setDataFi(tascaBroker.getDataFi());
-            tascaExistent.get().setDataCaducitat(tascaBroker.getDataCaducitat());
-            tascaExistent.get().setUrl(tascaBroker.getRedireccio());
-            tascaExistent.get().setResponsable(tascaBroker.getResponsable());
-            tascaExistent.get().setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
-            tascaExistent.get().setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
+            tascaExistent.get().setTipus(tasca.getTipus());
+            tascaExistent.get().setNom(tasca.getNom());
+            tascaExistent.get().setDescripcio(tasca.getDescripcio());
+            tascaExistent.get().setEstat(tasca.getEstat());
+            tascaExistent.get().setEstatDescripcio(tasca.getEstatDescripcio());
+            tascaExistent.get().setPrioritat(tasca.getPrioritat());
+            tascaExistent.get().setDataInici(tasca.getDataInici());
+            tascaExistent.get().setDataFi(tasca.getDataFi());
+            tascaExistent.get().setDataCaducitat(tasca.getDataCaducitat());
+            tascaExistent.get().setUrl(tasca.getUrl());
+            tascaExistent.get().setResponsable(tasca.getResponsable());
+            tascaExistent.get().setGrup(tasca.getGrup());
+            tascaExistent.get().setUsuarisAmbPermis(tasca.getUsuarisAmbPermis());
+            tascaExistent.get().setGrupsAmbPermis(tasca.getGrupsAmbPermis());
         }
     }
 
-    @Override
+    /*@Override
     protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
         List<Filter> filters = new ArrayList<>();
-        List<String> namedQueriesList = Optional.ofNullable(namedQueries)
-                .map(Arrays::asList)
-                .orElse(Collections.emptyList());
-
-        Filter filtreBase = (currentSpringFilter != null && !currentSpringFilter.isEmpty())?Filter.parse(currentSpringFilter):null;
-        filters.add(filtreBase);
-
-        if (namedQueriesList.contains("USER")) {
+        if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
+            filters.add(Filter.parse(currentSpringFilter));
+        }
+        //if (namedQueries != null && Arrays.asList(namedQueries).contains("USER")) {
             String userName = authenticationHelper.getCurrentUserName();
-
+            filters.add(Filter.parse("responsable: '" + userName + "' or usuarisAmbPermis.user:'" + userName + "'"));
+            //String[] roles = authenticationHelper.getCurrentUserRoles();
             filters.add(
                     FilterBuilder.or(
-                            FilterBuilder.equal("responsable", userName)
-//                            TODO: filtrar por 'usuarisAmbPermis' y 'grupsAmbPermis'
-//                            FilterBuilder.exists(
-//                                    FilterBuilder.equal("usuarisAmbPermis", userName)
-//                            )
+                            FilterBuilder.equal("responsable", userName),
+                            FilterBuilder.exists(
+                                    FilterBuilder.in("usuarisAmbPermis", Filter.parse("[" + userName + "]"))),
+                            FilterBuilder.exists(
+                                    FilterBuilder.in("grupsAmbPermis", roles))
                     )
             );
-        }
-
-        List<Filter> result = filters.stream()
-                .filter(f -> f!=null && !String.valueOf(f).isEmpty())
-                .collect(Collectors.toList());
-
+        //}
+        List<Filter> result = filters.stream().
+                filter(f -> f != null && !String.valueOf(f).isEmpty()).
+                collect(Collectors.toList());
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+    }*/
+
+    @Override
+    protected Specification<TascaEntity> additionalSpecification(String[] namedQueries) {
+        String userName = authenticationHelper.getCurrentUserName();
+        String[] roles = authenticationHelper.getCurrentUserRoles();
+        return teGrupSiNoNull(roles).and(
+                teResponsable(userName).
+                        or(tePermisUsuari(userName)).
+                        or(tePermisGrupIn(roles)));
     }
 
-    public class PathPerspectiveApplicator implements PerspectiveApplicator<TascaEntity, Tasca> {
+    public static Specification<TascaEntity> teGrupSiNoNull(String[] grups) {
+        return (root, query, cb) -> cb.or(
+                cb.isNull(root.get("grup")),
+                root.get("grup").in(Arrays.asList(grups))
+        );
+    }
+    private Specification<TascaEntity> teResponsable(String responsable) {
+        return (root, query, cb) -> cb.equal(root.get("responsable"), responsable);
+    }
+    private Specification<TascaEntity> tePermisUsuari(String usuari) {
+        return (root, query, cb) -> {
+            Join<TascaEntity, String> join = root.join("usuarisAmbPermis", JoinType.LEFT);
+            query.distinct(true);
+            return cb.equal(join, usuari);
+        };
+    }
+    private Specification<TascaEntity> tePermisGrupIn(String[] grups) {
+        return (root, query, cb) -> {
+            Join<TascaEntity, String> join = root.join("grupsAmbPermis", JoinType.LEFT);
+            query.distinct(true);
+            return join.in(Arrays.asList(grups));
+        };
+    }
+
+    @AllArgsConstructor
+    public static class PathPerspectiveApplicator implements PerspectiveApplicator<TascaEntity, Tasca> {
+        private TasquesClientHelper tasquesClientHelper;
         @Override
         public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
             EntornApp entornApp = tasquesClientHelper.entornAppFindById(entity.getEntornAppId());
@@ -127,7 +166,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         }
     }
 
-    public class ExpirationPerspectiveApplicator implements PerspectiveApplicator<TascaEntity, Tasca> {
+    public static class ExpirationPerspectiveApplicator implements PerspectiveApplicator<TascaEntity, Tasca> {
         @Override
         public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
             if (resource.getDataFi() == null) {

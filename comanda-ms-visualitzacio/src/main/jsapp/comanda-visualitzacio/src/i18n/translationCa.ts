@@ -528,6 +528,11 @@ const translationCa = {
                     CRON: "Cron",
                     SELECT: "Selecció",
                 },
+                valuesTootip: {
+                    true: "Verdader",
+                    false: "Fals",
+                    null: "Indefinit",
+                },
             },
         },
         notFound: "No trobat",

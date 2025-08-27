@@ -528,6 +528,11 @@ const translationEn = {
                     CRON: "Cron",
                     SELECT: "Selection",
                 },
+                valuesTootip: {
+                    true: "True",
+                    false: "False",
+                    null: "Undefined",
+                },
             },
         },
         notFound: "Not found",
