@@ -34,24 +34,12 @@
 			<artifactId>comanda-back</artifactId>
 			<version>${project.version}</version>
 			<type>war</type>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-api-interna</artifactId>
 			<version>${project.version}</version>
 			<type>war</type>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<!-- Dependències pels wars de tipus skinny (https://maven.apache.org/plugins/maven-war-plugin/examples/skinny-wars.html) -->
 		<dependency>
@@ -107,11 +95,6 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-client</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-lib</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
