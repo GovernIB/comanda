@@ -44,3 +44,8 @@ awk -F '=' 'NF {if (ENVIRON[$1]) {print $1 "=" ENVIRON[$1]} else {print $1 "=" $
 awk -F '=' 'NF {if (ENVIRON[$1]) {print $1 "=" ENVIRON[$1]} else {print $1 "=" $2}}' $JBOSS_SYSTEM_PROPS_FILE > $TEMP_PROPS_FILE && mv $TEMP_PROPS_FILE $JBOSS_SYSTEM_PROPS_FILE
 #unset `awk -F '=' '{print $1}' $JBOSS_SYSTEM_PROPS_FILE | tr '\n' ' '`
 echo "...fitxers de properties modificats"
+
+echo "Modificant l'adaptador de Keycloak..."
+cp $SCRIPT_DIR/adapter_patch/keycloak-adapter-core-22.0.5.jar $JBOSS_HOME/modules/system/add-ons/keycloak/org/keycloak/keycloak-adapter-core/main
+cp $SCRIPT_DIR/adapter_patch/keycloak-wildfly-elytron-oidc-adapter-22.0.5.jar $JBOSS_HOME/modules/system/add-ons/keycloak/org/keycloak/keycloak-wildfly-elytron-oidc-adapter/main
+echo "...adaptador de Keycloak modificat"
