@@ -126,12 +126,12 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-lib</artifactId>
+			<artifactId>comanda-ms-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-client</artifactId>
+			<artifactId>comanda-lib</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
