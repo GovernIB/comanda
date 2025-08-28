@@ -74,15 +74,15 @@ const useAppEstatLabel = () => {
       case 'UP':
         return t('enum.appEstat.UP.title');
       case 'WARN':
-        return t('enum.appEstat.WARN');
+        return t('enum.appEstat.WARN.title');
       case 'DOWN':
-        return t('enum.appEstat.DOWN');
+        return t('enum.appEstat.DOWN.title');
       case 'DEGRADED':
-        return t('enum.appEstat.DEGRADED');
+        return t('enum.appEstat.DEGRADED.title');
       case 'MAINTENANCE':
-        return t('enum.appEstat.MAINTENANCE');
+        return t('enum.appEstat.MAINTENANCE.title');
       case 'UNKNOWN':
-        return t('enum.appEstat.UNKNOWN');
+        return t('enum.appEstat.UNKNOWN.title');
       default:
         return estat;
     }

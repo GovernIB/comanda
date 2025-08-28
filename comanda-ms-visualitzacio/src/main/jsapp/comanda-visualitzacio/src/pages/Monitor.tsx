@@ -42,91 +42,74 @@ const TabMonitor: React.FC<TabMonitorProps> = (props) => {
     </Tabs>;
 }
 
-type EstatBadgeProps = {
-  value: string;
-  children?: string,
+export const translateEnumValue = (
+  value: string | undefined,
+  translationMap?: Record<string, string>,
+  t?: (key: string) => string
+): string => {
+  if (!value) return '';
+  if (translationMap && t && translationMap[value]) {
+    return t(translationMap[value]);
+  }
+  return value;
+};
+const estatTranslationMap: Record<string, string> = {
+  OK: 'page.monitors.detail.estatEnum.ok',
+  ERROR: 'page.monitors.detail.estatEnum.error',
+  WARN: 'page.monitors.detail.estatEnum.warn',
+};
+const tipusTranslationMap: Record<string, string> = {
+  SORTIDA: 'page.monitors.detail.tipusEnum.sortida',
+  ENTRADA: 'page.monitors.detail.tipusEnum.entrada',
+  INTERNA: 'page.monitors.detail.tipusEnum.interna',
 };
 
-const EstatBadge: React.FC<EstatBadgeProps> = ({ value, children }) => {
-  let color: 'success' | 'error' | 'warning' | 'default' = 'default';
-  let label = children ?? value;
-
-  switch (value) {
-    case 'OK':
-      color = 'success';
-      break;
-    case 'ERROR':
-      color = 'error';
-      break;
-    case 'WARN':
-      color = 'warning';
-      break;
-    default:
-      color = 'default';
-  }
-
+const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, children }) => {
+  const { t } = useTranslation();
+  const colorMap: Record<string, 'success' | 'error' | 'warning' | 'default'> = {
+    OK: 'success',
+    ERROR: 'error',
+    WARN: 'warning',
+  };
+  const color = colorMap[value] ?? 'default';
+  const label = children ?? translateEnumValue(value, estatTranslationMap, t);
   return <Chip label={label} color={color} size="small" />;
 };
 
-const columns = [{
-    field: 'data',
-    flex: 1,
-}, {
-    field: 'operacio',
-    flex: 2,
-}, {
-    field: 'tipus',
-    flex: 1,
-}, {
-    field: 'url',
-    flex: 2,
-}, {
-    field: 'modul',
-    flex: 1,
-}, {
-    field: 'tempsResposta',
-    flex: 1,
-}, {
-    field: 'estat',
-    flex: 0.5,
-    renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
-},];
+const columns = [
+    { field: 'data', flex: 1, },
+    { field: 'operacio', flex: 2, },
+    { field: 'tipus', flex: 1, },
+    { field: 'url', flex: 2, },
+    { field: 'modul', flex: 1, },
+    { field: 'tempsResposta', flex: 1, },
+    {
+        field: 'estat',
+        flex: 0.5,
+        renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
+    },
+];
 
 const MonitorDetails: React.FC<any> = (props) => {
     const { data } = props;
     const { t } = useTranslation();
-    const elementsDetail = [{
-        label: t('page.monitors.detail.data'),
-        value: dateFormatLocale(data?.data, true)
-    }, {
-        label: t('page.monitors.detail.operacio'),
-        value: data?.operacio
-    }, {
-        label: t('page.monitors.detail.tipus'),
-        value: data?.tipus
-    },
-    {
-        label: t('page.monitors.detail.estat'),
-        contentValue: <EstatBadge value={data?.estat} />
-    },
-    {
-        label: t('page.monitors.detail.codiUsuari'),
-        value: data?.codiUsuari
-    },
-    {
-        label: t("page.monitors.detail.errorDescripcio"),
-        value: data?.errorDescripcio
-    },
-    {
-        label: t("page.monitors.detail.excepcioMessage"),
-        value: data?.excepcioMessage
-    },
-    {
-        contentValue: <StacktraceBlock
-            title={t("page.monitors.detail.excepcioStacktrace")}
-            value={data?.excepcioStacktrace}
-        />
-    },]
+    const elementsDetail = [
+        { label: t('page.monitors.detail.data'), value: dateFormatLocale(data?.data, true) },
+        { label: t('page.monitors.detail.operacio'), value: data?.operacio },
+        { label: t('page.monitors.detail.tipus'), value: translateEnumValue(data?.tipus, tipusTranslationMap, t) },
+        { label: t('page.monitors.detail.estat'), contentValue: <EstatBadge value={data?.estat} /> },
+        { label: t('page.monitors.detail.codiUsuari'), value: data?.codiUsuari },
+        { label: t('page.monitors.detail.errorDescripcio'), value: data?.errorDescripcio },
+        { label: t('page.monitors.detail.excepcioMessage'), value: data?.excepcioMessage },
+        { 
+            contentValue: (
+                <StacktraceBlock
+                    title={t('page.monitors.detail.excepcioStacktrace')}
+                    value={data?.excepcioStacktrace}
+                />
+            )
+        },
+    ];
     return <ContentDetail title={""} elements={elementsDetail} />;
 }
 

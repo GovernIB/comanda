@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import {
     BasePage,
+    dateFormatLocale,
     MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
@@ -252,13 +253,22 @@ const AppDataTable: React.FC<any> = (props: {
                 field: 'estat',
                 headerName: t('page.salut.apps.column.estat'),
                 minWidth: 100,
-                renderCell: ({ row }) => renderItemStateChip(row.id, SalutModel.APP_ESTAT),
+                renderCell: ({ id }) => renderItemStateChip(id, SalutModel.APP_ESTAT),
             },
             {
                 flex: 0.3,
                 field: 'infoData',
                 description: t('page.salut.apps.column.infoData'),
                 minWidth: 150,
+                renderCell: ({ id }) => {
+                    const salutItem: SalutModel | null = findSalutItem(id);
+                    if (salutItem == null) {
+                        return '';
+                    }
+                    return salutItem?.data
+                        ? dateFormatLocale(salutItem?.data, true)
+                        : t('page.salut.nd');
+                },
             },
             {
                 flex: 0.3,
@@ -277,7 +287,7 @@ const AppDataTable: React.FC<any> = (props: {
                 field: 'bd',
                 headerName: t('page.salut.apps.column.bd'),
                 minWidth: 100,
-                renderCell: ({ row }) => renderItemStateChip(row.id, SalutModel.BD_ESTAT),
+                renderCell: ({ id }) => renderItemStateChip(id, SalutModel.BD_ESTAT),
             },
             {
                 flex: 0.3,
@@ -286,6 +296,9 @@ const AppDataTable: React.FC<any> = (props: {
                 minWidth: 100,
                 valueGetter: (_value, row) => {
                     const salutItem: SalutModel | null = findSalutItem(row.id);
+                    if (salutItem == null) {
+                        return '';
+                    }
                     return salutItem?.appLatencia != null
                         ? salutItem.appLatencia + ' ms'
                         : t('page.salut.nd');
@@ -296,8 +309,8 @@ const AppDataTable: React.FC<any> = (props: {
                 field: SalutModel.INTEGRACIONS,
                 // headerName: t('page.salut.apps.column.integ'),
                 minWidth: 100,
-                renderCell: ({ row }) => {
-                    const salutItem: SalutModel | null = findSalutItem(row.id);
+                renderCell: ({ id }) => {
+                    const salutItem: SalutModel | null = findSalutItem(id);
 
                     if (!salutItem) {
                         return null;

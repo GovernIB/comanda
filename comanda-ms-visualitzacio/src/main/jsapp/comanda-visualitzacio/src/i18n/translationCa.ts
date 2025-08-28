@@ -277,12 +277,23 @@ const translationCa = {
                 errorDescripcio: "Descripció de l'error",
                 excepcioMessage: "Missatge de l'excepció",
                 excepcioStacktrace: "Traça de l'excepció",
+                estatEnum: {
+                    ok: "Correcte",
+                    error: "Erroni",
+                    warn: "Avís",
+                },
+                tipusEnum: {
+                    sortida: "Sortida",
+                    entrada: "Entrada",
+                    interna: "Interna",
+                },
             },
             modulEnum: {
                 salut: "Salut",
                 estadistica: "Estadística",
                 configuracio: "Configuració",
             },
+            
         },
         widget: {
             title: "Widgets estadístics",

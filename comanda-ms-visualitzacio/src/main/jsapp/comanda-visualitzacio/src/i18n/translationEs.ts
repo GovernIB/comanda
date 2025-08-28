@@ -277,6 +277,16 @@ const translationEs = {
                 errorDescripcio: "Descripción del error",
                 excepcioMessage: "Mensaje de la excepción",
                 excepcioStacktrace: "Traza de la excepción",
+                estatEnum: {
+                    ok: "Correcto",
+                    error: "Erróneo",
+                    warn: "Aviso",
+                },
+                tipusEnum: {
+                    sortida: "Salida",
+                    entrada: "Entrada",
+                    interna: "Interna",
+                },
             },
             modulEnum: {
                 salut: "Salud",
