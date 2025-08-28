@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import {
     BasePage,
@@ -17,27 +16,26 @@ import {
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
-import {
-    GridRowId,
-    GridSlots,
-    useGridApiRef,
-} from '@mui/x-data-grid-pro';
+import {GridRowId, GridSlots, useGridApiRef,} from '@mui/x-data-grid-pro';
 import {PieChart} from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
 import {useParams} from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
 import {
-    ENUM_APP_ESTAT_PREFIX, getColorByIntegracio, getColorByMissatge,
-    getColorByStatEnum, getColorBySubsistema,
-    getMaterialIconByState,
+    ENUM_APP_ESTAT_PREFIX,
+    getColorByIntegracio,
+    getColorByMissatge,
+    getColorByStatEnum,
+    getColorBySubsistema,
     SalutEstatEnum,
     SalutModel,
     TITLE
 } from "../types/salut.model.tsx";
 import {BaseEntity} from "../types/base-entity.model.ts";
 import {ChipColor} from "../util/colorUtil.ts";
-import {SalutChipTooltip, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
+import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
+import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 
 const useAppData = () => {
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
@@ -178,42 +176,6 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
     );
 };
 
-const ItemStateChip: React.FC<any> = (props: { salutField: keyof SalutModel; salutStatEnum: SalutEstatEnum; date?: string }) => {
-    const { salutField, salutStatEnum, date } = props;
-    const { t } = useTranslation();
-    return (
-        <>
-            {salutStatEnum && (
-                <SalutChipTooltip stateEnum={salutStatEnum} salutField={salutField}>
-                    <Chip sx={{ bgcolor: getColorByStatEnum(salutStatEnum), color: ChipColor.WHITE,
-                        "& .MuiChip-label": {
-                            fontSize: "0.7rem !important",
-                        }}}
-                          icon={getMaterialIconByState(salutStatEnum)}
-                          label={t(ENUM_APP_ESTAT_PREFIX + salutStatEnum + TITLE)}
-                          size="small"
-                    />
-                </SalutChipTooltip>
-
-            )}
-            {!salutStatEnum && (
-                <SalutChipTooltip stateEnum={SalutEstatEnum.UNKNOWN} salutField={salutField}>
-                    <Chip sx={{ bgcolor: getColorByStatEnum(SalutEstatEnum.UNKNOWN), color: ChipColor.WHITE,
-                        "& .MuiChip-label": {
-                            fontSize: "0.7rem !important",
-                        }}}
-                          icon={getMaterialIconByState(SalutEstatEnum.UNKNOWN)}
-                          label={t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE)}
-                          size="small"
-                    />
-                </SalutChipTooltip>
-            )}
-            {date && (<><br />
-            <Typography variant="caption">{date}</Typography></>)}
-        </>
-    );
-};
-
 const AppDataTable: React.FC<any> = (props: {
     springFilter?: string;
     salutLastItems: SalutModel[];
@@ -238,8 +200,9 @@ const AppDataTable: React.FC<any> = (props: {
             }
             return (
                 <ItemStateChip
+                    sx={{ mr: 1 }}
                     salutField={salutField}
-                    salutStatEnum={salutItem[salutField]}
+                    salutStatEnum={salutItem[salutField] as SalutEstatEnum}
                 />
             );
         },
