@@ -6,14 +6,12 @@
 	<artifactId>comanda-lib</artifactId>
 	<version>0.1.0</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
-
 	<properties>
 		<lombok.version>1.18.34</lombok.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.source>11</maven.compiler.source>
 	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -22,7 +20,6 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
