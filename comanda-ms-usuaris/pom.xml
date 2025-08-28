@@ -13,17 +13,8 @@
 	<version>0.1.0</version>
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-artemis</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

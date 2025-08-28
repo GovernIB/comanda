@@ -12,20 +12,9 @@
 	<artifactId>comanda-ms-tasques</artifactId>
 	<version>0.1.0</version>
 	<dependencies>
-
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-client</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-lib</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
