@@ -11,6 +11,15 @@
 		<maven.compiler.source>11</maven.compiler.source>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+	<profiles>
+		<profile>
+			<id>jboss74</id>
+			<properties>
+				<maven.compiler.target>17</maven.compiler.target>
+				<maven.compiler.source>17</maven.compiler.source>
+			</properties>
+		</profile>
+	</profiles>
 	<modules>
 		<module>comanda-bom</module>
 		<module>comanda-bom-ms</module>
