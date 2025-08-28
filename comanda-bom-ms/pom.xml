@@ -12,28 +12,6 @@
 	<artifactId>comanda-bom-ms</artifactId>
 	<version>0.1.0</version>
 	<packaging>pom</packaging>
-	<properties>
-		<spring.filter.version>2.1.6</spring.filter.version>
-		<openapi.version>1.7.0</openapi.version>
-		<jasperreports.version>6.20.6</jasperreports.version>
-		<dynamicreports-core.version>6.12.1</dynamicreports-core.version>
-		<keycloak.version>22.0.4</keycloak.version>
-		<mapstruct.version>1.5.5.Final</mapstruct.version>
-	</properties>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct</artifactId>
-				<version>${mapstruct.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct-processor</artifactId>
-				<version>${mapstruct.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
