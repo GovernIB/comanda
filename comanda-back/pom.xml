@@ -61,7 +61,10 @@
 	</dependencies>
 	<profiles>
 		<profile>
-			<id>frontend</id>
+			<id>front</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
 			<build>
 				<plugins>
 					<plugin>

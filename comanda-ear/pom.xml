@@ -104,7 +104,7 @@
 					<includeLibInApplicationXml>false</includeLibInApplicationXml>
 					<version>6</version>
 					<initializeInOrder>true</initializeInOrder>
-					<packagingExcludes>lib/org.apache.tomcat.*.jar,lib/es.caib.comanda-comanda-lib-*.jar</packagingExcludes>
+					<packagingExcludes>lib/org.apache.tomcat.*.jar</packagingExcludes>
 					<skinnyWars>true</skinnyWars>
 					<archive>
 						<manifestEntries>
