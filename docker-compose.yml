@@ -36,9 +36,6 @@ services:
       - es.caib.comanda.app.url=${APP_URL:-http://localhost:8080}
       - es.caib.comanda.client.base.url=${APP_URL:-http://localhost:8080}/comandaapi/interna/api
       - es.caib.comanda.fitxers=${FILES_PATH:-/home/jboss/apps/comanda/fitxers}
-      - es.caib.comanda.httpauth.provider.base.url=${HTTPAUTH_PROVIDER_URL}
-      - es.caib.comanda.httpauth.provider.realm=${HTTPAUTH_PROVIDER_REALM}
-      - es.caib.comanda.httpauth.provider.client.id=${HTTPAUTH_PROVIDER_CLIENT_ID}
       - es.caib.comanda.httpauth.username=${HTTPAUTH_USERNAME}
       - es.caib.comanda.httpauth.password=${HTTPAUTH_PASSWORD}
       - es.caib.comanda.front.api.url=${APP_URL:-http://localhost:8080}/comandaback/api
