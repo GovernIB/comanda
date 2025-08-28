@@ -62,9 +62,6 @@
 	<profiles>
 		<profile>
 			<id>frontend</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<build>
 				<plugins>
 					<plugin>

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.ENTORN_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_CACHE;
 
 /**
  * Implementació del servei de gestió d'entorns.

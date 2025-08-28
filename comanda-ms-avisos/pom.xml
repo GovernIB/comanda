@@ -9,16 +9,13 @@
         <version>0.1.0</version>
         <relativePath>../comanda-bom-ms/pom.xml</relativePath>
     </parent>
-
     <artifactId>comanda-ms-avisos</artifactId>
     <version>0.1.0</version>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-artemis</artifactId>
         </dependency>
-
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>comanda-ms-common</artifactId>
@@ -35,5 +32,4 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
-
 </project>

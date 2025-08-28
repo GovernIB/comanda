@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.APP_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
 
 /**
  * Implementació del servei de gestió d'aplicacions.

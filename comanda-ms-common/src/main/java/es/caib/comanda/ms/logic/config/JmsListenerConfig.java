@@ -1,11 +1,10 @@
-package es.caib.comanda.permisos.logic.config;
+package es.caib.comanda.ms.logic.config;
 
 import es.caib.comanda.base.config.BaseConfig;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageConverter;
@@ -14,8 +13,7 @@ import org.springframework.jms.support.converter.MessageType;
 import javax.jms.ConnectionFactory;
 
 @Configuration
-@Profile("!back")
-public class JmsClientConfig {
+public class JmsListenerConfig {
 
     @Value("${" + BaseConfig.PROP_BROKER_PORT + ":61616}")
     private int brokerPort;
@@ -43,15 +41,6 @@ public class JmsClientConfig {
         return factory;
     }
 
-//    @Bean
-//    public JmsTemplate jmsTemplate(ConnectionFactory connectionFactory) {
-//        JmsTemplate template = new JmsTemplate();
-//        template.setConnectionFactory(connectionFactory);
-//        template.setPubSubDomain(false); // cues
-//        template.setDeliveryPersistent(true); // missatges persistents
-//        return template;
-//    }
-
     @Bean
     public MessageConverter jacksonJmsMessageConverter() {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
@@ -59,4 +48,5 @@ public class JmsClientConfig {
         converter.setTypeIdPropertyName("_type");
         return converter;
     }
+
 }
