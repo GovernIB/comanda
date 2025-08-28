@@ -5,21 +5,6 @@ volumes:
     driver: local
 
 services:
-#  APACHE PROXY
-#  apache:
-#    image: httpd:2.4
-#    container_name: apache-proxy
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    volumes:
-#      - ./comanda-ear/src/main/docker/apache:/usr/local/apache2/conf
-#    depends_on:
-#      - comanda
-#    networks:
-#      - comanda_net
-
-# APP COMANDA
   comanda:
     image: comanda:0.1.0
     container_name: jboss-comanda
@@ -50,19 +35,15 @@ services:
       - JBOSS_PROXY_PORT=${PROXY_PORT:-}
       - es.caib.comanda.app.url=${APP_URL:-http://localhost:8080}
       - es.caib.comanda.client.base.url=${APP_URL:-http://localhost:8080}/comandaapi/interna/api
-#     APACHE PROXY
-#      - es.caib.comanda.client.base.url=https://apache-proxy/comandaapi/interna/api
-#     SOFFID
-#      - es.caib.comanda.client.base.url=https://dev.caib.es/comandaapi/interna/api
+      - es.caib.comanda.fitxers=${FILES_PATH:-/home/jboss/apps/comanda/fitxers}
+      - es.caib.comanda.httpauth.provider.base.url=${HTTPAUTH_PROVIDER_URL}
+      - es.caib.comanda.httpauth.provider.realm=${HTTPAUTH_PROVIDER_REALM}
+      - es.caib.comanda.httpauth.provider.client.id=${HTTPAUTH_PROVIDER_CLIENT_ID}
       - es.caib.comanda.httpauth.username=${HTTPAUTH_USERNAME}
       - es.caib.comanda.httpauth.password=${HTTPAUTH_PASSWORD}
       - es.caib.comanda.front.api.url=${APP_URL:-http://localhost:8080}/comandaback/api
       - DEBUG=${DEBUG:-}
       - DEBUG_PORT=${DEBUG_HOST:-0.0.0.0:}${DEBUG_PORT:-8787}
-#     SOFFID
-#    extra_hosts:
-      - "dev.caib.es:172.18.0.3"
-#    restart: always
     networks:
       - comanda_net
 
