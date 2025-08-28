@@ -5,7 +5,7 @@ Quadre de comandaments de les aplicacions per l'administració digital de la CAI
 Executar la següent comanda:
 
 ```
-$ mvn -P frontend clean install
+$ mvn clean install
 ```
 La compilació del projecte crea varis fitxers per a executar o desplegar l'aplicació:
 - comanda-back/target/comanda-back.war: fitxer per a executar l'aplicació directament amb Java.
