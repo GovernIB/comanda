@@ -363,13 +363,13 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                         field: 'position',
                         flex: 1,
                         headerName: t('page.widget.grid.position'),
-                        valueGetter: (value, row) => `${row.posX}, ${row.posY}`,
+                        valueGetter: (_value, row) => `${row.posX}, ${row.posY}`,
                     },
                     {
                         field: 'size',
                         flex: 1,
                         headerName: t('page.widget.grid.size'),
-                        valueGetter: (value, row) => `${row.width}, ${row.height}`,
+                        valueGetter: (_value, row) => `${row.width}, ${row.height}`,
                     },
                 ]}
                 rowHeight={26}
