@@ -17,7 +17,6 @@
 		<docker.jboss.dir>jboss-eap-7.2</docker.jboss.dir>
 		<docker.image.from>280421/jboss-eap-caib-7.2</docker.image.from>
 		<docker.assembly.dir>${basedir}/src/main/docker/jboss</docker.assembly.dir>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<profiles>
 		<profile>
@@ -34,24 +33,12 @@
 			<artifactId>comanda-back</artifactId>
 			<version>${project.version}</version>
 			<type>war</type>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-api-interna</artifactId>
 			<version>${project.version}</version>
 			<type>war</type>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<!-- Dependències pels wars de tipus skinny (https://maven.apache.org/plugins/maven-war-plugin/examples/skinny-wars.html) -->
 		<dependency>
@@ -102,16 +89,6 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-broker</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-client</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-lib</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
@@ -221,12 +198,14 @@
 									<run>chmod a+x $JBOSS_USERHOME/config/jboss_config.sh</run>
 									<run>dos2unix $JBOSS_USERHOME/config/jboss_config.sh</run>
 									<run>sed -i 's~#!/bin/sh~#!/bin/sh\n$JBOSS_USERHOME/config/jboss_config.sh~' $JBOSS_HOME/bin/standalone.sh</run>
+									<!--
 									<run>keytool -import -trustcacerts -alias comanda-local -file /opt/comanda/ssl/certs/server.crt -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias authdev-limit -file /opt/comanda/ssl/certs/authdev-limit-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias dev-caib -file /opt/comanda/ssl/certs/dev-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias pre-caib -file /opt/comanda/ssl/certs/proves-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>keytool -import -trustcacerts -alias se-caib -file /opt/comanda/ssl/certs/se-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>
 									<run>echo 'JAVA_OPTS="$JAVA_OPTS -Djavax.net.ssl.trustStore=/home/jboss/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"' >> $JBOSS_HOME/bin/standalone.conf</run>
+									-->
 									<!-- SOFFID INICI -->
 <!--									<run>keytool -import -trustcacerts -alias idp-caib -file /opt/comanda/ssl/certs/idp-caib-es.pem -keystore /home/jboss/truststore.jks -storepass changeit -noprompt</run>-->
 <!--									<run>cp $JBOSS_USERHOME/config/keycloak-adapter-core-22.0.5.jar $JBOSS_HOME/modules/system/add-ons/keycloak/org/keycloak/keycloak-adapter-core/main</run>-->

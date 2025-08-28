@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE;
 
 /**
  * Lògica comuna per a obtenir i consultar informació per als widgets estadístics.

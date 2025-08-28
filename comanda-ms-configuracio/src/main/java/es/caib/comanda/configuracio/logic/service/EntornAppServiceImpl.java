@@ -4,7 +4,6 @@ import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppParamAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppFilter;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
 import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
@@ -17,9 +16,6 @@ import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
-import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
-import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -28,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
@@ -38,7 +33,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 
 /**
  * Implementació del servei de gestió d'aplicacions per entorn.

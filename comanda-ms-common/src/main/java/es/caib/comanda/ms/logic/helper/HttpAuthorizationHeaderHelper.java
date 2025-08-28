@@ -72,7 +72,7 @@ public class HttpAuthorizationHeaderHelper {
 						password,
 						null);
 			} catch (Exception ex) {
-				log.error("Error obtenint token de access Keycloak", ex);
+				log.error("Couldn't get access token", ex);
 				throw ex;
 			}
 		} else {

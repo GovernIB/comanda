@@ -32,7 +32,11 @@ import {
     ChartContainer,
     ChartsTooltip,
 } from '@mui/x-charts';
-import {getColorByNivellEnum, getColorByStatEnum, NivellEnum, SalutEstatEnum} from "../types/salut.model.tsx";
+import { useTheme } from '@mui/material/styles';
+import {ENUM_APP_ESTAT_PREFIX, getColorByMissatge, getColorByNivellEnum, getColorByStatEnum, NivellEnum, SalutEstatEnum, SalutModel, TITLE} from "../types/salut.model.tsx";
+import {ChipColor} from "../util/colorUtil.ts";
+import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
+import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -50,11 +54,11 @@ interface AppDataState {
     entornApp: any;
     estats: Record<string, any> | null;
     latencies: any[] | null;
-    salutCurrentApp: any;
+    salutCurrentApp: SalutModel | null;
     reportParams: any;
 }
 
-const appDataStateInitialValue = {
+const appDataStateInitialValue: AppDataState = {
     loading: null,
     entornApp: null,
     estats: null,
@@ -66,23 +70,8 @@ const appDataStateInitialValue = {
 const useAppEstatLabel = () => {
   const { t } = useTranslation();
 
-  return (estat?: string) => {
-    switch (estat) {
-      case 'UP':
-        return t('enum.appEstat.UP.title');
-      case 'WARN':
-        return t('enum.appEstat.WARN.title');
-      case 'DOWN':
-        return t('enum.appEstat.DOWN.title');
-      case 'DEGRADED':
-        return t('enum.appEstat.DEGRADED.title');
-      case 'MAINTENANCE':
-        return t('enum.appEstat.MAINTENANCE.title');
-      case 'UNKNOWN':
-        return t('enum.appEstat.UNKNOWN.title');
-      default:
-        return estat;
-    }
+  return (estat?: SalutEstatEnum) => {
+      return t(ENUM_APP_ESTAT_PREFIX + estat + TITLE, { defaultValue: estat });
   };
 };
 
@@ -138,7 +127,7 @@ const useAppData = (id: any) => {
                     filter: 'entornAppId : ' + entornAppId,
                 };
                 const { rows } = await salutApiFind(findArgs);
-                const salutCurrentApp = rows?.[0];
+                const salutCurrentApp: SalutModel = rows?.[0];
                 setAppDataState((state) => ({
                     ...state,
                     loading: false,
@@ -158,22 +147,41 @@ const useAppData = (id: any) => {
     };
 }
 
-const AppInfo: React.FC<any> = (props) => {
+const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: any}) => {
     const {
         salutCurrentApp: app,
         entornApp: entornApp,
     } = props;
     const { t } = useTranslation();
-    const getAppEstatLabel = useAppEstatLabel();
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
     const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
-    const bdEstat = app && <Typography><Chip label={getAppEstatLabel(app.bdEstat)} size="small" sx={{backgroundColor: getColorByStatEnum(app.bdEstat as SalutEstatEnum), color: 'white'}} /></Typography>;
+    const bdEstat = app && <ItemStateChip salutField={SalutModel.BD_ESTAT} salutStatEnum={app.bdEstat} />;
     const appLatencia = app && <Typography>{app.appLatencia != null ? app.appLatencia + ' ms' : t('page.salut.nd')}</Typography>;
     const missatges = app && <>
-        <Chip label={app.missatgeErrorCount} size="small" sx={{backgroundColor: getColorByStatEnum(SalutEstatEnum.ERROR), color: 'white'}} />&nbsp;/&nbsp;
-        <Chip label={app.missatgeWarnCount} size="small" sx={{backgroundColor: getColorByStatEnum(SalutEstatEnum.DEGRADED), color: 'white'}} />&nbsp;/&nbsp;
-        <Chip label={app.missatgeInfoCount} size="small" sx={{backgroundColor: getColorByStatEnum(SalutEstatEnum.MAINTENANCE), color: 'white'}} />
+        <SalutGenericTooltip title={t('page.salut.msgs.missatgeErrorCount')}>
+            <Chip
+                sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_ERROR_COUNT), color: ChipColor.WHITE }}
+                label={app.missatgeErrorCount}
+                size="small"
+            />
+        </SalutGenericTooltip>
+        &nbsp;/&nbsp;
+        <SalutGenericTooltip title={t('page.salut.msgs.missatgeWarnCount')}>
+            <Chip
+                sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT), color: ChipColor.WHITE }}
+                label={app.missatgeWarnCount}
+                size="small"
+            />
+        </SalutGenericTooltip>
+        &nbsp;/&nbsp;
+        <SalutGenericTooltip title={t('page.salut.msgs.missatgeInfoCount')}>
+            <Chip
+                sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_INFO_COUNT), color: ChipColor.WHITE }}
+                label={app.missatgeInfoCount}
+                size="small"
+            />
+        </SalutGenericTooltip>
     </>;
     return <Card variant="outlined" sx={{ height: '300px' }}>
         <CardContent sx={{ height: '100%' }}>
@@ -487,13 +495,13 @@ const SalutAppInfo: React.FC = () => {
         salutCurrentApp,
         reportParams,
     } = useAppData(id);
-    const getAppEstatLabel = useAppEstatLabel();
     const dataLoaded = ready && loading != null && !loading;
-    const toolbarState = salutCurrentApp?.appEstat ? <Chip
-        label={getAppEstatLabel(salutCurrentApp.appEstat)}
-        size="small"
-        sx={{backgroundColor: getColorByStatEnum(salutCurrentApp.appEstat as SalutEstatEnum), color: 'white', ml: 1}}
-        /> : undefined;
+    const toolbarState = salutCurrentApp?.appEstat
+        ? <ItemStateChip
+            sx={{ ml: 1 }}
+            salutField={SalutModel.APP_ESTAT}
+            salutStatEnum={salutCurrentApp.appEstat} />
+        : undefined;
     const toolbar = <SalutToolbar
         title={entornApp != null ? `${entornApp.app.description} - ${entornApp.entorn.description}` : ""}
         subtitle={entornApp?.versio ? 'v' + entornApp?.versio : undefined}

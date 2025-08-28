@@ -80,7 +80,7 @@ public class SalutInfoHelper {
         try {
 			// Obtenir dades de salut de l'aplicació
 			monitorSalut.startAction();
-            SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
+			SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
 			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
             idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);

@@ -18,65 +18,23 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-configuracio</artifactId>
 			<version>${project.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-salut</artifactId>
 			<version>${project.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-estadistica</artifactId>
 			<version>${project.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-monitor</artifactId>
 			<version>${project.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-lib</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	<profiles>
-		<profile>
-			<id>spring-boot</id>
-			<dependencies>
-				<dependency>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>comanda-lib</artifactId>
-					<version>${project.version}</version>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
 	<build>
 		<plugins>
 			<plugin>

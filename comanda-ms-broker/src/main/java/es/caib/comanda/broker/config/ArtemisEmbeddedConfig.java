@@ -15,14 +15,8 @@ import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
-import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
-import org.springframework.jms.support.converter.MessageConverter;
-import org.springframework.jms.support.converter.MessageType;
 
 import javax.annotation.PostConstruct;
-import javax.jms.ConnectionFactory;
 import java.util.Set;
 
 import static es.caib.comanda.ms.broker.model.Cues.*;
@@ -108,7 +102,7 @@ public class ArtemisEmbeddedConfig {
 
     }
 
-    @Bean
+    /*@Bean
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
             ConnectionFactory connectionFactory,
             MessageConverter messageConverter) {
@@ -119,7 +113,7 @@ public class ArtemisEmbeddedConfig {
         factory.setPubSubDomain(false); // false per cues (anycast), true per temes (multicast)
         factory.setMessageConverter(messageConverter);
         return factory;
-    }
+    }*/
 
     @Bean
     public ActiveMQServer activeMQServer() {

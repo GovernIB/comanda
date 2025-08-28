@@ -13,7 +13,6 @@
 	<description>Frontend de l'aplicació</description>
 	<properties>
 		<node.version>v22.13.1</node.version>
-		<skip.npm>true</skip.npm>
 		<frontend.resources.path>src/main/jsapp/comanda-visualitzacio</frontend.resources.path>
 	</properties>
 	<dependencies>
@@ -25,7 +24,7 @@
 	</dependencies>
 	<profiles>
 		<profile>
-			<id>frontend</id>
+			<id>front</id>
 			<activation>
 				<activeByDefault>true</activeByDefault>
 			</activation>

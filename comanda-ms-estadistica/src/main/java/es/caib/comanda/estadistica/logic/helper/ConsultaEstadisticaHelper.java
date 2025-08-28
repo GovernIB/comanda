@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.*;
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE;
 
 /**
  * Lògica comuna per a obtenir i consultar informació estadística de les apps.

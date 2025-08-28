@@ -12,36 +12,6 @@
 	<artifactId>comanda-bom-ms</artifactId>
 	<version>0.1.0</version>
 	<packaging>pom</packaging>
-	<properties>
-		<spring.filter.version>2.1.6</spring.filter.version>
-		<openapi.version>1.7.0</openapi.version>
-		<liquibase.version>4.4.3</liquibase.version>
-		<jasperreports.version>6.20.6</jasperreports.version>
-		<dynamicreports-core.version>6.12.1</dynamicreports-core.version>
-		<keycloak.version>22.0.4</keycloak.version>
-		<mapstruct.version>1.5.5.Final</mapstruct.version>
-	</properties>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring-boot.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct</artifactId>
-				<version>${mapstruct.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct-processor</artifactId>
-				<version>${mapstruct.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -129,17 +99,16 @@
 			<artifactId>spring-security-test</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-lib</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast-spring</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-artemis</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
@@ -155,39 +124,19 @@
 			<artifactId>lombok-mapstruct-binding</artifactId>
 			<version>0.2.0</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>comanda-ms-client</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>comanda-lib</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.liquibase</groupId>
-				<artifactId>liquibase-maven-plugin</artifactId>
-				<version>4.31.0</version>
-				<configuration>
-					<propertyFile>liquibase/liquibase.properties</propertyFile>
-				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-starter-data-jpa</artifactId>
-						<version>${spring-boot.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.liquibase</groupId>
-						<artifactId>liquibase-core</artifactId>
-						<version>${liquibase.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.liquibase.ext</groupId>
-						<artifactId>liquibase-hibernate5</artifactId>
-						<version>${liquibase.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>jakarta.validation</groupId>
-						<artifactId>jakarta.validation-api</artifactId>
-						<version>3.0.2</version>
-					</dependency>
-				</dependencies>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

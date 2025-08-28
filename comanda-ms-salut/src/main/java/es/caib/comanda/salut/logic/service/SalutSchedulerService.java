@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -70,11 +69,6 @@ public class SalutSchedulerService {
     }
 
     public void programarTasca(EntornApp entornApp) {
-//        if (entornApp.getSalutInterval() == null || entornApp.getSalutInterval() <= 0) {
-//            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getSalutInterval() + " no és un període vàlid.");
-//            return;
-//        }
-
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
 
@@ -86,7 +80,7 @@ public class SalutSchedulerService {
         try {
 //            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getSalutInterval()), TimeUnit.MILLISECONDS);
             PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_SALUT), TimeUnit.MILLISECONDS);
-            long initialDelay = TimeUnit.SECONDS.toMillis(new Random().nextInt(20));
+            long initialDelay = TimeUnit.SECONDS.toMillis(40);
             periodicTrigger.setInitialDelay(initialDelay); // Entre 0 i 20 segons
             periodicTrigger.setFixedRate(true);
 
