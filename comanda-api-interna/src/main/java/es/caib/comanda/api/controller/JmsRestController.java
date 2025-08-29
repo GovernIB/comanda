@@ -23,7 +23,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping(BaseConfig.API_PATH + "/jms")
-@Tag(name = "JMS", description = "Servei d'enviament de missatges a les cues JMS'")
+@Tag(name = "JMS", description = "Servei d'enviament de missatges a les cues JMS")
 @RequiredArgsConstructor
 public class JmsRestController extends BaseController {
 
