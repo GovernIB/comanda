@@ -1,6 +1,5 @@
 package es.caib.comanda.ms.back.controller;
 
-
 import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.Link;
