@@ -1,4 +1,10 @@
         <subsystem xmlns="urn:jboss:domain:keycloak:1.1">
+            <!-- SOFFID -->
+            <!-- <realm name="soffid"> -->
+            <!-- SOFFID FI-->
+            <!-- KEYCLOAK -->
+            <!-- <realm name="GOIB"> -->
+            <!-- KEYCLOAK FI-->
             <realm name="GOIB">
                 <auth-server-url>${env.JBOSS_AUTH_URL}</auth-server-url>
                 <ssl-required>none</ssl-required>
@@ -13,7 +19,7 @@
             </secure-deployment>
             <secure-deployment name="comanda-api-interna.war">
                 <realm>${env.JBOSS_AUTH_REALM}</realm>
-                <resource>${env.JBOSS_AUTH_API_CLIENTID}</resource>
+                <resource>${env.JBOSS_AUTH_WS_CLIENTID}</resource>
                 <use-resource-role-mappings>true</use-resource-role-mappings>
                 <bearer-only>true</bearer-only>
                 <enable-basic-auth>true</enable-basic-auth>

@@ -5,6 +5,15 @@ volumes:
     driver: local
 
 services:
+  httpd:
+    image: httpd:2.4
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./comanda-ear/src/main/docker/httpd:/usr/local/apache2/conf
+    depends_on:
+      - comanda
   comanda:
     image: comanda:0.1.0
     container_name: jboss-comanda
@@ -23,7 +32,7 @@ services:
       - JBOSS_AUTH_URL=${AUTH_URL}
       - JBOSS_AUTH_REALM=${AUTH_REALM}
       - JBOSS_AUTH_DEFAULT_CLIENTID=${AUTH_DEFAULT_CLIENTID}
-      - JBOSS_AUTH_API_CLIENTID=${AUTH_API_CLIENTID}
+      - JBOSS_AUTH_WS_CLIENTID=${AUTH_WS_CLIENTID}
       - JBOSS_AUTH_CREDENTIAL_SECRET=${AUTH_CREDENTIAL_SECRET}
       - JBOSS_MAIL_HOST=${MAIL_HOST}
       - JBOSS_MAIL_PORT=${MAIL_PORT}
@@ -34,15 +43,10 @@ services:
       - JBOSS_PROXY_HOST=${PROXY_HOST:-}
       - JBOSS_PROXY_PORT=${PROXY_PORT:-}
       - es.caib.comanda.app.url=${APP_URL:-http://localhost:8080}
-      - es.caib.comanda.client.base.url=${APP_URL:-http://localhost:8080}/comandaapi/interna/api
+      - es.caib.comanda.client.base.url=${CLIENT_BASE_URL:-http://localhost:8080/comandaapi/interna/api}
       - es.caib.comanda.fitxers=${FILES_PATH:-/home/jboss/apps/comanda/fitxers}
       - es.caib.comanda.httpauth.username=${HTTPAUTH_USERNAME}
       - es.caib.comanda.httpauth.password=${HTTPAUTH_PASSWORD}
       - es.caib.comanda.front.api.url=${APP_URL:-http://localhost:8080}/comandaback/api
       - DEBUG=${DEBUG:-}
       - DEBUG_PORT=${DEBUG_HOST:-0.0.0.0:}${DEBUG_PORT:-8787}
-    networks:
-      - comanda_net
-
-networks:
-  comanda_net:

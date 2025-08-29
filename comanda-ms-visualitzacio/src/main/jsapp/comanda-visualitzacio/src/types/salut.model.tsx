@@ -96,6 +96,45 @@ export class SalutModel extends BaseEntity implements Required<ISalut> {
     }
 }
 
+export class SalutInformeEstatItemModel extends BaseEntity {
+
+    // Claves estáticas para poder usarlas como keyof
+    static readonly ALWAYS_UP: keyof SalutInformeEstatItemModel = "alwaysUp";
+    static readonly ALWAYS_DOWN: keyof SalutInformeEstatItemModel = "alwaysDown";
+
+    static readonly UP_PERCENT: keyof SalutInformeEstatItemModel = "upPercent";
+    static readonly WARN_PERCENT: keyof SalutInformeEstatItemModel = "warnPercent";
+    static readonly DEGRADED_PERCENT: keyof SalutInformeEstatItemModel = "degradedPercent";
+    static readonly DOWN_PERCENT: keyof SalutInformeEstatItemModel = "downPercent";
+    static readonly ERROR_PERCENT: keyof SalutInformeEstatItemModel = "errorPercent";
+    static readonly MAINTENANCE_PERCENT: keyof SalutInformeEstatItemModel = "maintenancePercent";
+    static readonly UNKNOWN_PERCENT: keyof SalutInformeEstatItemModel = "unknownPercent";
+
+    alwaysUp: boolean;
+    alwaysDown: boolean;
+
+    upPercent: number;
+    warnPercent: number;
+    degradedPercent: number;
+    downPercent: number;
+    errorPercent: number;
+    maintenancePercent: number;
+    unknownPercent: number;
+
+    constructor(salut: any) {
+        super(salut);
+        this.alwaysUp = salut?.alwaysUp;
+        this.alwaysDown = salut?.alwaysDown;
+        this.upPercent = salut?.upPercent;
+        this.warnPercent = salut?.warnPercent;
+        this.degradedPercent = salut?.degradedPercent;
+        this.downPercent = salut?.downPercent;
+        this.errorPercent = salut?.errorPercent;
+        this.maintenancePercent = salut?.maintenancePercent;
+        this.unknownPercent = salut?.unknownPercent;
+    }
+}
+
 export enum SalutEstatEnum {
     UP='UP',
     WARN='WARN',
