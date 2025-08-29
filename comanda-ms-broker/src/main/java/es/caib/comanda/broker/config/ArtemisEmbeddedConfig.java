@@ -38,7 +38,6 @@ public class ArtemisEmbeddedConfig {
 
     @PostConstruct
     public void start() throws Exception {
-
         log.info("Iniciant broker Artemis...");
         ConfigurationImpl config = new ConfigurationImpl()
                 .setPersistenceEnabled(true)
@@ -48,14 +47,11 @@ public class ArtemisEmbeddedConfig {
                 .setPagingDirectory(propFiles + "/broker/paging")
                 .setSecurityEnabled(true)
                 .addAcceptorConfiguration("tcp", "tcp://0.0.0.0:" + brokerPort);
-
         embedded = new EmbeddedActiveMQ();
         embedded.setConfiguration(config);
         // Assignem el SecurityManager personalitzat
         embedded.setSecurityManager(new CustomSecurityManager());
-
         embedded.start();
-
         // Defineix cues durables
         if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_TASQUES)).isExists()) {
             embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_TASQUES)
@@ -75,7 +71,6 @@ public class ArtemisEmbeddedConfig {
                     .setRoutingType(RoutingType.ANYCAST)
                     .setDurable(true));
         }
-
         // Configurar AddressSettings amb TTL per defecte
         AddressSettings addressSettings = new AddressSettings()
                 .setMaxSizeBytes(1048576L)          // 1MB límit
@@ -86,34 +81,17 @@ public class ArtemisEmbeddedConfig {
                 .setDefaultNonDestructive(false)    // missatges s'esborren quan es consumeixen
                 .setAutoCreateQueues(true)          // crear cues dinàmicament
                 .setAutoCreateAddresses(true);      // crear adreces automàticament
-
         embedded.getActiveMQServer()
                 .getAddressSettingsRepository()
                 .addMatch("#", addressSettings);
-
         // Defineix rols
         Role permissiu = new Role("any", true, true, true, true, true, true, true, true);
         Set<Role> rols = Set.of(permissiu);
-
         // Aplica a totes les cues
         embedded.getActiveMQServer()
                 .getSecurityRepository()
                 .addMatch("#", rols);
-
     }
-
-    /*@Bean
-    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
-            ConnectionFactory connectionFactory,
-            MessageConverter messageConverter) {
-        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory);
-        factory.setSessionAcknowledgeMode(javax.jms.Session.CLIENT_ACKNOWLEDGE);
-        factory.setConcurrency("5-50");
-        factory.setPubSubDomain(false); // false per cues (anycast), true per temes (multicast)
-        factory.setMessageConverter(messageConverter);
-        return factory;
-    }*/
 
     @Bean
     public ActiveMQServer activeMQServer() {
