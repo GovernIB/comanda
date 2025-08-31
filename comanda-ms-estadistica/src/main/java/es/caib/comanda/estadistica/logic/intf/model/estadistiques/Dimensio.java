@@ -4,7 +4,6 @@ import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
-import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,7 +52,7 @@ import java.util.List;
 )
 public class Dimensio extends BaseResource<Long> {
 
-    public final static String DIMENSIO_FILTER = "dimensioFilter";
+    public static final String DIMENSIO_FILTER = "dimensioFilter";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -68,12 +67,15 @@ public class Dimensio extends BaseResource<Long> {
     private Long entornAppId;
     private List<DimensioValor> valors;
 
+    private Integer agrupableCount;
+
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @FieldNameConstants
     public static class DimensioFilter implements Serializable {
-        protected ResourceReference<Dimensio, Long> dimensio;
+        private String codi;
+        private String nom;
     }
 }

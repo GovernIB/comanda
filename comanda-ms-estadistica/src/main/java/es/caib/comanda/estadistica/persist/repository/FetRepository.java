@@ -30,7 +30,17 @@ public interface FetRepository extends BaseRepository<FetEntity, Long>, FetRepos
     List<FetEntity> findByTempsData(LocalDate data);
     List<FetEntity> findByEntornAppId(Long entornAppId);
     List<FetEntity> findByEntornAppIdAndTempsData(Long entornAppId, LocalDate data);
+    List<FetEntity> findByEntornAppIdAndTempsDataBefore(Long entornAppId, LocalDate data);
     List<FetEntity> findByEntornAppIdAndTempsDataBetween(Long entornAppId, LocalDate dataInici, LocalDate dataFi);
+
+    /**
+     * Elimina en batch tots els fets d'un entorn determinat amb data anterior a la indicada.
+     * Útil per a l'esborrat per retenció sense carregar entitats en memòria.
+     * @param entornAppId identificador de l'entorn
+     * @param data data llindar (exclusiva)
+     * @return nombre de registres eliminats
+     */
+    long deleteByEntornAppIdAndTempsDataBefore(Long entornAppId, LocalDate data);
 
 
     /**

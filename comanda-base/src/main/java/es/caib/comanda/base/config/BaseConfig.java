@@ -58,6 +58,8 @@ public class BaseConfig {
 
     // Propietats de ESTADISTIQUES
     public static final String PROP_STATS_PREFIX = PROPERTY_PREFIX + "stats.";
+    public static final String PROP_STATS_COMPACTAR_ACTIU = PROP_STATS_PREFIX + "compactar.actiu";
+    public static final String PROP_STATS_COMPACTAR_CRON = PROP_STATS_PREFIX + "compactar.cron";
 
     // Propietats de MONITOR
     public static final String PROP_MONITOR_PREFIX = PROPERTY_PREFIX + "monitor.";

@@ -107,6 +107,12 @@ public class EntornApp extends BaseResource<Long> {
 	private String estadisticaUrl;
 	private String estadisticaCron;
 
+    @Builder.Default
+    private Boolean compactable = false;
+    private Integer compactacioSetmanalMesos;
+    private Integer compactacioMensualMesos;
+    private Integer eliminacioMesos;
+
 	// Camps calculats
 	private String entornAppDescription;
 

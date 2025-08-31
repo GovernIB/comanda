@@ -14,7 +14,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Map;
 
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.PARAMETRE_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.PARAMETRE_CACHE;
 import static org.mockito.Mockito.*;
 
 /**

@@ -141,7 +141,7 @@ const CalendariEstadistiques: React.FC = () => {
     // Obtenir els ResourceServices
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
 
-    // Al obrir la pàgina carreguem el llistat de EntornApp actiux
+    // Al obrir la pàgina carreguem el llistat de EntornApp actius
     const [entornApps, setEntornApps] = useState<any[]>([]);
     useEffect(() => {
         if (entornAppApiIsReady) {

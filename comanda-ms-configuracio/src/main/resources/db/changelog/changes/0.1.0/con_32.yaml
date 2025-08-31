@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-32-01
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}entorn_app
+            columns:
+              - column:
+                  name: compactable
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: compactacio_setmanal
+                  type: INT
+              - column:
+                  name: compactacio_mensual
+                  type: INT
+              - column:
+                  name: eliminacio
+                  type: INT
+#        - dropColumn:
+#            tableName: ${db_prefix}entorn_app
+#            columnName: salutInterval

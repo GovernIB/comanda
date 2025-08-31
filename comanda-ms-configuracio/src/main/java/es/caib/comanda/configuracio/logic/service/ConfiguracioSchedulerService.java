@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,9 +33,9 @@ public class ConfiguracioSchedulerService {
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
 
+    private static final Integer PERIODE_CONSULTA_CONF = 1;
+
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
-    // Emmagatzemam l'interval programat per a cada entornApp per poder detectar canvis
-    private final Map<Long, Integer> intervalsActius = new ConcurrentHashMap<>();
 
     public ConfiguracioSchedulerService(
             @Qualifier("configuracioTaskScheduler") TaskScheduler taskScheduler,
@@ -62,11 +61,6 @@ public class ConfiguracioSchedulerService {
     }
 
     public void programarTasca(EntornAppEntity entornApp) {
-        if (entornApp.getInfoInterval() == null || entornApp.getInfoInterval() <= 0) {
-            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getInfoInterval() + " no és un període vàlid.");
-            return;
-        }
-
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
 
@@ -76,9 +70,10 @@ public class ConfiguracioSchedulerService {
         }
 
         try {
-            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getInfoInterval()), TimeUnit.MILLISECONDS);
+//            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getInfoInterval()), TimeUnit.MILLISECONDS);
+            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_CONF), TimeUnit.MILLISECONDS);
             long initialDelay = TimeUnit.SECONDS.toMillis(20);
-            periodicTrigger.setInitialDelay(initialDelay); // Entre 0 i 60 segons
+            periodicTrigger.setInitialDelay(initialDelay);
 
             ScheduledFuture<?> futuraTasca = taskScheduler.schedule(
                     () -> executarProces(entornApp.getId()),
@@ -86,14 +81,13 @@ public class ConfiguracioSchedulerService {
             );
 
             tasquesActives.put(entornApp.getId(), futuraTasca);
-            intervalsActius.put(entornApp.getId(), entornApp.getInfoInterval());
             log.info("Tasca programada de refresc de la informació per l'entornApp: {}, amb període: {}",
                     entornApp.getId(),
-                    entornApp.getInfoInterval());
+                    PERIODE_CONSULTA_CONF);
         } catch (IllegalArgumentException e) {
             log.error("Error en programar la tasca de refresc de la informació per l'entornApp: {}. Període invàlid: {}",
                     entornApp.getId(),
-                    entornApp.getInfoInterval(),
+                    PERIODE_CONSULTA_CONF,
                     e);
         }
     }
@@ -117,7 +111,6 @@ public class ConfiguracioSchedulerService {
         if (tasca != null) {
             tasca.cancel(false);
             tasquesActives.remove(entornAppId);
-            intervalsActius.remove(entornAppId);
             log.info("Tasca de refresc de la informació cancel·lada per l'entornAppId: {}", entornAppId);
         }
     }
@@ -135,11 +128,7 @@ public class ConfiguracioSchedulerService {
         List<EntornAppEntity> entornAppsActives = entornAppRepository.findByActivaTrueAndAppActivaTrue();
         entornAppsActives.forEach(ea -> {
             ScheduledFuture<?> tasca = tasquesActives.get(ea.getId());
-            Integer intervalActual = intervalsActius.get(ea.getId());
             if (tasca == null) {
-                programarTasca(ea);
-            } else if (ea.getInfoInterval() != null && !ea.getInfoInterval().equals(intervalActual)) {
-                log.info("Detectat canvi d'interval de info per l'entornApp {}: {} -> {}. Reprogramant tasca...", ea.getId(), intervalActual, ea.getInfoInterval());
                 programarTasca(ea);
             }
         });

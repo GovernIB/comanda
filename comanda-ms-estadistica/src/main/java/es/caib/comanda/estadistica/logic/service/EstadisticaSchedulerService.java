@@ -2,8 +2,10 @@ package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.estadistica.logic.helper.CompactacioHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,19 +32,26 @@ public class EstadisticaSchedulerService {
     private final TaskScheduler taskScheduler;
     private final EstadisticaHelper estadisticaHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final CompactacioHelper compactacioHelper;
+    private final ParametresHelper parametresHelper;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
+    private final Map<Long, ScheduledFuture<?>> tasquesCompactarActives = new ConcurrentHashMap<>();
 
     public EstadisticaSchedulerService(
             @Qualifier("estadisticaTaskScheduler") TaskScheduler taskScheduler,
             EstadisticaHelper estadisticaHelper,
-            EstadisticaClientHelper estadisticaClientHelper) {
+            EstadisticaClientHelper estadisticaClientHelper,
+            CompactacioHelper compactacioHelper,
+            ParametresHelper parametresHelper) {
         this.taskScheduler = taskScheduler;
         this.estadisticaHelper = estadisticaHelper;
         this.estadisticaClientHelper = estadisticaClientHelper;
+        this.compactacioHelper = compactacioHelper;
+        this.parametresHelper = parametresHelper;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -52,14 +61,14 @@ public class EstadisticaSchedulerService {
         executor.schedule(() -> {
             try {
                 List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
-                entornAppsActives.forEach(this::programarTasca);
+                entornAppsActives.forEach(this::programarTasques);
             } finally {
                 executor.shutdown();
             }
         }, 1, TimeUnit.MINUTES);
     }
 
-    public void programarTasca(EntornApp entornApp) {
+    public void programarTasques(EntornApp entornApp) {
         if (!CronExpression.isValidExpression(entornApp.getEstadisticaCron())) {
             log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getEstadisticaCron() + " no és un cron vàlid.");
             return;
@@ -67,6 +76,7 @@ public class EstadisticaSchedulerService {
 
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
+        cancelarTascaCompactatExistent(entornApp.getId());
 
         if (!entornApp.isActiva()) {
             log.info("Tasca de refresc de la informació no programada per l'entornApp: {}, degut a que no està activa", entornApp.getId());
@@ -88,6 +98,21 @@ public class EstadisticaSchedulerService {
                     entornApp.getId(),
                     entornApp.getEstadisticaCron(),
                     e);
+        }
+
+        // Compactat d'estadístiques
+        try {
+            Boolean compactarActiu = parametresHelper.getParametreBoolean(BaseConfig.PROP_STATS_COMPACTAR_ACTIU, false);
+            if (compactarActiu) {
+                String compactarCron = parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 3 * * *");
+
+                ScheduledFuture<?> futuraTascaCompactacio = taskScheduler.schedule(
+                        () -> executarProcesCompactacio(entornApp),
+                        new CronTrigger(compactarCron)
+                );
+            }
+        } catch (Exception e) {
+            log.error("Error en programar la tasca de compactat d'estadístiques per l'entornApp: {}.", entornApp.getId(), e);
         }
     }
 
@@ -114,6 +139,29 @@ public class EstadisticaSchedulerService {
         }
     }
 
+    private void executarProcesCompactacio(EntornApp entornApp) {
+        if (isLeader()) {
+            try {
+                log.info("Executant procés de compactació de dades estadístiques per l'entornApp {}", entornApp.getId());
+
+                // Compactació de dades estadístiques de entorn-app
+                compactacioHelper.compactar(entornApp);
+
+            } catch (Exception e) {
+                log.error("Error en l'execució del procés de compactació de dades estadístiques per l'entornApp {}", entornApp.getId(), e);
+            }
+        }
+    }
+
+    public void cancelarTascaCompactatExistent(Long entornAppId) {
+        ScheduledFuture<?> tascaInfo = tasquesCompactarActives.get(entornAppId);
+        if (tascaInfo != null) {
+            tascaInfo.cancel(false);
+            tasquesCompactarActives.remove(entornAppId);
+            log.info("Tasca de compactació d'estadístiques cancel·lada per l'entornAppId: {}", entornAppId);
+        }
+    }
+
     private boolean isLeader() {
         // TODO: Implementar per microserveis
         return schedulerLeader;
@@ -128,7 +176,7 @@ public class EstadisticaSchedulerService {
         entornAppsActives.forEach(ea -> {
             ScheduledFuture<?> tasca = tasquesActives.get(ea.getId());
             if (tasca == null) {
-                programarTasca(ea);
+                programarTasques(ea);
             }
         });
     }

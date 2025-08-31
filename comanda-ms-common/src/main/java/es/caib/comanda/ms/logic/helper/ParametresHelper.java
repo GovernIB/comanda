@@ -13,7 +13,8 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.PARAMETRE_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.PARAMETRE_CACHE;
+
 
 @Slf4j
 @Component

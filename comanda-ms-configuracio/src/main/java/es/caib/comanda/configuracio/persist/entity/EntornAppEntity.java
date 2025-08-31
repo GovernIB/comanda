@@ -52,8 +52,6 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	// Informació de l'aplicació en l'entorn concret
 	@Column(name = "info_url", length = 200, nullable = false)
 	private String infoUrl;
-	@Column(name = "info_interval", nullable = false)
-	private Integer infoInterval;
 	@Column(name = "info_data")
 	private LocalDateTime infoData;
 	@Column(name = "versio", length = 10)
@@ -68,8 +66,6 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	// Informació de salut
 	@Column(name = "salut_url", length = 200, nullable = false)
 	private String salutUrl;
-	@Column(name = "salut_interval", nullable = false)
-	private Integer salutInterval;
 
 	@OneToMany(mappedBy= "entornApp", cascade = CascadeType.ALL)
 	private Set<AppIntegracioEntity> appIntegracions;
@@ -90,5 +86,15 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	private String estadisticaUrl;
 	@Column(name = "estadistica_cron", length = 40)
 	private String estadisticaCron;
+
+    // Dades de compactació
+    @Column(name = "compactable", nullable = false)
+    private Boolean compactable = false;
+    @Column(name = "compactacio_setmanal")
+    private Integer compactacioSetmanalMesos;
+    @Column(name = "compactacio_mensual")
+    private Integer compactacioMensualMesos;
+    @Column(name = "eliminacio")
+    private Integer eliminacioMesos;
 
 }

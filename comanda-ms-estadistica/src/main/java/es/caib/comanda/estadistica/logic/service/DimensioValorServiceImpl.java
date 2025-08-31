@@ -3,7 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioValorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
-import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
+import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +26,6 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-public class DimensioValorServiceImpl extends BaseReadonlyResourceService<DimensioValor, Long, DimensioValorEntity> implements DimensioValorService {
+public class DimensioValorServiceImpl extends BaseMutableResourceService<DimensioValor, Long, DimensioValorEntity> implements DimensioValorService {
 
 }

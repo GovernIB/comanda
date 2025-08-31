@@ -1,15 +1,21 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
 import es.caib.comanda.ms.estadistica.model.Format;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 /**
  * Classe que representa un Indicador.
@@ -46,11 +52,15 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @ResourceConfig(
     quickFilterFields = { "codi", "nom" },
-    descriptionField = "codiNomDescription")
+    descriptionField = "codiNomDescription",
+    artifacts = {
+            @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Indicador.INDICADOR_FILTER, formClass = Indicador.IndicadorFilter.class)
+    })
 public class Indicador extends BaseResource<Long> {
 
     /** Named Filter para devolver un solo resultado por el atributo nom **/
     public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
+    public static final String INDICADOR_FILTER = "indicadorFilter";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -65,8 +75,23 @@ public class Indicador extends BaseResource<Long> {
     private Long entornAppId;
     private Format format;
 
+    // Compactació
+    private Boolean compactable;
+    private CompactacioEnum tipusCompactacio;
+    private ResourceReference<Indicador, Long> indicadorComptadorPerMitjana;
+
     public String getCodiNomDescription() {
         return this.codi + " - " + this.nom;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class IndicadorFilter implements Serializable {
+        private String codi;
+        private String nom;
     }
 
 }

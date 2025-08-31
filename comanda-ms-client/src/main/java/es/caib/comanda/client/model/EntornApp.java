@@ -20,13 +20,11 @@ public class EntornApp implements Serializable {
 	private AppRef app;
 
 	private String infoUrl;
-	private Integer infoInterval;
 	private LocalDateTime infoData;
 	private String versio;
 	private boolean activa;
 
 	private String salutUrl;
-	private Integer salutInterval;
 
 	private Integer integracioCount;
 	private Integer subsistemaCount;
@@ -39,4 +37,8 @@ public class EntornApp implements Serializable {
 	private String estadisticaUrl;
 	private String estadisticaCron;
 
+    private Boolean compactable = false;
+    private Integer compactacioSetmanalMesos;
+    private Integer compactacioMensualMesos;
+    private Integer eliminacioMesos;
 }

@@ -110,9 +110,7 @@ public class AppInfoHelperTest {
         entornAppEntity.setApp(appEntity);
         entornAppEntity.setEntorn(entornEntity);
         entornAppEntity.setInfoUrl("http://test.com/info");
-        entornAppEntity.setInfoInterval(5);
         entornAppEntity.setSalutUrl("http://test.com/salut");
-        entornAppEntity.setSalutInterval(10);
         entornAppEntity.setEstadisticaUrl("http://test.com/estadistica");
         entornAppEntity.setEstadisticaCron("0 0 * * * *");
         entornAppEntity.setActiva(true);

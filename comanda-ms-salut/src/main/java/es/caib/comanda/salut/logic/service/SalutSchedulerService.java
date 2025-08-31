@@ -37,8 +37,6 @@ public class SalutSchedulerService {
     private static final Integer PERIODE_CONSULTA_SALUT = 1;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
-    // Emmagatzemam l'interval programat per a cada entornApp per poder detectar canvis
-    private final Map<Long, Integer> intervalsActius = new ConcurrentHashMap<>();
 
     public SalutSchedulerService(
             @Qualifier("salutTaskScheduler") TaskScheduler taskScheduler,
@@ -81,7 +79,7 @@ public class SalutSchedulerService {
 //            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getSalutInterval()), TimeUnit.MILLISECONDS);
             PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_SALUT), TimeUnit.MILLISECONDS);
             long initialDelay = TimeUnit.SECONDS.toMillis(40);
-            periodicTrigger.setInitialDelay(initialDelay); // Entre 0 i 20 segons
+            periodicTrigger.setInitialDelay(initialDelay);
             periodicTrigger.setFixedRate(true);
 
             ScheduledFuture<?> futuraTasca = taskScheduler.schedule(
@@ -90,14 +88,13 @@ public class SalutSchedulerService {
             );
 
             tasquesActives.put(entornApp.getId(), futuraTasca);
-            intervalsActius.put(entornApp.getId(), entornApp.getSalutInterval());
             log.info("Tasca programada de obtenció de informació de salut per l'entornApp: {}, amb període: {}",
                     entornApp.getId(),
-                    entornApp.getSalutInterval());
+                    PERIODE_CONSULTA_SALUT);
         } catch (IllegalArgumentException e) {
             log.error("Error en programar la tasca de obtenció de informació de salut per l'entornApp: {}. Període invàlid: {}",
                     entornApp.getId(),
-                    entornApp.getSalutInterval(),
+                    PERIODE_CONSULTA_SALUT,
                     e);
         }
     }
@@ -121,7 +118,6 @@ public class SalutSchedulerService {
         if (tasca != null) {
             tasca.cancel(false);
             tasquesActives.remove(entornAppId);
-            intervalsActius.remove(entornAppId);
             log.info("Tasca de obtenció de informació de salut cancel·lada per l'entornAppId: {}", entornAppId);
         }
     }
@@ -138,11 +134,7 @@ public class SalutSchedulerService {
         List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(ea -> {
             ScheduledFuture<?> tasca = tasquesActives.get(ea.getId());
-            Integer intervalActual = intervalsActius.get(ea.getId());
             if (tasca == null) {
-                programarTasca(ea);
-            } else if (ea.getSalutInterval() != null && !ea.getSalutInterval().equals(intervalActual)) {
-                log.info("Detectat canvi d'interval de salut per l'entornApp {}: {} -> {}. Reprogramant tasca...", ea.getId(), intervalActual, ea.getSalutInterval());
                 programarTasca(ea);
             }
         });

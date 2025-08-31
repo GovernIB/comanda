@@ -18,6 +18,7 @@ import {
 import {Box, Tab, Tabs} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import BlockIcon from "@mui/icons-material/Block";
+import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
@@ -69,6 +70,7 @@ const useActions = (refresh?: () => void) => {
 };
 
 const AppEntornForm: React.FC = () => {
+    const { t } = useTranslation();
     const { data } = useFormContext();
     const { id: appId } = useParams();
     const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
@@ -82,15 +84,8 @@ const AppEntornForm: React.FC = () => {
             <Grid size={12}>
                 <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} onClick={pingUrl}/>}}}} />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
-                <FormField name="infoInterval" />
-            </Grid>
-
             <Grid size={12}>
                 <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} onClick={pingUrl}/>}}}} />
-            </Grid>
-            <Grid size={{xs:12, md:4}}>
-                <FormField name="salutInterval" />
             </Grid>
             <Grid size={12}>
                 <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} onClick={pingUrl}/>}}}} />
@@ -102,6 +97,30 @@ const AppEntornForm: React.FC = () => {
             <Grid size={12}>
                 <FormField name="estadisticaCron" />
             </Grid>
+            <Grid size={12}>
+                <FormField name="compactable" type="checkbox" label={t('page.apps.fields.compactable')} />
+            </Grid>
+            {data?.compactable === true && (
+                <>
+                    <Grid size={{xs:12, md:4}}>
+                        <FormField name="compactacioSetmanalMesos" type="number" required={false} label={t('page.apps.fields.compactacioSetmanalMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioSetmanes') }} />
+                    </Grid>
+                    <Grid size={{xs:12, md:4}}>
+                        <FormField name="compactacioMensualMesos" type="number" required={false} label={t('page.apps.fields.compactacioMensualMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioMesos') }} />
+                    </Grid>
+                    <Grid size={{xs:12, md:4}}>
+                        <FormField name="eliminacioMesos" type="number" required={false} label={t('page.apps.fields.eliminacioMesos')} componentProps={{ title: t('page.apps.tooltips.borratMesos') }} />
+                    </Grid>
+                    <Grid size={12}>
+                        {(() => {
+                            const s = data?.compactacioSetmanalMesos == null ? null : Number(data?.compactacioSetmanalMesos);
+                            const m = data?.compactacioMensualMesos == null ? null : Number(data?.compactacioMensualMesos);
+                            const e = data?.eliminacioMesos == null ? null : Number(data?.eliminacioMesos);
+                            return <FasesCompactacio s={s} m={m} e={e} />;
+                        })()}
+                    </Grid>
+                </>
+            )}
             <Grid size={12}>
                 <FormField name="activa" />
             </Grid>

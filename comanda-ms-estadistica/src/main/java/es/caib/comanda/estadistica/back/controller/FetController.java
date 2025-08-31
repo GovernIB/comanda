@@ -48,7 +48,7 @@ public class FetController extends BaseMutableResourceController<Fet, Long> {
             @Validated({Resource.OnCreate.class, Default.class})
             final EntornApp entornApp) {
         log.info("Rebuda petició d'actualització de procés de salut per entornApp: {}", entornApp.getId());
-        schedulerService.programarTasca(entornApp);
+        schedulerService.programarTasques(entornApp);
         return ResponseEntity.ok().build();
     }
 

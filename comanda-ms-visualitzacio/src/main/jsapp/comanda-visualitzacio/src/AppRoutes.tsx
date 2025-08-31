@@ -8,6 +8,9 @@ import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
 import Caches from "./pages/Caches";
 import Integracions from "./pages/Integracions";
+import Dimensions from "./pages/Dimensions";
+import DimensioValor from "./pages/DimensioValor";
+import Indicadors from "./pages/Indicadors";
 import EstadisticaWidget from './pages/EstadisticaWidget';
 import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
@@ -54,6 +57,13 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="integracio">
                 <Route index element={<Integracions />} />
+            </Route>
+            <Route path="dimensio">
+                <Route index element={<Dimensions />} />
+                <Route path="valor/:id" element={<DimensioValor />} />
+            </Route>
+            <Route path="indicador">
+                <Route index element={<Indicadors />} />
             </Route>
             <Route path="estadisticaWidget">
                 <Route index element={<EstadisticaWidget />} />

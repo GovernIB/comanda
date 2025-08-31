@@ -23,4 +23,6 @@ public interface DimensioValorRepository extends BaseRepository<DimensioValorEnt
     List<DimensioValorEntity> findByDimensio(DimensioEntity dimensio);
 
     List<DimensioValorEntity> findByDimensioAndValorIn(DimensioEntity dimensio, List<String> values);
+
+    List<DimensioValorEntity> findByDimensioEntornAppId(Long entornAppId);
 }

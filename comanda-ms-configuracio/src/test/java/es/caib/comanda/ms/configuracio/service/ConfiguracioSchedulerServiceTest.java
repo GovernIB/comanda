@@ -67,7 +67,6 @@ public class ConfiguracioSchedulerServiceTest {
         entornAppEntity.setApp(appEntity);
         entornAppEntity.setEntorn(entornEntity);
         entornAppEntity.setInfoUrl("http://test.com/info");
-        entornAppEntity.setInfoInterval(5); // 5 minutes
         entornAppEntity.setActiva(true);
 
         activeEntornApps = new ArrayList<>();
@@ -114,7 +113,7 @@ public class ConfiguracioSchedulerServiceTest {
 
         // Verify that the trigger has the correct period
         PeriodicTrigger trigger = triggerCaptor.getValue();
-        assertEquals(TimeUnit.MINUTES.toMillis(5), trigger.getPeriod());
+        assertEquals(TimeUnit.MINUTES.toMillis(1), trigger.getPeriod());
     }
 
     @Test

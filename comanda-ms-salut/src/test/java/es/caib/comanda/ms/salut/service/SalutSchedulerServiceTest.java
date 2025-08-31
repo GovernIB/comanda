@@ -76,7 +76,6 @@ public class SalutSchedulerServiceTest {
                 .app(new AppRef(1L, "Test App"))
                 .entorn(new EntornRef(1L, "Test Entorn"))
                 .salutUrl("http://test.com/health")
-                .salutInterval(15)
                 .activa(true)
                 .build();
 
@@ -85,7 +84,6 @@ public class SalutSchedulerServiceTest {
                 .app(new AppRef(1L, "Test App"))
                 .entorn(new EntornRef(1L, "Test Entorn"))
                 .salutUrl("http://test.com/health")
-                .salutInterval(15)
                 .activa(false)
                 .build();
 
@@ -230,9 +228,6 @@ public class SalutSchedulerServiceTest {
         // Add the task to tasquesActives
         Map<Long, ScheduledFuture<?>> tasquesActives = (Map<Long, ScheduledFuture<?>>) ReflectionTestUtils.getField(salutSchedulerService, "tasquesActives");
         tasquesActives.put(1L, scheduledFuture);
-        // Also set intervalsActius to the current interval (15)
-        Map<Long, Integer> intervalsActius = (Map<Long, Integer>) ReflectionTestUtils.getField(salutSchedulerService, "intervalsActius");
-        intervalsActius.put(1L, 15);
 
         // Act
         salutSchedulerService.comprovarRefrescInfo();
@@ -243,34 +238,4 @@ public class SalutSchedulerServiceTest {
         verify(taskScheduler, never()).schedule(any(Runnable.class), any(PeriodicTrigger.class));
     }
 
-    @Test
-    void testComprovarRefrescInfo_IntervalChanged_ReprogramsTask() {
-        // Arrange: first schedule a task with interval 15
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-        salutSchedulerService.programarTasca(entornApp);
-        // Reset interactions to capture only the re-schedule
-        reset(taskScheduler, scheduledFuture);
-        // Mock schedule again after reset
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-
-        // Now simulate that entornApp interval changed to 30 and service returns it
-        EntornApp entornApp30 = EntornApp.builder()
-                .id(entornApp.getId())
-                .app(entornApp.getApp())
-                .entorn(entornApp.getEntorn())
-                .salutUrl(entornApp.getSalutUrl())
-                .salutInterval(30)
-                .activa(true)
-                .build();
-        when(salutClientHelper.entornAppFindByActivaTrue()).thenReturn(Arrays.asList(entornApp30));
-
-        // Act
-        salutSchedulerService.comprovarRefrescInfo();
-
-        // Assert: should cancel the old task and schedule a new one with 30 minutes period
-        verify(scheduledFuture).cancel(eq(false));
-        verify(taskScheduler).schedule(runnableCaptor.capture(), triggerCaptor.capture());
-        PeriodicTrigger newTrigger = triggerCaptor.getValue();
-//        assertEquals(30 * 60 * 1000, newTrigger.getPeriod());
-    }
 }

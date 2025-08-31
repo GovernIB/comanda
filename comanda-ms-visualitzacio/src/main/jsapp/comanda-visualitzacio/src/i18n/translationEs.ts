@@ -49,6 +49,8 @@ const translationEs = {
         dashboard: "Cuadros de control",
         calendari: "Calendario",
         parametre: "Parámetros",
+        dimensio: "Dimensiones",
+        indicador: "Indicadores",
     },
     page: {
         salut: {
@@ -252,6 +254,20 @@ const translationEs = {
             uploadLogo: "Subir logo",
             changeLogo: "Cambiar logo",
             removeLogo: "Eliminar logo",
+            fields: {
+                compactable: "Compactable",
+                compactacioSetmanalMesos: "Compactación semanal (meses)",
+                compactacioMensualMesos: "Compactación mensual (meses)",
+                eliminacioMesos: "Borrado (meses)",
+            },
+            tooltips: {
+                compactacioMesos: "Cuántos meses completos se mantendrán las estadísticas antes de...\n - compactarlas por semana\n - compactarlas por mes\n - borrarlas.\nSi se dejan los campos sin valor, o valor 0, no se realizará la ...",
+            },
+            progress: {
+                diaries: "estadísticas diarias",
+                weeklies: "estadísticas semanales",
+                monthlies: "estadísticas mensuales",
+            },
             action: {
                 export: "Exportar aplicación",
             },
@@ -272,6 +288,27 @@ const translationEs = {
                 codi: "Código",
                 nom: "Nombre",
                 logo: "Logo",
+            },
+        },
+        dimensions: {
+            title: "Dimensiones",
+            values: "Valores",
+            column: {
+                codi: "Código",
+                nom: "Nombre",
+                descripcio: "Descripción",
+                agrupacions: "Tiene agrupaciones",
+            },
+        },
+        indicadors: {
+            title: "Indicadores",
+            edit: "Editar",
+            column: {
+                codi: "Código",
+                nom: "Nombre",
+                descripcio: "Descripción",
+                format: "Formato",
+                indicadorMitjana: "Indicador para media",
             },
         },
         monitors: {

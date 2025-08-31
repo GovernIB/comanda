@@ -97,6 +97,20 @@ export const App: React.FC = () => {
                 resourceName: 'integracio',
             },
             {
+                id: 'dimensio',
+                title: t('menu.dimensio'),
+                to: '/dimensio',
+                icon: 'category',
+                resourceName: 'dimensio',
+            },
+            {
+                id: 'indicador',
+                title: t('menu.indicador'),
+                to: '/indicador',
+                icon: 'insights',
+                resourceName: 'indicador',
+            },
+            {
                 id: 'estadisticaWidget',
                 title: t('menu.widget'),
                 to: '/estadisticaWidget',

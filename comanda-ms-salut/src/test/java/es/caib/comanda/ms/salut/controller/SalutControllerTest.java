@@ -44,7 +44,6 @@ public class SalutControllerTest {
                 .app(new AppRef(1L, "Test App"))
                 .entorn(new EntornRef(1L, "Test Entorn"))
                 .salutUrl("http://test.com/health")
-                .salutInterval(15)
                 .activa(true)
                 .build();
     }

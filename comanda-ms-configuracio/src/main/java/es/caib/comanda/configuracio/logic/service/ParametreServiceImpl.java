@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.Objects;
 
-import static es.caib.comanda.ms.back.config.HazelCastCacheConfig.PARAMETRE_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.PARAMETRE_CACHE;
 
 /**
  * Implementació del servei de gestió de paràmetres.

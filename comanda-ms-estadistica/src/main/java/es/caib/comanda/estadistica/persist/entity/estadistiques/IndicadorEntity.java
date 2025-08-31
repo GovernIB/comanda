@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.entity.estadistiques;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.CompactacioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.ms.estadistica.model.Format;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
@@ -13,6 +14,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.ForeignKey;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -69,6 +73,18 @@ public class IndicadorEntity extends BaseEntity<Indicador> {
     @Column(name = "format", length = 64)
     @Enumerated(EnumType.STRING)
     private Format format;
+
+    @Column(name = "compactable", nullable = false)
+    private Boolean compactable = true;
+    @Column(name = "tipus_compactacio", length = 64)
+    @Enumerated(EnumType.STRING)
+    private CompactacioEnum tipusCompactacio;
+    @ManyToOne
+    @JoinColumn(
+            name = "compactacio_indicador_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "ind_compactacio_fk"))
+    private IndicadorEntity indicadorComptadorPerMitjana;
 
     public String getCodiNomDescription() {
         return this.codi + " - " + this.nom;

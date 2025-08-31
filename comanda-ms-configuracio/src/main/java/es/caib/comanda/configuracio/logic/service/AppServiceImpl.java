@@ -200,7 +200,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 								.versio(e.getVersio())
 								.activa(e.isActiva())
 								.salutUrl(e.getSalutUrl())
-								.salutInterval(e.getSalutInterval())
 								.estadisticaInfoUrl(e.getEstadisticaInfoUrl())
 								.estadisticaUrl(e.getEstadisticaUrl())
 								.estadisticaCron(e.getEstadisticaCron())

@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-change-32-1
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dimensio_valor
+            columns:
+              - column:
+                  name: agrupable
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valor_agrupacio
+                  type: VARCHAR(255 ${varcharUnit})
+        - addColumn:
+            tableName: ${db_prefix}est_indicador
+            columns:
+              - column:
+                  name: compactable
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tipus_compactacio
+                  type: VARCHAR(64 ${varcharUnit})
+                  defaultValue: "SUMA"
+              - column:
+                  name: compactacio_indicador_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_indicador
+            baseColumnNames: compactacio_indicador_id
+            referencedTableName: ${db_prefix}est_indicador
+            referencedColumnNames: id
+            constraintName: ${db_prefix}ind_compactacio_fk

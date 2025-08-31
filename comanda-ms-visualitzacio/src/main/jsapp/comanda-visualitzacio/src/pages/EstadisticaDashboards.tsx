@@ -117,6 +117,14 @@ const columns = [
         field: 'descripcio',
         flex: 3,
     },
+    {
+        field: 'aplicacio',
+        flex: 1,
+    },
+    {
+        field: 'entorn',
+        flex: 1,
+    },
 ];
 
 const EstadisticaDashboards: React.FC = () => {

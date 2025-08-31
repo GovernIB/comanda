@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**
  * Interfície que defineix els serveis per gestionar recursos de tipus "Indicador".
@@ -26,5 +26,5 @@ import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
  *
  * @author Límit Tecnologies
  */
-public interface IndicadorService extends ReadonlyResourceService<Indicador, Long> {
+public interface IndicadorService extends MutableResourceService<Indicador, Long> {
 }

@@ -1,14 +1,19 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 /**
  * Classe que representa un valor associat a una dimensió.
@@ -42,8 +47,13 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @ResourceConfig(
         quickFilterFields = { "dimensio.nom", "valor" },
-        descriptionField = "desc")
+        descriptionField = "desc",
+        artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = DimensioValor.DIMENSIO_VALOR_FILTER, formClass = DimensioValor.DimensioValorFilter.class)
+        })
 public class DimensioValor extends BaseResource<Long> {
+
+    public static final String DIMENSIO_VALOR_FILTER = "dimensioValorFilter";
 
     @NotNull
     @Size(max = 255)
@@ -51,7 +61,22 @@ public class DimensioValor extends BaseResource<Long> {
     @NotNull
     private ResourceReference<Dimensio, Long> dimensio;
 
+    // Configuració d'agrupació
+    private Boolean agrupable;
+    private String valorAgrupacio;
+
     public String getDesc() {
         return dimensio.getDescription() + " [" + valor + "]";
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class DimensioValorFilter implements Serializable {
+        private String valor;
+        private Boolean agrupable;
+        private String valorAgrupacio;
     }
 }

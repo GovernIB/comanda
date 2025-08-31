@@ -49,6 +49,8 @@ const translationCa = {
         dashboard: "Taulers de control",
         calendari: "Calendari",
         parametre: "Paràmetres",
+        dimensio: "Dimensions",
+        indicador: "Indicadors",
     },
     page: {
         salut: {
@@ -252,6 +254,22 @@ const translationCa = {
             uploadLogo: "Pujar logo",
             changeLogo: "Canviar logo",
             removeLogo: "Eliminar logo",
+            fields: {
+                compactable: "Compactable",
+                compactacioSetmanalMesos: "Compactació setmanal (mesos)",
+                compactacioMensualMesos: "Compactacio mensual (mesos)",
+                eliminacioMesos: "Esborrat (mesos)",
+            },
+            tooltips: {
+                compactacioSetmanes: "Quans mesos complerts es mantindran les estadístiques abans de compactar-les per setmana.\nSi es deixen els camps sense valor, o amb valor 0, no es realitzarà compactació per setmana.",
+                compactacioMesos: "Quans mesos complerts es mantindran les estadístiques abans de compactar-les per mes.\nSi es deixen els camps sense valor, o amb valor 0, no es realitzarà compactació per mes.",
+                borratMesos: "Quans mesos complerts es mantindran les estadístiques abans d'esborrar-les.\nSi es deixen els camps sense valor, o amb valor 0, no es realitzarà el borrat.",
+            },
+            progress: {
+                diaries: "estadístiques diàries",
+                weeklies: "estadístiques setmanals",
+                monthlies: "estadístiques mensuals",
+            },
             action: {
                 export: "Exportar aplicació",
             },
@@ -272,6 +290,27 @@ const translationCa = {
                 codi: "Codi",
                 nom: "Nom",
                 logo: "Logo",
+            },
+        },
+        dimensions: {
+            title: "Dimensions",
+            values: "Valors",
+            column: {
+                codi: "Codi",
+                nom: "Nom",
+                descripcio: "Descripció",
+                agrupacions: "Té agrupacions",
+            },
+        },
+        indicadors: {
+            title: "Indicadors",
+            edit: "Editar",
+            column: {
+                codi: "Codi",
+                nom: "Nom",
+                descripcio: "Descripció",
+                format: "Format",
+                indicadorMitjana: "Indicador per mitjana",
             },
         },
         monitors: {

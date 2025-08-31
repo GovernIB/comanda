@@ -2,7 +2,7 @@ package es.caib.comanda.estadistica.logic.intf.service;
 
 
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**
  * Servei que gestiona les operacions relacionades amb els valors de dimensions.
@@ -20,5 +20,5 @@ import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
  *
  * @author Límit Tecnologies
  */
-public interface DimensioValorService extends ReadonlyResourceService<DimensioValor, Long> {
+public interface DimensioValorService extends MutableResourceService<DimensioValor, Long> {
 }

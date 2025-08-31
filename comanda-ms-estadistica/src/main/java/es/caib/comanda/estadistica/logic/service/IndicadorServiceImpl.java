@@ -3,11 +3,10 @@ package es.caib.comanda.estadistica.logic.service;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.estadistica.logic.intf.service.IndicadorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
-import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
+import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -30,7 +29,7 @@ import java.util.Objects;
  */
 @Slf4j
 @Service
-public class IndicadorServiceImpl extends BaseReadonlyResourceService<Indicador, Long, IndicadorEntity> implements IndicadorService {
+public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, Long, IndicadorEntity> implements IndicadorService {
 
 	@Override
 	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {

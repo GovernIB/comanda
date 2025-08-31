@@ -14,6 +14,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.util.List;
+import org.hibernate.annotations.Formula;
 
 /**
  * Representa l'entitat de persistència per a les dimensions en el sistema estadístic.
@@ -65,5 +66,8 @@ public class DimensioEntity extends BaseEntity<Dimensio> {
     private Long entornAppId;
     @OneToMany(mappedBy = "dimensio", cascade = CascadeType.ALL)
     private List<DimensioValorEntity> valors;
+
+    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "est_dimensio_valor dv where dv.dimensio_id = id and dv.agrupable = true)")
+    private Integer agrupableCount;
 
 }
