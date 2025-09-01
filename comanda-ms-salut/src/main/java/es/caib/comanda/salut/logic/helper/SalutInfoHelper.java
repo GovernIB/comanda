@@ -91,6 +91,9 @@ public class SalutInfoHelper {
 			salut.setEntornAppId(entornApp.getId());
 			salut.setData(currentMinuteTime);
 			salut.setAppEstat(SalutEstat.ERROR);
+            salut.updateAppCountByEstat(SalutEstat.ERROR);
+            salut.setNumElements(1);
+
 			SalutEntity saved = salutRepository.save(salut);
 			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
 					entornApp.getApp().getNom(),

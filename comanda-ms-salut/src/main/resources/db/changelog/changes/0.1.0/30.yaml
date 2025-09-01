@@ -36,45 +36,59 @@ databaseChangeLog:
         - column:
             name: app_count_up
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: app_count_warn
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: app_count_degraded
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: app_count_down
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: app_count_error
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: app_count_maintenance
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: app_count_unknown
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: bd_count_up
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: bd_count_warn
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: bd_count_degraded
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: bd_count_down
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: bd_count_error
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: bd_count_maintenance
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: bd_count_unknown
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: app_latencia_mitjana
             type: INTEGER
@@ -104,24 +118,31 @@ databaseChangeLog:
         - column:
             name: count_up
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_warn
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_degraded
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_down
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_error
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_maintenance
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_unknown
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: estat_num_elements
             type: INTEGER
@@ -133,7 +154,7 @@ databaseChangeLog:
             type: INTEGER
 - changeSet:
     id: salut-change-30-4
-    author: junie
+    author: Limit
     changes:
     - addColumn:
         tableName: ${db_prefix}salut_subsistema
@@ -141,24 +162,31 @@ databaseChangeLog:
         - column:
             name: count_up
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_warn
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_degraded
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_down
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_error
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_maintenance
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: count_unknown
             type: INTEGER
+            defaultValueNumeric: 0
         - column:
             name: estat_num_elements
             type: INTEGER
@@ -168,3 +196,14 @@ databaseChangeLog:
         - column:
             name: latencia_num_elements
             type: INTEGER
+- changeSet:
+    id: salut-change-30-5
+    author: Limit
+    changes:
+    - sql:
+        sql: |
+          truncate table ${db_prefix}salut_missatge reuse storage;
+          truncate table ${db_prefix}salut_detall reuse storage;
+          truncate table ${db_prefix}salut_subsistema reuse storage;
+          truncate table ${db_prefix}salut_integracio reuse storage;
+          truncate table ${db_prefix}salut reuse storage;
