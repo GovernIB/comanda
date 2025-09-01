@@ -225,6 +225,7 @@ const translationEn = {
             filter: {
                 more: "More fields",
                 finished: "Finished only",
+                unfinished: "Unfinished",
             },
             grid: {
                 groupHeader: "Name",
@@ -237,6 +238,7 @@ const translationEn = {
             filter: {
                 more: "More fields",
                 finished: "Finished only",
+                unfinished: "Unfinished",
             },
             grid: {
                 groupHeader: "Name",

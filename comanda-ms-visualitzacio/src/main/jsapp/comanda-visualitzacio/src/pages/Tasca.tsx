@@ -87,9 +87,9 @@ const TascaFilter = (props: any) => {
                 <Button
                     onClick={() => setFinishedOnly(fo => !fo)}
                     variant={finishedOnly ? 'contained' : 'outlined'}
-                    title={t('page.tasques.filter.finished')}
+                    title={t('page.tasques.filter.unfinished')}
                     sx={{ mr: 2 }}>
-                    <Icon>done_all</Icon>
+                    <Icon>pending_actions</Icon>
                 </Button>
                 <IconButton
                     onClick={netejar}
@@ -128,16 +128,16 @@ const TascaFilter = (props: any) => {
             onSpringFilterChange={onSpringFilterChange}
             commonFieldComponentProps={{ size: 'small' }}>
             <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
-                <Grid size={3}><FormField name="nom" /></Grid>
-                <Grid size={3}><FormField name="descripcio" /></Grid>
-                <Grid size={3}><FormField name="tipus" /></Grid>
-                <Grid size={3}><FormField name="prioritat" /></Grid>
-                <Grid size={2}><FormField name="dataInici1" /></Grid>
-                <Grid size={2}><FormField name="dataInici2" /></Grid>
-                <Grid size={2}><FormField name="dataFi1" /></Grid>
-                <Grid size={2}><FormField name="dataFi2" /></Grid>
-                <Grid size={2}><FormField name="dataCaducitat1" /></Grid>
-                <Grid size={2}><FormField name="dataCaducitat2" /></Grid>
+                <Grid size={{ xs: 6, sm:3}}><FormField name="nom" /></Grid>
+                <Grid size={{ xs: 6, sm:3}}><FormField name="descripcio" /></Grid>
+                <Grid size={{ xs: 6, sm:3}}><FormField name="tipus" /></Grid>
+                <Grid size={{ xs: 6, sm:3}}><FormField name="prioritat" /></Grid>
+                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataInici1" /></Grid>
+                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataInici2" /></Grid>
+                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataFi1" /></Grid>
+                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataFi2" /></Grid>
+                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataCaducitat1" /></Grid>
+                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataCaducitat2" /></Grid>
             </Grid>
         </MuiFilter>
     </>;

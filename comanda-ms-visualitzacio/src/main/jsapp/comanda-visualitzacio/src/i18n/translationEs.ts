@@ -227,6 +227,7 @@ const translationEs = {
             filter: {
                 more: "Más campos",
                 finished: "Sólo finalizadas",
+                unfinished: "Pendientes",
             },
             grid: {
                 groupHeader: "Nombre",
@@ -239,6 +240,7 @@ const translationEs = {
             filter: {
                 more: "Más campos",
                 finished: "Sólo finalitzados",
+                unfinished: "Pendientes",
             },
             grid: {
                 groupHeader: "Nombre",

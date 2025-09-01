@@ -227,6 +227,7 @@ const translationCa = {
             filter: {
                 more: "Més camps",
                 finished: "Només finalitzades",
+                unfinished: "Pendents",
             },
             grid: {
                 groupHeader: "Nom",
@@ -239,6 +240,7 @@ const translationCa = {
             filter: {
                 more: "Més camps",
                 finished: "Només finalitzats",
+                unfinished: "Pendents",
             },
             grid: {
                 groupHeader: "Nom",

@@ -819,6 +819,7 @@ const CalendariEstadistiques: React.FC = () => {
                 onClose={() => setDadesDiaModalOpen(false)}
                 maxWidth="xl" 
                 fullWidth
+                fullScreen
             >
                 <DialogTitle>
                     {t('calendari.modal_dades_dia')} - {dayjs(currentDataDia).format('DD/MM/YYYY')}
