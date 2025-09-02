@@ -2,10 +2,10 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useBaseAppContext, GridPage, useResourceApiService, Toolbar } from 'reactlib';
-import {useState, useEffect, useCallback} from "react";
+import {useState, useEffect, useCallback, useMemo} from "react";
 import dayjs from 'dayjs';
 import '../fullcalendar-custom.css';
-import {Button, Dialog, FormControl, InputLabel, MenuItem, Select, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Icon, useTheme, useMediaQuery, Tooltip} from "@mui/material";
+import {Button, Dialog, FormControl, InputLabel, MenuItem, Select, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Icon, useTheme, useMediaQuery, Tooltip, OutlinedInput} from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import DialogContent from "@mui/material/DialogContent";
@@ -17,6 +17,10 @@ import {useTranslation} from "react-i18next";
 import * as React from "react";
 import ReactDOM from 'react-dom/client';
 import {useMessage} from "../components/MessageShow.tsx";
+import Grid from "@mui/material/Grid";
+import Checkbox from "@mui/material/Checkbox";
+import FormGroup from "@mui/material/FormGroup";
+import ListItemText from "@mui/material/ListItemText";
 
 interface ErrorInfo {
     date: string;
@@ -812,90 +816,181 @@ const CalendariEstadistiques: React.FC = () => {
                     <Button onClick={() => setErrorDialogOpen(false)}>{t('calendari.tancar')}</Button>
                 </DialogActions>
             </Dialog>
-            
-            {/* Dialog per mostrar les dades del dia */}
-            <Dialog 
-                open={dadesDiaModalOpen} 
-                onClose={() => setDadesDiaModalOpen(false)}
-                maxWidth="xl" 
-                fullWidth
-                fullScreen
-            >
-                <DialogTitle>
-                    {t('calendari.modal_dades_dia')} - {dayjs(currentDataDia).format('DD/MM/YYYY')}
-                </DialogTitle>
-                <DialogContent>
-                    {currentDadesDia.length > 0 ? (
-                        <TableContainer component={Paper} sx={{ maxHeight: 'calc(95vh - 200px)' }}>
-                            <Table stickyHeader aria-label={t('calendari.modal_dades_dia')}>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell colSpan={Object.keys(currentDadesDia[0]?.dimensionsJson || {}).length}>
-                                            <Typography variant="subtitle1" fontWeight="bold">
-                                                {t('calendari.dimensions')}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell colSpan={Object.keys(currentDadesDia[0]?.indicadorsJson || {}).length}>
-                                            <Typography variant="subtitle1" fontWeight="bold">
-                                                {t('calendari.indicadors')}
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        {/* Dimensions column headers */}
-                                        {Object.keys(currentDadesDia[0]?.dimensionsJson || {}).map((dimensionKey) => (
-                                            <TableCell key={`dim-${dimensionKey}`}>
-                                                {dimensionKey}
-                                            </TableCell>
-                                        ))}
-                                        
-                                        {/* Indicators column headers */}
-                                        {Object.keys(currentDadesDia[0]?.indicadorsJson || {}).map((indicatorKey) => (
-                                            <TableCell key={`ind-${indicatorKey}`}>
-                                                {indicatorKey}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {currentDadesDia.map((fet, index) => (
-                                        <TableRow key={index}>
-                                            {/* Dimensions values */}
-                                            {Object.values(fet.dimensionsJson || {}).map((value, i) => (
-                                                <TableCell
-                                                    key={`dim-val-${index}-${i}`}
-                                                    sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50", }}
-                                                >
-                                                    {value}
-                                                </TableCell>
-                                            ))}
-                                            
-                                            {/* Indicators values */}
-                                            {Object.values(fet.indicadorsJson || {}).map((value, i) => (
-                                                <TableCell key={`ind-val-${index}-${i}`}
-                                                    align="right"
-                                                    sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50", }}>
-                                                    {value}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    ) : (
-                        <Typography variant="body1">
-                            {t('calendari.sense_dades')}
-                        </Typography>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDadesDiaModalOpen(false)}>{t('calendari.tancar')}</Button>
-                </DialogActions>
-            </Dialog>
+
+            <CaliendariDadesDialog
+                currentDadesDia={currentDadesDia}
+                currentDataDia={currentDataDia}
+                dadesDiaModalOpen={dadesDiaModalOpen}
+                setDadesDiaModalOpen={setDadesDiaModalOpen}
+            />
             {component}
         </GridPage>
     );
 };
+
+const CaliendariDadesDialog = (props:any) => {
+    const { currentDadesDia, currentDataDia, dadesDiaModalOpen, setDadesDiaModalOpen } = props;
+    const { t } = useTranslation();
+
+    const allOptions = useMemo(() => Object.keys(currentDadesDia[0]?.indicadorsJson || {}), [currentDadesDia])
+    useEffect(() => {
+        setIndicadorsShow(allOptions)
+    }, [allOptions]);
+    const [indicadorsShow, setIndicadorsShow] = useState<any[]>(allOptions)
+    const [filterForm, setFilterForm] = useState({})
+    const currentDadesDiaFiltered = useMemo<DadesDia[]>(()=>{
+        if (!filterForm) return currentDadesDia
+        return currentDadesDia.filter((currentDada: DadesDia) =>
+            Object.entries(filterForm).every(([key, value]) =>
+                currentDada.dimensionsJson?.[key]?.includes?.(value)
+            )
+        );
+    },[currentDadesDia, filterForm])
+
+    {/* Dialog per mostrar les dades del dia */}
+    return <Dialog
+        open={dadesDiaModalOpen}
+        onClose={() => setDadesDiaModalOpen(false)}
+        maxWidth="xl"
+        fullWidth
+        fullScreen
+    >
+        <DialogTitle>
+            {t('calendari.modal_dades_dia')} - {dayjs(currentDataDia).format('DD/MM/YYYY')}
+        </DialogTitle>
+        <DialogContent>
+            {currentDadesDia.length > 0 ? (<>
+                <FormGroup>
+                    <Grid container spacing={1} p={1} sx={{ maxWidth: '100%' }}>
+                        {Object.keys(currentDadesDia[0]?.dimensionsJson || {}).map((dimensionKey) => (
+                            <Grid size={3}>
+                                <TextField id={`textField-${dimensionKey}`} label={dimensionKey} variant="outlined" fullWidth
+                                           onChange={(event)=>{
+                                               setFilterForm({
+                                                   ...filterForm,
+                                                   [dimensionKey]: event.target.value
+                                               })
+                                           }}/>
+                            </Grid>
+                        ))}
+                        <Grid size={3}>
+                            <FormControl sx={{ width: '100%' }}>
+                                <InputLabel>{t('calendari.indicadors')}</InputLabel>
+                                <Select
+                                    multiple
+                                    value={indicadorsShow}
+                                    onChange={(event) => {
+                                        const value = event.target.value
+                                        if (value.includes("all")) {
+                                            if (indicadorsShow.length === allOptions.length) {
+                                                // Si ya todos están seleccionados → desmarcar todo
+                                                setIndicadorsShow([]);
+                                            } else {
+                                                // Seleccionar todos
+                                                setIndicadorsShow(allOptions);
+                                            }
+                                        } else {
+                                            setIndicadorsShow(value);
+                                        }
+                                    }}
+                                    input={<OutlinedInput label={t('calendari.indicadors')}/>}
+                                    renderValue={(selected) => selected.join(', ')}
+                                >
+                                    {/* Opción select all */}
+                                    <MenuItem key="all" value="all">
+                                        <Checkbox
+                                            checked={indicadorsShow.length === allOptions.length}
+                                            indeterminate={
+                                                indicadorsShow.length > 0 &&
+                                                indicadorsShow.length < allOptions.length
+                                            }
+                                        />
+                                        <ListItemText primary="Seleccionar todo" />
+                                    </MenuItem>
+
+                                    {allOptions.map((indicadorKey) => (
+                                        <MenuItem key={indicadorKey} value={indicadorKey}>
+                                            <Checkbox checked={indicadorsShow.includes(indicadorKey)} />
+                                            <ListItemText primary={indicadorKey} />
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                    </Grid>
+                </FormGroup>
+
+                <TableContainer component={Paper} sx={{ maxHeight: 'calc(95vh - 200px)' }}>
+                    <Table stickyHeader aria-label={t('calendari.modal_dades_dia')}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell colSpan={Object.keys(currentDadesDia[0]?.dimensionsJson || {}).length}>
+                                    <Typography variant="subtitle1" fontWeight="bold">
+                                        {t('calendari.dimensions')}
+                                    </Typography>
+                                </TableCell>
+                                {!!indicadorsShow.length && <TableCell colSpan={indicadorsShow.length}>
+                                    <Typography variant="subtitle1" fontWeight="bold">
+                                        {t('calendari.indicadors')}
+                                    </Typography>
+                                </TableCell>}
+                            </TableRow>
+                            <TableRow>
+                                {/* Dimensions column headers */}
+                                {Object.keys(currentDadesDia[0]?.dimensionsJson || {}).map((dimensionKey) => (
+                                    <TableCell key={`dim-${dimensionKey}`}>
+                                        {dimensionKey}
+                                    </TableCell>
+                                ))}
+
+                                {/* Indicators column headers */}
+                                {allOptions.map((indicatorKey) => {
+                                    if (indicadorsShow.includes(indicatorKey)) {
+                                        return <TableCell key={`ind-${indicatorKey}`}>
+                                            {indicatorKey}
+                                        </TableCell>
+                                    }
+                                })}
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {currentDadesDiaFiltered.map((fet, index) => (
+                                <TableRow key={index}>
+                                    {/* Dimensions values */}
+                                    {Object.values(fet.dimensionsJson || {}).map((value, i) => (
+                                        <TableCell
+                                            key={`dim-val-${index}-${i}`}
+                                            sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50", }}
+                                        >
+                                            {value}
+                                        </TableCell>
+                                    ))}
+
+                                    {/* Indicators values */}
+                                    {Object.entries(fet.indicadorsJson || {}).map(([key, value], i) => {
+                                        if (indicadorsShow.includes(key)) {
+                                            return <TableCell key={`ind-val-${index}-${i}`}
+                                                              align="right"
+                                                              sx={{backgroundColor: index % 2 === 0 ? "background.default" : "grey.50",}}>
+                                                {value}
+                                            </TableCell>
+                                        }})
+                                    }
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </>) : (
+                <Typography variant="body1">
+                    {t('calendari.sense_dades')}
+                </Typography>
+            )}
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={() => setDadesDiaModalOpen(false)}>{t('calendari.tancar')}</Button>
+        </DialogActions>
+    </Dialog>
+}
 
 export default CalendariEstadistiques;
