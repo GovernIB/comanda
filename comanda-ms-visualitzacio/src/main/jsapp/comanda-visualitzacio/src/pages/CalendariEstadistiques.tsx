@@ -1,7 +1,7 @@
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { useBaseAppContext, GridPage, useResourceApiService, Toolbar } from 'reactlib';
+import {useBaseAppContext, GridPage, useResourceApiService, Toolbar, springFilterBuilder as builder} from 'reactlib';
 import {useState, useEffect, useCallback, useMemo} from "react";
 import dayjs from 'dayjs';
 import '../fullcalendar-custom.css';
@@ -563,6 +563,24 @@ const CalendariEstadistiques: React.FC = () => {
         }
     };
 
+    const {isReady: dimensioIsReady, find: dimensioFind} = useResourceApiService('dimensio')
+    const [dimensions, setDimensions] = useState<any[]>([])
+    useEffect(()=>{
+        if (dimensioIsReady && entornAppId) {
+            dimensioFind({unpaged: true, filter: builder.eq("entornAppId", entornAppId)})
+                .then((data) => setDimensions(data.rows))
+        }
+    },[dimensioIsReady, entornAppId])
+
+    const {isReady: indicadorIsReady, find: indicadorFind} = useResourceApiService('indicador')
+    const [indicadors, setIndicadors] = useState<any[]>([])
+    useEffect(()=>{
+        if (indicadorIsReady && entornAppId) {
+            indicadorFind({unpaged: true, filter: builder.eq("entornAppId", entornAppId)})
+                .then((data) => setIndicadors(data.rows))
+        }
+    },[indicadorIsReady, entornAppId])
+
     return (
         <GridPage disableMargins>
             {/* Global loading overlay */}
@@ -818,6 +836,8 @@ const CalendariEstadistiques: React.FC = () => {
             </Dialog>
 
             <CaliendariDadesDialog
+                dimensions={dimensions}
+                indicadors={indicadors}
                 currentDadesDia={currentDadesDia}
                 currentDataDia={currentDataDia}
                 dadesDiaModalOpen={dadesDiaModalOpen}
@@ -829,14 +849,16 @@ const CalendariEstadistiques: React.FC = () => {
 };
 
 const CaliendariDadesDialog = (props:any) => {
-    const { currentDadesDia, currentDataDia, dadesDiaModalOpen, setDadesDiaModalOpen } = props;
+    const { dimensions, indicadors, currentDadesDia, currentDataDia, dadesDiaModalOpen, setDadesDiaModalOpen } = props;
     const { t } = useTranslation();
 
-    const allOptions = useMemo(() => Object.keys(currentDadesDia[0]?.indicadorsJson || {}), [currentDadesDia])
+    const dimensionsCodis = dimensions.map((i:any)=>i.codi);
+    const indicadorsCodis = indicadors.map((i:any)=>i.codi);
     useEffect(() => {
-        setIndicadorsShow(allOptions)
-    }, [allOptions]);
-    const [indicadorsShow, setIndicadorsShow] = useState<any[]>(allOptions)
+        if (currentDadesDia[0]?.indicadorsJson)
+            setIndicadorsShow(Object.keys(currentDadesDia[0]?.indicadorsJson))
+    }, [currentDadesDia]);
+    const [indicadorsShow, setIndicadorsShow] = useState<any[]>(indicadorsCodis)
     const [filterForm, setFilterForm] = useState({})
     const currentDadesDiaFiltered = useMemo<DadesDia[]>(()=>{
         if (!filterForm) return currentDadesDia
@@ -862,13 +884,13 @@ const CaliendariDadesDialog = (props:any) => {
             {currentDadesDia.length > 0 ? (<>
                 <FormGroup>
                     <Grid container spacing={1} p={1} sx={{ maxWidth: '100%' }}>
-                        {Object.keys(currentDadesDia[0]?.dimensionsJson || {}).map((dimensionKey) => (
+                        {dimensions.map((dimension:any) => (
                             <Grid size={3}>
-                                <TextField id={`textField-${dimensionKey}`} label={dimensionKey} variant="outlined" fullWidth
+                                <TextField id={`textField-${dimension.codi}`} label={dimension.nom} variant="outlined" fullWidth
                                            onChange={(event)=>{
                                                setFilterForm({
                                                    ...filterForm,
-                                                   [dimensionKey]: event.target.value
+                                                   [dimension.codi]: event.target.value
                                                })
                                            }}/>
                             </Grid>
@@ -882,12 +904,12 @@ const CaliendariDadesDialog = (props:any) => {
                                     onChange={(event) => {
                                         const value = event.target.value
                                         if (value.includes("all")) {
-                                            if (indicadorsShow.length === allOptions.length) {
-                                                // Si ya todos están seleccionados → desmarcar todo
+                                            if (indicadorsShow.length === indicadorsCodis.length) {
+                                                // Si ya todos están seleccionados → desmarcar todos
                                                 setIndicadorsShow([]);
                                             } else {
                                                 // Seleccionar todos
-                                                setIndicadorsShow(allOptions);
+                                                setIndicadorsShow(indicadorsCodis);
                                             }
                                         } else {
                                             setIndicadorsShow(value);
@@ -899,19 +921,19 @@ const CaliendariDadesDialog = (props:any) => {
                                     {/* Opción select all */}
                                     <MenuItem key="all" value="all">
                                         <Checkbox
-                                            checked={indicadorsShow.length === allOptions.length}
+                                            checked={indicadorsShow.length === indicadorsCodis.length}
                                             indeterminate={
                                                 indicadorsShow.length > 0 &&
-                                                indicadorsShow.length < allOptions.length
+                                                indicadorsShow.length < indicadorsCodis.length
                                             }
                                         />
-                                        <ListItemText primary="Seleccionar todo" />
+                                        <ListItemText primary="Seleccionar todo"/>
                                     </MenuItem>
 
-                                    {allOptions.map((indicadorKey) => (
-                                        <MenuItem key={indicadorKey} value={indicadorKey}>
-                                            <Checkbox checked={indicadorsShow.includes(indicadorKey)} />
-                                            <ListItemText primary={indicadorKey} />
+                                    {indicadors.map((indicador:any) => (
+                                        <MenuItem key={indicador.codi} value={indicador.codi}>
+                                            <Checkbox checked={indicadorsShow.includes(indicador.codi)}/>
+                                            <ListItemText primary={indicador.nom}/>
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -924,7 +946,7 @@ const CaliendariDadesDialog = (props:any) => {
                     <Table stickyHeader aria-label={t('calendari.modal_dades_dia')}>
                         <TableHead>
                             <TableRow>
-                                <TableCell colSpan={Object.keys(currentDadesDia[0]?.dimensionsJson || {}).length}>
+                                <TableCell colSpan={dimensionsCodis.length}>
                                     <Typography variant="subtitle1" fontWeight="bold">
                                         {t('calendari.dimensions')}
                                     </Typography>
@@ -937,17 +959,19 @@ const CaliendariDadesDialog = (props:any) => {
                             </TableRow>
                             <TableRow>
                                 {/* Dimensions column headers */}
-                                {Object.keys(currentDadesDia[0]?.dimensionsJson || {}).map((dimensionKey) => (
-                                    <TableCell key={`dim-${dimensionKey}`}>
-                                        {dimensionKey}
+                                {dimensions.map((dimensio:any) => (
+                                    <TableCell key={`dim-${dimensio.codi}`} title={dimensio.descripcio}>
+                                        {dimensio.nom}
                                     </TableCell>
                                 ))}
 
                                 {/* Indicators column headers */}
-                                {allOptions.map((indicatorKey) => {
-                                    if (indicadorsShow.includes(indicatorKey)) {
-                                        return <TableCell key={`ind-${indicatorKey}`}>
-                                            {indicatorKey}
+                                {indicadors.map((indicator:any) => {
+                                    if (indicadorsShow.includes(indicator.codi)) {
+                                        return <TableCell key={`ind-${indicator.codi}`}
+                                                          align="right"
+                                                          title={indicator.descripcio}>
+                                            {indicator.nom}
                                         </TableCell>
                                     }
                                 })}
@@ -957,22 +981,22 @@ const CaliendariDadesDialog = (props:any) => {
                             {currentDadesDiaFiltered.map((fet, index) => (
                                 <TableRow key={index}>
                                     {/* Dimensions values */}
-                                    {Object.values(fet.dimensionsJson || {}).map((value, i) => (
+                                    {dimensionsCodis.map((key:any, i:number) => (
                                         <TableCell
                                             key={`dim-val-${index}-${i}`}
                                             sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50", }}
                                         >
-                                            {value}
+                                            {fet.dimensionsJson[key]}
                                         </TableCell>
                                     ))}
 
                                     {/* Indicators values */}
-                                    {Object.entries(fet.indicadorsJson || {}).map(([key, value], i) => {
+                                    {indicadorsCodis.map((key:any, i:number) => {
                                         if (indicadorsShow.includes(key)) {
                                             return <TableCell key={`ind-val-${index}-${i}`}
                                                               align="right"
                                                               sx={{backgroundColor: index % 2 === 0 ? "background.default" : "grey.50",}}>
-                                                {value}
+                                                {fet.indicadorsJson[key]}
                                             </TableCell>
                                         }})
                                     }
