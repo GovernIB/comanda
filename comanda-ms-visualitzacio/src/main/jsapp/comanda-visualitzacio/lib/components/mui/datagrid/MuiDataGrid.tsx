@@ -108,14 +108,16 @@ export type MuiDataGridProps = {
     readOnly?: true;
     /** Desactiva les peticions automàtiques al backend per a obtenir la informació a mostrar a la graella */
     findDisabled?: boolean;
-    /** Activa la paginació */
-    paginationActive?: true;
-    /** Activa la selecció de files */
-    selectionActive?: true;
     /** Activa la persistència de l'estat (paginació, ordenació, selecció, ...) */
     persistentState?: true;
+    /** Activa la selecció de files */
+    selectionActive?: true;
+    /** Activa la paginació */
+    paginationActive?: true;
     /** Model de paginació inicial */
     paginationModel?: GridPaginationModel;
+    /** Text pel missatge de que no hi ha resultats */
+    paginationNoRowsText?: string;
     /** Model d'ordenació inicial */
     sortModel?: GridSortModel;
     /** Model d'ordenació que s'aplicarà sempre (ignorant el valor de sortModel) */
@@ -491,10 +493,11 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         columns,
         readOnly,
         findDisabled,
-        paginationActive,
-        selectionActive,
         persistentState,
+        selectionActive,
+        paginationActive,
         paginationModel: paginationModelProp,
+        paginationNoRowsText,
         sortModel,
         staticSortModel,
         quickFilterInitialValue,
@@ -852,7 +855,10 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                         setRowSelectionModel,
                         pageSizeOptions: otherProps?.pageSizeOptions,
                     },
-                    noRowsOverlay: { findDisabled },
+                    noRowsOverlay: {
+                        findDisabled,
+                        noRowsText: paginationNoRowsText,
+                    },
                 }}
                 semiBordered={semiBordered}
                 autoHeight={autoHeight}

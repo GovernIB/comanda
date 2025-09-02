@@ -107,10 +107,6 @@ const baseFormFieldComponents = [
         type: 'url',
         component: FormFieldText,
     },
-    {
-        type: 'password',
-        component: FormFieldText,
-    },
 ];
 
 const MuiComponentsConfigurer: React.FC = () => {
