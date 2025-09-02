@@ -5,7 +5,30 @@ import {useBaseAppContext, GridPage, useResourceApiService, Toolbar, springFilte
 import {useState, useEffect, useCallback, useMemo} from "react";
 import dayjs from 'dayjs';
 import '../fullcalendar-custom.css';
-import {Button, Dialog, FormControl, InputLabel, MenuItem, Select, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Icon, useTheme, useMediaQuery, Tooltip, OutlinedInput} from "@mui/material";
+import {
+    Button,
+    Dialog,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    Typography,
+    CircularProgress,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Icon,
+    useTheme,
+    useMediaQuery,
+    Tooltip,
+    OutlinedInput,
+    IconButton,
+    Chip
+} from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import DialogContent from "@mui/material/DialogContent";
@@ -569,6 +592,7 @@ const CalendariEstadistiques: React.FC = () => {
         if (dimensioIsReady && entornAppId) {
             dimensioFind({unpaged: true, filter: builder.eq("entornAppId", entornAppId)})
                 .then((data) => setDimensions(data.rows))
+                .catch(() => setDimensions([]))
         }
     },[dimensioIsReady, entornAppId])
 
@@ -578,6 +602,7 @@ const CalendariEstadistiques: React.FC = () => {
         if (indicadorIsReady && entornAppId) {
             indicadorFind({unpaged: true, filter: builder.eq("entornAppId", entornAppId)})
                 .then((data) => setIndicadors(data.rows))
+                .catch(() => setIndicadors([]))
         }
     },[indicadorIsReady, entornAppId])
 
@@ -854,21 +879,24 @@ const CaliendariDadesDialog = (props:any) => {
 
     const dimensionsCodis = dimensions.map((i:any)=>i.codi);
     const indicadorsCodis = indicadors.map((i:any)=>i.codi);
+
+    const [indicadorsShow, setIndicadorsShow] = useState<any[]>(indicadorsCodis)
+    const [open, setOpen] = useState<boolean>(true)
+    const [filterForm, setFilterForm] = useState<any>({})
+    const currentDadesDiaFiltered = useMemo<DadesDia[]>(()=>{
+        if (!filterForm) return currentDadesDia
+        return currentDadesDia.filter((currentDada: DadesDia) =>
+            Object.entries(filterForm).every(([key, value]) =>
+                currentDada.dimensionsJson?.[key]?.toLowerCase?.().includes?.(value?.toLowerCase?.())
+            )
+        );
+    },[filterForm])
+
     useEffect(() => {
         setFilterForm({})
         if (currentDadesDia[0]?.indicadorsJson)
             setIndicadorsShow(Object.keys(currentDadesDia[0]?.indicadorsJson))
     }, [currentDadesDia]);
-    const [indicadorsShow, setIndicadorsShow] = useState<any[]>(indicadorsCodis)
-    const [filterForm, setFilterForm] = useState({})
-    const currentDadesDiaFiltered = useMemo<DadesDia[]>(()=>{
-        if (!filterForm) return currentDadesDia
-        return currentDadesDia.filter((currentDada: DadesDia) =>
-            Object.entries(filterForm).every(([key, value]) =>
-                currentDada.dimensionsJson?.[key]?.includes?.(value)
-            )
-        );
-    },[filterForm])
 
     {/* Dialog per mostrar les dades del dia */}
     return <Dialog
@@ -885,19 +913,8 @@ const CaliendariDadesDialog = (props:any) => {
             {currentDadesDia.length > 0 ? (<>
                 <FormGroup>
                     <Grid container spacing={1} p={1} sx={{ maxWidth: '100%' }}>
-                        {dimensions.map((dimension:any) => (
-                            <Grid size={3}>
-                                <TextField id={`textField-${dimension.codi}`} label={dimension.nom} variant="outlined" fullWidth
-                                           onChange={(event)=>{
-                                               setFilterForm({
-                                                   ...filterForm,
-                                                   [dimension.codi]: event.target.value
-                                               })
-                                           }}/>
-                            </Grid>
-                        ))}
-                        <Grid size={3}>
-                            <FormControl sx={{ width: '100%' }}>
+                        <Grid size={11}>
+                            <FormControl sx={{ width: '100%' }} size={'small'}>
                                 <InputLabel>{t('calendari.indicadors')}</InputLabel>
                                 <Select
                                     multiple
@@ -940,6 +957,37 @@ const CaliendariDadesDialog = (props:any) => {
                                 </Select>
                             </FormControl>
                         </Grid>
+
+                        <Grid size={1} display={'flex'} justifyContent={'center'}>
+                            <IconButton
+                                title={t('components.clear')}
+                                onClick={() => {
+                                    setIndicadorsShow([]);
+                                    setFilterForm({});
+                                }}
+                            ><Icon>filter_alt_off</Icon></IconButton>
+                            <IconButton
+                                title={t('page.avisos.filter.more')}
+                                onClick={() => setOpen((prev) => !prev)}
+                            ><Icon>filter_list</Icon></IconButton>
+                        </Grid>
+
+                        {dimensions.map((dimension:any) => (
+                            <Grid size={3} hidden={open}>
+                                <TextField id={`textField-${dimension.codi}`}
+                                           label={dimension.nom}
+                                           variant="outlined"
+                                           value={filterForm[dimension.codi] || ""}
+                                           size={'small'}
+                                           fullWidth
+                                           onChange={(event)=>{
+                                               setFilterForm({
+                                                   ...filterForm,
+                                                   [dimension.codi]: event.target.value
+                                               })
+                                           }}/>
+                            </Grid>
+                        ))}
                     </Grid>
                 </FormGroup>
 
@@ -980,13 +1028,10 @@ const CaliendariDadesDialog = (props:any) => {
                         </TableHead>
                         <TableBody>
                             {currentDadesDiaFiltered.map((fet, index) => (
-                                <TableRow key={index}>
+                                <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50" }}>
                                     {/* Dimensions values */}
                                     {dimensionsCodis.map((key:any, i:number) => (
-                                        <TableCell
-                                            key={`dim-val-${index}-${i}`}
-                                            sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50", }}
-                                        >
+                                        <TableCell key={`dim-val-${index}-${i}`}>
                                             {fet.dimensionsJson[key]}
                                         </TableCell>
                                     ))}
@@ -994,9 +1039,7 @@ const CaliendariDadesDialog = (props:any) => {
                                     {/* Indicators values */}
                                     {indicadorsCodis.map((key:any, i:number) => {
                                         if (indicadorsShow.includes(key)) {
-                                            return <TableCell key={`ind-val-${index}-${i}`}
-                                                              align="right"
-                                                              sx={{backgroundColor: index % 2 === 0 ? "background.default" : "grey.50",}}>
+                                            return <TableCell key={`ind-val-${index}-${i}`} align="right">
                                                 {fet.indicadorsJson[key]}
                                             </TableCell>
                                         }})
