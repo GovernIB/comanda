@@ -855,6 +855,7 @@ const CaliendariDadesDialog = (props:any) => {
     const dimensionsCodis = dimensions.map((i:any)=>i.codi);
     const indicadorsCodis = indicadors.map((i:any)=>i.codi);
     useEffect(() => {
+        setFilterForm({})
         if (currentDadesDia[0]?.indicadorsJson)
             setIndicadorsShow(Object.keys(currentDadesDia[0]?.indicadorsJson))
     }, [currentDadesDia]);
@@ -867,7 +868,7 @@ const CaliendariDadesDialog = (props:any) => {
                 currentDada.dimensionsJson?.[key]?.includes?.(value)
             )
         );
-    },[currentDadesDia, filterForm])
+    },[filterForm])
 
     {/* Dialog per mostrar les dades del dia */}
     return <Dialog
