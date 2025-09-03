@@ -17,7 +17,7 @@ import {
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
 import {GridRowId, GridSlots, useGridApiRef,} from '@mui/x-data-grid-pro';
-import {ChartsLabelCustomMarkProps, PieChart, useDrawingArea} from '@mui/x-charts';
+import {PieChart, useDrawingArea} from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
 import {useParams} from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
@@ -27,7 +27,6 @@ import {
     getColorByMissatge,
     getColorByStatEnum,
     getColorBySubsistema,
-    getMaterialIconByState,
     SalutEstatEnum,
     SalutModel,
     TITLE
@@ -108,7 +107,8 @@ const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
     textAnchor: 'middle',
     dominantBaseline: 'central',
-    fontSize: 40,
+    fontSize: 50,
+    fontWeight: 'bold',
 }));
 
 function PieCenterLabel({ children }: { children: React.ReactNode }) {
