@@ -17,7 +17,7 @@ import {
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
 import {GridRowId, GridSlots, useGridApiRef,} from '@mui/x-data-grid-pro';
-import {PieChart} from '@mui/x-charts';
+import {ChartsLabelCustomMarkProps, PieChart, useDrawingArea} from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
 import {useParams} from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
@@ -27,6 +27,7 @@ import {
     getColorByMissatge,
     getColorByStatEnum,
     getColorBySubsistema,
+    getMaterialIconByState,
     SalutEstatEnum,
     SalutModel,
     TITLE
@@ -36,6 +37,7 @@ import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
+import {styled} from "@mui/material";
 
 const useAppData = () => {
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
@@ -102,6 +104,22 @@ const useAppData = () => {
     };
 };
 
+const StyledText = styled('text')(({ theme }) => ({
+    fill: theme.palette.text.primary,
+    textAnchor: 'middle',
+    dominantBaseline: 'central',
+    fontSize: 40,
+}));
+
+function PieCenterLabel({ children }: { children: React.ReactNode }) {
+    const { width, height, left, top } = useDrawingArea();
+    return (
+        <StyledText x={left + width / 2} y={top + height / 2}>
+            {children}
+        </StyledText>
+    );
+}
+
 const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) => {
     const { salutLastItems } = props;
     const { t } = useTranslation();
@@ -118,14 +136,14 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
         <PieChart
             series={[
                 {
-                    // innerRadius: 30,
+                    innerRadius: 60,
                     // outerRadius: 100,
                     // paddingAngle: 1,
                     highlightScope: { fade: 'global', highlight: 'item' },
                     highlighted: {
                         additionalRadius: 1,
                     },
-                    cornerRadius: 5,
+                    // cornerRadius: 5,
                     data: [
                         {
                             id: SalutEstatEnum.UP,
@@ -172,7 +190,9 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
                     ],
                 },
             ]}
-        />
+        >
+            <PieCenterLabel> {salutLastItems.length}</PieCenterLabel>
+        </PieChart>
     );
 };
 
