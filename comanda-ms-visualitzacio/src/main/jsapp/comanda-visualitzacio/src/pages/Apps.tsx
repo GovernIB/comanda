@@ -207,7 +207,10 @@ export const AppForm: React.FC = () => {
                                 <FormField name="descripcio" type="textarea" />
                             </Grid>
                             <Grid size={12}>
-                                <LogoUpload />
+                                <LogoUpload
+                                    name="logo"
+                                    // label="Logo"
+                                />
                             </Grid>
                             <Grid size={12}>
                                 <FormField name="activa" />

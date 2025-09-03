@@ -252,10 +252,6 @@ const translationCa = {
             update: "Modificar aplicació",
             general: "General",
             entornApp: "Entorns de l'aplicació",
-            logo: "Logo",
-            uploadLogo: "Pujar logo",
-            changeLogo: "Canviar logo",
-            removeLogo: "Eliminar logo",
             fields: {
                 compactable: "Compactable",
                 compactacioSetmanalMesos: "Compactació setmanal (mesos)",
@@ -343,7 +339,6 @@ const translationCa = {
                 estadistica: "Estadística",
                 configuracio: "Configuració",
             },
-            
         },
         widget: {
             title: "Widgets estadístics",
@@ -614,6 +609,15 @@ const translationCa = {
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
+    },
+    form: {
+        field: {
+            file: {
+                edit: 'Editar',
+                download: 'Descarregar',
+                clear: 'Esborrar',
+            },
+        },
     },
     calendari: {
         seleccionar_entorn_app: "Seleccionar entorn d'aplicació",

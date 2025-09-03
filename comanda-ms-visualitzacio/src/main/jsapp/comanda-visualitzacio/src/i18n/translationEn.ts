@@ -250,10 +250,6 @@ const translationEn = {
             update: "Update application",
             general: "General",
             entornApp: "App environments",
-            logo: "Logo",
-            uploadLogo: "Upload logo",
-            changeLogo: "Change logo",
-            removeLogo: "Remove logo",
             fields: {
                 compactable: "Compactable",
                 compactacioSetmanalMesos: "Weekly compaction (months)",
@@ -588,6 +584,15 @@ const translationEn = {
         copiarContingut: "Copy content",
         copiarContingutTitle: "Copy the content",
         copiarContingutSuccess: "Content copied to clipboard",
+    },
+    form: {
+        field: {
+            file: {
+                edit: 'Edit',
+                download: 'Download',
+                clear: 'Clear',
+            },
+        },
     },
     calendari: {
         seleccionar_entorn_app: "Select application environment",

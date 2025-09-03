@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     FormField,
 } from 'reactlib';
 import BlockIcon from '@mui/icons-material/Block';
@@ -41,7 +41,7 @@ const Integracions: React.FC = () => {
         },
     ];
     return <GridPage>
-        <MuiGrid
+        <MuiDataGrid
             title={t('page.integracions.title')}
             resourceName="integracio"
             columns={columns}
@@ -54,7 +54,7 @@ const Integracions: React.FC = () => {
                 <Grid container spacing={2}>
                     <Grid size={12}><FormField name="codi" disabled={true} /></Grid>
                     <Grid size={12}><FormField name="nom" disabled={true} /></Grid>
-                    <Grid size={12}><LogoUpload /></Grid>
+                    <Grid size={12}><LogoUpload name="logo" /></Grid>
                 </Grid>
             }
         />

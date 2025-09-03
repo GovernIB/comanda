@@ -1,25 +1,159 @@
 // Custom component for logo upload with image resizing
-import * as React from "react";
-import {useTranslation} from "react-i18next";
-import {useFormContext} from "reactlib";
-import {FormFieldDataActionType} from "../../lib/components/form/FormContext.tsx";
-import {Box, Button, Typography} from "@mui/material";
+import * as React from 'react';
+import { useTranslation } from 'react-i18next';
+import { useFormContext } from 'reactlib';
+import { FormFieldDataActionType } from '../../lib/components/form/FormContext.tsx';
+import { Box, IconButton, SxProps, Typography } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+import Icon from '@mui/material/Icon';
+import { Theme } from '@mui/material/styles';
 
-const LogoUpload: React.FC = () => {
-    const {t} = useTranslation();
-    const {data, dataDispatchAction} = useFormContext();
-    const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
+type ImageFieldProps = {
+    imageSrc: string | null;
+    label?: string | null;
+    editable: boolean;
+    onChange: (event?: React.ChangeEvent<HTMLInputElement>) => void;
+    onClear: () => void;
+    onDownloadClick: () => void;
+    hideDownloadButton?: boolean;
+    tooltip?: string;
+    placeholder?: React.ReactNode;
+    avatarProps?: React.ComponentProps<typeof Avatar>;
+    sx?: SxProps<Theme>;
+};
 
-    // Initialize preview if logo exists
+const ImageField: React.FC<ImageFieldProps> = ({
+    imageSrc,
+    label,
+    editable,
+    onChange,
+    onClear,
+    onDownloadClick,
+    hideDownloadButton,
+    tooltip,
+    placeholder,
+    avatarProps,
+    sx,
+}) => {
+    const buttonAvatarId = React.useId();
+    const inputRef = React.useRef<HTMLInputElement>(null);
+    const { t } = useTranslation();
+
     React.useEffect(() => {
-        if (data?.logo) {
-            setPreviewUrl(`data:image/png;base64,${data.logo}`);
+        if(!imageSrc && inputRef.current != null) {
+            inputRef.current.value = "";
         }
-    }, [data?.logo]);
+    }, [imageSrc])
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    return (
+        <>
+            {label && <Typography variant="subtitle1">{label}</Typography>}
+            <Box
+                title={tooltip}
+                sx={{
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: 'grey.400',
+                    position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '128px',
+                    height: '128px',
+                    borderRadius: '9999px',
+                    overflow: 'hidden',
+                    ...sx,
+                }}
+            >
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(35,35,35,0.5)',
+                        zIndex: '20',
+                        opacity: 0,
+                        transition: 'opacity 0.5s',
+                        '&:hover': {
+                            opacity: 1,
+                        },
+                    }}
+                >
+                    {editable && (
+                        <div title={t('form.field.file.edit')}>
+                            <label
+                                htmlFor={buttonAvatarId}
+                                style={{
+                                    display: 'flex',
+                                    padding: '8px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={inputRef}
+                                    style={{ display: 'none' }}
+                                    id={buttonAvatarId}
+                                    onChange={onChange}
+                                />
+                                <Icon sx={{ color: '#ffffff' }}>edit</Icon>
+                            </label>
+                        </div>
+                    )}
+                    {!hideDownloadButton && (
+                        <div title={t('form.field.file.download')}>
+                            <IconButton onClick={onDownloadClick} sx={{ color: '#ffffff' }}>
+                                <Icon>file_download</Icon>
+                            </IconButton>
+                        </div>
+                    )}
+                    {editable && (
+                        <div title={t('form.field.file.clear')}>
+                            <IconButton
+                                onClick={() => {
+                                    onClear();
+                                }}
+                                sx={{ color: '#ffffff' }}
+                            >
+                                <Icon>delete</Icon>
+                            </IconButton>
+                        </div>
+                    )}
+                </Box>
+                <Avatar
+                    src={imageSrc ?? undefined}
+                    variant="square"
+                    {...avatarProps}
+                    sx={{
+                        backgroundColor: 'background.default',
+                        color: 'text.secondary',
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%',
+                        ...avatarProps?.sx,
+                    }}
+                >
+                    {placeholder ? placeholder : <Icon fontSize="large">image_not_supported</Icon>}
+                </Avatar>
+            </Box>
+        </>
+    );
+};
+
+type LogoUploadProps = {
+    name: string;
+    label?: string;
+};
+
+const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
+    const { data, dataDispatchAction } = useFormContext();
+    const previewUrl = data[name] ? `data:image/png;base64,${data[name]}` : null;
+
+    const handleFileSelect = (event?: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event?.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
@@ -48,73 +182,53 @@ const LogoUpload: React.FC = () => {
                 // Convert canvas to base64 (without data:image/png;base64, prefix)
                 const base64 = canvas.toDataURL('image/png').split(',')[1];
 
-                // Update preview
-                setPreviewUrl(`data:image/png;base64,${base64}`);
-
                 // Update form data
                 dataDispatchAction({
                     type: FormFieldDataActionType.FIELD_CHANGE,
-                    payload: {fieldName: "logo", value: base64}
+                    payload: { fieldName: name, value: base64 },
                 });
-                // updateData({ ...data, logo: base64 });
             };
             img.src = e.target?.result as string;
         };
         reader.readAsDataURL(file);
     };
 
-    const handleButtonClick = () => {
-        fileInputRef.current?.click();
-    };
-
     const handleRemoveLogo = () => {
-        setPreviewUrl(null);
         dataDispatchAction({
             type: FormFieldDataActionType.FIELD_CHANGE,
-            payload: {fieldName: "logo", value: null}
+            payload: { fieldName: name, value: null },
         });
-        // updateData({ ...data, logo: null });
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
     };
 
     return (
-        <Box>
-            <Typography variant="subtitle1">{t('page.apps.logo')}</Typography>
-            <Box sx={{display: 'flex', alignItems: 'center', mt: 1, mb: 2}}>
-                {previewUrl && (
-                    <Box sx={{mr: 2, border: '1px solid #ccc', p: 1, borderRadius: 1}}>
-                        <img src={previewUrl} alt="Logo" style={{maxHeight: '64px'}}/>
-                    </Box>
-                )}
-                <Box>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        style={{display: 'none'}}
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                    />
-                    <Button
-                        variant="contained"
-                        onClick={handleButtonClick}
-                        sx={{mr: 1}}
-                    >
-                        {previewUrl ? t('page.apps.changeLogo') : t('page.apps.uploadLogo')}
-                    </Button>
-                    {previewUrl && (
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            onClick={handleRemoveLogo}
-                        >
-                            {t('page.apps.removeLogo')}
-                        </Button>
-                    )}
-                </Box>
-            </Box>
-        </Box>
+        <ImageField
+            imageSrc={previewUrl}
+            label={label}
+            onChange={handleFileSelect}
+            onClear={handleRemoveLogo}
+            onDownloadClick={() => {
+                if (previewUrl) {
+                    const link = document.createElement('a');
+                    link.href = previewUrl;
+                    link.download = 'logo.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }}
+            editable={true}
+            hideDownloadButton={previewUrl == null}
+            sx={{
+                borderRadius: '10px',
+            }}
+            avatarProps={{
+                imgProps: {
+                    sx: {
+                        objectFit: 'contain',
+                    },
+                },
+            }}
+        />
     );
 };
 
