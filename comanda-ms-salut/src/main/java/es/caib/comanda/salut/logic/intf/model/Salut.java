@@ -1,10 +1,13 @@
 package es.caib.comanda.salut.logic.intf.model;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.AppContext;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,17 +26,29 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-	artifacts = {
-		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST, formClass = String.class),
-		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTAT, formClass = SalutInformeParams.class),
-		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTATS, formClass = SalutInformeParams.class),
-		@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
-		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_INTEGRACIONS),
-		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_SUBSISTEMES),
-		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_CONTEXTS),
-		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_MISSATGES),
-		@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_DETALLS),
-	}
+		accessConstraints = {
+				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+						roles = { BaseConfig.ROLE_ADMIN },
+						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+				),
+				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+						roles = { BaseConfig.ROLE_CONSULTA },
+						grantedPermissions = { PermissionEnum.READ }
+				)
+		},
+		artifacts = {
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST, formClass = String.class),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTAT, formClass = SalutInformeParams.class),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTATS, formClass = SalutInformeParams.class),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_INTEGRACIONS),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_SUBSISTEMES),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_CONTEXTS),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_MISSATGES),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_DETALLS),
+		}
 )
 public class Salut extends BaseResource<Long> {
 

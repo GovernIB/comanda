@@ -39,6 +39,7 @@ export const App: React.FC = () => {
         id: 'monitoritzacio',
         title: t('menu.monitoritzacio'),
         icon: 'settings',
+        resourceName: 'monitor',
         children: [
             {
                 id: 'monitor',
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
         id: 'configuracio',
         title: t('menu.configuracio'),
         icon: 'settings',
+        resourceName: 'parametre',
         children: [
             {
                 id: 'app',
@@ -145,14 +147,14 @@ export const App: React.FC = () => {
         menuEstadistiques,
         menuTasca,
         menuAvis,
-        menuMonitoritzacio,
-        menuConfiguracio,
     ];
     const appMenuEntries = [
         menuSalut,
         menuEstadistiques,
         menuTasca,
         menuAvis,
+        menuMonitoritzacio,
+        menuConfiguracio,
     ];
     return (
         <BaseApp

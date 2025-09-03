@@ -39,3 +39,4 @@ build/
 **/node_modules/
 /comanda-back/liquibase/databasechangelog.csv
 /derby.log
+/application.properties
