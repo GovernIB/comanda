@@ -2,12 +2,15 @@ package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -47,7 +50,15 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @ResourceConfig(
         quickFilterFields = { "titol" },
-        descriptionField = "titol")
+        descriptionField = "titol",
+        accessConstraints = {
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+                )
+        }
+)
 public class IndicadorTaula extends BaseResource<Long> {
 
     @NotNull

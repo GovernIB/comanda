@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.intf.model.widget;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.annotation.Nulls;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.back.intf.validation.ValidGraficWidget;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
@@ -12,8 +13,10 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -84,7 +87,14 @@ import java.util.List;
 @NoArgsConstructor
 @ResourceConfig(
         quickFilterFields = { "titol", "descripcio" },
-        descriptionField = "titol"
+        descriptionField = "titol",
+        accessConstraints = {
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+                )
+        }
 )
 @ValidGraficWidget
 public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {

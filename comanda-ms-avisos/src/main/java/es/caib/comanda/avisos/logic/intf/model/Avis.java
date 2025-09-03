@@ -1,10 +1,13 @@
 package es.caib.comanda.avisos.logic.intf.model;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.broker.model.AvisTipus;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +25,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @ResourceConfig(
         descriptionField = "nom",
+        accessConstraints = {
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
+                        grantedPermissions = { PermissionEnum.READ }
+                )
+        },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Avis.FILTER, formClass = Avis.AvisFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Avis.PERSPECTIVE_PATH),
