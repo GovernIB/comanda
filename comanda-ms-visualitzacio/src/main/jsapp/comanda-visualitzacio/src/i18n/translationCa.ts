@@ -51,6 +51,11 @@ const translationCa = {
         parametre: "Paràmetres",
         dimensio: "Dimensions",
         indicador: "Indicadors",
+        user: {
+            options: {
+                profile: "El meu perfil"
+            }
+        }
     },
     page: {
         salut: {

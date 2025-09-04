@@ -5,8 +5,10 @@ import { Icon } from '@mui/material';
 import ListItemText from '@mui/material/ListItemText';
 import { FormField, MuiFormDialog } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
+import {useTranslation} from "react-i18next";
 
 export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void}) => {
+    const { t } = useTranslation();
     return (
         <MenuItem
             onClick={() => {
@@ -16,16 +18,17 @@ export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void})
             <ListItemIcon>
                 <Icon fontSize={'small'}>person</Icon>
             </ListItemIcon>
-            <ListItemText>{'page.user.options.perfil'}</ListItemText>
+            <ListItemText>{t('menu.user.options.profile')}</ListItemText>
         </MenuItem>
     );
 }
 
 export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.MutableRefObject<DataFormDialogApi | undefined> }) => {
+    const { t } = useTranslation();
     return (
         <MuiFormDialog
             resourceName="usuari"
-            // title={t('page.user.perfil.title')}
+            title={t('menu.user.options.profile')}
             onClose={(reason?: string) => reason !== 'backdropClick'}
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}

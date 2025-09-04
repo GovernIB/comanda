@@ -49,6 +49,11 @@ const translationEn = {
         dashboard: "Dashboards",
         calendari: "Calendar",
         parametre: "Parameters",
+        user: {
+            options: {
+                profile: "My profile"
+            }
+        }
     },
     page: {
         salut: {

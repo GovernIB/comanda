@@ -19,6 +19,7 @@ public class HateoasMessageResolverConfig extends BaseHateoasMessageResolverConf
 			"comanda.monitor-rest-messages",
 			"comanda.avisos-rest-messages",
 			"comanda.tasques-rest-messages",
+            "comanda.usuaris-rest-messages"
 		};
 	}
 

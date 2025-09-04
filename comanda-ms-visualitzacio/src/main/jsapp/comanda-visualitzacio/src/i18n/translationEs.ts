@@ -51,6 +51,11 @@ const translationEs = {
         parametre: "Parámetros",
         dimensio: "Dimensiones",
         indicador: "Indicadores",
+        user: {
+            options: {
+                profile: "Mi perfil"
+            }
+        }
     },
     page: {
         salut: {
