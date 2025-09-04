@@ -17,13 +17,10 @@ import HeaderLanguageSelector from "./HeaderLanguageSelector";
 import Button from '@mui/material/Button';
 import AppMenu from "./AppMenu";
 import drassana from '../assets/drassana.png';
-
-import {
-    MuiBaseApp,
-    MenuEntry,
-    useBaseAppContext,
-} from 'reactlib';
+import { MuiBaseApp, MenuEntry, useBaseAppContext } from 'reactlib';
 import Footer from "./Footer.tsx";
+import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
+import { UserFormDialog, UserFormDialogButton } from './UserFormDialog.tsx';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -185,6 +182,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
+    const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
     const i18nHandleLanguageChange = (language?: string) => {
         i18n.changeLanguage(language);
     }
@@ -216,6 +214,11 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ...generateLanguageItems(availableLanguages), // Idioma
             ...generateAppMenu(menuEntries) // Menú lateral
         ]}
+        headerAdditionalAuthComponents={
+            <UserFormDialogButton onClick={() => userDialogApiRef.current?.show(
+                '1', // TODO Recuperar el valor del usuario actual
+            )} />
+        }
         footer={generateFooter()}
         persistentSession
         persistentLanguage
@@ -229,6 +232,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
     >
+        <UserFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>
             {children}
         </CustomLocalizationProvider>
