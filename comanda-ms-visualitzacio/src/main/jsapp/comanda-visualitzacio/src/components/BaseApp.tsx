@@ -20,7 +20,7 @@ import drassana from '../assets/drassana.png';
 import { MuiBaseApp, MenuEntry, useBaseAppContext } from 'reactlib';
 import Footer from "./Footer.tsx";
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
-import { UserFormDialog, UserFormDialogButton } from './UserFormDialog.tsx';
+import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog.tsx';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -215,7 +215,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ...generateAppMenu(menuEntries) // Menú lateral
         ]}
         headerAdditionalAuthComponents={
-            <UserFormDialogButton onClick={() => userDialogApiRef.current?.show(
+            <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
                 '1', // TODO Recuperar el valor del usuario actual
             )} />
         }
@@ -232,7 +232,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
     >
-        <UserFormDialog dialogApiRef={userDialogApiRef} />
+        <UserProfileFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>
             {children}
         </CustomLocalizationProvider>

@@ -6,7 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import { FormField, MuiFormDialog } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
 
-export const UserFormDialogButton = ({ onClick }: { onClick: () => void}) => {
+export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void}) => {
     return (
         <MenuItem
             onClick={() => {
@@ -21,7 +21,7 @@ export const UserFormDialogButton = ({ onClick }: { onClick: () => void}) => {
     );
 }
 
-export const UserFormDialog = ({ dialogApiRef }: { dialogApiRef: React.MutableRefObject<DataFormDialogApi | undefined> }) => {
+export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.MutableRefObject<DataFormDialogApi | undefined> }) => {
     return (
         <MuiFormDialog
             resourceName="usuari"
