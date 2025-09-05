@@ -6,7 +6,7 @@ export interface IUsuari extends IBaseEntity {
     nif: string | undefined;
     email: string | undefined;
     emailAlternatiu: string | undefined;
-    idioma: LanguageEnum | undefined;
+    idioma: LanguageEnum;
     rols: string[] | undefined;
 
     numElementsPagina: number | undefined;
@@ -29,7 +29,7 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     nif: string | undefined;
     email: string | undefined;
     emailAlternatiu: string | undefined;
-    idioma: LanguageEnum | undefined;
+    idioma: LanguageEnum;
     rols: string[] | undefined;
     numElementsPagina: number | undefined;
 
@@ -37,6 +37,7 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
         super(usuari);
         this.codi = usuari.codi;
         this.nom = usuari.nom;
+        this.idioma = usuari.idioma;
         Object.assign(this, usuari);
     }
 }

@@ -21,6 +21,8 @@ import { MuiBaseApp, MenuEntry, useBaseAppContext } from 'reactlib';
 import Footer from "./Footer.tsx";
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
 import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog.tsx';
+import theme from "../theme.ts";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -93,7 +95,8 @@ const SystemTimeDisplay = React.memo(() => {
                 alignItems: 'flex-start',
                 marginLeft: '20px',
                 color: 'inherit',
-                fontSize: '11px'
+                fontSize: '11px',
+                marginRight: '6px',
             }}
         >
             <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
@@ -133,7 +136,8 @@ const generateMenuItems = (appMenuEntries: MenuEntry[] | undefined) => {
 }
 // Selector d'idioma (només si hi ha idiomes disponibles)
 const generateLanguageItems = (availableLanguages: string[] | undefined) => {
-    return availableLanguages?.length
+    const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
+    return availableLanguages?.length && isLgUp
         ? [
             <HeaderLanguageSelector
                 sx={{ml: {xs: 1, md: '42px'}}}

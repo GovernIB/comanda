@@ -20,6 +20,7 @@ import {
 import Badge from "@mui/material/Badge";
 import Grid from "@mui/material/Grid";
 import {UsuariModel} from "../types/usuari.model.tsx";
+import i18n from "../i18n/i18n.ts";
 
 export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void}) => {
     const { t } = useTranslation();
@@ -47,6 +48,7 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
             onClose={(reason?: string) => reason !== 'backdropClick'}
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}
+            formComponentProps={{ onSaveSuccess: (data: UsuariModel) => {i18n.changeLanguage(data.idioma.toLowerCase())}}}
         >
             <UserProfileCardData
                 icon={<AssignmentInd/>}
