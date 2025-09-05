@@ -53,7 +53,13 @@ const translationEs = {
         indicador: "Indicadores",
         user: {
             options: {
-                profile: "Mi perfil"
+                profile: {
+                    title: "Mi perfil",
+                    form: {
+                        userData: "Datos del usuario",
+                        genericConfig: "Configuración genérica"
+                    }
+                }
             }
         }
     },

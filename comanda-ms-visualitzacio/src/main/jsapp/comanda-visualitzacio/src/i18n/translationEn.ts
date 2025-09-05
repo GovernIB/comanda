@@ -51,7 +51,13 @@ const translationEn = {
         parametre: "Parameters",
         user: {
             options: {
-                profile: "My profile"
+                profile: {
+                    title: "My profile",
+                    form: {
+                        userData: "User data",
+                        genericConfig: "Generic config"
+                    }
+                }
             }
         }
     },

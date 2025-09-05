@@ -53,7 +53,13 @@ const translationCa = {
         indicador: "Indicadors",
         user: {
             options: {
-                profile: "El meu perfil"
+                profile: {
+                    title: "El meu perfil",
+                    form: {
+                        userData: "Dades de l'usuari",
+                        genericConfig: "Configuració genèrica"
+                    }
+                }
             }
         }
     },
