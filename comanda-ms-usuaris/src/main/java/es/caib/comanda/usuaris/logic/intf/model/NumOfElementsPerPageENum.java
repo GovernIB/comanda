@@ -1,4 +1,4 @@
-package es.caib.comanda.usuaris.persist.entity;
+package es.caib.comanda.usuaris.logic.intf.model;
 
 public enum NumOfElementsPerPageENum {
     AUTOMATIC,

@@ -20,6 +20,7 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 			"comanda.configuracio-messages",
 			"comanda.avisos-messages",
 			"comanda.tasques-messages",
+            "comanda.usuaris-messages",
 		};
 	}
 

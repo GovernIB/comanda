@@ -2,8 +2,6 @@ package es.caib.comanda.usuaris.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
-import es.caib.comanda.usuaris.persist.entity.LanguageEnum;
-import es.caib.comanda.usuaris.persist.entity.NumOfElementsPerPageENum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

@@ -2,6 +2,8 @@ package es.caib.comanda.usuaris.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.usuaris.logic.intf.model.LanguageEnum;
+import es.caib.comanda.usuaris.logic.intf.model.NumOfElementsPerPageENum;
 import es.caib.comanda.usuaris.logic.intf.model.Usuari;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

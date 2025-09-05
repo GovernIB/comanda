@@ -33,6 +33,7 @@ import java.util.jar.Manifest;
 				"es.caib.comanda.tasques",
 				"es.caib.comanda.usuaris",
 				"es.caib.comanda.broker",
+                "es.caib.comanda.usuaris"
 		},
 		excludeFilters = @ComponentScan.Filter(
 				type = FilterType.REGEX,
