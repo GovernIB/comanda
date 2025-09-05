@@ -502,7 +502,7 @@ const Salut: React.FC = () => {
                 </Box>
             ) : (
                 <Grid container spacing={2}>
-                    <Grid size={{xs: 12, sm: 3}} sx={{ height: '200px' }}>
+                    <Grid size={{xs: 12, sm: 5, md: 4, lg: 3}} sx={{ height: '200px' }}>
                         <Box
                             sx={{
                                 height: '100%',
@@ -514,7 +514,7 @@ const Salut: React.FC = () => {
                             <UpdownPieChart salutLastItems={salutLastItems} />
                         </Box>
                     </Grid>
-                    <Grid size={{xs: 12, sm: 9}} sx={{ height: '200px' }}>
+                    <Grid size={{xs: 12, sm: 7, md: 8, lg: 9}} sx={{ height: '200px' }}>
                         <UpdownBarChart
                             dataInici={reportParams.dataInici}
                             agrupacio={reportParams.agrupacio}
