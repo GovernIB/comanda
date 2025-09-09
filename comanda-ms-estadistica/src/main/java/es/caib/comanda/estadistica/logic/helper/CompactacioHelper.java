@@ -10,6 +10,7 @@ import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -30,8 +31,6 @@ import java.util.Objects;
  * 1) Compactació per valors de dimensions agrupables (valor -> valorAgrupacio).
  * 2) Compactació temporal (setmanal/mensual) i eliminació per retenció, en funció de la configuració.
  * <p>
- * Nota: La fase 2 requereix accedir a configuració específica d'EntornApp que actualment no està disponible
- * en el client d'estadística. Per tant, s'ha deixat com a punt d'extensió (TODO) per a una futura iteració.
  */
 @Slf4j
 @Component
@@ -43,29 +42,45 @@ public class CompactacioHelper {
     private final DimensioValorRepository dimensioValorRepository;
     private final FetRepository fetRepository;
     private final IndicadorRepository indicadorRepository;
+    private final EstadisticaClientHelper estadisticaClientHelper;
 
     public CompactacioHelper(DimensioValorRepository dimensioValorRepository,
                              FetRepository fetRepository,
-                             IndicadorRepository indicadorRepository) {
+                             IndicadorRepository indicadorRepository,
+                             EstadisticaClientHelper estadisticaClientHelper) {
         this.dimensioValorRepository = dimensioValorRepository;
         this.fetRepository = fetRepository;
         this.indicadorRepository = indicadorRepository;
+        this.estadisticaClientHelper = estadisticaClientHelper;
     }
 
+    private MonitorEstadistica initializeMonitor(EntornApp entornApp) {
+        return new MonitorEstadistica(
+                entornApp.getId(),
+                entornApp.getEstadisticaInfoUrl(),
+                entornApp.getEstadisticaUrl(),
+                estadisticaClientHelper);
+    }
+
+    @Transactional
     public void compactar(EntornApp entornApp) {
         // Punt d'entrada del procés de compactació per un entorn concret.
         // Aquest mètode orquestra les dues fases: 1) compactació per dimensions agrupables i 2) compactació temporal + retenció.
         log.info("[Compactacio] Inici del procés de compactació de fets per l'entornApp {}", entornApp.getId());
+
+        MonitorEstadistica monitorEstadistica = initializeMonitor(entornApp);
         try {
+            monitorEstadistica.startCompactarAction();
             // 1) Compactació per valors de dimensions agrupables
             compactarPerDimensioAgrupable(entornApp);
 
             // 2) Compactació temporal i eliminació per retenció (pendent de configuració EntornApp)
             compactarTemporalIEsborraPerRetencio(entornApp);
-
+            monitorEstadistica.endCompactarAction();
             log.info("[Compactacio] Procés de compactació finalitzat");
         } catch (Exception e) {
             log.error("[Compactacio] Error en el procés de compactació", e);
+            monitorEstadistica.endCompactarAction(e);
         }
     }
 
@@ -144,7 +159,8 @@ public class CompactacioHelper {
         @Override public int hashCode() { return Objects.hash(entornAppId, data, dims); }
     }
 
-    private LinkedHashMap<ClauDimensio, List<FetEntity>> agruparFetsAmbDimensionsNormalitzades(Long entornAppId,
+    // Visibilitat ampliada a protected per facilitar proves dirigides a l'agrupació per dimensions.
+    protected LinkedHashMap<ClauDimensio, List<FetEntity>> agruparFetsAmbDimensionsNormalitzades(Long entornAppId,
                                                                                                List<FetEntity> totsFets,
                                                                                                Map<String, Map<String, String>> reemplaCosPerDimensio) {
         // Recorre tots els fets, aplica els reemplaços de dimensions i agrupa
@@ -353,55 +369,39 @@ public class CompactacioHelper {
 
     private enum PeriodeTarget {SETMANAL, MENSUAL}
 
+    // Nova extracció: agrupació per període (setmana/mes) per facilitar proves i reutilització.
+    protected LinkedHashMap<ClauDimensio, List<FetEntity>> agruparFetsPerPeriode(List<FetEntity> fets,
+                                                                                  Long entornAppId,
+                                                                                  PeriodeTarget target) {
+        var agrupats = new LinkedHashMap<ClauDimensio, List<FetEntity>>();
+        if (fets == null || fets.isEmpty()) return agrupats;
+
+        for (var fet : fets) {
+            var dims = new HashMap<>(fet.getDimensionsJson() == null ? Map.of() : fet.getDimensionsJson());
+            var data = fet.getTemps().getData();
+            LocalDate novaData;
+            if (target == PeriodeTarget.MENSUAL) {
+                novaData = data.withDayOfMonth(1);
+            } else {
+                // Dilluns com a inici de setmana (ISO)
+                DayOfWeek first = DayOfWeek.MONDAY;
+                DayOfWeek dow = data.getDayOfWeek();
+                int diff = dow.getValue() - first.getValue();
+                novaData = data.minusDays(diff);
+            }
+            var clau = new ClauDimensio(entornAppId, novaData, Collections.unmodifiableMap(dims));
+            agrupats.computeIfAbsent(clau, k -> new ArrayList<>()).add(fet);
+        }
+        return agrupats;
+    }
+
     private int compactarPerPeriode(List<FetEntity> fets,
                                     Long entornAppId,
                                     Map<String, IndicadorEntity> indCfgMap,
                                     PeriodeTarget target) {
         if (fets == null || fets.isEmpty()) return 0;
 
-        class Clau {
-            final Long entorn;
-            final LocalDate data;
-            final Map<String, String> dimensions;
-
-            Clau(Long e, LocalDate d, Map<String, String> di) {
-                entorn = e;
-                data = d;
-                dimensions = di;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
-                Clau c = (Clau) o;
-                return Objects.equals(entorn, c.entorn) && Objects.equals(data, c.data) && Objects.equals(dimensions, c.dimensions);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(entorn, data, dimensions);
-            }
-        }
-
-        var agrupats = new LinkedHashMap<Clau, List<FetEntity>>();
-
-        for (var fet : fets) {
-            var dims = new HashMap<>(fet.getDimensionsJson() == null ? Map.of() : fet.getDimensionsJson());
-            LocalDate novaData;
-            var data = fet.getTemps().getData();
-            if (target == PeriodeTarget.MENSUAL) {
-                novaData = data.withDayOfMonth(1);
-            } else {
-                // ISO Monday as first day of week
-                DayOfWeek first = DayOfWeek.MONDAY;
-                DayOfWeek dow = data.getDayOfWeek();
-                int diff = dow.getValue() - first.getValue();
-                novaData = data.minusDays(diff);
-            }
-            var clau = new Clau(entornAppId, novaData, Collections.unmodifiableMap(dims));
-            agrupats.computeIfAbsent(clau, k -> new ArrayList<>()).add(fet);
-        }
+        var agrupats = agruparFetsPerPeriode(fets, entornAppId, target);
 
         int fetsActualitzats = 0;
         int fetsEliminats = 0;
