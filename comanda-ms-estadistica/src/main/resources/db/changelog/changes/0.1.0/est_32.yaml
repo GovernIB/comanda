@@ -56,3 +56,21 @@ databaseChangeLog:
                   defaultValueNumeric: 1
                   constraints:
                     nullable: false
+  - changeSet:
+      id: est-change-32-3
+      author: limit
+      changes:
+        - createIndex:
+            tableName: ${db_prefix}est_dimensio_valor
+            indexName: ${db_prefix}est_dim_valor_dim_agr_idx
+            columns:
+              - column:
+                  name: dimensio_id
+              - column:
+                  name: agrupable
+        - createIndex:
+            tableName: ${db_prefix}est_dimensio
+            indexName: ${db_prefix}est_dim_entorn_idx
+            columns:
+              - column:
+                  name: entorn_app_id

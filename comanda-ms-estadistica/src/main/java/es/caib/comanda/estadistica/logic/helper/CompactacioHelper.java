@@ -9,6 +9,7 @@ import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -102,6 +103,50 @@ public class CompactacioHelper {
                 return;
             }
 
+            // Estratègia de rendiment: si el volum és gran, processam per lots evitant carregar-ho tot en memòria
+            long total = 0L;
+            try {
+                total = fetRepository.countByEntornAppId(entornApp.getId());
+            } catch (Exception ignore) {
+                // alguns mocks/tests no tenen aquest mètode configurat: caurem al camí original
+            }
+
+            final int PAGE_SIZE = 5000; // mida de lot conservadora
+            final int FLUSH_INTERVAL = 1000;
+            int fusionats = 0;
+            int eliminats = 0;
+
+            if (total > PAGE_SIZE) {
+                log.info("[Compactacio] Processament paginat per entorn {}. Total fets: {}. Mida pàgina: {}", entornApp.getId(), total, PAGE_SIZE);
+                int page = 0;
+                while (true) {
+                    var pageable = PageRequest.of(page, PAGE_SIZE);
+                    var pageData = fetRepository.findByEntornAppId(entornApp.getId(), pageable);
+                    if (pageData == null || pageData.isEmpty()) break;
+
+                    var agregats = agruparFetsAmbDimensionsNormalitzades(entornApp.getId(), pageData.getContent(), reemplaCosPerDimensio);
+                    if (!agregats.isEmpty()) {
+                        var indicadorsPerEntorn = carregarIndicadorsPerEntorn(agregats);
+                        int[] counters = fusionarIEliminarBatch(agregats, indicadorsPerEntorn);
+                        fusionats += counters[0];
+                        eliminats += counters[1];
+                    }
+
+                    // Gestionam memòria del context de persistència
+                    if (((page + 1) * PAGE_SIZE) % FLUSH_INTERVAL == 0) {
+                        try {
+                            entityManager.flush(); entityManager.clear();
+                        } catch (Exception ignored) {}
+                    }
+
+                    page++;
+                    if (!pageData.hasNext()) break;
+                }
+                log.info("[Compactacio] Fase 1 finalitzada (paginat). Fets fusionats/actualitzats: {}, fets eliminats: {}", fusionats, eliminats);
+                return;
+            }
+
+            // Camí original (volum petit o tests)
             var totsFets = carregarFetsEntorn(entornApp);
             var agregats = agruparFetsAmbDimensionsNormalitzades(entornApp.getId(), totsFets, reemplaCosPerDimensio);
             if (agregats.isEmpty()) {
@@ -116,6 +161,7 @@ public class CompactacioHelper {
         } catch (Exception e) {
             log.warn("[Compactacio] Error durant la compactació per dimensions agrupables", e);
         } finally {
+            try { entityManager.flush(); entityManager.clear(); } catch (Exception ignored) {}
             log.info("[Compactacio] Fase 1 - Compactació per dimensions agrupables: fi");
         }
     }
@@ -123,10 +169,10 @@ public class CompactacioHelper {
     private Map<String, Map<String, String>> construirMapaReemplac(EntornApp entornApp) {
         // Construeix un mapa de reemplaç per cada dimensió: codiDimensio -> (valorOriginal -> valorAgrupacio)
         // Es filtra per l'entorn proporcionat per a limitar l'abast de la compactació.
-        var totsDimVal = dimensioValorRepository.findByDimensioEntornAppId(entornApp.getId());
+        var totsDimVal = dimensioValorRepository.findByDimensioEntornAppIdAndAgrupableTrueAndValorAgrupacioIsNotNull(entornApp.getId());
         var reemplaCosPerDimensio = new HashMap<String, Map<String, String>>();
         totsDimVal.stream()
-                .filter(dv -> Boolean.TRUE.equals(dv.getAgrupable()) && dv.getValorAgrupacio() != null && dv.getDimensio() != null && dv.getDimensio().getCodi() != null)
+                .filter(dv -> dv.getDimensio() != null && dv.getDimensio().getCodi() != null)
                 .forEach(dv -> {
                     reemplaCosPerDimensio.computeIfAbsent(dv.getDimensio().getCodi(), k -> new HashMap<>())
                             .put(dv.getValor(), dv.getValorAgrupacio());
