@@ -276,6 +276,13 @@ const translationEs = {
         appsEntorns: {
             title: "Entornos",
             resourceTitle: "entorno",
+            action: {
+                toolbarActiva: {
+                    activar: "Activar",
+                    desactivar: "Desactivar",
+                    ok: "La acción se ha ejecutado correctamente",
+                }
+            }
         },
         versionsEntorns: {
             title: "Versiones por entorno",
