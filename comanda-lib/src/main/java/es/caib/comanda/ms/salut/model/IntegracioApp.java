@@ -27,6 +27,7 @@ public enum IntegracioApp {
     RS2 ("Rolsac2"),
     SIS ("Sistra"),
     SI2 ("Sistra2"),
+    TIN ("TinyCaib"),
     TRA ("TranslatorIB"),
     USR ("Usuaris"),
     VFI ("Validació firma");
