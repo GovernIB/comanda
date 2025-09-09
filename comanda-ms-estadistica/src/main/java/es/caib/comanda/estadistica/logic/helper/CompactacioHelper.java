@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Helper responsable d'executar el procés de compactació d'estadístiques.
@@ -324,7 +325,8 @@ public class CompactacioHelper {
             // Reagrupa les dades anteriors al llindar mensual a l'inici del seu mes, aggregant indicadors segons configuració.
             LocalDate llindarMensual = entornApp.getCompactacioMensualMesos() != null && entornApp.getCompactacioMensualMesos() > 0 ? llindars.iniciMesActual.minusMonths(entornApp.getCompactacioMensualMesos()) : null;
             if (llindarMensual != null) {
-                var llistaMensual = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarMensual);
+                var llistaMensual = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarMensual)
+                        .stream().filter(fet -> fet.getTipus() != FetTipusEnum.MENSUAL).collect(Collectors.toList());
                 totalFetsActualitzats += compactarPerPeriode(llistaMensual, entornAppId, indicadorsPerEntorn, PeriodeTarget.MENSUAL);
             }
 
@@ -417,7 +419,10 @@ public class CompactacioHelper {
             desti.getTemps().setData(clau.data);
             desti.setIndicadorsJson(indicadorsResult);
             desti.setTipus(FetTipusEnum.MENSUAL);
-            desti.setNumDies(desti.getTemps().getData().lengthOfMonth());
+            long nombreFetsMateixMes = fets.stream()
+                    .filter(fet -> fet.getTemps().getData().getMonthValue() == desti.getTemps().getData().getMonthValue())
+                    .count();
+            desti.setNumDies(Math.toIntExact(nombreFetsMateixMes));
             // dimensions es mantenen tal qual
             fetRepository.save(desti);
             fetsActualitzats++;

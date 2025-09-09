@@ -107,13 +107,13 @@ const AppEntornForm: React.FC = () => {
             </Grid>
             {data?.compactable === true && (
                 <>
-                    <Grid size={{xs:12, md:4}}>
-                        <FormField name="compactacioSetmanalMesos" type="number" required={false} label={t('page.apps.fields.compactacioSetmanalMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioSetmanes') }} />
-                    </Grid>
-                    <Grid size={{xs:12, md:4}}>
+                    {/*<Grid size={{xs:12, md:4}}>*/}
+                    {/*    <FormField name="compactacioSetmanalMesos" type="number" required={false} label={t('page.apps.fields.compactacioSetmanalMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioSetmanes') }} />*/}
+                    {/*</Grid>*/}
+                    <Grid size={{xs:12, md:6}}>
                         <FormField name="compactacioMensualMesos" type="number" required={false} label={t('page.apps.fields.compactacioMensualMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioMesos') }} />
                     </Grid>
-                    <Grid size={{xs:12, md:4}}>
+                    <Grid size={{xs:12, md:6}}>
                         <FormField name="eliminacioMesos" type="number" required={false} label={t('page.apps.fields.eliminacioMesos')} componentProps={{ title: t('page.apps.tooltips.borratMesos') }} />
                     </Grid>
                     <Grid size={12}>
