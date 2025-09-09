@@ -37,3 +37,22 @@ databaseChangeLog:
             referencedTableName: ${db_prefix}est_indicador
             referencedColumnNames: id
             constraintName: ${db_prefix}ind_compactacio_fk
+  - changeSet:
+      id: est-change-32-2
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_fet
+            columns:
+              - column:
+                  name: tipus
+                  type: VARCHAR(64 ${varcharUnit})
+                  defaultValue: "DIARI"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: num_dies
+                  type: int
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false

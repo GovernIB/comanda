@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.CompactacioEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.FetTipusEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
@@ -311,18 +312,18 @@ public class CompactacioHelper {
                 totalFetsActualitzats += compactarPerPeriode(llistaMensual, entornAppId, indicadorsPerEntorn, PeriodeTarget.MENSUAL);
             }
 
-            // 1.c) Compactació setmanal
-            // Reagrupa les dades anteriors al llindar setmanal a l'inici de setmana (dilluns), evitant solapar amb la mensual.
-            LocalDate llindarSetmanal = entornApp.getCompactacioSetmanalMesos() != null && entornApp.getCompactacioSetmanalMesos() > 0 ? llindars.iniciMesActual.minusMonths(entornApp.getCompactacioSetmanalMesos()) : null;
-            if (llindarSetmanal != null) {
-                List<FetEntity> llistaSetmanal;
-                if (llindarMensual != null) {
-                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBetween(entornAppId, llindarSetmanal, llindarMensual);
-                } else {
-                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarSetmanal);
-                }
-                totalFetsActualitzats += compactarPerPeriode(llistaSetmanal, entornAppId, indicadorsPerEntorn, PeriodeTarget.SETMANAL);
-            }
+//            // 1.c) Compactació setmanal
+//            // Reagrupa les dades anteriors al llindar setmanal a l'inici de setmana (dilluns), evitant solapar amb la mensual.
+//            LocalDate llindarSetmanal = entornApp.getCompactacioSetmanalMesos() != null && entornApp.getCompactacioSetmanalMesos() > 0 ? llindars.iniciMesActual.minusMonths(entornApp.getCompactacioSetmanalMesos()) : null;
+//            if (llindarSetmanal != null) {
+//                List<FetEntity> llistaSetmanal;
+//                if (llindarMensual != null) {
+//                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBetween(entornAppId, llindarSetmanal, llindarMensual);
+//                } else {
+//                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarSetmanal);
+//                }
+//                totalFetsActualitzats += compactarPerPeriode(llistaSetmanal, entornAppId, indicadorsPerEntorn, PeriodeTarget.SETMANAL);
+//            }
             log.info("[Compactacio] Fase 2 finalitzada. Fets actualitzats/creats: {}, fets eliminats: {}", totalFetsActualitzats, totalFetsEliminats);
         } catch (Exception e) {
             log.warn("[Compactacio] Error durant la fase de compactació temporal/retenció", e);
@@ -409,66 +410,14 @@ public class CompactacioHelper {
             var clau = entry.getKey();
             var llista = entry.getValue();
 
-            Map<String, Double> indicadorsResult = new HashMap<>();
-            Map<String, Double> sumatori = new HashMap<>();
-            Map<String, Integer> comptatge = new HashMap<>();
-            Map<String, Double> comptadorPerMitjana = new HashMap<>();
-
-            for (var fet : llista) {
-                var indMap = fet.getIndicadorsJson();
-                if (indMap == null) continue;
-                for (var e : indMap.entrySet()) {
-                    String codi = e.getKey();
-                    Double valor = e.getValue();
-                    if (valor == null) continue;
-                    var indCfg = indCfgMap != null ? indCfgMap.get(codi) : null;
-                    var tipus = indCfg != null && indCfg.getTipusCompactacio() != null ? indCfg.getTipusCompactacio() : CompactacioEnum.SUMA;
-                    switch (tipus) {
-                        case SUMA:
-                            sumatori.merge(codi, valor, Double::sum);
-                            break;
-                        case MAXIMA:
-                            indicadorsResult.merge(codi, valor, java.lang.Math::max);
-                            break;
-                        case MINIMA:
-                            indicadorsResult.merge(codi, valor, java.lang.Math::min);
-                            break;
-                        case MITJANA:
-                            sumatori.merge(codi, valor, Double::sum);
-                            comptatge.merge(codi, 1, Integer::sum);
-                            if (indCfg != null && indCfg.getIndicadorComptadorPerMitjana() != null) {
-                                String compteCodi = indCfg.getIndicadorComptadorPerMitjana().getCodi();
-                                Double compteValor = indMap.get(compteCodi);
-                                if (compteValor != null) {
-                                    comptadorPerMitjana.merge(codi, compteValor, Double::sum);
-                                }
-                            }
-                            break;
-                    }
-                }
-            }
-            for (var e : sumatori.entrySet()) {
-                String codi = e.getKey();
-                double suma = e.getValue();
-                var indCfg = indCfgMap != null ? indCfgMap.get(codi) : null;
-                var tipus = indCfg != null && indCfg.getTipusCompactacio() != null ? indCfg.getTipusCompactacio() : CompactacioEnum.SUMA;
-                if (tipus == CompactacioEnum.SUMA) {
-                    indicadorsResult.put(codi, suma);
-                } else if (tipus == CompactacioEnum.MITJANA) {
-                    Double divisorEspecial = comptadorPerMitjana.get(codi);
-                    if (divisorEspecial != null && divisorEspecial > 0) {
-                        indicadorsResult.put(codi, suma / divisorEspecial);
-                    } else {
-                        int n = comptatge.getOrDefault(codi, 0);
-                        indicadorsResult.put(codi, n > 0 ? (suma / n) : 0d);
-                    }
-                }
-            }
+            Map<String, Double> indicadorsResult = calcularIndicadorsAgregats(llista, indCfgMap);
 
             var primer = llista.get(0);
             var desti = primer;
             desti.getTemps().setData(clau.data);
             desti.setIndicadorsJson(indicadorsResult);
+            desti.setTipus(FetTipusEnum.MENSUAL);
+            desti.setNumDies(desti.getTemps().getData().lengthOfMonth());
             // dimensions es mantenen tal qual
             fetRepository.save(desti);
             fetsActualitzats++;

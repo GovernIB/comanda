@@ -4,6 +4,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.config.DoubleJsonMapConverter;
 import es.caib.comanda.estadistica.logic.config.StringJsonMapConverter;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.FetTipusEnum;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
@@ -61,4 +63,10 @@ public class FetEntity extends BaseEntity<Fet> {
 
     @Column(name = "entorn_app_id", nullable = false)
     private Long entornAppId;
+
+    @Column(name = "tipus", nullable = false)
+    @Enumerated(javax.persistence.EnumType.STRING)
+    private FetTipusEnum tipus = FetTipusEnum.DIARI;
+    @Column(name = "num_dies", nullable = false)
+    private int numDies = 1;
 }

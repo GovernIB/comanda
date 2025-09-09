@@ -82,6 +82,10 @@ public class Fet extends BaseResource<Long> {
     @NotNull
     private Long entornAppId;
 
+    @NotNull
+    private FetTipusEnum tipus;
+    private int numDies;
+
 
     @Getter
     @Setter
