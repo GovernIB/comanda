@@ -246,7 +246,7 @@ public class SalutInfoHelper {
         Object lock = ENTORN_LOCKS.computeIfAbsent(entornAppId, k -> new Object());
         synchronized (lock) {
             try {
-                log.info("Executant buidat i compactat de dades de salut. EntonrAooId: {}, salutId: {}, numeroDiesAgrupacio: {}.",
+                log.info("Executant buidat i compactat de dades de salut. EntornAppId: {}, salutId: {}, numeroDiesAgrupacio: {}.",
                         entornAppId, salutId, numeroDiesAgrupacio);
                 SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);
                 if (dadesSalut == null) {

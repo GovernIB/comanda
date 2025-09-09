@@ -21,6 +21,3 @@ databaseChangeLog:
               - column:
                   name: eliminacio
                   type: INT
-#        - dropColumn:
-#            tableName: ${db_prefix}entorn_app
-#            columnName: salutInterval

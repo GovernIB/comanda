@@ -81,9 +81,6 @@ public class EntornApp extends BaseResource<Long> {
 	@NotNull
 	@Size(max = 200)
 	private String infoUrl;
-	@NotNull
-	@Builder.Default
-	private Integer infoInterval = 1;
 	@Setter(AccessLevel.NONE)
 	private LocalDateTime infoData;
 	@Size(max = 10)
@@ -104,9 +101,6 @@ public class EntornApp extends BaseResource<Long> {
 	@NotNull
 	@Size(max = 200)
 	private String salutUrl;
-	@NotNull
-	@Builder.Default
-	private Integer salutInterval = 1;
 
 	private List<AppIntegracio> integracions;
 	private List<AppSubsistema> subsistemes;
