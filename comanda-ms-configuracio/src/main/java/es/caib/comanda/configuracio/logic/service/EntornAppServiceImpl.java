@@ -14,8 +14,10 @@ import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.model.FieldOption;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -53,11 +55,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final CacheHelper cacheHelper;
     private final ConfiguracioSchedulerService schedulerService;
     private final RestTemplate restTemplate;
+    private final ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     @PostConstruct
     public void init() {
         register(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService));
         register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
+        register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
     }
 
     @Override
@@ -194,6 +198,20 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             }
             pingUrlResponse.setMessage(message);
             return pingUrlResponse;
+        }
+    }
+
+    @RequiredArgsConstructor
+    private class ToogleActiva implements ActionExecutor<EntornAppEntity, String, EntornApp> {
+        private final ResourceEntityMappingHelper resourceEntityMappingHelper;
+
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
+
+        @Override
+        public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
+            entity.setActiva(!entity.isActiva());
+            return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }
 
