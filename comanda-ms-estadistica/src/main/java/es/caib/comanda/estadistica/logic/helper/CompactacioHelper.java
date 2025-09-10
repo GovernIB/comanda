@@ -5,6 +5,7 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.CompactacioEnu
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.FetTipusEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
@@ -45,15 +46,18 @@ public class CompactacioHelper {
     private final FetRepository fetRepository;
     private final IndicadorRepository indicadorRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final EstadisticaHelper estadisticaHelper;
 
     public CompactacioHelper(DimensioValorRepository dimensioValorRepository,
                              FetRepository fetRepository,
                              IndicadorRepository indicadorRepository,
-                             EstadisticaClientHelper estadisticaClientHelper) {
+                             EstadisticaClientHelper estadisticaClientHelper,
+                             EstadisticaHelper estadisticaHelper) {
         this.dimensioValorRepository = dimensioValorRepository;
         this.fetRepository = fetRepository;
         this.indicadorRepository = indicadorRepository;
         this.estadisticaClientHelper = estadisticaClientHelper;
+        this.estadisticaHelper = estadisticaHelper;
     }
 
     private MonitorEstadistica initializeMonitor(EntornApp entornApp) {
@@ -451,8 +455,9 @@ public class CompactacioHelper {
 
         var agrupats = agruparFetsPerPeriode(fets, entornAppId, target);
 
+        HashMap<LocalDate, TempsEntity> tempsEntityCache = new HashMap<>();
+        List<Long> fetsEliminar = new ArrayList<>();
         int fetsActualitzats = 0;
-        int fetsEliminats = 0;
 
         for (var entry : agrupats.entrySet()) {
             var clau = entry.getKey();
@@ -461,24 +466,53 @@ public class CompactacioHelper {
             Map<String, Double> indicadorsResult = calcularIndicadorsAgregats(llista, indCfgMap);
 
             var primer = llista.get(0);
-            var desti = primer;
-            desti.getTemps().setData(clau.data);
+            var fetsMesActual = fets.stream()
+                    .filter(fet -> fet.getTemps().getData().getMonthValue() == primer.getTemps().getData().getMonthValue())
+                    .collect(Collectors.toList());
+
+            int nombreFetsMesActual = 0;
+//            TODO Aquesta manera de contar es fets al mes actual és molt més rapida, pero no l'he acabada de fer funcionar. Falta fer proves
+//            boolean[] diesMesAmbDades = new boolean[primer.getTemps().getData().lengthOfMonth()];
+//            for (var fetMesActual : fetsMesActual) {
+//                diesMesAmbDades[fetMesActual.getTemps().getDia()-1] = true;
+//            }
+//            for (boolean diaConteDades : diesMesAmbDades){
+//                if (diaConteDades) nombreFetsMesActual++;
+//            }
+
+            for (int i = 1; i <= primer.getTemps().getData().lengthOfMonth(); i++) {
+                int finalI = i;
+                if (fetsMesActual.stream()
+                        .anyMatch(fet -> fet.getTemps().getData().getDayOfMonth() == finalI)){
+                    nombreFetsMesActual++;
+                }
+            }
+
+            var desti = new FetEntity();
+            if (!tempsEntityCache.containsKey(clau.data)) {
+                tempsEntityCache.put(clau.data, estadisticaHelper.createOrGetTempsEntity(clau.data));
+            }
+            desti.setTemps(tempsEntityCache.get(clau.data));
             desti.setIndicadorsJson(indicadorsResult);
+            desti.setDimensionsJson(primer.getDimensionsJson());
             desti.setTipus(FetTipusEnum.MENSUAL);
-            long nombreFetsMateixMes = fets.stream()
-                    .filter(fet -> fet.getTemps().getData().getMonthValue() == desti.getTemps().getData().getMonthValue())
-                    .count();
-            desti.setNumDies(Math.toIntExact(nombreFetsMateixMes));
+            desti.setNumDies(nombreFetsMesActual);
+            desti.setEntornAppId(entornAppId);
             // dimensions es mantenen tal qual
             fetRepository.save(desti);
             fetsActualitzats++;
 
-            if (llista.size() > 1) {
-                var aEliminar = llista.subList(1, llista.size());
-                fetRepository.deleteAllInBatch(aEliminar);
-                fetsEliminats += aEliminar.size();
-            }
+            for (var fet : llista) fetsEliminar.add(fet.getId());
         }
+
+        int batchSize = 750;
+        for (int start = 0; start < fetsEliminar.size(); start += batchSize) {
+            fetRepository.deleteAllByIdInBatch(fetsEliminar.subList(
+                    start,
+                    Math.min(start + batchSize, fetsEliminar.size())
+            ));
+        }
+        int fetsEliminats = fetsEliminar.size();
 
         log.info("[Compactacio] Compactació {}: fets fusionats/actualitzats: {}, fets eliminats: {}", target, fetsActualitzats, fetsEliminats);
         return fetsActualitzats;
