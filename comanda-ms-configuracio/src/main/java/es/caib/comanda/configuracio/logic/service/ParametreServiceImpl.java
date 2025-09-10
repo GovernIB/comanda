@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
@@ -15,9 +16,14 @@ import es.caib.comanda.ms.logic.intf.exception.ResourceNotDeletedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Map;
 import java.util.Objects;
@@ -35,9 +41,11 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.PARAMETRE_CAC
 public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, Long, ParametreEntity> implements ParametreService {
 
     private final MonitorServiceClient monitorServiceClient;
+    private final EstadisticaServiceClient estadisticaServiceClient;
     private final CacheHelper cacheHelper;
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final String PASSWORD_LABEL = "********";
 
@@ -46,10 +54,20 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         cacheHelper.evictCacheItem(PARAMETRE_CACHE, entity.getId().toString());
 
-        switch (entity.getCodi()) {
+        eventPublisher.publishEvent(new ParametreInfoUpdatedEvent(entity));
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onSalutInfoUpdated(ParametreInfoUpdatedEvent event) {
+        switch (event.getEntity().getCodi()) {
             case BaseConfig.PROP_MONITOR_BUIDAT_PERIODE_MINUTS:
             case BaseConfig.PROP_MONITOR_BUIDAT_RETENCIO_DIES:
                 monitorServiceClient.programarBorrat(httpAuthorizationHeaderHelper.getAuthorizationHeader());
+                break;
+            case BaseConfig.PROP_STATS_COMPACTAR_ACTIU:
+            case BaseConfig.PROP_STATS_COMPACTAR_CRON:
+                estadisticaServiceClient.programarTot(httpAuthorizationHeaderHelper.getAuthorizationHeader());
                 break;
         }
     }
@@ -98,6 +116,15 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
     @Override
     protected void beforeDelete(ParametreEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotDeletedException {
         throw new ResourceNotDeletedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeUpdateEntity.disabled"));
+    }
+
+    /**
+     * Esdeveniment que indica que s'ha actualitzat la informació d'un paràmetre.
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public static class ParametreInfoUpdatedEvent {
+        private final ParametreEntity entity;
     }
 
 }

@@ -22,4 +22,7 @@ public interface EstadisticaServiceClient {
 			@RequestBody final EntornApp entornApp,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
+    @PostMapping("/programarTot")
+    ResponseEntity<EntityModel<Monitor>> programarTot(@RequestHeader("Authorization") final String authorizationHeader);
+
 }

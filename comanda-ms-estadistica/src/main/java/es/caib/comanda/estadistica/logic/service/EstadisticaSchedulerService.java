@@ -68,6 +68,11 @@ public class EstadisticaSchedulerService {
         }, 1, TimeUnit.MINUTES);
     }
 
+    public void programarTasques() {
+        List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
+        entornAppsActives.forEach(this::programarTasques);
+    }
+
     public void programarTasques(EntornApp entornApp) {
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
@@ -103,7 +108,7 @@ public class EstadisticaSchedulerService {
         // Compactat d'estadístiques
         try {
             Boolean compactarActiu = parametresHelper.getParametreBoolean(BaseConfig.PROP_STATS_COMPACTAR_ACTIU, false);
-            if (compactarActiu) {
+            if (compactarActiu && entornApp.getCompactable()) {
                 String compactarCron = parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 3 * * *");
 
                 ScheduledFuture<?> futuraTascaCompactacio = taskScheduler.schedule(

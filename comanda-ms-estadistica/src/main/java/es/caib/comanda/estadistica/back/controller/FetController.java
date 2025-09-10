@@ -52,6 +52,13 @@ public class FetController extends BaseMutableResourceController<Fet, Long> {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/programarTot")
+    public ResponseEntity<Void> programarTot() {
+        log.info("Rebuda petició d'actualització de procés de salut per a tots els entornApp");
+        schedulerService.programarTasques();
+        return ResponseEntity.ok().build();
+    }
+
 
 
 
