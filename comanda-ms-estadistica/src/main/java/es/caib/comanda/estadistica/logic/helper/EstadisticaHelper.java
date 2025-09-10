@@ -22,9 +22,11 @@ import es.caib.comanda.ms.estadistica.model.RegistresEstadistics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -50,6 +52,9 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class EstadisticaHelper {
+
+    @Lazy
+    private final EstadisticaHelper self = this;
 
     private final DimensioRepository dimensioRepository;
     private final DimensioValorRepository dimensioValorRepository;
@@ -339,12 +344,17 @@ public class EstadisticaHelper {
         Object lock = TIME_LOCKS.computeIfAbsent(data, k -> new Object());
 
         synchronized (lock) {
-            TempsEntity tempsEntity = tempsRepository.findByData(data);
-            if (tempsEntity == null) {
-                tempsEntity = tempsRepository.save(new TempsEntity(data));
-            }
-            return tempsEntity;
+            return self.createOrGetTempsEntity(data);
         }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public TempsEntity createOrGetTempsEntity(LocalDate data) {
+        TempsEntity tempsEntity = tempsRepository.findByData(data);
+        if (tempsEntity == null) {
+            tempsEntity = tempsRepository.save(new TempsEntity(data));
+        }
+        return tempsEntity;
     }
 
     /**

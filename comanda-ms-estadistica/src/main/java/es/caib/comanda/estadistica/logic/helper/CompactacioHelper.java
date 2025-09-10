@@ -74,7 +74,7 @@ public class CompactacioHelper {
         try {
             monitorEstadistica.startCompactarAction();
             // 1) Compactació per valors de dimensions agrupables
-            compactarPerDimensioAgrupable(entornApp);
+//            compactarPerDimensioAgrupable(entornApp);
 
             // 2) Compactació temporal i eliminació per retenció (pendent de configuració EntornApp)
             compactarTemporalIEsborraPerRetencio(entornApp);
