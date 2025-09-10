@@ -42,10 +42,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -953,7 +950,7 @@ public class ConsultaEstadisticaHelperTest {
 
             // Assert
             assertNotNull(result);
-            assertEquals("100,00", result);
+            assertEquals(String.format("%.2f", 100f), result);
 
         } catch (Exception e) {
             fail("Exception occurred: " + e.getMessage());
