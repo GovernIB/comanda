@@ -74,3 +74,11 @@ databaseChangeLog:
             columns:
               - column:
                   name: entorn_app_id
+  - changeSet:
+      id: est-change-32-4
+      author: limit
+      changes:
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_temps
+            constraintName: ${db_prefix}est_data_unq
+            columnNames: data

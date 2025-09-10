@@ -100,7 +100,7 @@ public class MonitorEstadistica {
 
     public void endCompactarAction() {
         this.finishedCompactarAction = true;
-        finalitzarOK(monitorCompactar, this.startInfoTime);
+        finalitzarOK(monitorCompactar, this.startCompactarTime);
 
     }
 
