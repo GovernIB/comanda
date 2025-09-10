@@ -16,6 +16,7 @@ import es.caib.comanda.ms.logic.intf.exception.ResourceNotDeletedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -123,6 +124,7 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
      */
     @Getter
     @RequiredArgsConstructor
+    @EqualsAndHashCode
     public static class ParametreInfoUpdatedEvent {
         private final ParametreEntity entity;
     }
