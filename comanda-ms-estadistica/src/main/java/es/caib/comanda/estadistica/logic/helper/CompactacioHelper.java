@@ -422,6 +422,7 @@ public class CompactacioHelper {
     private enum PeriodeTarget {SETMANAL, MENSUAL}
 
     // Nova extracció: agrupació per període (setmana/mes) per facilitar proves i reutilització.
+//    TODO Se podria optimitzar es conteig de fets al mes actual fent aqui un map clau (mes/any) valor (Set de dies)
     protected LinkedHashMap<ClauDimensio, List<FetEntity>> agruparFetsPerPeriode(List<FetEntity> fets,
                                                                                   Long entornAppId,
                                                                                   PeriodeTarget target) {
@@ -494,7 +495,7 @@ public class CompactacioHelper {
             }
             desti.setTemps(tempsEntityCache.get(clau.data));
             desti.setIndicadorsJson(indicadorsResult);
-            desti.setDimensionsJson(primer.getDimensionsJson());
+            desti.setDimensionsJson(primer.getDimensionsJson()); // TODO S'hauria de anar fent un "merge" de totes ses dimensions
             desti.setTipus(FetTipusEnum.MENSUAL);
             desti.setNumDies(nombreFetsMesActual);
             desti.setEntornAppId(entornAppId);

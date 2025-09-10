@@ -40,6 +40,7 @@ public class CompactacioHelperTest {
     @Mock DimensioValorRepository dimensioValorRepository;
     @Mock FetRepository fetRepository;
     @Mock IndicadorRepository indicadorRepository;
+    @Mock EstadisticaHelper estadisticaHelper;
 
     @InjectMocks CompactacioHelper helper;
 
@@ -216,6 +217,10 @@ public class CompactacioHelperTest {
         FetEntity s1 = fet(entornId, ara.minusMonths(8).withDayOfMonth(3), Map.of("D","v2"), Map.of("A", 3d));
         FetEntity s2 = fet(entornId, ara.minusMonths(8).withDayOfMonth(4), Map.of("D","v2"), Map.of("A", 7d));
 //        when(fetRepository.findByEntornAppIdAndTempsDataBetween(eq(entornId), any(LocalDate.class), any(LocalDate.class))).thenReturn(List.of(s1, s2));
+        when(estadisticaHelper.createOrGetTempsEntity(any(LocalDate.class))).thenAnswer(invocationOnMock -> {
+            LocalDate data = invocationOnMock.getArgument(0);
+            return new TempsEntity(data);
+        });
 
         // Act
         helper.compactarTemporalIEsborraPerRetencio(entornApp);
@@ -223,7 +228,7 @@ public class CompactacioHelperTest {
         // Assert
         // Com a mínim s'ha de guardar una fusió (mensual) i eliminar duplicats
         verify(fetRepository, atLeast(1)).save(any(FetEntity.class));
-        verify(fetRepository, atLeastOnce()).deleteAllInBatch(anyList());
+        verify(fetRepository, atLeastOnce()).deleteAllByIdInBatch(anyList());
         verify(fetRepository).deleteByEntornAppIdAndTempsDataBefore(eq(entornId), any(LocalDate.class));
     }
 
