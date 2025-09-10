@@ -69,17 +69,17 @@ public class EstadisticaSchedulerService {
     }
 
     public void programarTasques(EntornApp entornApp) {
-        if (!CronExpression.isValidExpression(entornApp.getEstadisticaCron())) {
-            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getEstadisticaCron() + " no és un cron vàlid.");
-            return;
-        }
-
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
         cancelarTascaCompactatExistent(entornApp.getId());
 
         if (!entornApp.isActiva()) {
             log.info("Tasca de refresc de la informació no programada per l'entornApp: {}, degut a que no està activa", entornApp.getId());
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(entornApp.getEstadisticaCron())) {
+            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getEstadisticaCron() + " no és un cron vàlid.");
             return;
         }
 
