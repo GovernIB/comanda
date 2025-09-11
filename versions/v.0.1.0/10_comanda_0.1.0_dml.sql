@@ -1,0 +1,8 @@
+-- Compactar monitor
+INSERT INTO COMANDA.COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Monitor', 'Borrat', 'BOOLEAN', 'es.caib.comanda.monitor.buidat.actiu', 'Activar buidat periòdic de dades del monitor', null, null, null, 'true', 1, null, null);
+INSERT INTO COMANDA.COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Monitor', 'Borrat', 'NUMERIC', 'es.caib.comanda.monitor.buidat.retencio.dies', 'Quants dies s''han de mantenir les dades del monitor en BBDD', null, null, null, '3', 1, null, null);
+INSERT INTO COMANDA.COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Monitor', 'Borrat', 'NUMERIC', 'es.caib.comanda.monitor.buidat.periode.minuts', 'Cada quants minuts executar el procés de buidat de dades del monitor', null, null, null, '60', 1, null, null);
+
+-- Compactar estadistiques
+INSERT INTO COMANDA.COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Estadístiques', 'Borrat', 'BOOLEAN', 'es.caib.comanda.stats.compactar.actiu', 'Activar compactat periòdic de dades estadístiques', null, null, null, 'false', 1, null, null);
+INSERT INTO COMANDA.COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Estadístiques', 'Borrat', 'CRON', 'es.caib.comanda.stats.compactar.cron', 'Quan executar el procés de compactat de dades estadístiques (CRON)', null, null, null, '0 0 3 * * *', 1, null, null);
