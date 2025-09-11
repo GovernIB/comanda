@@ -1,29 +1,24 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {AccessTime, CalendarMonth} from '@mui/icons-material';
 import dayjs from 'dayjs';
-import {
-    useNavigate,
-    useLocation,
-    Link as RouterLink,
-    LinkProps as RouterLinkProps,
-} from 'react-router-dom';
+import {Link as RouterLink, LinkProps as RouterLinkProps, useLocation, useNavigate,} from 'react-router-dom';
 import i18n from '../i18n/i18n';
-import { useTranslation } from 'react-i18next';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import {useTranslation} from 'react-i18next';
+import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
+import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
 import HeaderLanguageSelector from "./HeaderLanguageSelector";
 import Button from '@mui/material/Button';
 import AppMenu from "./AppMenu";
 import drassana from '../assets/drassana.png';
-import { MuiBaseApp, MenuEntry, useBaseAppContext } from 'reactlib';
+import {MenuEntry, MuiBaseApp, useBaseAppContext} from 'reactlib';
 import Footer from "./Footer.tsx";
-import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
-import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog.tsx';
+import {DataFormDialogApi} from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
+import {UserProfileFormDialog, UserProfileFormDialogButton} from './UserProfileFormDialog.tsx';
 import theme from "../theme.ts";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useUserContext } from './UserContext';
+import {useUserContext} from './UserContext';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -138,7 +133,7 @@ const generateMenuItems = (appMenuEntries: MenuEntry[] | undefined) => {
 // Selector d'idioma (només si hi ha idiomes disponibles)
 const generateLanguageItems = (availableLanguages: string[] | undefined) => {
     const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
-    return availableLanguages?.length && isLgUp
+    return availableLanguages?.length && isLgUp && false
         ? [
             <HeaderLanguageSelector
                 sx={{ml: {xs: 1, md: '42px'}}}
@@ -170,6 +165,30 @@ const generateFooter = () => {
     );
 };
 
+const useI18n = () => {
+    const user = useUserContext();
+    const [currentUserLanguage, setCurrentUserLanguage] = React.useState<string>();
+    React.useEffect(() => {
+        if (user != null && user.idioma !== null) {
+            setCurrentUserLanguage(user.idioma.toLowerCase());
+        }
+    }, [user]);
+    const i18nHandleLanguageChange = (language?: string) => {
+        // setCurrentUserLanguage(user.idioma.toLowerCase());
+        i18n.changeLanguage(language);
+    }
+    const i18nAddResourceBundleCallback = (language: string, namespace: string, bundle: any) => {
+        i18n.addResourceBundle(language, namespace, bundle);
+    }
+    return {
+        i18nUseTranslation: useTranslation,
+        i18nCurrentLanguage: currentUserLanguage ?? i18n.language,
+        i18nHandleLanguageChange,
+        i18nAddResourceBundleCallback,
+        i18nInitialized: currentUserLanguage !== undefined
+    }
+}
+
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {
         code,
@@ -190,12 +209,13 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     // TODO Falta control de loading del contexto de usuario, la app deberia esperar a que cargara
     const user = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
-    const i18nHandleLanguageChange = (language?: string) => {
-        i18n.changeLanguage(language);
-    }
-    const i18nAddResourceBundleCallback = (language: string, namespace: string, bundle: any) => {
-        i18n.addResourceBundle(language, namespace, bundle);
-    }
+    const {
+        i18nUseTranslation,
+        i18nCurrentLanguage,
+        i18nHandleLanguageChange,
+        i18nAddResourceBundleCallback,
+        i18nInitialized,
+    } = useI18n();
     const anyHistoryEntryExist = () => location.key !== 'default';
     const goBack = (fallback?: string) => {
         if (anyHistoryEntryExist()) {
@@ -229,8 +249,8 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         footer={generateFooter()}
         persistentSession
         persistentLanguage
-        i18nUseTranslation={useTranslation}
-        i18nCurrentLanguage={i18n.language}
+        i18nUseTranslation={i18nUseTranslation}
+        i18nCurrentLanguage={i18nCurrentLanguage}
         i18nHandleLanguageChange={i18nHandleLanguageChange}
         i18nAddResourceBundleCallback={i18nAddResourceBundleCallback}
         routerGoBack={goBack}

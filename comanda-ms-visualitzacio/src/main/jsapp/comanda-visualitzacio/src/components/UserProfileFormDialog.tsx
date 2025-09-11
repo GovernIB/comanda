@@ -3,13 +3,14 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import {Icon} from '@mui/material';
 import ListItemText from '@mui/material/ListItemText';
-import {FormField, MuiFormDialog} from 'reactlib';
+import {FormField, MuiFormDialog, useBaseAppContext} from 'reactlib';
 import {DataFormDialogApi} from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
 import {useTranslation} from "react-i18next";
 import {UserProfileCardData} from "./UserProfileCardData.tsx";
 import {
     AlternateEmail,
-    AssignmentInd, FormatListNumbered,
+    AssignmentInd,
+    FormatListNumbered,
     Language,
     Mail,
     ManageAccounts,
@@ -20,7 +21,6 @@ import {
 import Badge from "@mui/material/Badge";
 import Grid from "@mui/material/Grid";
 import {UsuariModel} from "../types/usuari.model.tsx";
-import i18n from "../i18n/i18n.ts";
 
 export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void}) => {
     const { t } = useTranslation();
@@ -40,7 +40,9 @@ export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void})
 
 export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.MutableRefObject<DataFormDialogApi | undefined> }) => {
     const { t } = useTranslation();
-    const {COLOR, BACKGROUND} = {COLOR: '#474747', BACKGROUND: '#f8f8f8'};
+    const {COLOR_DISABLED, BACKGROUND_DISABLED} = {COLOR_DISABLED: '#474747', BACKGROUND_DISABLED: '#f8f8f8'};
+    const { setCurrentLanguage } = useBaseAppContext();
+
     return (
         <MuiFormDialog
             resourceName="usuari"
@@ -48,7 +50,7 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
             onClose={(reason?: string) => reason !== 'backdropClick'}
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}
-            formComponentProps={{ onSaveSuccess: (data: UsuariModel) => {i18n.changeLanguage(data.idioma.toLowerCase())}}}
+            formComponentProps={{ onSaveSuccess: (data: UsuariModel) => {setCurrentLanguage(data.idioma.toLowerCase())}}}
         >
             <UserProfileCardData
                 icon={<AssignmentInd/>}
@@ -60,7 +62,7 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
                     <FormField name={UsuariModel.CODI} readOnly={true} componentProps={{
                         slotProps: {
                             input: {
-                                style: { color: COLOR, backgroundColor: BACKGROUND },
+                                style: { color: COLOR_DISABLED, backgroundColor: BACKGROUND_DISABLED },
                                 startAdornment: (<Tag/>),
                             },
                         },
@@ -70,7 +72,7 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
                     <FormField name={UsuariModel.NOM} readOnly={true} componentProps={{
                         slotProps: {
                             input: {
-                                style: { color: COLOR, backgroundColor: BACKGROUND },
+                                style: { color: COLOR_DISABLED, backgroundColor: BACKGROUND_DISABLED },
                                 startAdornment: (<Person/>),
                             },
                         },
@@ -80,7 +82,7 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
                     <FormField name={UsuariModel.NIF} readOnly={true} componentProps={{
                         slotProps: {
                             input: {
-                                style: { color: COLOR, backgroundColor: BACKGROUND },
+                                style: { color: COLOR_DISABLED, backgroundColor: BACKGROUND_DISABLED },
                                 startAdornment: (<Badge/>),
                             },
                         },
@@ -90,7 +92,7 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
                     <FormField name={UsuariModel.EMAIL} readOnly={true} componentProps={{
                         slotProps: {
                             input: {
-                                style: { color: COLOR, backgroundColor: BACKGROUND },
+                                style: { color: COLOR_DISABLED, backgroundColor: BACKGROUND_DISABLED },
                                 startAdornment: (<AlternateEmail/>),
                             },
                         },
@@ -100,7 +102,7 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
                     <FormField name={UsuariModel.ROLS} readOnly={true} componentProps={{
                         slotProps: {
                             input: {
-                                style: { color: COLOR, backgroundColor: BACKGROUND },
+                                style: { color: COLOR_DISABLED, backgroundColor: BACKGROUND_DISABLED },
                                 startAdornment: (<RecentActors/>),
                             },
                         },
