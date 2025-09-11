@@ -7,4 +7,5 @@ public interface UsuariService extends MutableResourceService<Usuari, Long> {
 
     Usuari getOneByCodi( String codi);
 
+    void refreshCurrentUser();
 }
