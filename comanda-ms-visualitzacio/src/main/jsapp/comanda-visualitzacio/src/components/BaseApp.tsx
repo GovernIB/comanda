@@ -23,6 +23,7 @@ import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormD
 import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog.tsx';
 import theme from "../theme.ts";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useUserContext } from './UserContext';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -186,6 +187,8 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
+    // TODO Falta control de loading del contexto de usuario, la app deberia esperar a que cargara
+    const user = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
     const i18nHandleLanguageChange = (language?: string) => {
         i18n.changeLanguage(language);
@@ -220,7 +223,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         ]}
         headerAdditionalAuthComponents={
             <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
-                '1', // TODO Recuperar el valor del usuario actual
+                user?.id,
             )} />
         }
         footer={generateFooter()}

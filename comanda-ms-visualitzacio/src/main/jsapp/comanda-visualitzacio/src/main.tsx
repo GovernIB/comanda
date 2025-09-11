@@ -17,6 +17,7 @@ import {
     ContainerAuthProvider,
     ResourceApiProvider
 } from 'reactlib';
+import UserProvider from './components/UserProvider';
 
 dayjs.extend(duration);
 
@@ -61,12 +62,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory debug>
             <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
-                <ThemeProvider theme={theme}>
-                    <CssBaseline />
-                    <BrowserRouter basename={import.meta.env.BASE_URL}>
-                        <App />
-                    </BrowserRouter>
-                </ThemeProvider>
+                <UserProvider>
+                    <ThemeProvider theme={theme}>
+                        <CssBaseline />
+                        <BrowserRouter basename={import.meta.env.BASE_URL}>
+                            <App />
+                        </BrowserRouter>
+                    </ThemeProvider>
+                </UserProvider>
             </ResourceApiProvider>
         </AuthProvider>
     </React.StrictMode>,
