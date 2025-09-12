@@ -53,6 +53,7 @@ const componentsCa = {
             multiple: '{{count}} files seleccionades',
         },
         pageInfo: '{{from}} a {{to}} de {{count}}',
+        sizeAuto: 'Automàtic',
     },
     form: {
         goBack: {
