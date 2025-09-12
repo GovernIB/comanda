@@ -55,6 +55,9 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         cacheHelper.evictCacheItem(PARAMETRE_CACHE, entity.getId().toString());
 
+//        Els mètodes de programar tasques es fan a través de cridades REST, per tant, no s'inclouen dins la transacció de base de dades actual.
+//        Per a evitar que es programin les tasques usant les dades antigues dels paràmetres, s'usa un eventPublisher que
+//        espera a que es faci commit de la transacció i després executam les cridades corresponents.
         eventPublisher.publishEvent(new ParametreInfoUpdatedEvent(entity));
     }
 
