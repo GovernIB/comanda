@@ -84,6 +84,7 @@
         <module>comanda-ms-broker</module>
 		<module>comanda-ms-tasques</module>
 		<module>comanda-ms-avisos</module>
+		<module>comanda-ms-alarmes</module>
 		<module>comanda-ms-permisos</module>
 		<module>comanda-ms-usuaris</module>
 		<module>comanda-back</module>

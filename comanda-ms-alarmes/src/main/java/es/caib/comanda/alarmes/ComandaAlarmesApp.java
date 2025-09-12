@@ -1,23 +1,23 @@
-package es.caib.comanda.avisos;
+package es.caib.comanda.alarmes;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 /**
- * Classe principal del microservei comanda-avisos.
+ * Classe principal del microservei comanda-alarmes.
  *
  * @author Límit Tecnologies
  */
 @SpringBootApplication
 @ComponentScan({
 		"es.caib.comanda.ms",
-		"es.caib.comanda.avisos",
+		"es.caib.comanda.alarmes",
 		"es.caib.comanda.client" })
-public class ComandaAvisosApp {
+public class ComandaAlarmesApp {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ComandaAvisosApp.class, args);
+		SpringApplication.run(ComandaAlarmesApp.class, args);
 	}
 
 }
