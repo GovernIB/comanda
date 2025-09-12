@@ -61,7 +61,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                 <FormFieldAdvancedSearchFilters
                     name="dimensionsValor"
                     advancedSearchFilterResourceName="dimensio"
-                    advancedSearchFilterCode="dimensioFilter"
+                    advancedSearchFilterCode="filterByDimensio"
                     advancedSearchFilterContent={
                         <Box sx={{ my: 1 }}>
                             <FormField

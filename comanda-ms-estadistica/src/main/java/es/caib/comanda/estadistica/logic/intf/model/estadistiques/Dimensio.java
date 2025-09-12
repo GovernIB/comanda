@@ -58,12 +58,14 @@ import java.util.List;
                 )
         },
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.DIMENSIO_FILTER, formClass = Dimensio.DimensioFilter.class)
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.DIMENSIO_FILTER, formClass = Dimensio.DimensioFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.FILTER_BY_DIMENSIO, formClass = Dimensio.FilterByDimensio.class)
         }
 )
 public class Dimensio extends BaseResource<Long> {
 
     public final static String DIMENSIO_FILTER = "dimensioFilter";
+    public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -88,5 +90,14 @@ public class Dimensio extends BaseResource<Long> {
     public static class DimensioFilter implements Serializable {
         private String codi;
         private String nom;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class FilterByDimensio implements Serializable {
+        protected ResourceReference<Dimensio, Long> dimensio;
     }
 }

@@ -48,6 +48,8 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
     return (
         <MuiFilter
             apiRef={filterApiRef}
+            // TODO Si el filtre no conte cap camp del modul de dimensions, considerar canviar el filtre per un al recurs de entornApp,
+            // de manera que no s'hagi de fer la petició manualment del llistat de entornApp
             resourceName="dimensio"
             code="dimensioFilter"
             persistentState
