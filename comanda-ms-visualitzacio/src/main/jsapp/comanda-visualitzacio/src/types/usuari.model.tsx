@@ -1,5 +1,7 @@
 import {BaseEntity, IBaseEntity} from "./base-entity.model.ts";
 
+export const NUM_ELEMENT_PAGE_OPTIONS = ['AUTOMATIC', '_20', '_50', '_100', '_200'] as const;
+
 export interface IUsuari extends IBaseEntity {
     codi: string;
     nom: string;
@@ -9,7 +11,7 @@ export interface IUsuari extends IBaseEntity {
     idioma: LanguageEnum;
     rols: string[] | undefined;
 
-    numElementsPagina: number | undefined;
+    numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
 }
 
 export class UsuariModel extends BaseEntity implements Required<IUsuari> {
@@ -31,13 +33,14 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     emailAlternatiu: string | undefined;
     idioma: LanguageEnum;
     rols: string[] | undefined;
-    numElementsPagina: number | undefined;
+    numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
 
     constructor(usuari: IUsuari) {
         super(usuari);
         this.codi = usuari.codi;
         this.nom = usuari.nom;
         this.idioma = usuari.idioma;
+        this.numElementsPagina = usuari.numElementsPagina;
         Object.assign(this, usuari);
     }
 }

@@ -23,7 +23,7 @@ import {DataFormDialogApi} from '../../lib/components/mui/datacommon/DataFormDia
 import {UserProfileFormDialog, UserProfileFormDialogButton} from './UserProfileFormDialog.tsx';
 import theme from "../theme.ts";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import {useUserContext} from './UserContext';
+import { useUserContext } from './UserContext';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -174,15 +174,9 @@ const generateFooter = () => {
 };
 
 const useI18n = () => {
-    const user = useUserContext();
-    const [currentUserLanguage, setCurrentUserLanguage] = React.useState<string>();
-    React.useEffect(() => {
-        if (user?.idioma != null) {
-            setCurrentUserLanguage(user.idioma.toLowerCase());
-        }
-    }, [user]);
+    const { user } = useUserContext();
+    const currentUserLanguage = user?.idioma.toLowerCase();
     const i18nHandleLanguageChange = (language?: string) => {
-        // setCurrentUserLanguage(user.idioma.toLowerCase());
         i18n.changeLanguage(language);
     }
     const i18nAddResourceBundleCallback = (language: string, namespace: string, bundle: any) => {
@@ -193,7 +187,6 @@ const useI18n = () => {
         i18nCurrentLanguage: currentUserLanguage ?? i18n.language,
         i18nHandleLanguageChange,
         i18nAddResourceBundleCallback,
-        i18nInitialized: currentUserLanguage !== undefined
     }
 }
 
@@ -214,15 +207,13 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
-    // TODO Falta control de loading del contexto de usuario, la app deberia esperar a que cargara
-    const user = useUserContext();
+    const { user } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
     const {
         i18nUseTranslation,
         i18nCurrentLanguage,
         i18nHandleLanguageChange,
         i18nAddResourceBundleCallback,
-        i18nInitialized,
     } = useI18n();
     const anyHistoryEntryExist = () => location.key !== 'default';
     const goBack = (fallback?: string) => {

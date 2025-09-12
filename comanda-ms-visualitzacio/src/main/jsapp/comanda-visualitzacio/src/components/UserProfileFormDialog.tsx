@@ -21,6 +21,7 @@ import {
 import Badge from "@mui/material/Badge";
 import Grid from "@mui/material/Grid";
 import {UsuariModel} from "../types/usuari.model.tsx";
+import { useUserContext } from './UserContext';
 
 export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void}) => {
     const { t } = useTranslation();
@@ -41,7 +42,7 @@ export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void})
 export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.MutableRefObject<DataFormDialogApi | undefined> }) => {
     const { t } = useTranslation();
     const {COLOR_DISABLED, BACKGROUND_DISABLED} = {COLOR_DISABLED: '#474747', BACKGROUND_DISABLED: '#f8f8f8'};
-    const { setCurrentLanguage } = useBaseAppContext();
+    const { setUser } = useUserContext();
 
     return (
         <MuiFormDialog
@@ -50,7 +51,9 @@ export const UserProfileFormDialog = ({ dialogApiRef }: { dialogApiRef: React.Mu
             onClose={(reason?: string) => reason !== 'backdropClick'}
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}
-            formComponentProps={{ onSaveSuccess: (data: UsuariModel) => {setCurrentLanguage(data.idioma.toLowerCase())}}}
+            formComponentProps={{
+                onSaveSuccess: setUser,
+            }}
         >
             <UserProfileCardData
                 icon={<AssignmentInd/>}

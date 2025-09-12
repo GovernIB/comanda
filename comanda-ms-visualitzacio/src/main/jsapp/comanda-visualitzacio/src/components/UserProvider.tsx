@@ -1,17 +1,28 @@
 import { useResourceApiService } from 'reactlib';
 import { FC, PropsWithChildren, useEffect, useState } from 'react';
-import { User, UserContext } from './UserContext';
+import { UserContext, UserContextType } from './UserContext';
+import { UsuariModel } from '../types/usuari.model';
 
 const UserProvider: FC<PropsWithChildren> = ({ children }) => {
     const { find, isReady } = useResourceApiService('usuari');
-    const [user, setUser] = useState<User>();
+    const [user, setUser] = useState<UsuariModel>();
+    const [loading, setLoading] = useState<boolean>(false);
     useEffect(() => {
         if (!isReady) return;
+        setLoading(true);
         find({ page: 0, size: 1 }).then((response) => {
             setUser(response.rows[0]);
+            setLoading(false);
         });
     }, [find, isReady]);
-    return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
+    const contextValue: UserContextType = {
+        user,
+        setUser,
+        loading,
+    };
+    if (loading) return;
+
+    return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
 };
 
 export default UserProvider;

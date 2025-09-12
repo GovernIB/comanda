@@ -1,19 +1,18 @@
 import { createContext, useContext } from 'react';
+import { UsuariModel } from '../types/usuari.model';
 
-export type User = {
-    id: number;
-    codi: string;
-    nom: string;
-    nif?: string;
-    email?: string;
-    emailAlternatiu?: string;
-    idioma: string;
-    rols?: string[];
-    numElementsPagina: number;
+export type UserContextType = {
+    user: UsuariModel | undefined;
+    setUser: (user: UsuariModel) => void;
+    loading: boolean;
 };
 
-export const UserContext = createContext<User | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const useUserContext = () => {
-    return useContext(UserContext);
+    const context = useContext(UserContext);
+    if (context === undefined) {
+        throw new Error('UserContext Provider not found');
+    }
+    return context;
 }
