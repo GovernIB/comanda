@@ -32,7 +32,6 @@ import {
     ChartContainer,
     ChartsTooltip,
 } from '@mui/x-charts';
-import { useTheme } from '@mui/material/styles';
 import {ENUM_APP_ESTAT_PREFIX, getColorByMissatge, getColorByNivellEnum, getColorByStatEnum, NivellEnum, SalutEstatEnum, SalutModel, TITLE} from "../types/salut.model.tsx";
 import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";

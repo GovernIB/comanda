@@ -83,7 +83,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         return [];
     }, [isPieTypeVisible, isScatterTypeVisible, isHeatTypeVisible, isBarTypeVisible, isLineTypeVisible, isSparkLineTypeVisible, isGaugeTypeVisible]);
 
-    const [appPalette, setAppPalette] = useState(data.colorsPaleta);
+    const [appPalette, setAppPalette] = useState<string>(data.colorsPaleta);
     const handlePaletteChange = (newPalette: string[]) => {
         const paletteString = newPalette.join(',');
         setAppPalette(paletteString);

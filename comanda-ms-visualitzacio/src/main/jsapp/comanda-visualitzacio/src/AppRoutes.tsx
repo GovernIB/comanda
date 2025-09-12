@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Salut from './pages/Salut';
-import SalutAppInfo from './pages/SalutAppInfo';
 import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';

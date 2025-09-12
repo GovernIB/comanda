@@ -11,6 +11,7 @@ import {
     useFormContext,
     useMessageDialogButtons,
     useConfirmDialogButtons,
+    useMuiDataGridApiRef,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
 import {useEffect, useState} from 'react';
@@ -301,8 +302,7 @@ const defaultSizeAndPosition = {
 const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseColumns, onDelete, onUpdate }) => {
     const { isReady: apiIsReady, delete: apiDelete } = useResourceApiService(resourceName);
     const { t } = useTranslation();
-    // @ts-ignore
-    const gridApiRef: MuiDataGridApiRef = React.useRef({});
+    const gridApiRef = useMuiDataGridApiRef();
     const { messageDialogShow, temporalMessageShow, t: tLib } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
@@ -397,7 +397,6 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
 
 export const AfegirTitolFormContent = () => {
     const { data } = useFormContext();
-    const { t } = useTranslation();
 
     return (<Grid container spacing={2}>
         <Grid size={12}>

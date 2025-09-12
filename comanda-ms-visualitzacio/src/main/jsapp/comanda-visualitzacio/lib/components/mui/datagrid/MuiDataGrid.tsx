@@ -222,7 +222,7 @@ export type MuiDataGridProps = {
     /** Referència a l'api del component */
     apiRef?: MuiDataGridApiRef;
     /** Referència a l'api interna del component DataGrid de MUI */
-    datagridApiRef?: React.MutableRefObject<GridApiPro>;
+    datagridApiRef?: React.RefObject<GridApiPro | null>;
     /** Alçada del component en píxels */
     height?: number;
     /** Indica si l'alçada del component s'ha d'ajustar al nombre de files que s'han de mostrar */

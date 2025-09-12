@@ -14,7 +14,6 @@ import {
     Icon,
     Typography,
     Paper,
-    Chip,
     Dialog,
     DialogActions,
     DialogContent,

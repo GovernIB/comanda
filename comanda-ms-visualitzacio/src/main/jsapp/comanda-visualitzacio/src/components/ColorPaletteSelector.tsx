@@ -15,7 +15,7 @@ import Icon from "@mui/material/Icon";
 import {useTranslation} from "react-i18next";
 
 // ColorPaletteSelector.jsx
-const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
+const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColors: string, onPaletteChange: (newPalette: string[]) => void }) => {
     const { t } = useTranslation();
     const [colors, setColors] = useState(initialColors?.split(',') || []);
     const [newColor, setNewColor] = useState('#000000'); // Valor per defecte negre per al nou color
