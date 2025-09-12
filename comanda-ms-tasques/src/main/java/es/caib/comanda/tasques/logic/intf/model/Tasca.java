@@ -1,11 +1,14 @@
 package es.caib.comanda.tasques.logic.intf.model;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.broker.model.Prioritat;
 import es.caib.comanda.ms.broker.model.TascaEstat;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +29,13 @@ import java.util.List;
 @NoArgsConstructor
 @ResourceConfig(
         descriptionField = "nom",
+        accessConstraints = {
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
+                        grantedPermissions = { PermissionEnum.READ }
+                )
+        },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Tasca.FILTER, formClass = Tasca.TascaFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Tasca.PERSPECTIVE_PATH),

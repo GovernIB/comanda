@@ -1,9 +1,13 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,13 +50,22 @@ import java.util.List;
 @ResourceConfig(
         quickFilterFields = { "nom", "descripcio" },
         descriptionField = "nom",
+        accessConstraints = {
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+                )
+        },
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.DIMENSIO_FILTER, formClass = Dimensio.DimensioFilter.class)
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.DIMENSIO_FILTER, formClass = Dimensio.DimensioFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.FILTER_BY_DIMENSIO, formClass = Dimensio.FilterByDimensio.class)
         }
 )
 public class Dimensio extends BaseResource<Long> {
 
-    public static final String DIMENSIO_FILTER = "dimensioFilter";
+    public final static String DIMENSIO_FILTER = "dimensioFilter";
+    public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -77,5 +90,14 @@ public class Dimensio extends BaseResource<Long> {
     public static class DimensioFilter implements Serializable {
         private String codi;
         private String nom;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class FilterByDimensio implements Serializable {
+        protected ResourceReference<Dimensio, Long> dimensio;
     }
 }

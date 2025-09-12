@@ -289,6 +289,13 @@ const translationCa = {
         appsEntorns: {
             title: "Entorns",
             resourceTitle: "entorn",
+            action: {
+                toolbalActiva: {
+                    activar: "Activar",
+                    desactivar: "Desactivar",
+                    ok: "L'acció s'ha executat correctament",
+                }
+            }
         },
         versionsEntorns: {
             title: "Versions per entorn",

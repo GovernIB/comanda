@@ -68,18 +68,23 @@ public class EstadisticaSchedulerService {
         }, 1, TimeUnit.MINUTES);
     }
 
-    public void programarTasques(EntornApp entornApp) {
-        if (!CronExpression.isValidExpression(entornApp.getEstadisticaCron())) {
-            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getEstadisticaCron() + " no és un cron vàlid.");
-            return;
-        }
+    public void programarTasques() {
+        List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
+        entornAppsActives.forEach(this::programarTasques);
+    }
 
+    public void programarTasques(EntornApp entornApp) {
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
         cancelarTascaCompactatExistent(entornApp.getId());
 
         if (!entornApp.isActiva()) {
             log.info("Tasca de refresc de la informació no programada per l'entornApp: {}, degut a que no està activa", entornApp.getId());
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(entornApp.getEstadisticaCron())) {
+            log.warn("EntornApp " + entornApp.getId() + ":" + entornApp.getEstadisticaCron() + " no és un cron vàlid.");
             return;
         }
 
@@ -103,7 +108,7 @@ public class EstadisticaSchedulerService {
         // Compactat d'estadístiques
         try {
             Boolean compactarActiu = parametresHelper.getParametreBoolean(BaseConfig.PROP_STATS_COMPACTAR_ACTIU, false);
-            if (compactarActiu) {
+            if (compactarActiu && entornApp.getCompactable()) {
                 String compactarCron = parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 3 * * *");
 
                 ScheduledFuture<?> futuraTascaCompactacio = taskScheduler.schedule(

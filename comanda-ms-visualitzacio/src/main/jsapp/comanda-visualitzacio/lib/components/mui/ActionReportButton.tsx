@@ -68,6 +68,8 @@ export type ActionReportButtonProps = {
     onSuccess?: (result?: any) => void;
     /** Event que es llença quan l'execució de l'artefacte finalitza amb errors */
     onError?: (error?: any) => void;
+    /** Event que es llença quan es tanca la modal del formulari de l'artefacte */
+    onClose?: () => void;
     /** Propietats pel component del botó */
     buttonComponentProps?: any;
     /** Propietats pel component de l'icona (només per a botons de tipus icona) */
@@ -141,6 +143,7 @@ const TextCustomButton: React.FC<TextCustomButtonProps> = (props) => {
  * @param formDialogResultProcessor - Funció que processa els resultats d'executar l'artefacte i retorna un element per a mostrar al diàleg com a resultat (només per a artefactes de tipus acció).
  * @param onSuccess - Event que es llença quan l'execució de l'artefacte finalitza sense errors.
  * @param onError - Event que es llença quan l'execució de l'artefacte finalitza amb errors.
+ * @param onClose - Event que es llença quan es tanca la modal del formulari de l'artefacte.
  * @param dialogCloseCallback - Callback que es crida quan es tanca el diàleg.
  * @returns un objecte amb el resultat d'executar la lògica.
  */
@@ -159,6 +162,7 @@ export const useActionReportLogic = (
     formDialogResultProcessor?: (result?: any) => React.ReactElement,
     onSuccess?: (result?: any) => void,
     onError?: (error?: any) => void,
+    onClose?: () => void,
     dialogCloseCallback?: (reason?: string) => boolean
 ): ActionReportLogicResult => {
     const { t, messageDialogShow, saveAs } = useBaseAppContext();
@@ -247,7 +251,9 @@ export const useActionReportLogic = (
                         fullWidth: true,
                         maxWidth: 'md',
                     },
-            }).catch((_error) => {});
+            })
+                .catch((_error) => {})
+                .finally(() => onClose?.());
         } else if (action != null) {
             if (confirm) {
                 const confirmDialogComponentProps = {
@@ -346,6 +352,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formDialogResultProcessor,
         onSuccess,
         onError,
+        onClose,
         buttonComponentProps,
         iconComponentProps,
     } = props;
@@ -368,7 +375,8 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formDialogComponentProps,
         formDialogResultProcessor,
         onSuccess,
-        onError
+        onError,
+        onClose
     );
     const buttonTitle = title ?? apiLink?.title ?? action ?? report;
     const ButtonComponent =

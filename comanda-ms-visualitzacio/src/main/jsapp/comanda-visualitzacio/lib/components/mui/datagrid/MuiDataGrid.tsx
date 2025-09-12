@@ -178,6 +178,8 @@ export type MuiDataGridProps = {
     rowHideDeleteButton?: boolean | ((row: any) => boolean);
     /** Oculta el botó de detalls de cada fila (por ser també una funció que reb la fila i retorna true/false) */
     rowHideDetailsButton?: boolean | ((row: any) => boolean);
+    /** Index a dins la llista de columnes a on insertar la columna d'accions (si no s'especifica s'inserta al final) */
+    rowActionsColumnIndex?: number;
     /** Propietats addicionals per a la columna d'accions de la graella */
     rowActionsColumnProps?: any;
     /** Accions addicionals per a cada fila */
@@ -371,6 +373,7 @@ const rowActionsToGridActionsCellItems = (
 
 const useGridColumns = (
     columns: MuiDataGridColDef[],
+    rowActionsColumnIndex: number | undefined,
     rowActionsColumnProps: any,
     rowActions: DataCommonAdditionalAction[],
     rowEditActions: DataCommonAdditionalAction[],
@@ -426,7 +429,7 @@ const useGridColumns = (
             };
         });
         if (rowActions && rowActions.length) {
-            processedColumns.push({
+            const actionsColumn = {
                 field: ' ',
                 type: 'actions',
                 getActions: (params: GridRowParams) => {
@@ -448,7 +451,12 @@ const useGridColumns = (
                     );
                 },
                 ...rowActionsColumnProps,
-            });
+            };
+            processedColumns.splice(
+                rowActionsColumnIndex ?? processedColumns.length,
+                0,
+                actionsColumn
+            );
         }
         return processedColumns;
     }, [columns, fields, rowModesModel, artifacts]);
@@ -528,6 +536,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         rowHideUpdateButton,
         rowHideDeleteButton,
         rowHideDetailsButton,
+        rowActionsColumnIndex,
         rowActionsColumnProps,
         rowAdditionalActions = [],
         rowSelectionModel: rowSelectionModelProp = DEFAULT_ROW_SELECTION,
@@ -571,6 +580,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
     const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel | undefined>(
         paginationModelProp
     );
+    const [footerAutoPageSize, setFooterAutoPageSize] = React.useState<boolean>(!(otherProps.pageSizeOptions != null && paginationModelProp != null));
     const [rowSelectionModel, setRowSelectionModel] =
         React.useState<GridRowSelectionModel>(rowSelectionModelProp);
     const [additionalRows, setAdditionalRows] = React.useState<any[]>(
@@ -747,6 +757,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
     );
     const processedColumns = useGridColumns(
         columns,
+        rowActionsColumnIndex,
         rowActionsColumnProps,
         [...rowAdditionalActions, ...rowEditActions],
         rowEditActions,
@@ -788,7 +799,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         ? {
               paginationMode: 'server',
               pagination: true,
-              autoPageSize: !autoHeight,
+              autoPageSize: !autoHeight && footerAutoPageSize,
               paginationModel: paginationModel,
               onPaginationModelChange: setPaginationModel,
               rowCount: pageInfo?.totalElements ?? 0,
@@ -854,6 +865,9 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                         pageInfo,
                         setRowSelectionModel,
                         pageSizeOptions: otherProps?.pageSizeOptions,
+                        enableAutoPageSizeOption: !autoHeight,
+                        autoPageSize: footerAutoPageSize,
+                        setAutoPageSize: setFooterAutoPageSize,
                     },
                     noRowsOverlay: {
                         findDisabled,

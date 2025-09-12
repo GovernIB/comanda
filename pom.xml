@@ -10,7 +10,7 @@
 		<spring-boot.version>2.7.18</spring-boot.version>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>
 		<spring.filter.version>2.1.6</spring.filter.version>
-		<liquibase.version>4.9.1</liquibase.version>
+		<liquibase.version>4.29.2</liquibase.version>
 		<openapi.version>1.7.0</openapi.version>
 		<jasperreports.version>6.20.6</jasperreports.version>
 		<dynamicreports-core.version>6.12.1</dynamicreports-core.version>

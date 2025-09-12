@@ -13,9 +13,9 @@ import {
     springFilterBuilder,
     useBaseAppContext,
     useFormContext,
+    useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
-import {Box, Tab, Tabs} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
@@ -24,6 +24,7 @@ import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
 // TODO Debería añadirse un export de este tipo
 import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
+import {Cancel, CheckCircle} from '@mui/icons-material';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -54,18 +55,22 @@ const useActions = (refresh?: () => void) => {
             });
     }
     const appExport = (id:any) => report(id, 'app_export', t('page.apps.action.export'), 'JSON')
-    const appActions: DataCommonAdditionalAction[] = [
-        {
-            label: t('page.apps.action.export'),
-            icon: 'download',
-            showInMenu: true,
-            onClick: appExport,
-        },
-    ]
+
+    const toogleActiva = (id:any) => {
+        apiAction(id, { code: "toogle_activa" })
+            .then(() => {
+                refresh?.();
+                temporalMessageShow(null, t('page.appsEntorns.action.toolbalActiva.ok'), 'success');
+            })
+            .catch((error) => {
+                error?.message && temporalMessageShow(null, error?.message, 'error');
+            });
+    }
 
     return {
         pingUrl,
-        appActions,
+        appExport,
+        toogleActiva,
     };
 };
 
@@ -102,13 +107,13 @@ const AppEntornForm: React.FC = () => {
             </Grid>
             {data?.compactable === true && (
                 <>
-                    <Grid size={{xs:12, md:4}}>
-                        <FormField name="compactacioSetmanalMesos" type="number" required={false} label={t('page.apps.fields.compactacioSetmanalMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioSetmanes') }} />
-                    </Grid>
-                    <Grid size={{xs:12, md:4}}>
+                    {/*<Grid size={{xs:12, md:4}}>*/}
+                    {/*    <FormField name="compactacioSetmanalMesos" type="number" required={false} label={t('page.apps.fields.compactacioSetmanalMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioSetmanes') }} />*/}
+                    {/*</Grid>*/}
+                    <Grid size={{xs:12, md:6}}>
                         <FormField name="compactacioMensualMesos" type="number" required={false} label={t('page.apps.fields.compactacioMensualMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioMesos') }} />
                     </Grid>
-                    <Grid size={{xs:12, md:4}}>
+                    <Grid size={{xs:12, md:6}}>
                         <FormField name="eliminacioMesos" type="number" required={false} label={t('page.apps.fields.eliminacioMesos')} componentProps={{ title: t('page.apps.tooltips.borratMesos') }} />
                     </Grid>
                     <Grid size={12}>
@@ -134,7 +139,7 @@ const AppsEntorns: React.FC = () => {
     const columns = [
         {
             field: 'entorn',
-            flex: 1,
+            flex: 2,
         },
         {
             field: 'versio',
@@ -143,11 +148,42 @@ const AppsEntorns: React.FC = () => {
         {
             field: 'activa',
             flex: 0.5,
+            renderCell: (params:any) => {
+                if (params?.row?.activa) {
+                    return <CheckCircle color="success" />
+                } else {
+                    return <Cancel color="error"/>
+                }
+            }
         },
     ];
+
+    const apiRef = useMuiDataGridApiRef();
+    const refresh = () => {
+        apiRef?.current?.refresh?.()
+    }
+    const { toogleActiva } = useActions(refresh)
+
+    const actions = [
+        {
+            label: t('page.appsEntorns.action.toolbalActiva.activar'),
+            icon: "check_circle",
+            showInMenu: true,
+            onClick: toogleActiva,
+            hidden: (row:any) => row?.activa,
+        },
+        {
+            label: t('page.appsEntorns.action.toolbalActiva.desactivar'),
+            icon: "cancel",
+            showInMenu: true,
+            onClick: toogleActiva,
+            hidden: (row:any) => !row?.activa,
+        },
+    ]
     return (
         <GridPage>
             <MuiDataGrid
+                apiRef={apiRef}
                 title={t('page.appsEntorns.title')}
                 resourceName="entornApp"
                 staticFilter={`app.id : ${appId}`}
@@ -160,6 +196,7 @@ const AppsEntorns: React.FC = () => {
                 formAdditionalData={{
                     app: { id: appId },
                 }}
+                rowAdditionalActions={actions}
             />
         </GridPage>
     );
@@ -230,7 +267,15 @@ export const AppForm: React.FC = () => {
 
 const Apps: React.FC = () => {
     const { t } = useTranslation();
-    const { appActions } = useActions();
+    const { appExport } = useActions();
+    const appActions: DataCommonAdditionalAction[] = [
+        {
+            label: t('page.apps.action.export'),
+            icon: 'download',
+            showInMenu: true,
+            onClick: appExport,
+        },
+    ]
 
     const columns = [
         {

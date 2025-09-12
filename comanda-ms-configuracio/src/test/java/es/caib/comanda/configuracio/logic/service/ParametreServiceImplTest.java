@@ -1,6 +1,7 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
 import es.caib.comanda.configuracio.persist.entity.ParametreEntity;
@@ -8,9 +9,8 @@ import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Map;
 
@@ -28,6 +28,10 @@ class ParametreServiceImplTest {
     private CacheHelper cacheHelper;
     @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private EstadisticaServiceClient estadisticaServiceClient;
 
     // S'utilitza la classe real amb mocks injectats (el mètode protegit és accessible dins el mateix paquet)
     @InjectMocks
@@ -47,29 +51,49 @@ class ParametreServiceImplTest {
     }
 
     @Test
-    void afterUpdateSave_evictsCache_and_programsDeletion_forPeriode() {
+    void onSalutInfoUpdated_programsDeletion_forPeriode() {
         ParametreEntity e = entity(10L, BaseConfig.PROP_MONITOR_BUIDAT_PERIODE_MINUTS);
-        service.afterUpdateSave(e, (Parametre) null, Map.of(), false);
+        service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
 
-        verify(cacheHelper).evictCacheItem(PARAMETRE_CACHE, "10");
         verify(monitorServiceClient).programarBorrat("AuthHdr");
+        verify(estadisticaServiceClient, never()).programarTot("AuthHdr");
     }
 
     @Test
-    void afterUpdateSave_evictsCache_and_programsDeletion_forRetencio() {
+    void onSalutInfoUpdated_programsDeletion_forRetencio() {
         ParametreEntity e = entity(11L, BaseConfig.PROP_MONITOR_BUIDAT_RETENCIO_DIES);
-        service.afterUpdateSave(e, (Parametre) null, Map.of(), false);
+        service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
 
-        verify(cacheHelper).evictCacheItem(PARAMETRE_CACHE, "11");
         verify(monitorServiceClient).programarBorrat("AuthHdr");
+        verify(estadisticaServiceClient, never()).programarTot("AuthHdr");
     }
 
     @Test
-    void afterUpdateSave_evictsCache_only_forOtherCodes() {
+    void onSalutInfoUpdated_reprograms_actiu() {
+        ParametreEntity e = entity(10L, BaseConfig.PROP_STATS_COMPACTAR_ACTIU);
+        service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
+
+        verify(estadisticaServiceClient).programarTot("AuthHdr");
+        verify(monitorServiceClient, never()).programarBorrat("AuthHdr");
+    }
+
+    @Test
+    void onSalutInfoUpdated_reprograms_cron() {
+        ParametreEntity e = entity(11L, BaseConfig.PROP_STATS_COMPACTAR_CRON);
+        service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
+
+        verify(estadisticaServiceClient).programarTot("AuthHdr");
+        verify(monitorServiceClient, never()).programarBorrat("AuthHdr");
+    }
+
+    @Test
+    void afterUpdateSave_evictsCache_and_publishesEvent() {
         ParametreEntity e = entity(12L, "other.code");
         service.afterUpdateSave(e, (Parametre) null, Map.of(), false);
 
         verify(cacheHelper).evictCacheItem(PARAMETRE_CACHE, "12");
-        verify(monitorServiceClient, never()).programarBorrat(anyString());
+        verify(eventPublisher).publishEvent(
+                ArgumentMatchers.eq(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e))
+        );
     }
 }

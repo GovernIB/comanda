@@ -3,6 +3,8 @@ package es.caib.comanda.estadistica.persist.repository;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 
@@ -61,5 +63,9 @@ public interface FetRepository extends BaseRepository<FetEntity, Long>, FetRepos
             @Param("p_data") String data,
             @Param("p_resultat") List<Object[]> resultat // Contingut del cursor
     );
+
+    // Rendiment: mètodes auxiliars per processat paginat/gran volum
+    long countByEntornAppId(Long entornAppId);
+    Page<FetEntity> findByEntornAppId(Long entornAppId, Pageable pageable);
 
 }

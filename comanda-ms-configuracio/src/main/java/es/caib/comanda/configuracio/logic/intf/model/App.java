@@ -1,9 +1,12 @@
 package es.caib.comanda.configuracio.logic.intf.model;
 
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,9 +27,20 @@ import java.util.List;
 @ResourceConfig(
 		quickFilterFields = { "codi", "nom" },
 		descriptionField = "nom",
+		accessConstraints = {
+				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+						roles = { BaseConfig.ROLE_ADMIN },
+						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+				),
+				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+						roles = { BaseConfig.ROLE_CONSULTA },
+						grantedPermissions = { PermissionEnum.READ }
+				)
+		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = App.APP_EXPORT, requiresId = true),
-//				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT)
 		})
 public class App extends BaseResource<Long> {
 

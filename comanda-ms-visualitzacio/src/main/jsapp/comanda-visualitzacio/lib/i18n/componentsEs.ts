@@ -53,6 +53,7 @@ const componentsEs = {
             multiple: '{{count}} selected rows',
         },
         pageInfo: '{{from}} a {{to}} de {{count}}',
+        sizeAuto: 'Automático',
     },
     form: {
         goBack: {

@@ -25,8 +25,10 @@ public enum IntegracioApp {
     RIP ("Ripea"),
     RSC ("Rolsac"),
     RS2 ("Rolsac2"),
+    SIG ("Signatura"),
     SIS ("Sistra"),
     SI2 ("Sistra2"),
+    TIN ("TinyCaib"),
     TRA ("TranslatorIB"),
     USR ("Usuaris"),
     VFI ("Validació firma");

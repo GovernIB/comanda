@@ -1,10 +1,13 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,9 +51,17 @@ import java.io.Serializable;
 @ResourceConfig(
         quickFilterFields = { "dimensio.nom", "valor" },
         descriptionField = "desc",
+        accessConstraints = {
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+                )
+        },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = DimensioValor.DIMENSIO_VALOR_FILTER, formClass = DimensioValor.DimensioValorFilter.class)
-        })
+        }
+)
 public class DimensioValor extends BaseResource<Long> {
 
     public static final String DIMENSIO_VALOR_FILTER = "dimensioValorFilter";

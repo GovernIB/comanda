@@ -14,8 +14,10 @@ import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.model.FieldOption;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -53,11 +55,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final CacheHelper cacheHelper;
     private final ConfiguracioSchedulerService schedulerService;
     private final RestTemplate restTemplate;
+    private final ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     @PostConstruct
     public void init() {
         register(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService));
         register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
+        register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
     }
 
     @Override
@@ -99,19 +103,31 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 + (resource.getEntorn() != null ? resource.getEntorn().getDescription() : ""));
     }
 
+    private void reprogramarTasques(EntornAppEntity entity, boolean netejarCache){
+        schedulerService.programarTasca(entity);
+        appInfoHelper.programarTasquesSalutEstadistica(entity);
+        if (netejarCache)
+            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+    }
+
     @Override
     protected void afterCreateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterCreateSave(entity, resource, answers, anyOrderChanged);
-        schedulerService.programarTasca(entity);
-        appInfoHelper.programarTasquesSalutEstadistica(entity);
+        reprogramarTasques(entity, false);
     }
 
     @Override
     protected void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
-        schedulerService.programarTasca(entity);
-        appInfoHelper.programarTasquesSalutEstadistica(entity);
-        cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+        reprogramarTasques(entity, true);
+    }
+
+    @Override
+    protected void afterDelete(EntornAppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        super.afterDelete(entity, answers);
+//        Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
+        entity.setActiva(false);
+        reprogramarTasques(entity, true);
     }
 
     // ACCIONS
@@ -194,6 +210,21 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             }
             pingUrlResponse.setMessage(message);
             return pingUrlResponse;
+        }
+    }
+
+    @RequiredArgsConstructor
+    private class ToogleActiva implements ActionExecutor<EntornAppEntity, String, EntornApp> {
+        private final ResourceEntityMappingHelper resourceEntityMappingHelper;
+
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
+
+        @Override
+        public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
+            entity.setActiva(!entity.isActiva());
+            reprogramarTasques(entity, true);
+            return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }
 

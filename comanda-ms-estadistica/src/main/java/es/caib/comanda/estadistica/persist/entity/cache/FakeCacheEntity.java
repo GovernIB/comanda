@@ -26,7 +26,6 @@ public class FakeCacheEntity  implements ResourceEntity<ComandaCache, String> {
     @Column(name = "id")
     private String id;
 
-
     @Override
     public void setId(String id) { }
 

@@ -1,18 +1,23 @@
-import React, {useEffect, useState} from 'react';
-import {AccessTime, CalendarMonth} from '@mui/icons-material';
+import React, { useEffect, useState } from 'react';
+import { AccessTime, CalendarMonth } from '@mui/icons-material';
 import dayjs from 'dayjs';
-import {Link as RouterLink, LinkProps as RouterLinkProps, useLocation, useNavigate,} from 'react-router-dom';
+import { Link as RouterLink, LinkProps as RouterLinkProps, useLocation, useNavigate } from 'react-router-dom';
 import i18n from '../i18n/i18n';
-import {useTranslation} from 'react-i18next';
-import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
-import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
+import { useTranslation } from 'react-i18next';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
 import HeaderLanguageSelector from "./HeaderLanguageSelector";
 import Button from '@mui/material/Button';
 import AppMenu from "./AppMenu";
 import drassana from '../assets/drassana.png';
-import {MenuEntry, MuiBaseApp, useBaseAppContext} from 'reactlib';
+import {
+    MenuEntry,
+    MuiBaseApp,
+    useBaseAppContext,
+    useResourceApiContext
+} from 'reactlib';
 import Footer from "./Footer.tsx";
 import {DataFormDialogApi} from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
 import {UserProfileFormDialog, UserProfileFormDialogButton} from './UserProfileFormDialog.tsx';
@@ -74,15 +79,13 @@ const CustomLocalizationProvider = ({ children }: React.PropsWithChildren) => {
 // Hora del sistema
 // Component separat per al rellotge del sistema per evitar re-renders innecesaris
 const SystemTimeDisplay = React.memo(() => {
-    const [currentTime, setCurrentTime] = useState(dayjs());
-
-    useEffect(() => {
+    const [currentTime, setCurrentTime] = React.useState(dayjs());
+    React.useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(dayjs());
         }, 1000);
         return () => clearInterval(timer);
     }, []);
-
     return (
         <div
             style={{
@@ -114,15 +117,17 @@ const generateSystemTimeItems = () => {
 }
 
 // Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
-const generateMenuItems = (appMenuEntries: MenuEntry[] | undefined) => {
-    return appMenuEntries?.length
-        ? appMenuEntries.map((entry) => (
+const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) => {
+    const { indexState: apiIndex } = useResourceApiContext();
+    const filteredAppMenuEntries = appMenuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
+    return filteredAppMenuEntries?.length
+        ? filteredAppMenuEntries.map((entry) => (
             <Button
                 className="appMenuItem"
                 key={entry.id}
                 color="inherit"
                 component={Link}
-                to={entry.to} // Navegació amb React Router
+                to={entry.to ?? ''} // Navegació amb React Router
                 sx={{display: {xs: 'none', md: 'inline'}}}
             >
                 {entry.title}
@@ -144,9 +149,12 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
         : [];
 }
 // Menú general
-const generateAppMenu = (menuEntries: MenuEntry[] | undefined) => {
-    return menuEntries?.length
-        ? [<AppMenu key="app_menu" menuEntries={menuEntries} />]
+const generateAppMenu = (menuEntries: MenuEntryWithResource[] | undefined) => {
+    const { indexState: apiIndex } = useResourceApiContext();
+    console.log('>>> api links', apiIndex?.links)
+    const filteredMenuEntries = menuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
+    return filteredMenuEntries?.length
+        ? [<AppMenu key="app_menu" menuEntries={filteredMenuEntries} />]
         : [];
 }
 
@@ -236,10 +244,10 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAppbarBackgroundImg={appbarBackgroundImg}
         headerAppbarStyle={appbarStyle}
         headerAdditionalComponents={[
-            ...generateMenuItems(appMenuEntries), // Menú
+            ...generateMenuItems(menuEntries), // Menú
             ...generateSystemTimeItems(), // Hora del sistema
             ...generateLanguageItems(availableLanguages), // Idioma
-            ...generateAppMenu(menuEntries) // Menú lateral
+            ...generateAppMenu(appMenuEntries), // Menú lateral
         ]}
         headerAdditionalAuthComponents={
             <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(

@@ -20,6 +20,7 @@ import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,9 +53,10 @@ public class EntornAppServiceImplTest {
                                           AppInfoHelper appInfoHelper,
                                           CacheHelper cacheHeper,
                                           ConfiguracioSchedulerService schedulerService,
-                                          RestTemplate restTemplate) {
+                                          RestTemplate restTemplate,
+                                          ResourceEntityMappingHelper resourceEntityMappingHelper) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, 
-                  entornAppRepository, appInfoHelper, cacheHeper, schedulerService, restTemplate);
+                  entornAppRepository, appInfoHelper, cacheHeper, schedulerService, restTemplate, resourceEntityMappingHelper);
         }
 
         @Override
@@ -106,6 +108,9 @@ public class EntornAppServiceImplTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private ResourceEntityMappingHelper resourceEntityMappingHelper;
+
     private TestableEntornAppServiceImpl entornAppService;
 
     private EntornAppEntity entornAppEntity;
@@ -124,7 +129,8 @@ public class EntornAppServiceImplTest {
             appInfoHelper,
             cacheHelper,
             schedulerService,
-            restTemplate
+            restTemplate,
+            resourceEntityMappingHelper
         );
         
         // Setup test data

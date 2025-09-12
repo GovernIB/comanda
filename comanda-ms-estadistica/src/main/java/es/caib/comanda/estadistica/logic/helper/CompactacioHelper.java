@@ -2,13 +2,17 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.CompactacioEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.FetTipusEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -21,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Helper responsable d'executar el procés de compactació d'estadístiques.
@@ -29,8 +34,6 @@ import java.util.Objects;
  * 1) Compactació per valors de dimensions agrupables (valor -> valorAgrupacio).
  * 2) Compactació temporal (setmanal/mensual) i eliminació per retenció, en funció de la configuració.
  * <p>
- * Nota: La fase 2 requereix accedir a configuració específica d'EntornApp que actualment no està disponible
- * en el client d'estadística. Per tant, s'ha deixat com a punt d'extensió (TODO) per a una futura iteració.
  */
 @Slf4j
 @Component
@@ -42,29 +45,48 @@ public class CompactacioHelper {
     private final DimensioValorRepository dimensioValorRepository;
     private final FetRepository fetRepository;
     private final IndicadorRepository indicadorRepository;
+    private final EstadisticaClientHelper estadisticaClientHelper;
+    private final EstadisticaHelper estadisticaHelper;
 
     public CompactacioHelper(DimensioValorRepository dimensioValorRepository,
                              FetRepository fetRepository,
-                             IndicadorRepository indicadorRepository) {
+                             IndicadorRepository indicadorRepository,
+                             EstadisticaClientHelper estadisticaClientHelper,
+                             EstadisticaHelper estadisticaHelper) {
         this.dimensioValorRepository = dimensioValorRepository;
         this.fetRepository = fetRepository;
         this.indicadorRepository = indicadorRepository;
+        this.estadisticaClientHelper = estadisticaClientHelper;
+        this.estadisticaHelper = estadisticaHelper;
     }
 
+    private MonitorEstadistica initializeMonitor(EntornApp entornApp) {
+        return new MonitorEstadistica(
+                entornApp.getId(),
+                entornApp.getEstadisticaInfoUrl(),
+                entornApp.getEstadisticaUrl(),
+                estadisticaClientHelper);
+    }
+
+    @Transactional
     public void compactar(EntornApp entornApp) {
         // Punt d'entrada del procés de compactació per un entorn concret.
         // Aquest mètode orquestra les dues fases: 1) compactació per dimensions agrupables i 2) compactació temporal + retenció.
         log.info("[Compactacio] Inici del procés de compactació de fets per l'entornApp {}", entornApp.getId());
+
+        MonitorEstadistica monitorEstadistica = initializeMonitor(entornApp);
         try {
+            monitorEstadistica.startCompactarAction();
             // 1) Compactació per valors de dimensions agrupables
-            compactarPerDimensioAgrupable(entornApp);
+//            compactarPerDimensioAgrupable(entornApp);
 
             // 2) Compactació temporal i eliminació per retenció (pendent de configuració EntornApp)
             compactarTemporalIEsborraPerRetencio(entornApp);
-
+            monitorEstadistica.endCompactarAction();
             log.info("[Compactacio] Procés de compactació finalitzat");
         } catch (Exception e) {
             log.error("[Compactacio] Error en el procés de compactació", e);
+            monitorEstadistica.endCompactarAction(e);
         }
     }
 
@@ -85,6 +107,50 @@ public class CompactacioHelper {
                 return;
             }
 
+            // Estratègia de rendiment: si el volum és gran, processam per lots evitant carregar-ho tot en memòria
+            long total = 0L;
+            try {
+                total = fetRepository.countByEntornAppId(entornApp.getId());
+            } catch (Exception ignore) {
+                // alguns mocks/tests no tenen aquest mètode configurat: caurem al camí original
+            }
+
+            final int PAGE_SIZE = 5000; // mida de lot conservadora
+            final int FLUSH_INTERVAL = 1000;
+            int fusionats = 0;
+            int eliminats = 0;
+
+            if (total > PAGE_SIZE) {
+                log.info("[Compactacio] Processament paginat per entorn {}. Total fets: {}. Mida pàgina: {}", entornApp.getId(), total, PAGE_SIZE);
+                int page = 0;
+                while (true) {
+                    var pageable = PageRequest.of(page, PAGE_SIZE);
+                    var pageData = fetRepository.findByEntornAppId(entornApp.getId(), pageable);
+                    if (pageData == null || pageData.isEmpty()) break;
+
+                    var agregats = agruparFetsAmbDimensionsNormalitzades(entornApp.getId(), pageData.getContent(), reemplaCosPerDimensio);
+                    if (!agregats.isEmpty()) {
+                        var indicadorsPerEntorn = carregarIndicadorsPerEntorn(agregats);
+                        int[] counters = fusionarIEliminarBatch(agregats, indicadorsPerEntorn);
+                        fusionats += counters[0];
+                        eliminats += counters[1];
+                    }
+
+                    // Gestionam memòria del context de persistència
+                    if (((page + 1) * PAGE_SIZE) % FLUSH_INTERVAL == 0) {
+                        try {
+                            entityManager.flush(); entityManager.clear();
+                        } catch (Exception ignored) {}
+                    }
+
+                    page++;
+                    if (!pageData.hasNext()) break;
+                }
+                log.info("[Compactacio] Fase 1 finalitzada (paginat). Fets fusionats/actualitzats: {}, fets eliminats: {}", fusionats, eliminats);
+                return;
+            }
+
+            // Camí original (volum petit o tests)
             var totsFets = carregarFetsEntorn(entornApp);
             var agregats = agruparFetsAmbDimensionsNormalitzades(entornApp.getId(), totsFets, reemplaCosPerDimensio);
             if (agregats.isEmpty()) {
@@ -99,6 +165,7 @@ public class CompactacioHelper {
         } catch (Exception e) {
             log.warn("[Compactacio] Error durant la compactació per dimensions agrupables", e);
         } finally {
+            try { entityManager.flush(); entityManager.clear(); } catch (Exception ignored) {}
             log.info("[Compactacio] Fase 1 - Compactació per dimensions agrupables: fi");
         }
     }
@@ -106,10 +173,10 @@ public class CompactacioHelper {
     private Map<String, Map<String, String>> construirMapaReemplac(EntornApp entornApp) {
         // Construeix un mapa de reemplaç per cada dimensió: codiDimensio -> (valorOriginal -> valorAgrupacio)
         // Es filtra per l'entorn proporcionat per a limitar l'abast de la compactació.
-        var totsDimVal = dimensioValorRepository.findByDimensioEntornAppId(entornApp.getId());
+        var totsDimVal = dimensioValorRepository.findByDimensioEntornAppIdAndAgrupableTrueAndValorAgrupacioIsNotNull(entornApp.getId());
         var reemplaCosPerDimensio = new HashMap<String, Map<String, String>>();
         totsDimVal.stream()
-                .filter(dv -> Boolean.TRUE.equals(dv.getAgrupable()) && dv.getValorAgrupacio() != null && dv.getDimensio() != null && dv.getDimensio().getCodi() != null)
+                .filter(dv -> dv.getDimensio() != null && dv.getDimensio().getCodi() != null)
                 .forEach(dv -> {
                     reemplaCosPerDimensio.computeIfAbsent(dv.getDimensio().getCodi(), k -> new HashMap<>())
                             .put(dv.getValor(), dv.getValorAgrupacio());
@@ -143,7 +210,8 @@ public class CompactacioHelper {
         @Override public int hashCode() { return Objects.hash(entornAppId, data, dims); }
     }
 
-    private LinkedHashMap<ClauDimensio, List<FetEntity>> agruparFetsAmbDimensionsNormalitzades(Long entornAppId,
+    // Visibilitat ampliada a protected per facilitar proves dirigides a l'agrupació per dimensions.
+    protected LinkedHashMap<ClauDimensio, List<FetEntity>> agruparFetsAmbDimensionsNormalitzades(Long entornAppId,
                                                                                                List<FetEntity> totsFets,
                                                                                                Map<String, Map<String, String>> reemplaCosPerDimensio) {
         // Recorre tots els fets, aplica els reemplaços de dimensions i agrupa
@@ -307,22 +375,23 @@ public class CompactacioHelper {
             // Reagrupa les dades anteriors al llindar mensual a l'inici del seu mes, aggregant indicadors segons configuració.
             LocalDate llindarMensual = entornApp.getCompactacioMensualMesos() != null && entornApp.getCompactacioMensualMesos() > 0 ? llindars.iniciMesActual.minusMonths(entornApp.getCompactacioMensualMesos()) : null;
             if (llindarMensual != null) {
-                var llistaMensual = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarMensual);
+                var llistaMensual = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarMensual)
+                        .stream().filter(fet -> fet.getTipus() != FetTipusEnum.MENSUAL).collect(Collectors.toList());
                 totalFetsActualitzats += compactarPerPeriode(llistaMensual, entornAppId, indicadorsPerEntorn, PeriodeTarget.MENSUAL);
             }
 
-            // 1.c) Compactació setmanal
-            // Reagrupa les dades anteriors al llindar setmanal a l'inici de setmana (dilluns), evitant solapar amb la mensual.
-            LocalDate llindarSetmanal = entornApp.getCompactacioSetmanalMesos() != null && entornApp.getCompactacioSetmanalMesos() > 0 ? llindars.iniciMesActual.minusMonths(entornApp.getCompactacioSetmanalMesos()) : null;
-            if (llindarSetmanal != null) {
-                List<FetEntity> llistaSetmanal;
-                if (llindarMensual != null) {
-                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBetween(entornAppId, llindarSetmanal, llindarMensual);
-                } else {
-                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarSetmanal);
-                }
-                totalFetsActualitzats += compactarPerPeriode(llistaSetmanal, entornAppId, indicadorsPerEntorn, PeriodeTarget.SETMANAL);
-            }
+//            // 1.c) Compactació setmanal
+//            // Reagrupa les dades anteriors al llindar setmanal a l'inici de setmana (dilluns), evitant solapar amb la mensual.
+//            LocalDate llindarSetmanal = entornApp.getCompactacioSetmanalMesos() != null && entornApp.getCompactacioSetmanalMesos() > 0 ? llindars.iniciMesActual.minusMonths(entornApp.getCompactacioSetmanalMesos()) : null;
+//            if (llindarSetmanal != null) {
+//                List<FetEntity> llistaSetmanal;
+//                if (llindarMensual != null) {
+//                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBetween(entornAppId, llindarSetmanal, llindarMensual);
+//                } else {
+//                    llistaSetmanal = fetRepository.findByEntornAppIdAndTempsDataBefore(entornAppId, llindarSetmanal);
+//                }
+//                totalFetsActualitzats += compactarPerPeriode(llistaSetmanal, entornAppId, indicadorsPerEntorn, PeriodeTarget.SETMANAL);
+//            }
             log.info("[Compactacio] Fase 2 finalitzada. Fets actualitzats/creats: {}, fets eliminats: {}", totalFetsActualitzats, totalFetsEliminats);
         } catch (Exception e) {
             log.warn("[Compactacio] Error durant la fase de compactació temporal/retenció", e);
@@ -352,133 +421,99 @@ public class CompactacioHelper {
 
     private enum PeriodeTarget {SETMANAL, MENSUAL}
 
+    // Nova extracció: agrupació per període (setmana/mes) per facilitar proves i reutilització.
+//    TODO Se podria optimitzar es conteig de fets al mes actual fent aqui un map clau (mes/any) valor (Set de dies)
+    protected LinkedHashMap<ClauDimensio, List<FetEntity>> agruparFetsPerPeriode(List<FetEntity> fets,
+                                                                                  Long entornAppId,
+                                                                                  PeriodeTarget target) {
+        var agrupats = new LinkedHashMap<ClauDimensio, List<FetEntity>>();
+        if (fets == null || fets.isEmpty()) return agrupats;
+
+        for (var fet : fets) {
+            var dims = new HashMap<>(fet.getDimensionsJson() == null ? Map.of() : fet.getDimensionsJson());
+            var data = fet.getTemps().getData();
+            LocalDate novaData;
+            if (target == PeriodeTarget.MENSUAL) {
+                novaData = data.withDayOfMonth(1);
+            } else {
+                // Dilluns com a inici de setmana (ISO)
+                DayOfWeek first = DayOfWeek.MONDAY;
+                DayOfWeek dow = data.getDayOfWeek();
+                int diff = dow.getValue() - first.getValue();
+                novaData = data.minusDays(diff);
+            }
+            var clau = new ClauDimensio(entornAppId, novaData, Collections.unmodifiableMap(dims));
+            agrupats.computeIfAbsent(clau, k -> new ArrayList<>()).add(fet);
+        }
+        return agrupats;
+    }
+
     private int compactarPerPeriode(List<FetEntity> fets,
                                     Long entornAppId,
                                     Map<String, IndicadorEntity> indCfgMap,
                                     PeriodeTarget target) {
         if (fets == null || fets.isEmpty()) return 0;
 
-        class Clau {
-            final Long entorn;
-            final LocalDate data;
-            final Map<String, String> dimensions;
+        var agrupats = agruparFetsPerPeriode(fets, entornAppId, target);
 
-            Clau(Long e, LocalDate d, Map<String, String> di) {
-                entorn = e;
-                data = d;
-                dimensions = di;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
-                Clau c = (Clau) o;
-                return Objects.equals(entorn, c.entorn) && Objects.equals(data, c.data) && Objects.equals(dimensions, c.dimensions);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(entorn, data, dimensions);
-            }
-        }
-
-        var agrupats = new LinkedHashMap<Clau, List<FetEntity>>();
-
-        for (var fet : fets) {
-            var dims = new HashMap<>(fet.getDimensionsJson() == null ? Map.of() : fet.getDimensionsJson());
-            LocalDate novaData;
-            var data = fet.getTemps().getData();
-            if (target == PeriodeTarget.MENSUAL) {
-                novaData = data.withDayOfMonth(1);
-            } else {
-                // ISO Monday as first day of week
-                DayOfWeek first = DayOfWeek.MONDAY;
-                DayOfWeek dow = data.getDayOfWeek();
-                int diff = dow.getValue() - first.getValue();
-                novaData = data.minusDays(diff);
-            }
-            var clau = new Clau(entornAppId, novaData, Collections.unmodifiableMap(dims));
-            agrupats.computeIfAbsent(clau, k -> new ArrayList<>()).add(fet);
-        }
-
+        HashMap<LocalDate, TempsEntity> tempsEntityCache = new HashMap<>();
+        List<Long> fetsEliminar = new ArrayList<>();
         int fetsActualitzats = 0;
-        int fetsEliminats = 0;
 
         for (var entry : agrupats.entrySet()) {
             var clau = entry.getKey();
             var llista = entry.getValue();
 
-            Map<String, Double> indicadorsResult = new HashMap<>();
-            Map<String, Double> sumatori = new HashMap<>();
-            Map<String, Integer> comptatge = new HashMap<>();
-            Map<String, Double> comptadorPerMitjana = new HashMap<>();
-
-            for (var fet : llista) {
-                var indMap = fet.getIndicadorsJson();
-                if (indMap == null) continue;
-                for (var e : indMap.entrySet()) {
-                    String codi = e.getKey();
-                    Double valor = e.getValue();
-                    if (valor == null) continue;
-                    var indCfg = indCfgMap != null ? indCfgMap.get(codi) : null;
-                    var tipus = indCfg != null && indCfg.getTipusCompactacio() != null ? indCfg.getTipusCompactacio() : CompactacioEnum.SUMA;
-                    switch (tipus) {
-                        case SUMA:
-                            sumatori.merge(codi, valor, Double::sum);
-                            break;
-                        case MAXIMA:
-                            indicadorsResult.merge(codi, valor, java.lang.Math::max);
-                            break;
-                        case MINIMA:
-                            indicadorsResult.merge(codi, valor, java.lang.Math::min);
-                            break;
-                        case MITJANA:
-                            sumatori.merge(codi, valor, Double::sum);
-                            comptatge.merge(codi, 1, Integer::sum);
-                            if (indCfg != null && indCfg.getIndicadorComptadorPerMitjana() != null) {
-                                String compteCodi = indCfg.getIndicadorComptadorPerMitjana().getCodi();
-                                Double compteValor = indMap.get(compteCodi);
-                                if (compteValor != null) {
-                                    comptadorPerMitjana.merge(codi, compteValor, Double::sum);
-                                }
-                            }
-                            break;
-                    }
-                }
-            }
-            for (var e : sumatori.entrySet()) {
-                String codi = e.getKey();
-                double suma = e.getValue();
-                var indCfg = indCfgMap != null ? indCfgMap.get(codi) : null;
-                var tipus = indCfg != null && indCfg.getTipusCompactacio() != null ? indCfg.getTipusCompactacio() : CompactacioEnum.SUMA;
-                if (tipus == CompactacioEnum.SUMA) {
-                    indicadorsResult.put(codi, suma);
-                } else if (tipus == CompactacioEnum.MITJANA) {
-                    Double divisorEspecial = comptadorPerMitjana.get(codi);
-                    if (divisorEspecial != null && divisorEspecial > 0) {
-                        indicadorsResult.put(codi, suma / divisorEspecial);
-                    } else {
-                        int n = comptatge.getOrDefault(codi, 0);
-                        indicadorsResult.put(codi, n > 0 ? (suma / n) : 0d);
-                    }
-                }
-            }
+            Map<String, Double> indicadorsResult = calcularIndicadorsAgregats(llista, indCfgMap);
 
             var primer = llista.get(0);
-            var desti = primer;
-            desti.getTemps().setData(clau.data);
+            var fetsMesActual = fets.stream()
+                    .filter(fet -> fet.getTemps().getData().getMonthValue() == primer.getTemps().getData().getMonthValue())
+                    .collect(Collectors.toList());
+
+            int nombreFetsMesActual = 0;
+//            TODO Aquesta manera de contar es fets al mes actual és molt més rapida, pero no l'he acabada de fer funcionar. Falta fer proves
+//            boolean[] diesMesAmbDades = new boolean[primer.getTemps().getData().lengthOfMonth()];
+//            for (var fetMesActual : fetsMesActual) {
+//                diesMesAmbDades[fetMesActual.getTemps().getDia()-1] = true;
+//            }
+//            for (boolean diaConteDades : diesMesAmbDades){
+//                if (diaConteDades) nombreFetsMesActual++;
+//            }
+
+            for (int i = 1; i <= primer.getTemps().getData().lengthOfMonth(); i++) {
+                int finalI = i;
+                if (fetsMesActual.stream()
+                        .anyMatch(fet -> fet.getTemps().getData().getDayOfMonth() == finalI)){
+                    nombreFetsMesActual++;
+                }
+            }
+
+            var desti = new FetEntity();
+            if (!tempsEntityCache.containsKey(clau.data)) {
+                tempsEntityCache.put(clau.data, estadisticaHelper.createOrGetTempsEntity(clau.data));
+            }
+            desti.setTemps(tempsEntityCache.get(clau.data));
             desti.setIndicadorsJson(indicadorsResult);
+            desti.setDimensionsJson(primer.getDimensionsJson()); // TODO S'hauria de anar fent un "merge" de totes ses dimensions
+            desti.setTipus(FetTipusEnum.MENSUAL);
+            desti.setNumDies(nombreFetsMesActual);
+            desti.setEntornAppId(entornAppId);
             // dimensions es mantenen tal qual
             fetRepository.save(desti);
             fetsActualitzats++;
 
-            if (llista.size() > 1) {
-                var aEliminar = llista.subList(1, llista.size());
-                fetRepository.deleteAllInBatch(aEliminar);
-                fetsEliminats += aEliminar.size();
-            }
+            for (var fet : llista) fetsEliminar.add(fet.getId());
         }
+
+        int batchSize = 750;
+        for (int start = 0; start < fetsEliminar.size(); start += batchSize) {
+            fetRepository.deleteAllByIdInBatch(fetsEliminar.subList(
+                    start,
+                    Math.min(start + batchSize, fetsEliminar.size())
+            ));
+        }
+        int fetsEliminats = fetsEliminar.size();
 
         log.info("[Compactacio] Compactació {}: fets fusionats/actualitzats: {}, fets eliminats: {}", target, fetsActualitzats, fetsEliminats);
         return fetsActualitzats;

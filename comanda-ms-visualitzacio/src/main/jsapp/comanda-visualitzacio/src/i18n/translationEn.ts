@@ -285,6 +285,13 @@ const translationEn = {
         appsEntorns: {
             title: "Environments",
             resourceTitle: "environment",
+            action: {
+                toolbarActiva: {
+                    activar: "Activate",
+                    desactivar: "Deactivate",
+                    ok: "The action has been executed successfully",
+                }
+            }
         },
         versionsEntorns: {
             title: "Versions by environment",
