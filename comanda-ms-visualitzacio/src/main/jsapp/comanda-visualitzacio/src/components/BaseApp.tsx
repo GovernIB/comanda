@@ -177,7 +177,7 @@ const useI18n = () => {
     const user = useUserContext();
     const [currentUserLanguage, setCurrentUserLanguage] = React.useState<string>();
     React.useEffect(() => {
-        if (user != null && user.idioma !== null) {
+        if (user?.idioma != null) {
             setCurrentUserLanguage(user.idioma.toLowerCase());
         }
     }, [user]);
