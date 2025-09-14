@@ -5,6 +5,7 @@ public enum IntegracioApp {
     AFI ("Afirma"),
     ARX ("Arxiu"),
     CAR ("Carpeta"),
+    CDO ("Conversió de documents"),
     CIE ("Cie"),
     DIB ("DigitalIB"),
     DIR ("Dir3Caib"),
@@ -31,6 +32,7 @@ public enum IntegracioApp {
     TIN ("TinyCaib"),
     TRA ("TranslatorIB"),
     USR ("Usuaris"),
+    VIF ("ViaFirma"),
     VFI ("Validació firma");
 
     private final String nom;
