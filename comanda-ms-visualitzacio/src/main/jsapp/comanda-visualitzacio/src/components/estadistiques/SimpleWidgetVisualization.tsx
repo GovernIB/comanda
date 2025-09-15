@@ -148,7 +148,7 @@ const WidgetFooter: React.FC<{ descripcio: string; canviPercentual: string; text
         ) : (
             <>
                 <Typography sx={descEstils}>{descripcio}</Typography>
-                {canviPercentual && (<Typography sx={canviPercentualEstils}>{canviPercentual}</Typography>)}
+                {canviPercentual && (<Typography sx={canviPercentualEstils}>{canviPercentual}%</Typography>)}
             </>
         )}
     </Box>
