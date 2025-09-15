@@ -97,9 +97,9 @@ public abstract class BaseWebSecurityConfig {
 	protected abstract RequestMatcher[] privateRequestMatchers();
 
 	protected void customHttpSecurityConfiguration(HttpSecurity http) throws Exception {
-		http.sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy());
+		http.sessionManagement().
+				sessionCreationPolicy(SessionCreationPolicy.STATELESS).
+				sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy());
 		http.csrf().disable();
 		http.cors();
 	}

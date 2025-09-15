@@ -5,7 +5,7 @@
             <!-- KEYCLOAK -->
             <!-- <realm name="GOIB"> -->
             <!-- KEYCLOAK FI-->
-            <realm name="soffid">
+            <realm name="GOIB">
                 <auth-server-url>${env.JBOSS_AUTH_URL}</auth-server-url>
                 <ssl-required>none</ssl-required>
             </realm>
