@@ -310,6 +310,8 @@ export const useMapDashboardItems = (dashboardWidgets) => {
     );
 };
 
+export const horizontalSubdivisions = 30;
+
 export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> = ({
     dashboardId,
     dashboardWidgets,
@@ -360,7 +362,6 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     );
 
     const rowHeight = 50;
-    const horizontalSubdivisions = 30;
 
     const drawGrid = () => {
         const canvas = canvasRef.current;
