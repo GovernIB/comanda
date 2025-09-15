@@ -81,7 +81,7 @@
 		<module>comanda-ms-visualitzacio</module>
 		<module>comanda-ms-gateway</module>
 		<module>comanda-ms-client</module>
-        <module>comanda-ms-broker</module>
+		<module>comanda-ms-broker</module>
 		<module>comanda-ms-tasques</module>
 		<module>comanda-ms-avisos</module>
 		<module>comanda-ms-alarmes</module>

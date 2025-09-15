@@ -1,0 +1,141 @@
+databaseChangeLog:
+- changeSet:
+    id: alarmes-init-table-1
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}alarma_config_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: entorn_app_id
+            type: BIGINT
+        - column:
+            constraints:
+                nullable: false
+            name: nom
+            type: VARCHAR(200 ${varcharUnit})
+        - column:
+            constraints:
+              nullable: false
+            name: missatge
+            type: VARCHAR(1024 ${varcharUnit})
+        - column:
+            constraints:
+              nullable: false
+            name: tipus
+            type: VARCHAR(15 ${varcharUnit})
+        - column:
+            constraints:
+              nullable: false
+            name: condicio
+            type: VARCHAR(15 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: valor
+            type: DECIMAL(19,4)
+        - column:
+            constraints:
+              nullable: false
+            name: admin
+            type: BOOLEAN
+        - column:
+            name: periode_unitat
+            type: VARCHAR(10 ${varcharUnit})
+        - column:
+            name: periode_valor
+            type: DECIMAL(19,4)
+        - column:
+            constraints:
+              nullable: false
+            name: created_by
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            constraints:
+              nullable: false
+            name: created_date
+            type: TIMESTAMP
+        - column:
+            name: lastmod_by
+            type: VARCHAR(64 ${varcharUnit})
+        - column:
+            name: lastmod_date
+            type: TIMESTAMP
+        - column:
+            name: v
+            type: BIGINT
+        tableName: ${db_prefix}alarma_config
+- changeSet:
+    id: alarmes-init-table-2
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}alarma_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+              nullable: false
+            name: entorn_app_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: missatge
+            type: VARCHAR(1024 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: estat
+            type: VARCHAR(10 ${varcharUnit})
+        - column:
+            constraints:
+              nullable: false
+            name: alarma_config_id
+            type: BIGINT
+        tableName: ${db_prefix}alarma
+- changeSet:
+    id: alarmes-init-table-3
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+                nullable: false
+                primaryKey: true
+                primaryKeyName: ${db_prefix}salut_subsistema_pk
+            name: id
+            type: BIGINT
+            autoIncrement: true
+        - column:
+            constraints:
+                nullable: false
+            name: alarma_id
+            type: BIGINT
+        - column:
+            constraints:
+                nullable: false
+            name: usuari
+            type: VARCHAR(100 ${varcharUnit})
+        - column:
+            constraints:
+              nullable: false
+            name: llegida
+            type: BOOLEAN
+        tableName: ${db_prefix}alarma_usuari

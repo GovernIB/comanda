@@ -12,9 +12,10 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 
 /**
- * Informació d'una alarma.
+ * Informació de configuració d'una alarma.
  *
  * @author Límit Tecnologies
  */
@@ -22,25 +23,34 @@ import javax.validation.constraints.Size;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-		descriptionField = "nom",
+        descriptionField = "nom",
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-						roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
-						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
+						roles = { BaseConfig.ROLE_ADMIN },
+						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
 				),
 		}
 )
-public class Alarma extends BaseResource<Long> {
+public class AlarmaConfig extends BaseResource<Long> {
 
 	@NotNull
 	private Long entornAppId;
 	@NotNull
+	@Size(max = 200)
+	private String nom;
+	@NotNull
 	@Size(max = 1024)
 	private String missatge;
-	private AlarmaEstat estat;
-
 	@NotNull
-	private ResourceReference<AlarmaConfig, Long> alarmaConfig;
+	private AlarmaConfigTipus tipus;
+	@NotNull
+	private AlarmaConfigCondicio condicio;
+	@NotNull
+	private BigDecimal valor;
+	private AlarmaConfigPeriodeUnitat periodeUnitat;
+	private BigDecimal periodeValor;
+	@NotNull
+	private Boolean admin;
 
 }

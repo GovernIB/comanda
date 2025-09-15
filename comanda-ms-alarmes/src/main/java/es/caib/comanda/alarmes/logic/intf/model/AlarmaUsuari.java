@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
- * Informació d'una alarma.
+ * Informació dels usuaris destinataris d'una alarma.
  *
  * @author Límit Tecnologies
  */
@@ -22,7 +22,7 @@ import javax.validation.constraints.Size;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-		descriptionField = "nom",
+        descriptionField = "nom",
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
@@ -31,16 +31,11 @@ import javax.validation.constraints.Size;
 				),
 		}
 )
-public class Alarma extends BaseResource<Long> {
+public class AlarmaUsuari extends BaseResource<Long> {
 
-	@NotNull
-	private Long entornAppId;
-	@NotNull
-	@Size(max = 1024)
-	private String missatge;
-	private AlarmaEstat estat;
+	private String usuari;
+	private boolean llegida;
 
-	@NotNull
-	private ResourceReference<AlarmaConfig, Long> alarmaConfig;
+	private ResourceReference<Alarma, Long> alarma;
 
 }
