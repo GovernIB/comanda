@@ -245,6 +245,7 @@ const QueueMessages: React.FC = () => {
     // Delete a message
     const handleDeleteMessage = async (messageID: string) => {
         try {
+            // TODO Sustituir por llamada a algun método Ketting
             const response = await fetch(`/api/broker/queues/${queueName}/messages/${messageID}`, {
                 method: 'DELETE',
             });
@@ -264,6 +265,7 @@ const QueueMessages: React.FC = () => {
     // Purge all messages from the queue
     const handlePurgeQueue = async () => {
         try {
+            // TODO Sustituir por llamada a algun método Ketting
             const response = await fetch(`/api/broker/queues/${queueName}/messages`, {
                 method: 'DELETE',
             });
