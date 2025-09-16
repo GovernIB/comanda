@@ -155,6 +155,7 @@ public class ConsultaEstadisticaHelper {
                     return getDadesWidgetTaula(dashboardItem, dadesComunsConsulta);
             }
         } catch (Exception e) {
+            log.error("Error obtnint dades de dashboard widget: " + e.getMessage(), e);
             throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId().toString(), e.getMessage(), e.getCause());
         }
 
