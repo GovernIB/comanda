@@ -13,4 +13,6 @@ public class SubsistemaSalut extends EstatSalut {
     private String codi;
     private Long totalOk;
     private Long totalError;
+    private Long peticionsOkUltimPeriode;
+    private Long peticionsErrorUltimPeriode;
 }

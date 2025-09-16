@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.Synchronized;
 import lombok.experimental.SuperBuilder;
 
 import java.util.HashMap;
@@ -18,40 +17,12 @@ import java.util.Map;
 public class IntegracioPeticions {
     private long totalOk;
     private long totalError;
+    private Long peticionsOkUltimPeriode;
+    private Long peticionsErrorUltimPeriode;
+
+    private String endpoint;
+
     @Builder.Default
-    private Map<String, Long> organOk = new HashMap<>();
-    @Builder.Default
-    private Map<String, Long> organError = new HashMap<>();
+    private Map<String, IntegracioPeticions> peticionsPerEntorn = new HashMap<>();
 
-    @Synchronized
-    public void addPeticioTotal(String organ) {
-        totalOk++;
-        if (organ != null && organ.trim().length() > 0) {
-            Long count = organOk.get(organ);
-            if (count == null) {
-                count = 0L;
-            }
-            organOk.put(organ, count + 1);
-        }
-    }
-
-    @Synchronized
-    public void addPeticioError(String organ) {
-        totalError++;
-        if (organ != null && organ.trim().length() > 0) {
-            Long count = organError.get(organ);
-            if (count == null) {
-                count = 0L;
-            }
-            organError.put(organ, count + 1);
-        }
-    }
-
-    @Synchronized
-    public void reset() {
-        totalOk = 0;
-        totalError = 0;
-        organOk.clear();
-        organError.clear();
-    }
 }
