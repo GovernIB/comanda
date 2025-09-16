@@ -6,6 +6,7 @@ import {
     MuiGrid,
     useMuiContentDialog,
     useCloseDialogButtons,
+    useAuthContext,
 } from 'reactlib';
 import { ContentDetail } from '../components/ContentDetail';
 import {
@@ -14,7 +15,6 @@ import {
     Icon,
     Typography,
     Paper,
-    Chip,
     Dialog,
     DialogActions,
     DialogContent,
@@ -242,12 +242,19 @@ const QueueMessages: React.FC = () => {
         );
     };
 
+    const { getToken } = useAuthContext();
+
     // Delete a message
     const handleDeleteMessage = async (messageID: string) => {
         try {
-            // TODO Sustituir por llamada a algun método Ketting
+            // TODO A ser posible, sustituir por peticiones mediante Ketting. Si no es posible,
+            //  crear un utils para hacer peticiones a través de fetch y estandarizar la gestión de token y otras cabeceras
+            const token = getToken?.();
             const response = await fetch(`/api/broker/queues/${queueName}/messages/${messageID}`, {
                 method: 'DELETE',
+                headers: token ? {
+                    'Authorization': 'Bearer ' + token
+                } : undefined,
             });
 
             if (!response.ok) {
@@ -265,9 +272,14 @@ const QueueMessages: React.FC = () => {
     // Purge all messages from the queue
     const handlePurgeQueue = async () => {
         try {
-            // TODO Sustituir por llamada a algun método Ketting
+            // TODO A ser posible, sustituir por peticiones mediante Ketting. Si no es posible,
+            //  crear un utils para hacer peticiones a través de fetch y estandarizar la gestión de token y otras cabeceras
+            const token = getToken?.();
             const response = await fetch(`/api/broker/queues/${queueName}/messages`, {
                 method: 'DELETE',
+                headers: token ? {
+                    'Authorization': 'Bearer ' + token
+                } : undefined,
             });
 
             if (!response.ok) {
