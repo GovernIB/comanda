@@ -1,4 +1,3 @@
-import { BarChart, PieChart } from '@mui/x-charts';
 import * as React from 'react';
 import { Layout, Layouts } from 'react-grid-layout';
 import { Responsive, WidthProvider } from 'react-grid-layout';
@@ -19,58 +18,21 @@ import {AfegirTitolFormContent} from "../../pages/EstadisticaDashboardEdit.tsx";
 
 const CustomGridLayout = WidthProvider(Responsive);
 
-const SimpleChartWrapper = React.memo(({ dashboardWidget }) => {
+const SimpleChartWrapper = React.memo<{ dashboardWidget: any }>(({ dashboardWidget }) => {
     return <SimpleWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
 });
 
-const GraficChartWrapper = React.memo(({ dashboardWidget }) => {
-    return <GraficWidgetVisualization {...dashboardWidget}
-    />;
+const GraficChartWrapper = React.memo<{ dashboardWidget: any }>(({ dashboardWidget }) => {
+    return <GraficWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
 });
 
-const TaulaChartWrapper = React.memo(({ dashboardWidget }) => {
+const TaulaChartWrapper = React.memo<{ dashboardWidget: any }>(({ dashboardWidget }) => {
     return <TaulaWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
 });
 
-const TitolChartWrapper = React.memo(({ dashboardTitol }) => {
+const TitolChartWrapper = React.memo<{ dashboardTitol: any }>(({ dashboardTitol }) => {
     return <TitolWidgetVisualization {...dashboardTitol} {...dashboardTitol.atributsVisuals} />;
 });
-
-function ChartsOverviewDemo(props) {
-    return (
-        <BarChart
-            {...props}
-            series={[
-                { data: [35, 44, 24, 34] },
-                { data: [51, 6, 49, 30] },
-                { data: [15, 25, 30, 50] },
-                { data: [60, 50, 15, 25] },
-            ]}
-            // height={290}
-            xAxis={[{ data: ['Q1', 'Q2', 'Q3', 'Q4'], scaleType: 'band' }]}
-            margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
-        />
-    );
-}
-
-function PieChartDemo(props) {
-    return (
-        <PieChart
-            {...props}
-            series={[
-                {
-                    data: [
-                        { id: 0, value: 10, label: 'series A' },
-                        { id: 1, value: 15, label: 'series B' },
-                        { id: 2, value: 20, label: 'series C' },
-                    ],
-                },
-            ]}
-            // width={200}
-            // height={200}
-        />
-    );
-}
 
 const useMenu = (props:any) => {
     const { entity, actions } = props;
@@ -124,7 +86,7 @@ const useMenu = (props:any) => {
 
 const useCustomGridItemActions = (refresh?: () => void) => {
     const { t } = useTranslation();
-    const formApiRef = React.useRef<MuiFormDialogApi>()
+    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
     const {messageDialogShow, temporalMessageShow} = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = {maxWidth: 'sm', fullWidth: true};
@@ -153,7 +115,7 @@ const useCustomGridItemActions = (refresh?: () => void) => {
                     temporalMessageShow(null, '', 'success');
                 })
                 .catch((error) => {
-                    error?.message && temporalMessageShow(null, error?.message, 'error');
+                    if (error?.message) temporalMessageShow(null, error?.message, 'error');
                 });
         });
     }
@@ -161,11 +123,11 @@ const useCustomGridItemActions = (refresh?: () => void) => {
         check(() => {
             deleteDashboardTitol(id)
                 .then(() => {
-                    refresh?.()
+                    refresh?.();
                     temporalMessageShow(null, '', 'success');
                 })
                 .catch((error) => {
-                    error?.message && temporalMessageShow(null, error?.message, 'error');
+                    if (error?.message) temporalMessageShow(null, error?.message, 'error');
                 });
         });
     }
@@ -176,7 +138,7 @@ const useCustomGridItemActions = (refresh?: () => void) => {
             icon: 'edit',
             showInMenu: true,
             onClick: (id:any, row:any) => {
-                if (row.tipus === 'TITOL') { formApiRef?.current?.show(id).then(()=>refresh?.()) }
+                if (row.tipus === 'TITOL') { formApiRef.current?.show(id).then(()=>refresh?.()) }
             },
             hidden: (row:any) => row.tipus !== 'TITOL', // TODO: implementar formulario para otros tipos
         },
@@ -206,7 +168,7 @@ const useCustomGridItemActions = (refresh?: () => void) => {
 
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
     (
-        { entity, refresh, style, className, onMouseDown, onMouseUp, onTouchEnd, editable, children, ...props },
+        { entity, refresh, style, className, onMouseDown, onMouseUp, onTouchEnd, editable, children },
         ref
     ) => {
         const { actions, content: contentActions } = useCustomGridItemActions(()=>refresh?.())
@@ -261,12 +223,10 @@ const CustomHandle = React.forwardRef<HTMLDivElement, any>((props, ref) => {
 
 const getMinDimensionsByType = (type: WidgetType) => {
     switch (type) {
-        case 'barChart':
-            return { minW: 2, minH: 3 };
-        case 'pieChart':
-            return { minW: 5, minH: 4 };
-        default:
-            // TODO Reimplementar para todos los tipos correctos
+        case 'SIMPLE':
+        case 'GRAFIC':
+        case 'TAULA':
+        case 'TITOL':
             return { minW: 1, minH: 1 };
     }
 };
@@ -295,7 +255,7 @@ type DashboardReactGridLayoutProps = {
     refresh?: () => void;
 };
 
-export const useMapDashboardItems = (dashboardWidgets) => {
+export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
     return useMemo(
         () =>
             dashboardWidgets?.map((widget: any) => ({
@@ -313,27 +273,29 @@ export const useMapDashboardItems = (dashboardWidgets) => {
 export const horizontalSubdivisions = 30;
 
 export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> = ({
-    dashboardId,
     dashboardWidgets,
     editable,
     gridLayoutItems,
     onGridLayoutItemsChange,
     refresh,
 }) => {
-    const canvasRef = useRef();
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
         drawGrid();
         const mappedLayouts: (GridLayoutItem | undefined)[] = allLayouts.md.map((item) => {
             const typeInGridLayoutItems = gridLayoutItems.find((i) => i.id === item.i)?.type;
-            const typeFromAutogeneratedId = item.i.split('-')[1];
+            const typeFromAutogeneratedId: string = item.i.split('-')[1];
+            const mergedType = typeInGridLayoutItems ?? typeFromAutogeneratedId;
 
-            if (typeInGridLayoutItems == null && !isValidWidgetType(typeFromAutogeneratedId)) {
+            if (!isValidWidgetType(mergedType))
+            {
                 console.error(`Invalid widget type: ${typeFromAutogeneratedId}`);
                 return undefined;
             }
+
             return {
                 id: item.i,
-                type: typeInGridLayoutItems ?? typeFromAutogeneratedId,
+                type: mergedType,
                 x: item.x,
                 y: item.y,
                 w: item.w,
@@ -370,6 +332,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
 
         // Obtenir la mida del contenidor
         const parent = canvas.parentElement;
+        if (!parent || !ctx) return;
         canvas.width = parent.clientWidth;
         canvas.height = parent.clientHeight;
 

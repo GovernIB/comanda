@@ -18,12 +18,7 @@ import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -45,11 +40,12 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     private FetRepositoryDialectFactory dialectFactory;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
+    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.ENGLISH);
 
     static {
         NUMBER_FORMAT.setMaximumFractionDigits(2);
         NUMBER_FORMAT.setMinimumFractionDigits(0);
+		NUMBER_FORMAT.setGroupingUsed(false);
     }
 
 
