@@ -25,16 +25,6 @@ import java.util.Optional;
 @Service
 public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, UsuariEntity> implements UsuariService {
 
-    @Override
-    public Usuari getOneByCodi(String codi) {
-        log.debug("Obtenint usuari {codi}", codi);
-        Optional<UsuariEntity> usuariEntity = ((UsuariRepository) entityRepository).findByCodi(codi);
-        if (usuariEntity.isPresent()) {
-            return entityToResource(usuariEntity.get());
-        }
-        return null;
-    }
-
 	@Override
 	protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
 		List<Filter> filters = new ArrayList<>();

@@ -24,11 +24,6 @@ public interface UsuariServiceClient {
 			@RequestParam("perspectives") final String[] perspectives,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
-	@GetMapping(value = "/byCodi/{codi}")
-	Usuari getByCodi(
-			@PathVariable("codi") final String codi,
-			@RequestHeader("Authorization") final String authorizationHeader);
-
 	@GetMapping
 	PagedModel<EntityModel<EntornApp>> find(
 			@RequestParam("quickFilter") final String quickFilter,
