@@ -171,7 +171,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
     const {
         // Widget data
         titol = 'Títol de la taula',
-        descripcio = 'Descripcio de la taula',
+        descripcio,
         columnes = generateSampleColumns(),
         files = generateSampleData(),
         entornCodi = 'DEV',
