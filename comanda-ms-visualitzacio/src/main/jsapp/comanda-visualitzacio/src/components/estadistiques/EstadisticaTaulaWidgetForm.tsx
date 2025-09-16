@@ -19,7 +19,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
     const { t } = useTranslation();
     const previewData: TaulaWidgetVisualizationProps = useMemo((): TaulaWidgetVisualizationProps =>({
         titol: data.titol,
-        descripcio: data.descripcio,
+        descripcio: data.descripcio || 'Descripcio de la taula',
         // columnes: [{}, {}, {}],
         // files: [{}, {}, {}],
         // Visual attributes
