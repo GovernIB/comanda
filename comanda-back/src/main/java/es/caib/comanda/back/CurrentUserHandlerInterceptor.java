@@ -25,13 +25,6 @@ public class CurrentUserHandlerInterceptor implements HandlerInterceptorWithPath
                              Object handler) throws Exception {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-//		TODO Si inicien sessió amb Jboss o amb springboot es principal sera de un tipo diferent
-//		debuguejar quin tipo de objecte es en cada cas
-
-
-//		TODO Proves a fer:
-//		Autenticació anonymous (comprovar que denega accés), auth amb spring, auth amb jboss
         if (authentication != null && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken)) {
 			usuariService.refreshCurrentUser();
