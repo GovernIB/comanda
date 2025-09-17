@@ -5,11 +5,11 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom</artifactId>
-		<version>0.1.0</version>
+		<version>0.1.1</version>
 		<relativePath>../comanda-bom/pom.xml</relativePath>
 	</parent>
 	<artifactId>comanda-lib</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
 	<properties>
 		<!-- El .jar que es genera s'ha d'utilitzar des d'altres projectes que es compilen en Java 11 -->
