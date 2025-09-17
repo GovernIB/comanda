@@ -38,6 +38,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.LockTimeoutException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -51,8 +53,8 @@ import java.util.Map;
  * @author Límit Tecnologies
  */
 @Slf4j
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class SalutInfoHelper {
 
 	private final SalutRepository salutRepository;
@@ -64,6 +66,7 @@ public class SalutInfoHelper {
 	private final SalutClientHelper salutClientHelper;
     private final RestTemplate restTemplate;
 	private final ApplicationEventPublisher eventPublisher;
+	private final MetricsHelper metricsHelper;
 
     @Lazy
     private final SalutInfoHelper self = this;
@@ -77,6 +80,7 @@ public class SalutInfoHelper {
 		log.debug("Obtenint dades de salut de l'app {}, entorn {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom());
+		Instant t0 = Instant.now();
 		MonitorSalut monitorSalut = new MonitorSalut(
 				entornApp.getId(),
 				entornApp.getSalutUrl(),
@@ -111,7 +115,13 @@ public class SalutInfoHelper {
 			}
             // Publicar esdeveniment per a compactació. També en cas d'error
             eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), saved.getId(), numeroDiesAgrupacio));
-        }
+		} finally {
+			Duration duration = Duration.between(t0, Instant.now());
+			metricsHelper.getSalutInfoGlobalTimer(null, null).record(duration);
+			metricsHelper.getSalutInfoGlobalTimer(
+					entornApp.getEntorn().getNom(),
+					entornApp.getApp().getNom()).record(duration);
+		}
 	}
 
 	private Long crearSalut(SalutInfo info, Long entornAppId, LocalDateTime currentMinuteTime) {

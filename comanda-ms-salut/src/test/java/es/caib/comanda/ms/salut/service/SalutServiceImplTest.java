@@ -6,6 +6,7 @@ import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -41,9 +42,15 @@ public class SalutServiceImplTest {
                                       SalutSubsistemaRepository salutSubsistemaRepository,
                                       SalutMissatgeRepository salutMissatgeRepository,
                                       SalutDetallRepository salutDetallRepository,
-                                      SalutClientHelper salutClientHelper) {
-            super(salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, 
-                  salutDetallRepository, salutClientHelper);
+                                      SalutClientHelper salutClientHelper,
+                                      MetricsHelper metricsHelper) {
+            super(
+					salutIntegracioRepository,
+		            salutSubsistemaRepository,
+		            salutMissatgeRepository,
+		            salutDetallRepository,
+		            salutClientHelper,
+		            metricsHelper);
             
             // Set the parent class fields using reflection
             try {
@@ -104,6 +111,9 @@ public class SalutServiceImplTest {
     @Mock
     private SalutClientHelper salutClientHelper;
 
+	@Mock
+	private MetricsHelper metricsHelper;
+
     @Mock
     private EntornAppServiceClient entornAppServiceClient;
 
@@ -125,7 +135,8 @@ public class SalutServiceImplTest {
             salutSubsistemaRepository,
             salutMissatgeRepository,
             salutDetallRepository,
-            salutClientHelper
+            salutClientHelper,
+            metricsHelper
         );
         
         // Setup test data
