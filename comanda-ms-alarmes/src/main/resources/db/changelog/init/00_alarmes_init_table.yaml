@@ -119,7 +119,7 @@ databaseChangeLog:
             constraints:
                 nullable: false
                 primaryKey: true
-                primaryKeyName: ${db_prefix}salut_subsistema_pk
+                primaryKeyName: ${db_prefix}alarma_usuari_pk
             name: id
             type: BIGINT
             autoIncrement: true

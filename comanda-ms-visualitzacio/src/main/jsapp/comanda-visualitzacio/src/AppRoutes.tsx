@@ -20,6 +20,7 @@ import QueueMessages from './pages/QueueMessages';
 import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
 import Tasca from "./pages/Tasca.tsx";
 import Avis from "./pages/Avis.tsx";
+import Alarma, { AlarmaForm } from "./pages/Alarma.tsx";
 import Parametres from './pages/Parametres.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
@@ -75,6 +76,13 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="avis">
                 <Route index element={<Avis />} />
+            </Route>
+            <Route path="alarma">
+                <Route index element={<Alarma />} />
+                <Route path="form">
+                    <Route index element={<AlarmaForm />} />
+                    <Route path=":id" element={<AlarmaForm />} />
+                </Route>
             </Route>
             <Route path="broker">
                 <Route index element={<Broker />} />

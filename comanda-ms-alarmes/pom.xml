@@ -8,7 +8,7 @@
 		<version>0.1.0</version>
 		<relativePath>../comanda-bom-ms/pom.xml</relativePath>
 	</parent>
-	<artifactId>comanda-alarmes</artifactId>
+	<artifactId>comanda-ms-alarmes</artifactId>
 	<version>0.1.0</version>
 	<dependencies>
 		<dependency>

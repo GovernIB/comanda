@@ -40,6 +40,11 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>comanda-ms-alarmes</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-ms-permisos</artifactId>
 			<version>${project.version}</version>
 		</dependency>

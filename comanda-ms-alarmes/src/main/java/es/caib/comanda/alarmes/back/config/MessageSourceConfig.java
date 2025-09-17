@@ -1,7 +1,8 @@
-package es.caib.comanda.back.config;
+package es.caib.comanda.alarmes.back.config;
 
 import es.caib.comanda.ms.back.config.BaseMessageSourceConfig;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Configuración del MessageSource de l'aplicació.
@@ -9,19 +10,15 @@ import org.springframework.context.annotation.Configuration;
  * @author Límit Tecnologies
  */
 @Configuration
+@Profile("!back")
 public class MessageSourceConfig extends BaseMessageSourceConfig {
 
 	@Override
 	protected String[] getBasenames() {
 		return new String[] {
-				getBasename(),
-				"comanda.client-messages",
-				"comanda.estadistica-messages",
-				"comanda.configuracio-messages",
-				"comanda.avisos-messages",
 				"comanda.alarmes-messages",
-				"comanda.tasques-messages",
-				"comanda.usuaris-messages",
+                "comanda.client-messages",
+				"comanda-messages"
 		};
 	}
 

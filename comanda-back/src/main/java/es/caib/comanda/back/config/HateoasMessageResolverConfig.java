@@ -14,12 +14,13 @@ public class HateoasMessageResolverConfig extends BaseHateoasMessageResolverConf
 	@Override
 	protected String[] getBasenames() {
 		return new String[] {
-			"comanda.configuracio-rest-messages",
-			"comanda.estadistica-rest-messages",
-			"comanda.monitor-rest-messages",
-			"comanda.avisos-rest-messages",
-			"comanda.tasques-rest-messages",
-            "comanda.usuaris-rest-messages"
+				"comanda.configuracio-rest-messages",
+				"comanda.estadistica-rest-messages",
+				"comanda.monitor-rest-messages",
+				"comanda.avisos-rest-messages",
+				"comanda.alarmes-rest-messages",
+				"comanda.tasques-rest-messages",
+				"comanda.usuaris-rest-messages"
 		};
 	}
 

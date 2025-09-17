@@ -92,6 +92,13 @@ export const App: React.FC = () => {
                 resourceName: 'entornApp',
             },
             {
+                id: 'alarma',
+                title: t('menu.alarmaConfig'),
+                to: '/alarma',
+                icon: 'notifications',
+                resourceName: 'alarmaConfig',
+            },
+            {
                 id: 'integracio',
                 title: t('menu.integracio'),
                 to: '/integracio',

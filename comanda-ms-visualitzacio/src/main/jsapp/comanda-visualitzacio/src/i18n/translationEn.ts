@@ -44,6 +44,7 @@ const translationEn = {
         app: "Applications",
         entorn: "Environments",
         versionsEntorn: "Versions by environment",
+        alarmaConfig: "Alarms",
         integracio: "Integrations",
         widget: "Statistic widgets",
         dashboard: "Dashboards",

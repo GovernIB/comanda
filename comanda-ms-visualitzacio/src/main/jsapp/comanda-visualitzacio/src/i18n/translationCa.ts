@@ -44,6 +44,7 @@ const translationCa = {
         app: "Aplicacions",
         entorn: "Entorns",
         versionsEntorn: "Versions per entorn",
+        alarmaConfig: "Alarmes",
         integracio: "Integracions",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
@@ -256,6 +257,11 @@ const translationCa = {
             grid: {
                 groupHeader: "Nom",
             }
+        },
+        alarmaConfig: {
+            title: "Configuració d'alarmes",
+            create: "Crear configuració d'alarma",
+            update: "Modificar configuració d'alarma",
         },
         apps: {
             title: "Aplicacions",
