@@ -105,6 +105,7 @@ const translationCa = {
                 appLatencia: "Latència",
                 missatges: "Missatges",
                 detalls: "Detalls",
+                noInfo: 'No hi ha dades disponibles per a aquest entorn',
             },
             latencia: {
                 title: "Latència",
