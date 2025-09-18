@@ -2,20 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>es.caib.comanda</groupId>
-		<artifactId>comanda-bom</artifactId>
-		<version>0.1.0</version>
-		<relativePath>../comanda-bom/pom.xml</relativePath>
-	</parent>
+<!--	<parent>-->
+<!--		<groupId>es.caib.comanda</groupId>-->
+<!--		<artifactId>comanda-bom</artifactId>-->
+<!--		<version>0.1.1</version>-->
+<!--		<relativePath>../comanda-bom/pom.xml</relativePath>-->
+<!--	</parent>-->
+    <groupId>es.caib.comanda</groupId>
 	<artifactId>comanda-lib</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
 	<properties>
 		<!-- El .jar que es genera s'ha d'utilitzar des d'altres projectes que es compilen en Java 11 -->
 		<!-- Si no forçam la compilació en Java 11 -->
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.source>11</maven.compiler.source>
+        <lombok.version>1.18.34</lombok.version>
 	</properties>
 	<dependencies>
 		<dependency>

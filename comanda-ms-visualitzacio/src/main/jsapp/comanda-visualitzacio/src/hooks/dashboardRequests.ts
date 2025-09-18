@@ -1,5 +1,6 @@
 import { useResourceApiService } from 'reactlib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { horizontalSubdivisions } from '../components/estadistiques/DashboardReactGridLayout';
 
 export const useDashboard = (dashboardId: any) => {
     type RequestStateType = {
@@ -82,7 +83,10 @@ export const useDashboardWidgets = (dashboardId: any) => {
                 setRequestState((prevState) => ({
                     ...prevState,
                     loadingWidgetPositions: false,
-                    widgets: widgetsPositionResponse,
+                    widgets: widgetsPositionResponse.sort((a, b) => {
+                        const getPosicioValor = (widget: any) => widget.posY * horizontalSubdivisions + widget.posX;
+                        return getPosicioValor(a) - getPosicioValor(b);
+                    }),
                 }));
 
                 // Després, carregar la informació de cada un dels items

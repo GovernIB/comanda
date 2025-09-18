@@ -20,21 +20,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(BaseConfig.API_PATH + "/usuaris")
 @Tag(name = "Usuari", description = "Servei de gestió d'usuaris")
 public class UsuariController extends BaseMutableResourceController<Usuari, Long> {
-
-    // Mètode per obtenir un usuari per codi amb la mínima sobrecàrrega possible (per utilitzar al client feign)
-    @GetMapping(value = "/byCodi/{codi}")
-    @Operation(summary = "Consulta la informació d'un usuari per codi")
-    @PreAuthorize("this.isPublic() or hasPermission(#resourceId, this.getResourceClass().getName(), this.getOperation('GET_ONE'))")
-    public ResponseEntity<Usuari> getByCodi(
-            @PathVariable
-            @Parameter(description = "Codi de l'usuari")
-            final String codi) {
-        log.debug("Obtenint usuari (codi={})", codi);
-        Usuari usuari = ((UsuariService) getReadonlyResourceService()).getOneByCodi(codi);
-        if (usuari == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(usuari);
-    }
-
 }

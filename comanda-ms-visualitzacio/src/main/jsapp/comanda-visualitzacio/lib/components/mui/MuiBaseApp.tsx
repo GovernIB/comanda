@@ -23,6 +23,11 @@ import { FormFieldTime } from './form/FormFieldTime';
 import { FormFieldRange } from './form/FormFieldRange';
 import { FormFieldFile } from './form/FormFieldFile';
 import { MuiDetailField } from './detail/MuiDetailField';
+import {
+    DefaultMuiComponentProps,
+    MuiBaseAppContext,
+    MuiBaseAppContextType,
+} from './MuiBaseAppContext';
 
 export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerTitle?: string | React.ReactElement;
@@ -40,6 +45,7 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     menuOnTitleClose?: () => void;
     menuShrinkDisabled?: boolean;
     menuWidth?: number;
+    defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
 const baseFormFieldComponents = [
@@ -185,6 +191,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         menuWidth,
         formFieldComponents,
         children,
+        defaultMuiComponentProps,
         ...otherProps
     } = props;
     const mergedFormFieldComponents = [...baseFormFieldComponents, ...(formFieldComponents ?? [])];
@@ -210,6 +217,11 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
             />
         ) : undefined;
     const offlineComponent = <OfflineMessage />;
+    const muiContext: MuiBaseAppContextType = {
+        defaultMuiComponentProps: {
+            ...defaultMuiComponentProps,
+        },
+    };
     return (
         <BaseApp
             formFieldComponents={mergedFormFieldComponents}
@@ -221,8 +233,10 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 menu: menuComponent,
                 offline: offlineComponent,
             }}>
-            <MuiComponentsConfigurer />
-            {children}
+            <MuiBaseAppContext.Provider value={muiContext}>
+                <MuiComponentsConfigurer />
+                {children}
+            </MuiBaseAppContext.Provider>
         </BaseApp>
     );
 };

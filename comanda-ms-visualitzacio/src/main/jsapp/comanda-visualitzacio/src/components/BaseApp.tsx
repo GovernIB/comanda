@@ -13,10 +13,11 @@ import Button from '@mui/material/Button';
 import AppMenu from "./AppMenu";
 import drassana from '../assets/drassana.png';
 import {
+    DefaultMuiComponentProps,
     MenuEntry,
     MuiBaseApp,
     useBaseAppContext,
-    useResourceApiContext
+    useResourceApiContext,
 } from 'reactlib';
 import Footer from "./Footer.tsx";
 import {DataFormDialogApi} from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
@@ -46,6 +47,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
     appbarStyle?: any;
+    defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
 const Link = React.forwardRef<HTMLAnchorElement, RouterLinkProps>((itemProps, ref) => {
@@ -203,6 +205,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         appbarBackgroundColor,
         appbarBackgroundImg,
         appbarStyle,
+        defaultMuiComponentProps,
         children
     } = props;
     const navigate = useNavigate();
@@ -257,6 +260,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerUseLocationPath={useLocationPath}
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
+        defaultMuiComponentProps={defaultMuiComponentProps}
     >
         <UserProfileFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>

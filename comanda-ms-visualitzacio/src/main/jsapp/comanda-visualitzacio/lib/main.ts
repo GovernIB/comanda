@@ -15,6 +15,7 @@ export {
 } from './components/AppButtons';
 
 export { MuiBaseApp } from './components/mui/MuiBaseApp';
+export { MuiBaseAppContext, useMuiBaseAppContext } from './components/mui/MuiBaseAppContext';
 export { BasePage } from './components/BasePage';
 export { GridPage } from './components/GridPage';
 export { FormPage } from './components/FormPage';
@@ -83,3 +84,4 @@ export type { FormApi, FormApiRef } from './components/form/FormContext';
 export type { FormFieldProps, FormFieldCustomProps } from './components/form/FormField';
 export type { DataFormDialogApi as MuiFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { FormSidebarApi as MuiFormSidebarApi } from './components/mui/form/MuiFormSidebar';
+export type { DefaultMuiComponentProps } from './components/mui/MuiBaseAppContext';

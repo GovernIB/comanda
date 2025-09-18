@@ -3,6 +3,9 @@ package es.caib.comanda.salut.persist.repository;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -16,6 +19,7 @@ public interface SalutIntegracioRepository extends BaseRepository<SalutIntegraci
 
 	List<SalutIntegracioEntity> findBySalut(SalutEntity salut);
 
-	void deleteBySalut(SalutEntity salut);
-    void deleteAllBySalutIdIn(List<Long> salutIds);
+    @Modifying
+    @Query("DELETE FROM SalutIntegracioEntity s WHERE s.salut.id IN :salutIds")
+    void deleteAllBySalutIdIn(@Param("salutIds") List<Long> salutIds);
 }

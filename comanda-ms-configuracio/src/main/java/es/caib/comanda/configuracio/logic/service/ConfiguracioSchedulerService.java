@@ -32,6 +32,8 @@ public class ConfiguracioSchedulerService {
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
+    @Value("${" + BaseConfig.PROP_SCHEDULER_BACK + ":#{false}}")
+    private Boolean schedulerBack;
 
     private static final Integer PERIODE_CONSULTA_CONF = 1;
 
@@ -48,6 +50,10 @@ public class ConfiguracioSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
+        if (!isLeader()) {
+            log.info("Inicialització de tasques de configuració ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
         // Esperarem mig minut a inicialitzar les tasques en segon pla
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         executor.schedule(() -> {
@@ -117,13 +123,17 @@ public class ConfiguracioSchedulerService {
 
     private boolean isLeader() {
         // TODO: Implementar per microserveis
-        return schedulerLeader;
+        return schedulerLeader && schedulerBack;
     }
 
 
     // Cada hora comprovarem que no hi hagi cap aplicacio-entorn que no s'estigui actualitzant
     @Scheduled(cron = "0 0 */1 * * *")
     public void comprovarRefrescInfo() {
+        if (!isLeader()) {
+            log.info("Refresc de tasques de configuració ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
         log.debug("Comprovant refresc periòdic dels entorn-app");
         List<EntornAppEntity> entornAppsActives = entornAppRepository.findByActivaTrueAndAppActivaTrue();
         entornAppsActives.forEach(ea -> {

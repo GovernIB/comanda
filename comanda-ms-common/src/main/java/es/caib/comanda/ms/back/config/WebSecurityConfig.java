@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
+import org.keycloak.representations.IDToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
@@ -115,10 +116,16 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 						realmAccess.getRoles().stream().map(r -> ROLE_PREFIX + r).forEach(roles::add);
 					}
 					logger.debug("Creating WebAuthenticationDetails for " + keycloakPrincipal.getName() + " with roles " + roles);
+					IDToken idToken = keycloakPrincipal.getKeycloakSecurityContext().getIdToken();
 					result = new PreauthWebAuthenticationDetails(
 							context,
 							j2eeUserRoles2GrantedAuthoritiesMapper.getGrantedAuthorities(roles),
-							keycloakPrincipal.getKeycloakSecurityContext().getIdTokenString());
+							keycloakPrincipal.getKeycloakSecurityContext().getIdTokenString(),
+							nameAttributeKey.equals("preferred_username") ? idToken.getPreferredUsername() : (String) idToken.getOtherClaims().get(nameAttributeKey),
+							idToken.getName(),
+							idToken.getEmail(),
+							(String) idToken.getOtherClaims().get("nif")
+					);
 				} else {
 					logger.debug("Creating WebAuthenticationDetails for " + context.getUserPrincipal().getName() + " with roles " + j2eeUserRoles);
 					result = new PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails(
@@ -140,12 +147,24 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 	@Getter
 	public static class PreauthWebAuthenticationDetails extends PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails {
 		private final String jwtToken;
+		private final String preferredUsername;
+		private final String name;
+		private final String email;
+		private final String nif;
 		public PreauthWebAuthenticationDetails(
 				HttpServletRequest request,
 				Collection<? extends GrantedAuthority> authorities,
-				String jwtToken) {
+				String jwtToken,
+				String preferredUsername,
+				String name,
+				String email,
+				String nif) {
 			super(request, authorities);
 			this.jwtToken = jwtToken;
+			this.preferredUsername = preferredUsername;
+			this.name = name;
+			this.email = email;
+			this.nif = nif;
 		}
 	}
 

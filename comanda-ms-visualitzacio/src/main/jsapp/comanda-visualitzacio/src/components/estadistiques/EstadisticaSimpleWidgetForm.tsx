@@ -21,7 +21,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
         valor: 1234, // Sample value for preview
         unitat: data.unitat || 'unitat',
         descripcio: data.descripcio || 'descripcio del widget',
-        canviPercentual: data.canviPercentual || '12.34%',
+        canviPercentual: data.canviPercentual || '12.34',
         icona: data.icona,
         colorText: data.colorText,
         colorFons: data.colorFons,

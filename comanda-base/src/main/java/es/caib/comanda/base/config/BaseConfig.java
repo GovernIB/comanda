@@ -38,6 +38,7 @@ public class BaseConfig {
 	public static final String PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED = PROPERTY_PREFIX + "persist.container-transactions-disabled";
 	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
+	public static final String PROP_SCHEDULER_BACK = PROPERTY_PREFIX + "scheduler.back";
 	public static final String PROP_HTTPAUTH_PROVIDER_BASE_URL = PROPERTY_PREFIX + "httpauth.provider.base.url";
 	public static final String PROP_HTTPAUTH_PROVIDER_REALM = PROPERTY_PREFIX + "httpauth.provider.realm";
 	public static final String PROP_HTTPAUTH_PROVIDER_CLIENT_ID = PROPERTY_PREFIX + "httpauth.provider.client.id";

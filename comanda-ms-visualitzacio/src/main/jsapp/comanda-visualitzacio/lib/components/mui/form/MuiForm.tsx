@@ -2,6 +2,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import { Form, FormProps, useFormApiContext } from '../../form/Form';
 import { useBaseAppContext } from '../../BaseAppContext';
+import { useMuiBaseAppContext } from '../MuiBaseAppContext';
 import { useFormContext } from '../../form/FormContext';
 import { ReactElementWithPosition } from '../../../util/reactNodePosition';
 import { toToolbarIcon } from '../ToolbarIcon';
@@ -122,6 +123,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
  * @returns Element JSX del formulari.
  */
 export const MuiForm: React.FC<MuiFormProps> = (props) => {
+    const { defaultMuiComponentProps } = useMuiBaseAppContext();
     const {
         id,
         title,
@@ -135,7 +137,7 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
         hiddenDeleteButton,
         componentProps,
         children,
-    } = props;
+    } = { ...defaultMuiComponentProps.form, ...props };
     return (
         <Form {...props}>
             <MuiFormContent

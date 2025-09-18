@@ -29,6 +29,8 @@ public class MonitorSchedulerService {
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
+    @Value("${" + BaseConfig.PROP_SCHEDULER_BACK + ":#{false}}")
+    private Boolean schedulerBack;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
 
@@ -42,6 +44,10 @@ public class MonitorSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
+        if (!isLeader()) {
+            log.info("Inicialització de tasques de monitor ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
         // Esperarem 1 minut i mig a inicialitzar les tasques en segon pla
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         executor.schedule(() -> {
@@ -102,6 +108,6 @@ public class MonitorSchedulerService {
 
     private boolean isLeader() {
         // TODO: Implementar per microserveis
-        return schedulerLeader;
+        return schedulerLeader && schedulerBack;
     }
 }

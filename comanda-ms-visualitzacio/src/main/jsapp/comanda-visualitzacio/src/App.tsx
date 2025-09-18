@@ -4,8 +4,10 @@ import { BaseApp } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
 import comandaLogo from './assets/COM_DRA_COL.svg';
 import AppRoutes from './AppRoutes';
+import { useUserContext } from './components/UserContext';
 
 export const App: React.FC = () => {
+    const { user } = useUserContext();
     const { t } = useTranslation();
     const menuSalut = {
         id: 'salut',
@@ -174,14 +176,34 @@ export const App: React.FC = () => {
                 mr: 4,
                 borderRight: '2px solid #000',
             }}
-            title={<img style={{ height: '64px', verticalAlign: 'middle' }} src={comandaLogo} alt="Logo de l'aplicació de Comanda" />}
+            title={
+                <img
+                    style={{ height: '64px', verticalAlign: 'middle' }}
+                    src={comandaLogo}
+                    alt="Logo de l'aplicació de Comanda"
+                />
+            }
             version="0.1"
             availableLanguages={['ca', 'es']}
             menuEntries={menuEntries}
             appMenuEntries={appMenuEntries}
             appbarBackgroundColor="#fff"
-            appbarStyle={{ cssText: 'min-height: 64px !important; background-color: #fff !important' }}
+            appbarStyle={{
+                cssText: 'min-height: 64px !important; background-color: #fff !important',
+            }}
             // appbarBackgroundImg={headerBackground}
+            defaultMuiComponentProps={{
+                dataGrid: {
+                    pageSizeOptions: [10, 20, 50, 100],
+                    paginationModel:
+                        user?.numElementsPagina != null && user.numElementsPagina !== 'AUTOMATIC'
+                            ? {
+                                  page: 0,
+                                  pageSize: parseInt(user.numElementsPagina.replace('_', '')),
+                              }
+                            : undefined,
+                },
+            }}
         >
             <AppRoutes />
         </BaseApp>

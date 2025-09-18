@@ -31,6 +31,7 @@ import {
 } from '../../../util/reactNodePosition';
 import { FormI18nKeys } from '../../form/Form';
 import { DialogButton } from '../../BaseAppContext';
+import { useMuiBaseAppContext } from '../MuiBaseAppContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
 import { useResourceApiContext, ResourceType, ExportFileType } from '../../ResourceApiContext';
 import { toDataGridActionItem, DataGridActionItemOnClickFn } from './DataGridActionItem';
@@ -490,6 +491,7 @@ export const useMuiDataGridApiContext: () => MuiDataGridApiRef = () => {
  * @returns Element JSX de la graella.
  */
 export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
+    const { defaultMuiComponentProps } = useMuiBaseAppContext();
     const {
         title,
         titleDisabled,
@@ -564,7 +566,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         sx,
         debug = false,
         ...otherProps
-    } = props;
+    } = { ...defaultMuiComponentProps.dataGrid, ...props };
     const logConsole = useLogConsole(LOG_PREFIX);
     const datagridApiRef = useMuiDatagridApiRef();
     const anyArtifactRowAction =
