@@ -10,11 +10,11 @@ const theme = createTheme({
     palette: {
         primary: {
             main: '#004B99',
-            contrastText: "#fff"
+            contrastText: '#fff'
         },
     },
     components: {
-        MuiButton: {
+        /*MuiButton: {
             styleOverrides: {
                 root: {
                     borderRadius: '0px',
@@ -119,8 +119,7 @@ const theme = createTheme({
                     fontSize: '14px',
                 },
             },
-        },
-
+        },*/
     }
 });
 

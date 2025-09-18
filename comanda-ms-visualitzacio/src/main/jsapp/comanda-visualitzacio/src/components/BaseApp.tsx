@@ -95,9 +95,9 @@ const SystemTimeDisplay = React.memo(() => {
                 flexDirection: 'column',
                 alignItems: 'flex-start',
                 marginLeft: '20px',
-                color: 'inherit',
+                color: theme.palette.text.primary,
                 fontSize: '11px',
-                marginRight: '6px',
+                marginRight: '32px',
             }}
         >
             <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
@@ -112,12 +112,6 @@ const SystemTimeDisplay = React.memo(() => {
     );
 });
 
-const generateSystemTimeItems = () => {
-    return [
-        <SystemTimeDisplay key="system_time" />
-    ];
-}
-
 // Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
 const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) => {
     const { indexState: apiIndex } = useResourceApiContext();
@@ -127,11 +121,20 @@ const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) 
             <Button
                 className="appMenuItem"
                 key={entry.id}
-                color="inherit"
                 component={Link}
                 to={entry.to ?? ''} // Navegació amb React Router
-                sx={{display: {xs: 'none', md: 'inline'}}}
-            >
+                sx={{
+                    color: theme.palette.text.primary,
+                    display: { xs: 'none', md: 'inline' },
+                    mr: 1,
+                    textTransform: 'none',
+                    '&:hover': {
+                        textDecoration: 'underline',
+                        '--variant-containedBg': '#fff',
+                        '--variant-textBg': '#fff',
+                        '--variant-outlinedBg': '#fff',
+                    }
+                }}>
                 {entry.title}
             </Button>
         ))
@@ -143,7 +146,7 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
     return availableLanguages?.length && isLgUp && false
         ? [
             <HeaderLanguageSelector
-                sx={{ml: {xs: 1, md: '42px'}}}
+                sx={{ ml: { xs: 1, md: '42px' } }}
                 key="sel_lang"
                 languages={availableLanguages}
             />,
@@ -238,7 +241,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAppbarStyle={appbarStyle}
         headerAdditionalComponents={[
             ...generateMenuItems(menuEntries), // Menú
-            ...generateSystemTimeItems(), // Hora del sistema
+            <SystemTimeDisplay key="system_time" />, // Hora del sistema
             ...generateLanguageItems(availableLanguages), // Idioma
             ...generateAppMenu(appMenuEntries), // Menú lateral
         ]}

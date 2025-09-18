@@ -20,13 +20,13 @@ export const AppMenu: React.FC<AppMenuProps> = ({ menuEntries }) => {
   return (
     <>
       <IconButton
-        color="inherit"
+        color="default"
         aria-label="open menu"
         onClick={toggleMenu}
         edge="start"
         sx={{ mr: 2 }}
       >
-        <Icon sx={{ fontSize: '24px'}} fontSize={'medium'}>{menuIcon}</Icon>
+        <Icon sx={{ fontSize: '24px'}} fontSize="medium">{menuIcon}</Icon>
       </IconButton>
       {open && <SideMenu
           entries={menuEntries}
