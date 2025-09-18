@@ -62,7 +62,6 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent");
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
-    console.log("dataGroups", dataGroups);
 
     const series = [
         {
@@ -108,7 +107,6 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
         }
     ];
-    console.log("series", series);
 
     return estats != null && <BarChart
         xAxis={[{ scaleType: 'band', data: dataGroups }]}
