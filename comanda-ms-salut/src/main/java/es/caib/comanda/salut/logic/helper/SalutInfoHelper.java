@@ -27,12 +27,17 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.persistence.LockTimeoutException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -54,12 +59,14 @@ public class SalutInfoHelper {
 	private final SalutIntegracioRepository salutIntegracioRepository;
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
-	private final SalutDetallRepository salutDetallRepository;
+    private final SalutDetallRepository salutDetallRepository;
 
 	private final SalutClientHelper salutClientHelper;
     private final RestTemplate restTemplate;
+	private final ApplicationEventPublisher eventPublisher;
 
- 	private final ApplicationEventPublisher eventPublisher;
+    @Lazy
+    private final SalutInfoHelper self = this;
 
     // Locks per assegurar compactació "synchronized" per entornAppId
     private static final java.util.concurrent.ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
@@ -282,15 +289,15 @@ public class SalutInfoHelper {
 
     private void eliminarAntiguesSenseRollback(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime dataLlindar) {
         try {
-            eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
+            self.eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
         } catch (Exception ex) {
-            log.warn("Error eliminant dades antigues ({}). Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", tipus.name(), entornAppId, dataLlindar, ex.getMessage(), ex
-            );
+            log.warn("Error eliminant dades antigues ({}). Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", tipus.name(), entornAppId, dataLlindar, ex.getMessage(), ex);
         }
     }
 
 
-    private void eliminarDadesSalutAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime data) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void eliminarDadesSalutAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime data) {
         log.debug("Eliminant dades de salut antigues. EntornAppId: {}, tipus: {}, data: {}", entornAppId, tipus, data);
 //        List<SalutEntity> massaAntics = salutRepository.findByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
         List<Long> idsAntics = salutRepository.findIdsByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
@@ -299,23 +306,41 @@ public class SalutInfoHelper {
         for (int i = 0; i < idsAntics.size(); i += BATCH_SIZE) {
             int end = Math.min(i + BATCH_SIZE, idsAntics.size());
             List<Long> batch = idsAntics.subList(i, end);
+            // Eliminació del batch dins la mateixa transacció REQUIRES_NEW oberta a nivell superior
             eliminarLlista(batch);
         }
     }
 
-    private void eliminarLlista(List<Long> salutIds) {
+    public void eliminarLlista(List<Long> salutIds) {
         if (salutIds == null || salutIds.isEmpty()) {
             log.debug("Cap registre de salut per eliminar (null o buit)");
             return;
         }
-        log.info("Eliminant {} registres de salut antics...", salutIds.size());
-        // Eliminar fills per assegurar integritat
-        salutIntegracioRepository.deleteAllBySalutIdIn(salutIds);
-        salutSubsistemaRepository.deleteAllBySalutIdIn(salutIds);
-        salutMissatgeRepository.deleteAllBySalutIdIn(salutIds);
-        salutDetallRepository.deleteAllBySalutIdIn(salutIds);
-        salutRepository.deleteAllById(salutIds);
-        log.info("Eliminat {} registres de salut antics", salutIds.size());
+        int intents = 0;
+        int maxIntents = 3;
+        while (true) {
+            try {
+                log.info("Eliminant {} registres de salut antics...", salutIds.size());
+                // Eliminar fills per assegurar integritat
+                salutIntegracioRepository.deleteAllBySalutIdIn(salutIds);
+                salutSubsistemaRepository.deleteAllBySalutIdIn(salutIds);
+                salutMissatgeRepository.deleteAllBySalutIdIn(salutIds);
+                salutDetallRepository.deleteAllBySalutIdIn(salutIds);
+                // Eliminació en batch per reduir bloquejos
+                salutRepository.deleteAllByIdInBatch(salutIds);
+                log.info("Eliminat {} registres de salut antics", salutIds.size());
+                return;
+            } catch (RuntimeException ex) {
+                intents++;
+                if (isLockAcquisitionException(ex) && intents < maxIntents) {
+                    long sleep = 100L + (long) (Math.random() * 200L);
+                    log.info("Bloqueig en eliminar registres de salut (intent {}/{}). Es tornarà a intentar després de {}ms.", intents, maxIntents, sleep);
+                    try { Thread.sleep(sleep); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                } else {
+                    throw ex;
+                }
+            }
+        }
     }
 
     private void agregarGrupMinuts(Long entornAppId, SalutEntity darreraActualitzacioSalut, int numeroDiesAgrupacio) {
@@ -633,4 +658,17 @@ public class SalutInfoHelper {
         return dateTime != null && dateTime.getHour() == 0 && dateTime.getMinute() == 0;
     }
 
+    private boolean isLockAcquisitionException(Throwable ex) {
+        Throwable t = ex;
+        while (t != null) {
+            if (t instanceof CannotAcquireLockException || t instanceof LockAcquisitionException || t instanceof LockTimeoutException) {
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
+    }
+
 }
+
+

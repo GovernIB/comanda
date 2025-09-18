@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda</artifactId>
-		<version>0.1.0</version>
+		<version>0.1.1</version>
 	</parent>
 	<artifactId>comanda-recoleccio</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<description>MS responsable de la recol·lecció, processament i emmagatzematge de les dades enviades pels diferents
 		sistema a monitorar
 	</description>

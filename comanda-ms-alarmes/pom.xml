@@ -4,17 +4,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>es.caib.comanda</groupId>
-		<artifactId>comanda-bom-ms</artifactId>
-		<version>0.1.0</version>
-		<relativePath>../comanda-bom-ms/pom.xml</relativePath>
+		<artifactId>comanda</artifactId>
+		<version>0.1.1</version>
 	</parent>
 	<artifactId>comanda-alarmes</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
+	<description>MS responsable de la gestió les alarmes: configurar, enviar, …</description>
 	<dependencies>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+		</plugins>
+	</build>
 </project>

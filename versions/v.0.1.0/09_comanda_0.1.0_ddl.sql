@@ -100,8 +100,7 @@ CREATE TABLE com_usuari
     created_date TIMESTAMP NOT NULL,
     lastmod_by   VARCHAR2(64 CHAR),
     lastmod_date TIMESTAMP,
-    v            NUMBER(38, 0),
-    CONSTRAINT com_usuari_pk PRIMARY KEY (id)
+    v            NUMBER(38, 0)
 );
 
 ALTER TABLE com_usuari ADD CONSTRAINT com_usuari_codi_uk UNIQUE (codi);
@@ -125,10 +124,9 @@ CREATE TABLE com_parametre
     descripcio     VARCHAR2(1024),
     descripcio_key VARCHAR2(128),
     valor          VARCHAR2(255),
-    editable       BOOLEAN,
+    editable       NUMBER(1),
     grup_key       VARCHAR2(128),
-    subgrup_key    VARCHAR2(128),
-    CONSTRAINT com_parametre_pk PRIMARY KEY (id)
+    subgrup_key    VARCHAR2(128)
 );
 
 ALTER TABLE com_parametre ADD CONSTRAINT com_parametre_codi_uk UNIQUE (codi);
@@ -137,7 +135,7 @@ GRANT SELECT, UPDATE, INSERT, DELETE ON com_parametre TO WWW_COMANDA;
 
 ALTER TABLE com_entorn_app DROP COLUMN info_interval;
 ALTER TABLE com_entorn_app DROP COLUMN salut_interval;
-ALTER TABLE com_entorn_app ADD compactable BOOLEAN DEFAULT 0 NOT NULL;
+ALTER TABLE com_entorn_app ADD compactable NUMBER(1) DEFAULT 0 NOT NULL;
 ALTER TABLE com_entorn_app ADD compactacio_setmanal INTEGER;
 ALTER TABLE com_entorn_app ADD compactacio_mensual INTEGER;
 ALTER TABLE com_entorn_app ADD eliminacio INTEGER;
@@ -152,8 +150,7 @@ CREATE TABLE com_objecte
     id            NUMBER(38, 0) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tipus         VARCHAR2(64 CHAR) NOT NULL,
     nom           VARCHAR2(255 CHAR) NOT NULL,
-    identificador VARCHAR2(64 CHAR) NOT NULL,
-    CONSTRAINT com_objecte_pk PRIMARY KEY (id)
+    identificador VARCHAR2(64 CHAR) NOT NULL
 );
 
 GRANT SELECT, UPDATE, INSERT, DELETE ON com_objecte TO WWW_COMANDA;
@@ -162,8 +159,7 @@ GRANT SELECT, UPDATE, INSERT, DELETE ON com_objecte TO WWW_COMANDA;
 CREATE TABLE com_acces
 (
     id    NUMBER(38, 0) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    acces VARCHAR2(64 CHAR),
-    CONSTRAINT com_acces_pk PRIMARY KEY (id)
+    acces VARCHAR2(64 CHAR)
 );
 
 GRANT SELECT, UPDATE, INSERT, DELETE ON com_acces TO WWW_COMANDA;
@@ -179,8 +175,7 @@ CREATE TABLE com_permis
     created_date  TIMESTAMP NOT NULL,
     lastmod_by    VARCHAR2(64 CHAR),
     lastmod_date  TIMESTAMP,
-    v             NUMBER(38, 0),
-    CONSTRAINT com_permis_pk PRIMARY KEY (id)
+    v             NUMBER(38, 0)
 );
 
 ALTER TABLE com_permis ADD CONSTRAINT com_permis_objecte_fk FOREIGN KEY (objecte_id) REFERENCES com_objecte (id);
@@ -270,10 +265,10 @@ CREATE INDEX com_salut_entorn_data_id ON com_salut(entorn_app_id, data);
 -- Module: comanda-ms-estadistica
 -- =============================================
 
-ALTER TABLE com_est_dimensio_valor ADD agrupable BOOLEAN DEFAULT 0 NOT NULL;
+ALTER TABLE com_est_dimensio_valor ADD agrupable NUMBER(1) DEFAULT 0 NOT NULL;
 ALTER TABLE com_est_dimensio_valor ADD valor_agrupacio VARCHAR2(255 CHAR);
 
-ALTER TABLE com_est_indicador ADD compactable BOOLEAN DEFAULT 1 NOT NULL;
+ALTER TABLE com_est_indicador ADD compactable NUMBER(1) DEFAULT 1 NOT NULL;
 ALTER TABLE com_est_indicador ADD tipus_compactacio VARCHAR2(64 CHAR) DEFAULT 'SUMA';
 ALTER TABLE com_est_indicador ADD compactacio_indicador_id NUMBER(38, 0);
 ALTER TABLE com_est_indicador ADD CONSTRAINT com_ind_compactacio_fk FOREIGN KEY (compactacio_indicador_id) REFERENCES com_est_indicador (id);

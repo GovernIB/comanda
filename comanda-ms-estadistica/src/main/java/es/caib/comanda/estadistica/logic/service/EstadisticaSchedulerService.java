@@ -37,6 +37,8 @@ public class EstadisticaSchedulerService {
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
+    @Value("${" + BaseConfig.PROP_SCHEDULER_BACK + ":#{false}}")
+    private Boolean schedulerBack;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
     private final Map<Long, ScheduledFuture<?>> tasquesCompactarActives = new ConcurrentHashMap<>();
@@ -56,6 +58,10 @@ public class EstadisticaSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
+        if (!isLeader()) {
+            log.info("Inicialització de tasques estadístiques ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
         // Esperarem 1 minut a inicialitzar les tasques en segon pla
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         executor.schedule(() -> {
@@ -169,13 +175,17 @@ public class EstadisticaSchedulerService {
 
     private boolean isLeader() {
         // TODO: Implementar per microserveis
-        return schedulerLeader;
+        return schedulerLeader && schedulerBack;
     }
 
 
     // Cada hora comprovarem que no hi hagi cap aplicacio-entorn que no s'estigui actualitzant
     @Scheduled(cron = "0 10 */1 * * *")
     public void comprovarRefrescInfo() {
+        if (!isLeader()) {
+            log.info("Refresc de tasques estadístiques ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
         log.debug("Comprovant refresc periòdic dels entorn-app - Estadístiques");
         List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(ea -> {

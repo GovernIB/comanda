@@ -11,6 +11,14 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class SubsistemaSalut extends EstatSalut {
     private String codi;
+
+    // Dades totals
     private Long totalOk;
     private Long totalError;
+    private Integer totalTempsMig;
+
+    // Dades per període consultat
+    private Long peticionsOkUltimPeriode;
+    private Long peticionsErrorUltimPeriode;
+    private Integer tempsMigUltimPeriode;
 }

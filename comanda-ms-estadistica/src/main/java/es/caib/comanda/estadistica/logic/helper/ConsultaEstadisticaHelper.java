@@ -155,6 +155,7 @@ public class ConsultaEstadisticaHelper {
                     return getDadesWidgetTaula(dashboardItem, dadesComunsConsulta);
             }
         } catch (Exception e) {
+            log.error("Error obtnint dades de dashboard widget: " + e.getMessage(), e);
             throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId().toString(), e.getMessage(), e.getCause());
         }
 
@@ -487,7 +488,7 @@ public class ConsultaEstadisticaHelper {
         String dimensioAgrupacioCodi = widget.getDimensioAgrupacio() != null ? widget.getDimensioAgrupacio().getCodi() : null;
 
         List<Map<String, String>> columnes = new ArrayList<>();
-        columnes.add(Map.of("id", "agrupacio", "label", widget.getTitolAgrupament()));
+        columnes.add(Map.of("id", "agrupacio", "label", widget.getTitolAgrupament() != null ? widget.getTitolAgrupament() : widget.getDimensioAgrupacio().getNom()));
         IntStream.range(0, widget.getColumnes().size()).forEach(index -> {
             var columna = widget.getColumnes().get(index);
             columnes.add(Map.of("id", "col" + (index + 1), "label", columna.getTitol()));

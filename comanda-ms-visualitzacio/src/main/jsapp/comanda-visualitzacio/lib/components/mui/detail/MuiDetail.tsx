@@ -2,6 +2,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import { Detail, DetailProps } from '../../detail/Detail';
 import { useBaseAppContext } from '../../BaseAppContext';
+import { useMuiBaseAppContext } from '../MuiBaseAppContext';
 import { ReactElementWithPosition } from '../../../util/reactNodePosition';
 import { toToolbarIcon } from '../ToolbarIcon';
 import { Toolbar } from '../Toolbar';
@@ -81,6 +82,7 @@ const MuiDetailContent: React.FC<React.PropsWithChildren | any> = (props) => {
  * @returns Element JSX del detall.
  */
 export const MuiDetail: React.FC<MuiDetailProps> = (props) => {
+    const { defaultMuiComponentProps } = useMuiBaseAppContext();
     const {
         title,
         resourceName,
@@ -90,7 +92,7 @@ export const MuiDetail: React.FC<MuiDetailProps> = (props) => {
         hiddenBackButton,
         componentProps,
         children,
-    } = props;
+    } = { ...defaultMuiComponentProps.detail, ...props };
     return (
         <Detail {...props}>
             <MuiDetailContent

@@ -1,84 +1,146 @@
-import {Card, CardContent, CardHeader, Grid, Typography} from "@mui/material";
-import IconButton from "@mui/material/IconButton";
-import Icon from "@mui/material/Icon";
+import { Card, CardContent, CardHeader, Grid, Typography } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import Icon from '@mui/material/Icon';
 
-const cardBorder= { border: '1px solid #e3e3e3', borderRadius: '4px' };
-const cardHeader= { backgroundColor: '#f5f5f5', borderBottom: '1px solid #e3e3e3' };
-const iconButton = { p: 0.5, borderRadius: '5px', maxWidth: 'max-content', border: '1px solid grey' }
+const cardBorder = { border: '1px solid #e3e3e3', borderRadius: '4px' };
+const cardHeader = { backgroundColor: '#f5f5f5', borderBottom: '1px solid #e3e3e3' };
+const iconButton = {
+    p: 0.5,
+    borderRadius: '5px',
+    maxWidth: 'max-content',
+    border: '1px solid grey',
+};
 
-const CardButton = (props:any) => {
-    const {text, icon, onClick, flex, buttonProps, hidden} = props;
+const CardButton = (props: any) => {
+    const { text, icon, onClick, flex, buttonProps, hidden } = props;
 
-    if (hidden){
-        return <></>
+    if (hidden) {
+        return <></>;
     }
 
-    return <Grid item xs={flex ?? 12} display={'flex'} justifyContent={'end'}>
-        <IconButton sx={{...iconButton, ...buttonProps}} title={text} onClick={onClick}>
-            <Typography sx={{display: 'flex', alignItems: 'center'}} variant={'caption'} color={'textPrimary'}>
-                {icon && <Icon fontSize={'inherit'}>{icon}</Icon>}
-                {text}
-            </Typography>
-        </IconButton>
-    </Grid>
-}
+    return (
+        <Grid size={flex ?? 12} sx={{
+            display: 'flex',
+            justifyContent: 'end',
 
-const isEmpty = (value:any[]) => {
-    return !value || value?.length === 0 || value?.every?.((item:any) => !item)
-}
+        }}>
+            <IconButton sx={{ ...iconButton, ...buttonProps }} title={text} onClick={onClick}>
+                <Typography
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                    variant={'caption'}
+                    color={'textPrimary'}
+                >
+                    {icon && <Icon fontSize={'inherit'}>{icon}</Icon>}
+                    {text}
+                </Typography>
+            </IconButton>
+        </Grid>
+    );
+};
 
-export const UserProfileCardData = (props:any) => {
-    const {icon, title, header, children, xs, hidden, hiddenIfEmpty, buttons, cardProps, headerProps = cardHeader, ...other} = props;
+const isEmpty = (value: any[]) => {
+    return !value || value?.length === 0 || value?.every?.((item: any) => !item);
+};
 
-    if (hidden || (hiddenIfEmpty && isEmpty(children))){
-        return <></>
+export const UserProfileCardData = (props: any) => {
+    const {
+        icon,
+        title,
+        header,
+        children,
+        xs,
+        hidden,
+        hiddenIfEmpty,
+        buttons,
+        cardProps,
+        headerProps = cardHeader,
+        ...other
+    } = props;
+
+    if (hidden || (hiddenIfEmpty && isEmpty(children))) {
+        return <></>;
     }
 
-    return <Grid item xs={xs ?? 12}>
-        <Card sx={{...cardBorder, ...cardProps}}>
-            {title && <CardHeader title={
-                <Typography variant="h8" sx={{display: 'flex'}}>
-                    {icon && icon}
-                    {title}
-                </Typography>} sx={headerProps}/>}
+    return (
+        <Grid size={xs ?? 12}>
+            <Card sx={{ ...cardBorder, ...cardProps }}>
+                {title && (
+                    <CardHeader
+                        title={
+                            <Typography variant="body1" sx={{ display: 'flex' }}>
+                                {icon && icon}
+                                {title}
+                            </Typography>
+                        }
+                        sx={headerProps}
+                    />
+                )}
+                {header && <CardContent sx={headerProps}>{header}</CardContent>}
+
+                <CardContent hidden={!children}>
+                    <Grid container columnSpacing={1} rowSpacing={1} item xs={12} {...other}>
+                        {children}
+                        {buttons?.map((button: any) => (
+                            <CardButton key={button?.text} {...button} />
+                        ))}
+                    </Grid>
+                </CardContent>
+            </Card>
+        </Grid>
+    );
+};
+
+export const CardPage = (props: any) => {
+    const { title, header, headerProps = cardHeader, children } = props;
+    return (
+        <Card
+            sx={{
+                ...cardBorder,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
+            {title && <CardHeader title={title} sx={headerProps} />}
             {header && <CardContent sx={headerProps}>{header}</CardContent>}
 
-            <CardContent hidden={!children}>
-                <Grid container columnSpacing={1} rowSpacing={1} item xs={12} {...other}>
-                    {children}
-                    {buttons?.map((button:any) => <CardButton key={button?.text} {...button}/>)}
-                </Grid>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                {children}
             </CardContent>
         </Card>
-    </Grid>
-}
+    );
+};
 
-export const CardPage = (props:any) => {
-    const {title, header, headerProps = cardHeader, children} = props;
-    return <Card sx={{
-        ...cardBorder,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-    }}>
-        {title && <CardHeader title={title} sx={headerProps}/>}
-        {header && <CardContent sx={headerProps}>{header}</CardContent>}
+export const ContenidoData = (props: any) => {
+    const {
+        title,
+        titleXs,
+        children,
+        textXs,
+        xs,
+        componentTitleProps,
+        componentTextProps,
+        hidden,
+        hiddenIfEmpty,
+        ...other
+    } = props;
 
-        <CardContent sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-            {children}
-        </CardContent>
-    </Card>
-}
-
-export const ContenidoData = (props:any) => {
-    const {title, titleXs, children, textXs, xs, componentTitleProps, componentTextProps, hidden, hiddenIfEmpty, ...other} = props;
-
-    if (hidden || (hiddenIfEmpty && isEmpty(children))){
-        return <></>
+    if (hidden || (hiddenIfEmpty && isEmpty(children))) {
+        return <></>;
     }
 
-    return <Grid container direction={"row"} columnSpacing={1} item xs={xs ?? 12} {...other}>
-        <Grid item xs={titleXs ?? 4}><Typography variant={"body1"} color={'black'} sx={componentTitleProps}>{title}</Typography></Grid>
-        <Grid item xs={textXs ?? 8}><Typography variant={"inherit"} color={'textSecondary'} sx={componentTextProps}>{children}</Typography></Grid>
-    </Grid>
-}
+    return (
+        <Grid container direction={'row'} columnSpacing={1} item xs={xs ?? 12} {...other}>
+            <Grid size={titleXs ?? 4}>
+                <Typography variant={'body1'} color={'black'} sx={componentTitleProps}>
+                    {title}
+                </Typography>
+            </Grid>
+            <Grid size={textXs ?? 8}>
+                <Typography variant={'inherit'} color={'textSecondary'} sx={componentTextProps}>
+                    {children}
+                </Typography>
+            </Grid>
+        </Grid>
+    );
+};

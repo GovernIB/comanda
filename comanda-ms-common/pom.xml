@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom-ms</artifactId>
-		<version>0.1.0</version>
+		<version>0.1.1</version>
 		<relativePath>../comanda-bom-ms/pom.xml</relativePath>
 	</parent>
 	<artifactId>comanda-ms-common</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<dependencies>
 		<dependency>
 			<groupId>net.sf.jasperreports</groupId>

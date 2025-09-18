@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda-bom</artifactId>
-		<version>0.1.0</version>
+		<version>0.1.1</version>
 		<relativePath>../comanda-bom</relativePath>
 	</parent>
 	<artifactId>comanda-api-interna</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<packaging>war</packaging>
 	<description>API interna de l'aplicació</description>
 	<dependencies>

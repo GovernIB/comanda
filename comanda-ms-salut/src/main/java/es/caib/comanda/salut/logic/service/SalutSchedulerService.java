@@ -33,6 +33,8 @@ public class SalutSchedulerService {
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
+    @Value("${" + BaseConfig.PROP_SCHEDULER_BACK + ":#{false}}")
+    private Boolean schedulerBack;
 
     private static final Integer PERIODE_CONSULTA_SALUT = 1;
 
@@ -50,6 +52,11 @@ public class SalutSchedulerService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
+        if (!isLeader()) {
+            log.info("Inicialització de tasques de salut ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
+
         // Esperarem 1 minut a inicialitzar les tasques en segon pla
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         long currentTimeMillis = System.currentTimeMillis();
@@ -124,12 +131,16 @@ public class SalutSchedulerService {
 
     private boolean isLeader() {
         // TODO: Implementar per microserveis
-        return schedulerLeader;
+        return schedulerLeader && schedulerBack;
     }
 
     // Cada hora comprovarem que no hi hagi cap aplicacio-entorn que no s'estigui actualitzant
     @Scheduled(cron = "0 5 */1 * * *")
     public void comprovarRefrescInfo() {
+        if (!isLeader()) {
+            log.debug("Comprovació de refresc de salut ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
         log.debug("Comprovant refresc periòdic dels entorn-app - Salut");
         List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
         entornAppsActives.forEach(ea -> {
