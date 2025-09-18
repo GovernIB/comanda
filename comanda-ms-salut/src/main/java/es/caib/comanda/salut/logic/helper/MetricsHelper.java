@@ -25,12 +25,17 @@ public class MetricsHelper {
 	private final MeterRegistry meterRegistry;
 
 	public Timer getSalutInfoGlobalTimer(String entornNom, String appNom) {
-		return Timer.builder(SALUT_INFO_GLOBAL_LATENCIA).
-				description("Temps transcorregut per a consultar la informació de salut").
-				tag("entorn", entornNom).
-				tag("app", appNom).
-				publishPercentiles(0.5, 0.75, 0.95).
-				register(meterRegistry);
+		Timer.Builder builder = Timer.builder(SALUT_INFO_GLOBAL_LATENCIA)
+				.description("Temps transcorregut per a consultar la informació de salut");
+		if (entornNom != null) {
+			builder.tag("entorn", entornNom);
+		}
+		if (appNom != null) {
+			builder.tag("app", appNom);
+		}
+		return builder
+				.publishPercentiles(0.5, 0.75, 0.95)
+				.register(meterRegistry);
 	}
 
 	public Timer getSalutLastGlobalTimer() {
