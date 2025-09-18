@@ -1,7 +1,6 @@
 package es.caib.comanda.client;
 
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.client.model.Usuari;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
