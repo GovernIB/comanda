@@ -15,10 +15,16 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IntegracioPeticions {
+
+    // Dades totals
     private long totalOk;
     private long totalError;
+    private Integer totalTempsMig;
+
+    // Dades per període consultat
     private Long peticionsOkUltimPeriode;
     private Long peticionsErrorUltimPeriode;
+    private Integer tempsMigUltimPeriode;
 
     private String endpoint;
 
