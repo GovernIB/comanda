@@ -31,11 +31,16 @@ export const calculateEstatsSeries = (
     return baseDataGroups.map((group) => {
 
         const estatApps = Object.keys(estats);
+        if (estatApps.length === 0) {
+            return 0;
+        }
         let estatPercent: number = 0;
         estatApps.forEach((appKey) => {
             const estatsData = estats[appKey];
             const estat = estatsData.find((e: any) => e?.data === group);
             if (estat && isDataInGroup(estat.data, group, agrupacio)) {
+                if (isNaN(estat[percentKey]))
+                    throw new Error(`${estat[percentKey]} is not a number (${group}, ${percentKey})`);
                 estatPercent += estat[percentKey];
             }
         });
