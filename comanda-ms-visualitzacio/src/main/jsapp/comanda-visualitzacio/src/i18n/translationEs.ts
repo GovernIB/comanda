@@ -116,6 +116,7 @@ const translationEs = {
                 appLatencia: "Latencia",
                 missatges: "Mensajes",
                 detalls: "Detalles",
+                noInfo: 'No hay datos disponibles para este entorno',
             },
             latencia: {
                 title: "Latencia",

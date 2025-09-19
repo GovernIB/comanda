@@ -38,6 +38,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.LockTimeoutException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -51,8 +53,8 @@ import java.util.Map;
  * @author Límit Tecnologies
  */
 @Slf4j
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class SalutInfoHelper {
 
 	private final SalutRepository salutRepository;
@@ -64,6 +66,7 @@ public class SalutInfoHelper {
 	private final SalutClientHelper salutClientHelper;
     private final RestTemplate restTemplate;
 	private final ApplicationEventPublisher eventPublisher;
+	private final MetricsHelper metricsHelper;
 
     @Lazy
     private final SalutInfoHelper self = this;
@@ -77,6 +80,7 @@ public class SalutInfoHelper {
 		log.debug("Obtenint dades de salut de l'app {}, entorn {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom());
+		Instant t0 = Instant.now();
 		MonitorSalut monitorSalut = new MonitorSalut(
 				entornApp.getId(),
 				entornApp.getSalutUrl(),
@@ -111,7 +115,13 @@ public class SalutInfoHelper {
 			}
             // Publicar esdeveniment per a compactació. També en cas d'error
             eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), saved.getId(), numeroDiesAgrupacio));
-        }
+		} finally {
+			Duration duration = Duration.between(t0, Instant.now());
+			metricsHelper.getSalutInfoGlobalTimer(null, null).record(duration);
+			metricsHelper.getSalutInfoGlobalTimer(
+					entornApp.getEntorn().getNom(),
+					entornApp.getApp().getNom()).record(duration);
+		}
 	}
 
 	private Long crearSalut(SalutInfo info, Long entornAppId, LocalDateTime currentMinuteTime) {
@@ -156,6 +166,14 @@ public class SalutInfoHelper {
                 salutIntegracio.setLatenciaMitjana(i.getLatencia());
 				salutIntegracio.setTotalOk(i.getPeticions() != null ? i.getPeticions().getTotalOk() : 0L);
 				salutIntegracio.setTotalError(i.getPeticions() != null ? i.getPeticions().getTotalError() : 0L);
+				salutIntegracio.setTotalTempsMig(i.getPeticions() != null && i.getPeticions().getTotalTempsMig() != null ? i.getPeticions().getTotalTempsMig() : 0);
+				salutIntegracio.setPeticionsOkUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsOkUltimPeriode() != null ? i.getPeticions().getPeticionsOkUltimPeriode() : 0L);
+				salutIntegracio.setPeticionsErrorUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsErrorUltimPeriode() != null ? i.getPeticions().getPeticionsErrorUltimPeriode() : 0L);
+				salutIntegracio.setTempsMigUltimPeriode(i.getPeticions() != null && i.getPeticions().getTempsMigUltimPeriode() != null ? i.getPeticions().getTempsMigUltimPeriode() : 0);
+				salutIntegracio.setEndpoint(i.getPeticions() != null ? i.getPeticions().getEndpoint() : null);
+				if (i.getPeticions().getPeticionsPerEntorn() != null) {
+					// TODO
+				}
 				salutIntegracio.setSalut(salut);
 				salutIntegracioRepository.save(salutIntegracio);
 			});
@@ -172,6 +190,10 @@ public class SalutInfoHelper {
                 salutSubsistema.setLatenciaMitjana(s.getLatencia());
 				salutSubsistema.setTotalOk(s.getTotalOk() != null ? s.getTotalOk() : 0L);
 				salutSubsistema.setTotalError(s.getTotalError() != null ? s.getTotalError() : 0L);
+				salutSubsistema.setTotalTempsMig(s.getTotalTempsMig() != null ? s.getTotalTempsMig() : 0);
+				salutSubsistema.setPeticionsOkUltimPeriode(s.getPeticionsOkUltimPeriode() != null ? s.getPeticionsOkUltimPeriode() : 0L);
+				salutSubsistema.setPeticionsErrorUltimPeriode(s.getPeticionsErrorUltimPeriode() != null ? s.getPeticionsErrorUltimPeriode() : 0L);
+				salutSubsistema.setTempsMigUltimPeriode(s.getTempsMigUltimPeriode() != null ? s.getTempsMigUltimPeriode() : 0);
 				salutSubsistema.setSalut(salut);
 				salutSubsistemaRepository.save(salutSubsistema);
 			});
@@ -209,7 +231,7 @@ public class SalutInfoHelper {
 
         try {
             return SalutEstat.valueOf(estatSalut.name());
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException ignored) {}
 
         return SalutEstat.UNKNOWN;
 	}

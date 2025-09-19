@@ -153,7 +153,6 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
 // Menú general
 const generateAppMenu = (menuEntries: MenuEntryWithResource[] | undefined) => {
     const { indexState: apiIndex } = useResourceApiContext();
-    console.log('>>> api links', apiIndex?.links)
     const filteredMenuEntries = menuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
     return filteredMenuEntries?.length
         ? [<AppMenu key="app_menu" menuEntries={filteredMenuEntries} />]

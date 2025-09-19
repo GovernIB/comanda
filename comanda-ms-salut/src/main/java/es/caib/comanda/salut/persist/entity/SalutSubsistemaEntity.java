@@ -41,6 +41,10 @@ public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
 	@Column(name = "latencia")                      	    private Integer latencia;
 	@Column(name = "total_ok", nullable = false)    	    private Long totalOk;
 	@Column(name = "total_error", nullable = false) 	    private Long totalError;
+	@Column(name = "total_tempsmig", nullable = false) 	    private Integer totalTempsMig;
+	@Column(name = "pet_ok_ultperiode", nullable = false) 	private Long peticionsOkUltimPeriode;
+	@Column(name = "pet_error_ultperiode", nullable = false) private Long peticionsErrorUltimPeriode;
+	@Column(name = "temps_mig_ultperiode", nullable = false) private Integer tempsMigUltimPeriode;
 
     // Comptadors d'estat agregats per període
     @Setter(NONE) @Column(name = "count_up")  	            private int countUp = 0;

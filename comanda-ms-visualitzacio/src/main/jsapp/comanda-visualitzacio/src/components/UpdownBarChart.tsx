@@ -31,11 +31,16 @@ export const calculateEstatsSeries = (
     return baseDataGroups.map((group) => {
 
         const estatApps = Object.keys(estats);
+        if (estatApps.length === 0) {
+            return 0;
+        }
         let estatPercent: number = 0;
         estatApps.forEach((appKey) => {
             const estatsData = estats[appKey];
             const estat = estatsData.find((e: any) => e?.data === group);
             if (estat && isDataInGroup(estat.data, group, agrupacio)) {
+                if (isNaN(estat[percentKey]))
+                    throw new Error(`${estat[percentKey]} is not a number (${group}, ${percentKey})`);
                 estatPercent += estat[percentKey];
             }
         });
@@ -62,7 +67,6 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent");
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
-    console.log("dataGroups", dataGroups);
 
     const series = [
         {
@@ -108,7 +112,6 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
         }
     ];
-    console.log("series", series);
 
     return estats != null && <BarChart
         xAxis={[{ scaleType: 'band', data: dataGroups }]}

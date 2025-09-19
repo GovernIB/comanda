@@ -60,7 +60,7 @@ const AuthProvider = isAuthUrlPresent ? KeycloakAuthProvider : ContainerAuthProv
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory debug>
+        <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
             <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
                 <UserProvider>
                     <ThemeProvider theme={theme}>
@@ -72,5 +72,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 </UserProvider>
             </ResourceApiProvider>
         </AuthProvider>
-    </React.StrictMode>,
+    </React.StrictMode>
 );
