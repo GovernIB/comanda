@@ -2,12 +2,14 @@ import React from 'react';
 import { MuiDataGridProps } from './datagrid/MuiDataGrid';
 import { MuiDataListProps } from './datalist/MuiDataList';
 import { MuiFormProps } from './form/MuiForm';
+import { MuiFilterProps } from './form/MuiFilter';
 import { MuiDetailProps } from './detail/MuiDetail';
 
 export type DefaultMuiComponentProps = {
     dataGrid?: Partial<MuiDataGridProps>,
     dataList?: Partial<MuiDataListProps>,
     form?: Partial<MuiFormProps>,
+    filter?: Partial<MuiFilterProps>;
     detail?: Partial<MuiDetailProps>,
 };
 

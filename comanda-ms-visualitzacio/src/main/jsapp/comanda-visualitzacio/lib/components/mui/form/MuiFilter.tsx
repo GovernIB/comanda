@@ -1,12 +1,13 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import Filter, { FilterProps } from '../../form/Filter';
+import { useMuiBaseAppContext } from '../MuiBaseAppContext';
 import { useOptionalDataGridContext } from '../datagrid/DataGridContext';
 
 /**
  * Propietats del component MuiFilter (també conté les propietats del component Filter).
  */
-type MuiFilterProps = FilterProps & {
+export type MuiFilterProps = FilterProps & {
     /** Propietats per a l'element que conté el filtre */
     componentProps?: any;
 };
@@ -18,7 +19,11 @@ type MuiFilterProps = FilterProps & {
  * @returns Element JSX del filtre.
  */
 export const MuiFilter: React.FC<MuiFilterProps> = (props) => {
-    const { componentProps, onSpringFilterChange, children, ...otherProps } = props;
+    const { defaultMuiComponentProps } = useMuiBaseAppContext();
+    const { componentProps, onSpringFilterChange, children, ...otherProps } = {
+        ...defaultMuiComponentProps.filter,
+        ...props,
+    };
     const gridContext = useOptionalDataGridContext();
     const handleSpringFilterChange = (filter: string | undefined) => {
         if (gridContext != null) {

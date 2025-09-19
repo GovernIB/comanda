@@ -124,6 +124,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
  */
 export const MuiForm: React.FC<MuiFormProps> = (props) => {
     const { defaultMuiComponentProps } = useMuiBaseAppContext();
+    const joinedProps = { ...defaultMuiComponentProps.form, ...props };
     const {
         id,
         title,
@@ -137,9 +138,9 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
         hiddenDeleteButton,
         componentProps,
         children,
-    } = { ...defaultMuiComponentProps.form, ...props };
+    } = joinedProps;
     return (
-        <Form {...props}>
+        <Form {...joinedProps}>
             <MuiFormContent
                 id={id}
                 title={title}

@@ -203,6 +203,16 @@ export const App: React.FC = () => {
                               }
                             : undefined,
                 },
+                form: {
+                    commonFieldComponentProps: {
+                        size: 'small'
+                    }
+                },
+                filter: {
+                    commonFieldComponentProps: {
+                        size: 'small'
+                    }
+                },
             }}
         >
             <AppRoutes />
