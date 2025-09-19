@@ -166,6 +166,14 @@ public class SalutInfoHelper {
                 salutIntegracio.setLatenciaMitjana(i.getLatencia());
 				salutIntegracio.setTotalOk(i.getPeticions() != null ? i.getPeticions().getTotalOk() : 0L);
 				salutIntegracio.setTotalError(i.getPeticions() != null ? i.getPeticions().getTotalError() : 0L);
+				salutIntegracio.setTotalTempsMig(i.getPeticions() != null && i.getPeticions().getTotalTempsMig() != null ? i.getPeticions().getTotalTempsMig() : 0);
+				salutIntegracio.setPeticionsOkUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsOkUltimPeriode() != null ? i.getPeticions().getPeticionsOkUltimPeriode() : 0L);
+				salutIntegracio.setPeticionsErrorUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsErrorUltimPeriode() != null ? i.getPeticions().getPeticionsErrorUltimPeriode() : 0L);
+				salutIntegracio.setTempsMigUltimPeriode(i.getPeticions() != null && i.getPeticions().getTempsMigUltimPeriode() != null ? i.getPeticions().getTempsMigUltimPeriode() : 0);
+				salutIntegracio.setEndpoint(i.getPeticions() != null ? i.getPeticions().getEndpoint() : null);
+				if (i.getPeticions().getPeticionsPerEntorn() != null) {
+					// TODO
+				}
 				salutIntegracio.setSalut(salut);
 				salutIntegracioRepository.save(salutIntegracio);
 			});
@@ -223,7 +231,7 @@ public class SalutInfoHelper {
 
         try {
             return SalutEstat.valueOf(estatSalut.name());
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException ignored) {}
 
         return SalutEstat.UNKNOWN;
 	}
