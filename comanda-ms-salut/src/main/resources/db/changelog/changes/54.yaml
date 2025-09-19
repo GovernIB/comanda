@@ -1,0 +1,59 @@
+databaseChangeLog:
+- changeSet:
+    id: salut-change-54-1
+    author: Limit
+    changes:
+    - addColumn:
+        tableName: ${db_prefix}salut_subsistema
+        columns:
+        - column:
+            name: total_tempsmig
+            type: INTEGER
+            constraints:
+              nullable: true
+        - column:
+            name: pet_ok_ultperiode
+            type: INTEGER
+            constraints:
+              nullable: true
+        - column:
+            name: pet_error_ultperiode
+            type: INTEGER
+            constraints:
+              nullable: true
+        - column:
+            name: temps_mig_ultperiode
+            type: INTEGER
+            constraints:
+              nullable: true
+    - update:
+        tableName: ${db_prefix}salut_subsistema
+        columns:
+          - column:
+              name: total_tempsmig
+              valueNumeric: 0
+          - column:
+              name: pet_ok_ultperiode
+              valueNumeric: 0
+          - column:
+              name: pet_error_ultperiode
+              valueNumeric: 0
+          - column:
+              name: temps_mig_ultperiode
+              valueNumeric: 0
+    - addNotNullConstraint:
+        tableName: ${db_prefix}salut_subsistema
+        columnName: total_tempsmig
+        columnDataType: INTEGER
+    - addNotNullConstraint:
+        tableName: ${db_prefix}salut_subsistema
+        columnName: pet_ok_ultperiode
+        columnDataType: INTEGER
+    - addNotNullConstraint:
+        tableName: ${db_prefix}salut_subsistema
+        columnName: pet_error_ultperiode
+        columnDataType: INTEGER
+    - addNotNullConstraint:
+        tableName: ${db_prefix}salut_subsistema
+        columnName: temps_mig_ultperiode
+        columnDataType: INTEGER

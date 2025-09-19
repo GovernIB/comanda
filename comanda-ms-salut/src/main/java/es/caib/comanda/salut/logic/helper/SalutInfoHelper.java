@@ -182,6 +182,10 @@ public class SalutInfoHelper {
                 salutSubsistema.setLatenciaMitjana(s.getLatencia());
 				salutSubsistema.setTotalOk(s.getTotalOk() != null ? s.getTotalOk() : 0L);
 				salutSubsistema.setTotalError(s.getTotalError() != null ? s.getTotalError() : 0L);
+				salutSubsistema.setTotalTempsMig(s.getTotalTempsMig() != null ? s.getTotalTempsMig() : 0);
+				salutSubsistema.setPeticionsOkUltimPeriode(s.getPeticionsOkUltimPeriode() != null ? s.getPeticionsOkUltimPeriode() : 0L);
+				salutSubsistema.setPeticionsErrorUltimPeriode(s.getPeticionsErrorUltimPeriode() != null ? s.getPeticionsErrorUltimPeriode() : 0L);
+				salutSubsistema.setTempsMigUltimPeriode(s.getTempsMigUltimPeriode() != null ? s.getTempsMigUltimPeriode() : 0);
 				salutSubsistema.setSalut(salut);
 				salutSubsistemaRepository.save(salutSubsistema);
 			});
