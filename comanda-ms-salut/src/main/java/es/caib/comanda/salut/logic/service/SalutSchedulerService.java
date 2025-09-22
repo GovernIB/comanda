@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -66,6 +67,12 @@ public class SalutSchedulerService {
         executor.schedule(() -> {
             try {
                 List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
+                if (entornAppsActives.isEmpty()) {
+                    log.info("No hi ha cap entorn-app activa per a programar les tasques de salut");
+                    return;
+                }
+                var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
+                log.info("Es van a programar les tasques de salut per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
                 entornAppsActives.forEach(this::programarTasca);
             } finally {
                 executor.shutdown();
@@ -74,6 +81,7 @@ public class SalutSchedulerService {
     }
 
     public void programarTasca(EntornApp entornApp) {
+        log.info("Programar tasca de salut per l'entornApp: {}", entornApp.getId());
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
 

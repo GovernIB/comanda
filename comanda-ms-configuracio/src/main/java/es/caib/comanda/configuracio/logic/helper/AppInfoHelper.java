@@ -107,6 +107,9 @@ public class AppInfoHelper {
 				.estadisticaUrl(entity.getEstadisticaUrl())
 				.estadisticaCron(entity.getEstadisticaCron())
 				.activa(entity.isActiva())
+                .compactable(entity.getCompactable())
+                .eliminacioMesos(entity.getEliminacioMesos())
+                .compactacioMensualMesos(entity.getCompactacioMensualMesos())
 				.build();
 	}
 
