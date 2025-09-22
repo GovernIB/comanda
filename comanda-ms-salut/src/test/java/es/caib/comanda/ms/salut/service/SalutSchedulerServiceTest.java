@@ -70,6 +70,9 @@ public class SalutSchedulerServiceTest {
         // Set schedulerLeader to true for testing
         ReflectionTestUtils.setField(salutSchedulerService, "schedulerLeader", true);
 
+		// Set schedulerBack to true for testing
+		ReflectionTestUtils.setField(salutSchedulerService, "schedulerBack", true);
+
         // Setup EntornApp
         entornApp = EntornApp.builder()
                 .id(1L)

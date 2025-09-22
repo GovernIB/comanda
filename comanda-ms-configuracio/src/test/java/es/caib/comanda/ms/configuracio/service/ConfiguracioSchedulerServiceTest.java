@@ -52,6 +52,9 @@ public class ConfiguracioSchedulerServiceTest {
         // Set the schedulerLeader property to true for testing
         ReflectionTestUtils.setField(schedulerService, "schedulerLeader", true);
 
+		// Set the schedulerBack property to true for testing
+		ReflectionTestUtils.setField(schedulerService, "schedulerBack", true);
+
         // Setup test data
         AppEntity appEntity = new AppEntity();
         appEntity.setId(1L);

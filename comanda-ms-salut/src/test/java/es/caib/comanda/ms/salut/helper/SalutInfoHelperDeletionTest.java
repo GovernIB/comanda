@@ -80,7 +80,7 @@ class SalutInfoHelperDeletionTest {
             verify(salutSubsistemaRepository, times(expectedBatches)).deleteAllBySalutIdIn(anyList());
             verify(salutMissatgeRepository, times(expectedBatches)).deleteAllBySalutIdIn(anyList());
             verify(salutDetallRepository, times(expectedBatches)).deleteAllBySalutIdIn(anyList());
-            verify(salutRepository, times(expectedBatches)).deleteAllById(anyList());
+            verify(salutRepository, times(expectedBatches)).deleteAllByIdInBatch(anyList());
         }
     }
 }
