@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.persistence.Column;
 import javax.persistence.LockTimeoutException;
 import java.time.Duration;
 import java.time.Instant;
@@ -171,7 +172,7 @@ public class SalutInfoHelper {
 				salutIntegracio.setPeticionsErrorUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsErrorUltimPeriode() != null ? i.getPeticions().getPeticionsErrorUltimPeriode() : 0L);
 				salutIntegracio.setTempsMigUltimPeriode(i.getPeticions() != null && i.getPeticions().getTempsMigUltimPeriode() != null ? i.getPeticions().getTempsMigUltimPeriode() : 0);
 				salutIntegracio.setEndpoint(i.getPeticions() != null ? i.getPeticions().getEndpoint() : null);
-				if (i.getPeticions().getPeticionsPerEntorn() != null) {
+				if (i.getPeticions() != null && i.getPeticions().getPeticionsPerEntorn() != null) {
 					// TODO
 				}
 				salutIntegracio.setSalut(salut);
@@ -503,21 +504,25 @@ public class SalutInfoHelper {
     }
 
     private void crearIntegracio(SalutEntity agregat, SalutIntegracioEntity si) {
-        SalutIntegracioEntity integracio = new SalutIntegracioEntity();
-        integracio.setSalut(agregat);
-        integracio.setCodi(si.getCodi());
-        integracio.setTotalOk(si.getTotalOk() != null ? si.getTotalOk() : 0L);
-        integracio.setTotalError(si.getTotalError() != null ? si.getTotalError() : 0L);
-        if (si.getLatencia() != null) {
-            integracio.setLatencia(si.getLatencia());
-            integracio.setLatenciaMitjana(si.getLatencia());
-        }
+        SalutIntegracioEntity salutIntegracio = new SalutIntegracioEntity();
+	    salutIntegracio.setSalut(agregat);
+	    salutIntegracio.setCodi(si.getCodi());
+	    salutIntegracio.setTotalOk(si.getTotalOk() != null ? si.getTotalOk() : 0L);
+	    salutIntegracio.setTotalError(si.getTotalError() != null ? si.getTotalError() : 0L);
+	    salutIntegracio.setTotalTempsMig(si.getTotalTempsMig() != null ? si.getTotalTempsMig() : 0);
+	    salutIntegracio.setPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode() != null ? si.getPeticionsOkUltimPeriode() : 0L);
+	    salutIntegracio.setPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode() != null ? si.getPeticionsErrorUltimPeriode() : 0L);
+	    salutIntegracio.setTempsMigUltimPeriode(si.getTempsMigUltimPeriode() != null ? si.getTempsMigUltimPeriode() : 0);
+	    if (si.getLatencia() != null) {
+		    salutIntegracio.setLatencia(si.getLatencia());
+		    salutIntegracio.setLatenciaMitjana(si.getLatencia());
+	    }
         if (si.getEstat() == null) {
             si.setEstat(SalutEstat.UNKNOWN);
         }
-        integracio.setEstat(si.getEstat());
-        integracio.updateCountByEstat(si.getEstat());
-        salutIntegracioRepository.save(integracio);
+	    salutIntegracio.setEstat(si.getEstat());
+	    salutIntegracio.updateCountByEstat(si.getEstat());
+        salutIntegracioRepository.save(salutIntegracio);
     }
 
     private void afegirIntegracions(SalutEntity agregat, SalutEntity salut) {
@@ -529,6 +534,10 @@ public class SalutInfoHelper {
                     .ifPresentOrElse(integracio -> {
                         integracio.addTotalOk(si.getTotalOk());
                         integracio.addTotalError(si.getTotalError());
+	                    integracio.addTotalTempsMig(si.getTotalTempsMig());
+	                    integracio.addPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode());
+	                    integracio.addPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode());
+	                    integracio.addTempsMigUltimPeriode(si.getTempsMigUltimPeriode());
                         if (si.getLatencia() != null) {
                             integracio.setLatencia(si.getLatencia());
                             integracio.addLatenciaMitjana(si.getLatencia());
@@ -558,6 +567,10 @@ public class SalutInfoHelper {
         subsistema.setCodi(ss.getCodi());
         subsistema.setTotalOk(ss.getTotalOk());
         subsistema.setTotalError(ss.getTotalError());
+	    subsistema.setTotalTempsMig(ss.getTotalTempsMig());
+	    subsistema.setPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
+	    subsistema.setPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
+	    subsistema.setTempsMigUltimPeriode(ss.getTempsMigUltimPeriode());
         if (ss.getLatencia() != null) {
             subsistema.setLatencia(ss.getLatencia());
             subsistema.setLatenciaMitjana(ss.getLatencia());
@@ -579,6 +592,10 @@ public class SalutInfoHelper {
                     .ifPresentOrElse(subsistema -> {
                         subsistema.addTotalOk(ss.getTotalOk());
                         subsistema.addTotalError(ss.getTotalError());
+	                    subsistema.addTotalTempsMig(ss.getTotalTempsMig());
+	                    subsistema.addPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
+	                    subsistema.addPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
+	                    subsistema.addTempsMigUltimPeriode(ss.getTempsMigUltimPeriode());
                         if (ss.getLatencia() != null) {
                             subsistema.setLatencia(ss.getLatencia());
                             subsistema.addLatenciaMitjana(ss.getLatencia());

@@ -32,7 +32,6 @@ import {
     ChartContainer,
     ChartsTooltip,
 } from '@mui/x-charts';
-import { useTheme } from '@mui/material/styles';
 import {ENUM_APP_ESTAT_PREFIX, getColorByMissatge, getColorByNivellEnum, getColorByStatEnum, NivellEnum, SalutEstatEnum, SalutModel, TITLE} from "../types/salut.model.tsx";
 import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
@@ -335,8 +334,10 @@ const Integracions: React.FC<any> = (props) => {
                         <TableCell sx={{width: '50px'}}></TableCell>
                         <TableCell>{t('page.salut.integracions.column.nom')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.estat')}</TableCell>
-                        <TableCell>{t('page.salut.integracions.column.latencia')}</TableCell>
-                        <TableCell>{t('page.salut.integracions.column.peticions')}</TableCell>
+                        <TableCell>{t('page.salut.integracions.column.peticionsTotals')}</TableCell>
+                        <TableCell>{t('page.salut.integracions.column.tempsMigTotal')}</TableCell>
+                        <TableCell>{t('page.salut.integracions.column.peticionsPeriode')}</TableCell>
+                        <TableCell>{t('page.salut.integracions.column.tempsMigPeriode')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -347,11 +348,16 @@ const Integracions: React.FC<any> = (props) => {
                         <TableCell>
                             <Chip label={getAppEstatLabel(i.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white'}}/>
                         </TableCell>
-                        <TableCell>{i.latencia != null ? i.latencia + ' ms' : t('page.salut.nd')}</TableCell>
                         <TableCell>
                             <Chip label={i.totalOk} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
                             <Chip label={i.totalError} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
                         </TableCell>
+                        <TableCell>{i.totalTempsMig != null ? i.totalTempsMig + ' ms' : t('page.salut.nd')}</TableCell>
+                        <TableCell>
+                            <Chip label={i.peticionsOkUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
+                            <Chip label={i.peticionsErrorUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
+                        </TableCell>
+                        <TableCell>{i.tempsMigUltimPeriode != null ? i.tempsMigUltimPeriode + ' ms' : t('page.salut.nd')}</TableCell>
                     </TableRow>)}
                 </TableBody>
             </Table>}
@@ -376,7 +382,10 @@ const Subsistemes: React.FC<any> = (props) => {
                         <TableCell>{t('page.salut.subsistemes.column.codi')}</TableCell>
                         <TableCell>{t('page.salut.subsistemes.column.nom')}</TableCell>
                         <TableCell>{t('page.salut.subsistemes.column.estat')}</TableCell>
-                        <TableCell>{t('page.salut.subsistemes.column.latencia')}</TableCell>
+                        <TableCell>{t('page.salut.subsistemes.column.peticionsTotals')}</TableCell>
+                        <TableCell>{t('page.salut.subsistemes.column.tempsMigTotal')}</TableCell>
+                        <TableCell>{t('page.salut.subsistemes.column.peticionsPeriode')}</TableCell>
+                        <TableCell>{t('page.salut.subsistemes.column.tempsMigPeriode')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -386,7 +395,16 @@ const Subsistemes: React.FC<any> = (props) => {
                         <TableCell>
                             <Chip label={getAppEstatLabel(s.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white'}} />
                         </TableCell>
-                        <TableCell>{s.latencia} ms</TableCell>
+                        <TableCell>
+                            <Chip label={s.totalOk} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
+                            <Chip label={s.totalError} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
+                        </TableCell>
+                        <TableCell>{s.totalTempsMig != null ? s.totalTempsMig + ' ms' : t('page.salut.nd')}</TableCell>
+                        <TableCell>
+                            <Chip label={s.peticionsOkUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
+                            <Chip label={s.peticionsErrorUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
+                        </TableCell>
+                        <TableCell>{s.tempsMigUltimPeriode != null ? s.tempsMigUltimPeriode + ' ms' : t('page.salut.nd')}</TableCell>
                     </TableRow>)}
                 </TableBody>
             </Table>}

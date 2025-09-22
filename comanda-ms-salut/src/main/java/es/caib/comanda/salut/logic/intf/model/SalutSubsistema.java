@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -25,6 +26,12 @@ public class SalutSubsistema extends BaseResource<Long> {
 	@NotNull
 	private SalutEstat estat;
 	private Integer latencia;
+	private Long totalOk;
+	Long totalError;
+	Integer totalTempsMig;
+	Long peticionsOkUltimPeriode;
+	Long peticionsErrorUltimPeriode;
+	Integer tempsMigUltimPeriode;
 
 	private ResourceReference<Salut, Long> salut;
 
