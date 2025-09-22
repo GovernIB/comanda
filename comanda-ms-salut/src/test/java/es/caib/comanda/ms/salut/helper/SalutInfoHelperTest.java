@@ -25,7 +25,9 @@ import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.noop.NoopTimer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,9 +75,9 @@ public class SalutInfoHelperTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
-    @Mock
-    private MetricsHelper metricsHelper;
-    
+	@Mock
+	private MetricsHelper metricsHelper;
+
     @InjectMocks
     private SalutInfoHelper salutInfoHelper;
 
@@ -174,14 +176,9 @@ public class SalutInfoHelperTest {
         salutEntity.setBdEstat(SalutEstat.UP);
         salutEntity.setBdLatencia(50);
 
-        // Setup metrics mocks
-        Timer globalTimer = mock(Timer.class);
-        Timer appTimer = mock(Timer.class);
-        when(metricsHelper.getSalutInfoGlobalTimer(null, null)).thenReturn(globalTimer);
-        when(metricsHelper.getSalutInfoGlobalTimer(
-                entornApp.getEntorn().getNom(),
-                entornApp.getApp().getNom())).thenReturn(appTimer);
-
+		// Setup MetricsHelper
+		when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
+				.thenReturn(new NoopTimer(new Meter.Id("", Tags.empty(), null, null, Meter.Type.TIMER)));
     }
 
     @Test

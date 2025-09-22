@@ -37,6 +37,7 @@ import {ENUM_APP_ESTAT_PREFIX, getColorByMissatge, getColorByNivellEnum, getColo
 import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
+import { Alert } from '@mui/material';
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -485,6 +486,7 @@ const DetallInfo: React.FC<any> = (props) => {
 
 const SalutAppInfo: React.FC = () => {
     const { id } = useParams();
+    const { t } = useTranslation();
     const {
         ready,
         loading,
@@ -512,9 +514,25 @@ const SalutAppInfo: React.FC = () => {
         goBackActive
         appDataLoading={!dataLoaded}
     />;
+
+    if (dataLoaded && salutCurrentApp == null) return (
+        <BasePage expandHeight toolbar={toolbar}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                }}
+            >
+                <Alert severity="warning">{t('page.salut.info.noInfo')}</Alert>
+            </Box>
+        </BasePage>
+    );
+
     return (
         <BasePage toolbar={toolbar}>
-            {(salutCurrentApp == null || entornApp == null) ? (
+            {salutCurrentApp == null || entornApp == null ? (
                 <Box
                     sx={{
                         display: 'flex',
