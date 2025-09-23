@@ -67,6 +67,12 @@ public class SalutIntegracioEntity extends BaseEntity<SalutIntegracio> {
 			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "salutint_salut_fk"))
 	private SalutEntity salut;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(
+			name = "pare_id",
+			referencedColumnName = "id",
+			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "salutint_pare_fk"))
+	private SalutIntegracioEntity pare;
 
     // Mètodes per actualitzar percentatges d'estats i latències mitjanes
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,24 +123,6 @@ public class SalutIntegracioEntity extends BaseEntity<SalutIntegracio> {
         if (total <= 0) return null;
         return BigDecimal.valueOf((part * 100.0) / total).setScale(2, RoundingMode.HALF_UP);
     }
-
-    public void addTotalOk(Long numOk) {
-        if (numOk == null) return;
-        if (this.totalOk == null) this.totalOk = 0L;
-        this.totalOk += numOk;
-    }
-
-    public void addTotalError(Long numError) {
-        if (numError == null) return;
-        if (this.totalError == null) this.totalError = 0L;
-        this.totalError += numError;
-    }
-
-	public void addTotalTempsMig(Integer nouTempsMig) {
-		if (nouTempsMig == null) return;
-		long total = ((long)this.totalTempsMig * this.totalOk) + (long)nouTempsMig;
-		this.totalTempsMig = Math.toIntExact(total / (this.totalOk + 1L));
-	}
 
 	public void addPeticionsOkUltimPeriode(Long numOk) {
 		if (numOk == null) return;

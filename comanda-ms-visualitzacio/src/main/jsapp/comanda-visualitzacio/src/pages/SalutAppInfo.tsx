@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
+import Collapse from '@mui/material/Collapse';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -14,6 +15,9 @@ import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Icon from '@mui/material/Icon';
+import { useTheme } from '@mui/material/styles';
 import { MarkPlot } from '@mui/x-charts/LineChart';
 import {
     BasePage,
@@ -221,37 +225,32 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
 const LatenciaLineChart: React.FC<any> = (props) => {
     const { dataInici, agrupacio, latencies, estats } = props;
     const { t } = useTranslation();
-
-    if (!latencies || latencies.length === 0)
-        return (
-            <Card variant="outlined" sx={{ height: '300px' }}>
-                <CardContent sx={{ height: '100%' }}>
-                    <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>
-                    <Typography
-                        sx={{
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
-                    >
-                        {t('page.salut.estatLatencia.noInfo')}
-                    </Typography>
-                </CardContent>
-            </Card>
-        );
-
+    if (!latencies || latencies.length === 0) {
+        return <Card variant="outlined" sx={{ height: '300px' }}>
+            <CardContent sx={{ height: '100%' }}>
+                <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>
+                <Typography
+                    sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    {t('page.salut.estatLatencia.noInfo')}
+                </Typography>
+            </CardContent>
+        </Card>;
+    }
     const estatsMaxData = getEstatsMaxData(estats);
     const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
-
     const seriesDataLatencia = baseDataGroups.map((group) => {
         return latencies.find((latenciaData: any) => {
             if (!latenciaData || !latenciaData.data) return false;
             return isDataInGroup(latenciaData.data, group, agrupacio);
         })?.latenciaMitja;
     });
-
     const lineSeries: LineSeriesType[] = [
         {
             data: seriesDataLatencia,
@@ -261,66 +260,114 @@ const LatenciaLineChart: React.FC<any> = (props) => {
         },
     ];
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
-
-    return (
-        <Card variant="outlined" sx={{ height: '300px' }}>
-            <CardContent sx={{ height: '100%' }}>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t('page.salut.latencia.title')}
-                </Typography>
-                <ChartContainer
-                    series={[...lineSeries]}
-                    xAxis={[{ scaleType: 'band', data: dataGroups, id: 'latencia-x-axis-id', }]}
-                    yAxis={[{ label: ' ms', id: 'latencia-y-axis-id', }]}
-                >
-                    <LinePlot />
-                    <MarkPlot />
-                    <ChartsTooltip />
-                    <ChartsYAxis axisId="latencia-y-axis-id" />
-                    <ChartsXAxis axisId="latencia-x-axis-id" />
-                </ChartContainer>
-            </CardContent>
-        </Card>
-    );
+    return <Card variant="outlined" sx={{ height: '300px' }}>
+        <CardContent sx={{ height: '100%' }}>
+            <Typography gutterBottom variant="h5" component="div">
+                {t('page.salut.latencia.title')}
+            </Typography>
+            <ChartContainer
+                series={[...lineSeries]}
+                xAxis={[{ scaleType: 'band', data: dataGroups, id: 'latencia-x-axis-id', }]}
+                yAxis={[{ label: ' ms', id: 'latencia-y-axis-id', }]}>
+                <LinePlot />
+                <MarkPlot />
+                <ChartsTooltip />
+                <ChartsYAxis axisId="latencia-y-axis-id" />
+                <ChartsXAxis axisId="latencia-x-axis-id" />
+            </ChartContainer>
+        </CardContent>
+    </Card>;
 }
 
 const EstatsBarCard: React.FC<any> = (props) => {
     const { dataInici, agrupacio, estats } = props;
     const { t } = useTranslation();
-
     const hasData = estats && Object.keys(estats).length > 0;
-
-    return (
-        <Card variant="outlined" sx={{ height: '300px' }}>
-            <CardContent sx={{ height: '100%' }}>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t('page.salut.estats.title')}
+    return <Card variant="outlined" sx={{ height: '300px' }}>
+        <CardContent sx={{ height: '100%' }}>
+            <Typography gutterBottom variant="h5" component="div">
+                {t('page.salut.estats.title')}
+            </Typography>
+            {!hasData ? (
+                <Typography
+                    sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    {t('page.salut.estatLatencia.noInfo')}
                 </Typography>
-                {!hasData ? (
-                    <Typography
-                        sx={{
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
-                    >
-                        {t('page.salut.estatLatencia.noInfo')}
-                    </Typography>
-                ) : (
-                    <UpdownBarChart dataInici={dataInici} agrupacio={agrupacio} estats={estats} />
-                )}
-            </CardContent>
-        </Card>
-    );
+            ) : (
+                <UpdownBarChart dataInici={dataInici} agrupacio={agrupacio} estats={estats} />
+            )}
+        </CardContent>
+    </Card>;
+}
+
+const PeticionsOkError: React.FC<any> = (props) => {
+    const { ok, error } = props;
+    const theme = useTheme();
+    return <>
+        <span style={{ color: theme.palette.success.main }}>{ok ?? 0}</span>
+        &nbsp;/&nbsp;
+        <span style={{ color: theme.palette.error.main }}>{error ?? 0}</span>
+    </>
+}
+
+const IntegracioRow: React.FC<any> = (props) => {
+    const { integracio, fills, key } = props;
+    const { t } = useTranslation();
+    const getAppEstatLabel = useAppEstatLabel();
+    const [open, setOpen] = React.useState<boolean>(false);
+    return <>
+        <TableRow key={key}>
+            <TableCell sx={{width: '50px'}}>
+                {fills?.length ? <IconButton size="small" onClick={() => setOpen(!open)}>
+                    {open ? <Icon>keyboard_arrow_up</Icon> : <Icon>keyboard_arrow_down</Icon>}
+                </IconButton> : null}
+                {integracio.logo && <img src={`data:image/png;base64,${integracio.logo}`} alt="logo" style={{ maxHeight: '32px' }}/>}
+            </TableCell>
+            <TableCell>{integracio.nom}</TableCell>
+            <TableCell>
+                <Chip label={getAppEstatLabel(integracio.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(integracio.estat as SalutEstatEnum), color: 'white'}}/>
+            </TableCell>
+            <TableCell>
+                <PeticionsOkError ok={integracio.totalOk} error={integracio.totalError} />
+            </TableCell>
+            <TableCell>{integracio.totalTempsMig != null ? integracio.totalTempsMig + ' ms' : t('page.salut.nd')}</TableCell>
+            <TableCell>
+                <PeticionsOkError ok={integracio.peticionsOkUltimPeriode} error={integracio.peticionsErrorUltimPeriode} />
+            </TableCell>
+            <TableCell>{integracio.tempsMigUltimPeriode != null ? integracio.tempsMigUltimPeriode + ' ms' : t('page.salut.nd')}</TableCell>
+            <TableCell>
+                {integracio.endpoint && <IconButton
+                    component="a"
+                    href={integracio.endpoint}
+                    target="_blank"
+                    size="small">
+                        <Icon>launch</Icon>
+                </IconButton>}
+            </TableCell>
+        </TableRow>
+        {fills?.length ? <TableRow>
+            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                <Collapse in={open} timeout="auto" unmountOnExit>
+                    {fills.map((f: any, key2: number) => <IntegracioRow
+                        integracio={f}
+                        key={key + '_' + key2} />)}
+                </Collapse>
+            </TableCell>
+        </TableRow> : null}
+    </>;
 }
 
 const Integracions: React.FC<any> = (props) => {
     const { salutCurrentApp } = props;
     const { t } = useTranslation();
     const integracions = salutCurrentApp?.integracions;
-    const getAppEstatLabel = useAppEstatLabel();
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.integracions.title')}</Typography>
@@ -330,7 +377,6 @@ const Integracions: React.FC<any> = (props) => {
             {integracions?.length > 0 && <Table size="small">
                 <TableHead>
                     <TableRow>
-                        {/*<TableCell>{t('page.salut.integracions.column.codi')}</TableCell>*/}
                         <TableCell sx={{width: '50px'}}></TableCell>
                         <TableCell>{t('page.salut.integracions.column.nom')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.estat')}</TableCell>
@@ -338,27 +384,14 @@ const Integracions: React.FC<any> = (props) => {
                         <TableCell>{t('page.salut.integracions.column.tempsMigTotal')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.peticionsPeriode')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.tempsMigPeriode')}</TableCell>
+                        <TableCell></TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {integracions.map((i: any, key: number) => <TableRow key={key}>
-                        {/*<TableCell>{i.codi}</TableCell>*/}
-                        <TableCell sx={{width: '50px'}}>{i.logo && <img src={`data:image/png;base64,${i.logo}`} alt="logo" style={{ maxHeight: '32px' }}/>}</TableCell>
-                        <TableCell>{i.nom}</TableCell>
-                        <TableCell>
-                            <Chip label={getAppEstatLabel(i.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white'}}/>
-                        </TableCell>
-                        <TableCell>
-                            <Chip label={i.totalOk} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
-                            <Chip label={i.totalError} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
-                        </TableCell>
-                        <TableCell>{i.totalTempsMig != null ? i.totalTempsMig + ' ms' : t('page.salut.nd')}</TableCell>
-                        <TableCell>
-                            <Chip label={i.peticionsOkUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
-                            <Chip label={i.peticionsErrorUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(i.estat as SalutEstatEnum), color: 'white' }} />
-                        </TableCell>
-                        <TableCell>{i.tempsMigUltimPeriode != null ? i.tempsMigUltimPeriode + ' ms' : t('page.salut.nd')}</TableCell>
-                    </TableRow>)}
+                    {integracions.filter((i: any) => i.pare == null).map((i: any, key: number) => <IntegracioRow
+                    integracio={i}
+                    fills={integracions.filter((i2: any) => i2.pare?.id === i.id)}
+                    key={key} />)}
                 </TableBody>
             </Table>}
         </CardContent>
@@ -396,13 +429,11 @@ const Subsistemes: React.FC<any> = (props) => {
                             <Chip label={getAppEstatLabel(s.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white'}} />
                         </TableCell>
                         <TableCell>
-                            <Chip label={s.totalOk} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
-                            <Chip label={s.totalError} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
+                            <PeticionsOkError ok={s.totalOk} error={s.totalError} />
                         </TableCell>
                         <TableCell>{s.totalTempsMig != null ? s.totalTempsMig + ' ms' : t('page.salut.nd')}</TableCell>
                         <TableCell>
-                            <Chip label={s.peticionsOkUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', mr:1, backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
-                            <Chip label={s.peticionsErrorUltimPeriode} size="small" sx={{ minWidth: '35px', textAlign: 'center', backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white' }} />
+                            <PeticionsOkError ok={s.peticionsOkUltimPeriode} error={s.peticionsErrorUltimPeriode} />
                         </TableCell>
                         <TableCell>{s.tempsMigUltimPeriode != null ? s.tempsMigUltimPeriode + ' ms' : t('page.salut.nd')}</TableCell>
                     </TableRow>)}

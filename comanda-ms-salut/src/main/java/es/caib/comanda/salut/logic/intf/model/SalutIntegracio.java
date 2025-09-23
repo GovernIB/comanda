@@ -37,6 +37,7 @@ public class SalutIntegracio extends BaseResource<Long> {
 	private String endpoint;
 
 	private ResourceReference<Salut, Long> salut;
+	private ResourceReference<SalutIntegracio, Long> pare;
 
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private String nom;

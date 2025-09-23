@@ -117,24 +117,6 @@ public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
         return BigDecimal.valueOf((part * 100.0) / total).setScale(2, RoundingMode.HALF_UP);
     }
 
-    public void addTotalOk(Long numOk) {
-        if (numOk == null) return;
-        if (this.totalOk == null) this.totalOk = 0L;
-        this.totalOk += numOk;
-    }
-
-    public void addTotalError(Long numError) {
-        if (numError == null) return;
-        if (this.totalError == null) this.totalError = 0L;
-        this.totalError += numError;
-    }
-
-	public void addTotalTempsMig(Integer nouTempsMig) {
-		if (nouTempsMig == null) return;
-		long total = ((long)this.totalTempsMig * this.totalOk) + (long)nouTempsMig;
-		this.totalTempsMig = Math.toIntExact(total / (this.totalOk + 1L));
-	}
-
 	public void addPeticionsOkUltimPeriode(Long numOk) {
 		if (numOk == null) return;
 		if (this.peticionsOkUltimPeriode == null) this.peticionsOkUltimPeriode = 0L;
