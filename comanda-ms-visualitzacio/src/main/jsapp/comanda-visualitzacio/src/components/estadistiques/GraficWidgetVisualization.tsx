@@ -20,6 +20,8 @@ import {
     Gauge,
     gaugeClasses,
     ScatterChart,
+    XAxis,
+    LineSeries,
 } from '@mui/x-charts';
 // import { Heatmap } from '@mui/x-charts-pro/Heatmap';
 import estils from "./WidgetEstils.ts";
@@ -298,7 +300,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             ? Object.keys(dades[0]).filter(key => key !== discriminador)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
             : [];
         // Prepare series for MUI X-Charts
-        const series = dataKeys.map((key, index) => ({
+        const series: LineSeries[] = dataKeys.map((key, index) => ({
             dataKey: key,
             label: labels?.find((label) => label.id === key)?.label || key,
             color: paletaColors[index % paletaColors.length],
@@ -308,7 +310,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         }));
 
         // Prepare xAxis categories from data
-        const xAxisData = [{
+        const xAxisData: ReadonlyArray<XAxis<'band'>> = [{
             dataKey: discriminador,
             scaleType: 'band',
             label: llegendaX,

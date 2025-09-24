@@ -89,6 +89,10 @@ const translationEn = {
                 },
                 detalls: "Details",
             },
+            groupingSelect: {
+                BY_APPLICATION: "By application",
+                BY_ENVIRONMENT: "By environment",
+            },
             refreshperiod: {
                 PT1M: "1 minute",
                 PT5M: "5 minutes",

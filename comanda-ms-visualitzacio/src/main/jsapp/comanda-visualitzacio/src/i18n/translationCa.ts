@@ -91,6 +91,10 @@ const translationCa = {
                 },
                 detalls: "Detalls",
             },
+            groupingSelect: {
+                BY_APPLICATION: "Per aplicació",
+                BY_ENVIRONMENT: "Per entorn",
+            },
             refreshperiod: {
                 PT1M: "1 minut",
                 PT5M: "5 minuts",

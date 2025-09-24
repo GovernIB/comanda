@@ -9,7 +9,7 @@ import {
 } from '../../util/reactNodePosition';
 
 export type ToolbarProps = React.PropsWithChildren & {
-    title?: string;
+    title?: React.ReactNode;
     subtitle?: string;
     lovMode?: boolean;
     upperToolbar?: boolean;

@@ -3,6 +3,7 @@ import {BarChart} from '@mui/x-charts/BarChart';
 import {generateDataGroups, isDataInGroup, toXAxisDataGroups} from '../util/dataGroup';
 import {useTranslation} from "react-i18next";
 import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, TITLE} from "../types/salut.model.tsx";
+import { XAxis } from '@mui/x-charts';
 
 export type UpdownBarChartProps = {
     dataInici: string;
@@ -113,8 +114,10 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         }
     ];
 
+    const xAxis: ReadonlyArray<XAxis<'band'>> = [{ scaleType: 'band', data: dataGroups }];
+
     return estats != null && <BarChart
-        xAxis={[{ scaleType: 'band', data: dataGroups }]}
+        xAxis={xAxis}
         yAxis={[{ max: 100 }]}
         series={series}
         // borderRadius={6}
@@ -122,6 +125,7 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
             horizontal: true,
             vertical: true
         }}
+        skipAnimation // TODO Animacions desactivades fins que es tregui una versió de MUI-X amb el fix https://github.com/mui/mui-x/pull/19606
     />;
 }
 

@@ -1,541 +1,364 @@
-import * as React from 'react';
-import {useTranslation} from 'react-i18next';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import {
-    BasePage,
-    dateFormatLocale,
-    MuiDataGrid,
-    MuiDataGridColDef,
-    springFilterBuilder,
-    useBaseAppContext,
-    useResourceApiService,
-} from 'reactlib';
-import SalutToolbar from '../components/SalutToolbar';
-import UpdownBarChart from '../components/UpdownBarChart';
-import {GridRowId, GridSlots, useGridApiRef,} from '@mui/x-data-grid-pro';
-import {PieChart, useDrawingArea} from '@mui/x-charts';
-import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
-import {useParams} from 'react-router-dom';
-import SalutAppInfo, { ErrorBoundaryFallback } from './SalutAppInfo';
-import {
-    ENUM_APP_ESTAT_PREFIX,
-    getColorByIntegracio,
-    getColorByMissatge,
-    getColorByStatEnum,
-    getColorBySubsistema,
-    SalutEstatEnum,
-    SalutModel,
-    TITLE
-} from "../types/salut.model.tsx";
-import {BaseEntity} from "../types/base-entity.model.ts";
-import {ChipColor} from "../util/colorUtil.ts";
-import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
-import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
-import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
-import { ErrorBoundary } from 'react-error-boundary';
-import {styled} from "@mui/material";
+import { FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { SalutModel } from '../types/salut.model';
+import { BasePage, springFilterBuilder, useResourceApiService } from 'reactlib';
+import { BaseEntity } from '../types/base-entity.model';
+import dayjs from 'dayjs';
+import SalutToolbar, {
+    GroupingEnum,
+    salutEntornAppFilterBuilder,
+    SalutFilterDataType,
+    toReportInterval,
+    useSalutToolbarState,
+} from '../components/SalutToolbar';
+import useInterval from '../hooks/useInterval';
+import { useTranslation } from 'react-i18next';
+import { SalutLlistat } from '../components/SalutPrincipalWidgets';
+import { useParams } from 'react-router-dom';
+import SalutAppInfo, { useAppInfoData } from './SalutAppInfo';
+import { ItemStateChip } from '../components/SalutItemStateChip';
 
-const useAppData = () => {
+type AppModel = {
+    // TODO
+    id: number;
+    nom: string;
+    codi: string;
+};
+
+type EntornAppModel = {
+    // TODO
+    id: number;
+    app: {
+        id: number;
+    };
+    entorn: {
+        id: number;
+    };
+};
+
+type EntornModel = {
+    // TODO
+    id: number;
+};
+
+// es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
+type SalutInformeEstatItem = {
+    data: string;
+    upPercent: number;
+    warnPercent: number;
+    degradedPercent: number;
+    downPercent: number;
+    errorPercent: number;
+    maintenancePercent: number;
+    unknownPercent: number;
+    alwaysUp: boolean;
+    alwaysDown: boolean;
+};
+
+export type SalutData = {
+    estats: {
+        [entornAppId: number]: SalutInformeEstatItem[];
+    };
+    salutLastItems: SalutModel[];
+    groupedApp?: AppModel;
+    groupedEntorn?: EntornModel;
+};
+
+const filterObjectKeys = <T extends { [key: number]: unknown }>(
+    object: T,
+    filterFunc: (key: string) => boolean
+) => {
+    return Object.keys(object)
+        .filter(filterFunc)
+        .reduce((acc, key) => {
+            acc[Number(key)] = object[Number(key)];
+            return acc;
+        }, {} as T);
+};
+
+const splitSalutDataIntoGroups = ({
+    estats,
+    salutLastItems,
+    groupBy,
+    apps,
+    entorns,
+    entornApps,
+}: {
+    estats: SalutData['estats'];
+    salutLastItems: SalutData['salutLastItems'];
+    entornApps: EntornAppModel[];
+    groupBy: GroupingEnum;
+    apps?: AppModel[];
+    entorns?: EntornModel[];
+}) => {
+    const groups: SalutData[] = [];
+
+    if (groupBy === GroupingEnum.APPLICATION) {
+        if (apps == null)
+            throw new Error('[splitSalutDataIntoGroups] apps is required when groupBy is APP');
+
+        const appIds = apps.map(({ id }) => id as number);
+        appIds.forEach((appId) => {
+            const entornAppIds = entornApps
+                .filter(({ app }) => app.id === appId)
+                .map(({ id }) => id as number);
+
+            groups.push({
+                groupedApp: apps.find(({ id }) => id === appId),
+                estats: filterObjectKeys(estats, (key) => entornAppIds.includes(Number(key))), // TODO Codigo duplicado
+                salutLastItems: salutLastItems.filter(
+                    ({ entornAppId }) => entornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
+                ),
+            });
+        });
+    } else {
+        if (entorns == null)
+            throw new Error(
+                '[splitSalutDataIntoGroups] entorns is required when groupBy is ENTORN'
+            );
+
+        const entornIds = entorns.map(({ id }) => id as number);
+        entornIds.forEach((entornId) => {
+            const entornAppIds = entornApps
+                .filter(({ entorn }) => entorn.id === entornId)
+                .map(({ id }) => id as number);
+
+            groups.push({
+                groupedEntorn: entorns.find(({ id }) => id === entornId),
+                estats: filterObjectKeys(estats, (key) => entornAppIds.includes(Number(key))), // TODO Codigo duplicado
+                salutLastItems: salutLastItems.filter(
+                    ({ entornAppId }) => entornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
+                ),
+            });
+        });
+    }
+
+    return groups;
+};
+
+const useSalutData = ({
+    groupBy,
+    dataRangeMinutes,
+    additionalFilter,
+    filterData,
+}: {
+    groupBy: GroupingEnum;
+    dataRangeMinutes: number;
+    additionalFilter?: string;
+    filterData?: SalutFilterDataType;
+}) => {
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
         useResourceApiService('salut');
-    const [loading, setLoading] = React.useState<boolean>(true);
-    const [estats, setEstats] = React.useState<Record<string, any>>({});
-    const [salutLastItems, setSalutLastItems] = React.useState<any[]>();
-    const [reportParams, setReportParams] = React.useState<any>();
-    const [springFilter, setSpringFilter] = React.useState<string>('');
-    const refresh = (
-        dataInici: string,
-        dataFi: string,
-        agrupacio: string,
-        springFilter?: string
-    ) => {
-        if (salutApiIsReady) {
-            setLoading(true);
-            let salutLastItemsResponse: SalutModel[] | null = null;
-            let estatsResponse: Record<string, any> | null = null;
-            const newReportParams = {
-                dataInici,
-                dataFi,
-                agrupacio,
-            };
-            salutApiReport(null, { code: 'salut_last', data: springFilter })
-                .then((apiResponse) => {
-                    salutLastItemsResponse = (apiResponse as SalutModel[]).map(item => new SalutModel(item));
-                    const reportData = {
-                        ...newReportParams,
-                        entornAppIdList: salutLastItemsResponse.map(
-                            ({ entornAppId }) => entornAppId
-                        ),
-                    };
-
-                    return new Promise((resolve, reject) => {
-                        salutApiReport(null, { code: 'estats', data: reportData })
-                            .then((response: any) => {
-                                // TODO: eliminar 'links' de respuesta
-                                estatsResponse = Object.fromEntries(
-                                    Object.entries(response[0]).filter(([key]) => key !== BaseEntity.LINKS)
-                                );
-                                resolve(null);
-                            })
-                            .catch(reject);
-                    });
-                })
-                .finally(() => {
-                    setSalutLastItems(salutLastItemsResponse as SalutModel[]);
-                    setEstats(estatsResponse as Record<string, any>);
-                    setLoading(false);
-                    if (springFilter != null) setSpringFilter(springFilter);
-                    setReportParams(newReportParams);
-                });
+    const { isReady: entornAppApiIsReady, find: entornAppFind } =
+        useResourceApiService('entornApp');
+    const { isReady: appApiIsReady, find: appFind } = useResourceApiService('app');
+    const { isReady: entornApiIsReady, find: entornFind } = useResourceApiService('entorn');
+    const ready = salutApiIsReady && entornAppApiIsReady && appApiIsReady && entornApiIsReady;
+    const [salutData, setSalutData] = useState<{
+        lastRefresh?: Date;
+        groups: SalutData[];
+        reportInterval?: {
+            dataInici: string;
+            dataFi: string;
+            agrupacio: string;
+        };
+        initialized: boolean;
+        loading: boolean;
+        error?: unknown;
+    }>({ groups: [], initialized: false, loading: false });
+    // TODO Considerar implementar bloqueig o cancelar peticions antigues si se fa una nova
+    const request = useCallback(async () => {
+        if (!ready) {
+            console.error('APIs not ready');
+            return;
         }
-    };
-    return {
-        ready: salutApiIsReady,
-        loading,
-        refresh,
-        springFilter,
-        salutLastItems,
-        estats,
-        reportParams,
-    };
-};
 
-const StyledText = styled('text')(({ theme }) => ({
-    fill: theme.palette.text.primary,
-    textAnchor: 'middle',
-    dominantBaseline: 'central',
-    fontSize: 50,
-    fontWeight: 'bold',
-}));
+        setSalutData((prevState) => ({ ...prevState, loading: true, error: undefined }));
 
-function PieCenterLabel({ children }: { children: React.ReactNode }) {
-    const { width, height, left, top } = useDrawingArea();
-    return (
-        <StyledText x={left + width / 2} y={top + height / 2}>
-            {children}
-        </StyledText>
-    );
-}
+        try {
+            const [activeEntornAppsResponse, activeAppsResponse, entornsResponse] =
+                await Promise.all([
+                    entornAppFind({
+                        unpaged: true,
+                        filter: springFilterBuilder.and(
+                            springFilterBuilder.eq('activa', true),
+                            springFilterBuilder.eq('app.activa', true),
+                            filterData?.entorn != null
+                                ? springFilterBuilder.eq('id', filterData.entorn.id)
+                                : null
+                        ),
+                    }),
+                    groupBy === GroupingEnum.APPLICATION
+                        ? appFind({
+                              unpaged: true,
+                              filter: springFilterBuilder.and(
+                                  springFilterBuilder.eq('activa', true),
+                                  filterData?.app != null
+                                      ? springFilterBuilder.eq('id', filterData.app.id)
+                                      : null
+                              ),
+                          })
+                        : undefined,
+                    groupBy === GroupingEnum.ENVIRONMENT
+                        ? entornFind({
+                              unpaged: true,
+                          })
+                        : undefined,
+                ]);
 
-const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) => {
-    const { salutLastItems } = props;
-    const { t } = useTranslation();
+            const reportInterval = toReportInterval(dataRangeMinutes);
+            const reportData = {
+                ...reportInterval,
+                entornAppIdList: activeEntornAppsResponse.rows.map(({ id }) => id),
+            };
 
-    const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UP).length;
-    const warnValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.WARN).length;
-    const errorValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.ERROR).length;
-    const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DOWN).length;
-    const degradedValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DEGRADED).length;
-    const maintenanceValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.MAINTENANCE).length;
-    const unknownValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UNKNOWN).length;
+            const [estatsResponse, salutLastItemsResponse] = await Promise.all([
+                salutApiReport(null, { code: 'estats', data: reportData }),
+                salutApiReport(null, {
+                    code: 'salut_last',
+                    data: additionalFilter ?? '', // El backend lanza un 500 si se envía un body vacío
+                }),
+            ]);
 
-    return (
-        <PieChart
-            series={[
-                {
-                    innerRadius: 60,
-                    // outerRadius: 100,
-                    // paddingAngle: 1,
-                    highlightScope: { fade: 'global', highlight: 'item' },
-                    highlighted: {
-                        additionalRadius: 1,
-                    },
-                    // cornerRadius: 5,
-                    data: [
-                        {
-                            id: SalutEstatEnum.UP,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP + TITLE)} (${upValue})`,
-                            value: upValue,
-                            color: getColorByStatEnum(SalutEstatEnum.UP),
-                        },
-                        {
-                            id: SalutEstatEnum.WARN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN + TITLE)} (${warnValue})`,
-                            value: warnValue,
-                            color: getColorByStatEnum(SalutEstatEnum.WARN),
-                        },
-                        {
-                            id: SalutEstatEnum.DEGRADED,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED + TITLE)} (${degradedValue})`,
-                            value: degradedValue,
-                            color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
-                        },
-                        {
-                            id: SalutEstatEnum.ERROR,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE)} (${errorValue})`,
-                            value: errorValue,
-                            color: getColorByStatEnum(SalutEstatEnum.ERROR),
-                        },
-                        {
-                            id: SalutEstatEnum.DOWN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE)} (${downValue})`,
-                            value: downValue,
-                            color: getColorByStatEnum(SalutEstatEnum.DOWN),
-                        },
-                        {
-                            id: SalutEstatEnum.MAINTENANCE,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE + TITLE)} (${maintenanceValue})`,
-                            value: maintenanceValue,
-                            color: getColorByStatEnum(SalutEstatEnum.MAINTENANCE),
-                        },
-                        {
-                            id: SalutEstatEnum.UNKNOWN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE)} (${unknownValue})`,
-                            value: unknownValue,
-                            color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
-                        },
-                    ],
-                },
-            ]}
-        >
-            <PieCenterLabel> {salutLastItems.length}</PieCenterLabel>
-        </PieChart>
-    );
-};
-
-const AppDataTable: React.FC<any> = (props: {
-    springFilter?: string;
-    salutLastItems: SalutModel[];
-}) => {
-    const { springFilter, salutLastItems } = props;
-    const { t } = useTranslation();
-    const { getLinkComponent } = useBaseAppContext();
-    const gridApiRef = useGridApiRef();
-
-    const findSalutItem:(id: GridRowId) => SalutModel | null = React.useCallback(
-        (id: GridRowId) => {
-            return salutLastItems?.find((entry: SalutModel) => entry.entornAppId === id) ?? null;
-        },
-        [salutLastItems]
-    );
-
-    const renderItemStateChip = React.useCallback(
-        (id: GridRowId, salutField: keyof SalutModel) => {
-            const salutItem: SalutModel | null = findSalutItem(id);
-            if (salutItem == null) {
-                return undefined;
-            }
-            return (
-                <ItemStateChip
-                    sx={{ mr: 1 }}
-                    salutField={salutField}
-                    salutStatEnum={salutItem[salutField] as SalutEstatEnum}
-                />
+            const salutLastItems = (salutLastItemsResponse as SalutModel[]).map(
+                (item) => new SalutModel(item)
             );
-        },
-        [findSalutItem]
-    );
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { [BaseEntity.LINKS]: _links, ...estats } = (estatsResponse as any[])[0];
 
-    const columns: MuiDataGridColDef[] = React.useMemo(() => {
-        return [
-            {
-                flex: 0.3,
-                field: 'estat',
-                headerName: t('page.salut.apps.column.estat'),
-                minWidth: 100,
-                renderCell: ({ id }) => renderItemStateChip(id, SalutModel.APP_ESTAT),
-            },
-            {
-                flex: 0.3,
-                field: 'infoData',
-                description: t('page.salut.apps.column.infoData'),
-                minWidth: 150,
-                renderCell: ({ id }) => {
-                    const salutItem: SalutModel | null = findSalutItem(id);
-                    if (salutItem == null) {
-                        return '';
-                    }
-                    return salutItem?.data
-                        ? dateFormatLocale(salutItem?.data, true)
-                        : t('page.salut.nd');
-                },
-            },
-            {
-                flex: 0.3,
-                field: 'versio',
-                // headerName: t('page.salut.apps.column.versio'),
-                minWidth: 100,
-            },
-            {
-                flex: 0.3,
-                field: 'revisioSimplificat',
-                // headerName: t('page.salut.apps.column.revisio'),
-                minWidth: 100,
-            },
-            {
-                flex: 0.3,
-                field: 'bd',
-                headerName: t('page.salut.apps.column.bd'),
-                minWidth: 100,
-                renderCell: ({ id }) => renderItemStateChip(id, SalutModel.BD_ESTAT),
-            },
-            {
-                flex: 0.3,
-                field: 'latencia',
-                headerName: t('page.salut.apps.column.latencia'),
-                minWidth: 100,
-                valueGetter: (_value, row) => {
-                    const salutItem: SalutModel | null = findSalutItem(row.id);
-                    if (salutItem == null) {
-                        return '';
-                    }
-                    return salutItem?.appLatencia != null
-                        ? salutItem.appLatencia + ' ms'
-                        : t('page.salut.nd');
-                },
-            },
-            {
-                flex: 0.5,
-                field: SalutModel.INTEGRACIONS,
-                // headerName: t('page.salut.apps.column.integ'),
-                minWidth: 100,
-                renderCell: ({ id }) => {
-                    const salutItem: SalutModel | null = findSalutItem(id);
+            setSalutData({
+                lastRefresh: new Date(),
+                groups: splitSalutDataIntoGroups({
+                    estats,
+                    salutLastItems,
+                    groupBy,
+                    apps: activeAppsResponse?.rows,
+                    entorns: entornsResponse?.rows,
+                    entornApps: activeEntornAppsResponse.rows,
+                }),
+                reportInterval,
+                error: undefined,
+                initialized: true,
+                loading: false,
+            });
+        } catch (e) {
+            // TODO Mostrar error en la UI
+            setSalutData({
+                lastRefresh: new Date(),
+                groups: [],
+                error: e,
+                initialized: true,
+                loading: false,
+            });
+        }
+    }, [
+        additionalFilter,
+        appFind,
+        dataRangeMinutes,
+        entornAppFind,
+        entornFind,
+        filterData?.app,
+        filterData?.entorn,
+        groupBy,
+        ready,
+        salutApiReport,
+    ]);
 
-                    if (!salutItem) {
-                        return null;
-                    }
-
-                    return (
-                        <>
-                            <SalutGenericTooltip title={t('page.salut.integracions.integracioUpCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_UP_COUNT), color: ChipColor.WHITE,
-                                        "& .MuiChip-label": {
-                                            // fontSize: "0.7rem !important",
-                                        }}}
-                                    label={salutItem.integracioUpCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.integracions.integracioDownCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DOWN_COUNT), color: ChipColor.WHITE,
-                                        "& .MuiChip-label": {
-                                            // fontSize: "0.7rem !important",
-                                        }}}
-                                    label={salutItem.integracioDownCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.integracions.integracioDesconegutCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorByIntegracio(SalutModel.INTEGRACIO_DESCONEGUT_COUNT), color: ChipColor.WHITE }}
-                                    label={salutItem.integracioDesconegutCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                        </>
-                    );
-                },
-            },
-            {
-                flex: 0.5,
-                field: SalutModel.SUBSISTEMES,
-                // headerName: t('page.salut.apps.column.subsis'),
-                minWidth: 100,
-                renderCell: ({ id }) => {
-                    const salutItem: SalutModel | null = findSalutItem(id);
-
-                    if (!salutItem) {
-                        return null;
-                    }
-                    return (
-                        <>
-                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaUpCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_UP_COUNT), color: ChipColor.WHITE }}
-                                    label={salutItem.subsistemaUpCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaDownCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_DOWN_COUNT), color: ChipColor.WHITE }}
-                                    label={salutItem.subsistemaDownCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                        </>
-                    );
-                },
-            },
-            {
-                flex: 0.5,
-                field: 'msgs',
-                headerName: t('page.salut.apps.column.msgs'),
-                minWidth: 150,
-                renderCell: ({ id }) => {
-                    const salutItem: SalutModel | null = findSalutItem(id);
-
-                    if (!salutItem) {
-                        return null;
-                    }
-                    return (
-                        <>
-                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeErrorCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_ERROR_COUNT), color: ChipColor.WHITE }}
-                                    label={salutItem.missatgeErrorCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeWarnCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT), color: ChipColor.WHITE }}
-                                    label={salutItem.missatgeWarnCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeInfoCount')}>
-                                <Chip
-                                    sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_INFO_COUNT), color: ChipColor.WHITE }}
-                                    label={salutItem.missatgeInfoCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                        </>
-                    );
-                },
-            },
-            {
-                field: 'detalls',
-                headerName: '',
-                minWidth: 100,
-                renderCell: (params) => params.rowNode.type !== 'group' && <Button
-                    variant="contained"
-                    size="small"
-                    component={getLinkComponent()}
-                    to={'appinfo/' + params.id}>
-                    {t('page.salut.apps.detalls')}
-                </Button>,
-            },
-        ];
-    }, [findSalutItem, getLinkComponent, renderItemStateChip, t]);
-
-    const treeDataRenderCell = useTreeDataEntornAppRenderCell();
-    const getTreeDataPath = React.useCallback(
-        (row: any) => [row.app.id, row.entorn.description],
-        []
-    );
-    const groupingColDefAdditionalProps = React.useMemo(
-        () => ({ renderCell: treeDataRenderCell }),
-        [treeDataRenderCell]
-    );
-    const { dataGridProps: treeDataGridProps } = useTreeData(
-        getTreeDataPath,
-        t('page.salut.apps.column.group'),
-        1,
-        true,
-        groupingColDefAdditionalProps);
-
-    return (
-        <MuiDataGrid
-            titleDisabled
-            resourceName="entornApp"
-            datagridApiRef={gridApiRef}
-            columns={columns}
-            filter={springFilterBuilder.and(
-                springFilterBuilder.eq('activa', true),
-                springFilterBuilder.eq('app.activa', true),
-                springFilter
-            )}
-            toolbarHideQuickFilter
-            toolbarHideRefresh
-            readOnly
-            {...treeDataGridProps}
-            hideFooter
-            slots={{
-                noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],
-            }}
-        />
-    );
+    useEffect(() => {
+        if (!ready) {
+            return;
+        }
+        request();
+    }, [ready, request]);
+    return { ...salutData, refresh: request, ready };
 };
 
-const Salut: React.FC = () => {
-    const { t } = useTranslation();
-    const {
-        ready,
-        loading,
-        refresh: appDataRefresh,
-        salutLastItems,
-        estats,
-        reportParams,
-        springFilter,
-    } = useAppData();
+const Salut: FunctionComponent = () => {
     const { id } = useParams();
-    const dataLoaded = ready && loading != null && !loading;
-    const toolbar = (
-        <SalutToolbar
-            title={t('page.salut.title')}
-            ready={ready}
-            onRefresh={appDataRefresh}
-            appDataLoading={!dataLoaded}
-        />
-    );
+    const { t } = useTranslation();
+    const toolbarState = useSalutToolbarState();
+    const additionalFilter = salutEntornAppFilterBuilder(toolbarState.filterData);
+    const dataRangeMinutes = dayjs.duration(toolbarState.dataRangeDuration).asMinutes();
+    const salutData = useSalutData({
+        groupBy: toolbarState.grouping,
+        dataRangeMinutes,
+        filterData: toolbarState.filterData,
+        additionalFilter,
+    });
+    const appInfoData = useAppInfoData(id, dataRangeMinutes);
+
+    const [nextRefresh, setNextRefresh] = useState<Date>();
+    const updateNextRefresh = () => {
+        const nextRequestDate = new Date();
+        nextRequestDate.setTime(
+            nextRequestDate.getTime() +
+                dayjs.duration(toolbarState.refreshDuration).asMilliseconds()
+        );
+        setNextRefresh(nextRequestDate);
+    };
+    const refreshAll = () => {
+        salutData.refresh();
+        appInfoData.refresh();
+    };
+    useInterval({
+        tick: () => {
+            updateNextRefresh();
+            refreshAll();
+        },
+        init: updateNextRefresh,
+        timeout: dayjs.duration(toolbarState.refreshDuration).asMilliseconds(),
+    });
 
     const isAppInfoRouteActive = id != null;
+    const appInfoToolbarProps = isAppInfoRouteActive
+        ? {
+              title:
+                  appInfoData.entornApp != null
+                      ? `${appInfoData.entornApp.app.description} - ${appInfoData.entornApp.entorn.description}`
+                      : '',
 
-    if (isAppInfoRouteActive) return <SalutAppInfo />;
+              subtitle: appInfoData.entornApp?.versio
+                  ? 'v' + appInfoData.entornApp.versio
+                  : undefined,
+              state: appInfoData.salutCurrentApp?.appEstat ? (
+                  <ItemStateChip
+                      sx={{ ml: 1 }}
+                      salutField={SalutModel.APP_ESTAT}
+                      salutStatEnum={appInfoData.salutCurrentApp.appEstat}
+                  />
+              ) : undefined,
+              goBackActive: true,
+              groupingActive: false,
+              hideFilter: true,
+          }
+        : null;
 
     return (
-        <BasePage toolbar={toolbar}>
-            {salutLastItems == null || estats == null || reportParams == null ? (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: 'calc(100vh - 80px)',
-                    }}
-                >
-                    <CircularProgress size={100} />
-                </Box>
+        <BasePage
+            toolbar={
+                <SalutToolbar
+                    title={t('page.salut.title')}
+                    ready={salutData.ready}
+                    onRefreshClick={() => refreshAll()}
+                    appDataLoading={salutData.loading}
+                    lastRefresh={salutData.lastRefresh}
+                    nextRefresh={nextRefresh}
+                    groupingActive
+                    {...toolbarState}
+                    {...appInfoToolbarProps}
+                />
+            }
+        >
+            {!isAppInfoRouteActive ? (
+                <SalutLlistat
+                    salutGroups={salutData.groups}
+                    reportInterval={salutData.reportInterval}
+                    springFilter={additionalFilter}
+                />
             ) : (
-                <Grid container spacing={2}>
-                    <Grid size={{xs: 12, sm: 5, md: 4, lg: 3}} sx={{ height: '200px' }}>
-                        <Box
-                            sx={{
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                                <UpdownPieChart salutLastItems={salutLastItems} />
-                            </ErrorBoundary>
-                        </Box>
-                    </Grid>
-                    <Grid size={{xs: 12, sm: 7, md: 8, lg: 9}} sx={{ height: '200px' }}>
-                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            <UpdownBarChart
-                                dataInici={reportParams.dataInici}
-                                agrupacio={reportParams.agrupacio}
-                                estats={estats}
-                            />
-                        </ErrorBoundary>
-                    </Grid>
-                    <Grid size={12}>
-                        <AppDataTable
-                            springFilter={springFilter}
-                            salutLastItems={salutLastItems}
-                        />
-                    </Grid>
-                </Grid>
+                // TODO Persistir estado de expansión al cambiar a AppInfo
+                <SalutAppInfo appInfoData={appInfoData} ready={appInfoData.ready} />
             )}
         </BasePage>
     );
 };
-
 export default Salut;
