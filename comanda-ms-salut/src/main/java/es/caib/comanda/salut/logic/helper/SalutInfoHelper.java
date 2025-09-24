@@ -92,8 +92,6 @@ public class SalutInfoHelper {
 			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
 			idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);
-			// Publicar esdeveniment per a compactació. També en cas d'error
-			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));
 		} catch (RestClientException ex) {
 			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
 					entornApp.getApp().getNom(),
@@ -106,18 +104,19 @@ public class SalutInfoHelper {
 			salut.updateAppCountByEstat(SalutEstat.DOWN);
 			salut.setPeticioError(true);
 			salut.setNumElements(1);
-			salutRepository.save(salut);
+			SalutEntity saved = salutRepository.save(salut);
 			if (!monitorSalut.isFinishedAction()) {
 				monitorSalut.endAction(ex);
 			}
-			// Publicar esdeveniment per a compactació. També en cas d'error
-			// eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), saved.getId(), numeroDiesAgrupacio));
+			idSalut = saved.getId();
 		} finally {
 			Duration duration = Duration.between(t0, Instant.now());
 			metricsHelper.getSalutInfoGlobalTimer(null, null).record(duration);
 			metricsHelper.getSalutInfoGlobalTimer(
 					entornApp.getEntorn().getNom(),
 					entornApp.getApp().getNom()).record(duration);
+			// Publicar esdeveniment per a compactació. També en cas d'error
+			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));
 		}
 	}
 
