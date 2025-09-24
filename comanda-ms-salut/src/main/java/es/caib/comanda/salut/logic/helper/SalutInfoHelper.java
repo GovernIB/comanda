@@ -88,29 +88,31 @@ public class SalutInfoHelper {
 		try {
 			// Obtenir dades de salut de l'aplicació
 			monitorSalut.startAction();
-			SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
+			throw new RestClientException("Bon dia");
+			/*SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
 			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
 			idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);
 			// Publicar esdeveniment per a compactació. També en cas d'error
-			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));
+			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));*/
 		} catch (RestClientException ex) {
-			SalutEntity salut = new SalutEntity();
-			salut.setEntornAppId(entornApp.getId());
-			salut.setData(currentMinuteTime);
-			salut.setAppEstat(SalutEstat.ERROR);
-			salut.updateAppCountByEstat(SalutEstat.ERROR);
-			salut.setNumElements(1);
-			SalutEntity saved = salutRepository.save(salut);
 			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
 					entornApp.getApp().getNom(),
 					entornApp.getEntorn().getNom(),
 					ex.getLocalizedMessage());
+			SalutEntity salut = new SalutEntity();
+			salut.setEntornAppId(entornApp.getId());
+			salut.setData(currentMinuteTime);
+			salut.setAppEstat(SalutEstat.DOWN);
+			salut.updateAppCountByEstat(SalutEstat.DOWN);
+			salut.setPeticioError(true);
+			salut.setNumElements(1);
+			salutRepository.save(salut);
 			if (!monitorSalut.isFinishedAction()) {
 				monitorSalut.endAction(ex);
 			}
 			// Publicar esdeveniment per a compactació. També en cas d'error
-	        // eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), saved.getId(), numeroDiesAgrupacio));
+			// eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), saved.getId(), numeroDiesAgrupacio));
 		} finally {
 			Duration duration = Duration.between(t0, Instant.now());
 			metricsHelper.getSalutInfoGlobalTimer(null, null).record(duration);

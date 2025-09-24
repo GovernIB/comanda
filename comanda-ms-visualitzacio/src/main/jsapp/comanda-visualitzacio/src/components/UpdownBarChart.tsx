@@ -62,8 +62,8 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "warnPercent");
     const seriesDegraded = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "degradedPercent");
     const seriesMaintenance = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "maintenancePercent");
-    const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent");
     const seriesError = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "errorPercent");
+    const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent");
     const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent");
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
@@ -88,16 +88,16 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
             color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
         },
         {
-            data: seriesDown,
-            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE),
-            stack: 'total',
-            color: getColorByStatEnum(SalutEstatEnum.DOWN),
-        },
-        {
             data: seriesError,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.ERROR),
+        },
+        {
+            data: seriesDown,
+            label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE),
+            stack: 'total',
+            color: getColorByStatEnum(SalutEstatEnum.DOWN),
         },
         {
             data: seriesMaintenance,

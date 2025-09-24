@@ -16,6 +16,9 @@ import java.util.List;
  */
 public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
+
+	SalutEntity findTopByEntornAppIdOrderByIdDesc(Long entornAppId);
+
     SalutEntity findTopByEntornAppIdAndTipusRegistreOrderByIdDesc(Long entornAppId, TipusRegistreSalut tipusRegistre);
 	List<SalutEntity> findByEntornAppIdAndTipusRegistreAndDataBefore(Long entornAppId, TipusRegistreSalut tipusRegistre, LocalDateTime data);
     @Query("SELECT s.id FROM SalutEntity s WHERE s.entornAppId = :entornAppId AND s.tipusRegistre = :tipusRegistre AND s.data < :data")

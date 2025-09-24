@@ -566,16 +566,29 @@ const SalutAppInfo: React.FC = () => {
 
     if (dataLoaded && salutCurrentApp == null) return (
         <BasePage expandHeight toolbar={toolbar}>
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100%',
-                }}
-            >
                 <Alert severity="warning">{t('page.salut.info.noInfo')}</Alert>
-            </Box>
+        </BasePage>
+    );
+
+    if (dataLoaded && salutCurrentApp?.peticioError) return (
+        <BasePage expandHeight toolbar={toolbar}>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid size={{ sm: 12, lg: 3 }}>
+                    <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
+                </Grid>
+                <Grid size={{ sm: 12, lg: 9 }}>
+                    <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                        {reportParams != null && estats != null && (
+                            <EstatsBarCard
+                                dataInici={reportParams.dataInici}
+                                agrupacio={reportParams.agrupacio}
+                                estats={estats}
+                            />
+                        )}
+                    </ErrorBoundary>
+                </Grid>
+            </Grid>
+            <Alert severity="error">{t('page.salut.info.downAlert')}</Alert>
         </BasePage>
     );
 
@@ -609,35 +622,40 @@ const SalutAppInfo: React.FC = () => {
                             )}
                         </ErrorBoundary>
                     </Grid>
-                    <Grid size={{ sm: 12, lg: 3 }}>
-                        <DetallInfo salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 9 }}>
-                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            {reportParams != null && latencies != null && estats != null && (
-                                <>
-                                    <LatenciaLineChart
-                                        dataInici={reportParams.dataInici}
-                                        agrupacio={reportParams.agrupacio}
-                                        latencies={latencies}
-                                        estats={estats}
-                                    />
-                                </>
-                            )}
-                        </ErrorBoundary>
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Integracions salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Subsistemes salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Contexts salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Missatges salutCurrentApp={salutCurrentApp} />
-                    </Grid>
+                    {salutCurrentApp?.peticioError ? 
+                        <Grid>
+                            <Alert severity="error">{t('page.salut.info.downAlert')}</Alert>
+                        </Grid> : <>
+                            <Grid size={{ sm: 12, lg: 3 }}>
+                                <DetallInfo salutCurrentApp={salutCurrentApp} />
+                            </Grid>
+                            <Grid size={{ sm: 12, lg: 9 }}>
+                                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                                    {reportParams != null && latencies != null && estats != null && (
+                                        <>
+                                            <LatenciaLineChart
+                                                dataInici={reportParams.dataInici}
+                                                agrupacio={reportParams.agrupacio}
+                                                latencies={latencies}
+                                                estats={estats}
+                                            />
+                                        </>
+                                    )}
+                                </ErrorBoundary>
+                            </Grid>
+                            <Grid size={{ sm: 12, lg: 6 }}>
+                                <Integracions salutCurrentApp={salutCurrentApp} />
+                            </Grid>
+                            <Grid size={{ sm: 12, lg: 6 }}>
+                                <Subsistemes salutCurrentApp={salutCurrentApp} />
+                            </Grid>
+                            <Grid size={{ sm: 12, lg: 6 }}>
+                                <Contexts salutCurrentApp={salutCurrentApp} />
+                            </Grid>
+                            <Grid size={{ sm: 12, lg: 6 }}>
+                                <Missatges salutCurrentApp={salutCurrentApp} />
+                            </Grid>
+                        </>}
                 </Grid>
             )}
         </BasePage>

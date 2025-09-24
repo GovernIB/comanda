@@ -63,6 +63,7 @@ export class SalutModel extends BaseEntity implements Required<ISalut> {
     appLatencia: number | undefined;
     bdEstat: SalutEstatEnum | undefined;
     bdLatencia: number | undefined;
+    peticioError: boolean | undefined;
 
     appUp: boolean | undefined;
     bdUp: boolean | undefined;
@@ -177,10 +178,10 @@ export function getColorByStatEnum(salutEstatEnum: SalutEstatEnum): string {
         case SalutEstatEnum.UNKNOWN:
             return GRAY;
         case SalutEstatEnum.DOWN:
-            return RED_LIGHT;
+            return RED_DARK;
         case SalutEstatEnum.ERROR:
         default:
-            return RED_DARK;
+            return RED_LIGHT;
     }
 }
 

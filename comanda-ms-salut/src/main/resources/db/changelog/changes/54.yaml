@@ -134,3 +134,25 @@ databaseChangeLog:
           referencedTableName: ${db_prefix}salut_integracio
           referencedColumnNames: id
           constraintName: ${db_prefix}salutint_pare_fk
+- changeSet:
+    id: salut-change-54-4
+    author: Limit
+    changes:
+      - addColumn:
+          tableName: ${db_prefix}salut
+          columns:
+            - column:
+                constraints:
+                  nullable: true
+                name: peticio_error
+                type: BOOLEAN
+      - update:
+          tableName: ${db_prefix}salut
+          columns:
+            - column:
+                name: peticio_error
+                valueBoolean: false
+      - addNotNullConstraint:
+          tableName: ${db_prefix}salut
+          columnName: peticio_error
+          columnDataType: BOOLEAN

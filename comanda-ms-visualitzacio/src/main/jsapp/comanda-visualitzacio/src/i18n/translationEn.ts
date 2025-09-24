@@ -104,6 +104,7 @@ const translationEn = {
                 missatges: "Messages",
                 detalls: "Details",
                 noInfo: 'No data available for this environment',
+                downAlert: "The application is crashed. Unable to display all health information.",
             },
             latencia: {
                 title: "Latency",

@@ -2,7 +2,7 @@ const translationEs = {
     enum: {
         appEstat: {
             UP: {
-                title: "Activo",
+                title: "Activa",
                 tooltip: "La aplicación funciona <bold>correctamente</bold>. <br> La tasa de <italic>errores detectados</italic> es <underline>inferior al 5%</underline>."
             },
             WARN: {
@@ -10,11 +10,11 @@ const translationEs = {
                 tooltip: "La tasa de <italic>errores detectados</italic> está <underline>entre el 5% y el 10%</underline>."
             },
             DOWN: {
-                title: "Inactivo",
+                title: "Caida",
                 tooltip: "<bold>Se han detectado errores</bold>. <br> La <italic>tasa de errores detectados</italic> es <underline>superior al 30%</underline>."
             },
             DEGRADED: {
-                title: "Degradado",
+                title: "Degradada",
                 tooltip: "<bold>Existen errores puntuales</bold>. <br> La <italic>tasa de errores detectados</italic> está <underline>entre el 10% y el 30%</underline>."
             },
             MAINTENANCE: {
@@ -106,6 +106,7 @@ const translationEs = {
                 missatges: "Mensajes",
                 detalls: "Detalles",
                 noInfo: 'No hay datos disponibles para este entorno',
+                downAlert: "La aplicación se encuentra caída. No se puede mostrar toda la información de salud.",
             },
             latencia: {
                 title: "Latencia",
