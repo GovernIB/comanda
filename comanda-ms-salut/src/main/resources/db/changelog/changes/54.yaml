@@ -118,3 +118,41 @@ databaseChangeLog:
           tableName: ${db_prefix}salut_integracio
           columnName: temps_mig_ultperiode
           columnDataType: INTEGER
+- changeSet:
+    id: salut-change-54-3
+    author: Limit
+    changes:
+      - addColumn:
+          tableName: ${db_prefix}salut_integracio
+          columns:
+            - column:
+                name: pare_id
+                type: BIGINT
+      - addForeignKeyConstraint:
+          baseTableName: ${db_prefix}salut_integracio
+          baseColumnNames: pare_id
+          referencedTableName: ${db_prefix}salut_integracio
+          referencedColumnNames: id
+          constraintName: ${db_prefix}salutint_pare_fk
+- changeSet:
+    id: salut-change-54-4
+    author: Limit
+    changes:
+      - addColumn:
+          tableName: ${db_prefix}salut
+          columns:
+            - column:
+                constraints:
+                  nullable: true
+                name: peticio_error
+                type: BOOLEAN
+      - update:
+          tableName: ${db_prefix}salut
+          columns:
+            - column:
+                name: peticio_error
+                valueBoolean: false
+      - addNotNullConstraint:
+          tableName: ${db_prefix}salut
+          columnName: peticio_error
+          columnDataType: BOOLEAN

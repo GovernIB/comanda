@@ -2,7 +2,7 @@ const translationCa = {
     enum: {
         appEstat: {
             UP: {
-                title: "Actiu",
+                title: "Activa",
                 tooltip: "L'aplicació funciona <bold>correctament</bold>. <br> La taxa de <italic>errors detectats</italic> és <underline>inferior al 5%</underline>."
             },
             WARN: {
@@ -10,11 +10,11 @@ const translationCa = {
                 tooltip: "La taxa <italic>errors detectats</italic> està <underline>entre el 5% i el 10%</underline>."
             },
             DOWN: {
-                title: "Inactiu",
+                title: "Caiguda",
                 tooltip: "<bold>S'han detectat errors</bold>. <br> La <italic>taxa de errors detectats</italic> és <underline>superior al 30%</underline>."
             },
             DEGRADED: {
-                title: "Degradat",
+                title: "Degradada",
                 tooltip: "<bold>Hi ha errors puntuals</bold>. <br> La <italic>taxa d'errors detectats</italic> està <underline>entre el 10% i el 30%</underline>."
             },
             MAINTENANCE: {
@@ -117,6 +117,7 @@ const translationCa = {
                 missatges: "Missatges",
                 detalls: "Detalls",
                 noInfo: 'No hi ha dades disponibles per a aquest entorn',
+                downAlert: "L'aplicació es troba caiguda. No es pot mostrar tota la informació de salut.",
             },
             latencia: {
                 title: "Latència",
@@ -136,8 +137,10 @@ const translationCa = {
                     codi: "Codi",
                     nom: "Nom",
                     estat: "Estat",
-                    latencia: "Latència",
-                    peticions: "Peticions",
+                    peticionsTotals: "Peticions totals",
+                    tempsMigTotal: "Temps mig total",
+                    peticionsPeriode: "Peticions període",
+                    tempsMigPeriode: "Temps mig període",
                 },
             },
             subsistemes: {
@@ -149,7 +152,10 @@ const translationCa = {
                     codi: "Codi",
                     nom: "Nom",
                     estat: "Estat",
-                    latencia: "Latència",
+                    peticionsTotals: "Peticions totals",
+                    tempsMigTotal: "Temps mig total",
+                    peticionsPeriode: "Peticions període",
+                    tempsMigPeriode: "Temps mig període",
                 },
             },
             missatges: {

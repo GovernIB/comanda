@@ -111,7 +111,7 @@ const Dimensions: React.FC = () => {
         { field: 'codi', flex: 1 },
         { field: 'nom', flex: 2 },
         { field: 'descripcio', flex: 4 },
-        { field: 'agrupableCount', headerName: t('page.dimensions.column.agrupacions'), flex: 1 },
+        // { field: 'agrupableCount', headerName: t('page.dimensions.column.agrupacions'), flex: 1 },
     ];
     const filterElement = <DimensionsFilter onSpringFilterChange={setFilter}/>;
 

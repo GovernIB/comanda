@@ -7,6 +7,7 @@ import es.caib.comanda.ms.salut.model.EstatSalut;
 import es.caib.comanda.ms.salut.model.EstatSalutEnum;
 import es.caib.comanda.ms.salut.model.SalutInfo;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
@@ -15,6 +16,9 @@ import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.noop.NoopTimer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +46,7 @@ class SalutInfoHelperGetSalutInfoEventTest {
     @Mock private SalutMissatgeRepository salutMissatgeRepository;
     @Mock private SalutDetallRepository salutDetallRepository;
     @Mock private SalutClientHelper salutClientHelper;
+	@Mock private MetricsHelper metricsHelper;
     @Mock private RestTemplate restTemplate;
     @Mock private ApplicationEventPublisher eventPublisher;
 
@@ -61,6 +66,9 @@ class SalutInfoHelperGetSalutInfoEventTest {
                 .salutUrl("http://x/health")
                 .activa(true)
                 .build();
+
+		when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
+				.thenReturn(new NoopTimer(new Meter.Id("", Tags.empty(), null, null, Meter.Type.TIMER)));
     }
 
     private SalutInfo sampleInfo() {

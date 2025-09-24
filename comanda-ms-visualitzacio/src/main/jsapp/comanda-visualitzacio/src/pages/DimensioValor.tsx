@@ -53,16 +53,16 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
             springFilterBuilder={(data) => {
                 return springFilterBuilder.and(
                     data?.valor && springFilterBuilder.like('valor', data?.valor),
-                    data?.agrupable != null && springFilterBuilder.eq('agrupable', data?.agrupable),
-                    data?.valorAgrupacio && springFilterBuilder.like('valorAgrupacio', data?.valorAgrupacio),
+                    // data?.agrupable != null && springFilterBuilder.eq('agrupable', data?.agrupable),
+                    // data?.valorAgrupacio && springFilterBuilder.like('valorAgrupacio', data?.valorAgrupacio),
                 ) || '';
             }}
         >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
                     <Grid size={{ xs: 12, md: 4 }}><FormField name={'valor'} /></Grid>
-                    <Grid size={{ xs: 12, md: 4 }}><FormField name={'agrupable'} type={'checkbox'} /></Grid>
-                    <Grid size={{ xs: 12, md: 4 }}><FormField name={'valorAgrupacio'} /></Grid>
+                    {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'agrupable'} type={'checkbox'} /></Grid>*/}
+                    {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'valorAgrupacio'} /></Grid>*/}
                 </Grid>
                 <IconButton onClick={netejar} title={t('components.clear')} sx={{ mr: 1 }}>
                     <Icon>filter_alt_off</Icon>
@@ -89,8 +89,8 @@ const DimensioValor: React.FC = () => {
 
     const columns: MuiDataGridColDef[] = [
         { field: 'valor', flex: 2 },
-        { field: 'agrupable', flex: 1 },
-        { field: 'valorAgrupacio', flex: 2 },
+        // { field: 'agrupable', flex: 1 },
+        // { field: 'valorAgrupacio', flex: 2 },
     ];
 
     const staticFilter = React.useMemo(() => springFilterBuilder.eq('dimensio.id', id), [id]);
@@ -130,8 +130,8 @@ const DimensioValor: React.FC = () => {
                 toolbarHideCreate
                 staticFilter={staticFilter}
                 filter={filter}
-                popupEditActive
-                popupEditFormContent={<DimensioValorForm />}
+                popupEditActive={false}
+                // popupEditFormContent={<DimensioValorForm />}
             />
         </GridPage>
     );

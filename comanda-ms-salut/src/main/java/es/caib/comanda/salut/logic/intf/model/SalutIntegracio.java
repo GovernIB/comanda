@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -29,8 +30,14 @@ public class SalutIntegracio extends BaseResource<Long> {
 	private Long totalOk;
 	@NotNull
 	private Long totalError;
+	private Integer totalTempsMig;
+	private Long peticionsOkUltimPeriode;
+	private Long peticionsErrorUltimPeriode;
+	private Integer tempsMigUltimPeriode;
+	private String endpoint;
 
 	private ResourceReference<Salut, Long> salut;
+	private ResourceReference<SalutIntegracio, Long> pare;
 
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private String nom;

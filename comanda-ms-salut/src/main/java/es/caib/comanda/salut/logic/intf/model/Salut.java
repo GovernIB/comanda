@@ -75,6 +75,7 @@ public class Salut extends BaseResource<Long> {
 	@NotNull
 	private SalutEstat bdEstat;
 	private Integer bdLatencia;
+	private boolean peticioError;
 
 	private Boolean appUp;
 	private Boolean bdUp;

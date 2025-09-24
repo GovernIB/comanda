@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -54,9 +55,10 @@ public class EntornAppServiceImplTest {
                                           CacheHelper cacheHeper,
                                           ConfiguracioSchedulerService schedulerService,
                                           RestTemplate restTemplate,
-                                          ResourceEntityMappingHelper resourceEntityMappingHelper) {
-            super(appIntegracioRepository, subsistemaRepository, contextRepository, 
-                  entornAppRepository, appInfoHelper, cacheHeper, schedulerService, restTemplate, resourceEntityMappingHelper);
+                                          ResourceEntityMappingHelper resourceEntityMappingHelper,
+                                          ApplicationEventPublisher eventPublisher) {
+            super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, appInfoHelper,
+                    cacheHeper, schedulerService, restTemplate, resourceEntityMappingHelper, eventPublisher);
         }
 
         @Override
@@ -111,6 +113,9 @@ public class EntornAppServiceImplTest {
     @Mock
     private ResourceEntityMappingHelper resourceEntityMappingHelper;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private TestableEntornAppServiceImpl entornAppService;
 
     private EntornAppEntity entornAppEntity;
@@ -130,7 +135,8 @@ public class EntornAppServiceImplTest {
             cacheHelper,
             schedulerService,
             restTemplate,
-            resourceEntityMappingHelper
+            resourceEntityMappingHelper,
+            eventPublisher
         );
         
         // Setup test data
@@ -216,10 +222,12 @@ public class EntornAppServiceImplTest {
         entornAppService.afterCreateSave(entornAppEntity, entornAppResource, answers, false);
         
         // Verify that the scheduler service was called
-        verify(schedulerService).programarTasca(entornAppEntity);
-        
+//        verify(schedulerService).programarTasca(entornAppEntity);
+
         // Verify that the appInfoHelper was called
-        verify(appInfoHelper).programarTasquesSalutEstadistica(entornAppEntity);
+//        verify(appInfoHelper).programarTasquesSalutEstadistica(entornAppEntity);
+
+        verify(eventPublisher).publishEvent(any(EntornAppServiceImpl.ReprogramarEvent.class));
     }
 
     @Test
@@ -231,10 +239,12 @@ public class EntornAppServiceImplTest {
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
         
         // Verify that the scheduler service was called
-        verify(schedulerService).programarTasca(entornAppEntity);
-        
+//        verify(schedulerService).programarTasca(entornAppEntity);
+
         // Verify that the appInfoHelper was called
-        verify(appInfoHelper).programarTasquesSalutEstadistica(entornAppEntity);
+//        verify(appInfoHelper).programarTasquesSalutEstadistica(entornAppEntity);
+
+        verify(eventPublisher).publishEvent(any(EntornAppServiceImpl.ReprogramarEvent.class));
     }
 
     @Test

@@ -117,15 +117,22 @@ public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
         return BigDecimal.valueOf((part * 100.0) / total).setScale(2, RoundingMode.HALF_UP);
     }
 
-    public void addTotalOk(Long numOk) {
-        if (numOk == null) return;
-        if (this.totalOk == null) this.totalOk = 0L;
-        this.totalOk += numOk;
-    }
+	public void addPeticionsOkUltimPeriode(Long numOk) {
+		if (numOk == null) return;
+		if (this.peticionsOkUltimPeriode == null) this.peticionsOkUltimPeriode = 0L;
+		this.peticionsOkUltimPeriode += numOk;
+	}
 
-    public void addTotalError(Long numError) {
-        if (numError == null) return;
-        if (this.totalError == null) this.totalError = 0L;
-        this.totalError += numError;
-    }
+	public void addPeticionsErrorUltimPeriode(Long numError) {
+		if (numError == null) return;
+		if (this.peticionsErrorUltimPeriode == null) this.peticionsErrorUltimPeriode = 0L;
+		this.peticionsErrorUltimPeriode += numError;
+	}
+
+	public void addTempsMigUltimPeriode(Integer nouTempsMig) {
+		if (nouTempsMig == null) return;
+		long total = ((long)this.tempsMigUltimPeriode * this.peticionsOkUltimPeriode) + (long)nouTempsMig;
+		this.tempsMigUltimPeriode = Math.toIntExact(total / (this.peticionsOkUltimPeriode + 1L));
+	}
+
 }

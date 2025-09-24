@@ -115,6 +115,7 @@ const translationEn = {
                 missatges: "Messages",
                 detalls: "Details",
                 noInfo: 'No data available for this environment',
+                downAlert: "The application is crashed. Unable to display all health information.",
             },
             latencia: {
                 title: "Latency",
@@ -134,8 +135,10 @@ const translationEn = {
                     codi: "Code",
                     nom: "Name",
                     estat: "State",
-                    latencia: "Latency",
-                    peticions: "Requests",
+                    peticionsTotals: "Total requests",
+                    tempsMigTotal: "Total avg. time",
+                    peticionsPeriode: "Time period requests",
+                    tempsMigPeriode: "Time period avg. time",
                 },
             },
             subsistemes: {
@@ -147,7 +150,10 @@ const translationEn = {
                     codi: "Code",
                     nom: "Name",
                     estat: "State",
-                    latencia: "Latency",
+                    peticionsTotals: "Total requests",
+                    tempsMigTotal: "Total avg. time",
+                    peticionsPeriode: "Time period requests",
+                    tempsMigPeriode: "Time period avg. time",
                 },
             },
             missatges: {
