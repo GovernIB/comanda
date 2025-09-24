@@ -88,13 +88,12 @@ public class SalutInfoHelper {
 		try {
 			// Obtenir dades de salut de l'aplicació
 			monitorSalut.startAction();
-			throw new RestClientException("Bon dia");
-			/*SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
+			SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
 			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
 			idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);
 			// Publicar esdeveniment per a compactació. També en cas d'error
-			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));*/
+			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));
 		} catch (RestClientException ex) {
 			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
 					entornApp.getApp().getNom(),
