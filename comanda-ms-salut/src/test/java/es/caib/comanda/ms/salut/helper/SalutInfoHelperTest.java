@@ -11,6 +11,7 @@ import es.caib.comanda.ms.salut.model.IntegracioSalut;
 import es.caib.comanda.ms.salut.model.MissatgeSalut;
 import es.caib.comanda.ms.salut.model.SalutInfo;
 import es.caib.comanda.ms.salut.model.SubsistemaSalut;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -24,6 +25,9 @@ import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.noop.NoopTimer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -70,6 +74,9 @@ public class SalutInfoHelperTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+	@Mock
+	private MetricsHelper metricsHelper;
 
     @InjectMocks
     private SalutInfoHelper salutInfoHelper;
@@ -169,6 +176,9 @@ public class SalutInfoHelperTest {
         salutEntity.setBdEstat(SalutEstat.UP);
         salutEntity.setBdLatencia(50);
 
+		// Setup MetricsHelper
+		when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
+				.thenReturn(new NoopTimer(new Meter.Id("", Tags.empty(), null, null, Meter.Type.TIMER)));
     }
 
     @Test

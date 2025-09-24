@@ -1,7 +1,11 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.logic.intf.model.*;
+import es.caib.comanda.configuracio.logic.intf.model.AppContext;
+import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
+import es.caib.comanda.configuracio.logic.intf.model.AppManual;
+import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppParamAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
@@ -17,22 +21,28 @@ import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
-import es.caib.comanda.ms.logic.intf.model.FieldOption;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
@@ -56,6 +66,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final ConfiguracioSchedulerService schedulerService;
     private final RestTemplate restTemplate;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @PostConstruct
     public void init() {
@@ -103,23 +114,41 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 + (resource.getEntorn() != null ? resource.getEntorn().getDescription() : ""));
     }
 
-    private void reprogramarTasques(EntornAppEntity entity, boolean netejarCache){
-        schedulerService.programarTasca(entity);
-        appInfoHelper.programarTasquesSalutEstadistica(entity);
-        if (netejarCache)
-            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+
+    /**
+     * Esdeveniment que indica que s'han de reprogramar les tasques en segon pla de l'entornApp indicat.
+     */
+    @Getter
+    @RequiredArgsConstructor
+    @EqualsAndHashCode
+    public static class ReprogramarEvent {
+        private final EntornAppEntity entity;
+        private final boolean netejarCache;
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void reprogramarTasques(ReprogramarEvent event){
+        if (event.isNetejarCache())
+            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, event.getEntity().getId().toString());
+        schedulerService.programarTasca(event.getEntity());
+        appInfoHelper.programarTasquesSalutEstadistica(event.getEntity());
     }
 
     @Override
     protected void afterCreateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterCreateSave(entity, resource, answers, anyOrderChanged);
-        reprogramarTasques(entity, false);
+
+//        reprogramarTasques(entity, false);
+        eventPublisher.publishEvent(new ReprogramarEvent(entity, false));
     }
 
     @Override
     protected void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
-        reprogramarTasques(entity, true);
+
+//        reprogramarTasques(entity, true);
+        eventPublisher.publishEvent(new ReprogramarEvent(entity, true));
     }
 
     @Override
@@ -127,7 +156,9 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         super.afterDelete(entity, answers);
 //        Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
         entity.setActiva(false);
-        reprogramarTasques(entity, true);
+
+//        reprogramarTasques(entity, true);
+        eventPublisher.publishEvent(new ReprogramarEvent(entity, true));
     }
 
     // ACCIONS
@@ -223,7 +254,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
             entity.setActiva(!entity.isActiva());
-            reprogramarTasques(entity, true);
+//            reprogramarTasques(entity, true);
+            eventPublisher.publishEvent(new ReprogramarEvent(entity, true));
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }

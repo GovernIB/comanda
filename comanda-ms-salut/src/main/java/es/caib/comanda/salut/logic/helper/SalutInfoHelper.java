@@ -38,12 +38,11 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.LockTimeoutException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Lògica comuna per a consultar la informació de salut de les apps.
@@ -51,67 +50,74 @@ import java.util.Map;
  * @author Límit Tecnologies
  */
 @Slf4j
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class SalutInfoHelper {
 
 	private final SalutRepository salutRepository;
 	private final SalutIntegracioRepository salutIntegracioRepository;
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
-    private final SalutDetallRepository salutDetallRepository;
+	private final SalutDetallRepository salutDetallRepository;
 
 	private final SalutClientHelper salutClientHelper;
-    private final RestTemplate restTemplate;
+	private final RestTemplate restTemplate;
 	private final ApplicationEventPublisher eventPublisher;
+	private final MetricsHelper metricsHelper;
 
-    @Lazy
-    private final SalutInfoHelper self = this;
+	@Lazy
+	private final SalutInfoHelper self = this;
 
-    // Locks per assegurar compactació "synchronized" per entornAppId
-    private static final java.util.concurrent.ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
-    private static final Integer BATCH_SIZE = 500;
-    
+	// Locks per assegurar compactació "synchronized" per entornAppId
+	private static final java.util.concurrent.ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
+	private static final Integer BATCH_SIZE = 500;
+
 	@Transactional
 	public void getSalutInfo(EntornApp entornApp) {
 		log.debug("Obtenint dades de salut de l'app {}, entorn {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom());
+		Instant t0 = Instant.now();
 		MonitorSalut monitorSalut = new MonitorSalut(
 				entornApp.getId(),
 				entornApp.getSalutUrl(),
 				salutClientHelper);
-        LocalDateTime currentMinuteTime = LocalDateTime.now().withSecond(0).withNano(0);
-        int numeroDiesAgrupacio = actualitzaInfoCompactacio(entornApp.getId());
-        Long idSalut = null;
-        try {
+		LocalDateTime currentMinuteTime = LocalDateTime.now().withSecond(0).withNano(0);
+		int numeroDiesAgrupacio = actualitzaInfoCompactacio(entornApp.getId());
+		Long idSalut = null;
+		try {
 			// Obtenir dades de salut de l'aplicació
 			monitorSalut.startAction();
 			SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
 			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
-            idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);
-            // Publicar esdeveniment per a compactació. També en cas d'error
-            eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));
+			idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);
 		} catch (RestClientException ex) {
-			SalutEntity salut = new SalutEntity();
-			salut.setEntornAppId(entornApp.getId());
-			salut.setData(currentMinuteTime);
-			salut.setAppEstat(SalutEstat.ERROR);
-            salut.updateAppCountByEstat(SalutEstat.ERROR);
-            salut.setNumElements(1);
-
-			SalutEntity saved = salutRepository.save(salut);
 			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
 					entornApp.getApp().getNom(),
 					entornApp.getEntorn().getNom(),
 					ex.getLocalizedMessage());
+			SalutEntity salut = new SalutEntity();
+			salut.setEntornAppId(entornApp.getId());
+			salut.setData(currentMinuteTime);
+			salut.setAppEstat(SalutEstat.DOWN);
+			salut.updateAppCountByEstat(SalutEstat.DOWN);
+			salut.setPeticioError(true);
+			salut.setNumElements(1);
+			SalutEntity saved = salutRepository.save(salut);
 			if (!monitorSalut.isFinishedAction()) {
 				monitorSalut.endAction(ex);
 			}
-            // Publicar esdeveniment per a compactació. També en cas d'error
-            eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), saved.getId(), numeroDiesAgrupacio));
-        }
+			idSalut = saved.getId();
+		} finally {
+			Duration duration = Duration.between(t0, Instant.now());
+			metricsHelper.getSalutInfoGlobalTimer(null, null).record(duration);
+			metricsHelper.getSalutInfoGlobalTimer(
+					entornApp.getEntorn().getNom(),
+					entornApp.getApp().getNom()).record(duration);
+			// Publicar esdeveniment per a compactació. També en cas d'error
+			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));
+		}
 	}
 
 	private Long crearSalut(SalutInfo info, Long entornAppId, LocalDateTime currentMinuteTime) {
@@ -119,34 +125,33 @@ public class SalutInfoHelper {
 			// Si es desconeix l'estat de l'aplicació, entenem que està DOWN
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornAppId);
-            salut.setData(currentMinuteTime);
+			salut.setData(currentMinuteTime);
 			salut.setDataApp(toLocalDateTime(info.getData()));
 			salut.setTipusRegistre(TipusRegistreSalut.MINUT);
-
 			SalutEstat appEstat = toSalutEstat(info.getEstat().getEstat());
 			salut.setAppEstat(appEstat);
-            salut.updateAppCountByEstat(appEstat);
-            SalutEstat bdEstat = toSalutEstat(info.getBd().getEstat());
-            salut.setBdEstat(bdEstat);
-            salut.updateBdCountByEstat(bdEstat);
-
-            salut.setAppLatencia(info.getEstat().getLatencia());
+			salut.updateAppCountByEstat(appEstat);
+			SalutEstat bdEstat = toSalutEstat(info.getBd().getEstat());
+			salut.setBdEstat(bdEstat);
+			salut.updateBdCountByEstat(bdEstat);
+			salut.setAppLatencia(info.getEstat().getLatencia());
 			salut.setAppLatenciaMitjana(info.getEstat().getLatencia());
 			salut.setBdLatencia(info.getBd().getLatencia());
 			salut.setBdLatenciaMitjana(info.getBd().getLatencia());
-            salut.setNumElements(1);
+			salut.setNumElements(1);
 			SalutEntity saved = salutRepository.save(salut);
-
 			crearSalutIntegracions(saved, info.getIntegracions());
 			crearSalutSubsistemes(saved, info.getSubsistemes());
 			crearSalutMissatges(saved, info.getMissatges());
 			crearSalutDetalls(saved, info.getAltres());
-            return saved.getId();
+			return saved.getId();
 		}
-        return null;
+		return null;
 	}
 
-	private void crearSalutIntegracions(SalutEntity salut, List<IntegracioSalut> integracions) {
+	private void crearSalutIntegracions(
+			SalutEntity salut,
+			Collection<IntegracioSalut> integracions) {
 		if (integracions != null) {
 			integracions.forEach(i -> {
 				SalutIntegracioEntity salutIntegracio = new SalutIntegracioEntity();
@@ -156,8 +161,29 @@ public class SalutInfoHelper {
                 salutIntegracio.setLatenciaMitjana(i.getLatencia());
 				salutIntegracio.setTotalOk(i.getPeticions() != null ? i.getPeticions().getTotalOk() : 0L);
 				salutIntegracio.setTotalError(i.getPeticions() != null ? i.getPeticions().getTotalError() : 0L);
+				salutIntegracio.setTotalTempsMig(i.getPeticions() != null && i.getPeticions().getTotalTempsMig() != null ? i.getPeticions().getTotalTempsMig() : 0);
+				salutIntegracio.setPeticionsOkUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsOkUltimPeriode() != null ? i.getPeticions().getPeticionsOkUltimPeriode() : 0L);
+				salutIntegracio.setPeticionsErrorUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsErrorUltimPeriode() != null ? i.getPeticions().getPeticionsErrorUltimPeriode() : 0L);
+				salutIntegracio.setTempsMigUltimPeriode(i.getPeticions() != null && i.getPeticions().getTempsMigUltimPeriode() != null ? i.getPeticions().getTempsMigUltimPeriode() : 0);
+				salutIntegracio.setEndpoint(i.getPeticions() != null ? i.getPeticions().getEndpoint() : null);
 				salutIntegracio.setSalut(salut);
-				salutIntegracioRepository.save(salutIntegracio);
+				SalutIntegracioEntity salutIntegracioSaved = salutIntegracioRepository.save(salutIntegracio);
+				if (i.getPeticions() != null && i.getPeticions().getPeticionsPerEntorn() != null) {
+					SalutIntegracioEntity salutIntegracioFilla = new SalutIntegracioEntity();
+					salutIntegracioFilla.setCodi(i.getCodi());
+					salutIntegracioFilla.setEstat(toSalutEstat(i.getEstat()));
+					salutIntegracioFilla.setLatencia(i.getLatencia());
+					salutIntegracioFilla.setLatenciaMitjana(i.getLatencia());
+					salutIntegracioFilla.setTotalOk(i.getPeticions() != null ? i.getPeticions().getTotalOk() : 0L);
+					salutIntegracioFilla.setTotalError(i.getPeticions() != null ? i.getPeticions().getTotalError() : 0L);
+					salutIntegracioFilla.setTotalTempsMig(i.getPeticions() != null && i.getPeticions().getTotalTempsMig() != null ? i.getPeticions().getTotalTempsMig() : 0);
+					salutIntegracioFilla.setPeticionsOkUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsOkUltimPeriode() != null ? i.getPeticions().getPeticionsOkUltimPeriode() : 0L);
+					salutIntegracioFilla.setPeticionsErrorUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsErrorUltimPeriode() != null ? i.getPeticions().getPeticionsErrorUltimPeriode() : 0L);
+					salutIntegracioFilla.setTempsMigUltimPeriode(i.getPeticions() != null && i.getPeticions().getTempsMigUltimPeriode() != null ? i.getPeticions().getTempsMigUltimPeriode() : 0);
+					salutIntegracioFilla.setEndpoint(i.getPeticions() != null ? i.getPeticions().getEndpoint() : null);
+					salutIntegracioFilla.setSalut(salut);
+					salutIntegracioFilla.setPare(salutIntegracioSaved);
+				}
 			});
 		}
 	}
@@ -172,6 +198,10 @@ public class SalutInfoHelper {
                 salutSubsistema.setLatenciaMitjana(s.getLatencia());
 				salutSubsistema.setTotalOk(s.getTotalOk() != null ? s.getTotalOk() : 0L);
 				salutSubsistema.setTotalError(s.getTotalError() != null ? s.getTotalError() : 0L);
+				salutSubsistema.setTotalTempsMig(s.getTotalTempsMig() != null ? s.getTotalTempsMig() : 0);
+				salutSubsistema.setPeticionsOkUltimPeriode(s.getPeticionsOkUltimPeriode() != null ? s.getPeticionsOkUltimPeriode() : 0L);
+				salutSubsistema.setPeticionsErrorUltimPeriode(s.getPeticionsErrorUltimPeriode() != null ? s.getPeticionsErrorUltimPeriode() : 0L);
+				salutSubsistema.setTempsMigUltimPeriode(s.getTempsMigUltimPeriode() != null ? s.getTempsMigUltimPeriode() : 0);
 				salutSubsistema.setSalut(salut);
 				salutSubsistemaRepository.save(salutSubsistema);
 			});
@@ -205,13 +235,11 @@ public class SalutInfoHelper {
 	}
 
 	private SalutEstat toSalutEstat(EstatSalutEnum estatSalut) {
-        if (estatSalut == null) return SalutEstat.UNKNOWN;
-
-        try {
-            return SalutEstat.valueOf(estatSalut.name());
-        } catch (IllegalArgumentException e) {}
-
-        return SalutEstat.UNKNOWN;
+		if (estatSalut == null) return SalutEstat.UNKNOWN;
+		try {
+			return SalutEstat.valueOf(estatSalut.name());
+		} catch (IllegalArgumentException ignored) {}
+		return SalutEstat.UNKNOWN;
 	}
 
 	private SalutNivell toSalutNivell(String nivell) {
@@ -481,21 +509,25 @@ public class SalutInfoHelper {
     }
 
     private void crearIntegracio(SalutEntity agregat, SalutIntegracioEntity si) {
-        SalutIntegracioEntity integracio = new SalutIntegracioEntity();
-        integracio.setSalut(agregat);
-        integracio.setCodi(si.getCodi());
-        integracio.setTotalOk(si.getTotalOk() != null ? si.getTotalOk() : 0L);
-        integracio.setTotalError(si.getTotalError() != null ? si.getTotalError() : 0L);
-        if (si.getLatencia() != null) {
-            integracio.setLatencia(si.getLatencia());
-            integracio.setLatenciaMitjana(si.getLatencia());
-        }
+        SalutIntegracioEntity salutIntegracio = new SalutIntegracioEntity();
+	    salutIntegracio.setSalut(agregat);
+	    salutIntegracio.setCodi(si.getCodi());
+	    salutIntegracio.setTotalOk(si.getTotalOk() != null ? si.getTotalOk() : 0L);
+	    salutIntegracio.setTotalError(si.getTotalError() != null ? si.getTotalError() : 0L);
+	    salutIntegracio.setTotalTempsMig(si.getTotalTempsMig() != null ? si.getTotalTempsMig() : 0);
+	    salutIntegracio.setPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode() != null ? si.getPeticionsOkUltimPeriode() : 0L);
+	    salutIntegracio.setPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode() != null ? si.getPeticionsErrorUltimPeriode() : 0L);
+	    salutIntegracio.setTempsMigUltimPeriode(si.getTempsMigUltimPeriode() != null ? si.getTempsMigUltimPeriode() : 0);
+	    if (si.getLatencia() != null) {
+		    salutIntegracio.setLatencia(si.getLatencia());
+		    salutIntegracio.setLatenciaMitjana(si.getLatencia());
+	    }
         if (si.getEstat() == null) {
             si.setEstat(SalutEstat.UNKNOWN);
         }
-        integracio.setEstat(si.getEstat());
-        integracio.updateCountByEstat(si.getEstat());
-        salutIntegracioRepository.save(integracio);
+	    salutIntegracio.setEstat(si.getEstat());
+	    salutIntegracio.updateCountByEstat(si.getEstat());
+        salutIntegracioRepository.save(salutIntegracio);
     }
 
     private void afegirIntegracions(SalutEntity agregat, SalutEntity salut) {
@@ -505,8 +537,9 @@ public class SalutInfoHelper {
             agregat.getSalutIntegracions().stream()
                     .filter(a -> a.getCodi().equals(si.getCodi())).findFirst()
                     .ifPresentOrElse(integracio -> {
-                        integracio.addTotalOk(si.getTotalOk());
-                        integracio.addTotalError(si.getTotalError());
+	                    integracio.addPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode());
+	                    integracio.addPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode());
+	                    integracio.addTempsMigUltimPeriode(si.getTempsMigUltimPeriode());
                         if (si.getLatencia() != null) {
                             integracio.setLatencia(si.getLatencia());
                             integracio.addLatenciaMitjana(si.getLatencia());
@@ -536,6 +569,10 @@ public class SalutInfoHelper {
         subsistema.setCodi(ss.getCodi());
         subsistema.setTotalOk(ss.getTotalOk());
         subsistema.setTotalError(ss.getTotalError());
+	    subsistema.setTotalTempsMig(ss.getTotalTempsMig());
+	    subsistema.setPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
+	    subsistema.setPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
+	    subsistema.setTempsMigUltimPeriode(ss.getTempsMigUltimPeriode());
         if (ss.getLatencia() != null) {
             subsistema.setLatencia(ss.getLatencia());
             subsistema.setLatenciaMitjana(ss.getLatencia());
@@ -555,8 +592,9 @@ public class SalutInfoHelper {
             agregat.getSalutSubsistemes().stream()
                     .filter(a -> a.getCodi().equals(ss.getCodi())).findFirst()
                     .ifPresentOrElse(subsistema -> {
-                        subsistema.addTotalOk(ss.getTotalOk());
-                        subsistema.addTotalError(ss.getTotalError());
+	                    subsistema.addPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
+	                    subsistema.addPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
+	                    subsistema.addTempsMigUltimPeriode(ss.getTempsMigUltimPeriode());
                         if (ss.getLatencia() != null) {
                             subsistema.setLatencia(ss.getLatencia());
                             subsistema.addLatenciaMitjana(ss.getLatencia());

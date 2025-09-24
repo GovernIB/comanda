@@ -5,6 +5,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutDetall;
@@ -32,6 +33,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -58,9 +61,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
-    private final SalutClientHelper salutClientHelper;
-
-
+	private final SalutClientHelper salutClientHelper;
+	private final MetricsHelper metricsHelper;
 
 	@PostConstruct
 	public void init() {
@@ -172,24 +174,32 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class InformeSalutLast implements ReportGenerator<SalutEntity, String, Salut> {
 		@Override
 		public List<Salut> generateData(String code, SalutEntity entity, String params) throws ReportGenerationException {
+			Instant t0 = Instant.now();
 			List<EntornApp> entornApps = salutClientHelper.entornAppFindByActivaTrue(params);
 			List<Long> entornAppIds = entornApps.stream()
 					.filter(Objects::nonNull)
 					.map(EntornApp::getId)
 					.collect(Collectors.toList());
-
+			metricsHelper.getSalutLastEntornAppsTimer().record(
+					Duration.between(t0, Instant.now()));
+			Instant t1 = Instant.now();
 			List<SalutEntity> saluts = ((SalutRepository)entityRepository).informeSalutLast(
 					entornAppIds,
 					LocalDateTime.now());
-			if (saluts == null)
+			metricsHelper.getSalutLastDadesTimer().record(
+					Duration.between(t1, Instant.now()));
+			metricsHelper.getSalutLastGlobalTimer().record(
+					Duration.between(t0, Instant.now()));
+			if (saluts != null) {
+				return entitiesToResources(saluts);
+			} else {
 				return List.of();
-			return entitiesToResources(saluts);
+			}
 		}
-
-        @Override
-        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
-        }
-    }
+		@Override
+		public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+		}
+	}
 
 	/**
 	 * Històric d'estats d'una aplicació entre dues dates.

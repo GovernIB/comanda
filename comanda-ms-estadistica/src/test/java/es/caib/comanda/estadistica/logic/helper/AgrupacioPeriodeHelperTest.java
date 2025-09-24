@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.FetTipusEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
@@ -14,9 +15,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.lang.reflect.Method;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Proves unitàries per l'agrupació per període (setmanal/mensual) extreta.
@@ -41,23 +46,11 @@ public class AgrupacioPeriodeHelperTest {
         return f;
     }
 
-    private Object periodeTargetValue(String name) throws Exception {
-        Class<?>[] declared = CompactacioHelper.class.getDeclaredClasses();
-        for (Class<?> c : declared) {
-            if (c.getSimpleName().equals("PeriodeTarget")) {
-                for (Object constant : c.getEnumConstants()) {
-                    if (((Enum<?>)constant).name().equals(name)) return constant;
-                }
-            }
-        }
-        throw new IllegalStateException("No s'ha trobat PeriodeTarget.");
-    }
-
     @SuppressWarnings("unchecked")
-    private LinkedHashMap<Object, List<FetEntity>> agrupar(List<FetEntity> fets, Long entornId, Object target) throws Exception {
-        Method m = CompactacioHelper.class.getDeclaredMethod("agruparFetsPerPeriode", List.class, Long.class, target.getClass());
+    private CompactacioHelper.ResultatAgrupacio agrupar(List<FetEntity> fets, Long entornId, FetTipusEnum periodeTipus) throws Exception {
+        Method m = CompactacioHelper.class.getDeclaredMethod("agruparFetsPerPeriode", List.class, Long.class, periodeTipus.getClass());
         m.setAccessible(true);
-        return (LinkedHashMap<Object, List<FetEntity>>) m.invoke(helper, fets, entornId, target);
+        return (CompactacioHelper.ResultatAgrupacio) m.invoke(helper, fets, entornId, periodeTipus);
     }
 
     @Test
@@ -68,21 +61,21 @@ public class AgrupacioPeriodeHelperTest {
         LocalDate d2 = LocalDate.of(2024, 4, 25);
         var f1 = fet(entorn, d1, Map.of("D","x"));
         var f2 = fet(entorn, d2, Map.of("D","x"));
-        Object mensual = periodeTargetValue("MENSUAL");
+        FetTipusEnum mensual = FetTipusEnum.MENSUAL;
 
         // Act
-        var map = agrupar(List.of(f1, f2), entorn, mensual);
+        var resultAgrupar = agrupar(List.of(f1, f2), entorn, mensual);
 
         // Assert
-        assertEquals(1, map.size(), "Mateix mes i dimensions -> una sola clau");
-        var clau = map.keySet().iterator().next();
+        assertEquals(1, resultAgrupar.getFetsPerPeriode().size(), "Mateix mes i dimensions -> una sola clau");
+        var clau = resultAgrupar.getFetsPerPeriode().keySet().iterator().next();
         // La data de la clau ha de ser el primer dia de mes
         // Accedim a camp 'data' via reflexió (és package-private dins ClauDimensio)
         var dataField = clau.getClass().getDeclaredField("data");
         dataField.setAccessible(true);
         LocalDate dataClau = (LocalDate) dataField.get(clau);
         assertEquals(LocalDate.of(2024,4,1), dataClau);
-        assertEquals(2, map.values().iterator().next().size());
+        assertEquals(2, resultAgrupar.getFetsPerPeriode().values().iterator().next().size());
     }
 
     @Test
@@ -95,19 +88,19 @@ public class AgrupacioPeriodeHelperTest {
         LocalDate wednesday = monday.plusDays(2);
         var f1 = fet(entorn, monday, Map.of("D","y"));
         var f2 = fet(entorn, wednesday, Map.of("D","y"));
-        Object setmanal = periodeTargetValue("SETMANAL");
+        FetTipusEnum setmanal = FetTipusEnum.SETMANAL;
 
         // Act
-        var map = agrupar(List.of(f1, f2), entorn, setmanal);
+        var resultAgrupar = agrupar(List.of(f1, f2), entorn, setmanal);
 
         // Assert
-        assertEquals(1, map.size(), "Mateixa setmana i dimensions -> una sola clau");
-        var clau = map.keySet().iterator().next();
+        assertEquals(1, resultAgrupar.getFetsPerPeriode().size(), "Mateixa setmana i dimensions -> una sola clau");
+        var clau = resultAgrupar.getFetsPerPeriode().keySet().iterator().next();
         var dataField = clau.getClass().getDeclaredField("data");
         dataField.setAccessible(true);
         LocalDate dataClau = (LocalDate) dataField.get(clau);
         assertEquals(monday, dataClau, "La data de la clau ha de ser el dilluns corresponent");
-        assertEquals(2, map.values().iterator().next().size());
+        assertEquals(2, resultAgrupar.getFetsPerPeriode().values().iterator().next().size());
     }
 
     @Test
@@ -117,26 +110,26 @@ public class AgrupacioPeriodeHelperTest {
         LocalDate d = LocalDate.of(2024, 5, 10);
         var f1 = fet(entorn, d, Map.of("D","a"));
         var f2 = fet(entorn, d, Map.of("D","b"));
-        Object mensual = periodeTargetValue("MENSUAL");
+        FetTipusEnum mensual = FetTipusEnum.MENSUAL;
 
         // Act
-        var map = agrupar(List.of(f1, f2), entorn, mensual);
+        var resultAgrupar = agrupar(List.of(f1, f2), entorn, mensual);
 
         // Assert
-        assertEquals(2, map.size(), "Dimensions diferents -> claus diferents");
+        assertEquals(2, resultAgrupar.getFetsPerPeriode().size(), "Dimensions diferents -> claus diferents");
     }
 
     @Test
     void agruparFetsPerPeriode_nullOBuit_retornBuit() throws Exception {
         // Arrange
-        Object mensual = periodeTargetValue("MENSUAL");
+        FetTipusEnum mensual = FetTipusEnum.MENSUAL;
 
         // Act
-        var buit = agrupar(null, 1L, mensual);
-        var buit2 = agrupar(Collections.emptyList(), 1L, mensual);
+        var resultBuitAgrupar = agrupar(null, 1L, mensual);
+        var resultAgruparBuitAgrupar2 = agrupar(Collections.emptyList(), 1L, mensual);
 
         // Assert
-        assertTrue(buit.isEmpty());
-        assertTrue(buit2.isEmpty());
+        assertTrue(resultBuitAgrupar.getFetsPerPeriode().isEmpty());
+        assertTrue(resultAgruparBuitAgrupar2.getFetsPerPeriode().isEmpty());
     }
 }

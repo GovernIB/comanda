@@ -20,7 +20,7 @@ import {GridRowId, GridSlots, useGridApiRef,} from '@mui/x-data-grid-pro';
 import {PieChart, useDrawingArea} from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay';
 import {useParams} from 'react-router-dom';
-import SalutAppInfo from './SalutAppInfo';
+import SalutAppInfo, { ErrorBoundaryFallback } from './SalutAppInfo';
 import {
     ENUM_APP_ESTAT_PREFIX,
     getColorByIntegracio,
@@ -36,6 +36,7 @@ import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
+import { ErrorBoundary } from 'react-error-boundary';
 import {styled} from "@mui/material";
 
 const useAppData = () => {
@@ -126,8 +127,8 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
 
     const upValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UP).length;
     const warnValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.WARN).length;
-    const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DOWN).length;
     const errorValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.ERROR).length;
+    const downValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DOWN).length;
     const degradedValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.DEGRADED).length;
     const maintenanceValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.MAINTENANCE).length;
     const unknownValue = salutLastItems.filter((salutItem) => salutItem.appEstat === SalutEstatEnum.UNKNOWN).length;
@@ -164,16 +165,16 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
                             color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
                         },
                         {
-                            id: SalutEstatEnum.DOWN,
-                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE)} (${downValue})`,
-                            value: downValue,
-                            color: getColorByStatEnum(SalutEstatEnum.DOWN),
-                        },
-                        {
                             id: SalutEstatEnum.ERROR,
                             label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE)} (${errorValue})`,
                             value: errorValue,
                             color: getColorByStatEnum(SalutEstatEnum.ERROR),
+                        },
+                        {
+                            id: SalutEstatEnum.DOWN,
+                            label: `${t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE)} (${downValue})`,
+                            value: downValue,
+                            color: getColorByStatEnum(SalutEstatEnum.DOWN),
                         },
                         {
                             id: SalutEstatEnum.MAINTENANCE,
@@ -511,15 +512,19 @@ const Salut: React.FC = () => {
                                 justifyContent: 'center',
                             }}
                         >
-                            <UpdownPieChart salutLastItems={salutLastItems} />
+                            <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                                <UpdownPieChart salutLastItems={salutLastItems} />
+                            </ErrorBoundary>
                         </Box>
                     </Grid>
                     <Grid size={{xs: 12, sm: 7, md: 8, lg: 9}} sx={{ height: '200px' }}>
-                        <UpdownBarChart
-                            dataInici={reportParams.dataInici}
-                            agrupacio={reportParams.agrupacio}
-                            estats={estats}
-                        />
+                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                            <UpdownBarChart
+                                dataInici={reportParams.dataInici}
+                                agrupacio={reportParams.agrupacio}
+                                estats={estats}
+                            />
+                        </ErrorBoundary>
                     </Grid>
                     <Grid size={12}>
                         <AppDataTable

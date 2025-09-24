@@ -46,6 +46,7 @@ public class SalutEntity extends BaseEntity<Salut> {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "bd_estat")                              	private SalutEstat bdEstat;
 	@Column(name = "bd_latencia")                              	private Integer bdLatencia;
+	@Column(name = "peticio_error")                             private boolean peticioError;
 
 	// Camps d'agregació (comptadors i mitjanes)
     @Setter(NONE) @Column(name = "app_count_up")                private int appCountUp = 0;
@@ -77,7 +78,6 @@ public class SalutEntity extends BaseEntity<Salut> {
     @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)     private Set<SalutSubsistemaEntity> salutSubsistemes;
     @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)     private Set<SalutMissatgeEntity> salutMissatges;
     @OneToMany(mappedBy="salut", cascade = CascadeType.ALL)     private Set<SalutDetallEntity> salutDetalls;
-
 
     @Formula("(CASE WHEN (app_estat = 'UP') THEN 1 ELSE 0 END)")
     private Boolean appUp;

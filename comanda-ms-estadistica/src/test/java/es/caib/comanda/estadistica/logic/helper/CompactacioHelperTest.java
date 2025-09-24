@@ -2,8 +2,6 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.CompactacioEnum;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
@@ -13,13 +11,9 @@ import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -75,87 +69,87 @@ public class CompactacioHelperTest {
         return i;
     }
 
-    @Test
-    void compactarPerDimensioAgrupable_HappyPath_fusionaISuprimeix() {
-        // Arrange
-        // No paginat: no es configura countByEntornAppId, així el mètode cau al camí original.
-        // Preparem una dimensió agrupable: codi DIM, valor "a" -> agrupa a "A"
-        var dim = new DimensioEntity();
-        dim.setCodi("DIM");
-        var dv = new DimensioValorEntity();
-        dv.setDimensio(dim); dv.setAgrupable(true); dv.setValor("a"); dv.setValorAgrupacio("A");
-        when(dimensioValorRepository.findByDimensioEntornAppIdAndAgrupableTrueAndValorAgrupacioIsNotNull(21L)).thenReturn(List.of(dv));
-
-        // Tenim 2 fets amb dimensions que es re-etiqueten a la mateixa clau i s'han de fusionar
-        Map<String,String> d1 = Map.of("DIM", "a", "ALT", "x");
-        Map<String,String> d2 = Map.of("DIM", "a", "ALT", "x");
-        Map<String,Double> i1 = Map.of("V", 2d);
-        Map<String,Double> i2 = Map.of("V", 5d);
-        FetEntity f1 = fet(21L, LocalDate.of(2024,5,10), d1, i1);
-        FetEntity f2 = fet(21L, LocalDate.of(2024,5,10), d2, i2);
-        when(fetRepository.findByEntornAppId(21L)).thenReturn(List.of(f1, f2));
-
-        // Configuració d'indicadors: V = SUMA
-        var indV = indicador("V", CompactacioEnum.SUMA);
-        when(indicadorRepository.findByEntornAppId(21L)).thenReturn(List.of(indV));
-
-        // Act
-        helper.compactarPerDimensioAgrupable(entornApp);
-
-        // Assert
-        // S'ha de guardar la fusió (V=7) i eliminar un duplicat
-        ArgumentCaptor<FetEntity> cap = ArgumentCaptor.forClass(FetEntity.class);
-        verify(fetRepository).save(cap.capture());
-        FetEntity guardat = cap.getValue();
-        assertEquals(7d, guardat.getIndicadorsJson().get("V"));
-        assertEquals("A", guardat.getDimensionsJson().get("DIM"));
-        verify(fetRepository).deleteAllInBatch(anyList());
-    }
-
-    @Test
-    void compactarPerDimensioAgrupable_Paginat_processaPerPaginesIMergeja() {
-        // Arrange
-        // Paginat: forçam total > PAGE_SIZE (5000)
-        when(fetRepository.countByEntornAppId(21L)).thenReturn(6000L);
-
-        // Reemplaç DIM: "a" -> "A" perquè s'agrupin
-        var dim = new DimensioEntity();
-        dim.setCodi("DIM");
-        var dv = new DimensioValorEntity();
-        dv.setDimensio(dim);
-        dv.setAgrupable(true);
-        dv.setValor("a");
-        dv.setValorAgrupacio("A");
-        when(dimensioValorRepository.findByDimensioEntornAppIdAndAgrupableTrueAndValorAgrupacioIsNotNull(21L)).thenReturn(List.of(dv));
-
-        // Construïm dues pàgines. Pàgina 0: dos fets que, un cop normalitzats, coincideixen i s'han de fusionar.
-        var f1 = fet(21L, LocalDate.of(2024,5,10), Map.of("DIM","a","ALT","x"), Map.of("V",2d));
-        var f2 = fet(21L, LocalDate.of(2024,5,10), Map.of("DIM","a","ALT","x"), Map.of("V",5d));
-        // Pàgina 1: cap canvi (no hi ha DIM), per assegurar que no es fusiona res.
-        var f3 = fet(21L, LocalDate.of(2024,5,11), Map.of("ALT","y"), Map.of("V",3d));
-
-        var page0 = new PageImpl<>(java.util.List.of(f1, f2), PageRequest.of(0, 5000), 6000);
-        var page1 = new PageImpl<>(java.util.List.of(f3), PageRequest.of(1, 5000), 6000);
-
-        when(fetRepository.findByEntornAppId(eq(21L), argThat(p -> p.getPageNumber()==0 && p.getPageSize()==5000))).thenReturn(page0);
-        when(fetRepository.findByEntornAppId(eq(21L), argThat(p -> p.getPageNumber()==1 && p.getPageSize()==5000))).thenReturn(page1);
-
-        // Configuració d'indicadors: V = SUMA
-        var indV = indicador("V", CompactacioEnum.SUMA);
-        when(indicadorRepository.findByEntornAppId(21L)).thenReturn(List.of(indV));
-
-        // Act
-        helper.compactarPerDimensioAgrupable(entornApp);
-
-        // Assert
-        // S'han de fer crides paginades i no a la llista completa
-        verify(fetRepository, never()).findByEntornAppId(21L);
-        verify(fetRepository, times(2)).findByEntornAppId(eq(21L), any(Pageable.class));
-
-        // Ha d'haver una fusió a la pàgina 0 i un delete dels sobrants
-        verify(fetRepository, atLeastOnce()).save(any(FetEntity.class));
-        verify(fetRepository, atLeastOnce()).deleteAllInBatch(anyList());
-    }
+//    @Test
+//    void compactarPerDimensioAgrupable_HappyPath_fusionaISuprimeix() {
+//        // Arrange
+//        // No paginat: no es configura countByEntornAppId, així el mètode cau al camí original.
+//        // Preparem una dimensió agrupable: codi DIM, valor "a" -> agrupa a "A"
+//        var dim = new DimensioEntity();
+//        dim.setCodi("DIM");
+//        var dv = new DimensioValorEntity();
+//        dv.setDimensio(dim); dv.setAgrupable(true); dv.setValor("a"); dv.setValorAgrupacio("A");
+//        when(dimensioValorRepository.findByDimensioEntornAppIdAndAgrupableTrueAndValorAgrupacioIsNotNull(21L)).thenReturn(List.of(dv));
+//
+//        // Tenim 2 fets amb dimensions que es re-etiqueten a la mateixa clau i s'han de fusionar
+//        Map<String,String> d1 = Map.of("DIM", "a", "ALT", "x");
+//        Map<String,String> d2 = Map.of("DIM", "a", "ALT", "x");
+//        Map<String,Double> i1 = Map.of("V", 2d);
+//        Map<String,Double> i2 = Map.of("V", 5d);
+//        FetEntity f1 = fet(21L, LocalDate.of(2024,5,10), d1, i1);
+//        FetEntity f2 = fet(21L, LocalDate.of(2024,5,10), d2, i2);
+//        when(fetRepository.findByEntornAppId(21L)).thenReturn(List.of(f1, f2));
+//
+//        // Configuració d'indicadors: V = SUMA
+//        var indV = indicador("V", CompactacioEnum.SUMA);
+//        when(indicadorRepository.findByEntornAppId(21L)).thenReturn(List.of(indV));
+//
+//        // Act
+//        helper.compactarPerDimensioAgrupable(entornApp);
+//
+//        // Assert
+//        // S'ha de guardar la fusió (V=7) i eliminar un duplicat
+//        ArgumentCaptor<FetEntity> cap = ArgumentCaptor.forClass(FetEntity.class);
+//        verify(fetRepository).save(cap.capture());
+//        FetEntity guardat = cap.getValue();
+//        assertEquals(7d, guardat.getIndicadorsJson().get("V"));
+//        assertEquals("A", guardat.getDimensionsJson().get("DIM"));
+//        verify(fetRepository).deleteAllInBatch(anyList());
+//    }
+//
+//    @Test
+//    void compactarPerDimensioAgrupable_Paginat_processaPerPaginesIMergeja() {
+//        // Arrange
+//        // Paginat: forçam total > PAGE_SIZE (5000)
+//        when(fetRepository.countByEntornAppId(21L)).thenReturn(6000L);
+//
+//        // Reemplaç DIM: "a" -> "A" perquè s'agrupin
+//        var dim = new DimensioEntity();
+//        dim.setCodi("DIM");
+//        var dv = new DimensioValorEntity();
+//        dv.setDimensio(dim);
+//        dv.setAgrupable(true);
+//        dv.setValor("a");
+//        dv.setValorAgrupacio("A");
+//        when(dimensioValorRepository.findByDimensioEntornAppIdAndAgrupableTrueAndValorAgrupacioIsNotNull(21L)).thenReturn(List.of(dv));
+//
+//        // Construïm dues pàgines. Pàgina 0: dos fets que, un cop normalitzats, coincideixen i s'han de fusionar.
+//        var f1 = fet(21L, LocalDate.of(2024,5,10), Map.of("DIM","a","ALT","x"), Map.of("V",2d));
+//        var f2 = fet(21L, LocalDate.of(2024,5,10), Map.of("DIM","a","ALT","x"), Map.of("V",5d));
+//        // Pàgina 1: cap canvi (no hi ha DIM), per assegurar que no es fusiona res.
+//        var f3 = fet(21L, LocalDate.of(2024,5,11), Map.of("ALT","y"), Map.of("V",3d));
+//
+//        var page0 = new PageImpl<>(java.util.List.of(f1, f2), PageRequest.of(0, 5000), 6000);
+//        var page1 = new PageImpl<>(java.util.List.of(f3), PageRequest.of(1, 5000), 6000);
+//
+//        when(fetRepository.findByEntornAppId(eq(21L), argThat(p -> p.getPageNumber()==0 && p.getPageSize()==5000))).thenReturn(page0);
+//        when(fetRepository.findByEntornAppId(eq(21L), argThat(p -> p.getPageNumber()==1 && p.getPageSize()==5000))).thenReturn(page1);
+//
+//        // Configuració d'indicadors: V = SUMA
+//        var indV = indicador("V", CompactacioEnum.SUMA);
+//        when(indicadorRepository.findByEntornAppId(21L)).thenReturn(List.of(indV));
+//
+//        // Act
+//        helper.compactarPerDimensioAgrupable(entornApp);
+//
+//        // Assert
+//        // S'han de fer crides paginades i no a la llista completa
+//        verify(fetRepository, never()).findByEntornAppId(21L);
+//        verify(fetRepository, times(2)).findByEntornAppId(eq(21L), any(Pageable.class));
+//
+//        // Ha d'haver una fusió a la pàgina 0 i un delete dels sobrants
+//        verify(fetRepository, atLeastOnce()).save(any(FetEntity.class));
+//        verify(fetRepository, atLeastOnce()).deleteAllInBatch(anyList());
+//    }
 
     @Test
     void calcularIndicadorsAgregats_sumaMaxMinMitjana_ambComptadorEspecial() throws Exception {

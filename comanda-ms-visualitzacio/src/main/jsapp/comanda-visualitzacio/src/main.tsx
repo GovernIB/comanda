@@ -72,5 +72,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 </UserProvider>
             </ResourceApiProvider>
         </AuthProvider>
-    </React.StrictMode>,
+    </React.StrictMode>
 );
