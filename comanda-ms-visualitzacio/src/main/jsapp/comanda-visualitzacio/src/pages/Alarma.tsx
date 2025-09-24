@@ -10,6 +10,7 @@ import {
     MuiFilter,
     FormField,
     useFormApiRef,
+    useResourceApiService,
 } from 'reactlib';
 
 const dataGridColumns = [{
@@ -18,17 +19,29 @@ const dataGridColumns = [{
 }];
 
 export const EntornAppSelector : React.FC<any> = (props) => {
-    const { onEntornAppChange, validationErrors } = props;
-    return <MuiFilter
+    const { id, onEntornAppChange, validationErrors } = props;
+    const formApiRef = useFormApiRef();
+    const { isReady: apiIsReady, getOne: apiGetOne } = useResourceApiService('entornApp');
+    const [entornApp, setEntornApp] = React.useState<any>();
+    React.useEffect(() => {
+        if (apiIsReady && id != null) {
+            apiGetOne(id).then(value => {
+                const entornApp = { id: value.id, description: value.entornAppDescription };
+                setEntornApp(entornApp)
+                formApiRef.current.setFieldValue('entornApp', entornApp);
+            });
+        }
+    }, [apiIsReady, id]);
+    return (!id || entornApp != null) && <MuiFilter
         resourceName="entornApp"
         code="salut_entornApp_filter"
         commonFieldComponentProps={{ size: 'small' }}
         validationErrors={validationErrors}
-        springFilterBuilder={data => {
-            onEntornAppChange(data?.entornApp)
-            return '';
-        }}>
-            <FormField name={'entornApp'} />
+        initialData={{ entornApp: entornApp }}
+        springFilterBuilder={() => ''}
+        onDataChange={data => onEntornAppChange(data?.entornApp)}
+        formApiRef={formApiRef}>
+            <FormField name="entornApp"/>
     </MuiFilter>;
 }
 
@@ -36,9 +49,10 @@ export const AlarmaForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
     const formApiRef = useFormApiRef();
+    const [entornAppId, setEntornAppId] = React.useState<any>();
     const [validationErrors, setValidationErrors] = React.useState<any>();
-    const handleEntornAppChange = (entornApp: any) => {
-        formApiRef.current.setFieldValue('entornAppId', entornApp?.id);
+    const handleDataChange = (data: any) => {
+        setEntornAppId(data?.entornAppId);
     }
     const handleValidationErrorsChange = (_id: any, validationErrors?: any[]) => {
         const entornAppValidationError = validationErrors?.find(e => e.field === 'entornAppId');
@@ -48,6 +62,9 @@ export const AlarmaForm: React.FC = () => {
             message: entornAppValidationError.message,
         }] : null);
     }
+    const handleEntornAppChange = (entornApp: any) => {
+        formApiRef.current.setFieldValue('entornAppId', entornApp?.id);
+    }
     return <FormPage>
         <MuiForm
             id={id}
@@ -56,10 +73,12 @@ export const AlarmaForm: React.FC = () => {
             goBackLink="/alarma"
             createLink="form/{{id}}"
             apiRef={formApiRef}
+            onDataChange={handleDataChange}
             onValidationErrorsChange={handleValidationErrorsChange}>
             <Grid container spacing={1}>
                 <Grid size={12}>
                     <EntornAppSelector
+                        id={entornAppId}
                         onEntornAppChange={handleEntornAppChange}
                         validationErrors={validationErrors} />
                 </Grid>
