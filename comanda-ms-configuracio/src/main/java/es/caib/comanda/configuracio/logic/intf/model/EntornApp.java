@@ -38,6 +38,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ResourceConfig(
+		descriptionField = "entornAppDescription",
 		quickFilterFields = { "entorn.codi", "entorn.nom" },
 		accessConstraints = {
 				@ResourceAccessConstraint(
@@ -148,6 +149,7 @@ public class EntornApp extends BaseResource<Long> {
 	public static class SalutEntornAppFilter implements Serializable {
 		protected ResourceReference<App, Long> app;
 		protected ResourceReference<Entorn, Long> entorn;
+		protected ResourceReference<EntornApp, Long> entornApp;
 	}
 
 	@Getter

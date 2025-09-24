@@ -49,7 +49,6 @@ public class AlarmaConfig extends BaseResource<Long> {
 	private BigDecimal valor;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	private BigDecimal periodeValor;
-	@NotNull
-	private Boolean admin;
+	private boolean admin;
 
 }
