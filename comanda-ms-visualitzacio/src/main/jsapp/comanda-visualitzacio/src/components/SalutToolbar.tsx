@@ -19,6 +19,8 @@ import Grid from "@mui/material/Grid";
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { GroupWork } from '@mui/icons-material';
+// TODO Añadir export de tipo en lib
+import { FilterApiRef } from '../../lib/components/form/FilterContext.tsx';
 
 export type SalutToolbarProps = {
     title: string;
@@ -143,11 +145,11 @@ const isValidRefreshDuration = (duration: string): duration is RefreshDurationTy
     return ['PT1M', 'PT5M', 'PT10M', 'PT30M', 'PT1H'].includes(duration);
 };
 
-const RefreshTimeoutSelect: React.FC<any> = (props: {
+const RefreshTimeoutSelect: React.FC<{
     value: RefreshDurationType;
     disabled?: boolean;
     onChange: (duration: RefreshDurationType) => void;
-}) => {
+}> = (props) => {
     const { value, onChange, disabled } = props;
     const { t } = useTranslation();
 
@@ -242,7 +244,7 @@ const AppDataRangeSelect = (props: {
     );
 };
 
-function formatTimeDifference(otherDate: any) {
+function formatTimeDifference(otherDate: Date) {
     const now = new Date();
     const diffInMs = Math.abs(now.getTime() - otherDate.getTime());
     const diffInSeconds = Math.floor(diffInMs / 1000);
@@ -271,7 +273,7 @@ const useTimeUntilNextRefreshFormatted = (nextRefresh?: Date | null) => {
     return timeUntilNextRefreshFormatted;
 };
 
-const SalutEntornAppFilterForm: React.FC<any> = () => {
+const SalutEntornAppFilterForm: React.FC = () => {
     const { data } = useFormContext();
 
     return <Grid container spacing={2}>
@@ -292,7 +294,7 @@ const SalutEntornAppFilterForm: React.FC<any> = () => {
     </Grid>
 }
 
-export const salutEntornAppFilterBuilder = (data: any) => {
+export const salutEntornAppFilterBuilder = (data: SalutFilterDataType) => {
     if (data == null) return '';
     return springFilterBuilder.and(
         springFilterBuilder.eq('app.id', data.app?.id),
@@ -300,23 +302,29 @@ export const salutEntornAppFilterBuilder = (data: any) => {
     )
 }
 
-const SalutEntornAppFilter: React.FC<any> = (props:any) => {
+const SalutEntornAppFilter: React.FC<{
+    initialData: SalutFilterDataType;
+    setData: (newData: SalutFilterDataType) => void;
+    apiRef: FilterApiRef;
+}> = (props) => {
     const { initialData, setData, apiRef } = props;
 
-    return <MuiFilter
-        resourceName={"entornApp"}
-        code={"salut_entornApp_filter"}
-        springFilterBuilder={(data:any)=> {
-            setData(data)
-            return salutEntornAppFilterBuilder(data);
-        }}
-        initialData={initialData}
-        apiRef={apiRef}
-        buttonControlled
-    >
-        <SalutEntornAppFilterForm/>
-    </MuiFilter>
-}
+    return (
+        <MuiFilter
+            resourceName="entornApp"
+            code="salut_entornApp_filter"
+            springFilterBuilder={(data: SalutFilterDataType) => {
+                setData(data);
+                return salutEntornAppFilterBuilder(data);
+            }}
+            initialData={initialData}
+            apiRef={apiRef}
+            buttonControlled
+        >
+            <SalutEntornAppFilterForm />
+        </MuiFilter>
+    );
+};
 
 const FILTER_DATA_LOCALSTORAGE_KEY = 'filterDataSalut';
 
@@ -350,6 +358,7 @@ const useSalutEntornAppFilter = ({
 
     const cercar = () => {
         filterRef?.current?.filter?.();
+        setOpen(false);
     };
     const netejar = () => {
         filterRef?.current?.clear?.();
@@ -388,7 +397,7 @@ const useSalutEntornAppFilter = ({
                     },
                 },
             ]}
-            buttonCallback={(value: any): void => {
+            buttonCallback={(value: unknown): void => {
                 if (value === 'clear') netejar();
                 if (value === 'search') cercar();
             }}
@@ -530,25 +539,14 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         {
             position: 2,
             element: (
-                <>
-                    {!hideFilter && (
-                        <IconButton onClick={() => handleOpen()}>
-                            {springFilter ? (
-                                <FilterAltIcon fontSize="small" />
-                            ) : (
-                                <FilterAltOutlinedIcon fontSize="small" />
-                            )}
-                        </IconButton>
-                    )}
-                    <IconButton
-                        onClick={onRefreshClick}
-                        title={t('page.salut.refrescar')}
-                        disabled={!ready}
-                        loading={appDataLoading}
-                    >
-                        <Icon>refresh</Icon>
-                    </IconButton>
-                </>
+                <IconButton
+                    onClick={onRefreshClick}
+                    title={t('page.salut.refrescar')}
+                    disabled={!ready}
+                    loading={appDataLoading}
+                >
+                    <Icon>refresh</Icon>
+                </IconButton>
             ),
         },
     ];
@@ -579,6 +577,34 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             ),
         });
     }
+    toolbarElementsWithPositions.unshift({
+        position: 1,
+        element: (
+            <>
+                {!hideFilter &&
+                    <IconButton onClick={() => handleOpen()}>
+                        {springFilter ? (
+                            <FilterAltIcon fontSize="small" />
+                        ) : (
+                            <FilterAltOutlinedIcon fontSize="small" />
+                        )}
+                    </IconButton>
+                }
+                <Typography
+                    variant="caption"
+                    sx={{
+                        position: 'relative',
+                        // top: '4px',
+                        color: theme.palette.text.disabled,
+                        mx: 1,
+                    }}
+                >
+                    {computedSubtitle}
+                </Typography>
+                {state}
+            </>
+        ),
+    });
     if (groupingActive) {
         toolbarElementsWithPositions.unshift({
             position: 1,
@@ -597,26 +623,11 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             ),
         });
     }
+
     return (
         <>
             <Toolbar
-                title={
-                    <>
-                        {title}
-                        {state}
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                position: 'relative',
-                                // top: '4px',
-                                color: theme.palette.text.disabled,
-                                ml: 1,
-                            }}
-                        >
-                            {computedSubtitle}
-                        </Typography>
-                    </>
-                }
+                title={title}
                 elementsWithPositions={toolbarElementsWithPositions}
                 upperToolbar
             />
