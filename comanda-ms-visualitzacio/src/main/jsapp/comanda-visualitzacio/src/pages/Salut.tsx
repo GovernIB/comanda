@@ -182,8 +182,11 @@ const useSalutData = ({
                         filter: springFilterBuilder.and(
                             springFilterBuilder.eq('activa', true),
                             springFilterBuilder.eq('app.activa', true),
+                            filterData?.app != null
+                                ? springFilterBuilder.eq('app.id', filterData.app.id)
+                                : null,
                             filterData?.entorn != null
-                                ? springFilterBuilder.eq('id', filterData.entorn.id)
+                                ? springFilterBuilder.eq('entorn.id', filterData.entorn.id)
                                 : null
                         ),
                     }),
@@ -201,6 +204,11 @@ const useSalutData = ({
                     groupBy === GroupingEnum.ENVIRONMENT
                         ? entornFind({
                               unpaged: true,
+                              filter: springFilterBuilder.and(
+                                  filterData?.entorn != null
+                                      ? springFilterBuilder.eq('id', filterData.entorn.id)
+                                      : null
+                              )
                           })
                         : undefined,
                 ]);
