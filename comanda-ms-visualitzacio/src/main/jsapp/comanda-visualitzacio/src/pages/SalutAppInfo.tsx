@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import Grid from '@mui/material/Grid';
@@ -20,11 +19,10 @@ import Icon from '@mui/material/Icon';
 import { useTheme } from '@mui/material/styles';
 import { MarkPlot } from '@mui/x-charts/LineChart';
 import {
-    BasePage,
     useResourceApiService,
     dateFormatLocale,
 } from 'reactlib';
-import SalutToolbar from '../components/SalutToolbar';
+import { toReportInterval } from '../components/SalutToolbar';
 import UpdownBarChart, { getEstatsMaxData } from '../components/UpdownBarChart';
 import { generateDataGroups, isDataInGroup, toXAxisDataGroups } from '../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -41,6 +39,7 @@ import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 import { Alert } from '@mui/material';
+import { useCallback, useEffect } from 'react';
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -60,6 +59,7 @@ interface AppDataState {
     latencies: any[] | null;
     salutCurrentApp: SalutModel | null;
     reportParams: any;
+    error?: any;
 }
 
 const appDataStateInitialValue: AppDataState = {
@@ -79,7 +79,7 @@ const useAppEstatLabel = () => {
   };
 };
 
-const useAppData = (id: any) => {
+export const useAppInfoData = (id: any, dataRangeMinutes: number ) => {
     const {
         isReady: entornAppApiIsReady,
         getOne: entornAppGetOne,
@@ -91,18 +91,21 @@ const useAppData = (id: any) => {
     } = useResourceApiService('salut');
     const [appDataState, setAppDataState] = React.useState<AppDataState>(appDataStateInitialValue);
     const ready = entornAppApiIsReady && salutApiIsReady;
-    const refresh = (dataInici: string, dataFi: string, agrupacio: string) => {
-        const reportParams = {
-            dataInici,
-            dataFi,
-            agrupacio,
-        };
+    // TODO Considerar implementar bloqueig o cancelar peticions antigues si se fa una nova
+    const refresh = useCallback(async () => {
+        if (id == null) {
+            setAppDataState(appDataStateInitialValue);
+            return;
+        }
+
+        const reportParams = toReportInterval(dataRangeMinutes);
         if (ready) {
             setAppDataState((prevState) => ({
                 ...prevState,
                 loading: true,
+                error: undefined,
             }));
-            (async function () {
+            try {
                 const entornApp = await entornAppGetOne(id);
                 const entornAppId = entornApp.id;
                 const reportData = {
@@ -141,9 +144,24 @@ const useAppData = (id: any) => {
                     salutCurrentApp,
                     reportParams,
                 }));
-            })();
+            } catch (e) {
+                // TODO Mostrar error en la UI
+                setAppDataState({
+                    ...appDataStateInitialValue,
+                    loading: false,
+                    error: e,
+                })
+            }
         }
-    }
+    }, [dataRangeMinutes, ready, entornAppGetOne, id, salutApiReport, salutApiFind]);
+
+    useEffect(() => {
+        if (!ready) {
+            return;
+        }
+        refresh();
+    }, [ready, refresh]);
+
     return {
         ready,
         refresh,
@@ -533,81 +551,21 @@ const DetallInfo: React.FC<any> = (props) => {
     </Card>;
 }
 
-const SalutAppInfo: React.FC = () => {
-    const { id } = useParams();
+const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean }> = ({
+    appInfoData,
+    ready,
+}) => {
     const { t } = useTranslation();
-    const {
-        ready,
-        loading,
-        refresh: entornAppDataRefresh,
-        entornApp,
-        estats,
-        latencies,
-        salutCurrentApp,
-        reportParams,
-    } = useAppData(id);
+    const { salutCurrentApp, entornApp, loading, reportParams, estats, latencies } = appInfoData;
     const dataLoaded = ready && loading != null && !loading;
-    const toolbarState = salutCurrentApp?.appEstat
-        ? <ItemStateChip
-            sx={{ ml: 1 }}
-            salutField={SalutModel.APP_ESTAT}
-            salutStatEnum={salutCurrentApp.appEstat} />
-        : undefined;
-    const toolbar = <SalutToolbar
-        title={entornApp != null ? `${entornApp.app.description} - ${entornApp.entorn.description}` : ""}
-        subtitle={entornApp?.versio ? 'v' + entornApp?.versio : undefined}
-        hideFilter
-        state={toolbarState}
-        ready={ready}
-        onRefresh={entornAppDataRefresh}
-        goBackActive
-        appDataLoading={!dataLoaded}
-    />;
 
-    if (dataLoaded && salutCurrentApp == null) return (
-        <BasePage expandHeight toolbar={toolbar}>
-                <Alert severity="warning">{t('page.salut.info.noInfo')}</Alert>
-        </BasePage>
-    );
+    if (dataLoaded && salutCurrentApp == null)
+        return <Alert severity="warning">{t('page.salut.info.noInfo')}</Alert>;
 
-    if (dataLoaded && salutCurrentApp?.peticioError) return (
-        <BasePage expandHeight toolbar={toolbar}>
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid size={{ sm: 12, lg: 3 }}>
-                    <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
-                </Grid>
-                <Grid size={{ sm: 12, lg: 9 }}>
-                    <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                        {reportParams != null && estats != null && (
-                            <EstatsBarCard
-                                dataInici={reportParams.dataInici}
-                                agrupacio={reportParams.agrupacio}
-                                estats={estats}
-                            />
-                        )}
-                    </ErrorBoundary>
-                </Grid>
-            </Grid>
-            <Alert severity="error">{t('page.salut.info.downAlert')}</Alert>
-        </BasePage>
-    );
-
-    return (
-        <BasePage toolbar={toolbar}>
-            {salutCurrentApp == null || entornApp == null ? (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: 'calc(100vh - 80px)',
-                    }}
-                >
-                    <CircularProgress size={100} />
-                </Box>
-            ) : (
-                <Grid container spacing={2}>
+    if (dataLoaded && salutCurrentApp?.peticioError)
+        return (
+            <>
+                <Grid container spacing={2} sx={{ mb: 2 }}>
                     <Grid size={{ sm: 12, lg: 3 }}>
                         <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
                     </Grid>
@@ -622,44 +580,81 @@ const SalutAppInfo: React.FC = () => {
                             )}
                         </ErrorBoundary>
                     </Grid>
-                    {salutCurrentApp?.peticioError ? 
-                        <Grid>
-                            <Alert severity="error">{t('page.salut.info.downAlert')}</Alert>
-                        </Grid> : <>
-                            <Grid size={{ sm: 12, lg: 3 }}>
-                                <DetallInfo salutCurrentApp={salutCurrentApp} />
-                            </Grid>
-                            <Grid size={{ sm: 12, lg: 9 }}>
-                                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                                    {reportParams != null && latencies != null && estats != null && (
-                                        <>
-                                            <LatenciaLineChart
-                                                dataInici={reportParams.dataInici}
-                                                agrupacio={reportParams.agrupacio}
-                                                latencies={latencies}
-                                                estats={estats}
-                                            />
-                                        </>
-                                    )}
-                                </ErrorBoundary>
-                            </Grid>
-                            <Grid size={{ sm: 12, lg: 6 }}>
-                                <Integracions salutCurrentApp={salutCurrentApp} />
-                            </Grid>
-                            <Grid size={{ sm: 12, lg: 6 }}>
-                                <Subsistemes salutCurrentApp={salutCurrentApp} />
-                            </Grid>
-                            <Grid size={{ sm: 12, lg: 6 }}>
-                                <Contexts salutCurrentApp={salutCurrentApp} />
-                            </Grid>
-                            <Grid size={{ sm: 12, lg: 6 }}>
-                                <Missatges salutCurrentApp={salutCurrentApp} />
-                            </Grid>
-                        </>}
                 </Grid>
+                <Alert severity="error">{t('page.salut.info.downAlert')}</Alert>
+            </>
+        );
+
+    if (salutCurrentApp == null || entornApp == null)
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 'calc(100vh - 80px)',
+                }}
+            >
+                <CircularProgress size={100} />
+            </Box>
+        );
+
+    return (
+        <Grid container spacing={2}>
+            <Grid size={{ sm: 12, lg: 3 }}>
+                <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
+            </Grid>
+            <Grid size={{ sm: 12, lg: 9 }}>
+                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                    {reportParams != null && estats != null && (
+                        <EstatsBarCard
+                            dataInici={reportParams.dataInici}
+                            agrupacio={reportParams.agrupacio}
+                            estats={estats}
+                        />
+                    )}
+                </ErrorBoundary>
+            </Grid>
+            {salutCurrentApp?.peticioError ? (
+                <Grid>
+                    <Alert severity="error">{t('page.salut.info.downAlert')}</Alert>
+                </Grid>
+            ) : (
+                <>
+                    <Grid size={{ sm: 12, lg: 3 }}>
+                        <DetallInfo salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 9 }}>
+                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                            {reportParams != null && latencies != null && estats != null && (
+                                <>
+                                    <LatenciaLineChart
+                                        dataInici={reportParams.dataInici}
+                                        agrupacio={reportParams.agrupacio}
+                                        latencies={latencies}
+                                        estats={estats}
+                                    />
+                                </>
+                            )}
+                        </ErrorBoundary>
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Integracions salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Subsistemes salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Contexts salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 6 }}>
+                        <Missatges salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                </>
             )}
-        </BasePage>
+        </Grid>
     );
-}
+};
 
 export default SalutAppInfo;
