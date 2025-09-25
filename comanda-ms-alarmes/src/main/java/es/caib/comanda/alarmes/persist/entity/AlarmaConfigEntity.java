@@ -34,9 +34,9 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	@Column(name = "tipus", length = 15, nullable = false)
 	private AlarmaConfigTipus tipus;
 	@Enumerated(EnumType.STRING)
-	@Column(name = "condicio", length = 15, nullable = false)
+	@Column(name = "condicio", length = 15)
 	private AlarmaConfigCondicio condicio;
-	@Column(name = "valor", nullable = false)
+	@Column(name = "valor")
 	private BigDecimal valor;
 	@Column(name = "admin", nullable = false)
 	private boolean admin;

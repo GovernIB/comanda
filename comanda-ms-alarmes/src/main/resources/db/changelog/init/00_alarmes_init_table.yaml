@@ -34,13 +34,9 @@ databaseChangeLog:
             name: tipus
             type: VARCHAR(15 ${varcharUnit})
         - column:
-            constraints:
-              nullable: false
             name: condicio
             type: VARCHAR(15 ${varcharUnit})
         - column:
-            constraints:
-                nullable: false
             name: valor
             type: DECIMAL(19,4)
         - column:

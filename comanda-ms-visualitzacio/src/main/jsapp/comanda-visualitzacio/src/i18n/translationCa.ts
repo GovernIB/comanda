@@ -269,6 +269,15 @@ const translationCa = {
             title: "Configuració d'alarmes",
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
+            condicio: {
+                title: "Condició",
+                subtitle: "Condició que s'ha de complir per a generar l'alarma",
+            },
+            periode: {
+                title: "Període",
+                subtitle: "Període de temps durant el qual s'ha de complir la condició per a generar l'alarma",
+                switch: "Amb període d'activació"
+            },
         },
         apps: {
             title: "Aplicacions",

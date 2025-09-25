@@ -43,9 +43,7 @@ public class AlarmaConfig extends BaseResource<Long> {
 	private String missatge;
 	@NotNull
 	private AlarmaConfigTipus tipus;
-	@NotNull
 	private AlarmaConfigCondicio condicio;
-	@NotNull
 	private BigDecimal valor;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	private BigDecimal periodeValor;

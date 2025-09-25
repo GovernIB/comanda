@@ -265,6 +265,20 @@ const translationEs = {
                 groupHeader: "Nombre",
             }
         },
+        alarmaConfig: {
+            title: "Configuración de alarmas",
+            create: "Crear configuración de alarma",
+            update: "Modificar configuración de alarma",
+            condicio: {
+                title: "Condición",
+                subtitle: "Condición que se debe cumplir para generar la alarma",
+            },
+            periode: {
+                title: "Periodo",
+                subtitle: "Periodo de tiempo durante el cual se debe cumplir la condición para generar la alarma",
+                switch: "Con periodo de activación"
+            },
+        },
         apps: {
             title: "Aplicaciones",
             create: "Crear aplicación",

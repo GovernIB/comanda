@@ -263,6 +263,20 @@ const translationEn = {
                 groupHeader: "Name",
             }
         },
+        alarmaConfig: {
+            title: "Alarm configuration",
+            create: "Create alarm configuration",
+            update: "Edit alarm configuration",
+            condicio: {
+                title: "Condition",
+                subtitle: "Condition that must be met to trigger the alarm",
+            },
+            periode: {
+                title: "Period",
+                subtitle: "Time period during which the condition must be met to trigger the alarm",
+                switch: "With activation period"
+            },
+        },
         apps: {
             title: "Applications",
             create: "Create application",
