@@ -44,13 +44,19 @@ const agrupacioFromMinutes = (intervalMinutes: number) => {
     }
 }
 
+// TODO Podria fer-se el calcul de intervals al back i rebre aixo com a resposta
 const toReportInterval = (intervalMinutes?: number) => {
     if (intervalMinutes != null && intervalMinutes > 0) {
-        const dataFi = dayjs().set('second', 0).set('millisecond', 0);
+        const agrupacio = agrupacioFromMinutes(intervalMinutes);
+        let dataFi = dayjs().set('second', 0).set('millisecond', 0);
+
+        // En cas de agruparse per "4 minuts", ajusta el minut perquè sigui divisible per 4
+        if (agrupacio === 'MINUTS_HORA' && dataFi.get('minutes') % 4 !== 0)
+            dataFi = dataFi.set('minutes', dataFi.get('minutes') - (dataFi.get('minutes') % 4));
+
         const dataInici = dataFi.subtract(intervalMinutes, 'm').set('second', 0).set('millisecond', 0);
         const dataIniciFormat = dataInici.format('YYYY-MM-DDTHH:mm:ss');
         const dataFiFormat = dataFi.format('YYYY-MM-DDTHH:mm:ss');
-        const agrupacio = agrupacioFromMinutes(intervalMinutes);
         return {
             dataInici: dataIniciFormat,
             dataFi: dataFiFormat,

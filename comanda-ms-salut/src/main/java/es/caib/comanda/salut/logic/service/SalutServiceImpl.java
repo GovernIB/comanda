@@ -47,6 +47,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
+
 /**
  * Implementació del servei de consulta d'informació de salut.
  *
@@ -285,7 +287,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             TipusRegistreSalut tipus = mapTipusAgrupacio(params);
             LocalDateTime dataInici = calculaDataIniciAmbMarge(params.getDataInici(), tipus);
 
-            List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataAfterAndTipusRegistreOrderById(
+            List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                     params.getEntornAppId(),
                     dataInici,
                     tipus);
@@ -359,19 +361,27 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
         if (dataFi == null || !dataFi.isAfter(dataInici)) {
             return resultat;
         }
+        int dataIniciMinutesMod4 = params.getDataInici().getMinute() % 4;
+        int dataFiMinutesMod4 = params.getDataFi().getMinute() % 4;
+        if (dataIniciMinutesMod4 != 0 || dataFiMinutesMod4 != 0) {
+            throw new ReportGenerationException(Salut.class, "Rang de dades invàlid. DataInici i DataFi han de tenir un múltiple de 4 com a minuts");
+        }
 
-        LocalDateTime iniciFranja = params.getDataInici().withSecond(0).minusMinutes(3);
-        LocalDateTime fiFranja = params.getDataInici();
+        LocalDateTime iniciFranja = params.getDataInici();
+        LocalDateTime fiFranja = params.getDataInici().plusMinutes(MINUTS_PER_AGRUPACIO);
         int pos = 0;
         final int total = salutEntityList.size();
 
         while (!dataFi.isBefore(iniciFranja)) {
             SalutEntity seleccionat = null;
 
+//          Skip dels salutEntity que son de abans de l'inici de la nostra franja
             while (pos < total && salutEntityList.get(pos).getData().isBefore(iniciFranja)) {
                 pos++;
             }
+//          Començam a partir del skip anterior
             int k = pos;
+//          Sa segona condicio pareix redundant? En teoria ja hem descartar els salutEntity de abans del iniciFranja
             while (k < total && !salutEntityList.get(k).getData().isBefore(iniciFranja)
                     && salutEntityList.get(k).getData().isBefore(fiFranja)) {
                 seleccionat = salutEntityList.get(k);

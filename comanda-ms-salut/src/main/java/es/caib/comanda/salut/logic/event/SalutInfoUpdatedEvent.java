@@ -11,5 +11,4 @@ import lombok.RequiredArgsConstructor;
 public class SalutInfoUpdatedEvent {
     private final Long entornAppId;
     private final Long salutId;
-    private final int numeroDiesAgrupacio;
 }
