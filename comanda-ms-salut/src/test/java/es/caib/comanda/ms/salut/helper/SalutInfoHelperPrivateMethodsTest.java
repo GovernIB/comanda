@@ -23,12 +23,6 @@ class SalutInfoHelperPrivateMethodsTest {
     @InjectMocks
     private SalutInfoHelper helper;
 
-    @BeforeEach
-    void resetStaticState() {
-        // Neteja el mapa estàtic abans de cada test
-        SalutInfoHelper.compactacioMap.clear();
-    }
-
     private Object invokePrivate(String name, Class<?>[] types, Object... args) throws Exception {
         Method m = SalutInfoHelper.class.getDeclaredMethod(name, types);
         m.setAccessible(true);
@@ -81,25 +75,5 @@ class SalutInfoHelperPrivateMethodsTest {
         assertTrue((Boolean) invokePrivate("isFirstMinuteOfDay", new Class[]{LocalDateTime.class}, h0m0));
         assertFalse((Boolean) invokePrivate("isFirstMinuteOfDay", new Class[]{LocalDateTime.class}, h1m0));
         assertFalse((Boolean) invokePrivate("isFirstMinuteOfDay", new Class[]{LocalDateTime.class}, new Object[]{null}));
-    }
-
-    @Test
-    void actualitzaInfoCompactacio_progresses_per_entorn_and_wraps_mod_4() throws Exception {
-        Method m = SalutInfoHelper.class.getDeclaredMethod("actualitzaInfoCompactacio", Long.class);
-        m.setAccessible(true);
-        // Primera crida crea entrada amb valor 1
-        int v1 = (Integer) m.invoke(helper, 10L);
-        int v2 = (Integer) m.invoke(helper, 10L);
-        int v3 = (Integer) m.invoke(helper, 10L);
-        int v4 = (Integer) m.invoke(helper, 10L);
-        int v5 = (Integer) m.invoke(helper, 10L);
-        assertEquals(1, v1);
-        assertEquals(2, v2);
-        assertEquals(3, v3);
-        assertEquals(0, v4); // 4 % 4 == 0 segons la implementació
-        assertEquals(1, v5);
-        // Un altre entorn és independent
-        int other = (Integer) m.invoke(helper, 20L);
-        assertEquals(1, other);
     }
 }

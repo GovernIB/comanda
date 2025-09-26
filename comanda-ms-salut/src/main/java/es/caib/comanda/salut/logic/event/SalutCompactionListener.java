@@ -22,7 +22,7 @@ public class SalutCompactionListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSalutInfoUpdated(SalutInfoUpdatedEvent event) {
         try {
-            salutInfoHelper.buidatIcompactat(event.getEntornAppId(), event.getSalutId(), event.getNumeroDiesAgrupacio());
+            salutInfoHelper.buidatIcompactat(event.getEntornAppId(), event.getSalutId());
         } catch (Exception ex) {
             log.warn("Error durant el procés de buidat i compactació després de l'esdeveniment: {}", ex.getMessage());
         }

@@ -52,15 +52,14 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
         Integer appLat;
         SalutEstat bd;
         Integer bdLat;
-        int numeroDiesAgrupacio;
         Long ok;
         Long err;
         String msgText; SalutNivell msgLevel; // INFO/WARN/ERROR
         String detailCode; String detailName; String detailValue;
-        Step(LocalDateTime t, SalutEstat app, Integer appLat, SalutEstat bd, Integer bdLat, int nd,
+        Step(LocalDateTime t, SalutEstat app, Integer appLat, SalutEstat bd, Integer bdLat,
              Long ok, Long err, String msgText, SalutNivell msgLevel,
              String detailCode, String detailName, String detailValue) {
-            this.time = t; this.app = app; this.appLat = appLat; this.bd = bd; this.bdLat = bdLat; this.numeroDiesAgrupacio = nd;
+            this.time = t; this.app = app; this.appLat = appLat; this.bd = bd; this.bdLat = bdLat;
             this.ok = ok; this.err = err; this.msgText = msgText; this.msgLevel = msgLevel;
             this.detailCode = detailCode; this.detailName = detailName; this.detailValue = detailValue;
         }
@@ -70,19 +69,19 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
         LocalDateTime base = LocalDateTime.now().withSecond(0).withNano(0).withHour(0).withMinute(0);
         List<Step> scenario = Arrays.asList(
                 // 1) Primer registre (crea MINUTS via numeroDiesAgrupacio=1), i també HORA i DIA per ser 00:00
-                new Step(base, SalutEstat.UP, 100, SalutEstat.UP, 80, 1, 1L, 0L, "m1", SalutNivell.INFO, "d1", "Detall 1", "v1"),
+                new Step(base, SalutEstat.UP, 100, SalutEstat.UP, 80, 1L, 0L, "m1", SalutNivell.INFO, "d1", "Detall 1", "v1"),
                 // 2) Segon minut (agrega a MINUTS existent)
-                new Step(base.plusMinutes(1), SalutEstat.WARN, 200, SalutEstat.UP, 70, 2, 2L, 1L, "m1", SalutNivell.WARN, "d1", "Detall 1", "v1b"),
+                new Step(base.plusMinutes(1), SalutEstat.WARN, 200, SalutEstat.UP, 70, 2L, 1L, "m1", SalutNivell.WARN, "d1", "Detall 1", "v1b"),
                 // 3) Tercer minut
-                new Step(base.plusMinutes(2), SalutEstat.UP, 300, SalutEstat.UP, 60, 2, 1L, 0L, "m2", SalutNivell.INFO, "d2", "Detall 2", "x"),
+                new Step(base.plusMinutes(2), SalutEstat.UP, 300, SalutEstat.UP, 60, 1L, 0L, "m2", SalutNivell.INFO, "d2", "Detall 2", "x"),
                 // 4) Quart minut (encara dins finestra MINUTS actual -> no nou registre MINUTS)
-                new Step(base.plusMinutes(3), SalutEstat.DEGRADED, 400, SalutEstat.WARN, 90, 2, 3L, 2L, "m2", SalutNivell.ERROR, "d2", "Detall 2", "y"),
+                new Step(base.plusMinutes(3), SalutEstat.DEGRADED, 400, SalutEstat.WARN, 90, 3L, 2L, "m2", SalutNivell.ERROR, "d2", "Detall 2", "y"),
                 // 5) Cinquè minut (fora finestra -> nou registre MINUTS)
-                new Step(base.plusMinutes(4), SalutEstat.UP, 500, SalutEstat.UP, 50, 2, 1L, 1L, "m3", SalutNivell.INFO, "d3", "Detall 3", "z"),
+                new Step(base.plusMinutes(4), SalutEstat.UP, 500, SalutEstat.UP, 50, 1L, 1L, "m3", SalutNivell.INFO, "d3", "Detall 3", "z"),
                 // 6) Canvi d'hora (01:00)
-                new Step(base.plusHours(1), SalutEstat.WARN, 150, SalutEstat.UP, 70, 2, 0L, 1L, "m1", SalutNivell.WARN, "d1", "Detall 1", "v2"),
+                new Step(base.plusHours(1), SalutEstat.WARN, 150, SalutEstat.UP, 70, 0L, 1L, "m1", SalutNivell.WARN, "d1", "Detall 1", "v2"),
                 // 7) Canvi de dia (endemà 00:00)
-                new Step(base.plusDays(1), SalutEstat.UP, 120, SalutEstat.UP, 80, 2, 5L, 0L, "m4", SalutNivell.INFO, "d4", "Detall 4", "w")
+                new Step(base.plusDays(1), SalutEstat.UP, 120, SalutEstat.UP, 80, 5L, 0L, "m4", SalutNivell.INFO, "d4", "Detall 4", "w")
         );
         return Stream.of(scenario);
     }
@@ -192,7 +191,7 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
 
             when(salutRepository.findById(salutId)).thenReturn(Optional.of(dades));
 
-            helper.buidatIcompactat(entornAppId, salutId, st.numeroDiesAgrupacio);
+            helper.buidatIcompactat(entornAppId, salutId);
 
             // Validacions en punts clau
             if (i == 0) {

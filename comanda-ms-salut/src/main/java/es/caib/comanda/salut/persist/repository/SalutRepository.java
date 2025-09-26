@@ -30,7 +30,6 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
 	void deleteByDataBefore(LocalDateTime data);
 
-    List<SalutEntity> findByEntornAppIdAndDataAfterAndTipusRegistreOrderById(Long entornAppId, LocalDateTime data, TipusRegistreSalut tipusRegistre);
     List<SalutEntity> findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(Long entornAppId, LocalDateTime data, TipusRegistreSalut tipusRegistre);
 
 	@Query( " FROM SalutEntity s1 " +

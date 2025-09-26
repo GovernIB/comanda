@@ -58,7 +58,6 @@ class SalutInfoHelperGetSalutInfoEventTest {
 
     @BeforeEach
     void setup() {
-        SalutInfoHelper.compactacioMap.clear();
         entornApp = EntornApp.builder()
                 .id(42L)
                 .app(new AppRef(1L, "App"))
@@ -95,8 +94,6 @@ class SalutInfoHelperGetSalutInfoEventTest {
         helper.getSalutInfo(entornApp); // second -> 2
 
         verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
-        assertEquals(1, eventCaptor.getAllValues().get(0).getNumeroDiesAgrupacio());
-        assertEquals(2, eventCaptor.getAllValues().get(1).getNumeroDiesAgrupacio());
         // entornAppId i salutId no nuls
         assertEquals(entornApp.getId(), eventCaptor.getAllValues().get(0).getEntornAppId());
         assertNotNull(eventCaptor.getAllValues().get(0).getSalutId());
@@ -117,6 +114,5 @@ class SalutInfoHelperGetSalutInfoEventTest {
         SalutInfoUpdatedEvent ev = eventCaptor.getValue();
         assertEquals(entornApp.getId(), ev.getEntornAppId());
         assertEquals(777L, ev.getSalutId());
-        assertTrue(ev.getNumeroDiesAgrupacio() >= 1);
     }
 }

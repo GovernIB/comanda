@@ -83,7 +83,6 @@ public class SalutInfoHelper {
 				entornApp.getSalutUrl(),
 				salutClientHelper);
 		LocalDateTime currentMinuteTime = LocalDateTime.now().withSecond(0).withNano(0);
-		int numeroDiesAgrupacio = actualitzaInfoCompactacio(entornApp.getId());
 		Long idSalut = null;
 		try {
 			// Obtenir dades de salut de l'aplicació
@@ -116,7 +115,7 @@ public class SalutInfoHelper {
 					entornApp.getEntorn().getNom(),
 					entornApp.getApp().getNom()).record(duration);
 			// Publicar esdeveniment per a compactació. També en cas d'error
-			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut, numeroDiesAgrupacio));
+			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut));
 		}
 	}
 
@@ -262,43 +261,31 @@ public class SalutInfoHelper {
     // Compactat de dades de salut
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public static final int MINUTS_PER_AGRUPACIO = 4;
-    public static Map<Long, CompactacioInfo> compactacioMap = new HashMap<>();
-
-    @Data
-    @Builder
-    public static class CompactacioInfo {
-        @Setter(AccessLevel.NONE)
-        private int numeroMinutsAgrupats;
-
-        public void incremenraMinutsAgrupats() {
-            numeroMinutsAgrupats = ++numeroMinutsAgrupats % MINUTS_PER_AGRUPACIO;
-        }
-    }
 
     @Transactional
-    public void buidatIcompactat(Long entornAppId, Long salutId, int numeroDiesAgrupacio) {
+    public void buidatIcompactat(Long entornAppId, Long salutId) {
 
         Object lock = ENTORN_LOCKS.computeIfAbsent(entornAppId, k -> new Object());
         synchronized (lock) {
             try {
-                log.debug("Executant buidat i compactat de dades de salut. EntornAppId: {}, salutId: {}, numeroDiesAgrupacio: {}.",
-                        entornAppId, salutId, numeroDiesAgrupacio);
+                log.debug("Executant buidat i compactat de dades de salut. EntornAppId: {}, salutId: {}.",
+                        entornAppId, salutId);
                 SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);
                 if (dadesSalut == null) {
                     log.warn("No s'ha trobat el registre de salut amb id {} per a l'entorn {}. Possiblement la transacció encara no està confirmada.", salutId, entornAppId);
                     return;
                 }
                 // Crear agregats per grups de minuts, hores i dies
-                agregarGrupMinuts(entornAppId, dadesSalut, numeroDiesAgrupacio);
+                agregarGrupMinuts(entornAppId, dadesSalut);
                 agregarHora(entornAppId, dadesSalut);
                 agregarDia(entornAppId, dadesSalut);
 
-                // Eliminar registres de minuts més antics que 15 minuts
-                LocalDateTime menys15m = dadesSalut.getData().minusMinutes(15);
+                // Eliminar registres de minuts més antics que 15 minuts (+1 minut de marge)
+                LocalDateTime menys15m = dadesSalut.getData().minusMinutes(16);
                 eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.MINUT, menys15m);
 
-                // Eliminar registres de grups de minuts més antics que 1 hora
-                LocalDateTime menys1h = dadesSalut.getData().minusHours(1).minusMinutes(3);
+                // Eliminar registres de grups de minuts més antics que 1 hora i (MINUTS_PER_AGRUPACIO) minuts
+                LocalDateTime menys1h = dadesSalut.getData().minusHours(1).minusMinutes(MINUTS_PER_AGRUPACIO);
                 eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.MINUTS, menys1h);
 
                 // Eliminar registres de hores més antics que 1 dia
@@ -371,25 +358,21 @@ public class SalutInfoHelper {
         }
     }
 
-    private void agregarGrupMinuts(Long entornAppId, SalutEntity darreraActualitzacioSalut, int numeroDiesAgrupacio) {
+    private void agregarGrupMinuts(Long entornAppId, SalutEntity darreraActualitzacioSalut) {
         if (darreraActualitzacioSalut == null) return;
 
-        if (numeroDiesAgrupacio == 1) {
-            creaAgregatSalut(entornAppId, TipusRegistreSalut.MINUTS, darreraActualitzacioSalut);
-        } else {
-            SalutEntity salutMinuts = salutRepository.findTopByEntornAppIdAndTipusRegistreOrderByIdDesc(entornAppId, TipusRegistreSalut.MINUTS);
-            if (salutMinuts != null && darreraActualitzacioSalut.getData().isBefore(salutMinuts.getData())) {
-                log.error("Informació de salut anterior a l'agrupació de minuts");
-                return;
-            }
+        SalutEntity salutMinuts = salutRepository.findTopByEntornAppIdAndTipusRegistreOrderByIdDesc(entornAppId, TipusRegistreSalut.MINUTS);
+        if (salutMinuts != null && darreraActualitzacioSalut.getData().isBefore(salutMinuts.getData())) {
+            log.error("Informació de salut anterior a l'agrupació de minuts");
+            return;
+        }
 
-            // Comprova que la data sigui dins els MINUTS_PER_AGRUPACIO (inclosos) a partir de l'inici de l'agrupada
-            // Exemple: si MINUTS_PER_AGRUPACIO=4 -> finestra inclusiva de 0..3 minuts; el 5è registre crea un nou agregat
-            if (salutMinuts != null && !darreraActualitzacioSalut.getData().isAfter(salutMinuts.getData().plusMinutes(MINUTS_PER_AGRUPACIO - 1))) {
-                afegirSalut(salutMinuts, darreraActualitzacioSalut);
-            } else {
-                creaAgregatSalut(entornAppId, TipusRegistreSalut.MINUTS, darreraActualitzacioSalut);
-            }
+        // Comprova que la data sigui dins els MINUTS_PER_AGRUPACIO (inclosos) a partir de l'inici de l'agrupada
+        // Exemple: si MINUTS_PER_AGRUPACIO=4 -> finestra inclusiva de 0..3 minuts; el 5è registre crea un nou agregat
+        if (salutMinuts != null && !darreraActualitzacioSalut.getData().isAfter(salutMinuts.getData().plusMinutes(MINUTS_PER_AGRUPACIO - 1))) {
+            afegirSalut(salutMinuts, darreraActualitzacioSalut);
+        } else {
+            creaAgregatSalut(entornAppId, TipusRegistreSalut.MINUTS, darreraActualitzacioSalut);
         }
     }
 
@@ -444,7 +427,12 @@ public class SalutInfoHelper {
         SalutEntity agregat = new SalutEntity();
         agregat.setEntornAppId(entornAppId);
         LocalDateTime data = salut.getData();
-        if (tipus == TipusRegistreSalut.HORA) {
+        if (tipus == TipusRegistreSalut.MINUTS) {
+            int dataMinutesModulus = data.getMinute() % MINUTS_PER_AGRUPACIO;
+            data = dataMinutesModulus != 0 ?
+                    data.minusMinutes(dataMinutesModulus).withSecond(0).withNano(0)
+                    : data.withSecond(0).withNano(0);
+        } else if (tipus == TipusRegistreSalut.HORA) {
             data = data.withMinute(0).withSecond(0).withNano(0);
         } else if (tipus == TipusRegistreSalut.DIA) {
             data = data.withHour(0).withMinute(0).withSecond(0).withNano(0);
@@ -675,17 +663,6 @@ public class SalutInfoHelper {
                         salutDetallRepository.save(detall);
                     });
         });
-    }
-
-    private static int actualitzaInfoCompactacio(Long entornAppId) {
-        CompactacioInfo compactacioInfo = compactacioMap.get(entornAppId);
-        if (compactacioInfo == null) {
-            compactacioInfo = CompactacioInfo.builder().numeroMinutsAgrupats(1).build();
-            compactacioMap.put(entornAppId, compactacioInfo);
-        } else {
-            compactacioInfo.incremenraMinutsAgrupats();
-        }
-        return compactacioInfo.getNumeroMinutsAgrupats();
     }
 
     private boolean isFirstMinuteOfHour(LocalDateTime dateTime) {
