@@ -125,7 +125,6 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
             horizontal: true,
             vertical: true
         }}
-        skipAnimation // TODO Animacions desactivades fins que es tregui una versió de MUI-X amb el fix https://github.com/mui/mui-x/pull/19606
     />;
 }
 
