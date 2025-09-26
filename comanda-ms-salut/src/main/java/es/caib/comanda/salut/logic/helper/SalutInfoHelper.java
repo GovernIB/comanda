@@ -308,9 +308,9 @@ public class SalutInfoHelper {
                 // Eliminar rgistres de dies més antics que 1 mes
                 LocalDateTime menys1M = dadesSalut.getData().minusMonths(1).minusHours(23).minusMinutes(59);
                 eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.DIA, menys1M);
-            } catch (Exception e) {
-                log.error("Error durant el procés de buidat i compactat de salut", e);
-                throw e;
+            } catch (Exception ex) {
+                log.error("Error durant el procés de buidat i compactat de salut", ex);
+                throw ex;
             }
         }
     }

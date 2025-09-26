@@ -9,4 +9,10 @@ import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
  * @author Límit Tecnologies
  */
 public interface AlarmaService extends MutableResourceService<Alarma, Long> {
+
+	/**
+	 * Tasca periòdica que comprova si s'han de crear alarmes.
+	 */
+	void comprovacioScheduledTask();
+
 }

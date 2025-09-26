@@ -35,7 +35,7 @@ public class SalutController extends BaseReadonlyResourceController<Salut, Long>
     @PostMapping ("/programar")
     public ResponseEntity<Void> create(
             @RequestBody
-            @Validated({Resource.OnCreate.class, Default.class})
+            @Validated({ Resource.OnCreate.class, Default.class })
             final EntornApp entornApp) {
         log.info("Rebuda petició d'actualització de procés de salut per entornApp: {}", entornApp.getId());
         schedulerService.programarTasca(entornApp);

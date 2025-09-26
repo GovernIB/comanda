@@ -11,7 +11,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  *
  * @author Límit Tecnologies
  */
-//@Profile("!back")
 @Configuration
 @EnableScheduling
 public class SalutSchedulerConfig {
@@ -23,4 +22,5 @@ public class SalutSchedulerConfig {
 		scheduler.setThreadNamePrefix("salut-tasques-");
 		return scheduler;
 	}
+
 }

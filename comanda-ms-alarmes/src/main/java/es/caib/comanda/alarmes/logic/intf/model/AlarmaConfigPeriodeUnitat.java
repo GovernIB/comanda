@@ -11,7 +11,5 @@ public enum AlarmaConfigPeriodeUnitat {
 	MINUTS,
 	HORES,
 	DIES,
-	MESOS,
-	ANYS
 
 }

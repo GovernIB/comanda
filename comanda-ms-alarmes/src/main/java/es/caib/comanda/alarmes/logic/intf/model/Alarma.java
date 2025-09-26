@@ -10,8 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 
 /**
  * Informació d'una alarma.
@@ -39,6 +41,8 @@ public class Alarma extends BaseResource<Long> {
 	@Size(max = 1024)
 	private String missatge;
 	private AlarmaEstat estat;
+	private LocalDateTime dataActivacio;
+	private LocalDateTime dataEsborrat;
 
 	@NotNull
 	private ResourceReference<AlarmaConfig, Long> alarmaConfig;
