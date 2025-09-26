@@ -343,8 +343,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 
     /**
      * Genera una llista d'ítems per franges de 4 minuts a partir de params.getDataInici() fins a params.getDataFi().
-     * Per cada franja s'agafa com a màxim una entitat i es calcula el desfasament (minuteOffset) per fixar la data
-     * de l'ítem exactament al límit de franja. En franges buides no s'afegeix cap ítem.
+     * Per cada franja s'agafa com a màxim una entitat. En franges buides no s'afegeix cap ítem.
      */
     private <T> List<T> generaPerFranges4Minuts(List<SalutEntity> salutEntityList,
                                                 SalutInformeParams params,
@@ -390,8 +389,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             pos = k;
 
             if (seleccionat != null) {
-                int desfasamentMinuts = (int) ChronoUnit.MINUTES.between(seleccionat.getData().withSecond(0), fiFranja);
-                resultat.add(constructor.apply(seleccionat, desfasamentMinuts));
+                resultat.add(constructor.apply(seleccionat, null));
             }
 
             iniciFranja = iniciFranja.plusMinutes(4);
