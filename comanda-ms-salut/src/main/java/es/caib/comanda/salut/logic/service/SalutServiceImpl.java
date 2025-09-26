@@ -389,7 +389,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             pos = k;
 
             if (seleccionat != null) {
-                resultat.add(constructor.apply(seleccionat, null));
+                resultat.add(constructor.apply(seleccionat, 0));
             }
 
             iniciFranja = iniciFranja.plusMinutes(4);
