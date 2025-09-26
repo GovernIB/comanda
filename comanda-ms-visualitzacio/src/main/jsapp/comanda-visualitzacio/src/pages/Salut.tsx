@@ -17,14 +17,15 @@ import { useParams } from 'react-router-dom';
 import SalutAppInfo, { useAppInfoData } from './SalutAppInfo';
 import { ItemStateChip } from '../components/SalutItemStateChip';
 
-type AppModel = {
+export type AppModel = {
     // TODO
     id: number;
     nom: string;
     codi: string;
+    logo?: string | null;
 };
 
-type EntornAppModel = {
+export type EntornAppModel = {
     // TODO
     id: number;
     app: {
@@ -35,9 +36,11 @@ type EntornAppModel = {
     };
 };
 
-type EntornModel = {
+export type EntornModel = {
     // TODO
     id: number;
+    codi: string;
+    nom?: string | null;
 };
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
@@ -58,6 +61,7 @@ export type SalutData = {
     estats: {
         [entornAppId: number]: SalutInformeEstatItem[];
     };
+    entornApps: EntornAppModel[];
     salutLastItems: SalutModel[];
     groupedApp?: AppModel;
     groupedEntorn?: EntornModel;
@@ -98,15 +102,17 @@ const splitSalutDataIntoGroups = ({
 
         const appIds = apps.map(({ id }) => id as number);
         appIds.forEach((appId) => {
-            const entornAppIds = entornApps
-                .filter(({ app }) => app.id === appId)
+            const filteredEntornApps = entornApps
+                .filter(({ app }) => app.id === appId);
+            const filteredEntornAppIds = filteredEntornApps
                 .map(({ id }) => id as number);
 
             groups.push({
                 groupedApp: apps.find(({ id }) => id === appId),
-                estats: filterObjectKeys(estats, (key) => entornAppIds.includes(Number(key))), // TODO Codigo duplicado
+                entornApps: filteredEntornApps,
+                estats: filterObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))), // TODO Codigo duplicado
                 salutLastItems: salutLastItems.filter(
-                    ({ entornAppId }) => entornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
+                    ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
                 ),
             });
         });
@@ -118,15 +124,17 @@ const splitSalutDataIntoGroups = ({
 
         const entornIds = entorns.map(({ id }) => id as number);
         entornIds.forEach((entornId) => {
-            const entornAppIds = entornApps
-                .filter(({ entorn }) => entorn.id === entornId)
+            const filteredEntornApps = entornApps
+                .filter(({ entorn }) => entorn.id === entornId);
+            const filteredEntornAppIds = filteredEntornApps
                 .map(({ id }) => id as number);
 
             groups.push({
                 groupedEntorn: entorns.find(({ id }) => id === entornId),
-                estats: filterObjectKeys(estats, (key) => entornAppIds.includes(Number(key))), // TODO Codigo duplicado
+                entornApps: filteredEntornApps,
+                estats: filterObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))), // TODO Codigo duplicado
                 salutLastItems: salutLastItems.filter(
-                    ({ entornAppId }) => entornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
+                    ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
                 ),
             });
         });
@@ -155,6 +163,8 @@ const useSalutData = ({
     const ready = salutApiIsReady && entornAppApiIsReady && appApiIsReady && entornApiIsReady;
     const [salutData, setSalutData] = useState<{
         lastRefresh?: Date;
+        apps?: AppModel[];
+        entorns?: EntornModel[];
         groups: SalutData[];
         reportInterval?: {
             dataInici: string;
@@ -190,27 +200,23 @@ const useSalutData = ({
                                 : null
                         ),
                     }),
-                    groupBy === GroupingEnum.APPLICATION
-                        ? appFind({
-                              unpaged: true,
-                              filter: springFilterBuilder.and(
-                                  springFilterBuilder.eq('activa', true),
-                                  filterData?.app != null
-                                      ? springFilterBuilder.eq('id', filterData.app.id)
-                                      : null
-                              ),
-                          })
-                        : undefined,
-                    groupBy === GroupingEnum.ENVIRONMENT
-                        ? entornFind({
-                              unpaged: true,
-                              filter: springFilterBuilder.and(
-                                  filterData?.entorn != null
-                                      ? springFilterBuilder.eq('id', filterData.entorn.id)
-                                      : null
-                              )
-                          })
-                        : undefined,
+                    appFind({
+                        unpaged: true,
+                        filter: springFilterBuilder.and(
+                            springFilterBuilder.eq('activa', true),
+                            filterData?.app != null
+                                ? springFilterBuilder.eq('id', filterData.app.id)
+                                : null
+                        ),
+                    }),
+                    entornFind({
+                        unpaged: true,
+                        filter: springFilterBuilder.and(
+                            filterData?.entorn != null
+                                ? springFilterBuilder.eq('id', filterData.entorn.id)
+                                : null
+                        ),
+                    }),
                 ]);
 
             const reportInterval = toReportInterval(dataRangeMinutes);
@@ -230,11 +236,13 @@ const useSalutData = ({
             const salutLastItems = (salutLastItemsResponse as SalutModel[]).map(
                 (item) => new SalutModel(item)
             );
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars
             const { [BaseEntity.LINKS]: _links, ...estats } = (estatsResponse as any[])[0];
 
             setSalutData({
                 lastRefresh: new Date(),
+                apps: activeAppsResponse?.rows,
+                entorns: entornsResponse?.rows,
                 groups: splitSalutDataIntoGroups({
                     estats,
                     salutLastItems,
@@ -358,6 +366,8 @@ const Salut: FunctionComponent = () => {
         >
             {!isAppInfoRouteActive ? (
                 <SalutLlistat
+                    apps={salutData.apps}
+                    entorns={salutData.entorns}
                     salutGroups={salutData.groups}
                     reportInterval={salutData.reportInterval}
                     springFilter={additionalFilter}

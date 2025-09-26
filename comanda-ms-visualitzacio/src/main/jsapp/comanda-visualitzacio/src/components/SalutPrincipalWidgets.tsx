@@ -8,12 +8,9 @@ import Grid from '@mui/material/Grid';
 import { useTranslation } from 'react-i18next';
 import {
     dateFormatLocale,
-    MuiDataGrid,
     MuiDataGridColDef,
     useBaseAppContext,
-    springFilterBuilder,
 } from 'reactlib';
-import { useTreeData, useTreeDataEntornAppRenderCell } from '../hooks/treeData.tsx';
 import { Button, Paper, styled } from '@mui/material';
 import { SalutGenericTooltip } from './SalutChipTooltip.tsx';
 import {
@@ -28,11 +25,11 @@ import {
 } from '../types/salut.model.tsx';
 import { ChipColor } from '../util/colorUtil.ts';
 import { ItemStateChip } from './SalutItemStateChip.tsx';
-import { GridRowId, GridSlots, useGridApiRef } from '@mui/x-data-grid-pro';
+import { DataGridPro, GridRowId, GridSlots } from '@mui/x-data-grid-pro';
 import { PieChart, useDrawingArea } from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay.tsx';
 import UpdownBarChart from './UpdownBarChart.tsx';
-import { SalutData } from '../pages/Salut.tsx';
+import { AppModel, EntornAppModel, EntornModel, SalutData } from '../pages/Salut.tsx';
 import { ErrorBoundaryFallback } from '../pages/SalutAppInfo.tsx';
 import { ErrorBoundary } from 'react-error-boundary';
 import IconButton from '@mui/material/IconButton';
@@ -57,7 +54,7 @@ function PieCenterLabel({ children }: { children: React.ReactNode }) {
     );
 }
 
-const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) => {
+const UpdownPieChart: React.FC<{ salutLastItems: SalutModel[] }> = (props) => {
     const { salutLastItems } = props;
     const { t } = useTranslation();
 
@@ -154,14 +151,17 @@ const UpdownPieChart: React.FC<any> = (props: { salutLastItems: SalutModel[] }) 
     );
 };
 
-const AppDataTable: React.FC<any> = (props: {
-    springFilter?: string;
+const AppDataTable: React.FC<{
     salutLastItems: SalutModel[];
-}) => {
-    const { springFilter, salutLastItems } = props;
+    apps?: AppModel[];
+    entorns?: EntornModel[];
+    entornApps: EntornAppModel[];
+    groupedApp?: AppModel;
+    groupedEntorn?: EntornModel;
+}> = (props) => {
+    const { salutLastItems, apps, entorns, entornApps, groupedApp, groupedEntorn } = props;
     const { t } = useTranslation();
     const { getLinkComponent } = useBaseAppContext();
-    const gridApiRef = useGridApiRef();
 
     const findSalutItem: (id: GridRowId) => SalutModel | null = React.useCallback(
         (id: GridRowId) => {
@@ -187,8 +187,45 @@ const AppDataTable: React.FC<any> = (props: {
         [findSalutItem]
     );
 
-    const columns: MuiDataGridColDef[] = React.useMemo(() => {
-        return [
+    const columns: MuiDataGridColDef[] = React.useMemo(
+        () => [
+            {
+                flex: 0.5,
+                field: 'nomLogo',
+                headerName: t('page.salut.apps.column.group'),
+                minWidth: 150,
+                valueGetter: (_value, row) => {
+                    const isGroupedByApp = groupedApp != null;
+                    const entorn =
+                        entorns != null && entorns.find((entorn) => entorn.id === row.entorn.id);
+
+                    if (isGroupedByApp && entorn) return entorn.nom ?? entorn.codi;
+                },
+                renderCell: (params) => {
+                    const isGroupedByEntorn = groupedEntorn != null;
+
+                    const app = apps != null && apps.find((app) => app.id === params.row.app.id);
+                    if (isGroupedByEntorn && app)
+                        return (
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                }}
+                            >
+                                {app.logo && (
+                                    <img
+                                        src={'data:image/png;base64,' + app.logo}
+                                        alt="Logo"
+                                        style={{ height: '48px' }}
+                                    />
+                                )}
+                                {app.nom}
+                            </Box>
+                        );
+                },
+            },
             {
                 flex: 0.3,
                 field: 'estat',
@@ -199,7 +236,8 @@ const AppDataTable: React.FC<any> = (props: {
             {
                 flex: 0.3,
                 field: 'infoData',
-                description: t('page.salut.apps.column.infoData'),
+                headerName: t('page.salut.apps.column.infoData'),
+                description: t('page.salut.apps.column.infoDataDescription'),
                 minWidth: 150,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
@@ -214,13 +252,13 @@ const AppDataTable: React.FC<any> = (props: {
             {
                 flex: 0.3,
                 field: 'versio',
-                // headerName: t('page.salut.apps.column.versio'),
+                headerName: t('page.salut.apps.column.versio'),
                 minWidth: 100,
             },
             {
                 flex: 0.3,
                 field: 'revisioSimplificat',
-                // headerName: t('page.salut.apps.column.revisio'),
+                headerName: t('page.salut.apps.column.revisio'),
                 minWidth: 100,
             },
             {
@@ -246,10 +284,10 @@ const AppDataTable: React.FC<any> = (props: {
                 },
             },
             {
-                flex: 0.5,
+                flex: 0.1,
                 field: SalutModel.INTEGRACIONS,
-                // headerName: t('page.salut.apps.column.integ'),
-                minWidth: 100,
+                headerName: t('page.salut.apps.column.integ'),
+                minWidth: 130,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
@@ -314,9 +352,9 @@ const AppDataTable: React.FC<any> = (props: {
                 },
             },
             {
-                flex: 0.5,
+                flex: 0.2,
                 field: SalutModel.SUBSISTEMES,
-                // headerName: t('page.salut.apps.column.subsis'),
+                headerName: t('page.salut.apps.column.subsis'),
                 minWidth: 100,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
@@ -360,10 +398,10 @@ const AppDataTable: React.FC<any> = (props: {
                 },
             },
             {
-                flex: 0.5,
+                flex: 0.1,
                 field: 'msgs',
                 headerName: t('page.salut.apps.column.msgs'),
-                minWidth: 150,
+                minWidth: 130,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
@@ -426,41 +464,23 @@ const AppDataTable: React.FC<any> = (props: {
                         </Button>
                     ),
             },
-        ];
-    }, [findSalutItem, getLinkComponent, renderItemStateChip, t]);
-
-    const treeDataRenderCell = useTreeDataEntornAppRenderCell();
-    const getTreeDataPath = React.useCallback(
-        (row: any) => [row.app.id, row.entorn.description],
-        []
-    );
-    const groupingColDefAdditionalProps = React.useMemo(
-        () => ({ renderCell: treeDataRenderCell }),
-        [treeDataRenderCell]
-    );
-    const { dataGridProps: treeDataGridProps } = useTreeData(
-        getTreeDataPath,
-        t('page.salut.apps.column.group'),
-        1,
-        true,
-        groupingColDefAdditionalProps
+        ],
+        [
+            apps,
+            entorns,
+            findSalutItem,
+            getLinkComponent,
+            groupedApp,
+            groupedEntorn,
+            renderItemStateChip,
+            t,
+        ]
     );
 
     return (
-        <MuiDataGrid
-            titleDisabled
-            resourceName="entornApp"
-            datagridApiRef={gridApiRef}
+        <DataGridPro
             columns={columns}
-            filter={springFilterBuilder.and(
-                springFilterBuilder.eq('activa', true),
-                springFilterBuilder.eq('app.activa', true),
-                springFilter
-            )}
-            toolbarHideQuickFilter
-            toolbarHideRefresh
-            readOnly
-            {...treeDataGridProps}
+            rows={entornApps}
             hideFooter
             slots={{
                 noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],
@@ -470,8 +490,8 @@ const AppDataTable: React.FC<any> = (props: {
 };
 
 export const SalutWidgetTitle: React.FC<{
-    app: any;
-    entorn: any;
+    app?: AppModel;
+    entorn?: EntornModel;
     loading?: boolean;
     midaFontTitol?: number;
 }> = ({ app, entorn, loading, midaFontTitol }) => {
@@ -517,14 +537,20 @@ export const SalutWidgetTitle: React.FC<{
 };
 
 export const SalutWidgetContent: React.FC<{
-    salutLastItems: any;
-    reportParams: any;
-    estats: any;
-    springFilter: any;
+    salutLastItems: SalutModel[];
+    reportParams: {
+        dataInici: string;
+        dataFi: string;
+        agrupacio: string;
+    };
+    estats: SalutData['estats'];
     loading?: boolean;
-    app: any;
-    entorn: any;
-}> = ({ salutLastItems, reportParams, estats, springFilter, loading, app, entorn }) => {
+    groupedApp?: AppModel;
+    groupedEntorn?: EntornModel;
+    apps?: AppModel[];
+    entorns?: EntornModel[];
+    entornApps: EntornAppModel[];
+}> = ({ salutLastItems, reportParams, estats, loading, groupedApp, groupedEntorn, entornApps, apps, entorns }) => {
     const [open, setOpen] = React.useState(false);
     const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
 
@@ -554,7 +580,7 @@ export const SalutWidgetContent: React.FC<{
                     size={{ xs: 12, sm: 11, md: 11, lg: 3 }}
                     sx={{ display: 'flex', flexDirection: 'column', height: '200px' }}
                 >
-                    <SalutWidgetTitle app={app} entorn={entorn} />
+                    <SalutWidgetTitle app={groupedApp} entorn={groupedEntorn} />
                     <Box
                         sx={{
                             height: '100%',
@@ -580,7 +606,14 @@ export const SalutWidgetContent: React.FC<{
                 </Grid>
                 {open && (
                     <Grid size={12}>
-                        <AppDataTable springFilter={springFilter} salutLastItems={salutLastItems} />
+                        <AppDataTable
+                            groupedApp={groupedApp}
+                            groupedEntorn={groupedEntorn}
+                            apps={apps}
+                            entorns={entorns}
+                            entornApps={entornApps}
+                            salutLastItems={salutLastItems}
+                        />
                     </Grid>
                 )}
                 <Grid
@@ -615,8 +648,11 @@ export const SalutWidgetContent: React.FC<{
 export const SalutLlistat = ({
     salutGroups,
     reportInterval,
-    springFilter,
+    apps,
+    entorns,
 }: {
+    apps?: AppModel[];
+    entorns?: EntornModel[];
     salutGroups: SalutData[];
     reportInterval?: {
         dataInici: string;
@@ -625,27 +661,22 @@ export const SalutLlistat = ({
     };
     springFilter?: string;
 }) => {
+    if (!salutGroups.length || reportInterval == null) return;
+
     return (
         <>
             {salutGroups.map((salutGroup, index) => {
-                const groupedEntornFilter = salutGroup.groupedEntorn
-                    ? springFilterBuilder.eq('entorn.id', salutGroup.groupedEntorn.id)
-                    : null;
-                const groupedAppFilter = salutGroup.groupedApp
-                    ? springFilterBuilder.eq('app.id', salutGroup.groupedApp?.id)
-                    : null;
                 return (
                     <Paper key={index} elevation={1} sx={{ px: 2, pt: 1, marginBottom: 1 }}>
                         <SalutWidgetContent
                             salutLastItems={salutGroup.salutLastItems}
                             reportParams={reportInterval}
                             estats={salutGroup.estats}
-                            springFilter={springFilterBuilder.and(
-                                springFilter,
-                                groupedEntornFilter ?? groupedAppFilter
-                            )}
-                            app={salutGroup.groupedApp}
-                            entorn={salutGroup.groupedEntorn}
+                            groupedApp={salutGroup.groupedApp}
+                            groupedEntorn={salutGroup.groupedEntorn}
+                            apps={apps}
+                            entorns={entorns}
+                            entornApps={salutGroup.entornApps}
                         />
                     </Paper>
                 );

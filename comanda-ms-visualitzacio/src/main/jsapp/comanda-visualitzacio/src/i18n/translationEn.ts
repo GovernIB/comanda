@@ -77,7 +77,8 @@ const translationEn = {
                 column: {
                     group: "Application / environment",
                     estat: "State",
-                    infoData: "Date of last information consultation",
+                    infoData: "Last query",
+                    infoDataDescription: "Date of last information query",
                     codi: "Code",
                     nom: "Name",
                     versio: "Version",

@@ -9,9 +9,7 @@ import Box from '@mui/material/Box';
 import {
     GridColumnHeaderTitle,
     GridGroupNode,
-    GridTreeDataGroupingCell,
 } from '@mui/x-data-grid-pro';
-import { useResourceApiService } from 'reactlib';
 
 export const useTreeData = (
     getTreeDataPath: (row: any) => string[],
@@ -99,39 +97,4 @@ export const useTreeData = (
         treeViewSwitch,
         dataGridProps,
     };
-}
-
-export const useTreeDataEntornAppRenderCell = () => {
-    const { isReady: appApiIsReady, find: appApiFind } = useResourceApiService('app');
-    const [apps, setApps] = React.useState<any[]>();
-    React.useEffect(() => {
-        if (appApiIsReady) {
-            appApiFind({ unpaged: true, filter: 'activa:true' })
-                .then((response) => setApps(response.rows))
-                .catch(() => setApps([]));
-        }
-    }, [appApiIsReady]);
-    return React.useCallback((params: any) => {
-        const app = apps?.find((app) => app.id === parseInt(params.formattedValue));
-        if (typeof params.id === 'number' || app == null) {
-            return <GridTreeDataGroupingCell {...params} />;
-        }
-        return <GridTreeDataGroupingCell
-            {...params}
-            formattedValue={
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                    }}>
-                    {app.logo && <img
-                        src={'data:image/png;base64,' + app.logo}
-                        alt="Logo"
-                        style={{ height: '48px' }}/>}
-                    {app.nom}
-                </Box>
-            }
-        />;
-    }, [apps]);
 }

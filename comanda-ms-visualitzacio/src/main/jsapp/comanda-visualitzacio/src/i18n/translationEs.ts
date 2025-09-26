@@ -79,7 +79,8 @@ const translationEs = {
                 column: {
                     group: "Aplicación / entorno",
                     estat: "Estado",
-                    infoData: "Fecha última consulta de información",
+                    infoData: "Última consulta",
+                    infoDataDescription: "Fecha última consulta de información",
                     codi: "Código",
                     nom: "Nombre",
                     versio: "Versión",
