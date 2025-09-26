@@ -101,7 +101,7 @@ public class EstadisticaSchedulerService {
             );
 
             tasquesActives.put(entornApp.getId(), futuraTasca);
-            log.info("Tasca programada de refresc de la informació per l'entornApp: {}, amb cron: {}",
+            log.debug("Tasca programada de refresc de la informació per l'entornApp: {}, amb cron: {}",
                     entornApp.getId(),
                     entornApp.getEstadisticaCron());
         } catch (IllegalArgumentException e) {

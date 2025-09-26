@@ -45,7 +45,7 @@ public class MonitorSchedulerService {
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
         if (!isLeader()) {
-            log.info("Inicialització de tasques de monitor ignorada: aquesta instància no és leader per als schedulers");
+            log.debug("Inicialització de tasques de monitor ignorada: aquesta instància no és leader per als schedulers");
             return;
         }
         // Esperarem 1 minut i mig a inicialitzar les tasques en segon pla
@@ -79,7 +79,7 @@ public class MonitorSchedulerService {
                 );
 
                 tasquesActives.put(0L, futuraTasca);
-                log.info("Tasca programada de borrat de dades del monitor amb període de {} minuts", periode);
+                log.debug("Tasca programada de borrat de dades del monitor amb període de {} minuts", periode);
             } catch (IllegalArgumentException e) {
                 log.error("Error en programar la tasca de borrat de monitor. Període invàlid: {}", periode, e);
             }
@@ -89,7 +89,7 @@ public class MonitorSchedulerService {
     public void executarBorrat(Integer retencio) {
         if (isLeader()) {
             try {
-                log.info("Executant borrat de monitor...");
+                log.debug("Executant borrat de monitor...");
                 monitorHelper.buidat(retencio);
             } catch (Exception e) {
                 log.error("Error en l'execució del borrat del monitor", e);

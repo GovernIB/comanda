@@ -51,7 +51,7 @@ public class ConfiguracioSchedulerService {
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
         if (!isLeader()) {
-            log.info("Inicialització de tasques de configuració ignorada: aquesta instància no és leader per als schedulers");
+            log.debug("Inicialització de tasques de configuració ignorada: aquesta instància no és leader per als schedulers");
             return;
         }
         // Esperarem mig minut a inicialitzar les tasques en segon pla
@@ -71,7 +71,7 @@ public class ConfiguracioSchedulerService {
         cancelarTascaExistent(entornApp.getId());
 
         if (!entornApp.isActiva()) {
-            log.info("Tasca de refresc de la informació no programada per l'entornApp: {}, degut a que no està activa", entornApp.getId());
+            log.debug("Tasca de refresc de la informació no programada per l'entornApp: {}, degut a que no està activa", entornApp.getId());
             return;
         }
 
@@ -87,7 +87,7 @@ public class ConfiguracioSchedulerService {
             );
 
             tasquesActives.put(entornApp.getId(), futuraTasca);
-            log.info("Tasca programada de refresc de la informació per l'entornApp: {}, amb període: {}",
+            log.debug("Tasca programada de refresc de la informació per l'entornApp: {}, amb període: {}",
                     entornApp.getId(),
                     PERIODE_CONSULTA_CONF);
         } catch (IllegalArgumentException e) {
@@ -101,7 +101,7 @@ public class ConfiguracioSchedulerService {
     private void executarProces(Long entornAppId) {
         if (isLeader()) {
             try {
-                log.info("Executant procés de refresc de la informació per l'entornApp {}", entornAppId);
+                log.debug("Executant procés de refresc de la informació per l'entornApp {}", entornAppId);
 
                 // Refrescar informació de entorn-app
                 appInfoHelper.refreshAppInfo(entornAppId);
@@ -117,7 +117,7 @@ public class ConfiguracioSchedulerService {
         if (tasca != null) {
             tasca.cancel(false);
             tasquesActives.remove(entornAppId);
-            log.info("Tasca de refresc de la informació cancel·lada per l'entornAppId: {}", entornAppId);
+            log.debug("Tasca de refresc de la informació cancel·lada per l'entornAppId: {}", entornAppId);
         }
     }
 
@@ -131,7 +131,7 @@ public class ConfiguracioSchedulerService {
     @Scheduled(cron = "0 0 */1 * * *")
     public void comprovarRefrescInfo() {
         if (!isLeader()) {
-            log.info("Refresc de tasques de configuració ignorada: aquesta instància no és leader per als schedulers");
+            log.debug("Refresc de tasques de configuració ignorada: aquesta instància no és leader per als schedulers");
             return;
         }
         log.debug("Comprovant refresc periòdic dels entorn-app");

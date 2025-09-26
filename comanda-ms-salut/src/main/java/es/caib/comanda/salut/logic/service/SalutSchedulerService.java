@@ -54,7 +54,7 @@ public class SalutSchedulerService {
     @EventListener(ApplicationReadyEvent.class)
     public void inicialitzarTasques() {
         if (!isLeader()) {
-            log.info("Inicialització de tasques de salut ignorada: aquesta instància no és leader per als schedulers");
+            log.warn("Inicialització de tasques de salut ignorada: aquesta instància no és leader per als schedulers");
             return;
         }
 
@@ -68,11 +68,11 @@ public class SalutSchedulerService {
             try {
                 List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
                 if (entornAppsActives.isEmpty()) {
-                    log.info("No hi ha cap entorn-app activa per a programar les tasques de salut");
+                    log.debug("No hi ha cap entorn-app activa per a programar les tasques de salut");
                     return;
                 }
                 var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
-                log.info("Es van a programar les tasques de salut per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
+                log.debug("Es van a programar les tasques de salut per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
                 entornAppsActives.forEach(this::programarTasca);
             } finally {
                 executor.shutdown();
@@ -81,12 +81,12 @@ public class SalutSchedulerService {
     }
 
     public void programarTasca(EntornApp entornApp) {
-        log.info("Programar tasca de salut per l'entornApp: {}", entornApp.getId());
+        log.debug("Programar tasca de salut per l'entornApp: {}", entornApp.getId());
         // Cancel·lem la tasca existent si existeix
         cancelarTascaExistent(entornApp.getId());
 
         if (!entornApp.isActiva()) {
-            log.info("Tasca de obtenció de informació de salut no programada per l'entornApp: {}, degut a que no està activa", entornApp.getId());
+            log.debug("Tasca de obtenció de informació de salut no programada per l'entornApp: {}, degut a que no està activa", entornApp.getId());
             return;
         }
 
@@ -103,7 +103,7 @@ public class SalutSchedulerService {
             );
 
             tasquesActives.put(entornApp.getId(), futuraTasca);
-            log.info("Tasca programada de obtenció de informació de salut per l'entornApp: {}, amb període: {}",
+            log.debug("Tasca programada de obtenció de informació de salut per l'entornApp: {}, amb període: {}",
                     entornApp.getId(),
                     PERIODE_CONSULTA_SALUT);
         } catch (IllegalArgumentException e) {
@@ -117,11 +117,9 @@ public class SalutSchedulerService {
     private void executarProces(EntornApp entornApp) {
         if (isLeader()) {
             try {
-                log.info("Executant procés per l'entornApp {}", entornApp.getId());
-
+                log.debug("Executant procés per l'entornApp {}", entornApp.getId());
                 // Obtenció de informació de salut per entorn-app
                 salutInfoHelper.getSalutInfo(entornApp);
-
             } catch (Exception e) {
                 log.error("Error en l'execució del procés d'obtenció de informació de salut per l'entornApp {}", entornApp.getId(), e);
             }

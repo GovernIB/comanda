@@ -281,7 +281,7 @@ public class SalutInfoHelper {
         Object lock = ENTORN_LOCKS.computeIfAbsent(entornAppId, k -> new Object());
         synchronized (lock) {
             try {
-                log.info("Executant buidat i compactat de dades de salut. EntornAppId: {}, salutId: {}, numeroDiesAgrupacio: {}.",
+                log.debug("Executant buidat i compactat de dades de salut. EntornAppId: {}, salutId: {}, numeroDiesAgrupacio: {}.",
                         entornAppId, salutId, numeroDiesAgrupacio);
                 SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);
                 if (dadesSalut == null) {
@@ -348,7 +348,7 @@ public class SalutInfoHelper {
         int maxIntents = 3;
         while (true) {
             try {
-                log.info("Eliminant {} registres de salut antics...", salutIds.size());
+                log.debug("Eliminant {} registres de salut antics...", salutIds.size());
                 // Eliminar fills per assegurar integritat
                 salutIntegracioRepository.deleteAllBySalutIdIn(salutIds);
                 salutSubsistemaRepository.deleteAllBySalutIdIn(salutIds);
@@ -356,13 +356,13 @@ public class SalutInfoHelper {
                 salutDetallRepository.deleteAllBySalutIdIn(salutIds);
                 // Eliminació en batch per reduir bloquejos
                 salutRepository.deleteAllByIdInBatch(salutIds);
-                log.info("Eliminat {} registres de salut antics", salutIds.size());
+                log.debug("Eliminat {} registres de salut antics", salutIds.size());
                 return;
             } catch (RuntimeException ex) {
                 intents++;
                 if (isLockAcquisitionException(ex) && intents < maxIntents) {
                     long sleep = 100L + (long) (Math.random() * 200L);
-                    log.info("Bloqueig en eliminar registres de salut (intent {}/{}). Es tornarà a intentar després de {}ms.", intents, maxIntents, sleep);
+                    log.warn("Bloqueig en eliminar registres de salut (intent {}/{}). Es tornarà a intentar després de {}ms.", intents, maxIntents, sleep);
                     try { Thread.sleep(sleep); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
                 } else {
                     throw ex;
