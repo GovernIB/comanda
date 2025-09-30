@@ -23,4 +23,7 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 			AlarmaConfigEntity alarmaConfig,
 			AlarmaEstat estat);
 
+	List<AlarmaEntity> findByAlarmaConfigCreatedByAndDataEnviamentIsNull(String username);
+	List<AlarmaEntity> findByAlarmaConfigAdminAndDataEnviamentIsNull(boolean admin);
+
 }
