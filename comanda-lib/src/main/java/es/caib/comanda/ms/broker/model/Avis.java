@@ -6,8 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Builder
 @Getter
@@ -22,7 +21,7 @@ public class Avis implements Serializable {
     private AvisTipus tipus;
     private String nom;
     private String descripcio;
-    private LocalDateTime dataInici;
-    private LocalDateTime dataFi;
+    private Date dataInici;
+    private Date dataFi;
 
 }

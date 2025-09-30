@@ -23,6 +23,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.ZoneId;
 import java.util.*;
 
 import static es.caib.comanda.ms.broker.model.Cues.CUA_TASQUES;
@@ -67,9 +68,9 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         tasca.setEstat(tascaBroker.getEstat());
         tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
         tasca.setPrioritat(tascaBroker.getPrioritat());
-        tasca.setDataInici(tascaBroker.getDataInici());
-        tasca.setDataFi(tascaBroker.getDataFi());
-        tasca.setDataCaducitat(tascaBroker.getDataCaducitat());
+        tasca.setDataInici(convertToLocalDateTime(tascaBroker.getDataInici()));
+        tasca.setDataFi(convertToLocalDateTime(tascaBroker.getDataFi()));
+        tasca.setDataCaducitat(convertToLocalDateTime(tascaBroker.getDataCaducitat()));
         tasca.setUrl(tascaBroker.getRedireccio());
         tasca.setResponsable(tascaBroker.getResponsable());
         tasca.setGrup(tascaBroker.getGrup());
@@ -96,6 +97,12 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         }
     }
 
+    private static LocalDateTime convertToLocalDateTime(Date dateToConvert) {
+        return dateToConvert != null ? dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime() : null;
+    }
+    
     /*@Override
     protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
         List<Filter> filters = new ArrayList<>();
