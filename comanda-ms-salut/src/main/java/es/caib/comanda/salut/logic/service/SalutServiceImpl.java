@@ -28,6 +28,8 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +63,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.SALUT_REPORT_ESTAT, new InformeEstat());
 		register(Salut.SALUT_REPORT_ESTATS, new InformeEstats());
 		register(Salut.SALUT_REPORT_LATENCIA, new InformeLatencia());
+		register(Salut.SALUT_REPORT_GRUPS_DATES, new InformeGrupsDates());
 		register(Salut.PERSP_INTEGRACIONS, new PerspectiveIntegracions());
 		register(Salut.PERSP_SUBSISTEMES, new PerspectiveSubsistemes());
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
@@ -283,6 +286,19 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 	}
 
+    public class InformeGrupsDates implements ReportGenerator<SalutEntity, SalutInformeGrupsParams, SalutInformeGrupItem> {
+
+        @Override
+        public List<SalutInformeGrupItem> generateData(String code, SalutEntity entity, SalutInformeGrupsParams params) throws ReportGenerationException {
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataReferencia());
+            return generarGrupsDates(dataInici, params.getAgrupacio()).stream().map(SalutInformeGrupItem::new).collect(Collectors.toList());
+        }
+
+        @Override
+        public void onChange(Serializable id, SalutInformeGrupsParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeGrupsParams target) {
+        }
+    }
+
     // --------------------------------------------------------------------------------------------
     // Mètodes auxiliars per evitar duplicació entre informes
     // --------------------------------------------------------------------------------------------
@@ -300,6 +316,74 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             default:
                 throw new ReportGenerationException(Salut.class, null, null, "Unknown agrupacio value: " + agrupacio);
         }
+    }
+
+    private TemporalAmount getTemporalAmountAgrupacio(SalutInformeAgrupacio agrupacio){
+        switch (agrupacio){
+            case DIA_MES:
+                return Period.ofDays(30);
+            case DIA_SETMANA:
+                return Period.ofDays(7);
+            case HORA:
+                return Period.ofDays(1);
+            case MINUTS_HORA:
+                return Duration.ofHours(1);
+            case MINUT:
+            default:
+                return Duration.ofMinutes(15);
+        }
+    }
+
+    /**
+     * Retorna la data d'inici del rang corresponent a l'agrupació (relatiu a la data de referència enviada pel frontal).
+     */
+    private LocalDateTime getDataIniciAjustada(SalutInformeAgrupacio agrupacio, LocalDateTime dataReferencia){
+        TemporalAmount temporalAmountAgrupacio = getTemporalAmountAgrupacio(agrupacio);
+
+        LocalDateTime dataFi = dataReferencia.withSecond(0).withNano(0);
+        switch (agrupacio){
+            case DIA_MES:
+            case DIA_SETMANA:
+                dataFi = dataFi.withHour(0).withMinute(0);
+                break;
+            case HORA:
+                dataFi = dataFi.withMinute(0);
+                break;
+            case MINUTS_HORA:
+                if (dataFi.getMinute() % MINUTS_PER_AGRUPACIO != 0)
+                    dataFi = dataFi.withMinute(dataFi.getMinute() - dataFi.getMinute() % MINUTS_PER_AGRUPACIO);
+                break;
+        }
+
+//        TODO COmprovar si sa correcció de hores, minuts, dies.. es necessaria a els casos que no son MINUTS_HORA
+        return dataFi.minus(temporalAmountAgrupacio);
+
+    }
+
+    private List<LocalDateTime> generarGrupsDates(LocalDateTime dataInici, SalutInformeAgrupacio agrupacio) {
+        List<LocalDateTime> result = new ArrayList<>();
+        LocalDateTime data = dataInici;
+        LocalDateTime dataFi = dataInici.plus(getTemporalAmountAgrupacio(agrupacio));
+        while (data.isBefore(dataFi) || data.isEqual(dataFi)) {
+            result.add(data);
+
+            switch (agrupacio) {
+                case DIA_MES:
+                case DIA_SETMANA:
+                    data = data.plusDays(1);
+                    break;
+                case HORA:
+                    data = data.plusHours(1);
+                    break;
+                case MINUTS_HORA:
+                    data = data.plusMinutes(MINUTS_PER_AGRUPACIO);
+                    break;
+                case MINUT:
+                    data = data.plusMinutes(1);
+                    break;
+            }
+        }
+        return result;
     }
 
     /**
