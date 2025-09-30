@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Optional;
 
 import static es.caib.comanda.ms.broker.model.Cues.CUA_AVISOS;
@@ -56,16 +59,22 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
             avis.setTipus(avisBroker.getTipus());
             avis.setNom(avisBroker.getNom());
             avis.setDescripcio(avisBroker.getDescripcio());
-            avis.setDataInici(avisBroker.getDataInici());
-            avis.setDataFi(avisBroker.getDataFi());
+            avis.setDataInici(convertToLocalDateTime(avisBroker.getDataInici()));
+            avis.setDataFi(convertToLocalDateTime(avisBroker.getDataFi()));
             entityRepository.save(AvisEntity.builder().avis(avis).build());
         } else {
             avisExistent.get().setTipus(avisBroker.getTipus());
             avisExistent.get().setNom(avisBroker.getNom());
             avisExistent.get().setDescripcio(avisBroker.getDescripcio());
-            avisExistent.get().setDataInici(avisBroker.getDataInici());
-            avisExistent.get().setDataFi(avisBroker.getDataFi());
+            avisExistent.get().setDataInici(convertToLocalDateTime(avisBroker.getDataInici()));
+            avisExistent.get().setDataFi(convertToLocalDateTime(avisBroker.getDataFi()));
         }
+    }
+
+    private static LocalDateTime convertToLocalDateTime(Date dateToConvert) {
+        return dateToConvert != null ? dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime() : null;
     }
 
     public class PathPerspectiveApplicator implements PerspectiveApplicator<AvisEntity, Avis> {
