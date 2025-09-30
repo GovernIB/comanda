@@ -10,6 +10,7 @@ import es.caib.comanda.ms.estadistica.model.GenericFet;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,18 +33,13 @@ public class RestTemplateConfig {
      * @return una instància de {@link MappingJackson2HttpMessageConverter} configurada amb ajustos personalitzats.
      */
     private static MappingJackson2HttpMessageConverter getConverter() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-
-        SimpleModule module = new SimpleModule();
-        module.addAbstractTypeMapping(es.caib.comanda.ms.estadistica.model.Dimensio.class, GenericDimensio.class);
-        module.addAbstractTypeMapping(es.caib.comanda.ms.estadistica.model.Fet.class, GenericFet.class);
-        objectMapper.registerModule(module);
-
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
-        return converter;
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    objectMapper.registerModule(new Jackson2HalModule());
+	    objectMapper.registerModule(new JavaTimeModule());
+	    objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+	    objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+	    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		return new MappingJackson2HttpMessageConverter(objectMapper);
     }
     
 }

@@ -14,8 +14,8 @@
 	<properties>
 		<!-- El .jar que es genera s'ha d'utilitzar des d'altres projectes que es compilen en Java 11 -->
 		<!-- Si no forçam la compilació en Java 11 -->
-		<maven.compiler.target>11</maven.compiler.target>
-		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>7</maven.compiler.target>
+		<maven.compiler.source>7</maven.compiler.source>
 	</properties>
 	<dependencies>
 		<dependency>
