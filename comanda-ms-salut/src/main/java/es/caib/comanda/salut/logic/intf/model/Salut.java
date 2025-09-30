@@ -41,7 +41,7 @@ import java.util.List;
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST, formClass = String.class),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTAT, formClass = SalutInformeParams.class),
-				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTATS, formClass = SalutInformeParams.class),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTATS, formClass = SalutInformeLlistatParams.class),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_INTEGRACIONS),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_SUBSISTEMES),

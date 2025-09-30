@@ -30,7 +30,7 @@ public class SalutInformeLatenciaItem implements Serializable {
 		this.latenciaMitja = latenciaMitja;
 	}
 
-    public SalutInformeLatenciaItem(SalutEntity salutEntity, Integer minuteOffset) {
+    public SalutInformeLatenciaItem(SalutEntity salutEntity) {
         switch (salutEntity.getTipusRegistre()) {
             case HORA:
                 this.data = salutEntity.getData().withMinute(0).withSecond(0);
@@ -38,10 +38,7 @@ public class SalutInformeLatenciaItem implements Serializable {
             case DIA:
                 this.data = salutEntity.getData().withHour(0).withMinute(0).withSecond(0);
                 break;
-            case MINUTS:
-                this.data = salutEntity.getData().plusMinutes(minuteOffset).withSecond(0);
-                break;
-            default:
+			default:
                 this.data = salutEntity.getData().withSecond(0);
         }
         this.latenciaMitja = salutEntity.getAppLatenciaMitjana();

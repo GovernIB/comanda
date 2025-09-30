@@ -39,7 +39,7 @@ public class SalutInformeEstatItem implements Serializable {
     private double unknownPercent;
 
 
-    public SalutInformeEstatItem(SalutEntity salutEntity, Integer minuteOffset) {
+    public SalutInformeEstatItem(SalutEntity salutEntity) {
 
         switch (salutEntity.getTipusRegistre()) {
             case HORA:
@@ -48,10 +48,7 @@ public class SalutInformeEstatItem implements Serializable {
             case DIA:
                 this.data = salutEntity.getData().withHour(0).withMinute(0).withSecond(0);
                 break;
-            case MINUTS:
-                this.data = salutEntity.getData().plusMinutes(minuteOffset).withSecond(0);
-                break;
-            default:
+			default:
                 this.data = salutEntity.getData().withSecond(0);
         }
 

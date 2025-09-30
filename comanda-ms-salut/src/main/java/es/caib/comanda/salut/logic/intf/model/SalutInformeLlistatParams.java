@@ -10,21 +10,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Informació per als informes de estats i latència de un recurs salut.
+ * Informació per a l'informe del llistat de salut.
  *
  * @author Límit Tecnologies
  */
 @Getter
 @Setter
 @NoArgsConstructor
-public class SalutInformeParams implements Serializable {
+public class SalutInformeLlistatParams implements Serializable {
+	@NotNull
+	private List<Long> entornAppIdList;
 	@NotNull
 	private LocalDateTime dataInici;
 	@NotNull
 	private LocalDateTime dataFi;
 	@NotNull
-	private Long entornAppId;
-	@NotNull
 	private SalutInformeAgrupacio agrupacio;
-
 }
