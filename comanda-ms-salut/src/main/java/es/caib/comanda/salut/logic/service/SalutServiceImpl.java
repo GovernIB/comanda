@@ -7,15 +7,7 @@ import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
-import es.caib.comanda.salut.logic.intf.model.Salut;
-import es.caib.comanda.salut.logic.intf.model.SalutDetall;
-import es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem;
-import es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem;
-import es.caib.comanda.salut.logic.intf.model.SalutInformeParams;
-import es.caib.comanda.salut.logic.intf.model.SalutIntegracio;
-import es.caib.comanda.salut.logic.intf.model.SalutMissatge;
-import es.caib.comanda.salut.logic.intf.model.SalutSubsistema;
-import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
+import es.caib.comanda.salut.logic.intf.model.*;
 import es.caib.comanda.salut.logic.intf.service.SalutService;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
@@ -36,15 +28,14 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.Period;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
@@ -72,6 +63,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.SALUT_REPORT_ESTAT, new InformeEstat());
 		register(Salut.SALUT_REPORT_ESTATS, new InformeEstats());
 		register(Salut.SALUT_REPORT_LATENCIA, new InformeLatencia());
+		register(Salut.SALUT_REPORT_GRUPS_DATES, new InformeGrupsDates());
 		register(Salut.PERSP_INTEGRACIONS, new PerspectiveIntegracions());
 		register(Salut.PERSP_SUBSISTEMES, new PerspectiveSubsistemes());
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
@@ -217,27 +209,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				String code,
 				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
-			final List<SalutInformeEstatItem> data = new ArrayList<>();
+            TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
 
-            TipusRegistreSalut tipus = mapTipusAgrupacio(params);
-            LocalDateTime dataInici = calculaDataIniciAmbMarge(params.getDataInici(), tipus);
-
-            List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                    params.getEntornAppId(),
-                    dataInici,
-                    tipus);
-
-            if (tipus == TipusRegistreSalut.MINUTS) {
-                return generaPerFranges4Minuts(salutEntityList, params, SalutInformeEstatItem::new);
-            }
-
-            // Comportament per defecte per a altres agrupacions
-            Integer minuteOffset = null;
-            salutEntityList.forEach(salutEntity -> {
-                data.add(new SalutInformeEstatItem(salutEntity, minuteOffset));
-            });
-
-            return data;
+			return generateSalutEstatList(dataInici, tipus, params.getEntornAppId());
 		}
 
 		@Override
@@ -245,17 +220,18 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 	}
 
-    public class InformeEstats implements ReportGenerator<SalutEntity, SalutInformeParams, HashMap<String, Object>> {
+    public class InformeEstats implements ReportGenerator<SalutEntity, SalutInformeLlistatParams, HashMap<String, Object>> {
 
         @Override
-		public List<HashMap<String, Object>> generateData(String code, SalutEntity entity, SalutInformeParams params) throws ReportGenerationException {
+		public List<HashMap<String, Object>> generateData(String code, SalutEntity entity, SalutInformeLlistatParams params) throws ReportGenerationException {
             List<HashMap<String, Object>> result = new ArrayList<>();
             HashMap<String, Object> map = new HashMap<>();
-            InformeEstat informeEstat = new InformeEstat();
+            TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
+
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
 
             params.getEntornAppIdList().forEach( id -> {
-                params.setEntornAppId(id);
-                List<SalutInformeEstatItem> list = informeEstat.generateData(code, entity, params);
+                List<SalutInformeEstatItem> list = generateSalutEstatList(dataInici, tipus, id);
                 map.put(String.valueOf(id), list);
             });
 
@@ -264,7 +240,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 
         @Override
-        public void onChange(Serializable id, SalutInformeParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeParams target) {
+        public void onChange(Serializable id, SalutInformeLlistatParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeLlistatParams target) {
         }
     }
 
@@ -284,22 +260,17 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				SalutInformeParams params) throws ReportGenerationException {
 			final List<SalutInformeLatenciaItem> data = new ArrayList<>();
 
-            TipusRegistreSalut tipus = mapTipusAgrupacio(params);
-            LocalDateTime dataInici = calculaDataIniciAmbMarge(params.getDataInici(), tipus);
+            TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
 
             List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                     params.getEntornAppId(),
                     dataInici,
                     tipus);
 
-            if (tipus == TipusRegistreSalut.MINUTS) {
-                return generaPerFranges4Minuts(salutEntityList, params, SalutInformeLatenciaItem::new);
-            }
-
             // Comportament per defecte per a altres agrupacions
-            Integer minuteOffset = null;
             salutEntityList.forEach(salutEntity -> {
-                data.add(new SalutInformeLatenciaItem(salutEntity, minuteOffset));
+                data.add(new SalutInformeLatenciaItem(salutEntity));
             });
 
             return data;
@@ -310,6 +281,19 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 	}
 
+    public class InformeGrupsDates implements ReportGenerator<SalutEntity, SalutInformeGrupsParams, SalutInformeGrupItem> {
+
+        @Override
+        public List<SalutInformeGrupItem> generateData(String code, SalutEntity entity, SalutInformeGrupsParams params) throws ReportGenerationException {
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataReferencia());
+            return generarGrupsDates(dataInici, params.getAgrupacio()).stream().map(SalutInformeGrupItem::new).collect(Collectors.toList());
+        }
+
+        @Override
+        public void onChange(Serializable id, SalutInformeGrupsParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeGrupsParams target) {
+        }
+    }
+
     // --------------------------------------------------------------------------------------------
     // Mètodes auxiliars per evitar duplicació entre informes
     // --------------------------------------------------------------------------------------------
@@ -317,86 +301,107 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
     /**
      * Converteix l'agrupació de l'informe al TipusRegistreSalut corresponent.
      */
-    private TipusRegistreSalut mapTipusAgrupacio(SalutInformeParams params) throws ReportGenerationException {
-        switch (params.getAgrupacio()) {
+    private TipusRegistreSalut mapTipusAgrupacio(SalutInformeAgrupacio agrupacio) throws ReportGenerationException {
+        switch (agrupacio) {
             case MINUT: return TipusRegistreSalut.MINUT;
             case MINUTS_HORA: return TipusRegistreSalut.MINUTS;
             case HORA: return TipusRegistreSalut.HORA;
             case DIA_SETMANA:
             case DIA_MES: return TipusRegistreSalut.DIA;
             default:
-                throw new ReportGenerationException(Salut.class, null, null, "Unknown agrupacio value: " + params.getAgrupacio());
+                throw new ReportGenerationException(Salut.class, null, null, "Unknown agrupacio value: " + agrupacio);
+        }
+    }
+
+    private TemporalAmount getTemporalAmountAgrupacio(SalutInformeAgrupacio agrupacio){
+        switch (agrupacio){
+            case DIA_MES:
+                return Period.ofDays(30);
+            case DIA_SETMANA:
+                return Period.ofDays(7);
+            case HORA:
+                return Period.ofDays(1);
+            case MINUTS_HORA:
+                return Duration.ofHours(1);
+            case MINUT:
+            default:
+                return Duration.ofMinutes(15);
         }
     }
 
     /**
-     * Aplica un petit marge de -3 minuts només per MINUTS.
+     * Retorna la data d'inici del rang corresponent a l'agrupació (relatiu a la data de referència enviada pel frontal).
      */
-    private LocalDateTime calculaDataIniciAmbMarge(LocalDateTime dataInici, TipusRegistreSalut tipus) {
-        if (tipus == TipusRegistreSalut.MINUTS) {
-            return dataInici.minusMinutes(3);
-        } else if (tipus == TipusRegistreSalut.DIA) {
-            return dataInici.plusMinutes(60);
+    private LocalDateTime getDataIniciAjustada(SalutInformeAgrupacio agrupacio, LocalDateTime dataReferencia){
+        TemporalAmount temporalAmountAgrupacio = getTemporalAmountAgrupacio(agrupacio);
+
+        LocalDateTime dataFi = dataReferencia.withSecond(0).withNano(0);
+        switch (agrupacio){
+            case DIA_MES:
+            case DIA_SETMANA:
+                dataFi = dataFi.withHour(0).withMinute(0);
+                break;
+            case HORA:
+                dataFi = dataFi.withMinute(0);
+                break;
+            case MINUTS_HORA:
+                if (dataFi.getMinute() % MINUTS_PER_AGRUPACIO != 0)
+                    dataFi = dataFi.withMinute(dataFi.getMinute() - dataFi.getMinute() % MINUTS_PER_AGRUPACIO);
+                break;
         }
-        return dataInici;
+        return dataFi.minus(temporalAmountAgrupacio);
+
+    }
+
+    private List<LocalDateTime> generarGrupsDates(LocalDateTime dataInici, SalutInformeAgrupacio agrupacio) {
+        List<LocalDateTime> result = new ArrayList<>();
+        LocalDateTime data = dataInici;
+        LocalDateTime dataFi = dataInici.plus(getTemporalAmountAgrupacio(agrupacio));
+        while (data.isBefore(dataFi) || data.isEqual(dataFi)) {
+            result.add(data);
+
+            switch (agrupacio) {
+                case DIA_MES:
+                case DIA_SETMANA:
+                    data = data.plusDays(1);
+                    break;
+                case HORA:
+                    data = data.plusHours(1);
+                    break;
+                case MINUTS_HORA:
+                    data = data.plusMinutes(MINUTS_PER_AGRUPACIO);
+                    break;
+                case MINUT:
+                    data = data.plusMinutes(1);
+                    break;
+            }
+        }
+        return result;
     }
 
     /**
-     * Genera una llista d'ítems per franges de 4 minuts a partir de params.getDataInici() fins a params.getDataFi().
-     * Per cada franja s'agafa com a màxim una entitat. En franges buides no s'afegeix cap ítem.
+     * Genera una llista d'objectes SalutInformeEstatItem basats en els paràmetres proporcionats.
+     *
+     * @param dataInici la data i hora d'inici utilitzades per filtrar les entitats
+     * @param tipus el tipus de registre utilitzat per filtrar les entitats
+     * @param entornAppId l'ID de l'entorn d'aplicació utilitzat per filtrar les entitats
+     * @return una llista d'objectes SalutInformeEstatItem creats a partir de les entitats filtrades
      */
-    private <T> List<T> generaPerFranges4Minuts(List<SalutEntity> salutEntityList,
-                                                SalutInformeParams params,
-                                                BiFunction<SalutEntity, Integer, T> constructor) {
-        final List<T> resultat = new ArrayList<>();
-        if (salutEntityList == null || salutEntityList.isEmpty()) {
-            return resultat;
-        }
-
-        salutEntityList.sort(Comparator.comparing(SalutEntity::getData));
-
-        LocalDateTime dataInici = params.getDataInici().withSecond(0);
-        LocalDateTime dataFi = params.getDataFi();
-        if (dataFi == null || !dataFi.isAfter(dataInici)) {
-            return resultat;
-        }
-        int dataIniciMinutesMod4 = params.getDataInici().getMinute() % 4;
-        int dataFiMinutesMod4 = params.getDataFi().getMinute() % 4;
-        if (dataIniciMinutesMod4 != 0 || dataFiMinutesMod4 != 0) {
-            throw new ReportGenerationException(Salut.class, "Rang de dades invàlid. DataInici i DataFi han de tenir un múltiple de 4 com a minuts");
-        }
-
-        LocalDateTime iniciFranja = params.getDataInici();
-        LocalDateTime fiFranja = params.getDataInici().plusMinutes(MINUTS_PER_AGRUPACIO);
-        int pos = 0;
-        final int total = salutEntityList.size();
-
-        while (!dataFi.isBefore(iniciFranja)) {
-            SalutEntity seleccionat = null;
-
-//          Skip dels salutEntity que son de abans de l'inici de la nostra franja
-            while (pos < total && salutEntityList.get(pos).getData().isBefore(iniciFranja)) {
-                pos++;
-            }
-//          Començam a partir del skip anterior
-            int k = pos;
-//          Sa segona condicio pareix redundant? En teoria ja hem descartar els salutEntity de abans del iniciFranja
-            while (k < total && !salutEntityList.get(k).getData().isBefore(iniciFranja)
-                    && salutEntityList.get(k).getData().isBefore(fiFranja)) {
-                seleccionat = salutEntityList.get(k);
-                k++;
-            }
-            pos = k;
-
-            if (seleccionat != null) {
-                resultat.add(constructor.apply(seleccionat, 0));
-            }
-
-            iniciFranja = iniciFranja.plusMinutes(4);
-            fiFranja = fiFranja.plusMinutes(4);
-        }
-
-        return resultat;
+    private List<SalutInformeEstatItem> generateSalutEstatList(LocalDateTime dataInici, TipusRegistreSalut tipus, Long entornAppId) {
+        List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                entornAppId,
+                dataInici,
+                tipus);
+        return salutEntityList.stream().map(SalutInformeEstatItem::new).collect(Collectors.toList());
     }
 
+    /**
+     * Comprova si una franja és vàlida per a l'agrupació de MINUTS
+     * usant la constant MINUTS_PER_AGRUPACIO
+     */
+    private boolean isFranjaMinutsInvalida(LocalDateTime dataInici, LocalDateTime dataFi) {
+        int dataIniciMinutesMod = dataInici.getMinute() % MINUTS_PER_AGRUPACIO;
+        int dataFiMinutesMod = dataFi.getMinute() % MINUTS_PER_AGRUPACIO;
+        return dataIniciMinutesMod != 0 || dataFiMinutesMod != 0;
+    }
 }

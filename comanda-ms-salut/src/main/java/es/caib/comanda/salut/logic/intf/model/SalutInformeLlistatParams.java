@@ -8,9 +8,10 @@ import lombok.Setter;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * Informació per als informes de estats i latència de un recurs salut.
+ * Informació per a l'informe del llistat de salut.
  *
  * @author Límit Tecnologies
  */
@@ -18,11 +19,11 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SalutInformeParams implements Serializable {
+public class SalutInformeLlistatParams implements Serializable {
+    @NotNull
+    private LocalDateTime dataFi; // TODO Canviar nom a dataReferencia al fer merge de la branca WIP
 	@NotNull
-	private LocalDateTime dataFi; // TODO Canviar nom a dataReferencia al fer merge de la branca WIP
-	@NotNull
-	private Long entornAppId;
+	private List<Long> entornAppIdList;
 	@NotNull
 	private SalutInformeAgrupacio agrupacio;
 }

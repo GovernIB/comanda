@@ -8,8 +8,8 @@ import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
-import es.caib.comanda.salut.logic.intf.model.Salut;
-import es.caib.comanda.salut.logic.intf.model.SalutEstat;
+import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
+import es.caib.comanda.salut.logic.intf.model.*;
 import es.caib.comanda.salut.logic.service.SalutServiceImpl;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
@@ -25,8 +25,16 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
+import static es.caib.comanda.salut.logic.intf.model.Salut.SALUT_REPORT_ESTATS;
+import static es.caib.comanda.salut.logic.intf.model.Salut.SALUT_REPORT_GRUPS_DATES;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class SalutServiceImplTest {
@@ -187,4 +195,161 @@ public class SalutServiceImplTest {
         assertEquals(Integer.valueOf(50), result.getBdLatencia());
     }
 
+    private void assertIncrement(List<SalutInformeGrupItem> result, java.time.temporal.TemporalAmount step) {
+        assertFalse(result.isEmpty(), "Generated list should not be empty");
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime current = result.get(i).getData();
+            LocalDateTime next = result.get(i + 1).getData();
+            assertEquals(current.plus(step), next, "Unexpected increment at index " + i);
+        }
+    }
+
+    @Test
+    void testGrupsDates_Minut() {
+        SalutInformeGrupsParams params = new SalutInformeGrupsParams();
+        params.setAgrupacio(SalutInformeAgrupacio.MINUT);
+        params.setDataReferencia(LocalDateTime.of(2023, 1, 1, 10, 17));
+
+        List<SalutInformeGrupItem> result = (salutService.new InformeGrupsDates()).generateData(SALUT_REPORT_GRUPS_DATES, salutEntity, params);
+
+        assertEquals(
+                params.getDataReferencia().minusMinutes(15),
+                result.get(0).getData(),
+                "First item should be 15 minutes before the reference date"
+        );
+        assertIncrement(result, java.time.Duration.ofMinutes(1));
+    }
+
+    @Test
+    void testGrupsDates_MinutsHora() {
+        SalutInformeGrupsParams params = new SalutInformeGrupsParams();
+        params.setAgrupacio(SalutInformeAgrupacio.MINUTS_HORA);
+        params.setDataReferencia(LocalDateTime.of(2023, 1, 1, 10, MINUTS_PER_AGRUPACIO*2-1));
+
+        List<SalutInformeGrupItem> result = (salutService.new InformeGrupsDates()).generateData(SALUT_REPORT_GRUPS_DATES, salutEntity, params);
+
+        assertEquals(
+                LocalDateTime.of(2023, 1, 1, 10, MINUTS_PER_AGRUPACIO),
+                result.get(result.size() - 1).getData(),
+                String.format("Minute value not divisible by %d", MINUTS_PER_AGRUPACIO));
+        assertEquals(
+                LocalDateTime.of(2023, 1, 1, 10, MINUTS_PER_AGRUPACIO).minusHours(1),
+                result.get(0).getData(),
+                "First item should be 1 hour before the reference date"
+        );
+        assertIncrement(result, java.time.Duration.ofMinutes(SalutInfoHelper.MINUTS_PER_AGRUPACIO));
+    }
+
+    @Test
+    void testGrupsDates_Hora() {
+        SalutInformeGrupsParams params = new SalutInformeGrupsParams();
+        params.setAgrupacio(SalutInformeAgrupacio.HORA);
+        params.setDataReferencia(LocalDateTime.of(2023, 1, 1, 10, 0));
+
+        List<SalutInformeGrupItem> result = (salutService.new InformeGrupsDates()).generateData(SALUT_REPORT_GRUPS_DATES, salutEntity, params);
+
+        assertEquals(
+                params.getDataReferencia().minusDays(1),
+                result.get(0).getData(),
+                "First item should be 1 day before the reference date"
+        );
+        assertIncrement(result, java.time.Duration.ofHours(1));
+    }
+
+    @Test
+    void testGrupsDates_DiaSetmana() {
+        SalutInformeGrupsParams params = new SalutInformeGrupsParams();
+        params.setAgrupacio(SalutInformeAgrupacio.DIA_SETMANA);
+        params.setDataReferencia(LocalDateTime.of(2023, 1, 1, 10, 0));
+
+        List<SalutInformeGrupItem> result = (salutService.new InformeGrupsDates()).generateData(SALUT_REPORT_GRUPS_DATES, salutEntity, params);
+
+        assertEquals(
+                params.getDataReferencia().withHour(0).minusDays(7),
+                result.get(0).getData(),
+                "First item should be 7 days before the reference date"
+        );
+        assertIncrement(result, java.time.Period.ofDays(1));
+    }
+
+    @Test
+    void testGrupsDates_DiaMes() {
+        SalutInformeGrupsParams params = new SalutInformeGrupsParams();
+        params.setAgrupacio(SalutInformeAgrupacio.DIA_MES);
+        params.setDataReferencia(LocalDateTime.of(2023, 1, 17, 10, 0));
+
+        List<SalutInformeGrupItem> result = (salutService.new InformeGrupsDates()).generateData(SALUT_REPORT_GRUPS_DATES, salutEntity, params);
+
+        assertEquals(
+                params.getDataReferencia().withHour(0).minusDays(30),
+                result.get(0).getData(),
+                "First item should be 30 days before the reference date"
+        );
+        assertIncrement(result, java.time.Period.ofDays(1));
+    }
+
+    @Test
+    void testEstatRequest() {
+        when(entityRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(any(), any(LocalDateTime.class), any()))
+                .thenReturn(List.of(salutEntity));
+
+        long entornAppId = 1L;
+
+        SalutInformeParams params =  new SalutInformeParams(
+                LocalDateTime.of(2023, 1, 17, 11, 0),
+                entornAppId,
+                SalutInformeAgrupacio.MINUTS_HORA
+        );
+        salutService.new InformeEstat().generateData(SALUT_REPORT_ESTATS, salutEntity, params);
+
+        verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                eq(entornAppId),
+                eq(LocalDateTime.of(2023, 1, 17, 10, 0)),
+                eq(TipusRegistreSalut.MINUTS)
+        );
+
+    }
+
+    @Test
+    void testEstatsRequest() {
+        when(entityRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(any(), any(LocalDateTime.class), any()))
+                .thenReturn(List.of(salutEntity));
+
+        List<Long> entornAppList = List.of(1L, 2L, 3L);
+        SalutInformeLlistatParams params = new SalutInformeLlistatParams(
+                LocalDateTime.of(2023, 1, 17, 11, 0),
+                entornAppList,
+                SalutInformeAgrupacio.MINUTS_HORA
+        );
+        salutService.new InformeEstats().generateData(SALUT_REPORT_ESTATS, salutEntity, params);
+
+        for (Long entornAppId : entornAppList) {
+            verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                    eq(entornAppId),
+                    eq(LocalDateTime.of(2023, 1, 17, 10, 0)),
+                    eq(TipusRegistreSalut.MINUTS)
+            );
+        }
+    }
+
+    @Test
+    void testLatenciaRequest() {
+        when(entityRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(any(), any(LocalDateTime.class), any()))
+                .thenReturn(List.of(salutEntity));
+
+        long entornAppId = 1L;
+
+        SalutInformeParams params =  new SalutInformeParams(
+                LocalDateTime.of(2023, 1, 17, 11, 0),
+                entornAppId,
+                SalutInformeAgrupacio.MINUTS_HORA
+        );
+        salutService.new InformeLatencia().generateData(SALUT_REPORT_ESTATS, salutEntity, params);
+
+        verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                eq(entornAppId),
+                eq(LocalDateTime.of(2023, 1, 17, 10, 0)),
+                eq(TipusRegistreSalut.MINUTS)
+        );
+    }
 }

@@ -373,10 +373,11 @@ const Salut: FunctionComponent = () => {
                     salutGroups={salutData.groups}
                     reportInterval={salutData.reportInterval}
                     springFilter={additionalFilter}
+                    grupsDates={grupsDates}
                 />
             ) : (
                 // TODO Persistir estado de expansión al cambiar a AppInfo
-                <SalutAppInfo appInfoData={appInfoData} ready={appInfoData.ready} />
+                <SalutAppInfo appInfoData={appInfoData} ready={appInfoData.ready} grupsDates={grupsDates} />
             )}
         </BasePage>
     );

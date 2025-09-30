@@ -41,8 +41,9 @@ import java.util.List;
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LAST, formClass = String.class),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTAT, formClass = SalutInformeParams.class),
-				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTATS, formClass = SalutInformeParams.class),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_ESTATS, formClass = SalutInformeLlistatParams.class),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_LATENCIA, formClass = SalutInformeParams.class),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = Salut.SALUT_REPORT_GRUPS_DATES, formClass = SalutInformeGrupsParams.class),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_INTEGRACIONS),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_SUBSISTEMES),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_CONTEXTS),
@@ -56,6 +57,7 @@ public class Salut extends BaseResource<Long> {
 	public final static String SALUT_REPORT_ESTAT = "estat";
 	public final static String SALUT_REPORT_ESTATS = "estats";
 	public final static String SALUT_REPORT_LATENCIA = "latencia";
+	public final static String SALUT_REPORT_GRUPS_DATES = "grups_dates";
 	public static final String PERSP_INTEGRACIONS = "SAL_INTEGRACIONS";
 	public static final String PERSP_SUBSISTEMES = "SAL_SUBSISTEMES";
 	public static final String PERSP_CONTEXTS = "SAL_CONTEXTS";
