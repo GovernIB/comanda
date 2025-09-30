@@ -303,12 +303,11 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
     }
 
     /**
-     * Aplica un petit marge de -3 minuts només per MINUTS.
+     * Aplica un petit marge
      */
     private LocalDateTime calculaDataIniciAmbMarge(LocalDateTime dataInici, TipusRegistreSalut tipus) {
-        if (tipus == TipusRegistreSalut.MINUTS) {
-            return dataInici.minusMinutes(3);
-        } else if (tipus == TipusRegistreSalut.DIA) {
+//        TODO Provar si realment és necessari aquest marge per DIA
+        if (tipus == TipusRegistreSalut.DIA) {
             return dataInici.plusMinutes(60);
         }
         return dataInici;
