@@ -28,8 +28,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
+import static es.caib.comanda.salut.logic.intf.model.Salut.SALUT_REPORT_ESTATS;
 import static es.caib.comanda.salut.logic.intf.model.Salut.SALUT_REPORT_GRUPS_DATES;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class SalutServiceImplTest {
@@ -281,5 +286,73 @@ public class SalutServiceImplTest {
                 "First item should be 30 days before the reference date"
         );
         assertIncrement(result, java.time.Period.ofDays(1));
+    }
+
+    @Test
+    void testEstatRequest() {
+        when(entityRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(any(), any(LocalDateTime.class), any()))
+                .thenReturn(List.of(salutEntity));
+
+        long entornAppId = 1L;
+
+        SalutInformeParams params =  new SalutInformeParams(
+                LocalDateTime.of(2023, 1, 17, 10, 0),
+                LocalDateTime.of(2023, 1, 17, 11, 0),
+                entornAppId,
+                SalutInformeAgrupacio.MINUTS_HORA
+        );
+        salutService.new InformeEstat().generateData(SALUT_REPORT_ESTATS, salutEntity, params);
+
+        verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                eq(entornAppId),
+                eq(params.getDataInici()),
+                eq(TipusRegistreSalut.MINUTS)
+        );
+
+    }
+
+    @Test
+    void testEstatsRequest() {
+        when(entityRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(any(), any(LocalDateTime.class), any()))
+                .thenReturn(List.of(salutEntity));
+
+        List<Long> entornAppList = List.of(1L, 2L, 3L);
+        SalutInformeLlistatParams params = new SalutInformeLlistatParams(
+                entornAppList,
+                LocalDateTime.of(2023, 1, 17, 10, 0),
+                LocalDateTime.of(2023, 1, 17, 11, 0),
+                SalutInformeAgrupacio.MINUTS_HORA
+        );
+        salutService.new InformeEstats().generateData(SALUT_REPORT_ESTATS, salutEntity, params);
+
+        for (Long entornAppId : entornAppList) {
+            verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                    eq(entornAppId),
+                    eq(params.getDataInici()),
+                    eq(TipusRegistreSalut.MINUTS)
+            );
+        }
+    }
+
+    @Test
+    void testLatenciaRequest() {
+        when(entityRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(any(), any(LocalDateTime.class), any()))
+                .thenReturn(List.of(salutEntity));
+
+        long entornAppId = 1L;
+
+        SalutInformeParams params =  new SalutInformeParams(
+                LocalDateTime.of(2023, 1, 17, 10, 0),
+                LocalDateTime.of(2023, 1, 17, 11, 0),
+                entornAppId,
+                SalutInformeAgrupacio.MINUTS_HORA
+        );
+        salutService.new InformeLatencia().generateData(SALUT_REPORT_ESTATS, salutEntity, params);
+
+        verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
+                eq(entornAppId),
+                eq(params.getDataInici()),
+                eq(TipusRegistreSalut.MINUTS)
+        );
     }
 }
