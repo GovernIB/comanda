@@ -96,6 +96,20 @@ const splitSalutDataIntoGroups = ({
 }) => {
     const groups: SalutData[] = [];
 
+    const generateGroup = ({ groupedApp, groupedEntorn, entornApps }: Pick<SalutData, 'groupedApp' | 'groupedEntorn' | 'entornApps'>) => {
+        const filteredEntornAppIds = entornApps
+            .map(({ id }) => id as number);
+        return {
+            groupedApp,
+            groupedEntorn,
+            entornApps,
+            estats: filterObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))),
+            salutLastItems: salutLastItems.filter(
+                ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
+            ),
+        };
+    };
+
     if (groupBy === GroupingEnum.APPLICATION) {
         if (apps == null)
             throw new Error('[splitSalutDataIntoGroups] apps is required when groupBy is APP');
@@ -104,17 +118,11 @@ const splitSalutDataIntoGroups = ({
         appIds.forEach((appId) => {
             const filteredEntornApps = entornApps
                 .filter(({ app }) => app.id === appId);
-            const filteredEntornAppIds = filteredEntornApps
-                .map(({ id }) => id as number);
 
-            groups.push({
+            groups.push(generateGroup({
                 groupedApp: apps.find(({ id }) => id === appId),
                 entornApps: filteredEntornApps,
-                estats: filterObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))), // TODO Codigo duplicado
-                salutLastItems: salutLastItems.filter(
-                    ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
-                ),
-            });
+            }));
         });
     } else {
         if (entorns == null)
@@ -126,17 +134,11 @@ const splitSalutDataIntoGroups = ({
         entornIds.forEach((entornId) => {
             const filteredEntornApps = entornApps
                 .filter(({ entorn }) => entorn.id === entornId);
-            const filteredEntornAppIds = filteredEntornApps
-                .map(({ id }) => id as number);
 
-            groups.push({
+            groups.push(generateGroup({
                 groupedEntorn: entorns.find(({ id }) => id === entornId),
                 entornApps: filteredEntornApps,
-                estats: filterObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))), // TODO Codigo duplicado
-                salutLastItems: salutLastItems.filter(
-                    ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
-                ),
-            });
+            }));
         });
     }
 
