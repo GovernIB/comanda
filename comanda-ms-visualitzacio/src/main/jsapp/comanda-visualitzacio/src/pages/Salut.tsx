@@ -42,6 +42,7 @@ const useAppData = () => {
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
         useResourceApiService('salut');
     const [loading, setLoading] = React.useState<boolean>(true);
+    const [grupsDates, setGrupsDates] = React.useState<string[]>();
     const [estats, setEstats] = React.useState<Record<string, any>>({});
     const [salutLastItems, setSalutLastItems] = React.useState<any[]>();
     const [reportParams, setReportParams] = React.useState<any>();
@@ -54,6 +55,7 @@ const useAppData = () => {
     ) => {
         if (salutApiIsReady) {
             setLoading(true);
+            let grupsDates: string[] | undefined = undefined;
             let salutLastItemsResponse: SalutModel[] | null = null;
             let estatsResponse: Record<string, any> | null = null;
             const newReportParams = {
@@ -61,29 +63,40 @@ const useAppData = () => {
                 dataFi,
                 agrupacio,
             };
-            salutApiReport(null, { code: 'salut_last', data: springFilter })
-                .then((apiResponse) => {
-                    salutLastItemsResponse = (apiResponse as SalutModel[]).map(item => new SalutModel(item));
-                    const reportData = {
-                        ...newReportParams,
-                        entornAppIdList: salutLastItemsResponse.map(
-                            ({ entornAppId }) => entornAppId
-                        ),
-                    };
+            salutApiReport(null, {
+                code: 'grups_dates',
+                data: {
+                    dataReferencia: dataFi,
+                    agrupacio,
+                },
+            }).then((responseDates) => {
+                grupsDates = (responseDates as { data: string }[]).map((item) => item.data);
+                return salutApiReport(null, { code: 'salut_last', data: springFilter })
+                    .then((apiResponse) => {
+                        salutLastItemsResponse = (apiResponse as SalutModel[]).map(item => new SalutModel(item));
+                        const reportData = {
+                            ...newReportParams,
+                            entornAppIdList: salutLastItemsResponse.map(
+                                ({ entornAppId }) => entornAppId
+                            ),
+                        };
 
-                    return new Promise((resolve, reject) => {
-                        salutApiReport(null, { code: 'estats', data: reportData })
-                            .then((response: any) => {
-                                // TODO: eliminar 'links' de respuesta
-                                estatsResponse = Object.fromEntries(
-                                    Object.entries(response[0]).filter(([key]) => key !== BaseEntity.LINKS)
-                                );
-                                resolve(null);
-                            })
-                            .catch(reject);
-                    });
-                })
+                        return new Promise((resolve, reject) => {
+                            salutApiReport(null, { code: 'estats', data: reportData })
+                                .then((response: any) => {
+                                    // TODO: eliminar 'links' de respuesta
+                                    estatsResponse = Object.fromEntries(
+                                        Object.entries(response[0]).filter(([key]) => key !== BaseEntity.LINKS)
+                                    );
+                                    resolve(null);
+                                })
+                                .catch(reject);
+                        });
+                    })
+
+            })
                 .finally(() => {
+                    setGrupsDates(grupsDates);
                     setSalutLastItems(salutLastItemsResponse as SalutModel[]);
                     setEstats(estatsResponse as Record<string, any>);
                     setLoading(false);
@@ -100,6 +113,7 @@ const useAppData = () => {
         salutLastItems,
         estats,
         reportParams,
+        grupsDates,
     };
 };
 
@@ -450,6 +464,7 @@ const Salut: React.FC = () => {
         salutLastItems,
         estats,
         reportParams,
+        grupsDates,
         springFilter,
     } = useAppData();
     const { id } = useParams();
@@ -469,7 +484,7 @@ const Salut: React.FC = () => {
 
     return (
         <BasePage toolbar={toolbar}>
-            {salutLastItems == null || estats == null || reportParams == null ? (
+            {salutLastItems == null || estats == null || reportParams == null || grupsDates == null ? (
                 <Box
                     sx={{
                         display: 'flex',
@@ -502,6 +517,7 @@ const Salut: React.FC = () => {
                             <UpdownBarChart
                                 dataInici={reportParams.dataInici}
                                 agrupacio={reportParams.agrupacio}
+                                grupsDates={grupsDates}
                                 estats={estats}
                             />
                         </ErrorBoundary>

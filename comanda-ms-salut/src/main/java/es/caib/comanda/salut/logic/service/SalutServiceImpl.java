@@ -349,8 +349,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
                     dataFi = dataFi.withMinute(dataFi.getMinute() - dataFi.getMinute() % MINUTS_PER_AGRUPACIO);
                 break;
         }
-
-//        TODO COmprovar si sa correcció de hores, minuts, dies.. es necessaria a els casos que no son MINUTS_HORA
         return dataFi.minus(temporalAmountAgrupacio);
 
     }

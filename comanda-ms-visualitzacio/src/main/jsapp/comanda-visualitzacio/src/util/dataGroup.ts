@@ -72,7 +72,7 @@ export const toXAxisDataGroups = (dataGroups: string[], agrupacio: string) => {
         } else if (agrupacio === 'DIA' || agrupacio === 'DIA_SETMANA' || agrupacio === 'DIA_MES') {
             return g.substring(0, 10);
         } else if (agrupacio === 'HORA') {
-            return g.substring(11, 13) + ':00';
+            return g.substring(8, 13) + ':00';
         } else if (agrupacio === 'MINUTS_HORA') {
             return g.substring(11, 16);
         } else if (agrupacio === 'MINUT') {

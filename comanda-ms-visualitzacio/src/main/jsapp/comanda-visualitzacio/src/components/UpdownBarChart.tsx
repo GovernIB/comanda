@@ -8,6 +8,7 @@ export type UpdownBarChartProps = {
     dataInici: string;
     agrupacio: string;
     estats?: any;
+    grupsDates: string[];
 }
 
 export const getEstatsMaxData = (estats: any) => {
@@ -52,11 +53,13 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     const {
         dataInici,
         agrupacio,
-        estats
+        estats,
+        grupsDates,
     } = props;
     const { t } = useTranslation();
     const estatsMaxData = getEstatsMaxData(estats);
-    const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
+    // const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
+    const baseDataGroups = grupsDates;
 
     const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "upPercent");
     const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "warnPercent");
@@ -114,7 +117,12 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
     ];
 
     return estats != null && <BarChart
-        xAxis={[{ scaleType: 'band', data: dataGroups }]}
+        xAxis={[{
+            scaleType: 'band',
+            data: dataGroups,
+            // TODO Fer un formatter generic per a totes les agrupacions
+            valueFormatter: (value: string) => agrupacio === 'HORA' ? value.substring(3) : value
+        }]}
         yAxis={[{ max: 100 }]}
         series={series}
         // borderRadius={6}

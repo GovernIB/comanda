@@ -60,6 +60,7 @@ interface AppDataState {
     latencies: any[] | null;
     salutCurrentApp: SalutModel | null;
     reportParams: any;
+    grupsDates: string[] | null;
 }
 
 const appDataStateInitialValue: AppDataState = {
@@ -69,6 +70,7 @@ const appDataStateInitialValue: AppDataState = {
     latencies: null,
     salutCurrentApp: null,
     reportParams: null,
+    grupsDates: null,
 };
 
 const useAppEstatLabel = () => {
@@ -109,6 +111,13 @@ const useAppData = (id: any) => {
                     ...reportParams,
                     entornAppId,
                 };
+                const grupDatesReportItems = await salutApiReport(null, {
+                    code: 'grups_dates',
+                    data: {
+                        dataReferencia: dataFi,
+                        agrupacio,
+                    },
+                });
                 const estatReportItems = await salutApiReport(null, {
                     code: 'estat',
                     data: reportData,
@@ -140,6 +149,7 @@ const useAppData = (id: any) => {
                     latencies: latenciaReportItems as any[],
                     salutCurrentApp,
                     reportParams,
+                    grupsDates: (grupDatesReportItems as { data: string }[]).map((item) => item.data),
                 }));
             })();
         }
@@ -223,7 +233,7 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
 }
 
 const LatenciaLineChart: React.FC<any> = (props) => {
-    const { dataInici, agrupacio, latencies, estats } = props;
+    const { dataInici, agrupacio, latencies, estats, grupsDates } = props;
     const { t } = useTranslation();
     if (!latencies || latencies.length === 0) {
         return <Card variant="outlined" sx={{ height: '300px' }}>
@@ -244,7 +254,8 @@ const LatenciaLineChart: React.FC<any> = (props) => {
         </Card>;
     }
     const estatsMaxData = getEstatsMaxData(estats);
-    const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
+    // const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
+    const baseDataGroups = grupsDates;
     const seriesDataLatencia = baseDataGroups.map((group) => {
         return latencies.find((latenciaData: any) => {
             if (!latenciaData || !latenciaData.data) return false;
@@ -267,7 +278,13 @@ const LatenciaLineChart: React.FC<any> = (props) => {
             </Typography>
             <ChartContainer
                 series={[...lineSeries]}
-                xAxis={[{ scaleType: 'band', data: dataGroups, id: 'latencia-x-axis-id', }]}
+                xAxis={[{
+                    scaleType: 'band',
+                    data: dataGroups,
+                    id: 'latencia-x-axis-id',
+                    // TODO Fer un formatter generic per a totes les agrupacions
+                    valueFormatter: (value: string) => agrupacio === 'HORA' ? value.substring(3) : value
+                }]}
                 yAxis={[{ label: ' ms', id: 'latencia-y-axis-id', }]}>
                 <LinePlot />
                 <MarkPlot />
@@ -280,7 +297,7 @@ const LatenciaLineChart: React.FC<any> = (props) => {
 }
 
 const EstatsBarCard: React.FC<any> = (props) => {
-    const { dataInici, agrupacio, estats } = props;
+    const { grupsDates, dataInici, agrupacio, estats } = props;
     const { t } = useTranslation();
     const hasData = estats && Object.keys(estats).length > 0;
     return <Card variant="outlined" sx={{ height: '300px' }}>
@@ -301,7 +318,7 @@ const EstatsBarCard: React.FC<any> = (props) => {
                     {t('page.salut.estatLatencia.noInfo')}
                 </Typography>
             ) : (
-                <UpdownBarChart dataInici={dataInici} agrupacio={agrupacio} estats={estats} />
+                <UpdownBarChart dataInici={dataInici} agrupacio={agrupacio} estats={estats} grupsDates={grupsDates} />
             )}
         </CardContent>
     </Card>;
@@ -545,6 +562,7 @@ const SalutAppInfo: React.FC = () => {
         latencies,
         salutCurrentApp,
         reportParams,
+        grupsDates,
     } = useAppData(id);
     const dataLoaded = ready && loading != null && !loading;
     const toolbarState = salutCurrentApp?.appEstat
@@ -578,11 +596,12 @@ const SalutAppInfo: React.FC = () => {
                 </Grid>
                 <Grid size={{ sm: 12, lg: 9 }}>
                     <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                        {reportParams != null && estats != null && (
+                        {reportParams != null && estats != null && grupsDates != null && (
                             <EstatsBarCard
                                 dataInici={reportParams.dataInici}
                                 agrupacio={reportParams.agrupacio}
                                 estats={estats}
+                                grupsDates={grupsDates}
                             />
                         )}
                     </ErrorBoundary>
@@ -613,16 +632,17 @@ const SalutAppInfo: React.FC = () => {
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
                         <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            {reportParams != null && estats != null && (
+                            {reportParams != null && estats != null && grupsDates != null && (
                                 <EstatsBarCard
                                     dataInici={reportParams.dataInici}
                                     agrupacio={reportParams.agrupacio}
                                     estats={estats}
+                                    grupsDates={grupsDates}
                                 />
                             )}
                         </ErrorBoundary>
                     </Grid>
-                    {salutCurrentApp?.peticioError ? 
+                    {salutCurrentApp?.peticioError ?
                         <Grid>
                             <Alert severity="error">{t('page.salut.info.downAlert')}</Alert>
                         </Grid> : <>
@@ -638,6 +658,7 @@ const SalutAppInfo: React.FC = () => {
                                                 agrupacio={reportParams.agrupacio}
                                                 latencies={latencies}
                                                 estats={estats}
+                                                grupsDates={grupsDates}
                                             />
                                         </>
                                     )}
