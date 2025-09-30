@@ -296,7 +296,6 @@ public class SalutServiceImplTest {
         long entornAppId = 1L;
 
         SalutInformeParams params =  new SalutInformeParams(
-                LocalDateTime.of(2023, 1, 17, 10, 0),
                 LocalDateTime.of(2023, 1, 17, 11, 0),
                 entornAppId,
                 SalutInformeAgrupacio.MINUTS_HORA
@@ -305,7 +304,7 @@ public class SalutServiceImplTest {
 
         verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                 eq(entornAppId),
-                eq(params.getDataInici()),
+                eq(LocalDateTime.of(2023, 1, 17, 10, 0)),
                 eq(TipusRegistreSalut.MINUTS)
         );
 
@@ -318,9 +317,8 @@ public class SalutServiceImplTest {
 
         List<Long> entornAppList = List.of(1L, 2L, 3L);
         SalutInformeLlistatParams params = new SalutInformeLlistatParams(
-                entornAppList,
-                LocalDateTime.of(2023, 1, 17, 10, 0),
                 LocalDateTime.of(2023, 1, 17, 11, 0),
+                entornAppList,
                 SalutInformeAgrupacio.MINUTS_HORA
         );
         salutService.new InformeEstats().generateData(SALUT_REPORT_ESTATS, salutEntity, params);
@@ -328,7 +326,7 @@ public class SalutServiceImplTest {
         for (Long entornAppId : entornAppList) {
             verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                     eq(entornAppId),
-                    eq(params.getDataInici()),
+                    eq(LocalDateTime.of(2023, 1, 17, 10, 0)),
                     eq(TipusRegistreSalut.MINUTS)
             );
         }
@@ -342,7 +340,6 @@ public class SalutServiceImplTest {
         long entornAppId = 1L;
 
         SalutInformeParams params =  new SalutInformeParams(
-                LocalDateTime.of(2023, 1, 17, 10, 0),
                 LocalDateTime.of(2023, 1, 17, 11, 0),
                 entornAppId,
                 SalutInformeAgrupacio.MINUTS_HORA
@@ -351,7 +348,7 @@ public class SalutServiceImplTest {
 
         verify(entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                 eq(entornAppId),
-                eq(params.getDataInici()),
+                eq(LocalDateTime.of(2023, 1, 17, 10, 0)),
                 eq(TipusRegistreSalut.MINUTS)
         );
     }

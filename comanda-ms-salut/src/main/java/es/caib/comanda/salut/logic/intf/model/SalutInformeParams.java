@@ -8,7 +8,6 @@ import lombok.Setter;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Informació per als informes de estats i latència de un recurs salut.
@@ -21,12 +20,9 @@ import java.util.List;
 @AllArgsConstructor
 public class SalutInformeParams implements Serializable {
 	@NotNull
-	private LocalDateTime dataInici;
-	@NotNull
-	private LocalDateTime dataFi;
+	private LocalDateTime dataFi; // TODO Canviar nom a dataReferencia al fer merge de la branca WIP
 	@NotNull
 	private Long entornAppId;
 	@NotNull
 	private SalutInformeAgrupacio agrupacio;
-
 }

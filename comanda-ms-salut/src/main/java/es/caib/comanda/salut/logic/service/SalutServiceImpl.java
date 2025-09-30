@@ -210,10 +210,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
             TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
-            LocalDateTime dataInici = calculaDataIniciAmbMarge(params.getDataInici(), tipus);
-            if (tipus == TipusRegistreSalut.MINUTS && isFranjaMinutsInvalida(dataInici, params.getDataFi())) {
-				throw new ReportGenerationException(Salut.class, "Rang de dades invàlid. DataInici i DataFi han de tenir un múltiple de 4 com a minuts");
-            }
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
 
 			return generateSalutEstatList(dataInici, tipus, params.getEntornAppId());
 		}
@@ -231,8 +228,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             HashMap<String, Object> map = new HashMap<>();
             TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
 
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
+
             params.getEntornAppIdList().forEach( id -> {
-                List<SalutInformeEstatItem> list = generateSalutEstatList(params.getDataInici(), tipus, id);
+                List<SalutInformeEstatItem> list = generateSalutEstatList(dataInici, tipus, id);
                 map.put(String.valueOf(id), list);
             });
 
@@ -262,16 +261,12 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			final List<SalutInformeLatenciaItem> data = new ArrayList<>();
 
             TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
-            LocalDateTime dataInici = calculaDataIniciAmbMarge(params.getDataInici(), tipus);
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
 
             List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                     params.getEntornAppId(),
                     dataInici,
                     tipus);
-
-            if (tipus == TipusRegistreSalut.MINUTS && isFranjaMinutsInvalida(dataInici, params.getDataFi())) {
-                throw new ReportGenerationException(Salut.class, "Rang de dades invàlid. DataInici i DataFi han de tenir un múltiple de 4 com a minuts");
-            }
 
             // Comportament per defecte per a altres agrupacions
             salutEntityList.forEach(salutEntity -> {
@@ -384,17 +379,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             }
         }
         return result;
-    }
-
-    /**
-     * Aplica un petit marge
-     */
-    private LocalDateTime calculaDataIniciAmbMarge(LocalDateTime dataInici, TipusRegistreSalut tipus) {
-//        TODO Provar si realment és necessari aquest marge per DIA
-        if (tipus == TipusRegistreSalut.DIA) {
-            return dataInici.plusMinutes(60);
-        }
-        return dataInici;
     }
 
     /**
