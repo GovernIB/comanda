@@ -6,6 +6,8 @@ import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaService;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	private final AlarmaComprovacioHelper alarmaComprovacioHelper;
 	private final AlarmaConfigRepository alarmaConfigRepository;
 	private final AlarmaMailHelper alarmaMailHelper;
+	private final AuthenticationHelper authenticationHelper;
 
 	@Override
 	@Transactional
@@ -44,6 +47,19 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		log.debug("Iniciant enviaments agrupats d'alarmes...");
 		long mailCount = alarmaMailHelper.sendAlarmesAgrupades();
 		log.debug("...enviaments agrupats d'alarmes finalitzat ({} correus enviats)", mailCount);
+	}
+
+	@Override
+	protected String additionalSpringFilter(
+			String currentSpringFilter,
+			String[] namedQueries) {
+		String currentUser = authenticationHelper.getCurrentUserName();
+		boolean isAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
+		if (!isAdmin) {
+			return "alarmaConfig.admin:false and alarmaConfig.createdBy:'" + currentUser + "'";
+		} else {
+			return "alarmaConfig.admin:true or (alarmaConfig.admin:false and alarmaConfig.createdBy:'" + currentUser + "')";
+		}
 	}
 
 }
