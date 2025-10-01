@@ -1,46 +1,63 @@
 import {BaseEntity, IBaseEntity} from "./base-entity.model.ts";
 import Icon from "@mui/material/Icon";
 import {JSX} from "react";
+import {IAppContext} from "./app.model.tsx";
 
 export const ENUM_APP_ESTAT_PREFIX: string = 'enum.appEstat.';
 export const ENUM_BD_ESTAT_PREFIX: string = 'enum.bdEstat.';
 export const TITLE = ".title";
 export const TOOLTIP = ".tooltip";
 
-export interface ISalut extends IBaseEntity {
-    entornAppId: number | undefined;
-    data: string | undefined;
-    versio: string | undefined;
-    appEstat: SalutEstatEnum | undefined;
-    appLatencia: number | undefined;
-    bdEstat: SalutEstatEnum | undefined;
-    bdLatencia: number | undefined;
-
-    appUp: boolean | undefined;
-    bdUp: boolean | undefined;
-
-    integracioUpCount: number | undefined;
-    integracioDownCount: number | undefined;
-    integracioDesconegutCount: number | undefined;
-    subsistemaUpCount: number | undefined;
-    subsistemaDownCount: number | undefined;
-    missatgeErrorCount: number | undefined;
-    missatgeWarnCount: number | undefined;
-    missatgeInfoCount: number | undefined;
-
-    year: string | undefined;
-    yearMonth: string | undefined;
-    yearMonthDay: string | undefined;
-    yearMonthDayHour: string | undefined;
-
-    integracions: any[] | undefined;
-    subsistemes: any[] | undefined;
-    contexts: any[] | undefined;
-    missatges: any[] | undefined;
-    detalls: any[] | undefined;
+export enum SalutEstatEnum {
+    UP='UP',
+    WARN='WARN',
+    DEGRADED='DEGRADED',
+    DOWN='DOWN',
+    MAINTENANCE='MAINTENANCE',
+    UNKNOWN='UNKNOWN',
+    ERROR='ERROR'
 }
 
-export class SalutModel extends BaseEntity implements Required<ISalut> {
+export enum NivellEnum {
+    INFO='INFO',
+    WARN='WARN',
+    ERROR='ERROR'
+}
+
+export interface ISalut extends IBaseEntity {
+    entornAppId : number;
+    data        : string;
+    versio      : string;
+    appEstat    : SalutEstatEnum;
+    appLatencia?: number;
+    bdEstat     : SalutEstatEnum;
+    bdLatencia? : number;
+
+    appUp?  : boolean;
+    bdUp?   : boolean;
+
+    integracioUpCount?          : number;
+    integracioDownCount?        : number;
+    integracioDesconegutCount?  : number;
+    subsistemaUpCount?          : number;
+    subsistemaDownCount?        : number;
+    missatgeErrorCount?         : number;
+    missatgeWarnCount?          : number;
+    missatgeInfoCount?          : number;
+
+    year?               : string;
+    yearMonth?          : string;
+    yearMonthDay?       : string;
+    yearMonthDayHour?   : string;
+
+    integracions?   : ISalutIntegracio[];
+    subsistemes?    : ISalutSubsistema[];
+    contexts?       : IAppContext[];
+    missatges?      : ISalutMissatge[];
+    detalls?        : ISalutDetall[];
+}
+
+export class SalutModel extends BaseEntity implements Partial<ISalut> {
 
     // Claves estáticas para poder usarlas como keyof
     static readonly APP_ESTAT: keyof SalutModel = "appEstat";
@@ -56,44 +73,213 @@ export class SalutModel extends BaseEntity implements Required<ISalut> {
     static readonly MISSATGE_WARN_COUNT: keyof SalutModel = "missatgeWarnCount";
     static readonly MISSATGE_INFO_COUNT: keyof SalutModel = "missatgeInfoCount";
 
-    entornAppId: number | undefined;
-    data: string | undefined;
-    versio: string | undefined;
-    appEstat: SalutEstatEnum | undefined;
-    appLatencia: number | undefined;
-    bdEstat: SalutEstatEnum | undefined;
-    bdLatencia: number | undefined;
-    peticioError: boolean | undefined;
+    entornAppId: number;
+    data: string;
+    versio: string;
+    appEstat: SalutEstatEnum;
+    appLatencia?: number;
+    bdEstat: SalutEstatEnum;
+    bdLatencia?: number;
+    peticioError?: boolean;
 
-    appUp: boolean | undefined;
-    bdUp: boolean | undefined;
+    appUp?: boolean;
+    bdUp?: boolean;
 
-    integracioUpCount: number | undefined;
-    integracioDownCount: number | undefined;
-    integracioDesconegutCount: number | undefined;
-    subsistemaUpCount: number | undefined;
-    subsistemaDownCount: number | undefined;
-    missatgeErrorCount: number | undefined;
-    missatgeWarnCount: number | undefined;
-    missatgeInfoCount: number | undefined;
+    integracioUpCount?: number;
+    integracioDownCount?: number;
+    integracioDesconegutCount?: number;
+    subsistemaUpCount?: number;
+    subsistemaDownCount?: number;
+    missatgeErrorCount?: number;
+    missatgeWarnCount?: number;
+    missatgeInfoCount?: number;
 
-    year: string | undefined;
-    yearMonth: string | undefined;
-    yearMonthDay: string | undefined;
-    yearMonthDayHour: string | undefined;
+    year?: string;
+    yearMonth?: string;
+    yearMonthDay?: string;
+    yearMonthDayHour?: string;
 
-    integracions: any[] | undefined;
-    subsistemes: any[] | undefined;
-    contexts: any[] | undefined;
-    missatges: any[] | undefined;
-    detalls: any[] | undefined;
+    integracions?: SalutIntegracioModel[];
+    subsistemes?: SalutSubsistema[];
+    contexts?: IAppContext[];
+    missatges?: SalutMissatge[];
+    detalls?: SalutDetall[];
 
     /**
      * Constructor
      */
     constructor(salut: ISalut) {
         super(salut);
+        this.entornAppId = salut.entornAppId;
+        this.data = salut.data;
+        this.versio = salut.versio;
+        this.appEstat = salut.appEstat;
+        this.bdEstat = salut.bdEstat;
         Object.assign(this, salut);
+    }
+}
+
+export interface ISalutIntegracio extends IBaseEntity {
+
+    codi: string;
+    estat: SalutEstatEnum;
+    latencia?: number;
+    totalOk: number;
+    totalError: number;
+    totalTempsMig?: number;
+    peticionsOkUltimPeriode?: number;
+    peticionsErrorUltimPeriode?: number;
+    tempsMigUltimPeriode?: number;
+    endpoint?: string;
+
+    salut?: ISalut;
+    pare?: ISalutIntegracio;
+
+    nom?: string;
+    logo?: string | null;
+}
+
+export class SalutIntegracioModel extends BaseEntity implements Partial<ISalutIntegracio> {
+
+    codi: string;
+    estat: SalutEstatEnum;
+    latencia?: number;
+    totalOk: number;
+    totalError: number;
+    totalTempsMig?: number;
+    peticionsOkUltimPeriode?: number;
+    peticionsErrorUltimPeriode?: number;
+    tempsMigUltimPeriode?: number;
+    endpoint?: string;
+
+    salut?: SalutModel;
+    pare?: SalutIntegracioModel;
+
+    nom?: string;
+    logo?: string | null;
+
+    /**
+     * Constructor
+     */
+    constructor(salutIntegracio: ISalutIntegracio) {
+        super(salutIntegracio);
+        this.codi = salutIntegracio.codi;
+        this.estat = salutIntegracio.estat;
+        this.latencia = salutIntegracio.latencia;
+        this.totalOk = salutIntegracio.totalOk;
+        this.totalError = salutIntegracio.totalError;
+        this.totalTempsMig = salutIntegracio.totalTempsMig;
+        this.peticionsOkUltimPeriode = salutIntegracio.peticionsOkUltimPeriode;
+        this.peticionsErrorUltimPeriode = salutIntegracio.peticionsErrorUltimPeriode;
+        this.tempsMigUltimPeriode = salutIntegracio.tempsMigUltimPeriode;
+        this.endpoint = salutIntegracio.endpoint;
+        Object.assign(this, salutIntegracio);
+    }
+}
+
+export interface ISalutSubsistema extends IBaseEntity {
+
+    codi: string;
+    estat: SalutEstatEnum;
+    latencia?: number;
+    totalOk: number;
+    totalError: number;
+    totalTempsMig?: number;
+    peticionsOkUltimPeriode?: number;
+    peticionsErrorUltimPeriode?: number;
+    tempsMigUltimPeriode?: number;
+
+    salut?: SalutModel;
+
+    nom?: string;
+}
+
+export class SalutSubsistema extends BaseEntity implements Partial<ISalutSubsistema>{
+
+    codi: string;
+    estat: SalutEstatEnum;
+    latencia?: number;
+    totalOk: number;
+    totalError: number;
+    totalTempsMig?: number;
+    peticionsOkUltimPeriode?: number;
+    peticionsErrorUltimPeriode?: number;
+    tempsMigUltimPeriode?: number;
+
+    salut?: SalutModel;
+
+    nom?: string;
+
+    /**
+     * Constructor
+     */
+    constructor(salutSubsistema: ISalutSubsistema) {
+        super(salutSubsistema);
+        this.codi = salutSubsistema.codi;
+        this.estat = salutSubsistema.estat;
+        this.latencia = salutSubsistema.latencia;
+        this.totalOk = salutSubsistema.totalOk;
+        this.totalError = salutSubsistema.totalError;
+        this.totalTempsMig = salutSubsistema.totalTempsMig;
+        this.peticionsOkUltimPeriode = salutSubsistema.peticionsOkUltimPeriode;
+        this.peticionsErrorUltimPeriode = salutSubsistema.peticionsErrorUltimPeriode;
+        this.tempsMigUltimPeriode = salutSubsistema.tempsMigUltimPeriode;
+        Object.assign(this, salutSubsistema);
+    }
+}
+
+export interface ISalutMissatge extends IBaseEntity {
+
+    data: string;
+    nivell: NivellEnum;
+    missatge: string;
+
+    salut?: ISalut;
+}
+
+export class SalutMissatge extends BaseEntity implements Partial<ISalutMissatge> {
+
+    data: string;
+    nivell: NivellEnum;
+    missatge: string;
+
+    salut?: SalutModel;
+
+    /**
+     * Constructor
+     */
+    constructor(salutMissatge: ISalutMissatge) {
+        super(salutMissatge);
+        this.data = salutMissatge.data;
+        this.nivell = salutMissatge.nivell;
+        this.missatge = salutMissatge.missatge;
+        Object.assign(this, salutMissatge);
+    }
+}
+
+export interface ISalutDetall extends IBaseEntity {
+
+    codi: string;
+    nom: string
+    valor: string;
+
+    salut?: ISalut;
+}
+
+export class SalutDetall extends BaseEntity implements Partial<ISalutDetall> {
+
+    codi: string;
+    nom: string
+    valor: string;
+
+    salut?: SalutModel;
+
+    constructor(salutDetall: ISalutDetall) {
+        super(salutDetall);
+        this.codi = salutDetall.codi;
+        this.nom = salutDetall.nom;
+        this.valor = salutDetall.valor;
+        Object.assign(this, salutDetall);
     }
 }
 
@@ -134,22 +320,6 @@ export class SalutInformeEstatItemModel extends BaseEntity {
         this.maintenancePercent = salut?.maintenancePercent;
         this.unknownPercent = salut?.unknownPercent;
     }
-}
-
-export enum SalutEstatEnum {
-    UP='UP',
-    WARN='WARN',
-    DEGRADED='DEGRADED',
-    DOWN='DOWN',
-    MAINTENANCE='MAINTENANCE',
-    UNKNOWN='UNKNOWN',
-    ERROR='ERROR'
-}
-
-export enum NivellEnum {
-    INFO='INFO',
-    WARN='WARN',
-    ERROR='ERROR'
 }
 
 export const GREEN: string = "#72bd75"  // Verde suave, transmite "ok"

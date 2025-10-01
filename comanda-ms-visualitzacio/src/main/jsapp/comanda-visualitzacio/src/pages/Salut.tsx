@@ -16,32 +16,8 @@ import { SalutLlistat } from '../components/SalutPrincipalWidgets';
 import { useParams } from 'react-router-dom';
 import SalutAppInfo, { useAppInfoData } from './SalutAppInfo';
 import { ItemStateChip } from '../components/SalutItemStateChip';
-
-export type AppModel = {
-    // TODO
-    id: number;
-    nom: string;
-    codi: string;
-    logo?: string | null;
-};
-
-export type EntornAppModel = {
-    // TODO
-    id: number;
-    app: {
-        id: number;
-    };
-    entorn: {
-        id: number;
-    };
-};
-
-export type EntornModel = {
-    // TODO
-    id: number;
-    codi: string;
-    nom?: string | null;
-};
+import {AppModel, EntornAppModel} from "../types/app.model.tsx";
+import {EntornModel} from "../types/entorn.model.tsx";
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 type SalutInformeEstatItem = {
@@ -105,7 +81,7 @@ const splitSalutDataIntoGroups = ({
             entornApps,
             estats: filterObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))),
             salutLastItems: salutLastItems.filter(
-                ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId) // TODO SalutModel alomejor no deberia anotar los campos NotNull como undefined
+                ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId)
             ),
         };
     };
@@ -251,13 +227,13 @@ const useSalutData = ({
 
             setSalutData({
                 lastRefresh: new Date(),
-                apps: activeAppsResponse?.rows,
+                apps: activeAppsResponse?.rows as AppModel[],
                 entorns: entornsResponse?.rows,
                 groups: splitSalutDataIntoGroups({
                     estats,
                     salutLastItems,
                     groupBy,
-                    apps: activeAppsResponse?.rows,
+                    apps: activeAppsResponse?.rows as AppModel[],
                     entorns: entornsResponse?.rows,
                     entornApps: activeEntornAppsResponse.rows,
                 }),

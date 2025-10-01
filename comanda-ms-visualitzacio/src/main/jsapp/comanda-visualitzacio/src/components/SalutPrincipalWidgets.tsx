@@ -29,13 +29,15 @@ import { DataGridPro, GridRowId, GridSlots } from '@mui/x-data-grid-pro';
 import { PieChart, useDrawingArea } from '@mui/x-charts';
 import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay.tsx';
 import UpdownBarChart from './UpdownBarChart.tsx';
-import { AppModel, EntornAppModel, EntornModel, SalutData } from '../pages/Salut.tsx';
+import { SalutData } from '../pages/Salut.tsx';
 import { ErrorBoundaryFallback } from '../pages/SalutAppInfo.tsx';
 import { ErrorBoundary } from 'react-error-boundary';
 import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import useSizeTracker from '../hooks/useSizeTracker';
+import {AppModel, EntornAppModel} from "../types/app.model.tsx";
+import {EntornModel} from "../types/entorn.model.tsx";
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
