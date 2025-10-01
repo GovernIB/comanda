@@ -1,11 +1,7 @@
 package es.caib.comanda.alarmes.logic.helper;
 
-import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
-import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
-import es.caib.comanda.base.config.BaseConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -15,7 +11,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Optional;
 
 /**
  * Enviament de correus d'alarmes.
@@ -27,8 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MailHelper {
 
-	@Autowired(required = false)
-	private final JavaMailSender mailSender;
+	private final Optional<JavaMailSender> mailSender;
 
 	public void sendSimple(
 			String fromAdress,
@@ -37,13 +32,20 @@ public class MailHelper {
 			String toName,
 			String subject,
 			String text) throws MessagingException, UnsupportedEncodingException {
-		MimeMessage message = mailSender.createMimeMessage();
-		MimeMessageHelper helper = new MimeMessageHelper(message, false, StandardCharsets.UTF_8.name());
-		helper.setFrom(new InternetAddress(fromAdress, fromName));
-		helper.setTo(new InternetAddress(toAdress, toName));
-		helper.setSubject(subject);
-		helper.setText(text, false);
-		mailSender.send(message);
+		if (mailSender.isPresent()) {
+			MimeMessage message = mailSender.get().createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, false, StandardCharsets.UTF_8.name());
+			helper.setFrom(new InternetAddress(fromAdress, fromName));
+			helper.setTo(new InternetAddress(toAdress, toName));
+			helper.setSubject(subject);
+			helper.setText(text, false);
+			mailSender.get().send(message);
+		} else {
+			log.warn(
+					"No es pot enviar missatge amb assumpte \"{}\" a \"{}\" perquè l'enviament de correus no està configurat",
+					subject,
+					toName != null ? toName + "<" + toAdress + ">" : toAdress);
+		}
 	}
 
 }

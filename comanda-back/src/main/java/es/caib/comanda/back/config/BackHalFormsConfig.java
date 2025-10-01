@@ -1,6 +1,6 @@
 package es.caib.comanda.back.config;
 
-import es.caib.comanda.alarmes.back.cotroller.AlarmaConfigController;
+import es.caib.comanda.alarmes.back.controller.AlarmaConfigController;
 import es.caib.comanda.avisos.back.controller.AvisController;
 import es.caib.comanda.configuracio.back.controller.AppController;
 import es.caib.comanda.estadistica.back.controller.FetController;

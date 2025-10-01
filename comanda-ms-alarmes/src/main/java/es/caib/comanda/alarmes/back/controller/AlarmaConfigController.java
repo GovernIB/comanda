@@ -1,4 +1,4 @@
-package es.caib.comanda.alarmes.back.cotroller;
+package es.caib.comanda.alarmes.back.controller;
 
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig;
 import es.caib.comanda.base.config.BaseConfig;

@@ -57,4 +57,9 @@ public class UsuariEntity extends BaseAuditableEntity<Usuari> {
     @Comment("Número de elementos por página")
     private NumOfElementsPerPageENum numElementsPagina;
 
+	@Column(name="alarma_mail", nullable = false)
+	private boolean alarmaMail;
+	@Column(name="alarma_mail_agrupar", nullable = false)
+	private boolean alarmaMailAgrupar;
+
 }

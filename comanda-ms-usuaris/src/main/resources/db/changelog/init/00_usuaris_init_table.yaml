@@ -80,3 +80,31 @@ databaseChangeLog:
                 constraints:
                   nullable: false
                 remarks: Número de elementos por página
+- changeSet:
+    id: usuaris-init-table-3
+    author: límit
+    changes:
+      - addColumn:
+          tableName: ${db_prefix}usuari
+          columns:
+            - column:
+                name: alarma_mail
+                type: BOOLEAN
+            - column:
+                name: alarma_mail_agrupar
+                type: BOOLEAN
+      - update:
+          tableName: ${db_prefix}usuari
+          columns:
+            - column:
+                name: alarma_mail
+                valueBoolean: false
+            - column:
+                name: alarma_mail_agrupar
+                valueBoolean: false
+      - addNotNullConstraint:
+          tableName: ${db_prefix}usuari
+          columnName: alarma_mail
+      - addNotNullConstraint:
+          tableName: ${db_prefix}usuari
+          columnName: alarma_mail_agrupar
