@@ -25,7 +25,7 @@ public class MailHelper {
 
 	private final Optional<JavaMailSender> mailSender;
 
-	public void sendSimple(
+	public boolean sendSimple(
 			String fromAdress,
 			String fromName,
 			String toAdress,
@@ -40,11 +40,13 @@ public class MailHelper {
 			helper.setSubject(subject);
 			helper.setText(text, false);
 			mailSender.get().send(message);
+			return true;
 		} else {
 			log.warn(
 					"No es pot enviar missatge amb assumpte \"{}\" a \"{}\" perquè l'enviament de correus no està configurat",
 					subject,
 					toName != null ? toName + "<" + toAdress + ">" : toAdress);
+			return false;
 		}
 	}
 

@@ -1,10 +1,16 @@
 package es.caib.comanda.alarmes.logic.helper;
 
+import es.caib.comanda.client.UsuariServiceClient;
+import es.caib.comanda.client.model.Salut;
+import es.caib.comanda.client.model.Usuari;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.fundaciobit.pluginsib.userinformation.RolesInfo;
 import org.fundaciobit.pluginsib.userinformation.UserInfo;
 import org.fundaciobit.pluginsib.userinformation.ldap.LdapUserInformationPlugin;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -19,13 +25,13 @@ public class UserInformationHelper {
 
 	private final LdapUserInformationPlugin userInformationPlugin;
 
-	public UserInformationHelper() {
+	public UserInformationHelper(UsuariServiceClient usuariServiceClient) {
 		this.userInformationPlugin = new LdapUserInformationPlugin("");
 	}
 
-	public UserInformation getUserInfo(String userName) {
+	public UserInformation getUserInfo(String username) {
 		try {
-			UserInfo userInfo = userInformationPlugin.getUserInfoByUserName(userName);
+			UserInfo userInfo = userInformationPlugin.getUserInfoByUserName(username);
 			if (userInfo != null) {
 				return new UserInformation(
 						userInfo.getUsername(),
@@ -38,8 +44,8 @@ public class UserInformationHelper {
 			}
 		} catch (Exception ex) {
 			throw new UserInformationException(
-					"getUserInfoByUserName",
-					new String[] { userName },
+					"getUserInfo",
+					new String[] { username },
 					ex);
 		}
 	}

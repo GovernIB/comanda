@@ -40,6 +40,7 @@ public class BaseConfig {
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
 	public static final String PROP_SCHEDULER_BACK = PROPERTY_PREFIX + "scheduler.back";
 	public static final String PROP_SCHEDULER_ALARMES_CRON = PROPERTY_PREFIX + "scheduler.alarmes.cron";
+	public static final String PROP_SCHEDULER_ALARMES_MAILS_AGRUPATS_CRON = PROPERTY_PREFIX + "scheduler.alarmes.mails.agrupats.cron";
 	public static final String PROP_HTTPAUTH_PROVIDER_BASE_URL = PROPERTY_PREFIX + "httpauth.provider.base.url";
 	public static final String PROP_HTTPAUTH_PROVIDER_REALM = PROPERTY_PREFIX + "httpauth.provider.realm";
 	public static final String PROP_HTTPAUTH_PROVIDER_CLIENT_ID = PROPERTY_PREFIX + "httpauth.provider.client.id";
@@ -47,6 +48,10 @@ public class BaseConfig {
 	public static final String PROP_HTTPAUTH_PASSWORD = PROPERTY_PREFIX + "httpauth.password";
 	public static final String PROP_SECURITY_MAPPABLE_ROLES = PROPERTY_PREFIX + "security.mappableRoles";
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
+	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
+	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
+	public static final String PROP_ALARMA_MAIL_ADMIN = PROPERTY_PREFIX + "alarma.mail.admin";
+	public static final String PROP_ALARMA_MAIL_ADMIN_AGRUPAR = PROPERTY_PREFIX + "alarma.mail.admin.agrupar";
 
 	public static final String PROP_BROKER_PORT = PROPERTY_PREFIX + "broker.port";
 	public static final String PROP_BROKER_USERNAME = PROPERTY_PREFIX + "broker.username";

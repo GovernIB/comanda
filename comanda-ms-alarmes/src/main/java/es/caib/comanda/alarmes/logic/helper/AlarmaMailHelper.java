@@ -5,8 +5,10 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,6 +21,11 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class AlarmaMailHelper {
+
+	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS + ":#{null}}")
+	private String alarmaMailFromAddress;
+	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_NAME + ":#{null}}")
+	private String alarmaMailFromName;
 
 	private final MailHelper mailHelper;
 	private final UserInformationHelper userInformationHelper;
@@ -40,15 +47,28 @@ public class AlarmaMailHelper {
 		}
 	}
 
-	public void sendAlarmaAgrupacio(String username) {
-		if (isUserProfileAlarmaActiva(username)) {
-			List<AlarmaEntity> alarmesPendents = alarmaRepository.findByAlarmaConfigCreatedByAndDataEnviamentIsNull(username);
-			if (isUserAdmin(username)) {
-				alarmesPendents.addAll(
-						alarmaRepository.findByAlarmaConfigAdminAndDataEnviamentIsNull(true));
+	public long sendAlarmesAgrupades() {
+		// Envia les alarmes dels administradors
+		LocalDateTime dataDesde = LocalDateTime.now().minusHours(24);
+		List<AlarmaEntity> alarmesPendentsAdmin = alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(
+				dataDesde);
+		String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
+		long adminMailCount = Arrays.stream(adminUsers).filter(a -> {
+			if (isUserProfileAlarmaActiva(a)) {
+				return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, a);
+			} else {
+				return false;
 			}
-			sendAlarmaGroupedMailForUser(alarmesPendents, username);
-		}
+		}).count();
+		// Envia les alarmes dels usuaris no administradors
+		List<String> usuaris = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfter(dataDesde);
+		long userMailCount = usuaris.stream().filter(u -> {
+			List<AlarmaEntity> alarmesPendentsUser = alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
+					u,
+					dataDesde);
+			return sendAlarmaGroupedMailForUser(alarmesPendentsUser, u);
+		}).count();
+		return adminMailCount + userMailCount;
 	}
 
 	private void sendAlarmaMailForUser(
@@ -57,8 +77,8 @@ public class AlarmaMailHelper {
 		try {
 			UserInformationHelper.UserInformation userInformation = userInformationHelper.getUserInfo(username);
 			mailHelper.sendSimple(
-					"comanda@caib.es",
-					"Comanda",
+					alarmaMailFromAddress != null ? alarmaMailFromAddress : "comanda@caib.es",
+					alarmaMailFromName != null ? alarmaMailFromName : "Comanda",
 					userInformation.getEmail(),
 					userInformation.getFullName(),
 					"[COMANDA] Alarma activada: " + alarma.getMissatge(),
@@ -68,15 +88,15 @@ public class AlarmaMailHelper {
 		}
 	}
 
-	private void sendAlarmaGroupedMailForUser(
+	private boolean sendAlarmaGroupedMailForUser(
 			List<AlarmaEntity> alarmes,
 			String username) {
 		try {
 			if (isUserProfileAlarmaActiva(username)) {
 				UserInformationHelper.UserInformation userInformation = userInformationHelper.getUserInfo(username);
-				mailHelper.sendSimple(
-						"comanda@caib.es",
-						"Comanda",
+				return mailHelper.sendSimple(
+						alarmaMailFromAddress != null ? alarmaMailFromAddress : "comanda@caib.es",
+						alarmaMailFromName != null ? alarmaMailFromName : "Comanda",
 						userInformation.getEmail(),
 						userInformation.getFullName(),
 						"[COMANDA] Resum diari d'alarmes activades",
@@ -85,6 +105,7 @@ public class AlarmaMailHelper {
 		} catch (Exception ex) {
 			log.error("No s'ha pogut enviar missatge d'alarma", ex);
 		}
+		return false;
 	}
 
 	private String getAlarmesGroupedText(List<AlarmaEntity> alarmes) {

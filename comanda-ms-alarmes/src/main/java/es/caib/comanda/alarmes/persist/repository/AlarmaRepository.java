@@ -4,7 +4,9 @@ import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,5 +27,19 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 
 	List<AlarmaEntity> findByAlarmaConfigCreatedByAndDataEnviamentIsNull(String username);
 	List<AlarmaEntity> findByAlarmaConfigAdminAndDataEnviamentIsNull(boolean admin);
+
+	@Query("SELECT " +
+			"    DISTINCT a.alarmaConfig.usuariCreacio " +
+			"FROM " +
+			"    AlarmaEntity a " +
+			"WHERE " +
+			"    a.dataActivacio >= ?1")
+	List<String> findDistinctAlarmaConfigCreatedByDataActivacioAfter(LocalDateTime data);
+
+	List<AlarmaEntity> findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(LocalDateTime data);
+
+	List<AlarmaEntity> findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
+			String createdBy,
+			LocalDateTime data);
 
 }

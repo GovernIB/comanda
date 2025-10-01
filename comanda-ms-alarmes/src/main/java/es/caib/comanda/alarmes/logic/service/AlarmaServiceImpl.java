@@ -1,6 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
 import es.caib.comanda.alarmes.logic.helper.AlarmaComprovacioHelper;
+import es.caib.comanda.alarmes.logic.helper.AlarmaMailHelper;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaService;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
@@ -25,6 +26,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 
 	private final AlarmaComprovacioHelper alarmaComprovacioHelper;
 	private final AlarmaConfigRepository alarmaConfigRepository;
+	private final AlarmaMailHelper alarmaMailHelper;
 
 	@Override
 	@Transactional
@@ -34,6 +36,14 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 				.filter(alarmaComprovacioHelper::comprovar)
 				.count();
 		log.debug("...comprovació d'alarmes finalitzada ({} alarmes activades)", activadesCount);
+	}
+
+	@Override
+	@Transactional
+	public void enviamentsAgrupatsScheduledTask() {
+		log.debug("Iniciant enviaments agrupats d'alarmes...");
+		long mailCount = alarmaMailHelper.sendAlarmesAgrupades();
+		log.debug("...enviaments agrupats d'alarmes finalitzat ({} correus enviats)", mailCount);
 	}
 
 }
