@@ -168,6 +168,7 @@ const useSalutData = ({
         apps?: AppModel[];
         entorns?: EntornModel[];
         groups: SalutData[];
+        grupsDates?: string[];
         reportInterval?: {
             dataInici: string;
             dataFi: string;
@@ -187,7 +188,8 @@ const useSalutData = ({
         setSalutData((prevState) => ({ ...prevState, loading: true, error: undefined }));
 
         try {
-            const [activeEntornAppsResponse, activeAppsResponse, entornsResponse] =
+            const reportInterval = toReportInterval(dataRangeMinutes);
+            const [activeEntornAppsResponse, activeAppsResponse, entornsResponse, grupsDatesResponse] =
                 await Promise.all([
                     entornAppFind({
                         unpaged: true,
@@ -219,9 +221,15 @@ const useSalutData = ({
                                 : null
                         ),
                     }),
+                    salutApiReport(null, {
+                        code: 'grups_dates',
+                        data: {
+                            dataReferencia: reportInterval.dataFi,
+                            agrupacio: reportInterval.agrupacio,
+                        },
+                    }),
                 ]);
 
-            const reportInterval = toReportInterval(dataRangeMinutes);
             const reportData = {
                 ...reportInterval,
                 entornAppIdList: activeEntornAppsResponse.rows.map(({ id }) => id),
@@ -253,6 +261,7 @@ const useSalutData = ({
                     entorns: entornsResponse?.rows,
                     entornApps: activeEntornAppsResponse.rows,
                 }),
+                grupsDates: (grupsDatesResponse as { data: string }[]).map((item) => item.data),
                 reportInterval,
                 error: undefined,
                 initialized: true,
@@ -373,11 +382,11 @@ const Salut: FunctionComponent = () => {
                     salutGroups={salutData.groups}
                     reportInterval={salutData.reportInterval}
                     springFilter={additionalFilter}
-                    grupsDates={grupsDates}
+                    grupsDates={salutData.grupsDates}
                 />
             ) : (
                 // TODO Persistir estado de expansión al cambiar a AppInfo
-                <SalutAppInfo appInfoData={appInfoData} ready={appInfoData.ready} grupsDates={grupsDates} />
+                <SalutAppInfo appInfoData={appInfoData} ready={appInfoData.ready} grupsDates={salutData.grupsDates} />
             )}
         </BasePage>
     );

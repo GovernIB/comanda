@@ -550,7 +550,8 @@ export const SalutWidgetContent: React.FC<{
     apps?: AppModel[];
     entorns?: EntornModel[];
     entornApps: EntornAppModel[];
-}> = ({ salutLastItems, reportParams, estats, loading, groupedApp, groupedEntorn, entornApps, apps, entorns }) => {
+    grupsDates: string[];
+}> = ({ salutLastItems, reportParams, estats, loading, groupedApp, groupedEntorn, entornApps, apps, entorns, grupsDates }) => {
     const [open, setOpen] = React.useState(false);
     const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
 
@@ -601,6 +602,7 @@ export const SalutWidgetContent: React.FC<{
                             dataInici={reportParams.dataInici}
                             agrupacio={reportParams.agrupacio}
                             estats={estats}
+                            grupsDates={grupsDates}
                         />
                     </ErrorBoundary>
                 </Grid>
@@ -647,6 +649,7 @@ export const SalutWidgetContent: React.FC<{
 
 export const SalutLlistat = ({
     salutGroups,
+    grupsDates,
     reportInterval,
     apps,
     entorns,
@@ -654,6 +657,7 @@ export const SalutLlistat = ({
     apps?: AppModel[];
     entorns?: EntornModel[];
     salutGroups: SalutData[];
+    grupsDates?: string[];
     reportInterval?: {
         dataInici: string;
         dataFi: string;
@@ -661,7 +665,7 @@ export const SalutLlistat = ({
     };
     springFilter?: string;
 }) => {
-    if (!salutGroups.length || reportInterval == null) return;
+    if (!salutGroups.length || grupsDates == null || reportInterval == null) return;
 
     return (
         <>
@@ -677,6 +681,7 @@ export const SalutLlistat = ({
                             apps={apps}
                             entorns={entorns}
                             entornApps={salutGroup.entornApps}
+                            grupsDates={grupsDates}
                         />
                     </Paper>
                 );

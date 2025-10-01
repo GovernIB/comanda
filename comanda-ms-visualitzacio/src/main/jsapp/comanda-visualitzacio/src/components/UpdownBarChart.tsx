@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {BarChart} from '@mui/x-charts/BarChart';
-import {generateDataGroups, isDataInGroup, toXAxisDataGroups} from '../util/dataGroup';
+import { isDataInGroup, toXAxisDataGroups} from '../util/dataGroup';
 import {useTranslation} from "react-i18next";
 import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, TITLE} from "../types/salut.model.tsx";
 import { XAxis } from '@mui/x-charts';
@@ -117,15 +117,15 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         }
     ];
 
-    // const xAxis: ReadonlyArray<XAxis<'band'>> = [{ scaleType: 'band', data: dataGroups }];
+    const xAxis: ReadonlyArray<XAxis<'band'>> = [{
+        scaleType: 'band',
+        data: dataGroups,
+        // TODO Fer un formatter generic per a totes les agrupacions
+        valueFormatter: (value: string) => agrupacio === 'HORA' ? value.substring(3) : value
+    }];
 
     return estats != null && <BarChart
-        xAxis={[{
-            scaleType: 'band',
-            data: dataGroups,
-            // TODO Fer un formatter generic per a totes les agrupacions
-            valueFormatter: (value: string) => agrupacio === 'HORA' ? value.substring(3) : value
-        }]}
+        xAxis={xAxis}
         yAxis={[{ max: 100 }]}
         series={series}
         // borderRadius={6}

@@ -568,12 +568,14 @@ const DetallInfo: React.FC<any> = (props) => {
     </Card>;
 }
 
-const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean }> = ({
+const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsDates?: string[] }> = ({
     appInfoData,
+    grupsDates,
     ready,
 }) => {
     const { t } = useTranslation();
-    const { salutCurrentApp, entornApp, loading, reportParams, estats, latencies, grupsDates } = appInfoData;
+    const { salutCurrentApp, entornApp, loading, reportParams, estats, latencies } =
+        appInfoData;
     const dataLoaded = ready && loading != null && !loading;
 
     if (dataLoaded && salutCurrentApp == null)
