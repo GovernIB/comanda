@@ -93,8 +93,6 @@ public class SalutSchedulerService {
         try {
 //            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getSalutInterval()), TimeUnit.MILLISECONDS);
             PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_SALUT), TimeUnit.MILLISECONDS);
-            long initialDelay = TimeUnit.SECONDS.toMillis(40);
-            periodicTrigger.setInitialDelay(initialDelay);
             periodicTrigger.setFixedRate(true);
 
             ScheduledFuture<?> futuraTasca = taskScheduler.schedule(
