@@ -35,6 +35,8 @@ public class AlarmaEntity extends BaseAuditableEntity<Alarma> {
 	private AlarmaEstat estat;
 	@Column(name = "data_activacio")
 	private LocalDateTime dataActivacio;
+	@Column(name = "data_enviament")
+	private LocalDateTime dataEnviament;
 	@Column(name = "data_esborrat")
 	private LocalDateTime dataEsborrat;
 

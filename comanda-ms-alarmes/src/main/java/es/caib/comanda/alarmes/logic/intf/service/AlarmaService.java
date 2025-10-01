@@ -15,4 +15,6 @@ public interface AlarmaService extends MutableResourceService<Alarma, Long> {
 	 */
 	void comprovacioScheduledTask();
 
+	void enviamentsAgrupatsScheduledTask();
+
 }

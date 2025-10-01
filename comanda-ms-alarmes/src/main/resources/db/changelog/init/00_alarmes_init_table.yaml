@@ -103,6 +103,9 @@ databaseChangeLog:
             name: data_activacio
             type: TIMESTAMP
         - column:
+            name: data_enviament
+            type: TIMESTAMP
+        - column:
             name: data_esborrat
             type: TIMESTAMP
         - column:

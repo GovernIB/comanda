@@ -42,6 +42,7 @@ public class Alarma extends BaseResource<Long> {
 	private String missatge;
 	private AlarmaEstat estat;
 	private LocalDateTime dataActivacio;
+	private LocalDateTime dataEnviament;
 	private LocalDateTime dataEsborrat;
 
 	@NotNull
