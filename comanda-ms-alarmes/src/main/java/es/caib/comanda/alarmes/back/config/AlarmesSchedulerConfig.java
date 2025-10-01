@@ -24,7 +24,7 @@ public class AlarmesSchedulerConfig {
 		alarmaService.comprovacioScheduledTask();
 	}
 
-	@Scheduled(cron = "${" + BaseConfig.PROP_SCHEDULER_ALARMES_MAILS_AGRUPATS_CRON + ":30 * * * * *}")
+	@Scheduled(cron = "${" + BaseConfig.PROP_SCHEDULER_ALARMES_MAILS_AGRUPATS_CRON + ":0 0 0 * * *}")
 	public void enviamentsAgrupats() {
 		alarmaService.enviamentsAgrupatsScheduledTask();
 	}
