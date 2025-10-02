@@ -7,6 +7,7 @@ import es.caib.comanda.ms.salut.model.IntegracioSalut;
 import es.caib.comanda.ms.salut.model.MissatgeSalut;
 import es.caib.comanda.ms.salut.model.SalutInfo;
 import es.caib.comanda.ms.salut.model.SubsistemaSalut;
+import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.SalutNivell;
@@ -21,11 +22,7 @@ import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.context.ApplicationEventPublisher;
@@ -64,9 +61,6 @@ public class SalutInfoHelper {
 	private final RestTemplate restTemplate;
 	private final ApplicationEventPublisher eventPublisher;
 	private final MetricsHelper metricsHelper;
-
-	@Lazy
-	private final SalutInfoHelper self = this;
 
 	// Locks per assegurar compactació "synchronized" per entornAppId
 	private static final java.util.concurrent.ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
@@ -263,12 +257,12 @@ public class SalutInfoHelper {
     public static final int MINUTS_PER_AGRUPACIO = 4;
 
     @Transactional
-    public void buidatIcompactat(Long entornAppId, Long salutId) {
+    public void compactar(Long entornAppId, Long salutId) {
 
         Object lock = ENTORN_LOCKS.computeIfAbsent(entornAppId, k -> new Object());
         synchronized (lock) {
             try {
-                log.info("Executant buidat i compactat de dades de salut. EntornAppId: {}, salutId: {}.",
+                log.info("Executant compactat de dades de salut. EntornAppId: {}, salutId: {}.",
                         entornAppId, salutId);
                 SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);
                 if (dadesSalut == null) {
@@ -280,38 +274,57 @@ public class SalutInfoHelper {
                 agregarHora(entornAppId, dadesSalut);
                 agregarDia(entornAppId, dadesSalut);
 
-                // Eliminar registres de minuts més antics que 15 minuts (+1 minut de marge)
-                LocalDateTime menys15m = dadesSalut.getData().minusMinutes(16);
-                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.MINUT, menys15m);
-
-                // Eliminar registres de grups de minuts més antics que 1 hora i (MINUTS_PER_AGRUPACIO) minuts
-                LocalDateTime menys1h = dadesSalut.getData().minusHours(1).minusMinutes(MINUTS_PER_AGRUPACIO);
-                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.MINUTS, menys1h);
-
-                // Eliminar registres de hores més antics que 1 dia
-                LocalDateTime menys1d = dadesSalut.getData().minusDays(1).minusMinutes(59);
-                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.HORA, menys1d);
-
-                // Eliminar rgistres de dies més antics que 1 mes
-                LocalDateTime menys1M = dadesSalut.getData().minusMonths(1).minusHours(23).minusMinutes(59);
-                eliminarAntiguesSenseRollback(entornAppId, TipusRegistreSalut.DIA, menys1M);
+                // Publicar esdeveniment per a compactació. També en cas d'error
+                eventPublisher.publishEvent(new SalutCompactionFinishedEvent(entornAppId, salutId));
             } catch (Exception e) {
-                log.error("Error durant el procés de buidat i compactat de salut", e);
+                log.error("Error durant el procés de compactat de salut. EntornAppId: {}, salutId: {}", entornAppId, salutId, e);
                 throw e;
             }
         }
     }
 
-    private void eliminarAntiguesSenseRollback(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime dataLlindar) {
+    @Transactional
+    public void buidar(Long entornAppId, Long salutId) {
         try {
-            self.eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
+            log.info("Executant buidat de dades de salut. EntornAppId: {}, salutId: {}.",
+                    entornAppId, salutId);
+
+            SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);
+            if (dadesSalut == null) {
+                log.warn("No s'ha trobat el registre de salut amb id {} per a l'entorn {}. Possiblement la transacció encara no està confirmada.", salutId, entornAppId);
+                return;
+            }
+
+            // Eliminar registres de minuts més antics que 15 minuts (+1 minut de marge)
+            LocalDateTime menys15m = dadesSalut.getData().minusMinutes(16);
+            eliminarAntigues(entornAppId, TipusRegistreSalut.MINUT, menys15m);
+
+            // Eliminar registres de grups de minuts més antics que 1 hora i (MINUTS_PER_AGRUPACIO) minuts
+            LocalDateTime menys1h = dadesSalut.getData().minusHours(1).minusMinutes(MINUTS_PER_AGRUPACIO);
+            eliminarAntigues(entornAppId, TipusRegistreSalut.MINUTS, menys1h);
+
+            // Eliminar registres de hores més antics que 1 dia
+            LocalDateTime menys1d = dadesSalut.getData().minusDays(1).minusMinutes(59);
+            eliminarAntigues(entornAppId, TipusRegistreSalut.HORA, menys1d);
+
+            // Eliminar rgistres de dies més antics que 1 mes
+            LocalDateTime menys1M = dadesSalut.getData().minusMonths(1).minusHours(23).minusMinutes(59);
+            eliminarAntigues(entornAppId, TipusRegistreSalut.DIA, menys1M);
+        } catch (Exception e) {
+            log.error("Error durant el procés de buidat de salut. EntornAppId: {}, salutId: {}", entornAppId, salutId, e);
+            throw e;
+        }
+    }
+
+    private void eliminarAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime dataLlindar) {
+        try {
+            eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
         } catch (Exception ex) {
             log.warn("Error eliminant dades antigues ({}). Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", tipus.name(), entornAppId, dataLlindar, ex.getMessage(), ex);
         }
     }
 
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void eliminarDadesSalutAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime data) {
         log.debug("Eliminant dades de salut antigues. EntornAppId: {}, tipus: {}, data: {}", entornAppId, tipus, data);
 //        List<SalutEntity> massaAntics = salutRepository.findByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
@@ -321,7 +334,6 @@ public class SalutInfoHelper {
         for (int i = 0; i < idsAntics.size(); i += BATCH_SIZE) {
             int end = Math.min(i + BATCH_SIZE, idsAntics.size());
             List<Long> batch = idsAntics.subList(i, end);
-            // Eliminació del batch dins la mateixa transacció REQUIRES_NEW oberta a nivell superior
             eliminarLlista(batch);
         }
     }
