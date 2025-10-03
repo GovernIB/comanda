@@ -29,7 +29,7 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 	List<AlarmaEntity> findByAlarmaConfigAdminAndDataEnviamentIsNull(boolean admin);
 
 	@Query("SELECT " +
-			"    DISTINCT a.alarmaConfig.usuariCreacio " +
+			"    DISTINCT a.alarmaConfig.createdBy " +
 			"FROM " +
 			"    AlarmaEntity a " +
 			"WHERE " +
