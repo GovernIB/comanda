@@ -8,10 +8,10 @@ const dataGridColumns = [{
     field: 'missatge',
     flex: 1,
 }, {
-    field: 'estat',
+    field: 'dataActivacio',
     flex: 0.5,
 }, {
-    field: 'dataActivacio',
+    field: 'estat',
     flex: 0.5,
 }];
 
@@ -23,7 +23,9 @@ const Alarmes = () => {
             resourceName="alarma"
             columns={dataGridColumns}
             readOnly
-            toolbarType="upper" />
+            toolbarType="upper"
+            filter="estat:'ACTIVA'"
+            sortModel={[{ field: 'dataActivacio', sort: 'desc' }]} />
     </GridPage>;
 }
 

@@ -36,7 +36,7 @@ const translationEn = {
         estadistiques: "Statistics",
         tasca: "Tasks",
         avis: "Warnings",
-        alarmes: "Alarms",
+        alarmes: "Active alarms",
         monitoritzacio: "Monitoring",
         monitor: "Monitor",
         cache: "Cache management",

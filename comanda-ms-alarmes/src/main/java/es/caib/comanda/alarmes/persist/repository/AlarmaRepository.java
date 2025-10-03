@@ -4,6 +4,7 @@ import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
@@ -36,10 +37,37 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 			"    a.dataActivacio >= ?1")
 	List<String> findDistinctAlarmaConfigCreatedByDataActivacioAfter(LocalDateTime data);
 
+	List<AlarmaEntity> findByAlarmaConfigAdminTrueAndEstat(AlarmaEstat estat);
 	List<AlarmaEntity> findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(LocalDateTime data);
 
+	List<AlarmaEntity> findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndEstat(
+			String createdBy,
+			AlarmaEstat estat);
 	List<AlarmaEntity> findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
 			String createdBy,
 			LocalDateTime data);
+
+	@Modifying
+	@Query("UPDATE " +
+			"    AlarmaEntity a " +
+			"SET " +
+			"    a.estat = 'ESBORRADA' " +
+			"WHERE " +
+			"    a.alarmaConfig.admin = true " +
+			"and a.estat = ?1")
+	int updateAllEstatEsborradaAdmin(AlarmaEstat estat);
+
+	@Modifying
+	@Query("UPDATE " +
+			"    AlarmaEntity a " +
+			"SET " +
+			"    a.estat = 'ESBORRADA' " +
+			"WHERE " +
+			"    a.alarmaConfig.admin = false " +
+			"and a.alarmaConfig.createdBy = ?1 " +
+			"and a.estat = ?2")
+	int updateAllEstatEsborradaNoAdmin(
+			String createdBy,
+			AlarmaEstat estat);
 
 }

@@ -36,7 +36,7 @@ const translationEs = {
         estadistiques: "Estadísticas",
         tasca: "Tareas",
         avis: "Avisos",
-        alarmes: "Alarmas",
+        alarmes: "Alarmas activas",
         monitoritzacio: "Monitorización",
         monitor: "Monitor",
         cache: "Gestión de cachés",

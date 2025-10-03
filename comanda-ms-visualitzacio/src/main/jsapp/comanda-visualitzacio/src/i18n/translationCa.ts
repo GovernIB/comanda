@@ -36,7 +36,7 @@ const translationCa = {
         estadistiques: "Estadístiques",
         tasca: "Tasques",
         avis: "Avisos",
-        alarmes: "Alarmes",
+        alarmes: "Alarmes actives",
         monitoritzacio: "Monitorització",
         monitor: "Monitor",
         cache: "Gestió de cachés",
