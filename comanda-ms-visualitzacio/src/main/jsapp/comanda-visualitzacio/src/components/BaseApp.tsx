@@ -1,17 +1,15 @@
 import React from 'react';
-import { AccessTime, CalendarMonth } from '@mui/icons-material';
-import dayjs from 'dayjs';
-import { Link as RouterLink, LinkProps as RouterLinkProps, useLocation, useNavigate } from 'react-router-dom';
-import i18n from '../i18n/i18n';
+import {
+    Link as RouterLink,
+    LinkProps as RouterLinkProps,
+    useLocation,
+    useNavigate
+} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import 'dayjs/locale/ca';
-import 'dayjs/locale/es';
-import HeaderLanguageSelector from "./HeaderLanguageSelector";
 import Button from '@mui/material/Button';
-import AppMenu from "./AppMenu";
-import drassana from '../assets/drassana.png';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import {
     DefaultMuiComponentProps,
     MenuEntry,
@@ -19,12 +17,19 @@ import {
     useBaseAppContext,
     useResourceApiContext,
 } from 'reactlib';
-import Footer from "./Footer.tsx";
-import {DataFormDialogApi} from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
-import {UserProfileFormDialog, UserProfileFormDialogButton} from './UserProfileFormDialog.tsx';
-import theme from "../theme.ts";
-import useMediaQuery from "@mui/material/useMediaQuery";
+import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
+import Alarms from './Alarms';
+import AppMenu from './AppMenu';
+import Footer from './Footer';
+import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
+import HeaderLanguageSelector from './HeaderLanguageSelector';
+import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog';
+import theme from '../theme';
+import i18n from '../i18n/i18n';
+import drassana from '../assets/drassana.png';
+import 'dayjs/locale/ca';
+import 'dayjs/locale/es';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -77,40 +82,6 @@ const CustomLocalizationProvider = ({ children }: React.PropsWithChildren) => {
         {children}
     </LocalizationProvider>;
 }
-
-// Hora del sistema
-// Component separat per al rellotge del sistema per evitar re-renders innecesaris
-const SystemTimeDisplay = React.memo(() => {
-    const [currentTime, setCurrentTime] = React.useState(dayjs());
-    React.useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(dayjs());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-    return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                marginLeft: '20px',
-                color: theme.palette.text.primary,
-                fontSize: '11px',
-                marginRight: '32px',
-            }}
-        >
-            <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                <CalendarMonth sx={{ fontSize: '14px' }}/>
-                <span>{currentTime.format('DD/MM/YYYY')}</span>
-            </div>
-            <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                <AccessTime  sx={{ fontSize: '14px' }}/>
-                <span>{currentTime.format('HH:mm:ss')}</span>
-            </div>
-        </div>
-    );
-});
 
 // Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
 const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) => {
@@ -242,6 +213,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAdditionalComponents={[
             ...generateMenuItems(menuEntries), // Menú
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
+            <Alarms key="alarms" />,
             ...generateLanguageItems(availableLanguages), // Idioma
             ...generateAppMenu(appMenuEntries), // Menú lateral
         ]}

@@ -5,11 +5,11 @@ import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
-import Caches from "./pages/Caches";
-import Integracions from "./pages/Integracions";
-import Dimensions from "./pages/Dimensions";
-import DimensioValor from "./pages/DimensioValor";
-import Indicadors from "./pages/Indicadors";
+import Caches from './pages/Caches';
+import Integracions from './pages/Integracions';
+import Dimensions from './pages/Dimensions';
+import DimensioValor from './pages/DimensioValor';
+import Indicadors from './pages/Indicadors';
 import EstadisticaWidget from './pages/EstadisticaWidget';
 import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
@@ -17,11 +17,12 @@ import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
 import Broker from './pages/Broker';
 import QueueMessages from './pages/QueueMessages';
-import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
-import Tasca from "./pages/Tasca.tsx";
-import Avis from "./pages/Avis.tsx";
-import Alarma, { AlarmaForm } from "./pages/Alarma.tsx";
-import Parametres from './pages/Parametres.tsx';
+import CalendariEstadistiques from './pages/CalendariEstadistiques';
+import Tasca from './pages/Tasca';
+import Avis from './pages/Avis';
+import Alarmes from './pages/Alarmes';
+import AlarmaConfig, { AlarmaConfigForm } from './pages/AlarmaConfig';
+import Parametres from './pages/Parametres';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -78,11 +79,14 @@ const AppRoutes: React.FC = () => {
                 <Route index element={<Avis />} />
             </Route>
             <Route path="alarma">
-                <Route index element={<Alarma />} />
+                <Route index element={<AlarmaConfig />} />
                 <Route path="form">
-                    <Route index element={<AlarmaForm />} />
-                    <Route path=":id" element={<AlarmaForm />} />
+                    <Route index element={<AlarmaConfigForm />} />
+                    <Route path=":id" element={<AlarmaConfigForm />} />
                 </Route>
+            </Route>
+            <Route path="alarmes">
+                <Route index element={<Alarmes />} />
             </Route>
             <Route path="broker">
                 <Route index element={<Broker />} />

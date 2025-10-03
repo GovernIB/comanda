@@ -74,7 +74,7 @@ export const EntornAppSelector : React.FC<any> = (props) => {
     </MuiFilter>;
 }
 
-export const AlarmaForm: React.FC = () => {
+export const AlarmaConfigForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
     const formApiRef = useFormApiRef();
@@ -190,7 +190,7 @@ export const AlarmaForm: React.FC = () => {
     </FormPage>;
 }
 
-const Alarma = () => {
+const AlarmaConfig = () => {
     const { t } = useTranslation();
     const dataGridColumns = useDataGridColumns();
     return <GridPage>
@@ -205,4 +205,4 @@ const Alarma = () => {
     </GridPage>;
 }
 
-export default Alarma;
+export default AlarmaConfig;
