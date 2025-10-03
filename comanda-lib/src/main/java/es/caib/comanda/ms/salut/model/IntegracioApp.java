@@ -7,6 +7,7 @@ public enum IntegracioApp {
     CAR ("Carpeta"),
     CDO ("Conversió de documents"),
     CIE ("Cie"),
+    CUS ("Custòdia"),
     DIB ("DigitalIB"),
     DIR ("Dir3Caib"),
     DIS ("Distribucio"),

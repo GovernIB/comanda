@@ -89,7 +89,7 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("params")
     @DisplayName("buidatIcompactat: comprova agregacions per MINUTS, HORA, DIA i merges de fills")
-    void test_buidatIcompactat_parametrized(List<Step> steps) {
+    void test_compactar_parametrized(List<Step> steps) {
         Long entornAppId = 100L;
         Long salutId = 500L;
 
@@ -191,7 +191,7 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
 
             when(salutRepository.findById(salutId)).thenReturn(Optional.of(dades));
 
-            helper.buidatIcompactat(entornAppId, salutId);
+            helper.compactar(entornAppId, salutId);
 
             // Validacions en punts clau
             if (i == 0) {
