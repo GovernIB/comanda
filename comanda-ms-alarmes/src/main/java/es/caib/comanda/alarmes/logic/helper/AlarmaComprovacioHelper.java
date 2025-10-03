@@ -8,6 +8,7 @@ import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.SalutServiceClient;
+import es.caib.comanda.client.UsuariServiceClient;
 import es.caib.comanda.client.model.Salut;
 import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
@@ -39,7 +40,7 @@ public class AlarmaComprovacioHelper {
 
 	private final AlarmaRepository alarmaRepository;
 	private final SalutServiceClient salutServiceClient;
-	//private final UsuariServiceClient usuariServiceClient;
+	private final UsuariServiceClient usuariServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 	private final AlarmaMailHelper alarmaMailHelper;
 
@@ -208,8 +209,7 @@ public class AlarmaComprovacioHelper {
 	}
 
 	private Usuari usuariFindByUsername(String username) {
-		return null;
-		/*PagedModel<EntityModel<Usuari>> usuaris = usuariServiceClient.find(
+		PagedModel<EntityModel<Usuari>> usuaris = usuariServiceClient.find(
 				null,
 				"codi:'" + username + "'",
 				null,
@@ -221,7 +221,7 @@ public class AlarmaComprovacioHelper {
 		return usuaris.getContent().stream().
 				findFirst().
 				map(EntityModel::getContent).
-				orElse(null);*/
+				orElse(null);
 	}
 
 }
