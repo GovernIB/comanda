@@ -15,8 +15,8 @@
 	<properties>
 		<!-- El .jar que es genera s'ha d'utilitzar des d'altres projectes que es compilen en Java 11 o Java 7 -->
 		<!-- Si no forçam la compilació en Java 11 -->
-		<maven.compiler.target>7</maven.compiler.target>
-		<maven.compiler.source>7</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
+		<maven.compiler.source>8</maven.compiler.source>
         <lombok.version>1.18.34</lombok.version>
 	</properties>
 	<dependencies>

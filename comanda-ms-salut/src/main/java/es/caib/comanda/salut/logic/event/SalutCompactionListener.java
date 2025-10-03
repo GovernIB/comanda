@@ -9,7 +9,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
- * Listener d'esdeveniments per a llançar la compactació després de cada consulta de salut.
+ * Listener d'esdeveniments per a llançar la compactació i el buidat després de cada consulta de salut.
  */
 @Slf4j
 @Component
@@ -22,9 +22,19 @@ public class SalutCompactionListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSalutInfoUpdated(SalutInfoUpdatedEvent event) {
         try {
-            salutInfoHelper.buidatIcompactat(event.getEntornAppId(), event.getSalutId());
+            salutInfoHelper.compactar(event.getEntornAppId(), event.getSalutId());
         } catch (Exception ex) {
-            log.warn("Error durant el procés de buidat i compactació després de l'esdeveniment: {}", ex.getMessage());
+            log.warn("Error durant el procés de compactació després de l'esdeveniment: {}", ex.getMessage());
+        }
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onSalutCompactionFinished(SalutCompactionFinishedEvent event) {
+        try {
+            salutInfoHelper.buidar(event.getEntornAppId(), event.getSalutId());
+        } catch (Exception ex) {
+            log.warn("Error durant el procés de buidat després de l'esdeveniment: {}", ex.getMessage());
         }
     }
 }

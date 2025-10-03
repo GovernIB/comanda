@@ -25,7 +25,7 @@ public class UserInformationHelper {
 
 	private final LdapUserInformationPlugin userInformationPlugin;
 
-	public UserInformationHelper(UsuariServiceClient usuariServiceClient) {
+	public UserInformationHelper() {
 		this.userInformationPlugin = new LdapUserInformationPlugin("");
 	}
 
