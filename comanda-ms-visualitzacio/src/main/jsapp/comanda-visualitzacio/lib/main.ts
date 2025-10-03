@@ -81,6 +81,7 @@ export type { MuiDataGridProps, MuiDataGridColDef } from './components/mui/datag
 export type { MuiDataGridApi, MuiDataGridApiRef } from './components/mui/datagrid/DataGridContext';
 export type { MuiFormProps } from './components/mui/form/MuiForm';
 export type { FormApi, FormApiRef } from './components/form/FormContext';
+export type { FilterApi, FilterApiRef } from './components/form/FilterContext';
 export type { FormFieldProps, FormFieldCustomProps } from './components/form/FormField';
 export type { DataFormDialogApi as MuiFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { FormSidebarApi as MuiFormSidebarApi } from './components/mui/form/MuiFormSidebar';

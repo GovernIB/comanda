@@ -18,6 +18,7 @@ import SalutAppInfo, { useAppInfoData } from './SalutAppInfo';
 import { ItemStateChip } from '../components/SalutItemStateChip';
 import {AppModel, EntornAppModel} from "../types/app.model.tsx";
 import {EntornModel} from "../types/entorn.model.tsx";
+import { useSalutLlistatExpansionState } from '../hooks/salutState.ts';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 type SalutInformeEstatItem = {
@@ -279,6 +280,7 @@ const Salut: FunctionComponent = () => {
     const { id } = useParams();
     const { t } = useTranslation();
     const toolbarState = useSalutToolbarState();
+    const salutLlistatState = useSalutLlistatExpansionState();
     const additionalFilter = salutEntornAppFilterBuilder(toolbarState.filterData);
     const dataRangeMinutes = dayjs.duration(toolbarState.dataRangeDuration).asMinutes();
     const salutData = useSalutData({
@@ -359,6 +361,7 @@ const Salut: FunctionComponent = () => {
                     reportInterval={salutData.reportInterval}
                     springFilter={additionalFilter}
                     grupsDates={salutData.grupsDates}
+                    {...salutLlistatState}
                 />
             ) : (
                 // TODO Persistir estado de expansión al cambiar a AppInfo

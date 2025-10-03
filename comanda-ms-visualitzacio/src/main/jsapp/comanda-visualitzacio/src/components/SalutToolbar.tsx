@@ -10,17 +10,21 @@ import Icon from '@mui/material/Icon';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import {
-    FormField, MuiDialog, MuiFilter, springFilterBuilder,
+    FilterApiRef,
+    FormField,
+    MuiDialog,
+    MuiFilter,
+    springFilterBuilder,
     Toolbar,
-    useBaseAppContext, useFilterApiRef, useFormContext,
+    useBaseAppContext,
+    useFilterApiRef,
+    useFormContext,
 } from 'reactlib';
 import { Box } from '@mui/material';
-import Grid from "@mui/material/Grid";
+import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { GroupWork } from '@mui/icons-material';
-// TODO Añadir export de tipo en lib
-import { FilterApiRef } from '../../lib/components/form/FilterContext.tsx';
 
 export type SalutToolbarProps = {
     title: string;

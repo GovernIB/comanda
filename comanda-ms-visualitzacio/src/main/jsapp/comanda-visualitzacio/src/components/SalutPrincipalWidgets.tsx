@@ -539,6 +539,8 @@ export const SalutWidgetTitle: React.FC<{
 };
 
 export const SalutWidgetContent: React.FC<{
+    expanded: boolean;
+    setExpanded: (expanded: boolean) => void;
     salutLastItems: SalutModel[];
     reportParams: {
         dataInici: string;
@@ -553,8 +555,20 @@ export const SalutWidgetContent: React.FC<{
     entorns?: EntornModel[];
     entornApps: EntornAppModel[];
     grupsDates: string[];
-}> = ({ salutLastItems, reportParams, estats, loading, groupedApp, groupedEntorn, entornApps, apps, entorns, grupsDates }) => {
-    const [open, setOpen] = React.useState(false);
+}> = ({
+    expanded,
+    setExpanded,
+    salutLastItems,
+    reportParams,
+    estats,
+    loading,
+    groupedApp,
+    groupedEntorn,
+    entornApps,
+    apps,
+    entorns,
+    grupsDates,
+}) => {
     const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
 
     if (loading)
@@ -572,7 +586,7 @@ export const SalutWidgetContent: React.FC<{
     return (
         <Box
             sx={{
-                height: !open ? '220px' : trackedGridSize?.height + 'px',
+                height: !expanded ? '220px' : trackedGridSize?.height + 'px',
                 transition: 'height 0.3s ease-in-out',
                 overflow: 'hidden',
                 position: 'relative',
@@ -608,7 +622,7 @@ export const SalutWidgetContent: React.FC<{
                         />
                     </ErrorBoundary>
                 </Grid>
-                {open && (
+                {expanded && (
                     <Grid size={12}>
                         <AppDataTable
                             groupedApp={groupedApp}
@@ -630,8 +644,8 @@ export const SalutWidgetContent: React.FC<{
                         width: '100%',
                     }}
                 >
-                    <IconButton onClick={() => setOpen(!open)}>
-                        {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                    <IconButton onClick={() => setExpanded(!expanded)}>
+                        {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                     </IconButton>
                 </Grid>
                 {/* Botón de expansión duplicado para ocupar la altura del botón original con position: absolute */}
@@ -655,6 +669,8 @@ export const SalutLlistat = ({
     reportInterval,
     apps,
     entorns,
+    setExpanded,
+    isExpanded,
 }: {
     apps?: AppModel[];
     entorns?: EntornModel[];
@@ -666,6 +682,8 @@ export const SalutLlistat = ({
         agrupacio: string;
     };
     springFilter?: string;
+    setExpanded: (expand: boolean, context: SalutData) => void;
+    isExpanded: (salutGroup: SalutData) => boolean;
 }) => {
     if (!salutGroups.length || grupsDates == null || reportInterval == null) return;
 
@@ -675,6 +693,8 @@ export const SalutLlistat = ({
                 return (
                     <Paper key={index} elevation={1} sx={{ px: 2, pt: 1, marginBottom: 1 }}>
                         <SalutWidgetContent
+                            expanded={isExpanded(salutGroup)}
+                            setExpanded={(expand) => setExpanded(expand, salutGroup)}
                             salutLastItems={salutGroup.salutLastItems}
                             reportParams={reportInterval}
                             estats={salutGroup.estats}
