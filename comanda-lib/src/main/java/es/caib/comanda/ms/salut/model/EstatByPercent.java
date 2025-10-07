@@ -2,10 +2,11 @@ package es.caib.comanda.ms.salut.model;
 
 public class EstatByPercent {
 
-    public static final int DOWN_PCT = 100;     // 100% errors
-    public static final int ERROR_GT_PCT = 30;  // >30% errors
-    public static final int DEGRADED_GT_PCT = 10; // >10% errors
-    public static final int UP_LT_PCT = 5;      // <5% errors
+    public static final int DOWN_PCT = 100;         // 100% errors --> DOWN
+    public static final int ERROR_GT_PCT = 50;      // 50% - <100% errors --> ERROR
+    public static final int DEGRADED_GT_PCT = 20;   // <20% - 50% errors --> DEGRADED
+    public static final int UP_LT_PCT = 10;         // <10% errors --> UP
+                                                    // 10% - 20% errors --> WARN
 
     public static EstatSalutEnum calculaEstat(double percent) {
         if (percent >= DOWN_PCT) {
