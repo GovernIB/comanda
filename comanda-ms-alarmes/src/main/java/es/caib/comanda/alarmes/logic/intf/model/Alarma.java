@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
 						roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
-						grantedPermissions = { PermissionEnum.READ }
+						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
 				),
 		},
 		artifacts = {

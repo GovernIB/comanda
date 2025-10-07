@@ -51,23 +51,26 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 	@Query("UPDATE " +
 			"    AlarmaEntity a " +
 			"SET " +
-			"    a.estat = 'ESBORRADA' " +
+			"    a.estat = ?2 " +
 			"WHERE " +
 			"    a.alarmaConfig.admin = true " +
 			"and a.estat = ?1")
-	int updateAllEstatEsborradaAdmin(AlarmaEstat estat);
+	int updateAllEstatEsborradaAdmin(
+			AlarmaEstat estat,
+			AlarmaEstat nouEstat);
 
 	@Modifying
 	@Query("UPDATE " +
 			"    AlarmaEntity a " +
 			"SET " +
-			"    a.estat = 'ESBORRADA' " +
+			"    a.estat = ?3 " +
 			"WHERE " +
 			"    a.alarmaConfig.admin = false " +
 			"and a.alarmaConfig.createdBy = ?1 " +
 			"and a.estat = ?2")
 	int updateAllEstatEsborradaNoAdmin(
 			String createdBy,
-			AlarmaEstat estat);
+			AlarmaEstat estat,
+			AlarmaEstat nouEstat);
 
 }

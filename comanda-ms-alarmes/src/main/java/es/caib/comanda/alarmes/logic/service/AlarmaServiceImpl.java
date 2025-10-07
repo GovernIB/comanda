@@ -103,9 +103,14 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 							"Sense permisos per a esborrar l'alarma");
 				}
 			} else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
-				alarmaRepository.updateAllEstatEsborradaNoAdmin(currentUser, AlarmaEstat.ACTIVA);
+				alarmaRepository.updateAllEstatEsborradaNoAdmin(
+						currentUser,
+						AlarmaEstat.ACTIVA,
+						AlarmaEstat.ESBORRADA);
 				if (isCurrentUserAdmin) {
-					alarmaRepository.updateAllEstatEsborradaAdmin(AlarmaEstat.ACTIVA);
+					alarmaRepository.updateAllEstatEsborradaAdmin(
+							AlarmaEstat.ACTIVA,
+							AlarmaEstat.ESBORRADA);
 				}
 			}
 			return null;
