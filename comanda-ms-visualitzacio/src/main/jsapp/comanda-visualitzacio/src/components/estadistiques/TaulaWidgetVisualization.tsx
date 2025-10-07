@@ -140,7 +140,7 @@ const useWidgetColors = (props: TaulaWidgetVisualizationProps, theme: any): Taul
         textTaula: colorTextTaula || colorText || theme.palette.text.primary,
         taulaBg: colorFonsTaula || colorFons || 'transparent',
         textHeader: colorCapcalera || colorTextTaula || colorText || theme.palette.text.primary,
-        headerBg: colorFonsCapcalera || colorFonsTaula || colorFons || 'transparent',
+        headerBg: colorFonsCapcalera || colorFonsTaula || colorFons,
         alternancia: colorAlternancia || colorFonsTaula || colorFons || 'transparent',
         voraTaula: colorVoraTaula || theme.palette.divider,
         horDivider: colorSeparadorHoritzontal || colorVoraTaula || theme.palette.divider,
