@@ -136,6 +136,7 @@ const translationEs = {
                 title: "Subsistemas",
                 subsistemaUpCount: "Activos",
                 subsistemaDownCount: "Inactivos",
+                subsistemaDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de subsistemas",
                 column: {
                     codi: "Código",

@@ -357,6 +357,14 @@ const AppDataTable: React.FC<any> = (props: {
                                     size="small"
                                 />
                             </SalutGenericTooltip>
+                            &nbsp;/&nbsp;
+                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaDesconegutCount')}>
+                                <Chip
+                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_DESCONEGUT_COUNT), color: ChipColor.WHITE }}
+                                    label={salutItem.subsistemaDesconegutCount}
+                                    size="small"
+                                />
+                            </SalutGenericTooltip>
                         </>
                     );
                 },

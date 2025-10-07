@@ -24,6 +24,7 @@ export interface ISalut extends IBaseEntity {
     integracioDesconegutCount: number | undefined;
     subsistemaUpCount: number | undefined;
     subsistemaDownCount: number | undefined;
+    subsistemaDesconegutCount: number | undefined;
     missatgeErrorCount: number | undefined;
     missatgeWarnCount: number | undefined;
     missatgeInfoCount: number | undefined;
@@ -52,6 +53,7 @@ export class SalutModel extends BaseEntity implements Required<ISalut> {
     static readonly INTEGRACIO_DESCONEGUT_COUNT: keyof SalutModel = "integracioDesconegutCount";
     static readonly SUBSISTEMA_UP_COUNT: keyof SalutModel = "subsistemaUpCount";
     static readonly SUBSISTEMA_DOWN_COUNT: keyof SalutModel = "subsistemaDownCount";
+    static readonly SUBSISTEMA_DESCONEGUT_COUNT: keyof SalutModel = "subsistemaDesconegutCount";
     static readonly MISSATGE_ERROR_COUNT: keyof SalutModel = "missatgeErrorCount";
     static readonly MISSATGE_WARN_COUNT: keyof SalutModel = "missatgeWarnCount";
     static readonly MISSATGE_INFO_COUNT: keyof SalutModel = "missatgeInfoCount";
@@ -73,6 +75,7 @@ export class SalutModel extends BaseEntity implements Required<ISalut> {
     integracioDesconegutCount: number | undefined;
     subsistemaUpCount: number | undefined;
     subsistemaDownCount: number | undefined;
+    subsistemaDesconegutCount: number | undefined;
     missatgeErrorCount: number | undefined;
     missatgeWarnCount: number | undefined;
     missatgeInfoCount: number | undefined;
@@ -203,7 +206,7 @@ export function getColorByIntegracio(integracioField: keyof SalutModel): string 
     } else if (SalutModel.INTEGRACIO_DOWN_COUNT === integracioField) {
         return RED_DARK;
     } else if (SalutModel.INTEGRACIO_DESCONEGUT_COUNT === integracioField) {
-        return GRAY
+        return GRAY;
     } else {
         return RED_DARK;
     }
@@ -214,6 +217,8 @@ export function getColorBySubsistema(subsistemaField: keyof SalutModel): string 
         return GREEN;
     } else if (SalutModel.SUBSISTEMA_DOWN_COUNT === subsistemaField) {
         return RED_DARK;
+    } else if (SalutModel.SUBSISTEMA_DESCONEGUT_COUNT === subsistemaField) {
+        return GRAY;
     } else {
         return RED_DARK;
     }

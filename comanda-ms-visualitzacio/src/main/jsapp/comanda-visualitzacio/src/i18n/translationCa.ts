@@ -136,6 +136,7 @@ const translationCa = {
                 title: "Subsistemes",
                 subsistemaUpCount: "Actives",
                 subsistemaDownCount: "Inactives",
+                subsistemaDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de subsistemes",
                 column: {
                     codi: "Codi",
