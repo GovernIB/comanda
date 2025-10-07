@@ -11,6 +11,7 @@ import {
 import { ContentDetail } from '../components/ContentDetail';
 import { Tabs, Tab, Chip, Box, Button, Icon, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
+import { buildHref } from '../util/requestUtils.ts';
 
 // Types for broker data
 interface BrokerInfo {
@@ -178,10 +179,10 @@ const Broker: React.FC = () => {
         const fetchBrokerInfo = async () => {
             try {
                 setLoading(true);
-                const brokerResponse = await requestHref('/api/broker');
+                const brokerResponse = await requestHref(buildHref("broker"));
                 setBrokerInfo(brokerResponse.data);
 
-                const queuesResponse = await requestHref('/api/broker/queues');
+                const queuesResponse = await requestHref(buildHref("broker/queues"));
                 setQueues(queuesResponse.data);
 
                 setLoading(false);
