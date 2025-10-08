@@ -3,7 +3,7 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
-import es.caib.comanda.salut.logic.intf.model.SalutNivell;
+import es.caib.comanda.ms.salut.model.SalutNivell;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;

@@ -3,7 +3,7 @@ package es.caib.comanda.salut.persist.entity;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import es.caib.comanda.salut.logic.intf.model.SalutMissatge;
-import es.caib.comanda.salut.logic.intf.model.SalutNivell;
+import es.caib.comanda.ms.salut.model.SalutNivell;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

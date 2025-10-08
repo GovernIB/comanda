@@ -2,6 +2,7 @@ package es.caib.comanda.salut.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.salut.model.SalutNivell;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

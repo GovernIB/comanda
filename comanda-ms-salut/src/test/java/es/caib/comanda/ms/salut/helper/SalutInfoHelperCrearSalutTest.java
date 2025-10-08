@@ -9,7 +9,7 @@ import es.caib.comanda.ms.salut.model.SalutInfo;
 import es.caib.comanda.ms.salut.model.SubsistemaSalut;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
-import es.caib.comanda.salut.logic.intf.model.SalutNivell;
+import es.caib.comanda.ms.salut.model.SalutNivell;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
@@ -92,7 +92,7 @@ class SalutInfoHelperCrearSalutTest {
                 .totalOk(null).totalError(null) // per defecte 0
                 .build();
         MissatgeSalut msg = MissatgeSalut.builder()
-                .data(new Date()).nivell("warn").missatge("m1").build();
+                .data(new Date()).nivell(SalutNivell.WARN).missatge("m1").build();
         DetallSalut det = DetallSalut.builder().codi("D1").nom("Detall").valor("V").build();
 
         SalutInfo info = SalutInfo.builder()

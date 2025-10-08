@@ -3,8 +3,7 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.ms.salut.model.EstatSalutEnum;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
-import es.caib.comanda.salut.logic.intf.model.SalutNivell;
-import org.junit.jupiter.api.BeforeEach;
+import es.caib.comanda.ms.salut.model.SalutNivell;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,17 +39,6 @@ class SalutInfoHelperPrivateMethodsTest {
         // null -> null
         Object unknownRes = invokePrivate("toSalutEstat", new Class[]{EstatSalutEnum.class}, new Object[]{null});
         assertEquals(SalutEstat.UNKNOWN, unknownRes);
-    }
-
-    @Test
-    void toSalutNivell_maps_variants_and_unknown_returns_null() throws Exception {
-        assertEquals(SalutNivell.ERROR, invokePrivate("toSalutNivell", new Class[]{String.class}, "error"));
-        assertEquals(SalutNivell.ERROR, invokePrivate("toSalutNivell", new Class[]{String.class}, "ERROR"));
-        assertEquals(SalutNivell.WARN, invokePrivate("toSalutNivell", new Class[]{String.class}, "avis"));
-        assertEquals(SalutNivell.WARN, invokePrivate("toSalutNivell", new Class[]{String.class}, "WARN"));
-        assertEquals(SalutNivell.INFO, invokePrivate("toSalutNivell", new Class[]{String.class}, "info"));
-        assertNull(invokePrivate("toSalutNivell", new Class[]{String.class}, "altre"));
-        assertNull(invokePrivate("toSalutNivell", new Class[]{String.class}, new Object[]{null}));
     }
 
     @Test
