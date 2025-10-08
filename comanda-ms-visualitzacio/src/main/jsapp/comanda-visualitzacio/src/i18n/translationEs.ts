@@ -307,6 +307,7 @@ const translationEs = {
             title: "Dimensiones",
             values: "Valores",
             column: {
+                entornApp: "Entorno de aplicación",
                 codi: "Código",
                 nom: "Nombre",
                 descripcio: "Descripción",
@@ -317,6 +318,7 @@ const translationEs = {
             title: "Indicadores",
             edit: "Editar",
             column: {
+                entornApp: "Entorno de aplicación",
                 codi: "Código",
                 nom: "Nombre",
                 descripcio: "Descripción",

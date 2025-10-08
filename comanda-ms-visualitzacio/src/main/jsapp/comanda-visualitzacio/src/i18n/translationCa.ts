@@ -309,6 +309,7 @@ const translationCa = {
             title: "Dimensions",
             values: "Valors",
             column: {
+                entornApp: "Entorn d'aplicació",
                 codi: "Codi",
                 nom: "Nom",
                 descripcio: "Descripció",
@@ -319,6 +320,7 @@ const translationCa = {
             title: "Indicadors",
             edit: "Editar",
             column: {
+                entornApp: "Entorn d'aplicació",
                 codi: "Codi",
                 nom: "Nom",
                 descripcio: "Descripció",

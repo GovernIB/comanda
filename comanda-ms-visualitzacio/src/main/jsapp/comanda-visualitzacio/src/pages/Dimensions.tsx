@@ -75,6 +75,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                         <FormField
                             name={'entornApp'}
                             type={'reference'}
+                            label={t('page.dimensions.column.entornApp')}
                             required={false}
                             optionsRequest={(q) => {
                                 const opts = (entornApp ?? []).map((ea: EntornAppItem) => ({

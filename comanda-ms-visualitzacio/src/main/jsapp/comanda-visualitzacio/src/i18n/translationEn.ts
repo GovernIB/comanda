@@ -301,6 +301,29 @@ const translationEn = {
                 logo: "Logo",
             },
         },
+        dimensions: {
+            title: "Dimensions",
+            values: "Values",
+            column: {
+                entornApp: "Application environment",
+                codi: "Code",
+                nom: "Name",
+                descripcio: "Description",
+                agrupacions: "Has groupings",
+            },
+        },
+        indicators: {
+            title: "Indicators",
+            edit: "Edit",
+            column: {
+                entornApp: "Application environment",
+                codi: "Code",
+                nom: "Name",
+                descripcio: "Description",
+                format: "Format",
+                indicadorMitjana: "Indicator by average",
+            },
+        },
         monitors: {
             title: "Monitors",
             detail: {
