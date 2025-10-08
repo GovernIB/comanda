@@ -59,7 +59,7 @@ interface TaulaWidgetColors {
     textTaulaColor: string;
     taulaBgColor: string;
     textHeaderColor: string;
-    headerBgColor: string;
+    headerBgColor?: string;
     alternanciaColor: string;
     voraTaulaColor: string;
     horDividerColor: string;
