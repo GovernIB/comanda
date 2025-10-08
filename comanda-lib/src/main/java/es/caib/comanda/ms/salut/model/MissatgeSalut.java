@@ -13,6 +13,6 @@ import java.util.Date;
 @AllArgsConstructor
 public class MissatgeSalut {
     private Date data;
-    private String nivell;
+    private SalutNivell nivell;
     private String missatge;
 }

@@ -3,14 +3,7 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
-import es.caib.comanda.ms.salut.model.DetallSalut;
-import es.caib.comanda.ms.salut.model.EstatSalut;
-import es.caib.comanda.ms.salut.model.EstatSalutEnum;
-import es.caib.comanda.ms.salut.model.IntegracioPeticions;
-import es.caib.comanda.ms.salut.model.IntegracioSalut;
-import es.caib.comanda.ms.salut.model.MissatgeSalut;
-import es.caib.comanda.ms.salut.model.SalutInfo;
-import es.caib.comanda.ms.salut.model.SubsistemaSalut;
+import es.caib.comanda.ms.salut.model.*;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
@@ -144,7 +137,7 @@ public class SalutInfoHelperTest {
 
         MissatgeSalut missatgeSalut = MissatgeSalut.builder()
                 .data(new Date())
-                .nivell("info")
+                .nivell(SalutNivell.INFO)
                 .missatge("Test message")
                 .build();
 

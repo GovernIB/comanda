@@ -10,7 +10,6 @@ import es.caib.comanda.ms.salut.model.SubsistemaSalut;
 import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
-import es.caib.comanda.salut.logic.intf.model.SalutNivell;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
@@ -26,10 +25,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -206,7 +203,7 @@ public class SalutInfoHelper {
 			missatges.forEach(m -> {
 				SalutMissatgeEntity salutMissatge = new SalutMissatgeEntity();
 				salutMissatge.setData(toLocalDateTime(m.getData()));
-				salutMissatge.setNivell(toSalutNivell(m.getNivell()));
+				salutMissatge.setNivell(m.getNivell());
 				salutMissatge.setMissatge(m.getMissatge());
 				salutMissatge.setSalut(salut);
 				salutMissatgeRepository.save(salutMissatge);
@@ -233,18 +230,6 @@ public class SalutInfoHelper {
 			return SalutEstat.valueOf(estatSalut.name());
 		} catch (IllegalArgumentException ignored) {}
 		return SalutEstat.UNKNOWN;
-	}
-
-	private SalutNivell toSalutNivell(String nivell) {
-		if ("error".equalsIgnoreCase(nivell)) {
-			return SalutNivell.ERROR;
-		} else if ("avis".equalsIgnoreCase(nivell) || "warn".equalsIgnoreCase(nivell)) {
-			return SalutNivell.WARN;
-		} else if ("info".equalsIgnoreCase(nivell)) {
-			return SalutNivell.INFO;
-		} else {
-			return null;
-		}
 	}
 
 	public LocalDateTime toLocalDateTime(Date dateToConvert) {

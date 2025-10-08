@@ -1,4 +1,4 @@
-package es.caib.comanda.salut.logic.intf.model;
+package es.caib.comanda.ms.salut.model;
 
 /**
  * Enumerat que indica el nivell de gravetat d'un missatge.
