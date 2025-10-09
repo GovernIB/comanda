@@ -218,11 +218,31 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 
 		// Per assegurar que s'executin les tasques programades correctament, es programen de nou.
 		if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {
-			entity.getEntornApps().forEach(e -> {
-				schedulerService.programarTasca(e);
-				appInfoHelper.programarTasquesSalutEstadistica(e);
+			entity.getEntornApps().forEach(entornAppEntity -> {
+                if (!entity.isActiva()) {
+//                    Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
+                    entornAppEntity.setActiva(false);
+                }
+
+				schedulerService.programarTasca(entornAppEntity);
+				appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
 			});
 		}
 	}
 
+    @Override
+    protected void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        super.afterDelete(entity, answers);
+        cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
+
+        if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {
+            entity.getEntornApps().forEach(entornAppEntity -> {
+//                Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
+                entornAppEntity.setActiva(false);
+
+                schedulerService.programarTasca(entornAppEntity);
+                appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
+            });
+        }
+    }
 }
