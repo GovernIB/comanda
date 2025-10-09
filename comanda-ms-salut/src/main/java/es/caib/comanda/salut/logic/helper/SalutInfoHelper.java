@@ -522,9 +522,12 @@ public class SalutInfoHelper {
             agregat.getSalutIntegracions().stream()
                     .filter(a -> a.getCodi().equals(si.getCodi())).findFirst()
                     .ifPresentOrElse(integracio -> {
+                        integracio.setTotalOk(si.getTotalOk());
+                        integracio.setTotalError(si.getTotalError());
+                        integracio.setTotalTempsMig(si.getTotalTempsMig());
+	                    integracio.addTempsMigUltimPeriode(si.getTempsMigUltimPeriode(), si.getPeticionsOkUltimPeriode());
 	                    integracio.addPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode());
 	                    integracio.addPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode());
-	                    integracio.addTempsMigUltimPeriode(si.getTempsMigUltimPeriode());
                         if (si.getLatencia() != null) {
                             integracio.setLatencia(si.getLatencia());
                             integracio.addLatenciaMitjana(si.getLatencia());
@@ -577,9 +580,12 @@ public class SalutInfoHelper {
             agregat.getSalutSubsistemes().stream()
                     .filter(a -> a.getCodi().equals(ss.getCodi())).findFirst()
                     .ifPresentOrElse(subsistema -> {
+                        subsistema.setTotalOk(ss.getTotalOk());
+                        subsistema.setTotalError(ss.getTotalError());
+                        subsistema.setTotalTempsMig(ss.getTotalTempsMig());
+	                    subsistema.addTempsMigUltimPeriode(ss.getTempsMigUltimPeriode(), ss.getPeticionsOkUltimPeriode());
 	                    subsistema.addPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
 	                    subsistema.addPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
-	                    subsistema.addTempsMigUltimPeriode(ss.getTempsMigUltimPeriode());
                         if (ss.getLatencia() != null) {
                             subsistema.setLatencia(ss.getLatencia());
                             subsistema.addLatenciaMitjana(ss.getLatencia());

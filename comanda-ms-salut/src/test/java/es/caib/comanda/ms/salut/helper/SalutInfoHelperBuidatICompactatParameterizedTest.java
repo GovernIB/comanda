@@ -54,14 +54,45 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
         Integer bdLat;
         Long ok;
         Long err;
+        Integer tmig;
+        Long p_ok;
+        Long p_err;
+        Integer p_tmig;
         String msgText; SalutNivell msgLevel; // INFO/WARN/ERROR
         String detailCode; String detailName; String detailValue;
-        Step(LocalDateTime t, SalutEstat app, Integer appLat, SalutEstat bd, Integer bdLat,
-             Long ok, Long err, String msgText, SalutNivell msgLevel,
-             String detailCode, String detailName, String detailValue) {
-            this.time = t; this.app = app; this.appLat = appLat; this.bd = bd; this.bdLat = bdLat;
-            this.ok = ok; this.err = err; this.msgText = msgText; this.msgLevel = msgLevel;
-            this.detailCode = detailCode; this.detailName = detailName; this.detailValue = detailValue;
+        Step(
+                LocalDateTime t,
+                SalutEstat app,
+                Integer appLat,
+                SalutEstat bd,
+                Integer bdLat,
+                Long ok,
+                Long err,
+                Integer tmig,
+                Long p_ok,
+                Long p_err,
+                Integer p_tmig,
+                String msgText,
+                SalutNivell msgLevel,
+                String detailCode,
+                String detailName,
+                String detailValue) {
+            this.time = t;
+            this.app = app;
+            this.appLat = appLat;
+            this.bd = bd;
+            this.bdLat = bdLat;
+            this.ok = ok;
+            this.err = err;
+            this.tmig = tmig;
+            this.p_ok = p_ok;
+            this.p_err = p_err;
+            this.p_tmig = p_tmig;
+            this.msgText = msgText;
+            this.msgLevel = msgLevel;
+            this.detailCode = detailCode;
+            this.detailName = detailName;
+            this.detailValue = detailValue;
         }
     }
 
@@ -69,19 +100,19 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
         LocalDateTime base = LocalDateTime.now().withSecond(0).withNano(0).withHour(0).withMinute(0);
         List<Step> scenario = Arrays.asList(
                 // 1) Primer registre (crea MINUTS via numeroDiesAgrupacio=1), i també HORA i DIA per ser 00:00
-                new Step(base, SalutEstat.UP, 100, SalutEstat.UP, 80, 1L, 0L, "m1", SalutNivell.INFO, "d1", "Detall 1", "v1"),
+                new Step(base, SalutEstat.UP, 100, SalutEstat.UP, 80, 10L, 0L, 100, 1L, 0L, 200, "m1", SalutNivell.INFO, "d1", "Detall 1", "v1"),
                 // 2) Segon minut (agrega a MINUTS existent)
-                new Step(base.plusMinutes(1), SalutEstat.WARN, 200, SalutEstat.UP, 70, 2L, 1L, "m1", SalutNivell.WARN, "d1", "Detall 1", "v1b"),
+                new Step(base.plusMinutes(1), SalutEstat.WARN, 200, SalutEstat.UP, 70, 20L, 10L, 200, 2L, 1L, 400, "m1", SalutNivell.WARN, "d1", "Detall 1", "v1b"),
                 // 3) Tercer minut
-                new Step(base.plusMinutes(2), SalutEstat.UP, 300, SalutEstat.UP, 60, 1L, 0L, "m2", SalutNivell.INFO, "d2", "Detall 2", "x"),
+                new Step(base.plusMinutes(2), SalutEstat.UP, 300, SalutEstat.UP, 60, 10L, 0L, 300, 1L, 0L, 600, "m2", SalutNivell.INFO, "d2", "Detall 2", "x"),
                 // 4) Quart minut (encara dins finestra MINUTS actual -> no nou registre MINUTS)
-                new Step(base.plusMinutes(3), SalutEstat.DEGRADED, 400, SalutEstat.WARN, 90, 3L, 2L, "m2", SalutNivell.ERROR, "d2", "Detall 2", "y"),
+                new Step(base.plusMinutes(3), SalutEstat.DEGRADED, 400, SalutEstat.WARN, 90, 30L, 20L, 400, 3L, 2L, 800, "m2", SalutNivell.ERROR, "d2", "Detall 2", "y"),
                 // 5) Cinquè minut (fora finestra -> nou registre MINUTS)
-                new Step(base.plusMinutes(4), SalutEstat.UP, 500, SalutEstat.UP, 50, 1L, 1L, "m3", SalutNivell.INFO, "d3", "Detall 3", "z"),
+                new Step(base.plusMinutes(4), SalutEstat.UP, 500, SalutEstat.UP, 50, 10L, 10L, 500, 1L, 1L, 1000, "m3", SalutNivell.INFO, "d3", "Detall 3", "z"),
                 // 6) Canvi d'hora (01:00)
-                new Step(base.plusHours(1), SalutEstat.WARN, 150, SalutEstat.UP, 70, 0L, 1L, "m1", SalutNivell.WARN, "d1", "Detall 1", "v2"),
+                new Step(base.plusHours(1), SalutEstat.WARN, 150, SalutEstat.UP, 70, 0L, 10L, 150, 0L, 1L, 300, "m1", SalutNivell.WARN, "d1", "Detall 1", "v2"),
                 // 7) Canvi de dia (endemà 00:00)
-                new Step(base.plusDays(1), SalutEstat.UP, 120, SalutEstat.UP, 80, 5L, 0L, "m4", SalutNivell.INFO, "d4", "Detall 4", "w")
+                new Step(base.plusDays(1), SalutEstat.UP, 120, SalutEstat.UP, 80, 50L, 0L, 120, 5L, 0L, 240, "m4", SalutNivell.INFO, "d4", "Detall 4", "w")
         );
         return Stream.of(scenario);
     }
@@ -104,9 +135,6 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
                     TipusRegistreSalut tipus = inv.getArgument(1);
                     return lastAgg.get(tipus);
                 });
-        // Mock: neteja retorna buit
-        when(salutRepository.findIdsByEntornAppIdAndTipusRegistreAndDataBefore(any(), any(), any()))
-                .thenReturn(Collections.emptyList());
 
         // save(SalutEntity): assigna id, inicialitza conjunts i desa per tipus quan és agregat (MINUTS/HORA/DIA)
         when(salutRepository.save(any(SalutEntity.class))).thenAnswer(inv -> {
@@ -177,9 +205,9 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
             dades.setBdLatencia(st.bdLat);
             // Fills per al registre de minut
             SalutIntegracioEntity i1 = new SalutIntegracioEntity();
-            i1.setSalut(dades); i1.setCodi("API"); i1.setEstat(st.app); i1.setLatencia(st.appLat); i1.setTotalOk(st.ok); i1.setTotalError(st.err);
+            i1.setSalut(dades); i1.setCodi("API"); i1.setEstat(st.app); i1.setLatencia(st.appLat); i1.setTotalOk(st.ok); i1.setTotalError(st.err); i1.setTotalTempsMig(st.tmig); i1.setPeticionsOkUltimPeriode(st.p_ok); i1.setPeticionsErrorUltimPeriode(st.p_err); i1.setTempsMigUltimPeriode(st.p_tmig);
             SalutSubsistemaEntity s1 = new SalutSubsistemaEntity();
-            s1.setSalut(dades); s1.setCodi("SUB"); s1.setEstat(st.bd); s1.setLatencia(st.bdLat); s1.setTotalOk(st.ok); s1.setTotalError(st.err);
+            s1.setSalut(dades); s1.setCodi("SUB"); s1.setEstat(st.bd); s1.setLatencia(st.bdLat); s1.setTotalOk(st.ok); s1.setTotalError(st.err); s1.setTotalTempsMig(st.tmig); s1.setPeticionsOkUltimPeriode(st.p_ok); s1.setPeticionsErrorUltimPeriode(st.p_err); s1.setTempsMigUltimPeriode(st.p_tmig);
             SalutMissatgeEntity m1 = new SalutMissatgeEntity();
             m1.setSalut(dades); m1.setData(st.time); m1.setNivell(st.msgLevel); m1.setMissatge(st.msgText);
             SalutDetallEntity d1 = new SalutDetallEntity();
@@ -206,12 +234,17 @@ class SalutInfoHelperBuidatICompactatParameterizedTest {
                 assertEquals(1, mins.size(), "El 4t ha d'agregar al mateix MINUTS");
                 SalutEntity agg = mins.get(0);
                 assertEquals(4, agg.getNumElements());
-                // Mitjana app
+                // Latencia Mitjana app
                 assertEquals(Integer.valueOf((100+200+300+400)/4), agg.getAppLatenciaMitjana());
                 // Integració totals
                 SalutIntegracioEntity api = agg.getSalutIntegracions().stream().filter(x -> "API".equals(x.getCodi())).findFirst().orElseThrow();
-                assertEquals(Long.valueOf(1+2+1+3), api.getTotalOk());
-                assertEquals(Long.valueOf(0+1+0+2), api.getTotalError());
+                assertEquals(Integer.valueOf(400), api.getTotalTempsMig());
+                assertEquals(Long.valueOf(30), api.getTotalOk());
+                assertEquals(Long.valueOf(20), api.getTotalError());
+                // Integració periode
+                assertEquals(Integer.valueOf(570), api.getTempsMigUltimPeriode()); // (200+(400*2)+600+(800*3))/(1+2+1+3) --> Pot haver-hi diferències pel redondeig en cada operació
+                assertEquals(Long.valueOf(1+2+1+3), api.getPeticionsOkUltimPeriode());
+                assertEquals(Long.valueOf(0+1+0+2), api.getPeticionsErrorUltimPeriode());
                 // Missatges: m1 actualitzat a WARN, m2 creat
                 assertTrue(agg.getSalutMissatges().stream().anyMatch(x -> "m1".equals(x.getMissatge()) && x.getNivell() == SalutNivell.WARN));
                 assertTrue(agg.getSalutMissatges().stream().anyMatch(x -> "m2".equals(x.getMissatge())));
