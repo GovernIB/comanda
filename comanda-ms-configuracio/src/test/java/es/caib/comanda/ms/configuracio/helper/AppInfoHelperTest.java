@@ -18,6 +18,7 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.salut.model.AppInfo;
 import es.caib.comanda.ms.salut.model.IntegracioInfo;
+import es.caib.comanda.ms.salut.model.SubsistemaInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,7 +78,7 @@ public class AppInfoHelperTest {
     private List<EntornAppEntity> activeEntornApps;
     private AppInfo appInfo;
     private List<IntegracioInfo> integracions;
-    private List<AppInfo> subsistemes;
+    private List<SubsistemaInfo> subsistemes;
 
     @BeforeEach
     void setUp() {
@@ -128,7 +129,7 @@ public class AppInfoHelperTest {
         integracions.add(integracio);
 
         // Setup subsistemes
-        AppInfo subsistema = AppInfo.builder()
+        SubsistemaInfo subsistema = SubsistemaInfo.builder()
                 .codi("SUB1")
                 .nom("Subsistema 1")
                 .build();

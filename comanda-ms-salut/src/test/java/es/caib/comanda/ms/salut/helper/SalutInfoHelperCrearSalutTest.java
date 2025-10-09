@@ -3,6 +3,7 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.ms.salut.model.DetallSalut;
 import es.caib.comanda.ms.salut.model.EstatSalut;
 import es.caib.comanda.ms.salut.model.EstatSalutEnum;
+import es.caib.comanda.ms.salut.model.IntegracioPeticions;
 import es.caib.comanda.ms.salut.model.IntegracioSalut;
 import es.caib.comanda.ms.salut.model.MissatgeSalut;
 import es.caib.comanda.ms.salut.model.SalutInfo;
@@ -85,11 +86,14 @@ class SalutInfoHelperCrearSalutTest {
 
         IntegracioSalut integ = IntegracioSalut.builder()
                 .codi("INT1").estat(EstatSalutEnum.DOWN).latencia(10)
-                .peticions(null) // totals per defecte 0
+                .peticions(IntegracioPeticions.builder()
+                        .totalOk(10L).totalError(2L).totalTempsMig(125)
+                        .peticionsOkUltimPeriode(2L).peticionsErrorUltimPeriode(0L).tempsMigUltimPeriode(130).build()) // totals per defecte 0
                 .build();
         SubsistemaSalut subs = SubsistemaSalut.builder()
                 .codi("SUB1").estat(EstatSalutEnum.UP).latencia(5)
-                .totalOk(null).totalError(null) // per defecte 0
+                .totalOk(20L).totalError(1L).totalTempsMig(236)
+                .peticionsOkUltimPeriode(4L).peticionsErrorUltimPeriode(0L).tempsMigUltimPeriode(228)
                 .build();
         MissatgeSalut msg = MissatgeSalut.builder()
                 .data(new Date()).nivell(SalutNivell.WARN).missatge("m1").build();
@@ -133,16 +137,16 @@ class SalutInfoHelperCrearSalutTest {
         assertEquals("INT1", iSaved.getCodi());
         assertEquals(SalutEstat.DOWN, iSaved.getEstat());
         assertEquals(Integer.valueOf(10), iSaved.getLatencia());
-        assertEquals(Long.valueOf(0), iSaved.getTotalOk());
-        assertEquals(Long.valueOf(0), iSaved.getTotalError());
+        assertEquals(Long.valueOf(10), iSaved.getTotalOk());
+        assertEquals(Long.valueOf(2), iSaved.getTotalError());
 
         verify(salutSubsistemaRepository).save(subsistemaCaptor.capture());
         SalutSubsistemaEntity sSaved = subsistemaCaptor.getValue();
         assertEquals("SUB1", sSaved.getCodi());
         assertEquals(SalutEstat.UP, sSaved.getEstat());
         assertEquals(Integer.valueOf(5), sSaved.getLatencia());
-        assertEquals(Long.valueOf(0), sSaved.getTotalOk());
-        assertEquals(Long.valueOf(0), sSaved.getTotalError());
+        assertEquals(Long.valueOf(20), sSaved.getTotalOk());
+        assertEquals(Long.valueOf(1), sSaved.getTotalError());
 
         verify(salutMissatgeRepository).save(missatgeCaptor.capture());
         SalutMissatgeEntity mSaved = missatgeCaptor.getValue();

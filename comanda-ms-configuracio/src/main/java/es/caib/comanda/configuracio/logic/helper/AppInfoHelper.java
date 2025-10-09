@@ -24,6 +24,7 @@ import es.caib.comanda.ms.salut.model.AppInfo;
 import es.caib.comanda.ms.salut.model.ContextInfo;
 import es.caib.comanda.ms.salut.model.IntegracioInfo;
 import es.caib.comanda.ms.salut.model.Manual;
+import es.caib.comanda.ms.salut.model.SubsistemaInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -209,7 +210,7 @@ public class AppInfoHelper {
 		});
 	}
 
-	private void refreshSubsistemes(EntornAppEntity entornApp, List<AppInfo> subsistemaInfos) {
+	private void refreshSubsistemes(EntornAppEntity entornApp, List<SubsistemaInfo> subsistemaInfos) {
 		List<AppSubsistemaEntity> subsistemesDb = subsistemaRepository.findByEntornApp(entornApp);
 		// Actualitzam els subsistemes existents i cream els subsistemes que falten a la base de dades
 		if (subsistemaInfos != null) {
@@ -236,7 +237,7 @@ public class AppInfoHelper {
 		}
 		// Desactivam els subsistemes que no apareixen a la resposta
 		subsistemesDb.forEach(sdb -> {
-			Optional<AppInfo> subsistemaInfo = subsistemaInfos != null ? subsistemaInfos.stream().
+			Optional<SubsistemaInfo> subsistemaInfo = subsistemaInfos != null ? subsistemaInfos.stream().
 					filter(sin -> sdb.getCodi().equals(sin.getCodi())).
 					findFirst() : Optional.empty();
 			if (subsistemaInfo.isEmpty()) {

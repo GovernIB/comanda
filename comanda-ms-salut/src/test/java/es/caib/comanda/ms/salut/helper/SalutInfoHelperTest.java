@@ -118,6 +118,10 @@ public class SalutInfoHelperTest {
         IntegracioPeticions peticions = IntegracioPeticions.builder()
                 .totalOk(10L)
                 .totalError(2L)
+                .totalTempsMig(48)
+                .peticionsOkUltimPeriode(2L)
+                .peticionsErrorUltimPeriode(0L)
+                .tempsMigUltimPeriode(50)
                 .build();
 
         IntegracioSalut integracioSalut = IntegracioSalut.builder()
@@ -133,6 +137,10 @@ public class SalutInfoHelperTest {
                 .latencia(60)
                 .totalOk(20L)
                 .totalError(5L)
+                .totalTempsMig(60)
+                .peticionsOkUltimPeriode(4L)
+                .peticionsErrorUltimPeriode(1L)
+                .tempsMigUltimPeriode(62)
                 .build();
 
         MissatgeSalut missatgeSalut = MissatgeSalut.builder()
