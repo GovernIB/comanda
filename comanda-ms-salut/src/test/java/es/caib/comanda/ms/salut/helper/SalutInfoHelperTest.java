@@ -215,7 +215,7 @@ public class SalutInfoHelperTest {
         SalutEntity capturedSalutEntity = salutEntityCaptor.getValue();
 
         assertEquals(1L, capturedSalutEntity.getEntornAppId().longValue());
-        assertEquals(SalutEstat.ERROR, capturedSalutEntity.getAppEstat());
+        assertEquals(SalutEstat.DOWN, capturedSalutEntity.getAppEstat());
 
         verify(salutIntegracioRepository, never()).save(any(SalutIntegracioEntity.class));
         verify(salutSubsistemaRepository, never()).save(any(SalutSubsistemaEntity.class));

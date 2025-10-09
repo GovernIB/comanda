@@ -129,10 +129,10 @@ public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
 		this.peticionsErrorUltimPeriode += numError;
 	}
 
-	public void addTempsMigUltimPeriode(Integer nouTempsMig) {
-		if (nouTempsMig == null) return;
-		long total = ((long)this.tempsMigUltimPeriode * this.peticionsOkUltimPeriode) + (long)nouTempsMig;
-		this.tempsMigUltimPeriode = Math.toIntExact(total / (this.peticionsOkUltimPeriode + 1L));
-	}
+    public void addTempsMigUltimPeriode(Integer nouTempsMig, Long peticionsNouPeriode) {
+        if (nouTempsMig == null) return;
+        long total = ((long)this.tempsMigUltimPeriode * this.peticionsOkUltimPeriode) + (nouTempsMig * peticionsNouPeriode);
+        this.tempsMigUltimPeriode = Math.toIntExact(total / (this.peticionsOkUltimPeriode + peticionsNouPeriode));
+    }
 
 }
