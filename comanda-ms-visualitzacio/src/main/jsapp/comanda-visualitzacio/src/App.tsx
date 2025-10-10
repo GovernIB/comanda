@@ -4,6 +4,7 @@ import { BaseApp } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
 import comandaLogo from './assets/COM_DRA_COL.svg';
 import AppRoutes from './AppRoutes';
+import KeepAlive from './components/KeepAlive';
 
 export const App: React.FC = () => {
     const { t } = useTranslation();
@@ -176,6 +177,7 @@ export const App: React.FC = () => {
             appbarStyle={{ cssText: 'min-height: 64px !important; background-color: #fff !important' }}
             // appbarBackgroundImg={headerBackground}
         >
+            <KeepAlive />
             <AppRoutes />
         </BaseApp>
     );
