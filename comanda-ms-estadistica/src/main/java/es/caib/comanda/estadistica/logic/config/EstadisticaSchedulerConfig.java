@@ -24,7 +24,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 @EnableScheduling
 public class EstadisticaSchedulerConfig {
 
-    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":100}")
+    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
     private Integer schedulerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":4}")
     private Integer workerPoolSize;

@@ -19,7 +19,7 @@ import org.springframework.core.task.TaskExecutor;
 @EnableScheduling
 public class SalutSchedulerConfig {
 
-    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":100}")
+    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
     private Integer schedulerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":4}")
     private Integer workerPoolSize;
