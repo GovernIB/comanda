@@ -33,9 +33,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.validation.*;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Lògica comuna per a consultar la informació de les apps.
@@ -162,12 +165,32 @@ public class AppInfoHelper {
 		}
 	}
 
+    private Set<ConstraintViolation<Object>> validateObject(Object object) {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            Validator validator = factory.getValidator();
+            return validator.validate(object);
+        }
+    }
+
 	private void refreshIntegracions(EntornAppEntity entornApp, List<IntegracioInfo> integracioInfos) {
 		List<AppIntegracioEntity> appIntegracionsDb = appIntegracioRepository.findByEntornApp(entornApp);
 		List<IntegracioEntity> integracionsDb = integracioRepository.findAll();
+
+        // Filtram les integracions invalides
+        List<IntegracioInfo> filteredIntegracioInfos = integracioInfos != null ? integracioInfos.stream()
+                .filter(iin -> {
+                    var violations = validateObject(iin);
+                    if (!violations.isEmpty()) {
+                        log.warn("Integració {} (entornApp: {}) no validada: {}", iin.getCodi(), entornApp.getId(), violations);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList()) : null;
+
 		// Actualitzam les integracions existents i cream les integracions que falten a la base de dades
-		if (integracioInfos != null) {
-			integracioInfos.forEach(iin -> {
+		if (filteredIntegracioInfos != null) {
+			filteredIntegracioInfos.forEach(iin -> {
 				Optional<AppIntegracioEntity> appIntegracioDb = appIntegracionsDb.stream().
 						filter(idb -> idb.getIntegracio().getCodi().equals(iin.getCodi())).
 						findFirst();
@@ -200,7 +223,7 @@ public class AppInfoHelper {
 		}
 		// Desactivam les integracions que no apareixen a la resposta
 		appIntegracionsDb.forEach(idb -> {
-			Optional<IntegracioInfo> integracioInfo = integracioInfos != null ? integracioInfos.stream().
+			Optional<IntegracioInfo> integracioInfo = filteredIntegracioInfos != null ? filteredIntegracioInfos.stream().
 					filter(iin -> idb.getIntegracio().getCodi().equals(iin.getCodi())).
 					findFirst() : Optional.empty();
 			if (integracioInfo.isEmpty()) {
@@ -212,9 +235,22 @@ public class AppInfoHelper {
 
 	private void refreshSubsistemes(EntornAppEntity entornApp, List<SubsistemaInfo> subsistemaInfos) {
 		List<AppSubsistemaEntity> subsistemesDb = subsistemaRepository.findByEntornApp(entornApp);
+
+        // Filtram els subsistemes invalids
+        var filteredSubsistemaInfos = subsistemaInfos != null ? subsistemaInfos.stream()
+                .filter(sin -> {
+                    var violations = validateObject(sin);
+                    if (!violations.isEmpty()) {
+                        log.warn("Subsistema {} (entornApp: {}) no validat: {}", sin.getCodi(), entornApp.getId(), violations);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList()) : null;
+
 		// Actualitzam els subsistemes existents i cream els subsistemes que falten a la base de dades
-		if (subsistemaInfos != null) {
-			subsistemaInfos.forEach(sin -> {
+		if (filteredSubsistemaInfos != null) {
+            filteredSubsistemaInfos.forEach(sin -> {
 				Optional<AppSubsistemaEntity> subsistemaDb = subsistemesDb.stream().
 						filter(sdb -> sdb.getCodi().equals(sin.getCodi())).
 						findFirst();
@@ -237,7 +273,7 @@ public class AppInfoHelper {
 		}
 		// Desactivam els subsistemes que no apareixen a la resposta
 		subsistemesDb.forEach(sdb -> {
-			Optional<SubsistemaInfo> subsistemaInfo = subsistemaInfos != null ? subsistemaInfos.stream().
+			Optional<SubsistemaInfo> subsistemaInfo = filteredSubsistemaInfos != null ? filteredSubsistemaInfos.stream().
 					filter(sin -> sdb.getCodi().equals(sin.getCodi())).
 					findFirst() : Optional.empty();
 			if (subsistemaInfo.isEmpty()) {
@@ -249,10 +285,23 @@ public class AppInfoHelper {
 
 	private void refreshContexts(EntornAppEntity entornApp, List<ContextInfo> contextInfos) {
 		List<AppContextEntity> contextsDb = contextRepository.findByEntornApp(entornApp);
+
+        // Filtram els contexts invalids
+        var filteredContextInfos = contextInfos != null ? contextInfos.stream()
+                .filter(cin -> {
+                    var violations = validateObject(cin);
+                    if (!violations.isEmpty()) {
+                        log.warn("Context {} (entornApp: {}) no validat: {}", cin.getCodi(), entornApp.getId(), violations);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList()) : null;
+
 		// Actualitzam els contexts existents i cream els contexts que falten a la base de dades
-		if (contextInfos != null) {
-			contextInfos.forEach(cin -> {
-				Optional<AppContextEntity> contextDb = contextsDb.stream().
+		if (filteredContextInfos != null) {
+            filteredContextInfos.forEach(cin -> {
+                Optional<AppContextEntity> contextDb = contextsDb.stream().
 						filter(ctx -> ctx.getCodi().equals(cin.getCodi())).
 						findFirst();
 				if (contextDb.isPresent()) {
@@ -280,7 +329,7 @@ public class AppInfoHelper {
 		}
 		// Desactivam els contexts que no apareixen a la resposta
 		contextsDb.forEach(cdb -> {
-			Optional<ContextInfo> contextInfo = contextInfos != null ? contextInfos.stream().
+			Optional<ContextInfo> contextInfo = filteredContextInfos != null ? filteredContextInfos.stream().
 					filter(sin -> cdb.getCodi().equals(sin.getCodi())).
 					findFirst() : Optional.empty();
 			if (contextInfo.isEmpty()) {
