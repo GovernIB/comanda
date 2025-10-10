@@ -5,9 +5,7 @@ import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
@@ -16,21 +14,18 @@ import es.caib.comanda.configuracio.persist.repository.ManualRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
-import es.caib.comanda.ms.salut.model.AppInfo;
-import es.caib.comanda.ms.salut.model.IntegracioInfo;
-import es.caib.comanda.ms.salut.model.SubsistemaInfo;
+import es.caib.comanda.ms.salut.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -71,6 +66,15 @@ public class AppInfoHelperTest {
 
     @Mock
     private RestTemplate restTemplate;
+
+    @Captor
+    private ArgumentCaptor<IntegracioEntity> integracioEntityCaptor;
+
+    @Captor
+    private ArgumentCaptor<AppSubsistemaEntity> subsistemaEntityCaptor;
+
+    @Captor
+    private ArgumentCaptor<AppContextEntity> contextEntityCaptor;
 
     private AppInfoHelper appInfoHelper;
 
@@ -217,6 +221,39 @@ public class AppInfoHelperTest {
         // Verify that integracions and subsistemes were refreshed
         verify(appIntegracioRepository).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository).findByEntornApp(entornAppEntity);
+    }
+
+    @Test
+    void testRefreshAppInfoAll_IgnoresValidationErrors() {
+        // Mock repository call
+        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(activeEntornApps);
+
+        // Rebuild AppInfo with invalid data
+        appInfo = new AppInfo(
+                appInfo.getCodi(),
+                appInfo.getNom(),
+                appInfo.getVersio(),
+                appInfo.getData(),
+                appInfo.getRevisio(),
+                appInfo.getJdkVersion(),
+                Arrays.asList(appInfo.getIntegracions().get(0), new IntegracioInfo("INT2", "")),
+                Arrays.asList(appInfo.getSubsistemes().get(0), new SubsistemaInfo("SUB1", "")),
+                List.of(new ContextInfo("CON1", "", "", null, ""))
+        );
+
+        // Mock RestTemplate
+        when(restTemplate.getForObject(eq("http://test.com/info"), eq(AppInfo.class))).thenReturn(appInfo);
+
+        // Call the method to test
+        appInfoHelper.refreshAppInfo();
+
+        // Verify that integracions and subsistemes were refreshed
+        verify(integracioRepository).save(integracioEntityCaptor.capture());
+        assertEquals(1, integracioEntityCaptor.getAllValues().size());
+        verify(subsistemaRepository).save(subsistemaEntityCaptor.capture());
+        assertEquals(1, subsistemaEntityCaptor.getAllValues().size());
+        verify(contextRepository, never()).save(any());
+
     }
 
     @Test

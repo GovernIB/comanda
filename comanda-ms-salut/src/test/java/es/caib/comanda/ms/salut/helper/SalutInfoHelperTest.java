@@ -231,5 +231,37 @@ public class SalutInfoHelperTest {
         verify(salutDetallRepository, never()).save(any(SalutDetallEntity.class));
     }
 
+    @Test
+    void testGetSalutInfo_Success_IgnoresValidationErrors() {
+        // Rebuild SalutInfo with invalid data
+        salutInfo = new SalutInfo(
+                salutInfo.getCodi(),
+                salutInfo.getData(),
+                salutInfo.getEstat(),
+                salutInfo.getBd(),
+                Arrays.asList(salutInfo.getIntegracions().get(0), new IntegracioSalut("", null)),
+                Arrays.asList(salutInfo.getAltres().get(0), new DetallSalut("", "codi, valor invalid", "")),
+                Arrays.asList(salutInfo.getMissatges().get(0), new MissatgeSalut(null, null, "Missatge invalid")),
+                salutInfo.getVersio(),
+                Arrays.asList(salutInfo.getSubsistemes().get(0), new SubsistemaSalut("", null, null, 0, 0L, 0L, 0))
+        );
 
+        // Arrange
+        when(salutRepository.save(any(SalutEntity.class))).thenReturn(salutEntity);
+        // Mock RestTemplate
+        when(restTemplate.getForObject(anyString(), eq(SalutInfo.class))).thenReturn(salutInfo);
+
+        // Act
+        salutInfoHelper.getSalutInfo(entornApp);
+
+        // Assert
+        verify(salutIntegracioRepository).save(salutIntegracioEntityCaptor.capture());
+        assertEquals(1, salutIntegracioEntityCaptor.getAllValues().size());
+        verify(salutSubsistemaRepository).save(salutSubsistemaEntityCaptor.capture());
+        assertEquals(1, salutSubsistemaEntityCaptor.getAllValues().size());
+        verify(salutMissatgeRepository).save(salutMissatgeEntityCaptor.capture());
+        assertEquals(1, salutMissatgeEntityCaptor.getAllValues().size());
+        verify(salutDetallRepository).save(salutDetallEntityCaptor.capture());
+        assertEquals(1, salutDetallEntityCaptor.getAllValues().size());
+    }
 }
