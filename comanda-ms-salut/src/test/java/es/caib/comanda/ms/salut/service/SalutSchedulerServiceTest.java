@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -47,6 +48,9 @@ public class SalutSchedulerServiceTest {
     @Mock
     private ScheduledFuture<?> scheduledFuture;
 
+    @Mock
+    private TaskExecutor salutWorkerExecutor;
+
     @Captor
     private ArgumentCaptor<Runnable> runnableCaptor;
 
@@ -64,7 +68,8 @@ public class SalutSchedulerServiceTest {
                 taskScheduler,
                 salutClientHelper,
                 salutInfoHelper,
-                httpAuthorizationHeaderHelper
+                httpAuthorizationHeaderHelper,
+                salutWorkerExecutor
         );
 
         // Set schedulerLeader to true for testing
@@ -176,14 +181,18 @@ public class SalutSchedulerServiceTest {
         // First schedule a task to capture the Runnable
         salutSchedulerService.programarTasca(entornApp);
         verify(taskScheduler).schedule(runnableCaptor.capture(), any(PeriodicTrigger.class));
-        // Mock taskScheduler.schedule to return scheduledFuture
-//        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+        // Make the worker executor run the submitted runnable synchronously
+        doAnswer(invocation -> {
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            return null;
+        }).when(salutWorkerExecutor).execute(any(Runnable.class));
 
         // Act
-        // Execute the captured Runnable
+        // Execute the captured Runnable (which will dispatch to the worker executor)
         runnableCaptor.getValue().run();
 
-        // Assert
+        // Assert: the worker has executed and the helper has been called
         verify(salutInfoHelper).getSalutInfo(eq(entornApp));
     }
 
@@ -195,13 +204,18 @@ public class SalutSchedulerServiceTest {
         // First schedule a task to capture the Runnable
         salutSchedulerService.programarTasca(entornApp);
         verify(taskScheduler).schedule(runnableCaptor.capture(), any(PeriodicTrigger.class));
-        // Mock taskScheduler.schedule to return scheduledFuture
-//        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+
+        // Make the worker executor run the submitted runnable synchronously
+        doAnswer(invocation -> {
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            return null;
+        }).when(salutWorkerExecutor).execute(any(Runnable.class));
 
         // Mock salutInfoHelper to throw exception
         doThrow(new RuntimeException("Test exception")).when(salutInfoHelper).getSalutInfo(any(EntornApp.class));
 
-        // Act & Assert - should not throw exception
+        // Act & Assert - should not throw exception (worker catches exceptions)
         assertDoesNotThrow(() -> runnableCaptor.getValue().run());
         verify(salutInfoHelper).getSalutInfo(eq(entornApp));
     }

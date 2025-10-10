@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -38,6 +39,9 @@ public class ConfiguracioSchedulerServiceTest {
     @Mock
     private AppInfoHelper appInfoHelper;
 
+    @Mock
+    private TaskExecutor configuracioWorkerExecutor;
+
     private ConfiguracioSchedulerService schedulerService;
 
     private EntornAppEntity entornAppEntity;
@@ -47,7 +51,7 @@ public class ConfiguracioSchedulerServiceTest {
     @BeforeEach
     void setUp() {
         // Create the scheduler service with mocked dependencies
-        schedulerService = new ConfiguracioSchedulerService(taskScheduler, entornAppRepository, appInfoHelper);
+        schedulerService = new ConfiguracioSchedulerService(taskScheduler, entornAppRepository, appInfoHelper, configuracioWorkerExecutor);
 
         // Set the schedulerLeader property to true for testing
         ReflectionTestUtils.setField(schedulerService, "schedulerLeader", true);
@@ -116,7 +120,7 @@ public class ConfiguracioSchedulerServiceTest {
 
         // Verify that the trigger has the correct period
         PeriodicTrigger trigger = triggerCaptor.getValue();
-        assertEquals(TimeUnit.MINUTES.toMillis(1), trigger.getPeriod());
+        assertEquals(TimeUnit.MINUTES.toMillis(10), trigger.getPeriod());
     }
 
     @Test

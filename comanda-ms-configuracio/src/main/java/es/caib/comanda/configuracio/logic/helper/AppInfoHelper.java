@@ -34,6 +34,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.*;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -142,6 +144,11 @@ public class AppInfoHelper {
 		try {
 			// Obtenim informació de l'app
 			monitorApp.startAction();
+
+            URI uri = buildUriOrNull(entornApp.getSalutUrl());
+            if (!isValidUri(uri)) {
+                throw new MalformedURLException("URL de salut invàlida o no absoluta");
+            }
 			AppInfo appInfo = restTemplate.getForObject(entornApp.getInfoUrl(), AppInfo.class);
 			monitorApp.endAction();
 			// Guardar la informació de l'app a la base de dades
@@ -154,7 +161,7 @@ public class AppInfoHelper {
 				refreshSubsistemes(entornApp, appInfo.getSubsistemes());
 				refreshContexts(entornApp, appInfo.getContexts());
 			}
-		} catch (RestClientException ex) {
+		} catch (RestClientException | MalformedURLException ex) {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom(),
@@ -164,6 +171,22 @@ public class AppInfoHelper {
 			}
 		}
 	}
+
+    private boolean isValidUri(URI uri) {
+        return (uri != null && uri.isAbsolute());
+    }
+
+    private URI buildUriOrNull(String raw) {
+        if (raw == null) return null;
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) return null;
+        try {
+            URI uri = URI.create(trimmed);
+            return uri;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
 
     private Set<ConstraintViolation<Object>> validateObject(Object object) {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.PeriodicTrigger;
@@ -31,6 +32,7 @@ public class SalutSchedulerService {
     private final TaskScheduler taskScheduler;
     private final SalutClientHelper salutClientHelper;
     private final SalutInfoHelper salutInfoHelper;
+    private final TaskExecutor salutWorkerExecutor;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
@@ -45,10 +47,12 @@ public class SalutSchedulerService {
             @Qualifier("salutTaskScheduler") TaskScheduler taskScheduler,
             SalutClientHelper salutClientHelper,
             SalutInfoHelper salutInfoHelper,
-            HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper) {
+            HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
+            @Qualifier("salutWorkerExecutor") TaskExecutor salutWorkerExecutor) {
         this.taskScheduler = taskScheduler;
         this.salutClientHelper = salutClientHelper;
         this.salutInfoHelper = salutInfoHelper;
+        this.salutWorkerExecutor = salutWorkerExecutor;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -91,9 +95,11 @@ public class SalutSchedulerService {
         }
 
         try {
-//            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getSalutInterval()), TimeUnit.MILLISECONDS);
             PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_SALUT), TimeUnit.MILLISECONDS);
+            // fixedRate garanteix un tir cada minut independentment de la durada de l'anterior.
             periodicTrigger.setFixedRate(true);
+//            long initialDelayMs = TimeUnit.SECONDS.toMillis(Math.floorMod(entornApp.getId(), 60));
+//            periodicTrigger.setInitialDelay(initialDelayMs);
 
             ScheduledFuture<?> futuraTasca = taskScheduler.schedule(
                     () -> executarProces(entornApp),
@@ -113,17 +119,18 @@ public class SalutSchedulerService {
     }
 
     private void executarProces(EntornApp entornApp) {
-        if (isLeader()) {
+        if (!isLeader()) {
+            return;
+        }
+        // Encuar el treball al worker executor per no bloquejar el scheduler i no perdre execucions
+        salutWorkerExecutor.execute(() -> {
             try {
                 log.info("Executant procés per l'entornApp {}", entornApp.getId());
-
-                // Obtenció de informació de salut per entorn-app
                 salutInfoHelper.getSalutInfo(entornApp);
-
             } catch (Exception e) {
                 log.error("Error en l'execució del procés d'obtenció de informació de salut per l'entornApp {}", entornApp.getId(), e);
             }
-        }
+        });
     }
 
     public void cancelarTascaExistent(Long entornAppId) {

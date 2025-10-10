@@ -3,7 +3,15 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
-import es.caib.comanda.ms.salut.model.*;
+import es.caib.comanda.ms.salut.model.DetallSalut;
+import es.caib.comanda.ms.salut.model.EstatSalut;
+import es.caib.comanda.ms.salut.model.EstatSalutEnum;
+import es.caib.comanda.ms.salut.model.IntegracioPeticions;
+import es.caib.comanda.ms.salut.model.IntegracioSalut;
+import es.caib.comanda.ms.salut.model.MissatgeSalut;
+import es.caib.comanda.ms.salut.model.SalutInfo;
+import es.caib.comanda.ms.salut.model.SalutNivell;
+import es.caib.comanda.ms.salut.model.SubsistemaSalut;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
@@ -33,6 +41,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
@@ -187,7 +196,7 @@ public class SalutInfoHelperTest {
         // Arrange
         when(salutRepository.save(any(SalutEntity.class))).thenReturn(salutEntity);
         // Mock RestTemplate
-        when(restTemplate.getForObject(anyString(), eq(SalutInfo.class))).thenReturn(salutInfo);
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenReturn(salutInfo);
 
         // Act
         salutInfoHelper.getSalutInfo(entornApp);
@@ -211,8 +220,7 @@ public class SalutInfoHelperTest {
     @Test
     void testGetSalutInfo_Exception() {
         // Arrange
-        when(restTemplate.getForObject(anyString(), eq(SalutInfo.class)))
-                .thenThrow(new RestClientException("Test exception"));
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenThrow(new RestClientException("Test exception"));
         when(salutRepository.save(any(SalutEntity.class))).thenReturn(salutEntity);
 
         // Act
@@ -249,7 +257,7 @@ public class SalutInfoHelperTest {
         // Arrange
         when(salutRepository.save(any(SalutEntity.class))).thenReturn(salutEntity);
         // Mock RestTemplate
-        when(restTemplate.getForObject(anyString(), eq(SalutInfo.class))).thenReturn(salutInfo);
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenReturn(salutInfo);
 
         // Act
         salutInfoHelper.getSalutInfo(entornApp);
