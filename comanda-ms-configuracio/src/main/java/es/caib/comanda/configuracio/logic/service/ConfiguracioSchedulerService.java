@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.PeriodicTrigger;
@@ -29,23 +30,26 @@ public class ConfiguracioSchedulerService {
     private final TaskScheduler taskScheduler;
     private final EntornAppRepository entornAppRepository;
     private final AppInfoHelper appInfoHelper;
+    private final TaskExecutor configuracioWorkerExecutor;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
     @Value("${" + BaseConfig.PROP_SCHEDULER_BACK + ":#{false}}")
     private Boolean schedulerBack;
 
-    private static final Integer PERIODE_CONSULTA_CONF = 1;
+    private static final Integer PERIODE_CONSULTA_CONF = 10;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
 
     public ConfiguracioSchedulerService(
             @Qualifier("configuracioTaskScheduler") TaskScheduler taskScheduler,
             EntornAppRepository entornAppRepository,
-            AppInfoHelper appInfoHelper) {
+            AppInfoHelper appInfoHelper,
+            @Qualifier("configuracioWorkerExecutor") TaskExecutor configuracioWorkerExecutor) {
         this.taskScheduler = taskScheduler;
         this.entornAppRepository = entornAppRepository;
         this.appInfoHelper = appInfoHelper;
+        this.configuracioWorkerExecutor = configuracioWorkerExecutor;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -76,9 +80,12 @@ public class ConfiguracioSchedulerService {
         }
 
         try {
-//            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(entornApp.getInfoInterval()), TimeUnit.MILLISECONDS);
-            PeriodicTrigger periodicTrigger = new PeriodicTrigger(TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_CONF), TimeUnit.MILLISECONDS);
-            long initialDelay = TimeUnit.SECONDS.toMillis(20);
+            long periodeMs = TimeUnit.MINUTES.toMillis(PERIODE_CONSULTA_CONF);
+            PeriodicTrigger periodicTrigger = new PeriodicTrigger(periodeMs, TimeUnit.MILLISECONDS);
+            periodicTrigger.setFixedRate(false);
+
+            // Escalonament
+            long initialDelay = Math.floorMod(entornApp.getId(), Math.max(periodeMs, 1));
             periodicTrigger.setInitialDelay(initialDelay);
 
             ScheduledFuture<?> futuraTasca = taskScheduler.schedule(
@@ -99,17 +106,18 @@ public class ConfiguracioSchedulerService {
     }
 
     private void executarProces(Long entornAppId) {
-        if (isLeader()) {
+        if (!isLeader()) {
+            return;
+        }
+        configuracioWorkerExecutor.execute(() -> {
             try {
                 log.debug("Executant procés de refresc de la informació per l'entornApp {}", entornAppId);
-
                 // Refrescar informació de entorn-app
                 appInfoHelper.refreshAppInfo(entornAppId);
-
             } catch (Exception e) {
                 log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornAppId, e);
             }
-        }
+        });
     }
 
     public void cancelarTascaExistent(Long entornAppId) {

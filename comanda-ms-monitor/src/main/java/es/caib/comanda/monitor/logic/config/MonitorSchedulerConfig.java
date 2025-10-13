@@ -17,10 +17,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 public class MonitorSchedulerConfig {
 
 	@Bean(name = "monitorTaskScheduler")
-	public TaskScheduler salutTaskScheduler() {
+	public TaskScheduler monitorTaskScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-		scheduler.setPoolSize(10); // Ajusta segons les necessitats
+		scheduler.setPoolSize(10);
 		scheduler.setThreadNamePrefix("monitor-tasques-");
+        scheduler.initialize();
 		return scheduler;
 	}
 }

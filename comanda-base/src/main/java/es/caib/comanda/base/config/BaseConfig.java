@@ -41,6 +41,9 @@ public class BaseConfig {
 	public static final String PROP_SCHEDULER_BACK = PROPERTY_PREFIX + "scheduler.back";
 	public static final String PROP_SCHEDULER_ALARMES_CRON = PROPERTY_PREFIX + "scheduler.alarmes.cron";
 	public static final String PROP_SCHEDULER_ALARMES_MAILS_AGRUPATS_CRON = PROPERTY_PREFIX + "scheduler.alarmes.mails.agrupats.cron";
+	public static final String PROP_SCHEDULER_POOL_SIZE = PROPERTY_PREFIX + "scheduler.pool.size";
+	public static final String PROP_WORKER_POOL_SIZE = PROPERTY_PREFIX + "worker.pool.size";
+	public static final String PROP_WORKER_QUEUE_SIZE = PROPERTY_PREFIX + "worker.queue.size";
 	public static final String PROP_HTTPAUTH_PROVIDER_BASE_URL = PROPERTY_PREFIX + "httpauth.provider.base.url";
 	public static final String PROP_HTTPAUTH_PROVIDER_REALM = PROPERTY_PREFIX + "httpauth.provider.realm";
 	public static final String PROP_HTTPAUTH_PROVIDER_CLIENT_ID = PROPERTY_PREFIX + "httpauth.provider.client.id";

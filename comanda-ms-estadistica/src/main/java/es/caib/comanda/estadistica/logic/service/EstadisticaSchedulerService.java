@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
@@ -34,6 +35,7 @@ public class EstadisticaSchedulerService {
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final CompactacioHelper compactacioHelper;
     private final ParametresHelper parametresHelper;
+    private final TaskExecutor estadisticaWorkerExecutor;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
@@ -48,12 +50,14 @@ public class EstadisticaSchedulerService {
             EstadisticaHelper estadisticaHelper,
             EstadisticaClientHelper estadisticaClientHelper,
             CompactacioHelper compactacioHelper,
-            ParametresHelper parametresHelper) {
+            ParametresHelper parametresHelper,
+            @Qualifier("estadisticaWorkerExecutor") TaskExecutor estadisticaWorkerExecutor) {
         this.taskScheduler = taskScheduler;
         this.estadisticaHelper = estadisticaHelper;
         this.estadisticaClientHelper = estadisticaClientHelper;
         this.compactacioHelper = compactacioHelper;
         this.parametresHelper = parametresHelper;
+        this.estadisticaWorkerExecutor = estadisticaWorkerExecutor;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -128,17 +132,19 @@ public class EstadisticaSchedulerService {
     }
 
     private void executarProces(EntornApp entornApp) {
-        if (isLeader()) {
+        if (!isLeader()) {
+            return;
+        }
+        // Encuar el treball al worker executor per no bloquejar el scheduler i no perdre execucions
+        estadisticaWorkerExecutor.execute(() -> {
             try {
                 log.info("Executant procés d'obtenció de dades estadístiques per l'entornApp {}", entornApp.getId());
-
                 // Refrescar informació estadística de entorn-app
                 estadisticaHelper.getEstadisticaInfoDades(entornApp);
-
             } catch (Exception e) {
                 log.error("Error en l'execució del procés d'obtenció de dades estadístiques per l'entornApp {}", entornApp.getId(), e);
             }
-        }
+        });
     }
 
     public void cancelarTascaExistent(Long entornAppId) {
@@ -151,7 +157,11 @@ public class EstadisticaSchedulerService {
     }
 
     private void executarProcesCompactacio(EntornApp entornApp) {
-        if (isLeader()) {
+        if (!isLeader()) {
+            return;
+        }
+        // Encuar el treball al worker executor per no bloquejar el scheduler i no perdre execucions
+        estadisticaWorkerExecutor.execute(() -> {
             try {
                 log.info("Executant procés de compactació de dades estadístiques per l'entornApp {}", entornApp.getId());
 
@@ -161,7 +171,7 @@ public class EstadisticaSchedulerService {
             } catch (Exception e) {
                 log.error("Error en l'execució del procés de compactació de dades estadístiques per l'entornApp {}", entornApp.getId(), e);
             }
-        }
+        });
     }
 
     public void cancelarTascaCompactatExistent(Long entornAppId) {

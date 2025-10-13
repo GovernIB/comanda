@@ -23,12 +23,10 @@ public class EntornAppExport implements Serializable {
 
 	// Informació de l'aplicació en l'entorn
 	private String infoUrl;
-	private Integer infoInterval;
 	private boolean activa;
 
 	// Informació de salut
 	private String salutUrl;
-	private Integer salutInterval;
 
 	// Informació d'estadístiques
 	private String estadisticaInfoUrl;

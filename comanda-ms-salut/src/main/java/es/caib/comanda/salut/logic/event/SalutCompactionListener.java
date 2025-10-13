@@ -18,7 +18,7 @@ public class SalutCompactionListener {
 
     private final SalutInfoHelper salutInfoHelper;
 
-    @Async
+    @Async("salutWorkerExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSalutInfoUpdated(SalutInfoUpdatedEvent event) {
         try {
@@ -28,7 +28,7 @@ public class SalutCompactionListener {
         }
     }
 
-    @Async
+    @Async("salutWorkerExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSalutCompactionFinished(SalutCompactionFinishedEvent event) {
         try {

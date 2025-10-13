@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
@@ -47,6 +48,7 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final ApplicationEventPublisher eventPublisher;
+    private final Environment environment;
 
     private static final String PASSWORD_LABEL = "********";
 
@@ -87,6 +89,14 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
                     resource.setValor(PASSWORD_LABEL);
                 }
                 break;
+        }
+
+        // Els paràmetres no editables, s'agafen del sistema
+        if (!entity.isEditable() && !ParamTipus.PASSWORD.equals(entity.getTipus())) {
+            var valor = environment.getProperty(entity.getCodi());
+            if (valor != null) {
+                resource.setValor(valor);
+            }
         }
     }
 

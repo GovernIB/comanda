@@ -36,11 +36,16 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -81,30 +86,21 @@ public class SalutInfoHelper {
 		LocalDateTime currentMinuteTime = LocalDateTime.now().withSecond(0).withNano(0);
 		Long idSalut = null;
 		try {
-			// Obtenir dades de salut de l'aplicació
-			monitorSalut.startAction();
-			SalutInfo salutInfo = restTemplate.getForObject(entornApp.getSalutUrl(), SalutInfo.class);
+            // Obtenir dades de salut de l'aplicació
+            monitorSalut.startAction();
+            // Validació prèvia de la URL per evitar IllegalArgumentException i errors no controlats
+            URI uri = buildUriOrNull(entornApp.getSalutUrl());
+            if (!isValidUri(uri)) {
+                idSalut = processSalutError(entornApp, idSalut, currentMinuteTime, monitorSalut, new MalformedURLException("URL de salut invàlida o no absoluta"));
+                return; // sortir; el bloc finally publicarà l'event i mètriques
+            }
+			SalutInfo salutInfo = restTemplate.getForObject(uri, SalutInfo.class);
 			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
 			idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);
 		} catch (RestClientException ex) {
-			log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
-					entornApp.getApp().getNom(),
-					entornApp.getEntorn().getNom(),
-					ex.getLocalizedMessage());
-			SalutEntity salut = new SalutEntity();
-			salut.setEntornAppId(entornApp.getId());
-			salut.setData(currentMinuteTime);
-			salut.setAppEstat(SalutEstat.DOWN);
-			salut.updateAppCountByEstat(SalutEstat.DOWN);
-			salut.setPeticioError(true);
-			salut.setNumElements(1);
-			SalutEntity saved = salutRepository.save(salut);
-			if (!monitorSalut.isFinishedAction()) {
-				monitorSalut.endAction(ex);
-			}
-			idSalut = saved.getId();
-		} finally {
+            idSalut = processSalutError(entornApp, idSalut, currentMinuteTime, monitorSalut, ex);
+        } finally {
 			Duration duration = Duration.between(t0, Instant.now());
 			metricsHelper.getSalutInfoGlobalTimer(null, null).record(duration);
 			metricsHelper.getSalutInfoGlobalTimer(
@@ -114,6 +110,43 @@ public class SalutInfoHelper {
 			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut));
 		}
 	}
+
+    private Long processSalutError(EntornApp entornApp, Long idSalut, LocalDateTime currentMinuteTime, MonitorSalut monitorSalut, Exception ex) {
+        log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",
+                entornApp.getApp().getNom(),
+                entornApp.getEntorn().getNom(),
+                ex.getLocalizedMessage());
+
+        SalutEntity salut = new SalutEntity();
+        salut.setEntornAppId(entornApp.getId());
+        salut.setData(currentMinuteTime);
+        salut.setAppEstat(SalutEstat.DOWN);
+        salut.updateAppCountByEstat(SalutEstat.DOWN);
+        salut.setPeticioError(true);
+        salut.setNumElements(1);
+        SalutEntity saved = salutRepository.save(salut);
+        if (!monitorSalut.isFinishedAction()) {
+            monitorSalut.endAction(ex);
+        }
+        idSalut = saved.getId();
+        return idSalut;
+    }
+
+    private boolean isValidUri(URI uri) {
+        return (uri != null && uri.isAbsolute());
+    }
+
+    private URI buildUriOrNull(String raw) {
+        if (raw == null) return null;
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) return null;
+        try {
+            URI uri = URI.create(trimmed);
+            return uri;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
 
 	private Long crearSalut(SalutInfo info, Long entornAppId, LocalDateTime currentMinuteTime) {
 		if (info != null) {

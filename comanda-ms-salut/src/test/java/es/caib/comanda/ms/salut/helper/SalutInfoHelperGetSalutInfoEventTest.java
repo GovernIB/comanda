@@ -31,10 +31,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -83,7 +86,7 @@ class SalutInfoHelperGetSalutInfoEventTest {
 
     @Test
     void publishEvent_on_success_increments_numeroDiesAgrupacio() {
-        when(restTemplate.getForObject(anyString(), eq(SalutInfo.class))).thenReturn(sampleInfo());
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenReturn(sampleInfo());
         when(salutRepository.save(any(SalutEntity.class))).thenAnswer(inv -> {
             SalutEntity e = inv.getArgument(0);
             if (e.getId() == null) e.setId(100L);
@@ -101,7 +104,7 @@ class SalutInfoHelperGetSalutInfoEventTest {
 
     @Test
     void publishEvent_on_error_path_also_occurs() {
-        when(restTemplate.getForObject(anyString(), eq(SalutInfo.class))).thenThrow(new RestClientException("x"));
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenThrow(new RestClientException("x"));
         when(salutRepository.save(any(SalutEntity.class))).thenAnswer(inv -> {
             SalutEntity e = inv.getArgument(0);
             e.setId(777L);

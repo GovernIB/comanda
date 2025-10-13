@@ -48,7 +48,7 @@ public class MonitorSchedulerService {
             log.debug("Inicialització de tasques de monitor ignorada: aquesta instància no és leader per als schedulers");
             return;
         }
-        // Esperarem 1 minut i mig a inicialitzar les tasques en segon pla
+        // Esperarem 1 minut i pico a inicialitzar les tasques en segon pla
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         executor.schedule(() -> {
             try {
@@ -56,7 +56,7 @@ public class MonitorSchedulerService {
             } finally {
                 executor.shutdown();
             }
-        }, 90, TimeUnit.SECONDS);
+        }, 83, TimeUnit.SECONDS);
     }
 
     public void programarBorrat() {
@@ -71,7 +71,7 @@ public class MonitorSchedulerService {
 
             try {
                 PeriodicTrigger periodicTrigger = new PeriodicTrigger(periode, TimeUnit.MINUTES);
-//                periodicTrigger.setFixedRate(true);
+                periodicTrigger.setFixedRate(false);
 
                 ScheduledFuture<?> futuraTasca = taskScheduler.schedule(
                         () -> executarBorrat(retencio),
