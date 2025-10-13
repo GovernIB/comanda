@@ -152,6 +152,7 @@ const translationEn = {
                 title: "Subsystems",
                 subsistemaUpCount: "Active",
                 subsistemaDownCount: "Inactive",
+                subsistemaDesconegutCount: "Unknown state",
                 noInfo: "There is no information about subsystems",
                 column: {
                     codi: "Code",
@@ -330,6 +331,29 @@ const translationEn = {
                 codi: "Code",
                 nom: "Name",
                 logo: "Logo",
+            },
+        },
+        dimensions: {
+            title: "Dimensions",
+            values: "Values",
+            column: {
+                entornApp: "Application environment",
+                codi: "Code",
+                nom: "Name",
+                descripcio: "Description",
+                agrupacions: "Has groupings",
+            },
+        },
+        indicators: {
+            title: "Indicators",
+            edit: "Edit",
+            column: {
+                entornApp: "Application environment",
+                codi: "Code",
+                nom: "Name",
+                descripcio: "Description",
+                format: "Format",
+                indicadorMitjana: "Indicator by average",
             },
         },
         monitors: {

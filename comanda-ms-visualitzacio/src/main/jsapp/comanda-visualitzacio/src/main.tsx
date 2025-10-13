@@ -39,7 +39,7 @@ const getAuthConfig = () => ({
     clientId: envVar('VITE_AUTH_PROVIDER_CLIENTID', envVars),
 });
 
-const getEnvApiUrl = () => {
+export const getEnvApiUrl = () => {
     const envApiPublicUrl = envVar('VITE_API_PUBLIC_URL', envVars);
     const envApiUrl = envVar('VITE_API_URL', envVars);
     if (envApiPublicUrl || envApiUrl) {

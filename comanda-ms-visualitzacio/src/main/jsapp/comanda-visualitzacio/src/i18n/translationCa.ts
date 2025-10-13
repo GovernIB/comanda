@@ -154,6 +154,7 @@ const translationCa = {
                 title: "Subsistemes",
                 subsistemaUpCount: "Actives",
                 subsistemaDownCount: "Inactives",
+                subsistemaDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de subsistemes",
                 column: {
                     codi: "Codi",
@@ -340,6 +341,7 @@ const translationCa = {
             title: "Dimensions",
             values: "Valors",
             column: {
+                entornApp: "Entorn d'aplicació",
                 codi: "Codi",
                 nom: "Nom",
                 descripcio: "Descripció",
@@ -350,6 +352,7 @@ const translationCa = {
             title: "Indicadors",
             edit: "Editar",
             column: {
+                entornApp: "Entorn d'aplicació",
                 codi: "Codi",
                 nom: "Nom",
                 descripcio: "Descripció",

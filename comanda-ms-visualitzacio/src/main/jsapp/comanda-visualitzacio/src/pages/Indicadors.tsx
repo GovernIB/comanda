@@ -73,6 +73,7 @@ const IndicadorsFilter = (props: any) => {
                         <FormField
                             name={'entornApp'}
                             type={'reference'}
+                            label={t('page.indicadors.column.entornApp')}
                             required={false}
                             optionsRequest={(q) => {
                                 const opts = (entornApp ?? []).map((ea: any) => ({
@@ -157,6 +158,7 @@ const Indicadors: React.FC = () => {
                 toolbarAdditionalRow={filterElement}
                 filter={filter}
                 popupEditActive
+                toolbarHideCreate
                 popupEditFormContent={<IndicadorForm />}
             />
         </GridPage>

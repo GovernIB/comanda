@@ -41,6 +41,7 @@ export interface ISalut extends IBaseEntity {
     integracioDesconegutCount?  : number;
     subsistemaUpCount?          : number;
     subsistemaDownCount?        : number;
+    subsistemaDesconegutCount?  : number;
     missatgeErrorCount?         : number;
     missatgeWarnCount?          : number;
     missatgeInfoCount?          : number;
@@ -69,6 +70,7 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     static readonly INTEGRACIO_DESCONEGUT_COUNT: keyof SalutModel = "integracioDesconegutCount";
     static readonly SUBSISTEMA_UP_COUNT: keyof SalutModel = "subsistemaUpCount";
     static readonly SUBSISTEMA_DOWN_COUNT: keyof SalutModel = "subsistemaDownCount";
+    static readonly SUBSISTEMA_DESCONEGUT_COUNT: keyof SalutModel = "subsistemaDesconegutCount";
     static readonly MISSATGE_ERROR_COUNT: keyof SalutModel = "missatgeErrorCount";
     static readonly MISSATGE_WARN_COUNT: keyof SalutModel = "missatgeWarnCount";
     static readonly MISSATGE_INFO_COUNT: keyof SalutModel = "missatgeInfoCount";
@@ -90,6 +92,7 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     integracioDesconegutCount?: number;
     subsistemaUpCount?: number;
     subsistemaDownCount?: number;
+    subsistemaDesconegutCount?: number;
     missatgeErrorCount?: number;
     missatgeWarnCount?: number;
     missatgeInfoCount?: number;
@@ -373,7 +376,7 @@ export function getColorByIntegracio(integracioField: keyof SalutModel): string 
     } else if (SalutModel.INTEGRACIO_DOWN_COUNT === integracioField) {
         return RED_DARK;
     } else if (SalutModel.INTEGRACIO_DESCONEGUT_COUNT === integracioField) {
-        return GRAY
+        return GRAY;
     } else {
         return RED_DARK;
     }
@@ -384,6 +387,8 @@ export function getColorBySubsistema(subsistemaField: keyof SalutModel): string 
         return GREEN;
     } else if (SalutModel.SUBSISTEMA_DOWN_COUNT === subsistemaField) {
         return RED_DARK;
+    } else if (SalutModel.SUBSISTEMA_DESCONEGUT_COUNT === subsistemaField) {
+        return GRAY;
     } else {
         return RED_DARK;
     }

@@ -697,7 +697,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         </ListItemText>
                                     </MenuItem>
                                 </ButtonMenu>
-                                <DashboardSideMenu dashboard={dashboard} addAction={addWidget}/>
+                                {/*<DashboardSideMenu dashboard={dashboard} addAction={addWidget}/>*/}
                             </Box>
                         </MuiToolbar>
                     }

@@ -136,10 +136,12 @@ public class SalutIntegracioEntity extends BaseEntity<SalutIntegracio> {
 		this.peticionsErrorUltimPeriode += numError;
 	}
 
-	public void addTempsMigUltimPeriode(Integer nouTempsMig, Long peticionsNouPeriode) {
-		if (nouTempsMig == null) return;
-		long total = ((long)this.tempsMigUltimPeriode * this.peticionsOkUltimPeriode) + (nouTempsMig * peticionsNouPeriode);
-		this.tempsMigUltimPeriode = Math.toIntExact(total / (this.peticionsOkUltimPeriode + peticionsNouPeriode));
-	}
+    public void addTempsMigUltimPeriode(Integer nouTempsMig, Long peticionsNouPeriode) {
+        if (nouTempsMig == null || peticionsNouPeriode == null || peticionsNouPeriode == 0) return;
+
+        long tempsTotal = ((long)this.tempsMigUltimPeriode * this.peticionsOkUltimPeriode) + (nouTempsMig * peticionsNouPeriode);
+        long numPeticions = Math.max(this.peticionsOkUltimPeriode + peticionsNouPeriode, 1L);
+        this.tempsMigUltimPeriode = Math.toIntExact(tempsTotal / numPeticions);
+    }
 
 }

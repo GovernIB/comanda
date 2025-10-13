@@ -24,6 +24,7 @@ import {
     Link
 } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
+import { buildHref } from '../util/requestUtils.ts';
 
 // Types for queue and message data
 interface QueueInfo {
@@ -214,10 +215,10 @@ const QueueMessages: React.FC = () => {
     const fetchQueueData = React.useCallback(async () => {
         try {
             setLoading(true);
-            const queueResponse = await requestHref(`/api/broker/queues/${queueName}`);
+            const queueResponse = await requestHref(buildHref(`broker/queues/${queueName}`));
             setQueueInfo(queueResponse.data);
 
-            const messagesResponse = await requestHref(`/api/broker/queues/${queueName}/messages`);
+            const messagesResponse = await requestHref(buildHref(`broker/queues/${queueName}/messages`));
             setMessages(messagesResponse.data);
 
             setLoading(false);

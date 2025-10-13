@@ -35,6 +35,11 @@ public class RestApiController {
 	@Autowired(required = false)
 	protected List<BaseController> baseControllers;
 
+    @GetMapping(BaseConfig.PING_PATH)
+    public ResponseEntity<Void> ping() {
+        return ResponseEntity.ok().build();
+    }
+
 	@GetMapping
 	@Operation(summary = "Consulta l'índex de serveis de l'aplicació")
 	public ResponseEntity<CollectionModel<?>> index() {

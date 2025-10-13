@@ -94,6 +94,8 @@ public class SalutEntity extends BaseEntity<Salut> {
 	private Integer subsistemaUpCount;
 	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'DOWN')")
 	private Integer subsistemaDownCount;
+    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'UNKNOWN')")
+    private Integer subsistemaDesconegutCount;
 	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'ERROR')")
 	private Integer missatgeErrorCount;
 	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'WARN')")

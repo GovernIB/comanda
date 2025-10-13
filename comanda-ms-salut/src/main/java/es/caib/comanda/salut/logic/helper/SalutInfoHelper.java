@@ -32,11 +32,16 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.LockTimeoutException;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Lògica comuna per a consultar la informació de salut de les apps.
@@ -139,11 +144,29 @@ public class SalutInfoHelper {
 		return null;
 	}
 
+    private Set<ConstraintViolation<Object>> validateObject(Object object) {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            Validator validator = factory.getValidator();
+            return validator.validate(object);
+        }
+    }
+
 	private void crearSalutIntegracions(
 			SalutEntity salut,
 			Collection<IntegracioSalut> integracions) {
-		if (integracions != null) {
-			integracions.forEach(i -> {
+        List<IntegracioSalut> filteredIntegracions = integracions != null ? integracions.stream()
+                .filter(i -> {
+                    var violations = validateObject(i);
+                    if (!violations.isEmpty()) {
+                        log.warn("SalutIntegracio {} (salut: {}) no validat: {}", i.getCodi(), salut.getId(), violations);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList()) : null;
+
+		if (filteredIntegracions != null) {
+			filteredIntegracions.forEach(i -> {
 				SalutIntegracioEntity salutIntegracio = new SalutIntegracioEntity();
 				salutIntegracio.setCodi(i.getCodi());
                 salutIntegracio.setEstat(toSalutEstat(i.getEstat()));
@@ -179,8 +202,19 @@ public class SalutInfoHelper {
 	}
 
 	private void crearSalutSubsistemes(SalutEntity salut, List<SubsistemaSalut> subsistemes) {
-		if (subsistemes != null) {
-			subsistemes.forEach(s -> {
+        List<SubsistemaSalut> filteredSubsistemes = subsistemes != null ? subsistemes.stream()
+                .filter(s -> {
+                    var violations = validateObject(s);
+                    if (!violations.isEmpty()) {
+                        log.warn("SalutSubsistema {} (salut: {}) no validat: {}", s.getCodi(), salut.getId(), violations);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList()) : null;
+
+		if (filteredSubsistemes != null) {
+			filteredSubsistemes.forEach(s -> {
 				SalutSubsistemaEntity salutSubsistema = new SalutSubsistemaEntity();
 				salutSubsistema.setCodi(s.getCodi());
 				salutSubsistema.setEstat(toSalutEstat(s.getEstat()));
@@ -199,8 +233,19 @@ public class SalutInfoHelper {
 	}
 
 	private void crearSalutMissatges(SalutEntity salut, List<MissatgeSalut> missatges) {
-		if (missatges != null) {
-			missatges.forEach(m -> {
+        List<MissatgeSalut> filteredMissatges = missatges != null ? missatges.stream()
+                .filter(m -> {
+                    var violations = validateObject(m);
+                    if (!violations.isEmpty()) {
+                        log.warn("SalutMissatge amb data {} (salut: {}) no validat: {}", m.getData(), salut.getId(), violations);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList()) : null;
+
+		if (filteredMissatges != null) {
+            filteredMissatges.forEach(m -> {
 				SalutMissatgeEntity salutMissatge = new SalutMissatgeEntity();
 				salutMissatge.setData(toLocalDateTime(m.getData()));
 				salutMissatge.setNivell(m.getNivell());
@@ -211,9 +256,20 @@ public class SalutInfoHelper {
 		}
 	}
 
-	private void crearSalutDetalls(SalutEntity salut, List<DetallSalut> missatges) {
-		if (missatges != null) {
-			missatges.forEach(d -> {
+	private void crearSalutDetalls(SalutEntity salut, List<DetallSalut> detalls) {
+        List<DetallSalut> filteredDetalls = detalls != null ? detalls.stream()
+                .filter(d -> {
+                    var violations = validateObject(d);
+                    if (!violations.isEmpty()) {
+                        log.warn("SalutDetalls {} (salut: {}) no validat: {}", d.getCodi(), salut.getId(), violations);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList()) : null;
+
+		if (filteredDetalls != null) {
+			filteredDetalls.forEach(d -> {
 				SalutDetallEntity salutDetall = new SalutDetallEntity();
 				salutDetall.setCodi(d.getCodi());
 				salutDetall.setNom(d.getNom());
@@ -525,9 +581,9 @@ public class SalutInfoHelper {
                         integracio.setTotalOk(si.getTotalOk());
                         integracio.setTotalError(si.getTotalError());
                         integracio.setTotalTempsMig(si.getTotalTempsMig());
-	                    integracio.addTempsMigUltimPeriode(si.getTempsMigUltimPeriode(), si.getPeticionsOkUltimPeriode());
-	                    integracio.addPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode());
-	                    integracio.addPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode());
+                        integracio.addTempsMigUltimPeriode(si.getTempsMigUltimPeriode(), si.getPeticionsOkUltimPeriode());
+                        integracio.addPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode());
+                        integracio.addPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode());
                         if (si.getLatencia() != null) {
                             integracio.setLatencia(si.getLatencia());
                             integracio.addLatenciaMitjana(si.getLatencia());
@@ -583,9 +639,9 @@ public class SalutInfoHelper {
                         subsistema.setTotalOk(ss.getTotalOk());
                         subsistema.setTotalError(ss.getTotalError());
                         subsistema.setTotalTempsMig(ss.getTotalTempsMig());
-	                    subsistema.addTempsMigUltimPeriode(ss.getTempsMigUltimPeriode(), ss.getPeticionsOkUltimPeriode());
-	                    subsistema.addPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
-	                    subsistema.addPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
+                        subsistema.addTempsMigUltimPeriode(ss.getTempsMigUltimPeriode(), ss.getPeticionsOkUltimPeriode());
+                        subsistema.addPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
+                        subsistema.addPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
                         if (ss.getLatencia() != null) {
                             subsistema.setLatencia(ss.getLatencia());
                             subsistema.addLatenciaMitjana(ss.getLatencia());

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,15 +19,22 @@ import java.util.Map;
 public class IntegracioPeticions {
 
     // Dades totals
-    private long totalOk;
-    private long totalError;
+    @NotNull
+    private Long totalOk;
+    @NotNull
+    private Long totalError;
+    @NotNull
     private Integer totalTempsMig;
 
     // Dades per període consultat
+    @NotNull
     private Long peticionsOkUltimPeriode;
+    @NotNull
     private Long peticionsErrorUltimPeriode;
+    @NotNull
     private Integer tempsMigUltimPeriode;
 
+    @Size(max = 255)
     private String endpoint;
 
     @Builder.Default

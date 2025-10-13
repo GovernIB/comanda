@@ -144,7 +144,7 @@ export const estils = {
         border: mostrarVora ? `${voraAmple}px solid ${voraColor}` : 'none',
         backgroundColor: taulaBgColor,
     }),
-    tableHeader: (textColor: string, bgColor: string,
+    tableHeader: (textColor: string, bgColor: string | undefined,
                   horDividerColor: string, horDividerAmple: number | undefined,
                   verDivider: boolean, verDividerColor: string, verDividerAmple: number | undefined) => ({
         color: textColor,

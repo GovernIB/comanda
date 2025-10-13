@@ -5,6 +5,7 @@ import logo from './assets/goib_logo.svg';
 import comandaLogo from './assets/COM_DRA_COL.svg';
 import AppRoutes from './AppRoutes';
 import { useUserContext } from './components/UserContext';
+import KeepAlive from './components/KeepAlive';
 
 export const App: React.FC = () => {
     const { user } = useUserContext();
@@ -215,6 +216,7 @@ export const App: React.FC = () => {
                 },
             }}
         >
+            <KeepAlive />
             <AppRoutes />
         </BaseApp>
     );
