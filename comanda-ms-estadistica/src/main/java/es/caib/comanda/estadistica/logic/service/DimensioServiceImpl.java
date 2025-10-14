@@ -5,7 +5,12 @@ import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
+import java.util.Objects;
 
 /**
  * Classe d'implementació del servei per a la gestió de la lògica de negoci relacionada amb l'entitat Dimensio.
@@ -27,5 +32,24 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class DimensioServiceImpl  extends BaseReadonlyResourceService<Dimensio, Long, DimensioEntity> implements DimensioService {
+
+    @Override
+    protected Specification<DimensioEntity> namedFilterToSpecification(String name) {
+        if (Objects.equals(Dimensio.NAMED_FILTER_GROUP_BY_NOM, name)) {
+            return uniqueNomByMinEntornAppId();
+        }
+        return null;
+    }
+
+    /** Filtro para solo mostrar un resultado por nombre en la aplicación. Aprovechando el UK de entornAppId y nom. **/
+    private static Specification<DimensioEntity> uniqueNomByMinEntornAppId() {
+        return (root, query, cb) -> {
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<DimensioEntity> subRoot = subquery.from(DimensioEntity.class);
+            subquery.select(cb.min(subRoot.get("entornAppId")));
+            subquery.where(cb.equal(subRoot.get("nom"), root.get("nom")));
+            return cb.equal(root.get("entornAppId"), subquery);
+        };
+    }
 
 }

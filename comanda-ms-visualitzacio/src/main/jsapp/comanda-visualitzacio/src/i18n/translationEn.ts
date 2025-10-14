@@ -96,7 +96,7 @@ const translationEn = {
                 title: "Information",
                 revisio: "Revision",
                 jdk: {
-                    versio: "JDK versin",
+                    versio: "JDK version",
                 },
                 data: "Last update",
                 bdEstat: "Database",

@@ -64,6 +64,8 @@ import java.util.List;
 )
 public class Dimensio extends BaseResource<Long> {
 
+    /** Named Filter para devolver un solo resultado por el atributo nom **/
+    public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
     public final static String DIMENSIO_FILTER = "dimensioFilter";
     public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
 

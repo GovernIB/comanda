@@ -148,7 +148,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             )}
                             { isUnIndicadorAmbDescomposicio && (
                                 <>
-                                    <Grid size={6}><FormField name="descomposicioDimensio" /></Grid>
+                                    <Grid size={6}><FormField name="descomposicioDimensio" namedQueries={["groupByNom"]} /></Grid>
                                     <Grid size={6}><FormField name="agruparPerDimensioDescomposicio" type={"checkbox"} onChange={handleAgruparPerDimensioChange} /></Grid>
                                 </>
                             )}
