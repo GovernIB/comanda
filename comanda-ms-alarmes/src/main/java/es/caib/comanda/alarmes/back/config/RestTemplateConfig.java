@@ -7,22 +7,30 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.caib.comanda.ms.estadistica.model.GenericDimensio;
 import es.caib.comanda.ms.estadistica.model.GenericFet;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
 
 @Configuration
 @Profile("!back")
 public class RestTemplateConfig {
 
-	@Bean
-	public RestTemplate restTemplate() {
-		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.getMessageConverters().set(0, getConverter());
-		return restTemplate;
-	}
+    @Bean
+    @Lazy
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        RestTemplate restTemplate = builder
+                .setConnectTimeout(Duration.ofSeconds(5))   // timeout de connexió
+//                .setReadTimeout(Duration.ofSeconds(10))     // timeout de lectura
+                .build();
+        restTemplate.getMessageConverters().add(0, getConverter());
+        return restTemplate;
+    }
 
 	/**
 	 * Configura i retorna un {@link MappingJackson2HttpMessageConverter} personalitzat amb un {@link ObjectMapper}
