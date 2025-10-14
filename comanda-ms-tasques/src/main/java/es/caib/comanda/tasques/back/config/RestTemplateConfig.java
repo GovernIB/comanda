@@ -20,11 +20,12 @@ public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder
+        RestTemplate restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))   // timeout de connexió
                 .setReadTimeout(Duration.ofSeconds(10))     // timeout de lectura
-                .additionalMessageConverters(getConverter())
                 .build();
+        restTemplate.getMessageConverters().add(0, getConverter());
+        return restTemplate;
     }
 
     /**
