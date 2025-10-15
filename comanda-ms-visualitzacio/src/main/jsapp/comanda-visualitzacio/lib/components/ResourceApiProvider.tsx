@@ -1200,6 +1200,7 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const [indexError, setIndexError] = React.useState<Error | undefined>();
     const [offline, setOffline] = React.useState<boolean>(false);
     const indexPath = new URL(apiUrl).pathname;
+    const indexPathWithoutApi = indexPath.endsWith('/api') ? indexPath.slice(0, -4) : indexPath;
     const refreshKettingClient = (userSession: any, currentLanguage: string | undefined) => {
         const kettingClient = new Client(apiUrl);
         kettingClient.use((request, next) => {
@@ -1267,7 +1268,7 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
             const timeoutFn = () => {
                 if (kettingClientRef.current) {
                     getPromiseFromResourceLink(
-                        kettingClientRef.current.go(indexPath + '/ping'),
+                        kettingClientRef.current.go(indexPathWithoutApi + '/ping'),
                         undefined,
                         true
                     )
