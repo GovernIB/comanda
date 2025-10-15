@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SubsistemaSalut extends EstatSalut {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 10)
     private String codi;
 
     // Dades totals

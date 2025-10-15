@@ -15,13 +15,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContextInfo {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 64)
     private String codi;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 100)
     private String nom;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 255)
     private String path;
     @Valid
     private List<Manual> manuals;
+    @Size(max = 255)
     private String api;
 }

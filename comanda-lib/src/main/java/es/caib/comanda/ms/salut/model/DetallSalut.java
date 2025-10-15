@@ -13,10 +13,10 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DetallSalut {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 10)
     private String codi;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 100)
     private String nom;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 1024)
     private String valor;
 }

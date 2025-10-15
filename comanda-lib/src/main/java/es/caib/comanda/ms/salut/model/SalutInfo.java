@@ -21,7 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SalutInfo {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 16)
     private String codi;
     @NotNull
     private Date data;
@@ -35,6 +35,7 @@ public class SalutInfo {
     private List<DetallSalut> altres;
     @Valid
     private List<MissatgeSalut> missatges;
+    @Size(max = 10)
     private String versio;
     @Valid
     private List<SubsistemaSalut> subsistemes;

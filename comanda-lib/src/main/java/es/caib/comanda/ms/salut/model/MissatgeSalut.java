@@ -18,6 +18,6 @@ public class MissatgeSalut {
     private Date data;
     @NotNull
     private SalutNivell nivell;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 2048)
     private String missatge;
 }

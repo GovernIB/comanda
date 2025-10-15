@@ -21,15 +21,17 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AppInfo {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 16)
     private String codi;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 100)
     private String nom;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 10)
     private String versio;
     @NotNull
     private Date data;
+    @Size(max = 64)
     private String revisio;
+    @Size(max = 10)
     private String jdkVersion;
     @Valid
     private List<IntegracioInfo> integracions;

@@ -14,10 +14,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DimensioDesc {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 16)
     private String codi;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 64)
     private String nom;
+    @Size(max = 1024)
     private String descripcio;
     private List<String> valors;
 }

@@ -13,8 +13,8 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Manual {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 128)
     private String nom;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 255)
     private String path;
 }
