@@ -23,13 +23,18 @@ import javax.validation.constraints.Size;
 @ResourceConfig(
 		quickFilterFields = { "codi", "nom" },
 		descriptionField = "nom",
-		accessConstraints = {
-				@ResourceAccessConstraint(
-						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-						roles = { BaseConfig.ROLE_ADMIN },
-						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
-				)
-		}
+        accessConstraints = {
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.READ }
+                ),
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_CONSULTA },
+                        grantedPermissions = { PermissionEnum.READ }
+                )
+        }
 )
 public class Integracio extends BaseResource<Long> {
 
