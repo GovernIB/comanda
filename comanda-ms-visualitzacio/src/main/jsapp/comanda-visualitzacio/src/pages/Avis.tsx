@@ -17,6 +17,7 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
+import { useGridApiRef } from '@mui/x-data-grid-pro';
 
 const AvisFilter = (props: any) => {
     const { onSpringFilterChange } = props;
@@ -147,12 +148,14 @@ const dataGridPerspectives = ['PATH'];
 const Avis = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string>();
+    const gridApiRef = useGridApiRef();
     const {
         treeView,
         treeViewSwitch,
         dataGridProps: treeDataGridProps,
     } = useTreeData(
         (row) => row?.treePath,
+        gridApiRef,
         t('page.avisos.grid.groupHeader'),
         1.5,
         true,
@@ -169,6 +172,7 @@ const Avis = () => {
             resourceName="avis"
             columns={columns}
             perspectives={dataGridPerspectives}
+            datagridApiRef={gridApiRef}
             findDisabled={filter == null}
             filter={filter}
             readOnly

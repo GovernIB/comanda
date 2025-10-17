@@ -435,8 +435,10 @@ const AppDataTable: React.FC<any> = (props: {
     );
     const { dataGridProps: treeDataGridProps } = useTreeData(
         getTreeDataPath,
+        gridApiRef,
         t('page.salut.apps.column.group'),
         1,
+        true,
         true,
         groupingColDefAdditionalProps);
 

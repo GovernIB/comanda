@@ -18,7 +18,7 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
-import { GridSortModel } from '@mui/x-data-grid-pro';
+import { GridSortModel, useGridApiRef } from '@mui/x-data-grid-pro';
 import dayjs from 'dayjs';
 
 export const StyledPrioritat = (props: any) => {
@@ -215,12 +215,14 @@ const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 const Tasca = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string>();
+    const gridApiRef = useGridApiRef();
     const {
         treeView,
         treeViewSwitch,
         dataGridProps: treeDataGridProps,
     } = useTreeData(
         (row) => row?.treePath,
+        gridApiRef,
         t('page.tasques.grid.groupHeader'),
         1.5,
         false,
@@ -257,6 +259,7 @@ const Tasca = () => {
         <BasePage expandHeight={!treeView} style={{ height: '100%' }}>
             <MuiDataGrid
                 title={t('menu.tasca')}
+                datagridApiRef={gridApiRef}
                 resourceName="tasca"
                 columns={columns}
                 perspectives={dataGridPerspectives}
