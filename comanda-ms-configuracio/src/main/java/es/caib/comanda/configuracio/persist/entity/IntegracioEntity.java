@@ -28,7 +28,7 @@ import javax.persistence.UniqueConstraint;
 @NoArgsConstructor
 public class IntegracioEntity extends BaseAuditableEntity<Integracio> {
 
-	@Column(name = "codi", length = 16, unique = true, nullable = false)
+	@Column(name = "codi", length = 32, unique = true, nullable = false)
 	private String codi;
 	@Column(name = "nom", length = 100, nullable = false)
 	private String nom;

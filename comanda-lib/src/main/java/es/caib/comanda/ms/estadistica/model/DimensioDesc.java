@@ -14,9 +14,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DimensioDesc {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 64)
     private String nom;
     private String descripcio;
     private List<String> valors;

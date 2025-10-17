@@ -14,9 +14,9 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IndicadorDesc {
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 64)
     private String nom;
     private String descripcio;
     @Valid

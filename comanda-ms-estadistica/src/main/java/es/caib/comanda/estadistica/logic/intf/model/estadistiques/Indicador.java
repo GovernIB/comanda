@@ -80,7 +80,7 @@ public class Indicador extends BaseResource<Long> {
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
-    @Size(max = 16)
+    @Size(max = 32)
     private String codi;
     @NotNull
     @Size(max = 64)
