@@ -1,12 +1,7 @@
 package es.caib.comanda.salut.logic.helper;
 
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.ms.salut.model.DetallSalut;
-import es.caib.comanda.ms.salut.model.EstatSalutEnum;
-import es.caib.comanda.ms.salut.model.IntegracioSalut;
-import es.caib.comanda.ms.salut.model.MissatgeSalut;
-import es.caib.comanda.ms.salut.model.SalutInfo;
-import es.caib.comanda.ms.salut.model.SubsistemaSalut;
+import es.caib.comanda.ms.salut.model.*;
 import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -215,20 +210,24 @@ public class SalutInfoHelper {
 				salutIntegracio.setSalut(salut);
 				SalutIntegracioEntity salutIntegracioSaved = salutIntegracioRepository.save(salutIntegracio);
 				if (i.getPeticions() != null && i.getPeticions().getPeticionsPerEntorn() != null) {
-					SalutIntegracioEntity salutIntegracioFilla = new SalutIntegracioEntity();
-					salutIntegracioFilla.setCodi(i.getCodi());
-					salutIntegracioFilla.setEstat(toSalutEstat(i.getEstat()));
-					salutIntegracioFilla.setLatencia(i.getLatencia());
-					salutIntegracioFilla.setLatenciaMitjana(i.getLatencia());
-					salutIntegracioFilla.setTotalOk(i.getPeticions() != null ? i.getPeticions().getTotalOk() : 0L);
-					salutIntegracioFilla.setTotalError(i.getPeticions() != null ? i.getPeticions().getTotalError() : 0L);
-					salutIntegracioFilla.setTotalTempsMig(i.getPeticions() != null && i.getPeticions().getTotalTempsMig() != null ? i.getPeticions().getTotalTempsMig() : 0);
-					salutIntegracioFilla.setPeticionsOkUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsOkUltimPeriode() != null ? i.getPeticions().getPeticionsOkUltimPeriode() : 0L);
-					salutIntegracioFilla.setPeticionsErrorUltimPeriode(i.getPeticions() != null && i.getPeticions().getPeticionsErrorUltimPeriode() != null ? i.getPeticions().getPeticionsErrorUltimPeriode() : 0L);
-					salutIntegracioFilla.setTempsMigUltimPeriode(i.getPeticions() != null && i.getPeticions().getTempsMigUltimPeriode() != null ? i.getPeticions().getTempsMigUltimPeriode() : 0);
-					salutIntegracioFilla.setEndpoint(i.getPeticions() != null ? i.getPeticions().getEndpoint() : null);
-					salutIntegracioFilla.setSalut(salut);
-					salutIntegracioFilla.setPare(salutIntegracioSaved);
+                    i.getPeticions().getPeticionsPerEntorn().keySet().forEach(peticioEntornKey -> {
+                        IntegracioPeticions peticioEntorn = i.getPeticions().getPeticionsPerEntorn().get(peticioEntornKey);
+                        SalutIntegracioEntity salutIntegracioFilla = new SalutIntegracioEntity();
+                        salutIntegracioFilla.setCodi(peticioEntornKey);
+                        salutIntegracioFilla.setEstat(toSalutEstat(i.getEstat()));
+//                        salutIntegracioFilla.setLatencia(i.getLatencia());
+//                        salutIntegracioFilla.setLatenciaMitjana(i.getLatencia());
+                        salutIntegracioFilla.setTotalOk(peticioEntorn.getTotalOk());
+                        salutIntegracioFilla.setTotalError(peticioEntorn.getTotalError());
+                        salutIntegracioFilla.setTotalTempsMig(peticioEntorn.getTotalTempsMig());
+                        salutIntegracioFilla.setPeticionsOkUltimPeriode(peticioEntorn.getPeticionsOkUltimPeriode());
+                        salutIntegracioFilla.setPeticionsErrorUltimPeriode(peticioEntorn.getPeticionsErrorUltimPeriode());
+                        salutIntegracioFilla.setTempsMigUltimPeriode(peticioEntorn.getTempsMigUltimPeriode());
+                        salutIntegracioFilla.setEndpoint(peticioEntorn.getEndpoint());
+                        salutIntegracioFilla.setSalut(salut);
+                        salutIntegracioFilla.setPare(salutIntegracioSaved);
+                        salutIntegracioRepository.save(salutIntegracioFilla);
+                    });
 				}
 			});
 		}

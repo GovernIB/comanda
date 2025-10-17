@@ -67,6 +67,7 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSalutInfoUpdated(ParametreInfoUpdatedEvent event) {
         switch (event.getEntity().getCodi()) {
+            case BaseConfig.PROP_MONITOR_BUIDAT_ACTIU:
             case BaseConfig.PROP_MONITOR_BUIDAT_PERIODE_MINUTS:
             case BaseConfig.PROP_MONITOR_BUIDAT_RETENCIO_DIES:
                 monitorServiceClient.programarBorrat(httpAuthorizationHeaderHelper.getAuthorizationHeader());

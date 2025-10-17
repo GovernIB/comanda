@@ -38,7 +38,7 @@ import {ENUM_APP_ESTAT_PREFIX, getColorByMissatge, getColorByNivellEnum, getColo
 import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
-import { Alert } from '@mui/material';
+import { Alert, Tooltip } from '@mui/material';
 import { useCallback, useEffect } from 'react';
 
 export const ErrorBoundaryFallback = () => {
@@ -353,19 +353,30 @@ const PeticionsOkError: React.FC<any> = (props) => {
 }
 
 const IntegracioRow: React.FC<any> = (props) => {
-    const { integracio, fills, key } = props;
+    const { integracio, fills, padLeft, toggleOpen, open } = props;
     const { t } = useTranslation();
     const getAppEstatLabel = useAppEstatLabel();
-    const [open, setOpen] = React.useState<boolean>(false);
+    const displayName = integracio.nom ?? integracio.codi;
     return <>
-        <TableRow key={key}>
-            <TableCell sx={{width: '50px'}}>
-                {fills?.length ? <IconButton size="small" onClick={() => setOpen(!open)}>
+        <TableRow>
+            <TableCell padding="none" align="center">
+                {fills?.length ? <IconButton size="small" onClick={toggleOpen}>
                     {open ? <Icon>keyboard_arrow_up</Icon> : <Icon>keyboard_arrow_down</Icon>}
                 </IconButton> : null}
-                {integracio.logo && <img src={`data:image/png;base64,${integracio.logo}`} alt="logo" style={{ maxHeight: '32px' }}/>}
             </TableCell>
-            <TableCell>{integracio.nom}</TableCell>
+            <TableCell>
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '100%',
+                    gap: '10px',
+                    paddingLeft: padLeft ? '20px' : '0px',
+                }}>
+                    {integracio.logo && <img src={`data:image/png;base64,${integracio.logo}`} alt="logo" style={{ height: '32px' }}/>}
+                    {integracio.endpoint ? <Tooltip title={integracio.endpoint}>{displayName}</Tooltip> : displayName}
+                </Box>
+
+            </TableCell>
             <TableCell>
                 <Chip label={getAppEstatLabel(integracio.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(integracio.estat as SalutEstatEnum), color: 'white'}}/>
             </TableCell>
@@ -377,30 +388,29 @@ const IntegracioRow: React.FC<any> = (props) => {
                 <PeticionsOkError ok={integracio.peticionsOkUltimPeriode} error={integracio.peticionsErrorUltimPeriode} />
             </TableCell>
             <TableCell>{integracio.tempsMigUltimPeriode != null ? integracio.tempsMigUltimPeriode + ' ms' : t('page.salut.nd')}</TableCell>
-            <TableCell>
-                {integracio.endpoint && <IconButton
-                    component="a"
-                    href={integracio.endpoint}
-                    target="_blank"
-                    size="small">
-                        <Icon>launch</Icon>
-                </IconButton>}
-            </TableCell>
+            {/*<TableCell>*/}
+            {/*    {integracio.endpoint && <IconButton*/}
+            {/*        component="a"*/}
+            {/*        href={integracio.endpoint}*/}
+            {/*        target="_blank"*/}
+            {/*        size="small">*/}
+            {/*            <Icon>launch</Icon>*/}
+            {/*    </IconButton>}*/}
+            {/*</TableCell>*/}
         </TableRow>
-        {fills?.length ? <TableRow>
-            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-                <Collapse in={open} timeout="auto" unmountOnExit>
-                    {fills.map((f: any, key2: number) => <IntegracioRow
-                        integracio={f}
-                        key={key + '_' + key2} />)}
-                </Collapse>
-            </TableCell>
-        </TableRow> : null}
+        {/*<Collapse in={open} timeout="auto" unmountOnExit>*/}
+        {(open && fills?.length) ?
+            fills.map((childIntegracio: any) => <IntegracioRow
+                padLeft
+                integracio={childIntegracio}
+                key={`integracioRowChild-${childIntegracio.id}`}
+            />) : undefined}
+        {/*</Collapse>*/}
     </>;
 }
 
 const Integracions: React.FC<any> = (props) => {
-    const { salutCurrentApp } = props;
+    const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand } = props;
     const { t } = useTranslation();
     const integracions = salutCurrentApp?.integracions;
     return <Card variant="outlined" sx={{ height: '100%' }}>
@@ -412,21 +422,22 @@ const Integracions: React.FC<any> = (props) => {
             {integracions?.length > 0 && <Table size="small">
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{width: '50px'}}></TableCell>
+                        <TableCell></TableCell>
                         <TableCell>{t('page.salut.integracions.column.nom')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.estat')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.peticionsTotals')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.tempsMigTotal')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.peticionsPeriode')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.tempsMigPeriode')}</TableCell>
-                        <TableCell></TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {integracions.filter((i: any) => i.pare == null).map((i: any, key: number) => <IntegracioRow
+                    {integracions.filter((i: any) => i.pare == null).map((i: any) => <IntegracioRow
+                        open={integracionsExpandState.includes(i.codi)}
+                        toggleOpen={() => toggleIntegracioExpand(i.codi)}
                     integracio={i}
                     fills={integracions.filter((i2: any) => i2.pare?.id === i.id)}
-                    key={key} />)}
+                    key={`integracioRow-${i.id}`} />)}
                 </TableBody>
             </Table>}
         </CardContent>
@@ -576,6 +587,13 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
     const { t } = useTranslation();
     const { salutCurrentApp, entornApp, loading, reportParams, estats, latencies } =
         appInfoData;
+    const [integracionsExpandState, setIntegracionsExpandState] = React.useState<number[]>([]);
+    const toggleIntegracioExpand = (id: number) => {
+        if (integracionsExpandState.includes(id))
+            setIntegracionsExpandState(integracionsExpandState.filter((i: number) => i !== id));
+        else
+            setIntegracionsExpandState([...integracionsExpandState, id]);
+    };
     const dataLoaded = ready && loading != null && !loading;
 
     if (dataLoaded && salutCurrentApp == null)
@@ -662,7 +680,7 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
                         </ErrorBoundary>
                     </Grid>
                     <Grid size={{ sm: 12, lg: 6 }}>
-                        <Integracions salutCurrentApp={salutCurrentApp} />
+                        <Integracions salutCurrentApp={salutCurrentApp}  toggleIntegracioExpand={toggleIntegracioExpand} integracionsExpandState={integracionsExpandState} />
                     </Grid>
                     <Grid size={{ sm: 12, lg: 6 }}>
                         <Subsistemes salutCurrentApp={salutCurrentApp} />

@@ -252,14 +252,17 @@ const translationCa = {
         tasques: {
             filter: {
                 more: "Més camps",
-                finished: "Només finalitzades",
-                unfinished: "Pendents",
+                unfinishedOnlyDisabled: "Visualitzar únicament les tasques pendents (desactivat)",
+                unfinishedOnlyEnabled: "Visualitzar únicament les tasques pendents (activat)",
             },
             grid: {
                 groupHeader: "Nom",
                 action: {
                     obrir: "Obrir tasca",
-                }
+                },
+                column: {
+                    appEntorn: "Aplicació - Entorn",
+                },
             }
         },
         avisos: {

@@ -1,6 +1,7 @@
 package es.caib.comanda.salut.logic.intf.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
@@ -19,6 +20,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @NoArgsConstructor
+@ResourceConfig(descriptionField = "codi")
 public class SalutIntegracio extends BaseResource<Long> {
 
 	@NotNull

@@ -21,7 +21,7 @@ import javax.validation.constraints.Size;
 public class AppSubsistema extends BaseResource<Long> {
 
 	@NotNull
-	@Size(max = 16)
+	@Size(max = 32)
 	private String codi;
 	@NotNull
 	@Size(max = 100)

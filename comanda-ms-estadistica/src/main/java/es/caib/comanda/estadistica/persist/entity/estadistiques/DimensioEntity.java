@@ -56,7 +56,7 @@ import org.hibernate.annotations.Formula;
 @NoArgsConstructor
 public class DimensioEntity extends BaseEntity<Dimensio> {
 
-    @Column(name = "codi", length = 16, nullable = false)
+    @Column(name = "codi", length = 32, nullable = false)
     private String codi;
     @Column(name = "nom", length = 64, nullable = false)
     private String nom;

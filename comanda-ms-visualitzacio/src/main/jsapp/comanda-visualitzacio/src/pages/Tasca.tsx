@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    GridPage,
     MuiDataGrid,
     MuiFilter,
     FormField,
     springFilterBuilder,
     useFormApiRef,
     useFilterApiRef,
+    MuiDataGridColDef,
+    BasePage,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -17,6 +18,8 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
+import { GridSortModel, useGridApiRef } from '@mui/x-data-grid-pro';
+import dayjs from 'dayjs';
 
 export const StyledPrioritat = (props: any) => {
     const {entity, children} = props;
@@ -52,18 +55,18 @@ export const StyledPrioritat = (props: any) => {
 const TascaFilter = (props: any) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
-    const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
+    const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
     const moreFormApiRef = useFormApiRef();
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear({ finalitzada: finishedOnly });
+        moreFilterApiRef?.current?.clear({ finalitzada: unfinishedOnly });
     }
     React.useEffect(() => {
-        moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
-    }, [finishedOnly]);
+        moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
+    }, [unfinishedOnly]);
     return <>
         <MuiFilter
             apiRef={appEntornFilterApiRef}
@@ -85,9 +88,9 @@ const TascaFilter = (props: any) => {
                     <Grid size={6}><FormField name={'entorn'} /></Grid>
                 </Grid>
                 <Button
-                    onClick={() => setFinishedOnly(fo => !fo)}
-                    variant={finishedOnly ? 'contained' : 'outlined'}
-                    title={t('page.tasques.filter.unfinished')}
+                    onClick={() => setUnfinishedOnly(fo => !fo)}
+                    variant={unfinishedOnly ? 'contained' : 'outlined'}
+                    title={unfinishedOnly ? t('page.tasques.filter.unfinishedOnlyEnabled') : t('page.tasques.filter.unfinishedOnlyDisabled')}
                     sx={{ mr: 2 }}>
                     <Icon>pending_actions</Icon>
                 </Button>
@@ -109,7 +112,7 @@ const TascaFilter = (props: any) => {
             formApiRef={moreFormApiRef}
             resourceName="tasca"
             code="FILTER"
-            initialData={{ finalitzada: finishedOnly }}
+            initialData={{ finalitzada: unfinishedOnly }}
             springFilterBuilder={data => springFilterBuilder.and(
                 springFilterBuilder.eq('appId', data?.appId?.id),
                 springFilterBuilder.eq('entornId', data?.entornId?.id),
@@ -143,55 +146,104 @@ const TascaFilter = (props: any) => {
     </>;
 }
 
-const dataGridCommonColumns = [{
-    field: 'descripcio',
-    flex: 2,
-}, {
-    field: 'tipus',
-    flex: .5,
-}, {
-    field: 'prioritat',
-    flex: 0.5,
-    renderCell: (param:any) => <StyledPrioritat entity={param.row}>{param?.formattedValue}</StyledPrioritat>,
-}, {
-    field: 'dataInici',
-    flex: 1,
-}, {
-    field: 'dataCaducitat',
-    flex: 1,
-    renderCell: (param:any) => {
-        const style = param?.row?.diesPerCaducar == null ? {} :
-        param?.row?.diesPerCaducar <= 0 ? { color: 'white', backgroundColor: '#6b0707' } :
-        param?.row?.diesPerCaducar <= 3 ? { color: 'white', backgroundColor: 'error.main' } :
-        param?.row?.diesPerCaducar <= 5 ? { color: 'white', backgroundColor: 'warning.main' } :
-        {};
-        return <Typography variant={'inherit'} sx={{p: 1, borderRadius: '4px', ...style}}>
-            {param?.formattedValue}
-        </Typography>
+const dataGridCommonColumns: MuiDataGridColDef[] = [
+    {
+        field: 'descripcio',
+        flex: 2,
     },
-}, {
-    field: 'dataFi',
-    flex: 1,
-}];
+    {
+        field: 'estat',
+        flex: 0.1,
+        minWidth: 100,
+    },
+    {
+        field: 'tipus',
+        flex: 0.5,
+        minWidth: 100,
+    },
+    {
+        field: 'responsable',
+        flex: 1,
+    },
+    {
+        field: 'prioritat',
+        flex: 0.5,
+        minWidth: 100,
+        renderCell: (param) => (
+            <StyledPrioritat entity={param.row}>{param?.formattedValue}</StyledPrioritat>
+        ),
+    },
+    {
+        field: 'dataInici',
+        flex: 0.7,
+        minWidth: 100,
+        valueFormatter: (value) => value ? dayjs(value).format('DD/MM/YYYY') : value,
+    },
+    {
+        field: 'dataCaducitat',
+        flex: 0.7,
+        minWidth: 100,
+        valueFormatter: (value) => (value ? dayjs(value).format('DD/MM/YYYY') : value),
+        renderCell: (param) => {
+            const style =
+                param?.row?.diesPerCaducar == null
+                    ? {}
+                    : param?.row?.diesPerCaducar <= 0
+                      ? { color: 'white', backgroundColor: '#6b0707' }
+                      : param?.row?.diesPerCaducar <= 3
+                        ? { color: 'white', backgroundColor: 'error.main' }
+                        : param?.row?.diesPerCaducar <= 5
+                          ? { color: 'white', backgroundColor: 'warning.main' }
+                          : {};
+            return (
+                <Typography variant={'inherit'} sx={{ p: 1, borderRadius: '4px', ...style }}>
+                    {param?.formattedValue}
+                </Typography>
+            );
+        },
+    },
+    {
+        field: 'dataFi',
+        flex: 0.1,
+        minWidth: 100,
+        valueFormatter: (value) => (value ? dayjs(value).format('DD/MM/YYYY') : value),
+    },
+];
 const dataGridPerspectives = ['PATH', 'EXPIRATION'];
-const dataGridSortModel: any = [{ field: 'dataInici', sort: 'asc' }];
+const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
 const Tasca = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string>();
+    const gridApiRef = useGridApiRef();
     const {
         treeView,
         treeViewSwitch,
         dataGridProps: treeDataGridProps,
     } = useTreeData(
         (row) => row?.treePath,
+        gridApiRef,
         t('page.tasques.grid.groupHeader'),
         1.5,
-        true,
+        false,
+        false,
         { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
     const columns = [
-        ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
-        ...(filter?.includes('dataFi is null') ? dataGridCommonColumns.slice(0, -1) : dataGridCommonColumns),
+        ...(!treeView
+            ? [
+                  { field: 'nom', flex: 1 },
+                  {
+                      field: 'treePath',
+                      flex: 1.2,
+                      headerName: t('page.tasques.grid.column.appEntorn'),
+                      valueFormatter: (value: any) =>
+                          `${value?.[0]} - ${value?.[1]}`,
+                  },
+              ]
+            : []),
+        ...(filter?.includes('dataFi is null')
+            ? dataGridCommonColumns.slice(0, -1)
+            : dataGridCommonColumns),
     ];
     const actions = [{
         icon: 'open_in_new',
@@ -203,24 +255,27 @@ const Tasca = () => {
         hidden: (row: any) => !row?.id,
     }];
     const filterElement = <TascaFilter onSpringFilterChange={setFilter}/>;
-    return <GridPage>
-        <MuiDataGrid
-            title={t('menu.tasca')}
-            resourceName="tasca"
-            columns={columns}
-            perspectives={dataGridPerspectives}
-            sortModel={dataGridSortModel}
-            findDisabled={filter == null}
-            filter={filter}
-            readOnly
-            toolbarType="upper"
-            toolbarHideQuickFilter
-            toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
-            toolbarAdditionalRow={filterElement}
-            rowAdditionalActions={actions}
-            {...treeDataGridProps}
-        />
-    </GridPage>;
+    return (
+        <BasePage expandHeight={!treeView} style={{ height: '100%' }}>
+            <MuiDataGrid
+                title={t('menu.tasca')}
+                datagridApiRef={gridApiRef}
+                resourceName="tasca"
+                columns={columns}
+                perspectives={dataGridPerspectives}
+                sortModel={dataGridSortModel}
+                findDisabled={filter == null}
+                filter={filter}
+                readOnly
+                toolbarType="upper"
+                toolbarHideQuickFilter
+                toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
+                toolbarAdditionalRow={filterElement}
+                rowAdditionalActions={actions}
+                {...treeDataGridProps}
+            />
+        </BasePage>
+    );
 }
 
 export default Tasca;

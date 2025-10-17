@@ -114,7 +114,7 @@ const translationEn = {
                 title: "Information",
                 revisio: "Revision",
                 jdk: {
-                    versio: "JDK versin",
+                    versio: "JDK version",
                 },
                 data: "Last update",
                 bdEstat: "Database",
@@ -250,14 +250,17 @@ const translationEn = {
         tasques: {
             filter: {
                 more: "More fields",
-                finished: "Finished only",
-                unfinished: "Unfinished",
+                unfinishedOnlyDisabled: "Show only unfinished tasks (disabled)",
+                unfinishedOnlyEnabled: "Show only unfinished tasks (enabled)",
             },
             grid: {
                 groupHeader: "Name",
                 action: {
                     obrir: "Open task",
-                }
+                },
+                column: {
+                    appEntorn: "Application - Environment",
+                },
             }
         },
         avisos: {

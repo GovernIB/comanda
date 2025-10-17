@@ -20,6 +20,8 @@ import org.springframework.security.config.annotation.method.configuration.Globa
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
 
+	public static final String DEFAULT_ROLE_PREFIX = "";
+
 	@Autowired
 	private ApplicationContext applicationContext;
 	@Autowired
@@ -30,6 +32,7 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
 		DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
 		expressionHandler.setApplicationContext(applicationContext);
 		expressionHandler.setPermissionEvaluator(permissionEvaluatorService);
+		expressionHandler.setDefaultRolePrefix(DEFAULT_ROLE_PREFIX);
 		return expressionHandler;
 	}
 

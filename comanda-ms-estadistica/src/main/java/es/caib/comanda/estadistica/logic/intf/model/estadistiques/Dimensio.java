@@ -54,7 +54,12 @@ import java.util.List;
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
-                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+                        grantedPermissions = { PermissionEnum.READ }
+                ),
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_CONSULTA },
+                        grantedPermissions = { PermissionEnum.READ }
                 )
         },
         artifacts = {
@@ -64,12 +69,14 @@ import java.util.List;
 )
 public class Dimensio extends BaseResource<Long> {
 
+    /** Named Filter para devolver un solo resultado por el atributo nom **/
+    public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
     public final static String DIMENSIO_FILTER = "dimensioFilter";
     public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
-    @Size(max = 16)
+    @Size(max = 32)
     private String codi;
     @NotNull
     @Size(max = 64)

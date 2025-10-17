@@ -7,20 +7,20 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import Box from '@mui/material/Box';
 import {
+    GridApiPro,
     GridColumnHeaderTitle,
-    GridGroupNode,
 } from '@mui/x-data-grid-pro';
 
 export const useTreeData = (
     getTreeDataPath: (row: any) => string[],
+    gridApiRef: React.RefObject<GridApiPro | null>,
     headerName?: string,
     headerFlex?: number,
     expandedByDefault?: boolean,
+    enabledByDefault?: boolean,
     groupingColDefAdditionalProps?: any) => {
     const { t } = useTranslation();
-    const [treeView, setTreeView] = React.useState<boolean>(true);
-    const [expandAll, setExpandAll] = React.useState<boolean>(expandedByDefault ?? false);
-    const [expansionState, setExpansionState] = React.useState<any>({});
+    const [treeView, setTreeView] = React.useState<boolean>(enabledByDefault ?? true);
     const treeViewSwitch = <FormGroup sx={{ ml: 2 }}>
         <FormControlLabel
             label={t('treeData.treeView')}
@@ -30,16 +30,9 @@ export const useTreeData = (
                     onChange={event => setTreeView(event.target.checked)}/>
             }/>
     </FormGroup>;
-    const onRowExpansionChange = (id: any, expanded: boolean) => {
-        setExpansionState((prevState: any) => ({
-            ...prevState,
-            [id]: expanded,
-        }));
-    };
     const isGroupExpandedByDefault = React.useCallback(
-        (node: GridGroupNode) =>
-            expansionState[node.id] != null ? expansionState[node.id] : expandAll,
-        [expandAll, expansionState]
+        () => expandedByDefault,
+        [expandedByDefault]
     );
     const groupingColDef = React.useMemo(() => ({
             headerName,
@@ -57,24 +50,14 @@ export const useTreeData = (
                     <IconButton
                         size="small"
                         onClick={() => {
-                            setExpandAll(true);
-                            if (expansionState != null) {
-                                Object.keys(expansionState).map((id) => {
-                                    onRowExpansionChange(id, true);
-                                });
-                            }
+                            gridApiRef.current?.expandAllRows();
                         }}>
                         <Icon fontSize="small">unfold_more</Icon>
                     </IconButton>
                     <IconButton
                         size="small"
                         onClick={() => {
-                            setExpandAll(false);
-                            if (expansionState != null) {
-                                Object.keys(expansionState).map((id) => {
-                                    onRowExpansionChange(id, false);
-                                });
-                            }
+                            gridApiRef.current?.collapseAllRows();
                         }}>
                         <Icon fontSize="small">unfold_less</Icon>
                     </IconButton>
@@ -82,7 +65,7 @@ export const useTreeData = (
             </Box>),
             ...groupingColDefAdditionalProps
         }
-    ), [expansionState, groupingColDefAdditionalProps, headerFlex, headerName]);
+    ), [gridApiRef, groupingColDefAdditionalProps, headerFlex, headerName]);
     const dataGridProps = treeView ? {
         treeData: true as true,
         autoHeight: true as true,
