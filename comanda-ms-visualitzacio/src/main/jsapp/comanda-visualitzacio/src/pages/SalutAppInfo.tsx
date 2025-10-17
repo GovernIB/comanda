@@ -40,7 +40,7 @@ import {ENUM_APP_ESTAT_PREFIX, getColorByMissatge, getColorByNivellEnum, getColo
 import {ChipColor} from "../util/colorUtil.ts";
 import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
-import { Alert } from '@mui/material';
+import { Alert, Tooltip } from '@mui/material';
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -338,6 +338,7 @@ const IntegracioRow: React.FC<any> = (props) => {
     const { integracio, fills, padLeft, toggleOpen, open } = props;
     const { t } = useTranslation();
     const getAppEstatLabel = useAppEstatLabel();
+    const displayName = integracio.nom ?? integracio.codi;
     return <>
         <TableRow>
             <TableCell padding="none" align="center">
@@ -354,7 +355,7 @@ const IntegracioRow: React.FC<any> = (props) => {
                     paddingLeft: padLeft ? '20px' : '0px',
                 }}>
                     {integracio.logo && <img src={`data:image/png;base64,${integracio.logo}`} alt="logo" style={{ height: '32px' }}/>}
-                    {integracio.nom ?? integracio.codi}
+                    {integracio.endpoint ? <Tooltip title={integracio.endpoint}>{displayName}</Tooltip> : displayName}
                 </Box>
 
             </TableCell>
@@ -369,15 +370,15 @@ const IntegracioRow: React.FC<any> = (props) => {
                 <PeticionsOkError ok={integracio.peticionsOkUltimPeriode} error={integracio.peticionsErrorUltimPeriode} />
             </TableCell>
             <TableCell>{integracio.tempsMigUltimPeriode != null ? integracio.tempsMigUltimPeriode + ' ms' : t('page.salut.nd')}</TableCell>
-            <TableCell>
-                {integracio.endpoint && <IconButton
-                    component="a"
-                    href={integracio.endpoint}
-                    target="_blank"
-                    size="small">
-                        <Icon>launch</Icon>
-                </IconButton>}
-            </TableCell>
+            {/*<TableCell>*/}
+            {/*    {integracio.endpoint && <IconButton*/}
+            {/*        component="a"*/}
+            {/*        href={integracio.endpoint}*/}
+            {/*        target="_blank"*/}
+            {/*        size="small">*/}
+            {/*            <Icon>launch</Icon>*/}
+            {/*    </IconButton>}*/}
+            {/*</TableCell>*/}
         </TableRow>
         {/*<Collapse in={open} timeout="auto" unmountOnExit>*/}
         {(open && fills?.length) ?
@@ -410,7 +411,6 @@ const Integracions: React.FC<any> = (props) => {
                         <TableCell>{t('page.salut.integracions.column.tempsMigTotal')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.peticionsPeriode')}</TableCell>
                         <TableCell>{t('page.salut.integracions.column.tempsMigPeriode')}</TableCell>
-                        <TableCell></TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
