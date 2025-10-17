@@ -18,9 +18,10 @@ export const useTreeData = (
     headerName?: string,
     headerFlex?: number,
     expandedByDefault?: boolean,
+    enabledByDefault?: boolean,
     groupingColDefAdditionalProps?: any) => {
     const { t } = useTranslation();
-    const [treeView, setTreeView] = React.useState<boolean>(true);
+    const [treeView, setTreeView] = React.useState<boolean>(enabledByDefault ?? true);
     const [expandAll, setExpandAll] = React.useState<boolean>(expandedByDefault ?? false);
     const [expansionState, setExpansionState] = React.useState<any>({});
     const treeViewSwitch = <FormGroup sx={{ ml: 2 }}>

@@ -156,6 +156,7 @@ const Avis = () => {
         t('page.avisos.grid.groupHeader'),
         1.5,
         true,
+        true,
         { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
     const columns = [
         ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),

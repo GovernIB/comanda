@@ -232,14 +232,17 @@ const translationEn = {
         tasques: {
             filter: {
                 more: "More fields",
-                finished: "Finished only",
-                unfinished: "Unfinished",
+                unfinishedOnlyDisabled: "Show only unfinished tasks (disabled)",
+                unfinishedOnlyEnabled: "Show only unfinished tasks (enabled)",
             },
             grid: {
                 groupHeader: "Name",
                 action: {
                     obrir: "Open task",
-                }
+                },
+                column: {
+                    appEntorn: "Application - Environment",
+                },
             }
         },
         avisos: {

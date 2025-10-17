@@ -234,14 +234,17 @@ const translationEs = {
         tasques: {
             filter: {
                 more: "Más campos",
-                finished: "Sólo finalizadas",
-                unfinished: "Pendientes",
+                unfinishedOnlyDisabled: "Visualizar únicamente las tareas pendientes (desactivado)",
+                unfinishedOnlyEnabled: "Visualizar únicamente las tareas pendientes (activado)",
             },
             grid: {
                 groupHeader: "Nombre",
                 action: {
                     obrir: "Obrir tasca",
-                }
+                },
+                column: {
+                    appEntorn: "Aplicación - Entorno",
+                },
             }
         },
         avisos: {

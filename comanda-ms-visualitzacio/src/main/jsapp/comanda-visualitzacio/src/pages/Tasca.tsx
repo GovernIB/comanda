@@ -19,6 +19,7 @@ import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
 import { GridSortModel } from '@mui/x-data-grid-pro';
+import dayjs from 'dayjs';
 
 export const StyledPrioritat = (props: any) => {
     const {entity, children} = props;
@@ -54,18 +55,18 @@ export const StyledPrioritat = (props: any) => {
 const TascaFilter = (props: any) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
-    const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
+    const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
     const moreFormApiRef = useFormApiRef();
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear({ finalitzada: finishedOnly });
+        moreFilterApiRef?.current?.clear({ finalitzada: unfinishedOnly });
     }
     React.useEffect(() => {
-        moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
-    }, [finishedOnly]);
+        moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
+    }, [unfinishedOnly]);
     return <>
         <MuiFilter
             apiRef={appEntornFilterApiRef}
@@ -87,9 +88,9 @@ const TascaFilter = (props: any) => {
                     <Grid size={6}><FormField name={'entorn'} /></Grid>
                 </Grid>
                 <Button
-                    onClick={() => setFinishedOnly(fo => !fo)}
-                    variant={finishedOnly ? 'contained' : 'outlined'}
-                    title={t('page.tasques.filter.unfinished')}
+                    onClick={() => setUnfinishedOnly(fo => !fo)}
+                    variant={unfinishedOnly ? 'contained' : 'outlined'}
+                    title={unfinishedOnly ? t('page.tasques.filter.unfinishedOnlyEnabled') : t('page.tasques.filter.unfinishedOnlyDisabled')}
                     sx={{ mr: 2 }}>
                     <Icon>pending_actions</Icon>
                 </Button>
@@ -111,7 +112,7 @@ const TascaFilter = (props: any) => {
             formApiRef={moreFormApiRef}
             resourceName="tasca"
             code="FILTER"
-            initialData={{ finalitzada: finishedOnly }}
+            initialData={{ finalitzada: unfinishedOnly }}
             springFilterBuilder={data => springFilterBuilder.and(
                 springFilterBuilder.eq('appId', data?.appId?.id),
                 springFilterBuilder.eq('entornId', data?.entornId?.id),
@@ -175,12 +176,14 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
     {
         field: 'dataInici',
         flex: 0.7,
-        minWidth: 150,
+        minWidth: 100,
+        valueFormatter: (value) => value ? dayjs(value).format('DD/MM/YYYY') : value,
     },
     {
         field: 'dataCaducitat',
         flex: 0.7,
-        minWidth: 150,
+        minWidth: 100,
+        valueFormatter: (value) => (value ? dayjs(value).format('DD/MM/YYYY') : value),
         renderCell: (param) => {
             const style =
                 param?.row?.diesPerCaducar == null
@@ -202,7 +205,8 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
     {
         field: 'dataFi',
         flex: 0.1,
-        minWidth: 150,
+        minWidth: 100,
+        valueFormatter: (value) => (value ? dayjs(value).format('DD/MM/YYYY') : value),
     },
 ];
 const dataGridPerspectives = ['PATH', 'EXPIRATION'];
@@ -219,11 +223,25 @@ const Tasca = () => {
         (row) => row?.treePath,
         t('page.tasques.grid.groupHeader'),
         1.5,
-        true,
+        false,
+        false,
         { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
     const columns = [
-        ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
-        ...(filter?.includes('dataFi is null') ? dataGridCommonColumns.slice(0, -1) : dataGridCommonColumns),
+        ...(!treeView
+            ? [
+                  { field: 'nom', flex: 1 },
+                  {
+                      field: 'treePath',
+                      flex: 1.2,
+                      headerName: t('page.tasques.grid.column.appEntorn'),
+                      valueFormatter: (value: any) =>
+                          `${value?.[0]} - ${value?.[1]}`,
+                  },
+              ]
+            : []),
+        ...(filter?.includes('dataFi is null')
+            ? dataGridCommonColumns.slice(0, -1)
+            : dataGridCommonColumns),
     ];
     const actions = [{
         icon: 'open_in_new',
