@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SubsistemaInfo {
-    @NotNull @Size(min = 1, max = 10)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
     @NotNull @Size(min = 1, max = 100)
     private String nom;

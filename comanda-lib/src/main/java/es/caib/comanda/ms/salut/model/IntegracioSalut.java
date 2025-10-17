@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IntegracioSalut extends EstatSalut {
-    @NotNull @Size(min = 1, max = 16)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
     @Valid
     private IntegracioPeticions peticions;

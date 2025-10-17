@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IntegracioInfo {
-    @NotNull @Size(min = 1, max = 16)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
     @NotNull @Size(min = 1, max = 64)
     private String nom;
