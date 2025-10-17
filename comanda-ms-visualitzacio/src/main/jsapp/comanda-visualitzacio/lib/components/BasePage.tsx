@@ -10,7 +10,7 @@ export type BasePageProps = React.PropsWithChildren & {
     /** Indica que s'han de desactivar els marges */
     disableMargins?: boolean;
     /** Indica que s'ha d'expandir l'alçada de la pàgina al 100% */
-    expandHeight?: true;
+    expandHeight?: boolean;
     /** Estils addicionals per l'element contenidor */
     style?: React.CSSProperties;
 };
@@ -34,21 +34,26 @@ export const BasePage: React.FC<BasePageProps> = (props) => {
             return () => setContentExpandsToAvailableHeight(false);
         }
     }, [expandHeight]);
-    const expandHeightStyles: React.CSSProperties = expandHeight
+    const parentDivExpandHeightStyles: React.CSSProperties = expandHeight
         ? {
-              display: 'flex',
-              flexDirection: 'column',
-              height: 'calc(100% - 64px - 1px)', // Els 64px son del toolbar de l'aplicació (el pixel ni idea)
-          }
+            display: 'flex',
+            flexDirection: 'column',
+            height: 'calc(100% - 64px - 1px)', // Els 64px son del toolbar de l'aplicació (el pixel ni idea)
+        }
+        : {};
+    const marginsDivExpandHeightStyles: React.CSSProperties = expandHeight
+        ? {
+            flexGrow: 1,
+        }
         : {};
     return (
         <div
             style={{
-                ...expandHeightStyles,
+                ...parentDivExpandHeightStyles,
                 ...style,
             }}>
             {toolbar}
-            <div style={{ margin: '16px', marginTop: '24px' }}>{children}</div>
+            <div style={{ margin: '16px', marginTop: '24px', ...marginsDivExpandHeightStyles }}>{children}</div>
         </div>
     );
 };

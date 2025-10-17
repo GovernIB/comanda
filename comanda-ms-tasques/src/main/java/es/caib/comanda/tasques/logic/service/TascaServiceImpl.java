@@ -176,7 +176,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     public static class ExpirationPerspectiveApplicator implements PerspectiveApplicator<TascaEntity, Tasca> {
         @Override
         public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
-            if (resource.getDataFi() == null) {
+            if (resource.getDataFi() == null && resource.getDataCaducitat() != null) {
                 long diesPerCaducar = ChronoUnit.DAYS.between(
                         LocalDateTime.now(),
                         resource.getDataCaducitat());
