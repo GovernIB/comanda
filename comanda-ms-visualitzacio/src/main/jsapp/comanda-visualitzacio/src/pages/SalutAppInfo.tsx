@@ -34,9 +34,9 @@ import {
     ChartContainer,
     ChartsTooltip,
 } from '@mui/x-charts';
-import {ENUM_APP_ESTAT_PREFIX, getColorByMissatge, getColorByNivellEnum, getColorByStatEnum, NivellEnum, SalutEstatEnum, SalutModel, TITLE} from "../types/salut.model.tsx";
+import {getColorByMissatge, getColorByNivellEnum, NivellEnum, SalutEstatEnum, SalutModel} from "../types/salut.model.tsx";
 import {ChipColor} from "../util/colorUtil.ts";
-import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
+import {SalutField, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 import { Alert, Tooltip } from '@mui/material';
 import { useCallback, useEffect } from 'react';
@@ -82,14 +82,6 @@ const appDataStateInitialValue: AppDataState = {
     salutCurrentApp: null,
     reportParams: null,
     grupsDates: null,
-};
-
-const useAppEstatLabel = () => {
-  const { t } = useTranslation();
-
-  return (estat?: SalutEstatEnum) => {
-      return t(ENUM_APP_ESTAT_PREFIX + estat + TITLE, { defaultValue: estat });
-  };
 };
 
 export const useAppInfoData = (id: any, dataRangeMinutes: number ) => {
@@ -202,7 +194,7 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
     const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
-    const bdEstat = app && <ItemStateChip salutField={SalutModel.BD_ESTAT} salutStatEnum={app.bdEstat} />;
+    const bdEstat = app && <ItemStateChip salutField={SalutField.BD_ESTAT} salutStatEnum={app.bdEstat} />;
     const appLatencia = app && <Typography>{app.appLatencia != null ? app.appLatencia + ' ms' : t('page.salut.nd')}</Typography>;
     const missatges = app && <>
         <SalutGenericTooltip title={t('page.salut.msgs.missatgeErrorCount')}>
@@ -370,7 +362,6 @@ const PeticionsOkError: React.FC<any> = (props) => {
 const IntegracioRow: React.FC<any> = (props) => {
     const { integracio, fills, padLeft, toggleOpen, open } = props;
     const { t } = useTranslation();
-    const getAppEstatLabel = useAppEstatLabel();
     const displayName = integracio.nom ?? integracio.codi;
     return <>
         <TableRow>
@@ -393,7 +384,7 @@ const IntegracioRow: React.FC<any> = (props) => {
 
             </TableCell>
             <TableCell>
-                <Chip label={getAppEstatLabel(integracio.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(integracio.estat as SalutEstatEnum), color: 'white'}}/>
+                <ItemStateChip sx={{ ml: 1 }} salutField={SalutField.INTEGRACIO_ESTAT} salutStatEnum={integracio.estat} />
             </TableCell>
             <TableCell>
                 <PeticionsOkError ok={integracio.totalOk} error={integracio.totalError} />
@@ -463,7 +454,6 @@ const Subsistemes: React.FC<any> = (props) => {
     const { salutCurrentApp } = props;
     const { t } = useTranslation();
     const subsistemes = salutCurrentApp?.subsistemes;
-    const getAppEstatLabel = useAppEstatLabel();
     return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.subsistemes.title')}</Typography>
@@ -487,7 +477,7 @@ const Subsistemes: React.FC<any> = (props) => {
                         <TableCell>{s.codi}</TableCell>
                         <TableCell>{s.nom}</TableCell>
                         <TableCell>
-                            <Chip label={getAppEstatLabel(s.estat)} size="small" sx={{backgroundColor: getColorByStatEnum(s.estat as SalutEstatEnum), color: 'white'}} />
+                            <ItemStateChip sx={{ ml: 1 }} salutField={SalutField.INTEGRACIO_ESTAT} salutStatEnum={s.estat} />
                         </TableCell>
                         <TableCell>
                             <PeticionsOkError ok={s.totalOk} error={s.totalError} />

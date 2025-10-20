@@ -2,32 +2,55 @@ const translationEn = {
     enum: {
         appEstat: {
             UP: {
-                title: "Up",
-                tooltip: "The application is working <bold>correctly</bold>. <br> The rate of <italic>detected errors</italic> is <underline>less than 5%</underline>."
+                title: "Active",
+                tooltip: "The application is working <bold>properly</bold>."
             },
             WARN: {
-                title: "Warn",
-                tooltip: "The rate of <italic>detected errors</italic> is <underline>between 5% and 10%</underline>."
+                title: "Warning",
+                tooltip: "<bold>Minor error rates</bold> have been detected in the application, or a non-critical subsystem is failing."
             },
             DOWN: {
                 title: "Down",
-                tooltip: "<bold>Errors have been detected</bold>. <br> The <italic>errors detected</italic> rate is <underline>greater than 30%</underline>."
+                tooltip: "The application <bold>appears to be down</bold>. It is not accessible, or its health check is unresponsive."
             },
             DEGRADED: {
                 title: "Degraded",
-                tooltip: "<bold>There are occasional errors</bold>. <br> The <italic>rate of detected errors</italic> is <underline>between 10% and 30%</underline>."
+                tooltip: "<bold>Significant error rates</bold> have been detected in the application or in a critical subsystem."
             },
             MAINTENANCE: {
                 title: "Maintenance",
-                tooltip: "The application <bold>is unavailable</bold> due to <underline>maintenance</underline>."
+                tooltip: "The application <bold>is not available</bold> due to <underline>maintenance tasks</underline>."
             },
             UNKNOWN: {
                 title: "Unknown",
-                tooltip: "<bold>No information available</bold> about the application status."
+                tooltip: "<bold>No information is available</bold> about the application's status."
             },
             ERROR: {
                 title: "Error",
-                tooltip: "The application <bold>is unavailable</bold> due to <underline>serious operational errors</underline>."
+                tooltip: "<bold>High error rates</bold> have been detected in the application or in a critical subsystem that is failing."
+            },
+        },
+        integracioEstat: {
+            UP: {
+                tooltip: "Service <bold>operational</bold>.<br> No errors or an error rate <underline>below 10%</underline> in the last requests"
+            },
+            WARN: {
+                tooltip: "Service with an error rate <underline>between 10% and 20%</underline> in the last requests"
+            },
+            DEGRADED: {
+                tooltip: "Service with an error rate <underline>between 20% and 50%</underline> in the last requests",
+            },
+            ERROR: {
+                tooltip: "Service with a <bold>high error rate</bold>, <underline>above 50%</underline> in the last requests"
+            },
+            DOWN: {
+                tooltip: "Service <bold>not operational</bold>. Error rate of <underline>100%</underline> in the last requests",
+            },
+            MAINTENANCE: {
+                tooltip: "Service information unavailable due to <bold>maintenance</bold> tasks",
+            },
+            UNKNOWN: {
+                tooltip: "No information about the service status is available",
             },
         },
     },

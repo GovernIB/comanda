@@ -5,6 +5,7 @@ import {IAppContext} from "./app.model.tsx";
 
 export const ENUM_APP_ESTAT_PREFIX: string = 'enum.appEstat.';
 export const ENUM_BD_ESTAT_PREFIX: string = 'enum.bdEstat.';
+export const ENUM_INTEGRACIO_ESTAT_PREFIX: string = 'enum.integracioEstat.';
 export const TITLE = ".title";
 export const TOOLTIP = ".tooltip";
 
@@ -333,7 +334,6 @@ export const GRAY: string = "#9c9c9c" // Gris claro, estado desconocido
 export const RED_LIGHT: string = "#EF9A9A" // Rojo claro, grave
 export const RED_DARK: string = "#e36161" // Rojo intenso, crítico
 
-
 /**
  * Devuelve el color predeterminado en función del estado
  * @param salutEstatEnum
@@ -423,7 +423,7 @@ export function getMaterialIconByState(state: SalutEstatEnum): JSX.Element {
         case SalutEstatEnum.UNKNOWN:
             return <Icon color={"inherit"}>help_outline</Icon>;
         case SalutEstatEnum.DOWN:
-            return <Icon fontSize="inherit">highlight_off</Icon>;
+            return <Icon color={"inherit"}>highlight_off</Icon>;
         case SalutEstatEnum.ERROR:
         default:
             return <Icon color={"inherit"}>error</Icon>;

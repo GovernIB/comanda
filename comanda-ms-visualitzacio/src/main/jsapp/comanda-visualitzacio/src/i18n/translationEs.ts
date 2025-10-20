@@ -3,19 +3,19 @@ const translationEs = {
         appEstat: {
             UP: {
                 title: "Activa",
-                tooltip: "La aplicación funciona <bold>correctamente</bold>. <br> La tasa de <italic>errores detectados</italic> es <underline>inferior al 5%</underline>."
+                tooltip: "La aplicación funciona <bold>correctamente</bold>."
             },
             WARN: {
                 title: "Advertencia",
-                tooltip: "La tasa de <italic>errores detectados</italic> está <underline>entre el 5% y el 10%</underline>."
+                tooltip: "Se han detectado tasas de <bold>errores menores</bold> en la aplicación, o algun subsistema no crítico fallando."
             },
             DOWN: {
                 title: "Caida",
-                tooltip: "<bold>Se han detectado errores</bold>. <br> La <italic>tasa de errores detectados</italic> es <underline>superior al 30%</underline>."
+                tooltip: "La aplicación <bold>parece caida</bold>. No se puede acceder a ella, o a su sistema de salud."
             },
             DEGRADED: {
                 title: "Degradada",
-                tooltip: "<bold>Existen errores puntuales</bold>. <br> La <italic>tasa de errores detectados</italic> está <underline>entre el 10% y el 30%</underline>."
+                tooltip: "Se han detectado tasas de <bold>errores significativas en la aplicación</bold>, o en algun subsistema crítico."
             },
             MAINTENANCE: {
                 title: "Mantenimiento",
@@ -27,9 +27,32 @@ const translationEs = {
             },
             ERROR: {
                 title: "Error",
-                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>errores graves en el funcionamiento</underline>."
+                tooltip: "Se han detectado <bold>altas tasas de errores</bold> en la aplicación, o algun subsistema crítico fallando."
             },
-        }
+        },
+        integracioEstat: {
+            UP: {
+                tooltip: "Servicio <bold>operativo</bold>.<br> Sin errores o con una tasa de errores <underline>inferior al 10%</underline> en las últimas peticiones"
+            },
+            WARN: {
+                tooltip: "Servicio con una tasa de errores <underline>entre el 10% y el 20%</underline> en las últimas peticiones"
+            },
+            DEGRADED: {
+                tooltip: "Servicio con una tasa de errores <underline>entre el 20% y el 50%</underline> en las últimas peticiones",
+            },
+            ERROR: {
+                tooltip: "Servicio con una <bold>alta tasa de errores</bold>, <underline>superior al 50%</underline> en las últimas peticiones"
+            },
+            DOWN: {
+                tooltip: "Servicio <bold>no operativo</bold>. Tasa de errores del <underline>100%</underline> en las últimas peticiones",
+            },
+            MAINTENANCE: {
+                tooltip: "Sin información del servicio debido a tareas de <bold>mantenimiento</bold>",
+            },
+            UNKNOWN: {
+                tooltip: "No se dispone de información sobre el estado del servicio",
+            },
+        },
     },
     menu: {
         salut: "Salud",
