@@ -3,19 +3,19 @@ const translationEs = {
         appEstat: {
             UP: {
                 title: "Activa",
-                tooltip: "La aplicación funciona <bold>correctamente</bold>. <br> La tasa de <italic>errores detectados</italic> es <underline>inferior al 5%</underline>."
+                tooltip: "La aplicación funciona <bold>correctamente</bold>."
             },
             WARN: {
                 title: "Advertencia",
-                tooltip: "La tasa de <italic>errores detectados</italic> está <underline>entre el 5% y el 10%</underline>."
+                tooltip: "Se han detectado <italic>pocos</italic> errores."
             },
             DOWN: {
                 title: "Caida",
-                tooltip: "<bold>Se han detectado errores</bold>. <br> La <italic>tasa de errores detectados</italic> es <underline>superior al 30%</underline>."
+                tooltip: "<bold>Se han detectado errores</bold>."
             },
             DEGRADED: {
                 title: "Degradada",
-                tooltip: "<bold>Existen errores puntuales</bold>. <br> La <italic>tasa de errores detectados</italic> está <underline>entre el 10% y el 30%</underline>."
+                tooltip: "<bold>Existen errores puntuales</bold>."
             },
             MAINTENANCE: {
                 title: "Mantenimiento",
@@ -27,6 +27,29 @@ const translationEs = {
             },
             ERROR: {
                 title: "Error",
+                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>errores graves en el funcionamiento</underline>."
+            },
+        },
+        integracioEstat: {
+            UP: {
+                tooltip: "La aplicación funciona <bold>correctamente</bold>. <br> La tasa de <italic>errores detectados</italic> es <underline>inferior al 5%</underline>."
+            },
+            WARN: {
+                tooltip: "La tasa de <italic>errores detectados</italic> está <underline>entre el 5% y el 10%</underline>."
+            },
+            DOWN: {
+                tooltip: "<bold>Se han detectado errores</bold>. <br> La <italic>tasa de errores detectados</italic> es <underline>superior al 30%</underline>."
+            },
+            DEGRADED: {
+                tooltip: "<bold>Existen errores puntuales</bold>. <br> La <italic>tasa de errores detectados</italic> está <underline>entre el 10% y el 30%</underline>."
+            },
+            MAINTENANCE: {
+                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>tareas de mantenimiento</underline>."
+            },
+            UNKNOWN: {
+                tooltip: "<bold>No se dispone de información</bold> acerca del estado de la aplicación."
+            },
+            ERROR: {
                 tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>errores graves en el funcionamiento</underline>."
             },
         }

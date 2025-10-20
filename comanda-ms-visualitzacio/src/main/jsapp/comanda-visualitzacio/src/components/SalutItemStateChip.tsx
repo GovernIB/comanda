@@ -1,18 +1,18 @@
 import {useTranslation} from "react-i18next";
-import {SalutChipTooltip} from "./SalutChipTooltip.tsx";
+import {SalutChipTooltip, SalutField} from "./SalutChipTooltip.tsx";
 import Chip from "@mui/material/Chip";
 import {
     ENUM_APP_ESTAT_PREFIX,
     getColorByStatEnum,
     getMaterialIconByState,
     SalutEstatEnum,
-    SalutModel, TITLE
+    TITLE
 } from "../types/salut.model.tsx";
 import {ChipColor} from "../util/colorUtil.ts";
 import {ChipProps, Typography} from "@mui/material";
 
 interface ItemStateChipProps extends ChipProps {
-    salutField: keyof SalutModel;
+    salutField: SalutField;
     salutStatEnum: SalutEstatEnum | undefined;
     date?: string;
 }

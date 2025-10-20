@@ -3,14 +3,21 @@ import {Box, Tooltip, tooltipClasses, TooltipProps, Typography,} from "@mui/mate
 import {styled} from "@mui/material/styles";
 import {
     ENUM_APP_ESTAT_PREFIX,
-    ENUM_BD_ESTAT_PREFIX, getColorByStatEnum,
+    ENUM_BD_ESTAT_PREFIX,
+    ENUM_INTEGRACIO_ESTAT_PREFIX,
+    getColorByStatEnum,
     getMaterialIconByState,
     SalutEstatEnum,
-    SalutModel,
     TITLE,
     TOOLTIP
 } from "../types/salut.model.tsx";
 import {Trans, useTranslation} from "react-i18next";
+
+export enum SalutField {
+  APP_ESTAT = "appEstat",
+  BD_ESTAT = "bdEstat",
+  INTEGRACIO_ESTAT = "integracioEstat"
+}
 
 // Tooltip con estilo
 const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
@@ -27,7 +34,7 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
 
 interface SalutTooltipProps extends Omit<TooltipProps, "title"> {
     stateEnum: SalutEstatEnum;
-    salutField: keyof SalutModel;
+    salutField: SalutField;
     children: React.ReactElement;
 }
 
@@ -35,10 +42,23 @@ interface SalutGenericTooltipProps extends TooltipProps {
     children: React.ReactElement;
 }
 
+const getPrefixByField = (field: SalutField): string => {
+  switch (field) {
+    case SalutField.APP_ESTAT:
+      return ENUM_APP_ESTAT_PREFIX;
+    case SalutField.BD_ESTAT:
+      return ENUM_BD_ESTAT_PREFIX;
+    case SalutField.INTEGRACIO_ESTAT:
+      return ENUM_INTEGRACIO_ESTAT_PREFIX;
+    default:
+      return ENUM_APP_ESTAT_PREFIX; // valor por defecto por si acaso
+  }
+};
+
 export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salutField, children, ...props }) => {
     const { t } = useTranslation();
 
-    const prefix = salutField === SalutModel.APP_ESTAT ? ENUM_APP_ESTAT_PREFIX : ENUM_BD_ESTAT_PREFIX;
+    const prefix = getPrefixByField(salutField);
     const existTranslation: boolean = !(t(prefix + stateEnum + TOOLTIP) === (prefix + stateEnum + TOOLTIP));
 
     const titleContent: React.ReactNode = (

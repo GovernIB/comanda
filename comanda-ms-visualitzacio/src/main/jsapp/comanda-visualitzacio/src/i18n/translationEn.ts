@@ -3,19 +3,19 @@ const translationEn = {
         appEstat: {
             UP: {
                 title: "Up",
-                tooltip: "The application is working <bold>correctly</bold>. <br> The rate of <italic>detected errors</italic> is <underline>less than 5%</underline>."
+                tooltip: "The application is working <bold>correctly</bold>."
             },
             WARN: {
                 title: "Warn",
-                tooltip: "The rate of <italic>detected errors</italic> is <underline>between 5% and 10%</underline>."
+                tooltip: "<italic>Few</italic> errors have been detected."
             },
             DOWN: {
                 title: "Down",
-                tooltip: "<bold>Errors have been detected</bold>. <br> The <italic>errors detected</italic> rate is <underline>greater than 30%</underline>."
+                tooltip: "<bold>Errors have been detected</bold>."
             },
             DEGRADED: {
                 title: "Degraded",
-                tooltip: "<bold>There are occasional errors</bold>. <br> The <italic>rate of detected errors</italic> is <underline>between 10% and 30%</underline>."
+                tooltip: "<bold>There are occasional errors</bold>."
             },
             MAINTENANCE: {
                 title: "Maintenance",
@@ -27,6 +27,29 @@ const translationEn = {
             },
             ERROR: {
                 title: "Error",
+                tooltip: "The application <bold>is unavailable</bold> due to <underline>serious operational errors</underline>."
+            },
+        },
+        integracioEstat: {
+            UP: {
+                tooltip: "The application is working <bold>correctly</bold>. <br> The rate of <italic>detected errors</italic> is <underline>less than 5%</underline>."
+            },
+            WARN: {
+                tooltip: "The rate of <italic>detected errors</italic> is <underline>between 5% and 10%</underline>."
+            },
+            DOWN: {
+                tooltip: "<bold>Errors have been detected</bold>. <br> The <italic>errors detected</italic> rate is <underline>greater than 30%</underline>."
+            },
+            DEGRADED: {
+                tooltip: "<bold>There are occasional errors</bold>. <br> The <italic>rate of detected errors</italic> is <underline>between 10% and 30%</underline>."
+            },
+            MAINTENANCE: {
+                tooltip: "The application <bold>is unavailable</bold> due to <underline>maintenance</underline>."
+            },
+            UNKNOWN: {
+                tooltip: "<bold>No information available</bold> about the application status."
+            },
+            ERROR: {
                 tooltip: "The application <bold>is unavailable</bold> due to <underline>serious operational errors</underline>."
             },
         },
