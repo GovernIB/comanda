@@ -210,7 +210,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
             TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
-            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataReferencia());
 
 			return generateSalutEstatList(dataInici, tipus, params.getEntornAppId());
 		}
@@ -228,7 +228,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             HashMap<String, Object> map = new HashMap<>();
             TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
 
-            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataReferencia());
 
             params.getEntornAppIdList().forEach( id -> {
                 List<SalutInformeEstatItem> list = generateSalutEstatList(dataInici, tipus, id);
@@ -261,7 +261,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			final List<SalutInformeLatenciaItem> data = new ArrayList<>();
 
             TipusRegistreSalut tipus = mapTipusAgrupacio(params.getAgrupacio());
-            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataFi());
+            LocalDateTime dataInici = getDataIniciAjustada(params.getAgrupacio(), params.getDataReferencia());
 
             List<SalutEntity> salutEntityList = ((SalutRepository) entityRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                     params.getEntornAppId(),

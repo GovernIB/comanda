@@ -4,10 +4,10 @@ import { BasePage, springFilterBuilder, useResourceApiService } from 'reactlib';
 import { BaseEntity } from '../types/base-entity.model';
 import dayjs from 'dayjs';
 import SalutToolbar, {
+    agrupacioFromMinutes,
     GroupingEnum,
     salutEntornAppFilterBuilder,
     SalutFilterDataType,
-    toReportInterval,
     useSalutToolbarState,
 } from '../components/SalutToolbar';
 import useInterval from '../hooks/useInterval';
@@ -19,6 +19,8 @@ import { ItemStateChip } from '../components/SalutItemStateChip';
 import {AppModel, EntornAppModel} from "../types/app.model.tsx";
 import {EntornModel} from "../types/entorn.model.tsx";
 import { useSalutLlistatExpansionState } from '../hooks/salutState.ts';
+import { ISO_DATE_FORMAT } from '../util/dateUtils.ts';
+import { filterNumericObjectKeys } from '../util/objectUtils.ts';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 type SalutInformeEstatItem = {
@@ -42,18 +44,6 @@ export type SalutData = {
     salutLastItems: SalutModel[];
     groupedApp?: AppModel;
     groupedEntorn?: EntornModel;
-};
-
-const filterObjectKeys = <T extends { [key: number]: unknown }>(
-    object: T,
-    filterFunc: (key: string) => boolean
-) => {
-    return Object.keys(object)
-        .filter(filterFunc)
-        .reduce((acc, key) => {
-            acc[Number(key)] = object[Number(key)];
-            return acc;
-        }, {} as T);
 };
 
 const splitSalutDataIntoGroups = ({
@@ -80,7 +70,7 @@ const splitSalutDataIntoGroups = ({
             groupedApp,
             groupedEntorn,
             entornApps,
-            estats: filterObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))),
+            estats: filterNumericObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))),
             salutLastItems: salutLastItems.filter(
                 ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId)
             ),
@@ -146,11 +136,7 @@ const useSalutData = ({
         entorns?: EntornModel[];
         groups: SalutData[];
         grupsDates?: string[];
-        reportInterval?: {
-            dataInici: string;
-            dataFi: string;
-            agrupacio: string;
-        };
+        agrupacio?: string;
         initialized: boolean;
         loading: boolean;
         error?: unknown;
@@ -165,7 +151,8 @@ const useSalutData = ({
         setSalutData((prevState) => ({ ...prevState, loading: true, error: undefined }));
 
         try {
-            const reportInterval = toReportInterval(dataRangeMinutes);
+            const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
+            const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
             const [activeEntornAppsResponse, activeAppsResponse, entornsResponse, grupsDatesResponse] =
                 await Promise.all([
                     entornAppFind({
@@ -201,14 +188,15 @@ const useSalutData = ({
                     salutApiReport(null, {
                         code: 'grups_dates',
                         data: {
-                            dataReferencia: reportInterval.dataFi,
-                            agrupacio: reportInterval.agrupacio,
+                            dataReferencia,
+                            agrupacio,
                         },
                     }),
                 ]);
 
             const reportData = {
-                ...reportInterval,
+                dataReferencia,
+                agrupacio,
                 entornAppIdList: activeEntornAppsResponse.rows.map(({ id }) => id),
             };
 
@@ -239,7 +227,7 @@ const useSalutData = ({
                     entornApps: activeEntornAppsResponse.rows,
                 }),
                 grupsDates: (grupsDatesResponse as { data: string }[]).map((item) => item.data),
-                reportInterval,
+                agrupacio,
                 error: undefined,
                 initialized: true,
                 loading: false,
@@ -358,7 +346,7 @@ const Salut: FunctionComponent = () => {
                     apps={salutData.apps}
                     entorns={salutData.entorns}
                     salutGroups={salutData.groups}
-                    reportInterval={salutData.reportInterval}
+                    agrupacio={salutData.agrupacio}
                     springFilter={additionalFilter}
                     grupsDates={salutData.grupsDates}
                     {...salutLlistatState}

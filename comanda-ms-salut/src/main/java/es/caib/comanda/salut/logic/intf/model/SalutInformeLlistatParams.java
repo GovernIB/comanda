@@ -21,7 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SalutInformeLlistatParams implements Serializable {
     @NotNull
-    private LocalDateTime dataFi; // TODO Canviar nom a dataReferencia al fer merge de la branca WIP
+    private LocalDateTime dataReferencia;
 	@NotNull
 	private List<Long> entornAppIdList;
 	@NotNull

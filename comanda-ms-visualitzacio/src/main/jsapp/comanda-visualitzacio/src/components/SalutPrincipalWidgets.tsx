@@ -550,11 +550,7 @@ export const SalutWidgetContent: React.FC<{
     expanded: boolean;
     setExpanded: (expanded: boolean) => void;
     salutLastItems: SalutModel[];
-    reportParams: {
-        dataInici: string;
-        dataFi: string;
-        agrupacio: string;
-    };
+    agrupacio: string;
     estats: SalutData['estats'];
     loading?: boolean;
     groupedApp?: AppModel;
@@ -567,7 +563,7 @@ export const SalutWidgetContent: React.FC<{
     expanded,
     setExpanded,
     salutLastItems,
-    reportParams,
+    agrupacio,
     estats,
     loading,
     groupedApp,
@@ -623,8 +619,7 @@ export const SalutWidgetContent: React.FC<{
                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 9 }} sx={{ height: '200px' }}>
                     <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
                         <UpdownBarChart
-                            dataInici={reportParams.dataInici}
-                            agrupacio={reportParams.agrupacio}
+                            agrupacio={agrupacio}
                             estats={estats}
                             grupsDates={grupsDates}
                         />
@@ -674,7 +669,7 @@ export const SalutWidgetContent: React.FC<{
 export const SalutLlistat = ({
     salutGroups,
     grupsDates,
-    reportInterval,
+    agrupacio,
     apps,
     entorns,
     setExpanded,
@@ -684,16 +679,12 @@ export const SalutLlistat = ({
     entorns?: EntornModel[];
     salutGroups: SalutData[];
     grupsDates?: string[];
-    reportInterval?: {
-        dataInici: string;
-        dataFi: string;
-        agrupacio: string;
-    };
+    agrupacio?: string;
     springFilter?: string;
     setExpanded: (expand: boolean, context: SalutData) => void;
     isExpanded: (salutGroup: SalutData) => boolean;
 }) => {
-    if (!salutGroups.length || grupsDates == null || reportInterval == null) return;
+    if (!salutGroups.length || grupsDates == null || agrupacio == null) return;
 
     return (
         <>
@@ -704,7 +695,7 @@ export const SalutLlistat = ({
                             expanded={isExpanded(salutGroup)}
                             setExpanded={(expand) => setExpanded(expand, salutGroup)}
                             salutLastItems={salutGroup.salutLastItems}
-                            reportParams={reportInterval}
+                            agrupacio={agrupacio}
                             estats={salutGroup.estats}
                             groupedApp={salutGroup.groupedApp}
                             groupedEntorn={salutGroup.groupedEntorn}

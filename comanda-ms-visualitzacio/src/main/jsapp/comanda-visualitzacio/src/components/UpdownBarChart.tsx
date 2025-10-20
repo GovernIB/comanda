@@ -4,30 +4,24 @@ import { isDataInGroup, toXAxisDataGroups} from '../util/dataGroup';
 import {useTranslation} from "react-i18next";
 import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, TITLE} from "../types/salut.model.tsx";
 import { XAxis } from '@mui/x-charts';
-
-export type UpdownBarChartProps = {
-    dataInici: string;
-    agrupacio: string;
-    estats?: any;
-    grupsDates: string[];
-}
+import { SalutData } from '../pages/Salut.tsx';
+import { numericObjectKeys } from '../util/objectUtils.ts';
 
 export const calculateEstatsSeries = (
     baseDataGroups: string[],
-    estats: Record<string, any[]>,
+    estats: SalutData['estats'],
     agrupacio: string,
     percentKey: "upPercent" | "warnPercent" | "degradedPercent" | "maintenancePercent" | "downPercent" | "errorPercent" | "unknownPercent"
 ): number[] => {
     return baseDataGroups.map((group) => {
-
-        const estatApps = Object.keys(estats);
+        const estatApps = numericObjectKeys(estats);
         if (estatApps.length === 0) {
             return 0;
         }
         let estatPercent: number = 0;
         estatApps.forEach((appKey) => {
             const estatsData = estats[appKey];
-            const estat = estatsData.find((e: any) => e?.data === group);
+            const estat = estatsData.find((e) => e?.data === group);
             if (estat && isDataInGroup(estat.data, group, agrupacio)) {
                 if (isNaN(estat[percentKey]))
                     throw new Error(`${estat[percentKey]} is not a number (${group}, ${percentKey})`);
@@ -38,24 +32,36 @@ export const calculateEstatsSeries = (
     });
 };
 
-const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
-    const {
-        dataInici,
-        agrupacio,
-        estats,
-        grupsDates,
-    } = props;
+const UpdownBarChart: React.FC<{
+    agrupacio: string;
+    estats: SalutData['estats'];
+    grupsDates: string[];
+}> = (props) => {
+    const { agrupacio, estats, grupsDates: baseDataGroups } = props;
     const { t } = useTranslation();
-    // const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
-    const baseDataGroups = grupsDates;
 
-    const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "upPercent");
-    const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "warnPercent");
-    const seriesDegraded = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "degradedPercent");
-    const seriesMaintenance = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "maintenancePercent");
-    const seriesError = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "errorPercent");
-    const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "downPercent");
-    const seriesUnknown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, "unknownPercent");
+    const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'upPercent');
+    const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'warnPercent');
+    const seriesDegraded = calculateEstatsSeries(
+        baseDataGroups,
+        estats,
+        agrupacio,
+        'degradedPercent'
+    );
+    const seriesMaintenance = calculateEstatsSeries(
+        baseDataGroups,
+        estats,
+        agrupacio,
+        'maintenancePercent'
+    );
+    const seriesError = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'errorPercent');
+    const seriesDown = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'downPercent');
+    const seriesUnknown = calculateEstatsSeries(
+        baseDataGroups,
+        estats,
+        agrupacio,
+        'unknownPercent'
+    );
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
 
@@ -101,26 +107,32 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
-        }
+        },
     ];
 
-    const xAxis: ReadonlyArray<XAxis<'band'>> = [{
-        scaleType: 'band',
-        data: dataGroups,
-        // TODO Fer un formatter generic per a totes les agrupacions
-        valueFormatter: (value: string) => agrupacio === 'HORA' ? value.substring(3) : value
-    }];
+    const xAxis: ReadonlyArray<XAxis<'band'>> = [
+        {
+            scaleType: 'band',
+            data: dataGroups,
+            // TODO Fer un formatter generic per a totes les agrupacions
+            valueFormatter: (value: string) => (agrupacio === 'HORA' ? value.substring(3) : value),
+        },
+    ];
 
-    return estats != null && <BarChart
-        xAxis={xAxis}
-        yAxis={[{ max: 100 }]}
-        series={series}
-        // borderRadius={6}
-        grid={{
-            horizontal: true,
-            vertical: true
-        }}
-    />;
-}
+    return (
+        estats != null && (
+            <BarChart
+                xAxis={xAxis}
+                yAxis={[{ max: 100 }]}
+                series={series}
+                // borderRadius={6}
+                grid={{
+                    horizontal: true,
+                    vertical: true,
+                }}
+            />
+        )
+    );
+};
 
 export default UpdownBarChart;

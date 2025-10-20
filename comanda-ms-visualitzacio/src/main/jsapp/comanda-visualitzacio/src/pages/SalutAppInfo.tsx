@@ -22,7 +22,7 @@ import {
     dateFormatLocale,
     springFilterBuilder as builder,
 } from 'reactlib';
-import { toReportInterval } from '../components/SalutToolbar';
+import { agrupacioFromMinutes } from '../components/SalutToolbar';
 import UpdownBarChart from '../components/UpdownBarChart';
 import { isDataInGroup, toXAxisDataGroups } from '../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -34,13 +34,16 @@ import {
     ChartContainer,
     ChartsTooltip,
 } from '@mui/x-charts';
-import {getColorByMissatge, getColorByNivellEnum, NivellEnum, SalutEstatEnum, SalutModel} from "../types/salut.model.tsx";
+import {getColorByMissatge, getColorByNivellEnum, NivellEnum, SalutModel} from "../types/salut.model.tsx";
 import {ChipColor} from "../util/colorUtil.ts";
 import {SalutField, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 import { Alert, Tooltip } from '@mui/material';
 import { useCallback, useEffect } from 'react';
 import { EntornAppModel } from '../types/app.model.tsx';
+import dayjs from 'dayjs';
+import { ISO_DATE_FORMAT } from '../util/dateUtils.ts';
+import { SalutData } from './Salut.tsx';
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -65,11 +68,7 @@ interface AppDataState {
     estats: Record<string, any> | null;
     latencies: SalutInformeLatenciaItem[] | null;
     salutCurrentApp: SalutModel | null;
-    reportParams: {
-        dataInici: any;
-        dataFi: any;
-        agrupacio: string
-    };
+    agrupacio?: string;
     error?: any;
     grupsDates: string[] | null;
 }
@@ -80,7 +79,6 @@ const appDataStateInitialValue: AppDataState = {
     estats: null,
     latencies: null,
     salutCurrentApp: null,
-    reportParams: null,
     grupsDates: null,
 };
 
@@ -103,7 +101,6 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number ) => {
             return;
         }
 
-        const reportParams = toReportInterval(dataRangeMinutes);
         if (ready) {
             setAppDataState((prevState) => ({
                 ...prevState,
@@ -113,15 +110,18 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number ) => {
             try {
                 const entornApp = await entornAppGetOne(id);
                 const entornAppId = entornApp.id;
+                const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
+                const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
                 const reportData = {
-                    ...reportParams,
+                    dataReferencia,
+                    agrupacio,
                     entornAppId,
                 };
                 const grupDatesReportItems = await salutApiReport(null, {
                     code: 'grups_dates',
                     data: {
-                        dataReferencia: reportData.dataFi,
-                        agrupacio: reportData.agrupacio,
+                        dataReferencia,
+                        agrupacio,
                     },
                 });
                 const estatReportItems = await salutApiReport(null, {
@@ -157,7 +157,7 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number ) => {
                     estats: { [entornAppId]: estatReportItems },
                     latencies: latenciaReportItems as any[],
                     salutCurrentApp,
-                    reportParams,
+                    agrupacio,
                     grupsDates: (grupDatesReportItems as { data: string }[]).map((item) => item.data),
                 }));
             } catch (e) {
@@ -321,8 +321,12 @@ const LatenciaLineChart: React.FC<{
     </Card>;
 }
 
-const EstatsBarCard: React.FC<any> = (props) => {
-    const { grupsDates, dataInici, agrupacio, estats } = props;
+const EstatsBarCard: React.FC<{
+    agrupacio: string;
+    estats: SalutData['estats'];
+    grupsDates: string[];
+}> = (props) => {
+    const { grupsDates, agrupacio, estats } = props;
     const { t } = useTranslation();
     const hasData = estats && Object.keys(estats).length > 0;
     return <Card variant="outlined" sx={{ height: '300px' }}>
@@ -343,7 +347,7 @@ const EstatsBarCard: React.FC<any> = (props) => {
                     {t('page.salut.estatLatencia.noInfo')}
                 </Typography>
             ) : (
-                <UpdownBarChart dataInici={dataInici} agrupacio={agrupacio} estats={estats} grupsDates={grupsDates} />
+                <UpdownBarChart agrupacio={agrupacio} estats={estats} grupsDates={grupsDates} />
             )}
         </CardContent>
     </Card>;
@@ -590,7 +594,7 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
     ready,
 }) => {
     const { t } = useTranslation();
-    const { salutCurrentApp, entornApp, loading, reportParams, estats, latencies } =
+    const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } =
         appInfoData;
     const [integracionsExpandState, setIntegracionsExpandState] = React.useState<number[]>([]);
     const toggleIntegracioExpand = (id: number) => {
@@ -613,10 +617,9 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
                         <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            {reportParams != null && estats != null && grupsDates != null && (
+                            {agrupacio != null && estats != null && grupsDates != null && (
                                 <EstatsBarCard
-                                    dataInici={reportParams.dataInici}
-                                    agrupacio={reportParams.agrupacio}
+                                    agrupacio={agrupacio}
                                     estats={estats}
                                     grupsDates={grupsDates}
                                 />
@@ -650,10 +653,9 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
             </Grid>
             <Grid size={{ sm: 12, lg: 9 }}>
                 <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                    {reportParams != null && estats != null && grupsDates != null && (
+                    {agrupacio != null && estats != null && grupsDates != null && (
                         <EstatsBarCard
-                            dataInici={reportParams.dataInici}
-                            agrupacio={reportParams.agrupacio}
+                            agrupacio={agrupacio}
                             estats={estats}
                             grupsDates={grupsDates}
                         />
@@ -671,10 +673,10 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
                         <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            {reportParams != null && latencies != null && estats != null && grupsDates != null && (
+                            {agrupacio != null && latencies != null && estats != null && grupsDates != null && (
                                 <>
                                     <LatenciaLineChart
-                                        agrupacio={reportParams.agrupacio}
+                                        agrupacio={agrupacio}
                                         latencies={latencies}
                                         grupsDates={grupsDates}
                                     />
