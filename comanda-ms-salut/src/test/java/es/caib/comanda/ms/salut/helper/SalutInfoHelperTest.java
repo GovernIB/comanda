@@ -159,7 +159,7 @@ public class SalutInfoHelperTest {
                 .build();
 
         DetallSalut detallSalut = DetallSalut.builder()
-                .codi("TEST_DETALL")
+                .codi("TESTDETALL")
                 .nom("Test Detall")
                 .valor("Test Value")
                 .build();
