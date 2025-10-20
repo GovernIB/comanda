@@ -7,15 +7,15 @@ const translationCa = {
             },
             WARN: {
                 title: "Avís",
-                tooltip: "S'han detectat <italic>pocs</italic> errors."
+                tooltip: "S'han detectat taxes d'<bold>errors menors</bold> a l'aplicació, o algun subsistema no crític està fallant."
             },
             DOWN: {
                 title: "Caiguda",
-                tooltip: "<bold>S'han detectat errors</bold>."
+                tooltip: "L'aplicació <bold>sembla caiguda</bold>. No s'hi pot accedir o el seu sistema de salut no respon."
             },
             DEGRADED: {
                 title: "Degradada",
-                tooltip: "<bold>Hi ha errors puntuals</bold>."
+                tooltip: "S'han detectat taxes d'<bold>errors significatives a l'aplicació</bold> o en algun subsistema crític."
             },
             MAINTENANCE: {
                 title: "Manteniment",
@@ -23,25 +23,25 @@ const translationCa = {
             },
             UNKNOWN: {
                 title: "Desconegut",
-                tooltip: "<bold>No teniu informació</bold> sobre l'estat de l'aplicació."
+                tooltip: "<bold>No es disposa d'informació</bold> sobre l'estat de l'aplicació."
             },
             ERROR: {
                 title: "Error",
-                tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>errors greus en el funcionament</underline>."
+                tooltip: "S'han detectat <bold>taxes altes d'errors</bold> a l'aplicació o en algun subsistema crític que està fallant."
             },
         },
         integracioEstat: {
             UP: {
-                tooltip: "L'aplicació funciona <bold>correctament</bold>. <br> La taxa de <italic>errors detectats</italic> és <underline>inferior al 5%</underline>."
+                tooltip: "L'aplicació funciona <bold>correctament</bold>. <br> La taxa de <italic>errors detectats</italic> és <underline>inferior al 10%</underline>."
             },
             WARN: {
-                tooltip: "La taxa <italic>errors detectats</italic> està <underline>entre el 5% i el 10%</underline>."
+                tooltip: "La taxa <italic>errors detectats</italic> està <underline>entre el 10% i el 20%</underline>."
             },
             DOWN: {
-                tooltip: "<bold>S'han detectat errors</bold>. <br> La <italic>taxa de errors detectats</italic> és <underline>superior al 30%</underline>."
+                tooltip: "<bold>S'han detectat errors</bold>. <br> La <italic>taxa de errors detectats</italic> és <underline>superior al 50%</underline>."
             },
             DEGRADED: {
-                tooltip: "<bold>Hi ha errors puntuals</bold>. <br> La <italic>taxa d'errors detectats</italic> està <underline>entre el 10% i el 30%</underline>."
+                tooltip: "<bold>Hi ha errors puntuals</bold>. <br> La <italic>taxa d'errors detectats</italic> està <underline>entre el 20% i el 50%</underline>."
             },
             MAINTENANCE: {
                 tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>tasques de manteniment</underline>."

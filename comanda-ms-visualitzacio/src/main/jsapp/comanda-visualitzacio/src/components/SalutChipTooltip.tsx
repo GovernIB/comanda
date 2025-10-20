@@ -51,7 +51,7 @@ const getPrefixByField = (field: SalutField): string => {
     case SalutField.INTEGRACIO_ESTAT:
       return ENUM_INTEGRACIO_ESTAT_PREFIX;
     default:
-      return ENUM_APP_ESTAT_PREFIX; // valor por defecto por si acaso
+      return ENUM_APP_ESTAT_PREFIX;
   }
 };
 
