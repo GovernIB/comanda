@@ -21,6 +21,7 @@ import { MarkPlot } from '@mui/x-charts/LineChart';
 import {
     useResourceApiService,
     dateFormatLocale,
+    springFilterBuilder as builder,
 } from 'reactlib';
 import { toReportInterval } from '../components/SalutToolbar';
 import UpdownBarChart, { getEstatsMaxData } from '../components/UpdownBarChart';
@@ -140,7 +141,10 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number ) => {
                         'SAL_MISSATGES',
                         'SAL_DETALLS',
                     ],
-                    filter: 'entornAppId : ' + entornAppId,
+                    filter: builder.and(
+                        builder.eq('tipusRegistre', `'MINUT'`),
+                        builder.eq('entornAppId', `'${entornAppId}'`),
+                    ),
                 };
                 const { rows } = await salutApiFind(findArgs);
                 const salutCurrentApp: SalutModel = rows?.[0];
