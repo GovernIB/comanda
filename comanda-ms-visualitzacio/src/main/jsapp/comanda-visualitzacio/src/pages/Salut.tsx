@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { Activity, FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { SalutModel } from '../types/salut.model';
 import { BasePage, springFilterBuilder, useResourceApiService } from 'reactlib';
 import { BaseEntity } from '../types/base-entity.model';
@@ -341,7 +341,7 @@ const Salut: FunctionComponent = () => {
                 />
             }
         >
-            {!isAppInfoRouteActive ? (
+            <Activity mode={isAppInfoRouteActive ? 'hidden' : 'visible'}>
                 <SalutLlistat
                     apps={salutData.apps}
                     entorns={salutData.entorns}
@@ -351,9 +351,13 @@ const Salut: FunctionComponent = () => {
                     grupsDates={salutData.grupsDates}
                     {...salutLlistatState}
                 />
-            ) : (
-                // TODO Persistir estado de expansión al cambiar a AppInfo
-                <SalutAppInfo appInfoData={appInfoData} ready={appInfoData.ready} grupsDates={salutData.grupsDates} />
+            </Activity>
+            {isAppInfoRouteActive && (
+                <SalutAppInfo
+                    appInfoData={appInfoData}
+                    ready={appInfoData.ready}
+                    grupsDates={salutData.grupsDates}
+                />
             )}
         </BasePage>
     );
