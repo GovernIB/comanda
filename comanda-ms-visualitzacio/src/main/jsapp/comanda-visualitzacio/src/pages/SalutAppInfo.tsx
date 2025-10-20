@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
-import Collapse from '@mui/material/Collapse';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -24,8 +23,8 @@ import {
     springFilterBuilder as builder,
 } from 'reactlib';
 import { toReportInterval } from '../components/SalutToolbar';
-import UpdownBarChart, { getEstatsMaxData } from '../components/UpdownBarChart';
-import { generateDataGroups, isDataInGroup, toXAxisDataGroups } from '../util/dataGroup';
+import UpdownBarChart from '../components/UpdownBarChart';
+import { isDataInGroup, toXAxisDataGroups } from '../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
 import {
     ChartsXAxis,
@@ -41,6 +40,7 @@ import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 import { Alert, Tooltip } from '@mui/material';
 import { useCallback, useEffect } from 'react';
+import { EntornAppModel } from '../types/app.model.tsx';
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -53,13 +53,23 @@ export const ErrorBoundaryFallback = () => {
     }} color="error">{t('page.salut.latencia.error')}</Typography>
 }
 
+// es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem
+type SalutInformeLatenciaItem = {
+    data: string;
+    latenciaMitja: number;
+};
+
 interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
-    entornApp: any;
+    entornApp: EntornAppModel | null;
     estats: Record<string, any> | null;
-    latencies: any[] | null;
+    latencies: SalutInformeLatenciaItem[] | null;
     salutCurrentApp: SalutModel | null;
-    reportParams: any;
+    reportParams: {
+        dataInici: any;
+        dataFi: any;
+        agrupacio: string
+    };
     error?: any;
     grupsDates: string[] | null;
 }
@@ -254,8 +264,12 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
     </Card>;
 }
 
-const LatenciaLineChart: React.FC<any> = (props) => {
-    const { dataInici, agrupacio, latencies, estats, grupsDates } = props;
+const LatenciaLineChart: React.FC<{
+    agrupacio: string;
+    latencies: SalutInformeLatenciaItem[];
+    grupsDates: string[];
+}> = (props) => {
+    const { agrupacio, latencies, grupsDates: baseDataGroups } = props;
     const { t } = useTranslation();
     if (!latencies || latencies.length === 0) {
         return <Card variant="outlined" sx={{ height: '300px' }}>
@@ -275,14 +289,11 @@ const LatenciaLineChart: React.FC<any> = (props) => {
             </CardContent>
         </Card>;
     }
-    const estatsMaxData = getEstatsMaxData(estats);
-    // const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
-    const baseDataGroups = grupsDates;
     const seriesDataLatencia = baseDataGroups.map((group) => {
-        return latencies.find((latenciaData: any) => {
+        return latencies.find((latenciaData) => {
             if (!latenciaData || !latenciaData.data) return false;
             return isDataInGroup(latenciaData.data, group, agrupacio);
-        })?.latenciaMitja;
+        })?.latenciaMitja ?? null;
     });
     const lineSeries: LineSeriesType[] = [
         {
@@ -670,13 +681,11 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
                         <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            {reportParams != null && latencies != null && estats != null && (
+                            {reportParams != null && latencies != null && estats != null && grupsDates != null && (
                                 <>
                                     <LatenciaLineChart
-                                        dataInici={reportParams.dataInici}
                                         agrupacio={reportParams.agrupacio}
                                         latencies={latencies}
-                                        estats={estats}
                                         grupsDates={grupsDates}
                                     />
                                 </>

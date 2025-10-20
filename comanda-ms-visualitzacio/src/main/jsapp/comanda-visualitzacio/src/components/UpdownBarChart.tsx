@@ -12,18 +12,6 @@ export type UpdownBarChartProps = {
     grupsDates: string[];
 }
 
-export const getEstatsMaxData = (estats: any) => {
-    let estatsMaxData = estats?.[estats.length - 1]?.data;
-    const estatApps = Object.keys(estats);
-    estatApps?.forEach((a: any) => {
-        const maxData = estats[a][estats[a].length - 1]?.data;
-        if (estatsMaxData == null || maxData > estatsMaxData) {
-            estatsMaxData = maxData;
-        }
-    });
-    return estatsMaxData;
-}
-
 export const calculateEstatsSeries = (
     baseDataGroups: string[],
     estats: Record<string, any[]>,
@@ -58,7 +46,6 @@ const UpdownBarChart: React.FC<UpdownBarChartProps> = (props) => {
         grupsDates,
     } = props;
     const { t } = useTranslation();
-    const estatsMaxData = getEstatsMaxData(estats);
     // const baseDataGroups = generateDataGroups(dataInici, estatsMaxData, agrupacio);
     const baseDataGroups = grupsDates;
 
