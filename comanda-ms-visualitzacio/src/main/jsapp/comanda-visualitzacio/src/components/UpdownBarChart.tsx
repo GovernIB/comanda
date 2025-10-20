@@ -36,7 +36,7 @@ const UpdownBarChart: React.FC<{
     agrupacio: string;
     estats: SalutData['estats'];
     grupsDates: string[];
-}> = (props) => {
+}> = React.memo((props) => {
     const { agrupacio, estats, grupsDates: baseDataGroups } = props;
     const { t } = useTranslation();
 
@@ -133,6 +133,6 @@ const UpdownBarChart: React.FC<{
             />
         )
     );
-};
+});
 
 export default UpdownBarChart;

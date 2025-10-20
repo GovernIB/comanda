@@ -56,7 +56,7 @@ function PieCenterLabel({ children }: { children: React.ReactNode }) {
     );
 }
 
-const UpdownPieChart: React.FC<{ salutLastItems: SalutModel[] }> = (props) => {
+const UpdownPieChart: React.FC<{ salutLastItems: SalutModel[] }> = React.memo((props) => {
     const { salutLastItems } = props;
     const { t } = useTranslation();
 
@@ -151,7 +151,7 @@ const UpdownPieChart: React.FC<{ salutLastItems: SalutModel[] }> = (props) => {
             <PieCenterLabel> {salutLastItems.length}</PieCenterLabel>
         </PieChart>
     );
-};
+});
 
 const AppDataTable: React.FC<{
     salutLastItems: SalutModel[];
@@ -160,7 +160,7 @@ const AppDataTable: React.FC<{
     entornApps: EntornAppModel[];
     groupedApp?: AppModel;
     groupedEntorn?: EntornModel;
-}> = (props) => {
+}> = React.memo((props) => {
     const { salutLastItems, apps, entorns, entornApps, groupedApp, groupedEntorn } = props;
     const { t } = useTranslation();
     const { getLinkComponent } = useBaseAppContext();
@@ -497,7 +497,7 @@ const AppDataTable: React.FC<{
             }}
         />
     );
-};
+});
 
 export const SalutWidgetTitle: React.FC<{
     app?: AppModel;
