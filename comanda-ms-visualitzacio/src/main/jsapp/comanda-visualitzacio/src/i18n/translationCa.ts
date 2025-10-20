@@ -32,25 +32,25 @@ const translationCa = {
         },
         integracioEstat: {
             UP: {
-                tooltip: "L'aplicació funciona <bold>correctament</bold>. <br> La taxa de <italic>errors detectats</italic> és <underline>inferior al 10%</underline>."
+                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les últimes peticions"
             },
             WARN: {
-                tooltip: "La taxa <italic>errors detectats</italic> està <underline>entre el 10% i el 20%</underline>."
-            },
-            DOWN: {
-                tooltip: "<bold>S'han detectat errors</bold>. <br> La <italic>taxa de errors detectats</italic> és <underline>superior al 50%</underline>."
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les últimes peticions"
             },
             DEGRADED: {
-                tooltip: "<bold>Hi ha errors puntuals</bold>. <br> La <italic>taxa d'errors detectats</italic> està <underline>entre el 20% i el 50%</underline>."
-            },
-            MAINTENANCE: {
-                tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>tasques de manteniment</underline>."
-            },
-            UNKNOWN: {
-                tooltip: "<bold>No teniu informació</bold> sobre l'estat de l'aplicació."
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les últimes peticions",
             },
             ERROR: {
-                tooltip: "L'aplicació <bold>no està disponible</bold> per <underline>errors greus en el funcionament</underline>."
+                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les últimes peticions"
+            },
+            DOWN: {
+                tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les últimes peticions",
+            },
+            MAINTENANCE: {
+                tooltip: "Sense informació del servei degut a tasques de <bold>manteniment</bold>",
+            },
+            UNKNOWN: {
+                tooltip: "No es disposa d'informació de l'estat del servei",
             },
         }
     },

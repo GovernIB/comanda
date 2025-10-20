@@ -32,27 +32,27 @@ const translationEs = {
         },
         integracioEstat: {
             UP: {
-                tooltip: "La aplicación funciona <bold>correctamente</bold>. <br> La tasa de <italic>errores detectados</italic> es <underline>inferior al 10%</underline>."
+                tooltip: "Servicio <bold>operativo</bold>.<br> Sin errores o con una tasa de errores <underline>inferior al 10%</underline> en las últimas peticiones"
             },
             WARN: {
-                tooltip: "La tasa de <italic>errores detectados</italic> está <underline>entre el 10% y el 20%</underline>."
-            },
-            DOWN: {
-                tooltip: "<bold>Se han detectado errores</bold>. <br> La <italic>tasa de errores detectados</italic> es <underline>superior al 50%</underline>."
+                tooltip: "Servicio con una tasa de errores <underline>entre el 10% y el 20%</underline> en las últimas peticiones"
             },
             DEGRADED: {
-                tooltip: "<bold>Existen errores puntuales</bold>. <br> La <italic>tasa de errores detectados</italic> está <underline>entre el 20% y el 50%</underline>."
-            },
-            MAINTENANCE: {
-                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>tareas de mantenimiento</underline>."
-            },
-            UNKNOWN: {
-                tooltip: "<bold>No se dispone de información</bold> acerca del estado de la aplicación."
+                tooltip: "Servicio con una tasa de errores <underline>entre el 20% y el 50%</underline> en las últimas peticiones",
             },
             ERROR: {
-                tooltip: "La aplicación <bold>no está disponible</bold> debido a <underline>errores graves en el funcionamiento</underline>."
+                tooltip: "Servicio con una <bold>alta tasa de errores</bold>, <underline>superior al 50%</underline> en las últimas peticiones"
             },
-        }
+            DOWN: {
+                tooltip: "Servicio <bold>no operativo</bold>. Tasa de errores del <underline>100%</underline> en las últimas peticiones",
+            },
+            MAINTENANCE: {
+                tooltip: "Sin información del servicio debido a tareas de <bold>mantenimiento</bold>",
+            },
+            UNKNOWN: {
+                tooltip: "No se dispone de información sobre el estado del servicio",
+            },
+        },
     },
     menu: {
         salut: "Salud",

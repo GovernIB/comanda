@@ -32,25 +32,25 @@ const translationEn = {
         },
         integracioEstat: {
             UP: {
-                tooltip: "The application is working <bold>correctly</bold>. <br> The rate of <italic>detected errors</italic> is <underline>less than 10%</underline>."
+                tooltip: "Service <bold>operational</bold>.<br> No errors or an error rate <underline>below 10%</underline> in the last requests"
             },
             WARN: {
-                tooltip: "The rate of <italic>detected errors</italic> is <underline>between 10% and 20%</underline>."
-            },
-            DOWN: {
-                tooltip: "<bold>Errors have been detected</bold>. <br> The <italic>errors detected</italic> rate is <underline>greater than 50%</underline>."
+                tooltip: "Service with an error rate <underline>between 10% and 20%</underline> in the last requests"
             },
             DEGRADED: {
-                tooltip: "<bold>There are occasional errors</bold>. <br> The <italic>rate of detected errors</italic> is <underline>between 20% and 50%</underline>."
-            },
-            MAINTENANCE: {
-                tooltip: "The application <bold>is unavailable</bold> due to <underline>maintenance</underline>."
-            },
-            UNKNOWN: {
-                tooltip: "<bold>No information available</bold> about the application status."
+                tooltip: "Service with an error rate <underline>between 20% and 50%</underline> in the last requests",
             },
             ERROR: {
-                tooltip: "The application <bold>is unavailable</bold> due to <underline>serious operational errors</underline>."
+                tooltip: "Service with a <bold>high error rate</bold>, <underline>above 50%</underline> in the last requests"
+            },
+            DOWN: {
+                tooltip: "Service <bold>not operational</bold>. Error rate of <underline>100%</underline> in the last requests",
+            },
+            MAINTENANCE: {
+                tooltip: "Service information unavailable due to <bold>maintenance</bold> tasks",
+            },
+            UNKNOWN: {
+                tooltip: "No information about the service status is available",
             },
         },
     },
