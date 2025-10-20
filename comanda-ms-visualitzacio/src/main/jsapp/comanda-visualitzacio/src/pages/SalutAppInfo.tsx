@@ -22,6 +22,7 @@ import {
     BasePage,
     useResourceApiService,
     dateFormatLocale,
+    springFilterBuilder as builder,
 } from 'reactlib';
 import SalutToolbar from '../components/SalutToolbar';
 import UpdownBarChart, { getEstatsMaxData } from '../components/UpdownBarChart';
@@ -128,7 +129,10 @@ const useAppData = (id: any) => {
                         'SAL_MISSATGES',
                         'SAL_DETALLS',
                     ],
-                    filter: 'entornAppId : ' + entornAppId,
+                    filter: builder.and(
+                        builder.eq('tipusRegistre', `'MINUT'`),
+                        builder.eq('entornAppId', `'${entornAppId}'`),
+                    ),
                 };
                 const { rows } = await salutApiFind(findArgs);
                 const salutCurrentApp: SalutModel = rows?.[0];
