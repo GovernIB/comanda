@@ -10,6 +10,8 @@ import {
     GridApiPro,
     GridColumnHeaderTitle,
 } from '@mui/x-data-grid-pro';
+import { MuiDataGridProps, useResourceApiService } from 'reactlib';
+import { GridGroupNode } from '@mui/x-data-grid';
 
 export const useTreeData = (
     getTreeDataPath: (row: any) => string[],
@@ -30,8 +32,8 @@ export const useTreeData = (
                     onChange={event => setTreeView(event.target.checked)}/>
             }/>
     </FormGroup>;
-    const isGroupExpandedByDefault = React.useCallback(
-        () => expandedByDefault,
+    const isGroupExpandedByDefault: (node: GridGroupNode) => boolean = React.useCallback(
+        () => expandedByDefault ?? false,
         [expandedByDefault]
     );
     const groupingColDef = React.useMemo(() => ({
@@ -66,14 +68,14 @@ export const useTreeData = (
             ...groupingColDefAdditionalProps
         }
     ), [gridApiRef, groupingColDefAdditionalProps, headerFlex, headerName]);
-    const dataGridProps = treeView ? {
-        treeData: true as true,
-        autoHeight: true as true,
+    const dataGridProps: Partial<MuiDataGridProps> = treeView ? {
+        treeData: true,
+        autoHeight: true,
         isGroupExpandedByDefault,
         getTreeDataPath,
         groupingColDef,
     } : {
-        paginationActive: true as true,
+        paginationActive: true,
     };
     return {
         treeView,

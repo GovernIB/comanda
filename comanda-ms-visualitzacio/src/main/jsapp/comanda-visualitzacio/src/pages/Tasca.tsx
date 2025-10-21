@@ -9,6 +9,7 @@ import {
     useFilterApiRef,
     MuiDataGridColDef,
     BasePage,
+    useAuthContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -20,10 +21,14 @@ import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
 import { GridSortModel, useGridApiRef } from '@mui/x-data-grid-pro';
 import dayjs from 'dayjs';
+import { SxProps } from '@mui/material';
 
-export const StyledPrioritat = (props: any) => {
+export const StyledPrioritat = (props: {
+    entity: any;
+    children?: React.ReactNode;
+}) => {
     const {entity, children} = props;
-    let style: any = {};
+    let style: SxProps = {};
     switch (entity?.prioritat) {
         case 'MAXIMA':
             style = { backgroundColor: '#d99b9d' }
@@ -52,21 +57,37 @@ export const StyledPrioritat = (props: any) => {
         }}>{children}</Typography>;
 }
 
-const TascaFilter = (props: any) => {
+const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
     const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
+    const [ownTasksOnly, setOwnTasksOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
     const moreFormApiRef = useFormApiRef();
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear({ finalitzada: unfinishedOnly });
+        moreFilterApiRef?.current?.clear({ finalitzada: unfinishedOnly, tascaPropia: ownTasksOnly });
     }
     React.useEffect(() => {
         moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
     }, [unfinishedOnly]);
+    React.useEffect(() => {
+        moreFormApiRef.current?.setFieldValue('tascaPropia', ownTasksOnly);
+    }, [ownTasksOnly]);
+
+    // TODO Recuperar el nombre de usuario usando el contexto de usuario que hay en la rama comanda-wip
+    const [tokenParsed, setTokenParsed] = React.useState<{
+        name: string;
+        preferred_username: string;
+    }>();
+    const { getTokenParsed } = useAuthContext();
+    React.useEffect(() => {
+        setTokenParsed(getTokenParsed());
+    }, []);
+    const currentUsername = tokenParsed?.preferred_username;
+
     return <>
         <MuiFilter
             apiRef={appEntornFilterApiRef}
@@ -94,6 +115,14 @@ const TascaFilter = (props: any) => {
                     sx={{ mr: 2 }}>
                     <Icon>pending_actions</Icon>
                 </Button>
+                <Button
+                    onClick={() => setOwnTasksOnly(value => !value)}
+                    disabled={!currentUsername}
+                    variant={ownTasksOnly ? 'contained' : 'outlined'}
+                    title={ownTasksOnly ? t('page.tasques.filter.ownTasksOnlyEnabled') : t('page.tasques.filter.ownTasksOnlyDisabled')}
+                    sx={{ mr: 2 }}>
+                    <Icon>person</Icon>
+                </Button>
                 <IconButton
                     onClick={netejar}
                     title={t('components.clear')}
@@ -112,7 +141,7 @@ const TascaFilter = (props: any) => {
             formApiRef={moreFormApiRef}
             resourceName="tasca"
             code="FILTER"
-            initialData={{ finalitzada: unfinishedOnly }}
+            initialData={{ finalitzada: unfinishedOnly, tascaPropia: ownTasksOnly }}
             springFilterBuilder={data => springFilterBuilder.and(
                 springFilterBuilder.eq('appId', data?.appId?.id),
                 springFilterBuilder.eq('entornId', data?.entornId?.id),
@@ -127,6 +156,7 @@ const TascaFilter = (props: any) => {
                 data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1)}'`),
                 data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2)}'`),
                 data?.finalitzada && springFilterBuilder.eq('dataFi', null),
+                data?.tascaPropia && currentUsername && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
             )}
             onSpringFilterChange={onSpringFilterChange}
             commonFieldComponentProps={{ size: 'small' }}>

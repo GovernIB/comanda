@@ -275,6 +275,8 @@ const translationEn = {
                 more: "More fields",
                 unfinishedOnlyDisabled: "Show only unfinished tasks (disabled)",
                 unfinishedOnlyEnabled: "Show only unfinished tasks (enabled)",
+                ownTasksOnlyDisabled: "Show only my tasks (disabled)",
+                ownTasksOnlyEnabled: "Show only my tasks (enabled)",
             },
             grid: {
                 groupHeader: "Name",
