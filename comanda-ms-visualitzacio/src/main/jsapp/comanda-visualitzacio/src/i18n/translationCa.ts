@@ -259,6 +259,8 @@ const translationCa = {
                 more: "Més camps",
                 unfinishedOnlyDisabled: "Visualitzar únicament les tasques pendents (desactivat)",
                 unfinishedOnlyEnabled: "Visualitzar únicament les tasques pendents (activat)",
+                ownTasksOnlyDisabled: "Visualitzar únicament les meves tasques (desactivat)",
+                ownTasksOnlyEnabled: "Visualitzar únicament les meves tasques (activat)",
             },
             grid: {
                 groupHeader: "Nom",

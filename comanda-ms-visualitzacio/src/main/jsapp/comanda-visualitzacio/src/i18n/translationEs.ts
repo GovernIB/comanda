@@ -259,6 +259,8 @@ const translationEs = {
                 more: "Más campos",
                 unfinishedOnlyDisabled: "Visualizar únicamente las tareas pendientes (desactivado)",
                 unfinishedOnlyEnabled: "Visualizar únicamente las tareas pendientes (activado)",
+                ownTasksOnlyDisabled: "Visualizar únicamente mis tareas (desactivado)",
+                ownTasksOnlyEnabled: "Visualizar únicamente mis tareas (activado)",
             },
             grid: {
                 groupHeader: "Nombre",
