@@ -22,6 +22,7 @@ import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
 import { GridSortModel, useGridApiRef } from '@mui/x-data-grid-pro';
 import dayjs from 'dayjs';
 import { SxProps } from '@mui/material';
+import { useUserContext } from '../components/UserContext';
 
 export const StyledPrioritat = (props: {
     entity: any;
@@ -60,6 +61,7 @@ export const StyledPrioritat = (props: {
 const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
+    const { user } = useUserContext();
     const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [ownTasksOnly, setOwnTasksOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
@@ -77,16 +79,7 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
         moreFormApiRef.current?.setFieldValue('tascaPropia', ownTasksOnly);
     }, [ownTasksOnly]);
 
-    // TODO Recuperar el nombre de usuario usando el contexto de usuario que hay en la rama comanda-wip
-    const [tokenParsed, setTokenParsed] = React.useState<{
-        name: string;
-        preferred_username: string;
-    }>();
-    const { getTokenParsed } = useAuthContext();
-    React.useEffect(() => {
-        setTokenParsed(getTokenParsed());
-    }, []);
-    const currentUsername = tokenParsed?.preferred_username;
+    const currentUserCodi = user?.codi;
 
     return <>
         <MuiFilter
@@ -117,7 +110,7 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
                 </Button>
                 <Button
                     onClick={() => setOwnTasksOnly(value => !value)}
-                    disabled={!currentUsername}
+                    disabled={!currentUserCodi}
                     variant={ownTasksOnly ? 'contained' : 'outlined'}
                     title={ownTasksOnly ? t('page.tasques.filter.ownTasksOnlyEnabled') : t('page.tasques.filter.ownTasksOnlyDisabled')}
                     sx={{ mr: 2 }}>
@@ -156,7 +149,7 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
                 data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1)}'`),
                 data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2)}'`),
                 data?.finalitzada && springFilterBuilder.eq('dataFi', null),
-                data?.tascaPropia && currentUsername && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
+                data?.tascaPropia && currentUserCodi && springFilterBuilder.eq('responsable', `'${currentUserCodi}'`),
             )}
             onSpringFilterChange={onSpringFilterChange}
             commonFieldComponentProps={{ size: 'small' }}>
