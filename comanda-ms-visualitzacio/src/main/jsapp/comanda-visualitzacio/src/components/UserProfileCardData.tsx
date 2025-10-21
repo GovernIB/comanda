@@ -1,6 +1,7 @@
-import { Card, CardContent, CardHeader, Grid, Typography } from '@mui/material';
+import { Card, CardContent, CardHeader, Grid, SxProps, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
+import { ReactNode } from 'react';
 
 const cardBorder = { border: '1px solid #e3e3e3', borderRadius: '4px' };
 const cardHeader = { backgroundColor: '#f5f5f5', borderBottom: '1px solid #e3e3e3' };
@@ -11,7 +12,16 @@ const iconButton = {
     border: '1px solid grey',
 };
 
-const CardButton = (props: any) => {
+type CardButtonProps = {
+    text: string;
+    icon: string;
+    onClick: () => void;
+    flex: number;
+    buttonProps: SxProps;
+    hidden: boolean;
+};
+
+const CardButton = (props: CardButtonProps) => {
     const { text, icon, onClick, flex, buttonProps, hidden } = props;
 
     if (hidden) {
@@ -19,11 +29,13 @@ const CardButton = (props: any) => {
     }
 
     return (
-        <Grid size={flex ?? 12} sx={{
-            display: 'flex',
-            justifyContent: 'end',
-
-        }}>
+        <Grid
+            size={flex ?? 12}
+            sx={{
+                display: 'flex',
+                justifyContent: 'end',
+            }}
+        >
             <IconButton sx={{ ...iconButton, ...buttonProps }} title={text} onClick={onClick}>
                 <Typography
                     sx={{ display: 'flex', alignItems: 'center' }}
@@ -38,11 +50,17 @@ const CardButton = (props: any) => {
     );
 };
 
-const isEmpty = (value: any[]) => {
-    return !value || value?.length === 0 || value?.every?.((item: any) => !item);
-};
-
-export const UserProfileCardData = (props: any) => {
+export const UserProfileCardData = (props: {
+    icon: ReactNode;
+    title: string;
+    header?: ReactNode;
+    children?: ReactNode;
+    xs?: number;
+    hidden?: boolean;
+    buttons?: CardButtonProps[];
+    cardProps: SxProps;
+    headerProps?: SxProps;
+}) => {
     const {
         icon,
         title,
@@ -50,14 +68,13 @@ export const UserProfileCardData = (props: any) => {
         children,
         xs,
         hidden,
-        hiddenIfEmpty,
         buttons,
         cardProps,
         headerProps = cardHeader,
         ...other
     } = props;
 
-    if (hidden || (hiddenIfEmpty && isEmpty(children))) {
+    if (hidden) {
         return <></>;
     }
 
@@ -78,9 +95,9 @@ export const UserProfileCardData = (props: any) => {
                 {header && <CardContent sx={headerProps}>{header}</CardContent>}
 
                 <CardContent hidden={!children}>
-                    <Grid container columnSpacing={1} rowSpacing={1} item xs={12} {...other}>
+                    <Grid container columnSpacing={1} rowSpacing={1} size={12} {...other}>
                         {children}
-                        {buttons?.map((button: any) => (
+                        {buttons?.map((button) => (
                             <CardButton key={button?.text} {...button} />
                         ))}
                     </Grid>
@@ -90,7 +107,12 @@ export const UserProfileCardData = (props: any) => {
     );
 };
 
-export const CardPage = (props: any) => {
+export const CardPage = (props: {
+    title: string;
+    header?: ReactNode;
+    headerProps?: { backgroundColor: string; borderBottom: string } | undefined;
+    children?: ReactNode;
+}) => {
     const { title, header, headerProps = cardHeader, children } = props;
     return (
         <Card
@@ -111,7 +133,16 @@ export const CardPage = (props: any) => {
     );
 };
 
-export const ContenidoData = (props: any) => {
+export const ContenidoData = (props: {
+    title: string;
+    titleXs: number;
+    children: ReactNode;
+    textXs: number;
+    xs: number;
+    componentTitleProps: SxProps;
+    componentTextProps: SxProps;
+    hidden: boolean;
+}) => {
     const {
         title,
         titleXs,
@@ -121,16 +152,15 @@ export const ContenidoData = (props: any) => {
         componentTitleProps,
         componentTextProps,
         hidden,
-        hiddenIfEmpty,
         ...other
     } = props;
 
-    if (hidden || (hiddenIfEmpty && isEmpty(children))) {
+    if (hidden) {
         return <></>;
     }
 
     return (
-        <Grid container direction={'row'} columnSpacing={1} item xs={xs ?? 12} {...other}>
+        <Grid container direction={'row'} columnSpacing={1} size={xs ?? 12} {...other}>
             <Grid size={titleXs ?? 4}>
                 <Typography variant={'body1'} color={'black'} sx={componentTitleProps}>
                     {title}
