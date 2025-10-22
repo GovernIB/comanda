@@ -8,6 +8,7 @@ import {
     useFormApiRef,
     useFilterApiRef,
     BasePage,
+    MuiDataGridColDef,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -18,22 +19,23 @@ import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
 import { useGridApiRef } from '@mui/x-data-grid-pro';
+import { SxProps } from '@mui/material';
 
-const AvisFilter = (props: any) => {
+const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
-    const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
+    const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
     const moreFormApiRef = useFormApiRef();
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear({ finalitzada: finishedOnly });
+        moreFilterApiRef?.current?.clear({ finalitzada: unfinishedOnly });
     }
     React.useEffect(() => {
-        moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
-    }, [finishedOnly]);
+        moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
+    }, [unfinishedOnly]);
     return <>
         <MuiFilter
             apiRef={appEntornFilterApiRef}
@@ -55,9 +57,9 @@ const AvisFilter = (props: any) => {
                     <Grid size={6}><FormField name="entorn" /></Grid>
                 </Grid>
                 <Button
-                    onClick={() => setFinishedOnly(fo => !fo)}
-                    variant={finishedOnly ? 'contained' : 'outlined'}
-                    title={t('page.avisos.filter.unfinished')}
+                    onClick={() => setUnfinishedOnly(fo => !fo)}
+                    variant={unfinishedOnly ? 'contained' : 'outlined'}
+                    title={unfinishedOnly ? t('page.avisos.filter.unfinishedOnlyEnabled') : t('page.avisos.filter.unfinishedOnlyDisabled')}
                     sx={{ mr: 2 }}>
                     <Icon>pending_actions</Icon>
                 </Button>
@@ -79,7 +81,7 @@ const AvisFilter = (props: any) => {
             formApiRef={moreFormApiRef}
             resourceName="avis"
             code="FILTER"
-            initialData={{ finalitzada: finishedOnly }}
+            initialData={{ finalitzada: unfinishedOnly }}
             springFilterBuilder={data => springFilterBuilder.and(
                 springFilterBuilder.eq('appId', data?.appId?.id),
                 springFilterBuilder.eq('entornId', data?.entornId?.id),
@@ -107,14 +109,14 @@ const AvisFilter = (props: any) => {
     </>;
 }
 
-const dataGridCommonColumns = [{
+const dataGridCommonColumns: MuiDataGridColDef[] = [{
     field: 'descripcio',
     flex: 1,
 }, {
     field: 'tipus',
     flex: 0.5,
-    renderCell: (param:any) => {
-        let style: any = {};
+    renderCell: (param) => {
+        let style: SxProps = {};
         switch (param?.row?.tipus) {
             case 'NOTICIA':
                 style = { backgroundColor: 'success.main', color: 'white' }
@@ -158,12 +160,24 @@ const Avis = () => {
         gridApiRef,
         t('page.avisos.grid.groupHeader'),
         1.5,
-        true,
-        true,
+        false,
+        false,
         { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
-    const columns = [
-        ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
-        ...(filter?.includes('dataFi is null') ? dataGridCommonColumns.slice(0, -1) : dataGridCommonColumns),
+    const columns: MuiDataGridColDef[] = [
+        ...(!treeView
+            ? [
+                  { field: 'nom', flex: 1 },
+                  {
+                      field: 'treePath',
+                      flex: 0.7,
+                      headerName: t('page.avisos.grid.column.appEntorn'),
+                      valueFormatter: (value: any) => `${value?.[0]} - ${value?.[1]}`,
+                  },
+              ]
+            : []),
+        ...(filter?.includes('dataFi is null')
+            ? dataGridCommonColumns.slice(0, -1)
+            : dataGridCommonColumns),
     ];
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
     // Se usa el componente BasePage para evitar posibles conflictos entre la suscripción de eventos y el estado "proceed" de GridPage

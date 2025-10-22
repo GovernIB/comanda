@@ -291,11 +291,14 @@ const translationEn = {
         avisos: {
             filter: {
                 more: "More fields",
-                finished: "Finished only",
-                unfinished: "Unfinished",
+                unfinishedOnlyDisabled: "Show only unfinished warnings (disabled)",
+                unfinishedOnlyEnabled: "Show only unfinished warnings (enabled)",
             },
             grid: {
                 groupHeader: "Name",
+                column: {
+                    appEntorn: "Application - Environment",
+                },
             }
         },
         alarmaConfig: {

@@ -293,11 +293,14 @@ const translationCa = {
         avisos: {
             filter: {
                 more: "Més camps",
-                finished: "Només finalitzats",
-                unfinished: "Pendents",
+                unfinishedOnlyDisabled: "Visualitzar únicament els avisos pendents (desactivat)",
+                unfinishedOnlyEnabled: "Visualitzar únicament els avisos pendents (activat)",
             },
             grid: {
                 groupHeader: "Nom",
+                column: {
+                    appEntorn: "Aplicació - Entorn",
+                },
             }
         },
         alarmaConfig: {

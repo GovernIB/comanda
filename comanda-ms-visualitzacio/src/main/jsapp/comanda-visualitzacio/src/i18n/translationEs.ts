@@ -293,11 +293,14 @@ const translationEs = {
         avisos: {
             filter: {
                 more: "Más campos",
-                finished: "Sólo finalitzados",
-                unfinished: "Pendientes",
+                unfinishedOnlyDisabled: "Visualizar únicamente los avisos pendientes (desactivado)",
+                unfinishedOnlyEnabled: "Visualizar únicamente los avisos pendientes (activado)",
             },
             grid: {
                 groupHeader: "Nombre",
+                column: {
+                    appEntorn: "Aplicación - Entorno",
+                },
             }
         },
         alarmaConfig: {

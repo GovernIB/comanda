@@ -9,7 +9,6 @@ import {
     useFilterApiRef,
     MuiDataGridColDef,
     BasePage,
-    useAuthContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
