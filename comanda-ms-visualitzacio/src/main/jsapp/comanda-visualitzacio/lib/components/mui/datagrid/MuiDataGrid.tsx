@@ -226,7 +226,10 @@ export type MuiDataGridProps = {
     datagridApiRef?: React.RefObject<GridApiPro | null>;
     /** Alçada del component en píxels */
     height?: number;
-    /** Indica si l'alçada del component s'ha d'ajustar al nombre de files que s'han de mostrar */
+    /**
+     * Indica si l'alçada del component s'ha d'ajustar al nombre de files que s'han de mostrar
+     * @warning Canviar aquest valor dinàmicament fa que el DataGrid de MUI es torni a montar de nou (l'estat intern i subscripcions a events es perden).
+     */
     autoHeight?: true;
     /** Indica que les files parells s'han de mostrar d'un color més oscur per a facilitar la seva lectura */
     striped?: true;
@@ -568,7 +571,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         ...otherProps
     } = { ...defaultMuiComponentProps.dataGrid, ...props };
     const logConsole = useLogConsole(LOG_PREFIX);
-    const datagridApiRef = useMuiDatagridApiRef();
+    const datagridApiRefInternal = useMuiDatagridApiRef();
+    const datagridApiRef = datagridApiRefProp ?? datagridApiRefInternal;
     const anyArtifactRowAction =
         rowAdditionalActions?.find((a) => a.action != null || a.report != null) != null;
     const treeDataAdditionalRowsIsFunction = treeDataAdditionalRows
@@ -594,9 +598,6 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         currentError: apiCurrentError,
         delete: apiDelete,
     } = useResourceApiService(resourceName);
-    if (datagridApiRefProp) {
-        datagridApiRefProp.current = datagridApiRef.current as any;
-    }
     const findArgs = React.useMemo(() => {
         const filter = staticFilter
             ? internalFilter

@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    GridPage,
     MuiDataGrid,
     MuiFilter,
     FormField,
     springFilterBuilder,
     useFormApiRef,
     useFilterApiRef,
+    BasePage,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -166,7 +166,8 @@ const Avis = () => {
         ...(filter?.includes('dataFi is null') ? dataGridCommonColumns.slice(0, -1) : dataGridCommonColumns),
     ];
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
-    return <GridPage>
+    // Se usa el componente BasePage para evitar posibles conflictos entre la suscripción de eventos y el estado "proceed" de GridPage
+    return <BasePage expandHeight style={{ height: '100%' }}>
         <MuiDataGrid
             title={t('menu.avis')}
             resourceName="avis"
@@ -182,7 +183,7 @@ const Avis = () => {
             toolbarAdditionalRow={filterElement}
             {...treeDataGridProps}
         />
-    </GridPage>;
+    </BasePage>;
 }
 
 export default Avis;

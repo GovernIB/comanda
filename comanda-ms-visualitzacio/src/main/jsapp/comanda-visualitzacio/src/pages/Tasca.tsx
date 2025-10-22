@@ -278,8 +278,10 @@ const Tasca = () => {
         hidden: (row: any) => !row?.id,
     }];
     const filterElement = <TascaFilter onSpringFilterChange={setFilter}/>;
+
+    // Se usa el componente BasePage para evitar posibles conflictos entre la suscripción de eventos y el estado "proceed" de GridPage
     return (
-        <BasePage expandHeight={!treeView} style={{ height: '100%' }}>
+        <BasePage expandHeight style={{ height: '100%' }}>
             <MuiDataGrid
                 title={t('menu.tasca')}
                 datagridApiRef={gridApiRef}
