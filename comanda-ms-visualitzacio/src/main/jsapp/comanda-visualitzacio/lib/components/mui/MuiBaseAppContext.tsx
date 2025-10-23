@@ -6,11 +6,11 @@ import { MuiFilterProps } from './form/MuiFilter';
 import { MuiDetailProps } from './detail/MuiDetail';
 
 export type DefaultMuiComponentProps = {
-    dataGrid?: Partial<MuiDataGridProps>,
-    dataList?: Partial<MuiDataListProps>,
-    form?: Partial<MuiFormProps>,
+    dataGrid?: Partial<MuiDataGridProps>;
+    dataList?: Partial<MuiDataListProps>;
+    form?: Partial<MuiFormProps>;
     filter?: Partial<MuiFilterProps>;
-    detail?: Partial<MuiDetailProps>,
+    detail?: Partial<MuiDetailProps>;
 };
 
 export type MuiBaseAppContextType = {

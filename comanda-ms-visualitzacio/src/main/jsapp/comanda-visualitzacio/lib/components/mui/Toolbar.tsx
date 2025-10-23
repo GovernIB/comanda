@@ -14,6 +14,7 @@ export type ToolbarProps = React.PropsWithChildren & {
     lovMode?: boolean;
     upperToolbar?: boolean;
     error?: boolean;
+    noFlexGrow?: true;
     sx?: any;
     elementsWithPositions?: ReactElementWithPosition[];
 };
@@ -25,6 +26,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         elementsWithPositions,
         upperToolbar,
         error,
+        noFlexGrow,
         sx: sxProp,
         children,
     } = props;
@@ -47,10 +49,9 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     ) : (
         <Typography variant="h6">{title}</Typography>
     );
+    const flexGrow = !noFlexGrow ? <div style={{ flexGrow: 1 }} /> : <></>;
     const toolbarElements: React.ReactElement[] =
-        title != null
-            ? [titleElement, <div style={{ flexGrow: 1 }} />]
-            : [<div style={{ flexGrow: 1 }} />];
+        title != null ? [titleElement, flexGrow] : [flexGrow];
     return (
         <>
             <MuiToolbar

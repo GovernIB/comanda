@@ -59,6 +59,7 @@ export { useDetailContext } from './components/detail/DetailContext';
 
 export { Toolbar } from './components/mui/Toolbar';
 export { TextAvatar, IconAvatar } from './components/mui/Avatars';
+export { CopyToClipboard } from './components/mui/CopyToClipboard';
 
 export { envVar } from './util/envVars';
 export { numberFormat, numberFormatCurrency } from './util/numberFormat';

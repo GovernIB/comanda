@@ -132,20 +132,18 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
     const { getLinkComponent } = useBaseAppContext();
     const [expanded, setExpanded] = React.useState<boolean>(selected ?? false);
     const itemButtonSx = {
-        minHeight: shrink ? 48 : 48,
+        minHeight: 48,
         justifyContent: !shrink ? 'initial' : 'center',
-        py: 0,
-        pl: 3,
-        pr: !shrink ? 1 : 3,
         '& :before':
-            (level ?? 0) > 0 && !shrink
+            level > 0 && !shrink
                 ? {
                       content: '""',
                       display: 'block',
                       position: 'absolute',
                       zIndex: '100',
-                      left: '34px',
-                      height: '70%',
+                      top: '0',
+                      left: '40px',
+                      height: '100%',
                       width: '2px',
                       opacity: '1',
                       background: selected ? 'hsl(210, 100%, 60%)' : 'hsl(215, 15%, 92%)',
@@ -193,7 +191,9 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
                     }
                     onClick={handleMenuItemClick}
                     sx={itemButtonSx}
-                    style={{ paddingLeft: level > 0 ? (3 + 2 * level) * 8 + 'px' : '40px' }}>
+                    style={{
+                        paddingLeft: shrink ? '40px' : 24 + 16 * level + (level > 0 ? 8 : 0) + 'px',
+                    }}>
                     {iconComponent}
                     <ListItemText primary={primary} sx={itemTextSx} />
                 </ListItemButton>
@@ -295,7 +295,11 @@ export const Menu: React.FC<MenuProps> = (props) => {
             onClose={() => setOpen(false)}
             sx={{
                 display: { sm: 'block', md: 'none' },
-                '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                    width: drawerWidth,
+                    boxSizing: 'border-box',
+                },
             }}>
             {drawerContent}
         </Drawer>

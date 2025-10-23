@@ -84,7 +84,7 @@ export type ActionReportLogicExecFn = (
 ) => void;
 
 export type ActionReportLogicResult = {
-    initialized: boolean;
+    available: boolean;
     apiLink: any;
     formDialogComponent: React.ReactElement;
     exec: ActionReportLogicExecFn;
@@ -215,7 +215,6 @@ export const useActionReportLogic = (
                 console.error("Couldn't generate report without code");
             }
         });
-    const dialogDisabled = formDialogContent == null;
     const [formDialogShow, formDialogComponent, formDialogClose] = useFormDialog(
         resourceName,
         action ? 'ACTION' : report ? 'REPORT' : undefined,
@@ -239,7 +238,7 @@ export const useActionReportLogic = (
         formAdditionalData?: any,
         formDialogComponentProps?: any
     ) => {
-        if (hasForm && !dialogDisabled) {
+        if (hasForm) {
             const formDialogTitle =
                 apiLink?.title ?? (action != null ? 'Exec ' + action : 'Generate ' + report);
             formDialogShow(id, {
@@ -281,7 +280,6 @@ export const useActionReportLogic = (
     };
     const [artifact, setArtifact] = React.useState<any>();
     const [apiLink, setApiLink] = React.useState<any>();
-    const initialized = artifact != null;
     const hasForm = artifact != null && artifact.formClassActive;
     React.useEffect(() => {
         if (action == null && report == null) {
@@ -316,7 +314,7 @@ export const useActionReportLogic = (
         }
     }, [apiIsReady]);
     return {
-        initialized,
+        available: artifact != null,
         apiLink,
         formDialogComponent,
         exec,
@@ -357,7 +355,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         iconComponentProps,
     } = props;
     const {
-        initialized,
+        available,
         apiLink,
         formDialogComponent,
         exec: handleButtonClick,
@@ -395,7 +393,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
             {icon != null && <Icon {...iconComponentProps}>{icon}</Icon>}
         </ButtonComponent>
     );
-    return initialized ? (
+    return available ? (
         <>
             {selectedCount ? (
                 <ButtonWithBadge selectedCount={selectedCount}>{button}</ButtonWithBadge>

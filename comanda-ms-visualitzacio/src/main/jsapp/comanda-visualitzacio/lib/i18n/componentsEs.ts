@@ -124,6 +124,11 @@ const componentsEs = {
             error: 'Error generando el informe',
         },
     },
+    copyToClipboard: {
+        copy: 'Copiar',
+        default: 'Contenido copiado al portapapeles',
+        error: 'Error copiando contenido en el portapapeles',
+    },
     buttons: {
         answerRequired: {
             accept: 'Aceptar',

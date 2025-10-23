@@ -223,7 +223,7 @@ export type MuiDataGridProps = {
     /** Referència a l'api del component */
     apiRef?: MuiDataGridApiRef;
     /** Referència a l'api interna del component DataGrid de MUI */
-    datagridApiRef?: React.RefObject<GridApiPro | null>;
+    datagridApiRef?: React.MutableRefObject<GridApiPro | null>;
     /** Alçada del component en píxels */
     height?: number;
     /**
@@ -586,7 +586,9 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
     const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel | undefined>(
         paginationModelProp
     );
-    const [footerAutoPageSize, setFooterAutoPageSize] = React.useState<boolean>(!(otherProps.pageSizeOptions != null && paginationModelProp != null));
+    const [footerAutoPageSize, setFooterAutoPageSize] = React.useState<boolean>(
+        !(otherProps.pageSizeOptions != null && paginationModelProp != null)
+    );
     const [rowSelectionModel, setRowSelectionModel] =
         React.useState<GridRowSelectionModel>(rowSelectionModelProp);
     const [additionalRows, setAdditionalRows] = React.useState<any[]>(

@@ -124,6 +124,11 @@ const componentsCa = {
             error: "Error generant l'informe",
         },
     },
+    copyToClipboard: {
+        copy: 'Copiar',
+        default: 'Contingut copiat al porta-retalls',
+        error: 'Error copiant contingut al porta-retalls',
+    },
     buttons: {
         answerRequired: {
             accept: 'Acceptar',

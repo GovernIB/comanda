@@ -121,6 +121,11 @@ const componentsEn = {
             error: 'Error generating report',
         },
     },
+    copyToClipboard: {
+        copy: 'Copy',
+        default: 'Content copied to clipboard',
+        error: 'Error copying content to clipboard',
+    },
     buttons: {
         answerRequired: {
             accept: 'Accept',
