@@ -137,6 +137,7 @@ const translationCa = {
             },
             info: {
                 title: "Informació",
+                versio: "Versió",
                 revisio: "Revisió",
                 jdk: {
                     versio: "Versió JDK",

@@ -135,6 +135,7 @@ const translationEn = {
             },
             info: {
                 title: "Information",
+                versio: "Version",
                 revisio: "Revision",
                 jdk: {
                     versio: "JDK version",

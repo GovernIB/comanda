@@ -137,6 +137,7 @@ const translationEs = {
             },
             info: {
                 title: "Información",
+                versio: "Versión",
                 revisio: "Revisión",
                 jdk: {
                     versio: "Versión JDK",

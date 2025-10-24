@@ -191,6 +191,7 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
         entornApp: entornApp,
     } = props;
     const { t } = useTranslation();
+    const versio = entornApp && <Typography>{entornApp.versio}</Typography>;
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
     const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
@@ -221,32 +222,36 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
             />
         </SalutGenericTooltip>
     </>;
-    return <Card variant="outlined" sx={{ height: '300px' }}>
+    return <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">{t('page.salut.info.title')}</Typography>
-            <Table size="small">
+            <Table size="small" sx={{ width: '100%', tableLayout: 'fixed'}}>
                 <TableBody>
                     <TableRow key={1}>
+                        <TableCell>{t('page.salut.info.versio')}</TableCell>
+                        <TableCell>{versio}</TableCell>
+                    </TableRow>
+                    <TableRow key={2}>
                         <TableCell>{t('page.salut.info.revisio')}</TableCell>
                         <TableCell>{revisio}</TableCell>
                     </TableRow>
-                    <TableRow key={2}>
+                    <TableRow key={3}>
                         <TableCell>{t('page.salut.info.jdk.versio')}</TableCell>
                         <TableCell>{jdk}</TableCell>
                     </TableRow>
-                    <TableRow key={3}>
+                    <TableRow key={4}>
                         <TableCell>{t('page.salut.info.data')}</TableCell>
                         <TableCell>{data}</TableCell>
                     </TableRow>
-                    <TableRow key={4}>
+                    <TableRow key={5}>
                         <TableCell>{t('page.salut.info.bdEstat')}</TableCell>
                         <TableCell>{bdEstat}</TableCell>
                     </TableRow>
-                    <TableRow key={5}>
+                    <TableRow key={6}>
                         <TableCell>{t('page.salut.info.appLatencia')}</TableCell>
                         <TableCell>{appLatencia}</TableCell>
                     </TableRow>
-                    <TableRow key={6}>
+                    <TableRow key={7}>
                         <TableCell>{t('page.salut.info.missatges')}</TableCell>
                         <TableCell>{missatges}</TableCell>
                     </TableRow>
@@ -264,7 +269,7 @@ const LatenciaLineChart: React.FC<{
     const { agrupacio, latencies, grupsDates: baseDataGroups } = props;
     const { t } = useTranslation();
     if (!latencies || latencies.length === 0) {
-        return <Card variant="outlined" sx={{ height: '300px' }}>
+        return <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent sx={{ height: '100%' }}>
                 <Typography gutterBottom variant="h5" component="div">{t('page.salut.latencia.title')}</Typography>
                 <Typography
@@ -296,7 +301,7 @@ const LatenciaLineChart: React.FC<{
         },
     ];
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
-    return <Card variant="outlined" sx={{ height: '300px' }}>
+    return <Card variant="outlined" sx={{ height: '350px' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">
                 {t('page.salut.latencia.title')}
@@ -329,7 +334,7 @@ const EstatsBarCard: React.FC<{
     const { grupsDates, agrupacio, estats } = props;
     const { t } = useTranslation();
     const hasData = estats && Object.keys(estats).length > 0;
-    return <Card variant="outlined" sx={{ height: '300px' }}>
+    return <Card variant="outlined" sx={{ height: '350px' }}>
         <CardContent sx={{ height: '100%' }}>
             <Typography gutterBottom variant="h5" component="div">
                 {t('page.salut.estats.title')}
@@ -509,7 +514,7 @@ const Contexts: React.FC<any> = (props) => {
                 {t('page.salut.contexts.noInfo')}
             </Typography>}
             {contexts?.length > 0 && <Table size="small">
-            <TableHead>
+                <TableHead>
                     <TableRow>
                         <TableCell>{t('page.salut.contexts.column.codi')}</TableCell>
                         <TableCell>{t('page.salut.contexts.column.nom')}</TableCell>
@@ -576,7 +581,7 @@ const DetallInfo: React.FC<any> = (props) => {
             {!detalls?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
                 {t('page.salut.detalls.noInfo')}
             </Typography>}
-            {detalls?.length > 0 && <Table size="small">
+            {detalls?.length > 0 && <Table size="small" sx={{ width: '100%', tableLayout: 'fixed'}}>
                 <TableBody>
                     {detalls.map((d: any) => <TableRow key={d.id}>
                         <TableCell sx={{minWidth: '165px'}}>{d.nom}</TableCell>
