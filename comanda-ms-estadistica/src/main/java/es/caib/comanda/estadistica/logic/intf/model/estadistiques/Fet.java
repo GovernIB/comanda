@@ -56,7 +56,8 @@ import java.util.Map;
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
-                        grantedPermissions = { PermissionEnum.READ }
+//                        TODO Llevar permís de WRITE però permetre l'execució de les accions
+                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
                 )
         },
         artifacts = {
