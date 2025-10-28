@@ -5,6 +5,7 @@ import es.caib.comanda.configuracio.logic.intf.validation.EntornAppExists;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig.ResourceSort;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
@@ -39,7 +40,11 @@ import java.util.List;
 @AllArgsConstructor
 @ResourceConfig(
 		descriptionField = "entornAppDescription",
-		quickFilterFields = { "entorn.codi", "entorn.nom" },
+		quickFilterFields = { "entorn.codi", "entorn.nom", "app.codi", "app.nom" },
+        defaultSortFields = {
+                @ResourceSort(field = "app.nom"),
+                @ResourceSort(field = "entorn.ordre")
+        },
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,

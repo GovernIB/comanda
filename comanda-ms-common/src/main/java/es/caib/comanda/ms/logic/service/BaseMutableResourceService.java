@@ -367,7 +367,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			return null;
 		}
 	}
-	private ID reorderGetParentId(E entity) {
+	protected ID reorderGetParentId(E entity) {
 		if (entity instanceof ReorderableEntity<?>) {
 			ReorderableEntity<ID> reorderableEntity = (ReorderableEntity<ID>)entity;
 			return reorderableEntity.getOrderParentId();
@@ -375,13 +375,16 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			return null;
 		}
 	}
-	private long reorderSetNextSequence(ReorderableEntity<ID> reorderableEntity, long index) {
-		Integer increment = reorderGetIncrement();
-		long nextValue = index * (increment != null ? increment : 1);
+	protected long reorderSetNextSequence(ReorderableEntity<ID> reorderableEntity, long index) {
+		long nextValue = reorderGetNextSequence(index);
 		reorderableEntity.setOrder(nextValue);
 		return nextValue;
 	}
-	private boolean reorderIfReorderable(
+	private long reorderGetNextSequence(long index) {
+		Integer increment = reorderGetIncrement();
+		return index * (increment != null ? increment : 1);
+	}
+	protected boolean reorderIfReorderable(
 			E entity,
 			Long sequenceForEntity,
 			ID previousParentId,
@@ -390,7 +393,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		boolean anyOrderChanged = false;
 		if (entity instanceof ReorderableEntity<?>) {
 			ReorderableEntity<ID> reorderableEntity = (ReorderableEntity<ID>)entity;
-			boolean reorderParentIdChanged = !Objects.equals(reorderableEntity.getOrderParentId(), previousParentId);
+			boolean parentIdChanged = !Objects.equals(reorderableEntity.getOrderParentId(), previousParentId);
 			log.debug("\tReordenant entitat {} amb la seqüència {} (previousParentId={})",
 					entity,
 					sequenceForEntity,
@@ -399,11 +402,11 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 					reorderableEntity,
 					sequenceForEntity,
 					reorderableEntity.getOrderParentId(),
-					reorderParentIdChanged,
+					parentIdChanged,
 					sameSequenceInsertBefore,
 					isDelete);
 			if (anyOrderChanged1) anyOrderChanged = true;
-			if (reorderParentIdChanged) {
+			if (parentIdChanged) {
 				boolean anyOrderChanged2 = reorderWithParentId(
 						null,
 						null,
@@ -416,11 +419,11 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		}
 		return anyOrderChanged;
 	}
-	private boolean reorderWithParentId(
+	protected boolean reorderWithParentId(
 			@Nullable ReorderableEntity<ID> reorderableEntity,
 			@Nullable Long sequenceForEntity,
 			@Nullable ID parentId,
-			boolean reorderParentIdChanged,
+			boolean parentIdChanged,
 			boolean sameSequenceInsertBefore,
 			boolean isDelete) {
 		boolean anyOrderChanged = false;
@@ -432,24 +435,32 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		long index = 1;
 		for (E value: linesToReorder) {
 			ReorderableEntity<ID> line = (ReorderableEntity<ID>)value;
-			if (!line.equals(reorderableEntity)) {
-				Long currentSequence = line.getOrder();
-				boolean insertHere = !reorderParentIdChanged && sequenceForEntity != null && (sameSequenceInsertBefore ?
-						currentSequence != null && currentSequence.compareTo(sequenceForEntity) >= 0 :
-						currentSequence != null && currentSequence.compareTo(sequenceForEntity) > 0);
-				if (!inserted && insertHere) {
-					long sequence = reorderSetNextSequence(reorderableEntity, index++);
-					log.debug("\tInsertant entitat {} amb ordre {}", reorderableEntity, sequence);
+			if (line.equals(reorderableEntity)) {
+				log.debug("\tIgnorant ordre de l'entitat {}", line);
+				continue;
+			}
+			Long sequence = null;
+			Long currentSequence = line.getOrder();
+			if (!inserted && !parentIdChanged) {
+				Integer compareTo = currentSequence != null && sequenceForEntity != null ?
+						currentSequence.compareTo(sequenceForEntity) : null;
+				boolean insertHere = compareTo != null && (sameSequenceInsertBefore ? compareTo >= 0 : compareTo > 0);
+				if (insertHere) {
+					if (reorderGetNextSequence(index) < sequenceForEntity) {
+						sequence = reorderSetNextSequence(line, index++);
+					}
+					long sequenceEntity = reorderSetNextSequence(reorderableEntity, index++);
+					log.debug("\tInsertant entitat {} amb ordre {}", reorderableEntity, sequenceEntity);
 					inserted = true;
 					anyOrderChanged = true;
 				}
-				long sequence = reorderSetNextSequence(line, index++);
-				log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, sequence, currentSequence);
-				if (currentSequence == null || sequence != currentSequence) {
-					anyOrderChanged = true;
-				}
-			} else {
-				log.debug("\tIgnorant ordre de l'entitat {}", line);
+			}
+			if (sequence == null) {
+				sequence = reorderSetNextSequence(line, index++);
+			}
+			log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, sequence, currentSequence);
+			if (currentSequence == null || !currentSequence.equals(sequence)) {
+				anyOrderChanged = true;
 			}
 		}
 		if (!inserted && reorderableEntity != null) {

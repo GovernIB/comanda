@@ -70,7 +70,13 @@ export const EntornAppSelector : React.FC<any> = (props) => {
         springFilterBuilder={() => ''}
         onDataChange={data => onEntornAppChange(data?.entornApp)}
         formApiRef={formApiRef}>
-            <FormField name="entornApp"/>
+            <FormField
+            name="entornApp"
+            advancedSearchResourceName="entornApp"
+            advancedSearchColumns={[{
+                field: 'entornAppDescription',
+                flex: 1,
+            }]} />
     </MuiFilter>;
 }
 

@@ -3,11 +3,13 @@ package es.caib.comanda.configuracio.logic.intf.model;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig.ResourceSort;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Sort;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -23,6 +25,8 @@ import javax.validation.constraints.Size;
 @ResourceConfig(
         quickFilterFields = { "codi", "nom" },
         descriptionField = "nom",
+        defaultSortFields = { @ResourceSort(field = "ordre") },
+        orderField = "ordre",
         accessConstraints = {
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
@@ -43,5 +47,6 @@ public class Entorn extends BaseResource<Long> {
     private String codi;
     @Size(max = 255)
     private String nom;
+    private Long ordre;
 
 }

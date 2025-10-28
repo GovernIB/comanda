@@ -5,10 +5,13 @@ import {
     GridPage,
     MuiGrid,
     FormField,
+    useResourceApiService,
 } from 'reactlib';
+import { GridRowOrderChangeParams } from '@mui/x-data-grid-pro';
 
 const Entorns: React.FC = () => {
     const { t } = useTranslation();
+    const {patch} = useResourceApiService('entorn');
     const columns = [
         {
             field: 'codi',
@@ -19,6 +22,9 @@ const Entorns: React.FC = () => {
             flex: 3,
         },
     ];
+    const onRowOrderChange = (params:GridRowOrderChangeParams) => {
+        patch(params?.row?.id, {data: {ordre: params?.targetIndex + 1 }})
+    }
     return <GridPage>
         <MuiGrid
             title={t('page.entorns.title')}
@@ -32,6 +38,8 @@ const Entorns: React.FC = () => {
                 <Grid size={8}></Grid>
                 <Grid size={12}><FormField name="nom" /></Grid>
             </Grid>}
+            rowReordering
+            onRowOrderChange={onRowOrderChange}
         />
     </GridPage>;
 };
