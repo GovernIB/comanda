@@ -82,11 +82,15 @@ const translationCa = {
                     title: "El meu perfil",
                     form: {
                         userData: "Dades de l'usuari",
-                        genericConfig: "Configuració genèrica"
-                    }
-                }
-            }
-        }
+                        genericConfig: "Configuració genèrica",
+                    },
+                    tema: {
+                        clar: "Clar",
+                        obscur: "Obscur",
+                    },
+                },
+            },
+        },
     },
     page: {
         salut: {

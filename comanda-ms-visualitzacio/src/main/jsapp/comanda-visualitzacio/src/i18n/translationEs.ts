@@ -82,8 +82,12 @@ const translationEs = {
                     title: "Mi perfil",
                     form: {
                         userData: "Datos del usuario",
-                        genericConfig: "Configuración genérica"
-                    }
+                        genericConfig: "Configuración genérica",
+                    },
+                    tema: {
+                        clar: "Claro",
+                        obscur: "Oscuro",
+                    },
                 }
             }
         }

@@ -1,8 +1,6 @@
 package es.caib.comanda.usuaris.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
-import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
@@ -41,6 +39,7 @@ public class Usuari extends BaseResource<Long> {
     private String emailAlternatiu;
     @NotNull
     private LanguageEnum idioma;
+    private Boolean temaObscur;
     private String[] rols;
 
     /************************************************ CONFIGURACIÓN GENÉRICA ******************************************/

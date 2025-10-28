@@ -80,8 +80,12 @@ const translationEn = {
                     title: "My profile",
                     form: {
                         userData: "User data",
-                        genericConfig: "Generic config"
-                    }
+                        genericConfig: "Generic config",
+                    },
+                    tema: {
+                        clar: "Light",
+                        obscur: "Dark",
+                    },
                 }
             }
         }

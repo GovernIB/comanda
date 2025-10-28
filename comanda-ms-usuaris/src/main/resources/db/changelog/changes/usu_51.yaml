@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: usu-change-51-01
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}usuari
+            columns:
+              - column:
+                  name: tema_obscur
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  remarks: Indica si l'usuari prefereix el tema fosc del frontal (mode clar/fosc)

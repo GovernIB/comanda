@@ -51,6 +51,8 @@ public class UsuariEntity extends BaseAuditableEntity<Usuari> {
     @Column(name="idioma", length = 2, nullable = false, columnDefinition = "VARCHAR(2) DEFAULT 'CA'")
     @Comment("Idioma del usuario")
     private LanguageEnum idioma;
+    @Column(name="tema_obscur")
+    private Boolean temaObscur;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "num_elements_pagina", length = 12, nullable = false, columnDefinition = "VARCHAR(12) DEFAULT 'AUTOMATIC'")

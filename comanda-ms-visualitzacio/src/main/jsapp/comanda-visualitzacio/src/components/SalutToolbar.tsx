@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -262,9 +261,13 @@ const SalutEntornAppFilterForm: React.FC = () => {
     return <Grid container spacing={2}>
         <Grid size={6}>
             <FormField name="app" componentProps={{ size: 'small', }}
-                       filter={springFilterBuilder.exists(
-                           springFilterBuilder.and(springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id))
-                       )}
+                       filter={
+                        springFilterBuilder.and(
+                            springFilterBuilder.eq('activa', true),
+                            springFilterBuilder.exists(
+                                springFilterBuilder.and(springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id))
+                            )
+                        )}
             />
         </Grid>
         <Grid size={6}>

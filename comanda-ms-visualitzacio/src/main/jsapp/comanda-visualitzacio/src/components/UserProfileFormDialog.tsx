@@ -1,9 +1,9 @@
 import React from 'react';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import { Icon } from '@mui/material';
+import { Icon, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import ListItemText from '@mui/material/ListItemText';
-import { FormField, MuiFormDialog } from 'reactlib';
+import { FormField, MuiFormDialog, useFormContext } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
 import { useTranslation } from 'react-i18next';
 import { UserProfileCardData } from './UserProfileCardData.tsx';
@@ -37,6 +37,36 @@ export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void }
             <ListItemText>{t('menu.user.options.profile.title')}</ListItemText>
         </MenuItem>
     );
+};
+
+export const TemaObscurSelector: React.FC = () => {
+  const { t } = useTranslation();
+  const { data, apiRef } = useFormContext();
+  const handleChange = (_event: any, newValue: boolean | null) => {
+    if (newValue !== null) {
+        apiRef?.current?.setFieldValue("temaObscur", newValue);
+    }
+  };
+  return (
+    <ToggleButtonGroup
+      value={data?.temaObscur}
+      exclusive
+      onChange={handleChange}
+      size="small"
+      sx={{
+        display: 'flex',
+        width: '100%',
+        justifyContent: 'center',
+      }}
+    >
+      <ToggleButton value={false} sx={{ flex: 1, gap: 1 }} >
+        <Icon>light_mode</Icon> {t('menu.user.options.profile.tema.clar')}
+      </ToggleButton>
+      <ToggleButton value={true} sx={{ flex: 1, gap: 1 }} >
+        <Icon>dark_mode</Icon> {t('menu.user.options.profile.tema.obscur')}
+      </ToggleButton>
+    </ToggleButtonGroup>
+  );
 };
 
 export const UserProfileFormDialog = ({
@@ -177,6 +207,9 @@ export const UserProfileFormDialog = ({
                             },
                         }}
                     />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                    <TemaObscurSelector />
                 </Grid>
             </UserProfileCardData>
 
