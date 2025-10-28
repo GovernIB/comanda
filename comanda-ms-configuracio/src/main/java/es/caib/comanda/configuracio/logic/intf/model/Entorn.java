@@ -9,7 +9,6 @@ import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.domain.Sort;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;

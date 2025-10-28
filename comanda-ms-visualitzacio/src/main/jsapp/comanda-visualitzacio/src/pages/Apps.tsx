@@ -25,6 +25,7 @@ import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/Mu
 // TODO Debería añadirse un export de este tipo
 import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 import {Cancel, CheckCircle} from '@mui/icons-material';
+import { GridRowOrderChangeParams } from '@mui/x-data-grid-pro';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -276,6 +277,10 @@ const Apps: React.FC = () => {
             onClick: appExport,
         },
     ]
+    const {patch} = useResourceApiService('app');
+    const onRowOrderChange = (params:GridRowOrderChangeParams) => {
+        patch(params?.row?.id, {data: {ordre: params?.targetIndex + 1 }})
+    }
 
     const columns = [
         {
@@ -322,6 +327,8 @@ const Apps: React.FC = () => {
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
+                rowReordering
+                onRowOrderChange={onRowOrderChange}
             />
         </GridPage>
     );

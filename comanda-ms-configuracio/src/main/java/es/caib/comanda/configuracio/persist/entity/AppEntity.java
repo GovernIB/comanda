@@ -3,6 +3,7 @@ package es.caib.comanda.configuracio.persist.entity;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.ReorderableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,7 +24,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AppEntity extends BaseAuditableEntity<App> {
+public class AppEntity extends BaseAuditableEntity<App> implements ReorderableEntity<Long> {
 
 	@Column(name = "codi", length = 16, nullable = false)
 	private String codi;
@@ -33,6 +34,8 @@ public class AppEntity extends BaseAuditableEntity<App> {
 	private String descripcio;
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
+    @Column(name = "ordre")
+    private Long ordre;
 
 	@Lob
 	@Column(name = "logo", nullable = true)
@@ -41,4 +44,12 @@ public class AppEntity extends BaseAuditableEntity<App> {
 	@OneToMany(mappedBy= "app", cascade = CascadeType.ALL)
 	private List<EntornAppEntity> entornApps;
 
+    @Override
+    public Long getOrder() {
+        return ordre;
+    }
+    @Override
+    public void setOrder(Long order) {
+        this.ordre = order;
+    }
 }

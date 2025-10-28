@@ -53,13 +53,19 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	private final CacheHelper cacheHelper;
 	private final ObjectMapper objectMapper;
 	private final AppExportMapper appExportMapper;
+    private final AppRepository appRepository;
 
 	@PostConstruct
 	public void init() {
 		register(App.APP_EXPORT, new AppExportReportGenerator());
 //		register(App.APP_IMPORT, new AppImportActionExecutor());
 	}
-	
+
+    @Override
+    protected List<AppEntity> reorderFindLinesWithParent(Serializable parentId) {
+        return appRepository.findAllByOrderByOrdreAsc();
+    }
+
 	/**
 	 * Generador d'informes per exportar aplicacions en format JSON.
 	 */

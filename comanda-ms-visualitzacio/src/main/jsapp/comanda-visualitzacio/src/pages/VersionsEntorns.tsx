@@ -89,13 +89,6 @@ const Entorns: React.FC = () => {
                 readOnly
                 toolbarType="upper"
                 paginationActive
-                staticSortModel={[
-                    { field: 'app', sort: 'asc' },
-                    {
-                        field: 'entorn',
-                        sort: 'asc',
-                    },
-                ]}
             />
         </GridPage>
     );

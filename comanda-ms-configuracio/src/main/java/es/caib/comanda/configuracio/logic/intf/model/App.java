@@ -4,6 +4,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig.ResourceSort;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
@@ -27,6 +28,8 @@ import java.util.List;
 @ResourceConfig(
 		quickFilterFields = { "codi", "nom" },
 		descriptionField = "nom",
+        defaultSortFields = { @ResourceSort(field = "ordre") },
+        orderField = "ordre",
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
@@ -58,7 +61,7 @@ public class App extends BaseResource<Long> {
 	@InputType("checkbox")
 	private boolean activa = true;
 	private byte[] logo;
-
+    private Long ordre;
 
 	private List<EntornApp> entornApps;
 

@@ -42,7 +42,7 @@ import java.util.List;
 		descriptionField = "entornAppDescription",
 		quickFilterFields = { "entorn.codi", "entorn.nom", "app.codi", "app.nom" },
         defaultSortFields = {
-                @ResourceSort(field = "app.nom"),
+                @ResourceSort(field = "app.ordre"),
                 @ResourceSort(field = "entorn.ordre")
         },
 		accessConstraints = {

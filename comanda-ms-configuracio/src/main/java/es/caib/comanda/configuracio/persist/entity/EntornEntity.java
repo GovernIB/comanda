@@ -36,7 +36,6 @@ public class EntornEntity extends BaseEntity<Entorn> implements ReorderableEntit
     public Long getOrder() {
         return ordre;
     }
-
     @Override
     public void setOrder(Long order) {
         this.ordre = order;
