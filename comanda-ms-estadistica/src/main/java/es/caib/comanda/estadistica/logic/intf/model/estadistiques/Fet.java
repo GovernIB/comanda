@@ -62,8 +62,18 @@ import java.util.Map;
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_DATES_DISPONIBLES, formClass = Long.class),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_DADES_DIA, formClass = Fet.FetObtenirParamAction.class),
-                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_DATA, formClass = Fet.FetObtenirParamAction.class),
-                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_INTERVAL, formClass = Fet.FetObtenirParamAction.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_DATA, formClass = Fet.FetObtenirParamAction.class, accessConstraints = {
+                        @ResourceAccessConstraint(
+                                type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                roles = { BaseConfig.ROLE_ADMIN }
+                        )
+                }),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_INTERVAL, formClass = Fet.FetObtenirParamAction.class, accessConstraints = {
+                        @ResourceAccessConstraint(
+                                type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                roles = { BaseConfig.ROLE_ADMIN }
+                        )
+                }),
         }
 )
 public class Fet extends BaseResource<Long> {

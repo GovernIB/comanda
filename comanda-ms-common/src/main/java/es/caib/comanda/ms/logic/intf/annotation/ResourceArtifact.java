@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 /**
  * Anotació per a configurar un artefacte.
- * 
+ *
  * @author Limit Tecnologies
  */
 @Target(ElementType.TYPE)
@@ -21,5 +21,6 @@ public @interface ResourceArtifact {
 	String code();
 	boolean requiresId() default false;
 	Class<? extends Serializable> formClass() default Serializable.class;
+	ResourceAccessConstraint[] accessConstraints() default {};
 
 }

@@ -1,17 +1,21 @@
 package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Helper per a la comprovació de permisos.
@@ -46,19 +50,24 @@ public abstract class BasePermissionHelper {
 			Class<?> targetTypeClass = Class.forName(targetType);
 			ResourceConfig resourceConfig = targetTypeClass.getAnnotation(ResourceConfig.class);
 			if (resourceConfig != null) {
-				boolean hasPermission = checkResourceAccessConstraints(
-						auth,
-						targetTypeClass,
-						permission,
-						resourceConfig.accessConstraints());
-				log.debug("Checking {} permission for resource {}: {}", permission, targetType, hasPermission);
-				return hasPermission;
+				if (resourceConfig.accessConstraints().length > 0) {
+					return checkAccessConstraints(
+							auth,
+							targetTypeClass,
+							null,
+							null,
+							resourceConfig.accessConstraints(),
+							permission);
+				} else {
+					// Els recursos sense restriccions d'accés tenen l'accés permès per defecte
+					return true;
+				}
 			} else {
 				// Els recursos sense configuració tenen l'accés permès per defecte
 				return true;
 			}
 		} catch (ClassNotFoundException ex) {
-			log.error("Permission denied for resource {} because class not found", targetType, ex);
+			log.warn("Permission denied for resource {}: class not found", targetType, ex);
 			return false;
 		}
 	}
@@ -86,39 +95,92 @@ public abstract class BasePermissionHelper {
 				permission);
 	}
 
-	protected boolean checkResourceAccessConstraints(
+	/**
+	 * Comprova els permisos per a accedir a un artefacte d'un recurs.
+	 *
+	 * @param resourceClass
+	 *            la classe del recurs.
+	 * @param type
+	 *            El tipus d'artefacte.
+	 * @param code
+	 *            El codi de l'artefacte.
+	 * @return true si l'usuari actual te accés a l'artefacte o false en cas contrari.
+	 */
+	public boolean checkResourceArtifactPermission(
+			Class<?> resourceClass,
+			ResourceArtifactType type,
+			String code) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		ResourceConfig resourceConfig = resourceClass.getAnnotation(ResourceConfig.class);
+		if (resourceConfig != null) {
+			Optional<ResourceArtifact> optionalArtifact = Arrays.stream(resourceConfig.artifacts()).
+					filter(a -> a.type() == type && a.code().equals(code)).
+					findFirst();
+			if (optionalArtifact.isPresent()) {
+				ResourceArtifact artifact = optionalArtifact.get();
+				if (artifact.accessConstraints().length > 0) {
+					return checkAccessConstraints(
+							auth,
+							resourceClass,
+							type,
+							code,
+							resourceConfig.accessConstraints(),
+							null);
+				} else {
+					// Els artefactes sense restriccions d'accés comproven l'accés al recurs
+					Permission permission = ResourceArtifactType.ACTION.equals(type) ? BasePermission.WRITE : BasePermission.READ;
+					return checkResourcePermission(
+							auth,
+							null,
+							resourceClass.getName(),
+							(BasePermission)permission);
+				}
+			}
+		}
+		// Els artefactes que no apareixen a l'anotació @ResourceConfig del recurs no tenen l'accés permès
+		return false;
+	}
+
+	protected boolean checkAccessConstraints(
 			Authentication auth,
 			Class<?> resourceClass,
-			BasePermission permission,
-			ResourceAccessConstraint[] accessConstraints) {
-		if (accessConstraints.length != 0) {
-			ResourceAccessConstraint allowedAccessConstraint = Arrays.stream(accessConstraints).
-					filter(ac -> {
-						boolean accessContraintGranted = false;
-						if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.PERMIT_ALL) {
-							accessContraintGranted = true;
-						} else if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED) {
-							accessContraintGranted = auth.isAuthenticated();
-						} else if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.ROLE) {
-							accessContraintGranted = isCurrentUserInAnyRole(auth, ac.roles());
-						} else if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.CUSTOM) {
+			ResourceArtifactType type,
+			String code,
+			ResourceAccessConstraint[] accessConstraints,
+			BasePermission permission) {
+		ResourceAccessConstraint allowedAccessConstraint = Arrays.stream(accessConstraints).
+				filter(ac -> {
+					boolean accessContraintGranted = false;
+					if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.PERMIT_ALL) {
+						accessContraintGranted = true;
+					} else if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED) {
+						accessContraintGranted = auth.isAuthenticated();
+					} else if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.ROLE) {
+						accessContraintGranted = isCurrentUserInAnyRole(auth, ac.roles());
+					} else if (ac.type() == ResourceAccessConstraint.ResourceAccessConstraintType.CUSTOM) {
+						if (type == null) {
 							accessContraintGranted = checkCustomResourceAccessConstraint(
 									auth,
 									resourceClass,
+									ac,
 									permission);
-						}
-						if (accessContraintGranted) {
-							return permission == null || isPermissionGranted(permission, ac.grantedPermissions());
 						} else {
-							return false;
+							accessContraintGranted = checkCustomResourceArtifactAccessConstraint(
+									auth,
+									resourceClass,
+									type,
+									code,
+									ac);
 						}
-					}).
-					findFirst().orElse(null);
-			return allowedAccessConstraint != null;
-		} else {
-			// Els recursos sense restriccions d'accés tenen l'accés permès per defecte
-			return true;
-		}
+					}
+					if (accessContraintGranted) {
+						return permission == null || isPermissionGranted(permission, ac.grantedPermissions());
+					} else {
+						return false;
+					}
+				}).
+				findFirst().orElse(null);
+		return allowedAccessConstraint != null;
 	}
 
 	protected boolean isCurrentUserInAnyRole(Authentication auth, String[] roles) {
@@ -140,6 +202,14 @@ public abstract class BasePermissionHelper {
 	protected abstract boolean checkCustomResourceAccessConstraint(
 			Authentication auth,
 			Class<?> resourceClass,
+			ResourceAccessConstraint resourceAccessConstraint,
 			BasePermission permission);
+
+	protected abstract boolean checkCustomResourceArtifactAccessConstraint(
+			Authentication auth,
+			Class<?> resourceClass,
+			ResourceArtifactType type,
+			String code,
+			ResourceAccessConstraint resourceAccessConstraint);
 
 }

@@ -1,30 +1,18 @@
 package es.caib.comanda.ms.logic.service;
 
+import es.caib.comanda.ms.logic.helper.BasePermissionHelper;
 import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
-import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
+import es.caib.comanda.ms.logic.springfilter.FilterSpecification;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
-import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
-import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
-import es.caib.comanda.ms.logic.intf.exception.FieldArtifactNotFoundException;
-import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
-import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
-import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
-import es.caib.comanda.ms.logic.intf.model.ExportField;
-import es.caib.comanda.ms.logic.intf.model.FieldArtifactType;
-import es.caib.comanda.ms.logic.intf.model.FieldOption;
-import es.caib.comanda.ms.logic.intf.model.ReportFileType;
-import es.caib.comanda.ms.logic.intf.model.Resource;
-import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
-import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.exception.*;
+import es.caib.comanda.ms.logic.intf.model.*;
 import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.ms.logic.intf.util.StringUtil;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;
-import es.caib.comanda.ms.logic.springfilter.FilterSpecification;
 import es.caib.comanda.ms.persist.entity.ResourceEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import lombok.AllArgsConstructor;
@@ -34,12 +22,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
@@ -53,13 +36,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -84,6 +61,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected JasperReportsHelper jasperReportsHelper;
 	@Autowired
 	protected ResourceEntityMappingHelper resourceEntityMappingHelper;
+	@Autowired
+	protected BasePermissionHelper permissionHelper;
 
 	private Class<R> resourceClass;
 	private Class<E> entityClass;
@@ -244,9 +223,13 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		if (type == null || type == ResourceArtifactType.PERSPECTIVE) {
 			artifacts.addAll(
 					perspectiveApplicatorMap.keySet().stream().
-							map(pa -> new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+							filter(code -> permissionHelper.checkResourceArtifactPermission(
+									getResourceClass(),
 									ResourceArtifactType.PERSPECTIVE,
-									pa,
+									code)).
+							map(code -> new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+									ResourceArtifactType.PERSPECTIVE,
+									code,
 									null,
 									null)).
 							collect(Collectors.toList()));
@@ -254,6 +237,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		if (type == null || type == ResourceArtifactType.REPORT) {
 			artifacts.addAll(
 					reportGeneratorMap.keySet().stream().
+							filter(code -> permissionHelper.checkResourceArtifactPermission(
+									getResourceClass(),
+									ResourceArtifactType.REPORT,
+									code)).
 							map(code -> new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
 									ResourceArtifactType.REPORT,
 									code,
@@ -264,6 +251,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		if (type == null || type == ResourceArtifactType.FILTER) {
 			artifacts.addAll(
 					artifactGetFilterAll().stream().
+							filter(f -> permissionHelper.checkResourceArtifactPermission(
+									getResourceClass(),
+									ResourceArtifactType.FILTER,
+									f.code())).
 							map(f -> new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
 									ResourceArtifactType.FILTER,
 									f.code(),
@@ -276,33 +267,53 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	@Override
 	@Transactional(readOnly = true)
-	public es.caib.comanda.ms.logic.intf.model.ResourceArtifact artifactGetOne(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
+	public es.caib.comanda.ms.logic.intf.model.ResourceArtifact artifactGetOne(
+			ResourceArtifactType type,
+			String code) throws ArtifactNotFoundException {
 		log.debug("Querying artifact form class (type={}, code={})", type, code);
 		if (type == ResourceArtifactType.PERSPECTIVE) {
 			PerspectiveApplicator<?, ?> perspectiveApplicator = perspectiveApplicatorMap.get(code);
 			if (perspectiveApplicator != null) {
-				return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+				boolean allowed = permissionHelper.checkResourceArtifactPermission(
+						getResourceClass(),
 						ResourceArtifactType.PERSPECTIVE,
-						code,
-						null,
-						null);
+						code);
+				if (allowed) {
+					return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+							ResourceArtifactType.PERSPECTIVE,
+							code,
+							null,
+							null);
+				}
 			}
 		} else if (type == ResourceArtifactType.REPORT) {
 			ReportGenerator<E, ?, ?> reportGenerator = reportGeneratorMap.get(code);
 			if (reportGenerator != null) {
-				return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+				boolean allowed = permissionHelper.checkResourceArtifactPermission(
+						getResourceClass(),
 						ResourceArtifactType.REPORT,
-						code,
-						artifactRequiresId(ResourceArtifactType.REPORT, code),
-						artifactGetFormClass(ResourceArtifactType.REPORT, code));
+						code);
+				if (allowed) {
+					return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+							ResourceArtifactType.REPORT,
+							code,
+							artifactRequiresId(ResourceArtifactType.REPORT, code),
+							artifactGetFormClass(ResourceArtifactType.REPORT, code));
+				}
 			}
 		} else if (type == ResourceArtifactType.FILTER) {
 			if (artifactIsPresentInResourceConfig(type, code)) {
-				return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+				boolean allowed = permissionHelper.checkResourceArtifactPermission(
+						getResourceClass(),
 						ResourceArtifactType.FILTER,
-						code,
-						null,
-						artifactGetFormClass(ResourceArtifactType.FILTER, code));
+						code);
+				if (allowed) {
+					return new es.caib.comanda.ms.logic.intf.model.ResourceArtifact(
+							ResourceArtifactType.FILTER,
+							code,
+							null,
+							artifactGetFormClass(ResourceArtifactType.FILTER, code));
+				}
 			}
 		}
 		throw new ArtifactNotFoundException(getResourceClass(), type, code);
@@ -313,7 +324,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	public <P extends Serializable> Map<String, Object> artifactOnChange(
 			ResourceArtifactType type,
 			String code,
-			Serializable id,
+			ID id,
 			P previous,
 			String fieldName,
 			Object fieldValue,
@@ -384,7 +395,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 	@Override
-	@Transactional(readOnly = true) //, propagation = Propagation.SUPPORTS)
+	@Transactional(readOnly = true)
 	public <P extends Serializable> List<?> artifactReportGenerateData(
 			ID id,
 			String code,
@@ -396,7 +407,20 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			if (id != null) {
 				entity = getEntity(id, null);
 			}
-			return generator.generateData(code, entity, params);
+			try {
+				return generator.generateData(code, entity, params);
+			} catch (ActionExecutionException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				ReportGenerationException rgex = new ReportGenerationException(
+						getResourceClass(),
+						id,
+						code,
+						"",
+						ex);
+				log.error(rgex.getMessage(), ex);
+				throw rgex;
+			}
 		} else {
 			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.REPORT, code);
 		}
@@ -412,29 +436,43 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		log.debug("Generating report file (code={}, data={}, fileType={})", code, data, fileType);
 		ReportGenerator<E, ?, ?> generator = reportGeneratorMap.get(code);
 		if (generator != null) {
-			DownloadableFile downloadableFile = generator.generateFile(code, data, fileType, out);
-			if (downloadableFile != null) {
-				return downloadableFile;
-			} else {
-				URL reportUrl = generator.getJasperReportUrl(code, fileType);
-				if (reportUrl != null) {
-					return jasperReportsHelper.generate(
-							getResourceClass(),
-							code,
-							reportUrl,
-							data,
-							LocaleContextHolder.getLocale(),
-							null,
-							fileType,
-							out);
+			try {
+				DownloadableFile downloadableFile = generator.generateFile(code, data, fileType, out);
+				if (downloadableFile != null) {
+					return downloadableFile;
 				} else {
-					throw new ReportGenerationException(
-							getResourceClass(),
-							null,
-							code,
-							"Couldn't generate report file: both generateFile and getJasperReportUrl methods returned null (fileType=" + fileType + ")");
+					URL reportUrl = generator.getJasperReportUrl(code, fileType);
+					if (reportUrl != null) {
+						return jasperReportsHelper.generate(
+								getResourceClass(),
+								code,
+								reportUrl,
+								data,
+								LocaleContextHolder.getLocale(),
+								null,
+								fileType,
+								out);
+					} else {
+						throw new ReportGenerationException(
+								getResourceClass(),
+								null,
+								code,
+								"Couldn't generate report file: both generateFile and getJasperReportUrl methods returned null (fileType=" + fileType + ")");
+					}
 				}
+			} catch (ActionExecutionException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				ReportGenerationException rgex = new ReportGenerationException(
+						getResourceClass(),
+						null,
+						code,
+						"",
+						ex);
+				log.error(rgex.getMessage(), ex);
+				throw rgex;
 			}
+
 		} else {
 			throw new ArtifactNotFoundException(getResourceClass(), ResourceArtifactType.REPORT, code);
 		}
@@ -793,8 +831,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		return null;
 	}
 
-	protected Specification<E> additionalSpecification(
-			String[] namedQueries) {
+	protected Specification<E> additionalSpecification(String[] namedQueries) {
 		return null;
 	}
 
@@ -807,6 +844,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 
 	protected <P> Specification<P> processSpecification(Specification<P> specification) {
 		return specification;
+	}
+
+	protected Sort processSort(Sort sort) {
+		return sort;
 	}
 
 	protected void beforeGetOne(String[] perspectives) {}
@@ -965,10 +1006,10 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			String code) {
 		ResourceConfig resourceConfig = getResourceClass().getAnnotation(ResourceConfig.class);
 		if (resourceConfig != null) {
-			Optional<ResourceArtifact> artifacts = Arrays.stream(resourceConfig.artifacts()).
+			Optional<ResourceArtifact> artifact = Arrays.stream(resourceConfig.artifacts()).
 					filter(a -> a.type() == type && a.code().equals(code)).
 					findFirst();
-			return artifacts.isPresent();
+			return artifact.isPresent();
 		} else {
 			return false;
 		}
@@ -996,11 +1037,12 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	private Sort toProcessedSort(
 			Sort sort) {
 		Sort resultSort;
-		if (sort != null) {
-			log.debug("\tProcessant ordenació " + sort);
-			if (sort.isSorted()) {
+		Sort protectedProcessedSort = processSort(sort);
+		if (protectedProcessedSort != null) {
+			log.debug("\tProcessant ordenació " + protectedProcessedSort);
+			if (protectedProcessedSort.isSorted()) {
 				List<Sort.Order> orders = new ArrayList<>();
-				for (Sort.Order order: sort) {
+				for (Sort.Order order: protectedProcessedSort) {
 					String[] orderPaths = toProcessedSortPath(
 							order.getProperty().split("\\."),
 							getEntityClass());
@@ -1020,7 +1062,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				}
 				resultSort = Sort.by(orders);
 			} else {
-				resultSort = sort;
+				resultSort = protectedProcessedSort;
 			}
 		} else {
 			resultSort = Sort.unsorted();
@@ -1404,3 +1446,4 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	}
 
 }
+
