@@ -56,15 +56,24 @@ import java.util.Map;
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
-//                        TODO Llevar permís de WRITE però permetre l'execució de les accions
-                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
+                        grantedPermissions = { PermissionEnum.READ }
                 )
         },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_DATES_DISPONIBLES, formClass = Long.class),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_DADES_DIA, formClass = Fet.FetObtenirParamAction.class),
-                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_DATA, formClass = Fet.FetObtenirParamAction.class),
-                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_INTERVAL, formClass = Fet.FetObtenirParamAction.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_DATA, formClass = Fet.FetObtenirParamAction.class, accessConstraints = {
+                        @ResourceAccessConstraint(
+                                type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                roles = { BaseConfig.ROLE_ADMIN }
+                        )
+                }),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_OBTENIR_PER_INTERVAL, formClass = Fet.FetObtenirParamAction.class, accessConstraints = {
+                        @ResourceAccessConstraint(
+                                type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                roles = { BaseConfig.ROLE_ADMIN }
+                        )
+                }),
         }
 )
 public class Fet extends BaseResource<Long> {
