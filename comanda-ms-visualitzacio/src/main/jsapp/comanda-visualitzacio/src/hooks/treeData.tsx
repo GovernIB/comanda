@@ -11,6 +11,7 @@ import {
     GridApiPro,
     GridColumnHeaderTitle,
     GridEventListener,
+    GridGroupingColDefOverride,
     GridRowId,
     gridRowTreeSelector,
 } from '@mui/x-data-grid-pro';
@@ -76,11 +77,12 @@ export const useTreeData = (
     }, [gridApiRef]);
     // WORKAROUND ends here
 
-    const groupingColDef = React.useMemo(
+    const groupingColDef = React.useMemo<GridGroupingColDefOverride>(
         () => ({
             headerName,
             flex: headerFlex,
-            renderHeader: (params: any) => (
+            hideDescendantCount: true,
+            renderHeader: (params) => (
                 <Box
                     sx={{
                         display: 'flex',
@@ -91,7 +93,7 @@ export const useTreeData = (
                     }}
                 >
                     <GridColumnHeaderTitle
-                        label={params?.colDef?.headerName}
+                        label={params?.colDef?.headerName ?? ""}
                         columnWidth={params.colDef.computedWidth}
                     />
                     <Box sx={{ display: 'flex', gap: 1, ml: 1 }}>
