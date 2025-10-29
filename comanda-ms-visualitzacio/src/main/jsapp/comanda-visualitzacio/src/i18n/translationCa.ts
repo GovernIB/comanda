@@ -1,3 +1,5 @@
+export type translationResourcesType = typeof translationCa;
+
 const translationCa = {
     enum: {
         appEstat: {
@@ -355,7 +357,7 @@ const translationCa = {
             title: "Entorns",
             resourceTitle: "entorn",
             action: {
-                toolbalActiva: {
+                toolbarActiva: {
                     activar: "Activar",
                     desactivar: "Desactivar",
                     ok: "L'acció s'ha executat correctament",

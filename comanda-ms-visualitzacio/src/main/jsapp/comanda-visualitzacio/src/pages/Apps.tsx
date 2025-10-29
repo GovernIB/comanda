@@ -61,7 +61,7 @@ const useActions = (refresh?: () => void) => {
         apiAction(id, { code: "toogle_activa" })
             .then(() => {
                 refresh?.();
-                temporalMessageShow(null, t('page.appsEntorns.action.toolbalActiva.ok'), 'success');
+                temporalMessageShow(null, t('page.appsEntorns.action.toolbarActiva.ok'), 'success');
             })
             .catch((error) => {
                 error?.message && temporalMessageShow(null, error?.message, 'error');
@@ -167,14 +167,14 @@ const AppsEntorns: React.FC = () => {
 
     const actions = [
         {
-            label: t('page.appsEntorns.action.toolbalActiva.activar'),
+            label: t('page.appsEntorns.action.toolbarActiva.activar'),
             icon: "check_circle",
             showInMenu: true,
             onClick: toogleActiva,
             hidden: (row:any) => row?.activa,
         },
         {
-            label: t('page.appsEntorns.action.toolbalActiva.desactivar'),
+            label: t('page.appsEntorns.action.toolbarActiva.desactivar'),
             icon: "cancel",
             showInMenu: true,
             onClick: toogleActiva,
