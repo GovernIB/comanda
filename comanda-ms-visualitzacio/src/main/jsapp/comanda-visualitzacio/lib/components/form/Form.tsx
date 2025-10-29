@@ -285,7 +285,7 @@ export const Form: React.FC<FormProps> = (props) => {
             const getInitialDataFromApiGetOne = resourceType == null && id != null;
             const initialData = getInitialDataFromApiGetOne
                 ? await apiGetOne(id, {
-                      data: { perspectives },
+                      data: { perspective: perspectives },
                       includeLinks: true,
                   })
                 : getInitialDataFromFields(fields);
