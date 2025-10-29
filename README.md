@@ -20,4 +20,4 @@ Quadre de control per coneixer l'estat d'una aplicació via cridades REST
 
 **Documentació**
 
->- [Manual d'integració](https://github.com/GovernIB/comanda/raw/comanda-dev/doc/pdf/01_COMANDA_integració.pdf))
+>- [Manual d'integració](https://github.com/GovernIB/comanda/raw/comanda-dev/doc/pdf/01_COMANDA_integració.pdf)
