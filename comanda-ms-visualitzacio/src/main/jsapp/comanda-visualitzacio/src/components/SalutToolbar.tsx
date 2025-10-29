@@ -98,20 +98,22 @@ const GroupForViewSelect = (props: { disabled?: boolean; onChange: (grouping: Gr
             console.error('Invalid grouping:', selectedGrouping);
     }
 
-    return <FormControl>
-        <Select
-            labelId="grouping-select-label"
-            id="grouping-select"
-            value={value}
-            size="small"
-            disabled={disabled}
-            onChange={handleChange}
-            startAdornment={<InputAdornment position="start"><GroupWork/></InputAdornment>}
-            sx={{ ml: 1, width: '12rem' }}>
-            <MenuItem value={GroupingEnum.APPLICATION}>{t('page.salut.groupingSelect.BY_APPLICATION')}</MenuItem>
-            <MenuItem value={GroupingEnum.ENVIRONMENT}>{t('page.salut.groupingSelect.BY_ENVIRONMENT')}</MenuItem>
-        </Select>
-    </FormControl>;
+    return (
+        <FormControl>
+            <Select
+                labelId="grouping-select-label"
+                id="grouping-select"
+                value={value}
+                size="small"
+                disabled={disabled}
+                onChange={handleChange}
+                startAdornment={<InputAdornment position="start"><GroupWork/></InputAdornment>}
+                sx={{ ml: 1, width: '12rem' }}>
+                <MenuItem value={GroupingEnum.APPLICATION}>{t($ => $.page.salut.groupingSelect.BY_APPLICATION)}</MenuItem>
+                <MenuItem value={GroupingEnum.ENVIRONMENT}>{t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}</MenuItem>
+            </Select>
+        </FormControl>
+    );
 }
 
 const getInitialRefreshDuration = () => {
@@ -160,11 +162,11 @@ const RefreshTimeoutSelect: React.FC<{
                 }
                 sx={{ mr: 1 }}
             >
-                <MenuItem value={'PT1M'}>{t('page.salut.refreshperiod.PT1M')}</MenuItem>
-                <MenuItem value={'PT5M'}>{t('page.salut.refreshperiod.PT5M')}</MenuItem>
-                <MenuItem value={'PT10M'}>{t('page.salut.refreshperiod.PT10M')}</MenuItem>
-                <MenuItem value={'PT30M'}>{t('page.salut.refreshperiod.PT30M')}</MenuItem>
-                <MenuItem value={'PT1H'}>{t('page.salut.refreshperiod.PT1H')}</MenuItem>
+                <MenuItem value={'PT1M'}>{t($ => $.page.salut.refreshperiod.PT1M)}</MenuItem>
+                <MenuItem value={'PT5M'}>{t($ => $.page.salut.refreshperiod.PT5M)}</MenuItem>
+                <MenuItem value={'PT10M'}>{t($ => $.page.salut.refreshperiod.PT10M)}</MenuItem>
+                <MenuItem value={'PT30M'}>{t($ => $.page.salut.refreshperiod.PT30M)}</MenuItem>
+                <MenuItem value={'PT1H'}>{t($ => $.page.salut.refreshperiod.PT1H)}</MenuItem>
             </Select>
         </FormControl>
     );
@@ -216,11 +218,11 @@ const AppDataRangeSelect = (props: {
                 }
                 sx={{ mr: 1 }}
             >
-                <MenuItem value={'PT15M'}>{t('page.salut.timerange.PT15M')}</MenuItem>
-                <MenuItem value={'PT1H'}>{t('page.salut.timerange.PT1H')}</MenuItem>
-                <MenuItem value={'P1D'}>{t('page.salut.timerange.P1D')}</MenuItem>
-                <MenuItem value={'P7D'}>{t('page.salut.timerange.P7D')}</MenuItem>
-                <MenuItem value={'P1M'}>{t('page.salut.timerange.P1M')}</MenuItem>
+                <MenuItem value={'PT15M'}>{t($ => $.page.salut.timerange.PT15M)}</MenuItem>
+                <MenuItem value={'PT1H'}>{t($ => $.page.salut.timerange.PT1H)}</MenuItem>
+                <MenuItem value={'P1D'}>{t($ => $.page.salut.timerange.P1D)}</MenuItem>
+                <MenuItem value={'P7D'}>{t($ => $.page.salut.timerange.P7D)}</MenuItem>
+                <MenuItem value={'P1M'}>{t($ => $.page.salut.timerange.P1M)}</MenuItem>
             </Select>
         </FormControl>
     );
@@ -362,12 +364,12 @@ const useSalutEntornAppFilter = ({
         <MuiDialog
             open={open}
             closeCallback={handleClose}
-            title={t('page.salut.filtrar')}
+            title={t($ => $.page.salut.filtrar)}
             componentProps={{ fullWidth: true, maxWidth: 'sm' }}
             buttons={[
                 {
                     value: 'clear',
-                    text: t('components.clear'),
+                    text: t($ => $.components.clear),
                     componentProps: {
                         variant: 'outlined',
                         sx: { borderRadius: '4px' },
@@ -375,7 +377,7 @@ const useSalutEntornAppFilter = ({
                 },
                 {
                     value: 'search',
-                    text: t('components.search'),
+                    text: t($ => $.components.search),
                     icon: 'filter_alt',
                     componentProps: {
                         variant: 'contained',
@@ -469,7 +471,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
 
         const appName = filterData?.app?.description;
         const envName = filterData?.entorn?.description;
-        if (!appName && !envName) return t('page.salut.senseFiltres');
+        if (!appName && !envName) return t($ => $.page.salut.senseFiltres);
         if (appName && !envName) return appName as string;
         if (!appName && envName) return envName as string;
         return `${appName} - ${envName}`;
@@ -482,7 +484,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                 <Box sx={{ mr: 2, minWidth: { xs: '50px', sm: '135px' } }}>
                     {lastRefresh != null && (
                         <Typography sx={{ display: 'block' }} variant="caption">
-                            {t('page.salut.refresh.last')}:{' '}
+                            {t($ => $.page.salut.refresh.last)}:{' '}
                             <b>{lastRefresh.toLocaleTimeString()}</b>
                         </Typography>
                     )}
@@ -490,7 +492,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                         nextRefresh > new Date() &&
                         timeUntilNextRefreshFormatted && (
                             <Typography sx={{ display: 'block' }} variant="caption">
-                                {t('page.salut.refresh.next')}:{' '}
+                                {t($ => $.page.salut.refresh.next)}:{' '}
                                 <b>{timeUntilNextRefreshFormatted}</b>
                             </Typography>
                         )}
@@ -527,7 +529,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             element: (
                 <IconButton
                     onClick={onRefreshClick}
-                    title={t('page.salut.refrescar')}
+                    title={t($ => $.page.salut.refrescar)}
                     disabled={!ready}
                     loading={appDataLoading}
                 >

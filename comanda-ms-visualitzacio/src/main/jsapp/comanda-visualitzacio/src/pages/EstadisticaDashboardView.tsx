@@ -51,7 +51,7 @@ function useDashboardSelect(currentDashboardId: any) {
                 }}
             >
                 <MuiGrid
-                    title={t('page.dashboards.action.select.title')}
+                    title={t($ => $.page.dashboards.action.select.title)}
                     resourceName="dashboard"
                     columns={columns}
                     toolbarType="upper"
@@ -127,18 +127,18 @@ const EstadisticaDashboardView = () => {
                     severity="warning"
                     action={
                         <Button onClick={returnToDefaultDashboardAndClear}>
-                            {t('page.dashboards.alert.tornarTauler')}
+                            {t($ => $.page.dashboards.alert.tornarTauler)}
                         </Button>
                     }
                 >
-                    {t('page.dashboards.alert.notExists')}
+                    {t($ => $.page.dashboards.alert.notExists)}
                 </Alert>
             );
-        else return <Alert severity="error">{t('page.dashboards.alert.carregar')}.</Alert>;
+        else return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}.</Alert>;
     }
 
     if (dashboardId == null && firstDashboard === NO_DASHBOARD_FOUND)
-        return <Alert severity="warning">{t('page.dashboards.alert.notDefined')}</Alert>;
+        return <Alert severity="warning">{t($ => $.page.dashboards.alert.notDefined)}</Alert>;
 
     return (
         <>

@@ -73,7 +73,7 @@ const IndicadorsFilter = (props: any) => {
                         <FormField
                             name={'entornApp'}
                             type={'reference'}
-                            label={t('page.indicadors.column.entornApp')}
+                            label={t($ => $.page.indicadors.column.entornApp)}
                             required={false}
                             optionsRequest={(q) => {
                                 const opts = (entornApp ?? []).map((ea: any) => ({
@@ -93,7 +93,7 @@ const IndicadorsFilter = (props: any) => {
                 </Grid>
                 <IconButton
                     onClick={netejar}
-                    title={t('components.clear')}
+                    title={t($ => $.components.clear)}
                     sx={{ mr: 1 }}>
                     <Icon>filter_alt_off</Icon>
                 </IconButton>
@@ -113,7 +113,7 @@ const Indicadors: React.FC = () => {
         { field: 'format', flex: 1 },
         { field: 'compactable', flex: 0.6 },
         { field: 'tipusCompactacio', flex: 1.2 },
-        { field: 'indicadorComptadorPerMitjana.description', headerName: t('page.indicadors.column.indicadorMitjana'), flex: 2 },
+        { field: 'indicadorComptadorPerMitjana.description', headerName: t($ => $.page.indicadors.column.indicadorMitjana), flex: 2 },
     ];
     const filterElement = <IndicadorsFilter onSpringFilterChange={setFilter}/>;
 
@@ -149,7 +149,7 @@ const Indicadors: React.FC = () => {
     return (
         <GridPage>
             <MuiGrid
-                title={t('page.indicadors.title')}
+                title={t($ => $.page.indicadors.title)}
                 resourceName="indicador"
                 columns={columns}
                 toolbarType="upper"

@@ -194,7 +194,7 @@ const AppDataTable: React.FC<{
             {
                 flex: 0.5,
                 field: 'nomLogo',
-                headerName: t('page.salut.apps.column.group'),
+                headerName: t($ => $.page.salut.apps.column.group),
                 minWidth: 150,
                 valueGetter: (_value, row) => {
                     const isGroupedByApp = groupedApp != null;
@@ -231,15 +231,15 @@ const AppDataTable: React.FC<{
             {
                 flex: 0.3,
                 field: 'estat',
-                headerName: t('page.salut.apps.column.estat'),
+                headerName: t($ => $.page.salut.apps.column.estat),
                 minWidth: 100,
                 renderCell: ({ id }) => renderItemStateChip(id, SalutModel.APP_ESTAT),
             },
             {
                 flex: 0.3,
                 field: 'infoData',
-                headerName: t('page.salut.apps.column.infoData'),
-                description: t('page.salut.apps.column.infoDataDescription'),
+                headerName: t($ => $.page.salut.apps.column.infoData),
+                description: t($ => $.page.salut.apps.column.infoDataDescription),
                 minWidth: 150,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
@@ -248,32 +248,32 @@ const AppDataTable: React.FC<{
                     }
                     return salutItem?.data
                         ? dateFormatLocale(salutItem?.data, true)
-                        : t('page.salut.nd');
+                        : t($ => $.page.salut.nd);
                 },
             },
             {
                 flex: 0.3,
                 field: 'versio',
-                headerName: t('page.salut.apps.column.versio'),
+                headerName: t($ => $.page.salut.apps.column.versio),
                 minWidth: 100,
             },
             {
                 flex: 0.3,
                 field: 'revisioSimplificat',
-                headerName: t('page.salut.apps.column.revisio'),
+                headerName: t($ => $.page.salut.apps.column.revisio),
                 minWidth: 100,
             },
             {
                 flex: 0.3,
                 field: 'bd',
-                headerName: t('page.salut.apps.column.bd'),
+                headerName: t($ => $.page.salut.apps.column.bd),
                 minWidth: 100,
                 renderCell: ({ id }) => renderItemStateChip(id, SalutModel.BD_ESTAT),
             },
             {
                 flex: 0.3,
                 field: 'latencia',
-                headerName: t('page.salut.apps.column.latencia'),
+                headerName: t($ => $.page.salut.apps.column.latencia),
                 minWidth: 100,
                 valueGetter: (_value, row) => {
                     const salutItem: SalutModel | null = findSalutItem(row.id);
@@ -282,13 +282,13 @@ const AppDataTable: React.FC<{
                     }
                     return salutItem?.appLatencia != null
                         ? salutItem.appLatencia + ' ms'
-                        : t('page.salut.nd');
+                        : t($ => $.page.salut.nd);
                 },
             },
             {
                 flex: 0.1,
                 field: SalutModel.INTEGRACIONS,
-                headerName: t('page.salut.apps.column.integ'),
+                headerName: t($ => $.page.salut.apps.column.integ),
                 minWidth: 130,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
@@ -300,7 +300,7 @@ const AppDataTable: React.FC<{
                     return (
                         <>
                             <SalutGenericTooltip
-                                title={t('page.salut.integracions.integracioUpCount')}
+                                title={t($ => $.page.salut.integracions.integracioUpCount)}
                             >
                                 <Chip
                                     sx={{
@@ -318,7 +318,7 @@ const AppDataTable: React.FC<{
                             </SalutGenericTooltip>
                             &nbsp;/&nbsp;
                             <SalutGenericTooltip
-                                title={t('page.salut.integracions.integracioDownCount')}
+                                title={t($ => $.page.salut.integracions.integracioDownCount)}
                             >
                                 <Chip
                                     sx={{
@@ -336,7 +336,7 @@ const AppDataTable: React.FC<{
                             </SalutGenericTooltip>
                             &nbsp;/&nbsp;
                             <SalutGenericTooltip
-                                title={t('page.salut.integracions.integracioDesconegutCount')}
+                                title={t($ => $.page.salut.integracions.integracioDesconegutCount)}
                             >
                                 <Chip
                                     sx={{
@@ -356,7 +356,7 @@ const AppDataTable: React.FC<{
             {
                 flex: 0.2,
                 field: SalutModel.SUBSISTEMES,
-                headerName: t('page.salut.apps.column.subsis'),
+                headerName: t($ => $.page.salut.apps.column.subsis),
                 minWidth: 100,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
@@ -367,7 +367,7 @@ const AppDataTable: React.FC<{
                     return (
                         <>
                             <SalutGenericTooltip
-                                title={t('page.salut.subsistemes.subsistemaUpCount')}
+                                title={t($ => $.page.salut.subsistemes.subsistemaUpCount)}
                             >
                                 <Chip
                                     sx={{
@@ -382,7 +382,7 @@ const AppDataTable: React.FC<{
                             </SalutGenericTooltip>
                             &nbsp;/&nbsp;
                             <SalutGenericTooltip
-                                title={t('page.salut.subsistemes.subsistemaDownCount')}
+                                title={t($ => $.page.salut.subsistemes.subsistemaDownCount)}
                             >
                                 <Chip
                                     sx={{
@@ -396,7 +396,7 @@ const AppDataTable: React.FC<{
                                 />
                             </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.subsistemes.subsistemaDesconegutCount')}>
+                            <SalutGenericTooltip title={t($ => $.page.salut.subsistemes.subsistemaDesconegutCount)}>
                                 <Chip
                                     sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_DESCONEGUT_COUNT), color: ChipColor.WHITE }}
                                     label={salutItem.subsistemaDesconegutCount}
@@ -410,7 +410,7 @@ const AppDataTable: React.FC<{
             {
                 flex: 0.1,
                 field: 'msgs',
-                headerName: t('page.salut.apps.column.msgs'),
+                headerName: t($ => $.page.salut.apps.column.msgs),
                 minWidth: 130,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
@@ -420,7 +420,7 @@ const AppDataTable: React.FC<{
                     }
                     return (
                         <>
-                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeErrorCount')}>
+                            <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeErrorCount)}>
                                 <Chip
                                     sx={{
                                         bgcolor: getColorByMissatge(
@@ -433,7 +433,7 @@ const AppDataTable: React.FC<{
                                 />
                             </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeWarnCount')}>
+                            <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeWarnCount)}>
                                 <Chip
                                     sx={{
                                         bgcolor: getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT),
@@ -444,7 +444,7 @@ const AppDataTable: React.FC<{
                                 />
                             </SalutGenericTooltip>
                             &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t('page.salut.msgs.missatgeInfoCount')}>
+                            <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeInfoCount)}>
                                 <Chip
                                     sx={{
                                         bgcolor: getColorByMissatge(SalutModel.MISSATGE_INFO_COUNT),
@@ -470,7 +470,7 @@ const AppDataTable: React.FC<{
                             component={getLinkComponent()}
                             to={'appinfo/' + params.id}
                         >
-                            {t('page.salut.apps.detalls')}
+                            {t($ => $.page.salut.apps.detalls)}
                         </Button>
                     ),
             },

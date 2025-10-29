@@ -55,13 +55,13 @@ const useActions = (refresh?: () => void) => {
                 temporalMessageShow(null, error.message, 'error');
             });
     }
-    const appExport = (id:any) => report(id, 'app_export', t('page.apps.action.export'), 'JSON')
+    const appExport = (id:any) => report(id, 'app_export', t($ => $.page.apps.action.export), 'JSON')
 
     const toogleActiva = (id:any) => {
         apiAction(id, { code: "toogle_activa" })
             .then(() => {
                 refresh?.();
-                temporalMessageShow(null, t('page.appsEntorns.action.toolbarActiva.ok'), 'success');
+                temporalMessageShow(null, t($ => $.page.appsEntorns.action.toolbarActiva.ok), 'success');
             })
             .catch((error) => {
                 error?.message && temporalMessageShow(null, error?.message, 'error');
@@ -96,7 +96,6 @@ const AppEntornForm: React.FC = () => {
             <Grid size={12}>
                 <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} onClick={pingUrl}/>}}}} />
             </Grid>
-
             <Grid size={12}>
                 <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} onClick={pingUrl}/>}}}} />
             </Grid>
@@ -104,7 +103,7 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="estadisticaCron" />
             </Grid>
             <Grid size={12}>
-                <FormField name="compactable" type="checkbox" label={t('page.apps.fields.compactable')} />
+                <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />
             </Grid>
             {data?.compactable === true && (
                 <>
@@ -112,10 +111,10 @@ const AppEntornForm: React.FC = () => {
                     {/*    <FormField name="compactacioSetmanalMesos" type="number" required={false} label={t('page.apps.fields.compactacioSetmanalMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioSetmanes') }} />*/}
                     {/*</Grid>*/}
                     <Grid size={{xs:12, md:6}}>
-                        <FormField name="compactacioMensualMesos" type="number" required={false} label={t('page.apps.fields.compactacioMensualMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioMesos') }} />
+                        <FormField name="compactacioMensualMesos" type="number" required={false} label={t($ => $.page.apps.fields.compactacioMensualMesos)} componentProps={{ title: t($ => $.page.apps.tooltips.compactacioMesos) }} />
                     </Grid>
                     <Grid size={{xs:12, md:6}}>
-                        <FormField name="eliminacioMesos" type="number" required={false} label={t('page.apps.fields.eliminacioMesos')} componentProps={{ title: t('page.apps.tooltips.borratMesos') }} />
+                        <FormField name="eliminacioMesos" type="number" required={false} label={t($ => $.page.apps.fields.eliminacioMesos)} componentProps={{ title: t($ => $.page.apps.tooltips.borratMesos) }} />
                     </Grid>
                     <Grid size={12}>
                         {(() => {
@@ -167,14 +166,14 @@ const AppsEntorns: React.FC = () => {
 
     const actions = [
         {
-            label: t('page.appsEntorns.action.toolbarActiva.activar'),
+            label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
             icon: "check_circle",
             showInMenu: true,
             onClick: toogleActiva,
             hidden: (row:any) => row?.activa,
         },
         {
-            label: t('page.appsEntorns.action.toolbarActiva.desactivar'),
+            label: t($ => $.page.appsEntorns.action.toolbarActiva.desactivar),
             icon: "cancel",
             showInMenu: true,
             onClick: toogleActiva,
@@ -185,7 +184,7 @@ const AppsEntorns: React.FC = () => {
         <GridPage>
             <MuiDataGrid
                 apiRef={apiRef}
-                title={t('page.appsEntorns.title')}
+                title={t($ => $.page.appsEntorns.title)}
                 resourceName="entornApp"
                 staticFilter={`app.id : ${appId}`}
                 columns={columns}
@@ -193,7 +192,7 @@ const AppsEntorns: React.FC = () => {
                 paginationActive
                 popupEditActive
                 popupEditFormContent={<AppEntornForm />}
-                popupEditFormDialogResourceTitle={t('page.appsEntorns.resourceTitle')}
+                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
                 formAdditionalData={{
                     app: { id: appId },
                 }}
@@ -214,10 +213,10 @@ export const AppForm: React.FC = () => {
 
     const formTabs: FormTabsValue[] = [
         {
-            label: t('page.apps.general'),
+            label: t($ => $.page.apps.general),
         },
         {
-            label: t('page.apps.entornApp'),
+            label: t($ => $.page.apps.entornApp),
         },
     ];
 
@@ -225,7 +224,7 @@ export const AppForm: React.FC = () => {
         <MuiForm
             key={id} // TODO No debería ser necesario, parece un bug de la librería
             id={id}
-            title={id ? t('page.apps.update') : t('page.apps.create')}
+            title={id ? t($ => $.page.apps.update) : t($ => $.page.apps.create)}
             resourceName="app"
             goBackLink="/app"
             createLink="form/{{id}}"
@@ -271,7 +270,7 @@ const Apps: React.FC = () => {
     const { appExport } = useActions();
     const appActions: DataCommonAdditionalAction[] = [
         {
-            label: t('page.apps.action.export'),
+            label: t($ => $.page.apps.action.export),
             icon: 'download',
             showInMenu: true,
             onClick: appExport,
@@ -317,7 +316,7 @@ const Apps: React.FC = () => {
     return (
         <GridPage>
             <MuiDataGrid
-                title={t('page.apps.title')}
+                title={t($ => $.page.apps.title)}
                 resourceName="app"
                 columns={columns}
                 toolbarType="upper"

@@ -101,16 +101,16 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
     : <Icon>download</Icon>;
 
   const label = hasError
-    ? t('calendari.error_dades')
+    ? t($ => $.calendari.error_dades)
     : esDisponible
-    ? t('calendari.dades_disponibles')
-    : t('calendari.obtenir_dades');
+    ? t($ => $.calendari.dades_disponibles)
+    : t($ => $.calendari.obtenir_dades);
 
   const tooltip = hasError
-    ? t('calendari.error_dades_tooltip')
+    ? t($ => $.calendari.error_dades_tooltip)
     : esDisponible
-    ? t('calendari.dades_disponibles_tooltip')
-    : t('calendari.obtenir_dades_tooltip');
+    ? t($ => $.calendari.dades_disponibles_tooltip)
+    : t($ => $.calendari.obtenir_dades_tooltip);
 
   const color: 'primary' | 'error' | 'success' = hasError
     ? 'error'
@@ -197,9 +197,9 @@ const CalendariEstadistiques: React.FC = () => {
             
             const data = await apiAction(null, { code: 'obtenir_per_data', data: additionalData });
             if (data.success)
-                temporalMessageShow(null, t('calendari.success_obtenir_dades'), 'success');
+                temporalMessageShow(null, t($ => $.calendari.success_obtenir_dades), 'success');
             else
-                temporalMessageShow(null, t('calendari.error_obtenir_dades') + ": " + data.message, 'error');
+                temporalMessageShow(null, t($ => $.calendari.error_obtenir_dades) + ": " + data.message, 'error');
 
 
             if (data.diesAmbDades) {
@@ -234,11 +234,11 @@ const CalendariEstadistiques: React.FC = () => {
             
             const data = await apiAction(null, { code: 'obtenir_per_interval', data: additionalData });
             if (data.success) {
-                showMessage(null, t('calendari.success_obtenir_dades'), 'success');
+                showMessage(null, t($ => $.calendari.success_obtenir_dades), 'success');
                 // Actualitzar les dates disponibles després d'obtenir dades per interval
                 obtenirDatesDisponibles(additionalData.entornAppId);
             } else {
-                showMessage(null, t('calendari.error_obtenir_dades') + ": " + data.message, 'error');
+                showMessage(null, t($ => $.calendari.error_obtenir_dades) + ": " + data.message, 'error');
             }
             
             // Set global loading to false when done
@@ -267,7 +267,7 @@ const CalendariEstadistiques: React.FC = () => {
             console.log('Dates disponibles:', dates);
         } catch (error: any) {
             console.error('Error en obtenir dates disponibles:', error);
-            temporalMessageShow(null, t('calendari.error_dades_disponibles') + ": " + error.message, 'error');
+            temporalMessageShow(null, t($ => $.calendari.error_dades_disponibles) + ": " + error.message, 'error');
             setDatesAmbDades([]);
             setDatesDisponiblesError(true);
             console.log('Dates disponibles:', []);
@@ -298,7 +298,7 @@ const CalendariEstadistiques: React.FC = () => {
             return true;
         } catch (error: any) {
             console.error('Error en obtenir dades per dia:', error);
-            temporalMessageShow(null, t('calendari.error_dades_dia') + ": " + error.message, 'error');
+            temporalMessageShow(null, t($ => $.calendari.error_dades_dia) + ": " + error.message, 'error');
             return false;
         }
     }, [apiReport, temporalMessageShow, t, setCurrentDadesDia, setCurrentDataDia, setDadesDiaModalOpen]);
@@ -346,7 +346,7 @@ const CalendariEstadistiques: React.FC = () => {
             // Guardar l'error per mostrar-lo després
             const errorInfo: ErrorInfo = {
                 date: data,
-                message: error.message || t('calendari.error_obtenir_dades'),
+                message: error.message || t($ => $.calendari.error_obtenir_dades),
                 trace: error.stack
             };
             setErrors(prev => {
@@ -371,7 +371,7 @@ const CalendariEstadistiques: React.FC = () => {
             // La funció obtenirPerInterval ja actualitza les dates disponibles si té èxit
         } catch (error: any) {
             console.error('Error en carregar interval de dades:', error);
-            alert(t('calendari.error_carregar_interval'));
+            alert(t($ => $.calendari.error_carregar_interval));
         }
     }, [entornAppId, obtenirPerInterval, t]);
 
@@ -425,7 +425,7 @@ const CalendariEstadistiques: React.FC = () => {
             return [
                 // Event de background per donar color a la cel·la
                 {
-                    title: t('calendari.carregant'),
+                    title: t($ => $.calendari.carregant),
                     date,
                     backgroundColor: '#f5f5f5',
                     extendedProps: {
@@ -438,7 +438,7 @@ const CalendariEstadistiques: React.FC = () => {
                 },
                 // Event de block amb l'indicador de càrrega
                 {
-                    title: t('calendari.carregant'),
+                    title: t($ => $.calendari.carregant),
                     date,
                     classNames: ['cal-event-loading'],
                     textColor: '#888',
@@ -464,7 +464,7 @@ const CalendariEstadistiques: React.FC = () => {
             return [
                 // Event de background per donar color a la cel·la
                 {
-                    title: hasEmptyDades ? t('calendari.dades_buides') : t('calendari.sense_dades'),
+                    title: hasEmptyDades ? t($ => $.calendari.dades_buides) : t($ => $.calendari.sense_dades),
                     date,
                     backgroundColor: hasEmptyDades ? '#f6af2a' : '#79b2ef',
                     extendedProps: {
@@ -477,7 +477,7 @@ const CalendariEstadistiques: React.FC = () => {
                 },
                 // Event de block amb l'enllaç per obtenir dades
                 {
-                    title: t('calendari.obtenir_dades'),
+                    title: t($ => $.calendari.obtenir_dades),
                     date,
                     classNames: ['cal-event-download'],
                     textColor: '#888',
@@ -488,9 +488,9 @@ const CalendariEstadistiques: React.FC = () => {
                         isLoading: false,
                         hasContent: true,
                         content: `<div class="material-button-container">
-                            <button class="material-download-button" title="${t('calendari.obtenir_dades_tooltip')}">
+                            <button class="material-download-button" title="${t($ => $.calendari.obtenir_dades_tooltip)}">
                                 <span class="material-icon">download</span>
-                                <span>${t('calendari.obtenir_dades')}</span>
+                                <span>${t($ => $.calendari.obtenir_dades)}</span>
                             </button>
                         </div>`
                     },
@@ -502,7 +502,7 @@ const CalendariEstadistiques: React.FC = () => {
             return [
                 // Event de background per donar color a la cel·la
                 {
-                    title: hasDades ? '' : t('calendari.error_dades'),
+                    title: hasDades ? '' : t($ => $.calendari.error_dades),
                     date,
                     backgroundColor: hasDades ? '#b7ecaf' : '#dc7352',
                     extendedProps: {
@@ -514,7 +514,7 @@ const CalendariEstadistiques: React.FC = () => {
                     display: 'background'
                 },
                 {
-                    title: hasDades ? t('calendari.dades_disponibles') : t('calendari.error_dades'),
+                    title: hasDades ? t($ => $.calendari.dades_disponibles) : t($ => $.calendari.error_dades),
                     date,
                     backgroundColor: hasDades ? '#e9f9e6' : '#dc7352',
                     borerColor: hasDades ? '#b7ecaf' : '#dc7352',
@@ -526,15 +526,15 @@ const CalendariEstadistiques: React.FC = () => {
                         hasContent: true,
                         content: hasError
                             ? `<div class="material-button-container">
-                                <button class="material-error-button" title="${t('calendari.error_dades_tooltip')}">
+                                <button class="material-error-button" title="${t($ => $.calendari.error_dades_tooltip)}">
                                     <span class="material-icon">error</span>
-                                    <span>${t('calendari.error_dades')}</span>
+                                    <span>${t($ => $.calendari.error_dades)}</span>
                                 </button>
                               </div>`
                             : `<div class="material-button-container">
-                                <button class="material-success-button" title="${t('calendari.dades_disponibles_tooltip')}">
+                                <button class="material-success-button" title="${t($ => $.calendari.dades_disponibles_tooltip)}">
                                     <span class="material-icon">check_circle</span>
-                                    <span>${t('calendari.dades_disponibles')}</span>
+                                    <span>${t($ => $.calendari.dades_disponibles)}</span>
                                 </button>
                               </div>`
                     },
@@ -613,22 +613,22 @@ const CalendariEstadistiques: React.FC = () => {
                 <Box className="global-loading-overlay">
                     <Box className="global-loading-container">
                         <CircularProgress size={60} />
-                        <Typography sx={{ mt: 2 }}>{t('calendari.carregant_dades')}</Typography>
+                        <Typography sx={{ mt: 2 }}>{t($ => $.calendari.carregant_dades)}</Typography>
                     </Box>
                 </Box>
             )}
             <Toolbar
-                title={t('menu.calendari')} upperToolbar
+                title={t($ => $.menu.calendari)} upperToolbar
                 elementsWithPositions={[
                     {
                         position: 2,
                         element: <FormControl sx={{ minWidth: 250 }}>
-                            <InputLabel size={"small"} id="entorn-app-select-label">{t('calendari.seleccionar_entorn_app')}</InputLabel>
+                            <InputLabel size={"small"} id="entorn-app-select-label">{t($ => $.calendari.seleccionar_entorn_app)}</InputLabel>
                             <Select
                                 labelId="entorn-app-select-label"
                                 value={entornAppId}
                                 size={"small"}
-                                label={t('calendari.seleccionar_entorn_app')}
+                                label={t($ => $.calendari.seleccionar_entorn_app)}
                                 onChange={(e) => {
                                     const newEntornAppId = e.target.value as number | '';
                                     setEntornAppId(newEntornAppId);
@@ -640,7 +640,7 @@ const CalendariEstadistiques: React.FC = () => {
                                     }
                                 }}
                             >
-                                <MenuItem value="">{t('calendari.seleccionar')}</MenuItem>
+                                <MenuItem value="">{t($ => $.calendari.seleccionar)}</MenuItem>
                                 {entornApps.map((entornApp) => (
                                     <MenuItem key={entornApp.id} value={entornApp.id}>
                                         {entornApp.app.description} - {entornApp.entorn.description}
@@ -651,7 +651,6 @@ const CalendariEstadistiques: React.FC = () => {
                     }
                 ]}
             />
-
             {/* Sempre mostrem el calendari, però amb un missatge d'ajuda si no hi ha entorn seleccionat */}
             <Box
                 sx={{
@@ -754,10 +753,10 @@ const CalendariEstadistiques: React.FC = () => {
                     }}
                     customButtons={{
                         intervalButton: {
-                            text: t('calendari.carregar_interval'),
+                            text: t($ => $.calendari.carregar_interval),
                             click: () => {
                                 if (entornAppId === '') {
-                                    alert(t('calendari.seleccionar_entorn_app_primer'));
+                                    alert(t($ => $.calendari.seleccionar_entorn_app_primer));
                                     return;
                                 }
 
@@ -765,10 +764,10 @@ const CalendariEstadistiques: React.FC = () => {
                             }
                         },
                         monthButton: {
-                            text: t('calendari.carregar_mes_actual'),
+                            text: t($ => $.calendari.carregar_mes_actual),
                             click: () => {
                                 if (entornAppId === '') {
-                                    alert(t('calendari.seleccionar_entorn_app_primer'));
+                                    alert(t($ => $.calendari.seleccionar_entorn_app_primer));
                                     return;
                                 }
                                 
@@ -779,7 +778,7 @@ const CalendariEstadistiques: React.FC = () => {
                         }
                     }}
                     buttonText={{
-                        today: t('calendari.today'),
+                        today: t($ => $.calendari.today),
                     }}
                     headerToolbar={{
                         start: 'prev,next today',
@@ -788,20 +787,19 @@ const CalendariEstadistiques: React.FC = () => {
                     }}
                 />
             </Box>
-
             {/* Dialog per carregar dades per interval */}
             <Dialog open={obrirDialog} onClose={() => setObrirDialog(false)}>
-                <DialogTitle>{t('calendari.carregar_interval')}</DialogTitle>
+                <DialogTitle>{t($ => $.calendari.carregar_interval)}</DialogTitle>
                 <DialogContent>
                     <Box className="date-picker-container">
                         <DatePicker
-                            label={t('calendari.data_inici')}
+                            label={t($ => $.calendari.data_inici)}
                             value={dataInici}
                             onChange={(newValue) => setDataInici(newValue)}
                             renderInput={(params) => <TextField {...params} fullWidth />}
                         />
                         <DatePicker
-                            label={t('calendari.data_fi')}
+                            label={t($ => $.calendari.data_fi)}
                             value={dataFi}
                             onChange={(newValue) => setDataFi(newValue)}
                             renderInput={(params) => <TextField {...params} fullWidth />}
@@ -809,7 +807,7 @@ const CalendariEstadistiques: React.FC = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setObrirDialog(false)}>{t('calendari.cancelar')}</Button>
+                    <Button onClick={() => setObrirDialog(false)}>{t($ => $.calendari.cancelar)}</Button>
                     <Button
                         onClick={() => {
                             if (dataInici && dataFi) {
@@ -822,30 +820,29 @@ const CalendariEstadistiques: React.FC = () => {
                         variant="contained"
                         disabled={!dataInici || !dataFi}
                     >
-                        {t('calendari.carregar')}
+                        {t($ => $.calendari.carregar)}
                     </Button>
                 </DialogActions>
             </Dialog>
-
             {/* Dialog per mostrar errors */}
             <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)} maxWidth="md" fullWidth>
                 <DialogTitle className="error-dialog-title">
                     <ErrorIcon color="error" />
-                    {t('calendari.error_titol')}
+                    {t($ => $.calendari.error_titol)}
                 </DialogTitle>
                 <DialogContent>
                     {currentError && (
                         <>
                             <Typography variant="subtitle1" gutterBottom>
-                                <strong>{t('calendari.data')}:</strong> {dayjs(currentError.date).format('DD/MM/YYYY')}
+                                <strong>{t($ => $.calendari.data)}:</strong> {dayjs(currentError.date).format('DD/MM/YYYY')}
                             </Typography>
                             <Typography variant="subtitle1" gutterBottom>
-                                <strong>{t('calendari.missatge')}:</strong> {currentError.message}
+                                <strong>{t($ => $.calendari.missatge)}:</strong> {currentError.message}
                             </Typography>
                             {currentError.trace && (
                                 <Box sx={{ mt: 2 }}>
                                     <Typography variant="subtitle1" gutterBottom>
-                                        <strong>{t('calendari.traca')}:</strong>
+                                        <strong>{t($ => $.calendari.traca)}:</strong>
                                     </Typography>
                                     <Box className="error-trace-container">
                                         <pre>{currentError.trace}</pre>
@@ -856,10 +853,9 @@ const CalendariEstadistiques: React.FC = () => {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setErrorDialogOpen(false)}>{t('calendari.tancar')}</Button>
+                    <Button onClick={() => setErrorDialogOpen(false)}>{t($ => $.calendari.tancar)}</Button>
                 </DialogActions>
             </Dialog>
-
             <CaliendariDadesDialog
                 dimensions={dimensions}
                 indicadors={indicadors}
@@ -899,166 +895,168 @@ const CaliendariDadesDialog = (props:any) => {
     }, [currentDadesDia]);
 
     {/* Dialog per mostrar les dades del dia */}
-    return <Dialog
-        open={dadesDiaModalOpen}
-        onClose={() => setDadesDiaModalOpen(false)}
-        maxWidth="xl"
-        fullWidth
-        fullScreen
-    >
-        <DialogTitle>
-            {t('calendari.modal_dades_dia')} - {dayjs(currentDataDia).format('DD/MM/YYYY')}
-        </DialogTitle>
-        <DialogContent>
-            {currentDadesDia.length > 0 ? (<>
-                <FormGroup>
-                    <Grid container spacing={1} p={1} sx={{ maxWidth: '100%' }}>
-                        <Grid size={11}>
-                            <FormControl sx={{ width: '100%' }} size={'small'}>
-                                <InputLabel>{t('calendari.indicadors')}</InputLabel>
-                                <Select
-                                    multiple
-                                    value={indicadorsShow}
-                                    onChange={(event) => {
-                                        const value = event.target.value
-                                        if (value.includes("all")) {
-                                            if (indicadorsShow.length === indicadorsCodis.length) {
-                                                // Si ya todos están seleccionados → desmarcar todos
-                                                setIndicadorsShow([]);
+    return (
+        <Dialog
+            open={dadesDiaModalOpen}
+            onClose={() => setDadesDiaModalOpen(false)}
+            maxWidth="xl"
+            fullWidth
+            fullScreen
+        >
+            <DialogTitle>
+                {t($ => $.calendari.modal_dades_dia)} - {dayjs(currentDataDia).format('DD/MM/YYYY')}
+            </DialogTitle>
+            <DialogContent>
+                {currentDadesDia.length > 0 ? (<>
+                    <FormGroup>
+                        <Grid container spacing={1} p={1} sx={{ maxWidth: '100%' }}>
+                            <Grid size={11}>
+                                <FormControl sx={{ width: '100%' }} size={'small'}>
+                                    <InputLabel>{t($ => $.calendari.indicadors)}</InputLabel>
+                                    <Select
+                                        multiple
+                                        value={indicadorsShow}
+                                        onChange={(event) => {
+                                            const value = event.target.value
+                                            if (value.includes("all")) {
+                                                if (indicadorsShow.length === indicadorsCodis.length) {
+                                                    // Si ya todos están seleccionados → desmarcar todos
+                                                    setIndicadorsShow([]);
+                                                } else {
+                                                    // Seleccionar todos
+                                                    setIndicadorsShow(indicadorsCodis);
+                                                }
                                             } else {
-                                                // Seleccionar todos
-                                                setIndicadorsShow(indicadorsCodis);
+                                                setIndicadorsShow(value);
                                             }
-                                        } else {
-                                            setIndicadorsShow(value);
-                                        }
-                                    }}
-                                    input={<OutlinedInput label={t('calendari.indicadors')}/>}
-                                    renderValue={(selected) => selected.join(', ')}
-                                >
-                                    {/* Opción select all */}
-                                    <MenuItem key="all" value="all">
-                                        <Checkbox
-                                            checked={indicadorsShow.length === indicadorsCodis.length}
-                                            indeterminate={
-                                                indicadorsShow.length > 0 &&
-                                                indicadorsShow.length < indicadorsCodis.length
-                                            }
-                                        />
-                                        <ListItemText primary="Seleccionar todo"/>
-                                    </MenuItem>
-
-                                    {indicadors.map((indicador:any) => (
-                                        <MenuItem key={indicador.codi} value={indicador.codi}>
-                                            <Checkbox checked={indicadorsShow.includes(indicador.codi)}/>
-                                            <ListItemText primary={indicador.nom}/>
+                                        }}
+                                        input={<OutlinedInput label={t($ => $.calendari.indicadors)}/>}
+                                        renderValue={(selected) => selected.join(', ')}
+                                    >
+                                        {/* Opción select all */}
+                                        <MenuItem key="all" value="all">
+                                            <Checkbox
+                                                checked={indicadorsShow.length === indicadorsCodis.length}
+                                                indeterminate={
+                                                    indicadorsShow.length > 0 &&
+                                                    indicadorsShow.length < indicadorsCodis.length
+                                                }
+                                            />
+                                            <ListItemText primary="Seleccionar todo"/>
                                         </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
 
-                        <Grid size={1} display={'flex'} justifyContent={'center'}>
-                            <IconButton
-                                title={t('components.clear')}
-                                onClick={() => {
-                                    setIndicadorsShow([]);
-                                    setFilterForm({});
-                                }}
-                            ><Icon>filter_alt_off</Icon></IconButton>
-                            <IconButton
-                                title={t('page.avisos.filter.more')}
-                                onClick={() => setOpen((prev) => !prev)}
-                            ><Icon>filter_list</Icon></IconButton>
-                        </Grid>
-
-                        {dimensions.map((dimension:any) => (
-                            <Grid size={3} hidden={open}>
-                                <TextField id={`textField-${dimension.codi}`}
-                                           label={dimension.nom}
-                                           variant="outlined"
-                                           value={filterForm[dimension.codi] || ""}
-                                           size={'small'}
-                                           fullWidth
-                                           onChange={(event)=>{
-                                               setFilterForm({
-                                                   ...filterForm,
-                                                   [dimension.codi]: event.target.value
-                                               })
-                                           }}/>
+                                        {indicadors.map((indicador:any) => (
+                                            <MenuItem key={indicador.codi} value={indicador.codi}>
+                                                <Checkbox checked={indicadorsShow.includes(indicador.codi)}/>
+                                                <ListItemText primary={indicador.nom}/>
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
                             </Grid>
-                        ))}
-                    </Grid>
-                </FormGroup>
 
-                <TableContainer component={Paper} sx={{ maxHeight: 'calc(95vh - 200px)' }}>
-                    <Table stickyHeader aria-label={t('calendari.modal_dades_dia')}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell colSpan={dimensionsCodis.length}>
-                                    <Typography variant="subtitle1" fontWeight="bold">
-                                        {t('calendari.dimensions')}
-                                    </Typography>
-                                </TableCell>
-                                {!!indicadorsShow.length && <TableCell colSpan={indicadorsShow.length}>
-                                    <Typography variant="subtitle1" fontWeight="bold">
-                                        {t('calendari.indicadors')}
-                                    </Typography>
-                                </TableCell>}
-                            </TableRow>
-                            <TableRow>
-                                {/* Dimensions column headers */}
-                                {dimensions.map((dimensio:any) => (
-                                    <TableCell key={`dim-${dimensio.codi}`} title={dimensio.descripcio}>
-                                        {dimensio.nom}
+                            <Grid size={1} display={'flex'} justifyContent={'center'}>
+                                <IconButton
+                                    title={t($ => $.components.clear)}
+                                    onClick={() => {
+                                        setIndicadorsShow([]);
+                                        setFilterForm({});
+                                    }}
+                                ><Icon>filter_alt_off</Icon></IconButton>
+                                <IconButton
+                                    title={t($ => $.page.avisos.filter.more)}
+                                    onClick={() => setOpen((prev) => !prev)}
+                                ><Icon>filter_list</Icon></IconButton>
+                            </Grid>
+
+                            {dimensions.map((dimension:any) => (
+                                <Grid size={3} hidden={open}>
+                                    <TextField id={`textField-${dimension.codi}`}
+                                               label={dimension.nom}
+                                               variant="outlined"
+                                               value={filterForm[dimension.codi] || ""}
+                                               size={'small'}
+                                               fullWidth
+                                               onChange={(event)=>{
+                                                   setFilterForm({
+                                                       ...filterForm,
+                                                       [dimension.codi]: event.target.value
+                                                   })
+                                               }}/>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </FormGroup>
+
+                    <TableContainer component={Paper} sx={{ maxHeight: 'calc(95vh - 200px)' }}>
+                        <Table stickyHeader aria-label={t($ => $.calendari.modal_dades_dia)}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell colSpan={dimensionsCodis.length}>
+                                        <Typography variant="subtitle1" fontWeight="bold">
+                                            {t($ => $.calendari.dimensions)}
+                                        </Typography>
                                     </TableCell>
-                                ))}
-
-                                {/* Indicators column headers */}
-                                {indicadors.map((indicator:any) => {
-                                    if (indicadorsShow.includes(indicator.codi)) {
-                                        return <TableCell key={`ind-${indicator.codi}`}
-                                                          align="right"
-                                                          title={indicator.descripcio}>
-                                            {indicator.nom}
-                                        </TableCell>
-                                    }
-                                })}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {currentDadesDiaFiltered.map((fet, index) => (
-                                <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50" }}>
-                                    {/* Dimensions values */}
-                                    {dimensionsCodis.map((key:any, i:number) => (
-                                        <TableCell key={`dim-val-${index}-${i}`}>
-                                            {fet.dimensionsJson[key]}
+                                    {!!indicadorsShow.length && <TableCell colSpan={indicadorsShow.length}>
+                                        <Typography variant="subtitle1" fontWeight="bold">
+                                            {t($ => $.calendari.indicadors)}
+                                        </Typography>
+                                    </TableCell>}
+                                </TableRow>
+                                <TableRow>
+                                    {/* Dimensions column headers */}
+                                    {dimensions.map((dimensio:any) => (
+                                        <TableCell key={`dim-${dimensio.codi}`} title={dimensio.descripcio}>
+                                            {dimensio.nom}
                                         </TableCell>
                                     ))}
 
-                                    {/* Indicators values */}
-                                    {indicadorsCodis.map((key:any, i:number) => {
-                                        if (indicadorsShow.includes(key)) {
-                                            return <TableCell key={`ind-val-${index}-${i}`} align="right">
-                                                {fet.indicadorsJson[key]}
+                                    {/* Indicators column headers */}
+                                    {indicadors.map((indicator:any) => {
+                                        if (indicadorsShow.includes(indicator.codi)) {
+                                            return <TableCell key={`ind-${indicator.codi}`}
+                                                              align="right"
+                                                              title={indicator.descripcio}>
+                                                {indicator.nom}
                                             </TableCell>
-                                        }})
-                                    }
+                                        }
+                                    })}
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </>) : (
-                <Typography variant="body1">
-                    {t('calendari.sense_dades')}
-                </Typography>
-            )}
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={() => setDadesDiaModalOpen(false)}>{t('calendari.tancar')}</Button>
-        </DialogActions>
-    </Dialog>
+                            </TableHead>
+                            <TableBody>
+                                {currentDadesDiaFiltered.map((fet, index) => (
+                                    <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50" }}>
+                                        {/* Dimensions values */}
+                                        {dimensionsCodis.map((key:any, i:number) => (
+                                            <TableCell key={`dim-val-${index}-${i}`}>
+                                                {fet.dimensionsJson[key]}
+                                            </TableCell>
+                                        ))}
+
+                                        {/* Indicators values */}
+                                        {indicadorsCodis.map((key:any, i:number) => {
+                                            if (indicadorsShow.includes(key)) {
+                                                return <TableCell key={`ind-val-${index}-${i}`} align="right">
+                                                    {fet.indicadorsJson[key]}
+                                                </TableCell>
+                                            }})
+                                        }
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </>) : (
+                    <Typography variant="body1">
+                        {t($ => $.calendari.sense_dades)}
+                    </Typography>
+                )}
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setDadesDiaModalOpen(false)}>{t($ => $.calendari.tancar)}</Button>
+            </DialogActions>
+        </Dialog>
+    );
 }
 
 export default CalendariEstadistiques;

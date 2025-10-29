@@ -65,64 +65,64 @@ const QueueDetails: React.FC<{ data: QueueInfo }> = ({ data }) => {
 
     const elementsDetail = [
         {
-            label: t('page.queue.detail.name'),
+            label: t($ => $.page.queue.detail.name),
             value: data?.name
         },
         {
-            label: t('page.queue.detail.address'),
+            label: t($ => $.page.queue.detail.address),
             value: data?.address
         },
         {
-            label: t('page.queue.detail.routingType'),
+            label: t($ => $.page.queue.detail.routingType),
             value: data?.routingType
         },
         {
-            label: t('page.queue.detail.durable'),
-            value: data?.durable ? t('common.yes') : t('common.no')
+            label: t($ => $.page.queue.detail.durable),
+            value: data?.durable ? t($ => $.common.yes) : t($ => $.common.no)
         },
         {
-            label: t('page.queue.detail.messageCount'),
+            label: t($ => $.page.queue.detail.messageCount),
             value: data?.messageCount
         },
         {
-            label: t('page.queue.detail.consumerCount'),
+            label: t($ => $.page.queue.detail.consumerCount),
             value: data?.consumerCount
         },
         {
-            label: t('page.queue.detail.deliveringCount'),
+            label: t($ => $.page.queue.detail.deliveringCount),
             value: data?.deliveringCount
         },
         {
-            label: t('page.queue.detail.messagesAdded'),
+            label: t($ => $.page.queue.detail.messagesAdded),
             value: data?.messagesAdded
         },
         {
-            label: t('page.queue.detail.messagesAcknowledged'),
+            label: t($ => $.page.queue.detail.messagesAcknowledged),
             value: data?.messagesAcknowledged
         },
         {
-            label: t('page.queue.detail.filter'),
-            value: data?.filter || t('common.none')
+            label: t($ => $.page.queue.detail.filter),
+            value: data?.filter || t($ => $.common.none)
         },
         {
-            label: t('page.queue.detail.temporary'),
-            value: data?.temporary ? t('common.yes') : t('common.no')
+            label: t($ => $.page.queue.detail.temporary),
+            value: data?.temporary ? t($ => $.common.yes) : t($ => $.common.no)
         },
         {
-            label: t('page.queue.detail.autoCreated'),
-            value: data?.autoCreated ? t('common.yes') : t('common.no')
+            label: t($ => $.page.queue.detail.autoCreated),
+            value: data?.autoCreated ? t($ => $.common.yes) : t($ => $.common.no)
         },
         {
-            label: t('page.queue.detail.purgeOnNoConsumers'),
-            value: data?.purgeOnNoConsumers ? t('common.yes') : t('common.no')
+            label: t($ => $.page.queue.detail.purgeOnNoConsumers),
+            value: data?.purgeOnNoConsumers ? t($ => $.common.yes) : t($ => $.common.no)
         },
         {
-            label: t('page.queue.detail.maxConsumers'),
+            label: t($ => $.page.queue.detail.maxConsumers),
             value: data?.maxConsumers
         }
     ];
 
-    return <ContentDetail title={t('page.queue.detail.title')} elements={elementsDetail} />;
+    return <ContentDetail title={t($ => $.page.queue.detail.title)} elements={elementsDetail} />;
 };
 
 // Message details component
@@ -144,56 +144,56 @@ const MessageDetails: React.FC<{ data: MessageInfo }> = ({ data }) => {
 
     const elementsDetail = [
         {
-            label: t('page.message.detail.messageID'),
+            label: t($ => $.page.message.detail.messageID),
             value: data?.messageID
         },
         {
-            label: t('page.message.detail.queueName'),
+            label: t($ => $.page.message.detail.queueName),
             value: data?.queueName
         },
         {
-            label: t('page.message.detail.timestamp'),
+            label: t($ => $.page.message.detail.timestamp),
             value: formatDate(data?.timestamp)
         },
         {
-            label: t('page.message.detail.type'),
-            value: data?.type || t('common.none')
+            label: t($ => $.page.message.detail.type),
+            value: data?.type || t($ => $.common.none)
         },
         {
-            label: t('page.message.detail.durable'),
-            value: data?.durable ? t('common.yes') : t('common.no')
+            label: t($ => $.page.message.detail.durable),
+            value: data?.durable ? t($ => $.common.yes) : t($ => $.common.no)
         },
         {
-            label: t('page.message.detail.priority'),
+            label: t($ => $.page.message.detail.priority),
             value: data?.priority
         },
         {
-            label: t('page.message.detail.size'),
+            label: t($ => $.page.message.detail.size),
             value: data?.size + ' bytes'
         },
         {
-            label: t('page.message.detail.redelivered'),
-            value: data?.redelivered ? t('common.yes') : t('common.no')
+            label: t($ => $.page.message.detail.redelivered),
+            value: data?.redelivered ? t($ => $.common.yes) : t($ => $.common.no)
         },
         {
-            label: t('page.message.detail.deliveryCount'),
+            label: t($ => $.page.message.detail.deliveryCount),
             value: data?.deliveryCount
         },
         {
-            label: t('page.message.detail.expirationTime'),
-            value: data?.expirationTime ? formatDate(data?.expirationTime) : t('common.none')
+            label: t($ => $.page.message.detail.expirationTime),
+            value: data?.expirationTime ? formatDate(data?.expirationTime) : t($ => $.common.none)
         },
         {
-            label: t('page.message.detail.properties'),
+            label: t($ => $.page.message.detail.properties),
             value: formatProperties(data?.properties)
         },
         {
-            label: t('page.message.detail.content'),
+            label: t($ => $.page.message.detail.content),
             value: data?.content
         }
     ];
 
-    return <ContentDetail title={t('page.message.detail.title')} elements={elementsDetail} />;
+    return <ContentDetail title={t($ => $.page.message.detail.title)} elements={elementsDetail} />;
 };
 
 // Main queue messages page component
@@ -224,7 +224,7 @@ const QueueMessages: React.FC = () => {
             setLoading(false);
         } catch (err) {
             console.error('Error fetching queue data:', err);
-            setError(t('page.queue.error.fetchFailed'));
+            setError(t($ => $.page.queue.error.fetchFailed));
             setLoading(false);
         }
     }, [queueName, t, requestHref]);
@@ -236,7 +236,7 @@ const QueueMessages: React.FC = () => {
     // Show message details
     const handleShowMessageDetails = (message: MessageInfo) => {
         showMessageDialog(
-            t('page.message.detail.title'),
+            t($ => $.page.message.detail.title),
             <MessageDetails data={message} />,
             closeDialogButton,
             { maxWidth: 'lg', fullWidth: true }
@@ -266,7 +266,7 @@ const QueueMessages: React.FC = () => {
             fetchQueueData();
         } catch (err) {
             console.error('Error deleting message:', err);
-            setError(t('page.message.error.deleteFailed'));
+            setError(t($ => $.page.message.error.deleteFailed));
         }
     };
 
@@ -292,7 +292,7 @@ const QueueMessages: React.FC = () => {
             fetchQueueData();
         } catch (err) {
             console.error('Error purging queue:', err);
-            setError(t('page.queue.error.purgeFailed'));
+            setError(t($ => $.page.queue.error.purgeFailed));
             setPurgeDialogOpen(false);
         }
     };
@@ -305,7 +305,7 @@ const QueueMessages: React.FC = () => {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <Typography>{t('common.loading')}</Typography>
+                <Typography>{t($ => $.common.loading)}</Typography>
             </Box>
         );
     }
@@ -322,12 +322,12 @@ const QueueMessages: React.FC = () => {
     const columns = [
         {
             field: 'messageID',
-            headerName: t('page.message.grid.messageID'),
+            headerName: t($ => $.page.message.grid.messageID),
             flex: 2,
         },
         {
             field: 'timestamp',
-            headerName: t('page.message.grid.timestamp'),
+            headerName: t($ => $.page.message.grid.timestamp),
             flex: 1,
             valueFormatter: (params: any) => {
                 return new Date(params.value).toLocaleString();
@@ -335,17 +335,17 @@ const QueueMessages: React.FC = () => {
         },
         {
             field: 'type',
-            headerName: t('page.message.grid.type'),
+            headerName: t($ => $.page.message.grid.type),
             flex: 1,
         },
         {
             field: 'priority',
-            headerName: t('page.message.grid.priority'),
+            headerName: t($ => $.page.message.grid.priority),
             flex: 0.5,
         },
         {
             field: 'size',
-            headerName: t('page.message.grid.size'),
+            headerName: t($ => $.page.message.grid.size),
             flex: 0.5,
             valueFormatter: (params: any) => {
                 return `${params.value} bytes`;
@@ -353,7 +353,7 @@ const QueueMessages: React.FC = () => {
         },
         {
             field: 'actions',
-            headerName: t('page.message.grid.actions'),
+            headerName: t($ => $.page.message.grid.actions),
             flex: 1,
             renderCell: (params: any) => (
                 <Button
@@ -362,7 +362,7 @@ const QueueMessages: React.FC = () => {
                     size="small"
                     onClick={() => handleDeleteMessage(params.row.messageID)}
                 >
-                    {t('common.delete')}
+                    {t($ => $.common.delete)}
                 </Button>
             ),
         },
@@ -374,13 +374,15 @@ const QueueMessages: React.FC = () => {
                 {/* Breadcrumbs navigation */}
                 <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
                     <Link color="inherit" onClick={handleBackToBroker} sx={{ cursor: 'pointer' }}>
-                        {t('page.broker.title')}
+                        {t($ => $.page.broker.title)}
                     </Link>
                     <Typography color="text.primary">{queueName}</Typography>
                 </Breadcrumbs>
 
                 <Typography variant="h4" component="h1" gutterBottom>
-                    {t('page.queue.title', { name: queueName })}
+                    {t($ => $.page.queue.title, {
+                        name: queueName
+                    })}
                 </Typography>
 
                 {/* Queue details */}
@@ -393,7 +395,7 @@ const QueueMessages: React.FC = () => {
                 {/* Actions */}
                 <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="h5" component="h2">
-                        {t('page.message.title')}
+                        {t($ => $.page.message.title)}
                     </Typography>
 
                     <Button
@@ -403,7 +405,7 @@ const QueueMessages: React.FC = () => {
                         onClick={() => setPurgeDialogOpen(true)}
                         disabled={messages.length === 0}
                     >
-                        {t('page.queue.actions.purge')}
+                        {t($ => $.page.queue.actions.purge)}
                     </Button>
                 </Box>
 
@@ -427,18 +429,20 @@ const QueueMessages: React.FC = () => {
                     open={purgeDialogOpen}
                     onClose={() => setPurgeDialogOpen(false)}
                 >
-                    <DialogTitle>{t('page.queue.purge.title')}</DialogTitle>
+                    <DialogTitle>{t($ => $.page.queue.purge.title)}</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            {t('page.queue.purge.confirmation', { name: queueName })}
+                            {t($ => $.page.queue.purge.confirmation, {
+                                name: queueName
+                            })}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => setPurgeDialogOpen(false)}>
-                            {t('common.cancel')}
+                            {t($ => $.common.cancel)}
                         </Button>
                         <Button onClick={handlePurgeQueue} color="error" autoFocus>
-                            {t('common.confirm')}
+                            {t($ => $.common.confirm)}
                         </Button>
                     </DialogActions>
                 </Dialog>

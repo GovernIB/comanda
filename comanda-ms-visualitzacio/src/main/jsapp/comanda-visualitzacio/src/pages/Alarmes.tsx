@@ -55,22 +55,24 @@ const Alarmes = () => {
         showInMenu: false,
         onClick: exec
     }];
-    return <GridPage>
-        {actionInitialized && <>
-            <MuiDataGrid
-                title={t('menu.alarmes')}
-                resourceName="alarma"
-                columns={dataGridColumns}
-                readOnly
-                apiRef={gridApiRef}
-                toolbarType="upper"
-                //toolbarElementsWithPositions={toolbarElementsWithPositions}
-                filter="estat:'ACTIVA'"
-                sortModel={[{ field: 'dataActivacio', sort: 'desc' }]}
-                rowAdditionalActions={rowAdditionalActions} />
-            {formDialogComponent}
-        </>}
-    </GridPage>;
+    return (
+        <GridPage>
+            {actionInitialized && <>
+                <MuiDataGrid
+                    title={t($ => $.menu.alarmes)}
+                    resourceName="alarma"
+                    columns={dataGridColumns}
+                    readOnly
+                    apiRef={gridApiRef}
+                    toolbarType="upper"
+                    //toolbarElementsWithPositions={toolbarElementsWithPositions}
+                    filter="estat:'ACTIVA'"
+                    sortModel={[{ field: 'dataActivacio', sort: 'desc' }]}
+                    rowAdditionalActions={rowAdditionalActions} />
+                {formDialogComponent}
+            </>}
+        </GridPage>
+    );
 }
 
 export default Alarmes;

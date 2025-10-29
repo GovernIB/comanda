@@ -10,12 +10,14 @@ const resources = {
     es: { translation: translationEs },
 };
 
+export type caResourceType = (typeof resources)['ca'];
+
 i18next.use(initReactI18next).init({
     resources,
     fallbackLng: 'ca',
     interpolation: {
-        escapeValue: false
-    }
+        escapeValue: false,
+    },
 });
 
 export default i18next;

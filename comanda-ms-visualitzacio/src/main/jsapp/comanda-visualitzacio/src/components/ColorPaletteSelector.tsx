@@ -32,7 +32,7 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColor
             }
             setNewColor('#000000'); // Reseteja el selector de color per al següent afegit
         } else {
-            alert(t('page.widget.editorPaleta.exist')); // O mostra un missatge més amigable
+            alert(t($ => $.page.widget.editorPaleta.exist)); // O mostra un missatge més amigable
         }
     }, [colors, newColor, onPaletteChange]);
 
@@ -62,13 +62,12 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColor
     // Renderitzat del component
     return (
         <Box sx={{ py: 1, px: 2, border: '1px solid #ccc', borderRadius: 2, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>{t('page.widget.editorPaleta.title')}</Typography>
-
+            <Typography variant="subtitle2" gutterBottom>{t($ => $.page.widget.editorPaleta.title)}</Typography>
             {/* Secció per afegir nous colors */}
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <TextField
                     type="color"
-                    label={t('page.widget.editorPaleta.color')}
+                    label={t($ => $.page.widget.editorPaleta.color)}
                     value={newColor}
                     onChange={(e) => setNewColor(e.target.value)}
                     fullWidth
@@ -84,7 +83,7 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColor
                     value={newColor}
                     onChange={(e) => setNewColor(e.target.value)}
                     size="small"
-                    label={t('page.widget.editorPaleta.hex')}
+                    label={t($ => $.page.widget.editorPaleta.hex)}
                     sx={{ flexGrow: 1 }}
                 />
                 <Button
@@ -93,17 +92,16 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColor
                     startIcon={<AddCircleOutlineIcon />}
                     disabled={!newColor || colors.includes(newColor)} // Deshabilita si el color està buit o duplicat
                 >
-                    {t('page.widget.action.add.label')}
+                    {t($ => $.page.widget.action.add.label)}
                 </Button>
             </Stack>
-
             {/* Visualització de la paleta de colors actual */}
             <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
-                {t('page.widget.editorPaleta.palet')}
+                {t($ => $.page.widget.editorPaleta.palet)}
             </Typography>
             {colors.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                    {t('page.widget.editorPaleta.empty')}
+                    {t($ => $.page.widget.editorPaleta.empty)}
                 </Typography>
             ) : (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

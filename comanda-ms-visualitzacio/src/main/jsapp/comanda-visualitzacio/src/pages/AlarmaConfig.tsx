@@ -112,103 +112,107 @@ export const AlarmaConfigForm: React.FC = () => {
     const handlePeriodeShowChange = (event: any) => {
         setPeriodeShow(event.target.checked);
     }
-    return <FormPage>
-        <MuiForm
-            id={id}
-            title={id ? t('page.alarmaConfig.update') : t('page.alarmaConfig.create')}
-            resourceName="alarmaConfig"
-            goBackLink="/alarma"
-            createLink="form/{{id}}"
-            apiRef={formApiRef}
-            onDataChange={handleDataChange}
-            onValidationErrorsChange={handleValidationErrorsChange}>
-            <Grid container spacing={2}>
-                <Grid size={3}>
-                    <EntornAppSelector
-                        id={entornAppId}
-                        onEntornAppChange={handleEntornAppChange}
-                        validationErrors={validationErrors} />
-                </Grid>
-                <Grid size={9}>
-                    <FormField name="nom" />
-                </Grid>
-                <Grid size={12}>
-                    <Card variant="outlined">
-                        <CardHeader
-                            title={t('page.alarmaConfig.condicio.title')}
-                            subheader={t('page.alarmaConfig.condicio.subtitle')}
-                            slotProps={{
-                                title: { variant: 'h6' },
-                                subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
-                            }}
-                            sx={{ mb: -2 }} />
-                        <CardContent>
-                            <Grid container spacing={1}>
-                                <Grid size={3}>
-                                    <FormField name="tipus" />
+    return (
+        <FormPage>
+            <MuiForm
+                id={id}
+                title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)}
+                resourceName="alarmaConfig"
+                goBackLink="/alarma"
+                createLink="form/{{id}}"
+                apiRef={formApiRef}
+                onDataChange={handleDataChange}
+                onValidationErrorsChange={handleValidationErrorsChange}>
+                <Grid container spacing={2}>
+                    <Grid size={3}>
+                        <EntornAppSelector
+                            id={entornAppId}
+                            onEntornAppChange={handleEntornAppChange}
+                            validationErrors={validationErrors} />
+                    </Grid>
+                    <Grid size={9}>
+                        <FormField name="nom" />
+                    </Grid>
+                    <Grid size={12}>
+                        <Card variant="outlined">
+                            <CardHeader
+                                title={t($ => $.page.alarmaConfig.condicio.title)}
+                                subheader={t($ => $.page.alarmaConfig.condicio.subtitle)}
+                                slotProps={{
+                                    title: { variant: 'h6' },
+                                    subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
+                                }}
+                                sx={{ mb: -2 }} />
+                            <CardContent>
+                                <Grid container spacing={1}>
+                                    <Grid size={3}>
+                                        <FormField name="tipus" />
+                                    </Grid>
+                                    <Grid size={6}>
+                                        <FormField name="condicio" disabled={condicioValorDisabled} />
+                                    </Grid>
+                                    <Grid size={3}>
+                                        <FormField name="valor" disabled={condicioValorDisabled} />
+                                    </Grid>
                                 </Grid>
-                                <Grid size={6}>
-                                    <FormField name="condicio" disabled={condicioValorDisabled} />
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    <Grid size={12}>
+                        <FormField name="missatge" />
+                    </Grid>
+                    <Grid size={6}>
+                        <FormControlLabel
+                            control={<Checkbox size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}
+                            label={t($ => $.page.alarmaConfig.periode.switch)}
+                            sx={{ ml: 1 }} />
+                    </Grid>
+                    <Grid size={6}>
+                        <FormField name="admin" />
+                    </Grid>
+                    {periodeShow && <Grid size={12}>
+                        <Card variant="outlined">
+                            <CardHeader
+                                title={t($ => $.page.alarmaConfig.periode.title)}
+                                subheader={t($ => $.page.alarmaConfig.periode.subtitle)}
+                                slotProps={{
+                                    title: { variant: 'h6' },
+                                    subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
+                                }}
+                                sx={{ mb: -2 }} />
+                            <CardContent>
+                                <Grid container spacing={1}>
+                                    <Grid size={3}>
+                                        <FormField name="periodeValor" />
+                                    </Grid>
+                                    <Grid size={9}>
+                                        <FormField name="periodeUnitat" />
+                                    </Grid>
                                 </Grid>
-                                <Grid size={3}>
-                                    <FormField name="valor" disabled={condicioValorDisabled} />
-                                </Grid>
-                            </Grid>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </Grid>}
                 </Grid>
-                <Grid size={12}>
-                    <FormField name="missatge" />
-                </Grid>
-                <Grid size={6}>
-                    <FormControlLabel
-                        control={<Checkbox size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}
-                        label={t('page.alarmaConfig.periode.switch')}
-                        sx={{ ml: 1 }} />
-                </Grid>
-                <Grid size={6}>
-                    <FormField name="admin" />
-                </Grid>
-                {periodeShow && <Grid size={12}>
-                    <Card variant="outlined">
-                        <CardHeader
-                            title={t('page.alarmaConfig.periode.title')}
-                            subheader={t('page.alarmaConfig.periode.subtitle')}
-                            slotProps={{
-                                title: { variant: 'h6' },
-                                subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
-                            }}
-                            sx={{ mb: -2 }} />
-                        <CardContent>
-                            <Grid container spacing={1}>
-                                <Grid size={3}>
-                                    <FormField name="periodeValor" />
-                                </Grid>
-                                <Grid size={9}>
-                                    <FormField name="periodeUnitat" />
-                                </Grid>
-                            </Grid>
-                        </CardContent>
-                    </Card>
-                </Grid>}
-            </Grid>
-        </MuiForm>
-    </FormPage>;
+            </MuiForm>
+        </FormPage>
+    );
 }
 
 const AlarmaConfig = () => {
     const { t } = useTranslation();
     const dataGridColumns = useDataGridColumns();
-    return <GridPage>
-        <MuiDataGrid
-            title={t('page.alarmaConfig.title')}
-            resourceName="alarmaConfig"
-            columns={dataGridColumns}
-            toolbarType="upper"
-            toolbarCreateLink="form"
-            rowUpdateLink="form/{{id}}"
-        />
-    </GridPage>;
+    return (
+        <GridPage>
+            <MuiDataGrid
+                title={t($ => $.page.alarmaConfig.title)}
+                resourceName="alarmaConfig"
+                columns={dataGridColumns}
+                toolbarType="upper"
+                toolbarCreateLink="form"
+                rowUpdateLink="form/{{id}}"
+            />
+        </GridPage>
+    );
 }
 
 export default AlarmaConfig;

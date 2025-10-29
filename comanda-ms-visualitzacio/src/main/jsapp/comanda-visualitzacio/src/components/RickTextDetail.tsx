@@ -25,12 +25,11 @@ export const StacktraceBlock: React.FC<StacktraceBlockProps> = ({ title, value }
         <>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Typography variant="subtitle1" fontWeight="bold">{title}</Typography>
-                <Button onClick={handleCopy} size="small" title={t('components.copiarContingutTitle')}>
+                <Button onClick={handleCopy} size="small" title={t($ => $.components.copiarContingutTitle)}>
                     <Icon fontSize="small" sx={{mr:1}}>content_copy</Icon>
-                    {t('components.copiarContingut')}
+                    {t($ => $.components.copiarContingut)}
                 </Button>
             </Box>
-
             <Box sx={{
                 border: '1px solid #ccc',
                 borderRadius: 2,
@@ -47,7 +46,6 @@ export const StacktraceBlock: React.FC<StacktraceBlockProps> = ({ title, value }
                     {value}
                 </Typography>
             </Box>
-
             <Snackbar
                 open={copied}
                 autoHideDuration={2000}
@@ -58,7 +56,7 @@ export const StacktraceBlock: React.FC<StacktraceBlockProps> = ({ title, value }
                     severity="info"
                     variant="filled"
                     sx={{ width: '100%' }} >
-                    {t('components.copiarContingutSuccess')}
+                    {t($ => $.components.copiarContingutSuccess)}
                 </Alert>
             </Snackbar>
         </>

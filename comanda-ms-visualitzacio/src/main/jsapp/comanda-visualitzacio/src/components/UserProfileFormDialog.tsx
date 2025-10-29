@@ -34,7 +34,7 @@ export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void }
             <ListItemIcon>
                 <Icon fontSize={'small'}>person</Icon>
             </ListItemIcon>
-            <ListItemText>{t('menu.user.options.profile.title')}</ListItemText>
+            <ListItemText>{t($ => $.menu.user.options.profile.title)}</ListItemText>
         </MenuItem>
     );
 };
@@ -48,24 +48,24 @@ export const TemaObscurSelector: React.FC = () => {
     }
   };
   return (
-    <ToggleButtonGroup
-      value={data?.temaObscur}
-      exclusive
-      onChange={handleChange}
-      size="small"
-      sx={{
-        display: 'flex',
-        width: '100%',
-        justifyContent: 'center',
-      }}
-    >
-      <ToggleButton value={false} sx={{ flex: 1, gap: 1 }} >
-        <Icon>light_mode</Icon> {t('menu.user.options.profile.tema.clar')}
-      </ToggleButton>
-      <ToggleButton value={true} sx={{ flex: 1, gap: 1 }} >
-        <Icon>dark_mode</Icon> {t('menu.user.options.profile.tema.obscur')}
-      </ToggleButton>
-    </ToggleButtonGroup>
+      <ToggleButtonGroup
+        value={data?.temaObscur}
+        exclusive
+        onChange={handleChange}
+        size="small"
+        sx={{
+          display: 'flex',
+          width: '100%',
+          justifyContent: 'center',
+        }}
+      >
+          <ToggleButton value={false} sx={{ flex: 1, gap: 1 }} >
+            <Icon>light_mode</Icon> {t($ => $.menu.user.options.profile.tema.clar)}
+          </ToggleButton>
+          <ToggleButton value={true} sx={{ flex: 1, gap: 1 }} >
+            <Icon>dark_mode</Icon> {t($ => $.menu.user.options.profile.tema.obscur)}
+          </ToggleButton>
+      </ToggleButtonGroup>
   );
 };
 
@@ -84,7 +84,7 @@ export const UserProfileFormDialog = ({
     return (
         <MuiFormDialog
             resourceName="usuari"
-            title={t('menu.user.options.profile.title')}
+            title={t($ => $.menu.user.options.profile.title)}
             onClose={(reason?: string) => reason !== 'backdropClick'}
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}
@@ -94,7 +94,7 @@ export const UserProfileFormDialog = ({
         >
             <UserProfileCardData
                 icon={<AssignmentInd />}
-                title={t('menu.user.options.profile.form.userData')}
+                title={t($ => $.menu.user.options.profile.form.userData)}
                 cardProps={{ border: '1px solid #004B99' }}
                 headerProps={{ color: 'white', backgroundColor: '#3f96f6' }}
             >
@@ -212,10 +212,9 @@ export const UserProfileFormDialog = ({
                     <TemaObscurSelector />
                 </Grid>
             </UserProfileCardData>
-
             <UserProfileCardData
                 icon={<ManageAccounts />}
-                title={t('menu.user.options.profile.form.genericConfig')}
+                title={t($ => $.menu.user.options.profile.form.genericConfig)}
                 cardProps={{ border: '1px solid #004B99', marginTop: '1rem' }}
                 headerProps={{ color: 'white', backgroundColor: '#9ea4ad' }}
             >

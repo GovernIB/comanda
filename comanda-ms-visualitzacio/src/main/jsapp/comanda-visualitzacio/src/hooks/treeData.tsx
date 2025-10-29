@@ -27,7 +27,7 @@ export const useTreeData = (
     const treeViewSwitch = (
         <FormGroup sx={{ ml: 2 }}>
             <FormControlLabel
-                label={t('treeData.treeView')}
+                label={t($ => $.treeData.treeView)}
                 control={
                     <Switch
                         checked={treeView}

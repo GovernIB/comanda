@@ -83,7 +83,7 @@ const Entorns: React.FC = () => {
     return (
         <GridPage disableMargins>
             <MuiGrid
-                title={t('page.versionsEntorns.title')}
+                title={t($ => $.page.versionsEntorns.title)}
                 resourceName="app"
                 columns={columns}
                 readOnly
