@@ -746,6 +746,9 @@ const translationCa = {
     treeData: {
         treeView: "Vista en arbre"
     },
+    reordering: {
+        errorMessage: "Error al reordenar",
+    },
 };
 
 export default translationCa;

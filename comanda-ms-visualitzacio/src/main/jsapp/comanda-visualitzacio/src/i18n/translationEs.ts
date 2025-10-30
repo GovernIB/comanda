@@ -746,6 +746,9 @@ const translationEs: translationResourcesType = {
     treeData: {
         treeView: "Vista en árbol"
     },
+    reordering: {
+        errorMessage: "Error al reordenar",
+    },
 };
 
 export default translationEs;
