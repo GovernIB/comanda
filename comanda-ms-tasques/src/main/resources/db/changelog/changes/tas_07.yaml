@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: tas-change-07-01
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}tasca
+            columns:
+              - column:
+                  name: numero_expedient
+                  type: VARCHAR(128 ${varcharUnit})

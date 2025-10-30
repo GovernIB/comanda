@@ -65,6 +65,8 @@ public class Tasca extends BaseResource<Long> {
     private TascaEstat estat;
     @Size(max = 1024)
     private String estatDescripcio;
+    @Size(max = 128)
+    private String numeroExpedient;
     private Prioritat prioritat;
     private LocalDateTime dataInici;
     private LocalDateTime dataFi;
@@ -91,6 +93,7 @@ public class Tasca extends BaseResource<Long> {
         private String nom;
         private String descripcio;
         private String tipus;
+        private String numeroExpedient;
         private Prioritat prioritat;
         private LocalDateTime dataInici1;
         private LocalDateTime dataInici2;

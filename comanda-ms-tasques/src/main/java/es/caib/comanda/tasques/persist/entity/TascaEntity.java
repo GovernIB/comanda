@@ -47,6 +47,8 @@ public class TascaEntity extends BaseAuditableEntity<Tasca> {
     private TascaEstat estat;
     @Column(name = "estat_desc", length = 1024)
     private String estatDescripcio;
+    @Column(name = "numero_expedient", length = 128)
+    private String numeroExpedient;
     @Column(name = "prioritat", length = 16)
     @Enumerated(EnumType.STRING)
     private Prioritat prioritat;
