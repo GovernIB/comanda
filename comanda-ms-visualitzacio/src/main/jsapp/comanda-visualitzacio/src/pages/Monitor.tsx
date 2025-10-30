@@ -30,16 +30,18 @@ type TabMonitorProps = {
 const TabMonitor: React.FC<TabMonitorProps> = (props) => {
     const { t } = useTranslation();
     const { selectedModule, handleTabChange } = props;
-    return <Tabs
-        value={selectedModule}
-        onChange={handleTabChange}
-        textColor="primary"
-        indicatorColor="primary"
-        sx={{ mb: 2 }} >
-        {moduleOptions.map((option) => (
-            <Tab key={option.value} label={t(option.labelKey)} value={option.value} />
-        ))}
-    </Tabs>;
+    return (
+        <Tabs
+            value={selectedModule}
+            onChange={handleTabChange}
+            textColor="primary"
+            indicatorColor="primary"
+            sx={{ mb: 2 }} >
+            {moduleOptions.map((option) => (
+                <Tab key={option.value} label={t($ => $[option.labelKey])} value={option.value} />
+            ))}
+        </Tabs>
+    );
 }
 
 export const translateEnumValue = (
@@ -49,7 +51,7 @@ export const translateEnumValue = (
 ): string => {
   if (!value) return '';
   if (translationMap && t && translationMap[value]) {
-    return t(translationMap[value]);
+    return t($ => $[translationMap[value]]);
   }
   return value;
 };
@@ -94,17 +96,17 @@ const MonitorDetails: React.FC<any> = (props) => {
     const { data } = props;
     const { t } = useTranslation();
     const elementsDetail = [
-        { label: t('page.monitors.detail.data'), value: dateFormatLocale(data?.data, true) },
-        { label: t('page.monitors.detail.operacio'), value: data?.operacio },
-        { label: t('page.monitors.detail.tipus'), value: translateEnumValue(data?.tipus, tipusTranslationMap, t) },
-        { label: t('page.monitors.detail.estat'), contentValue: <EstatBadge value={data?.estat} /> },
-        { label: t('page.monitors.detail.codiUsuari'), value: data?.codiUsuari },
-        { label: t('page.monitors.detail.errorDescripcio'), value: data?.errorDescripcio },
-        { label: t('page.monitors.detail.excepcioMessage'), value: data?.excepcioMessage },
+        { label: t($ => $.page.monitors.detail.data), value: dateFormatLocale(data?.data, true) },
+        { label: t($ => $.page.monitors.detail.operacio), value: data?.operacio },
+        { label: t($ => $.page.monitors.detail.tipus), value: translateEnumValue(data?.tipus, tipusTranslationMap, t) },
+        { label: t($ => $.page.monitors.detail.estat), contentValue: <EstatBadge value={data?.estat} /> },
+        { label: t($ => $.page.monitors.detail.codiUsuari), value: data?.codiUsuari },
+        { label: t($ => $.page.monitors.detail.errorDescripcio), value: data?.errorDescripcio },
+        { label: t($ => $.page.monitors.detail.excepcioMessage), value: data?.excepcioMessage },
         { 
             contentValue: (
                 <StacktraceBlock
-                    title={t('page.monitors.detail.excepcioStacktrace')}
+                    title={t($ => $.page.monitors.detail.excepcioStacktrace)}
                     value={data?.excepcioStacktrace}
                 />
             )
@@ -128,36 +130,38 @@ const MonitorFilter: React.FC<any> = () => {
         );
     }
 
-    return <><MuiFilter
-        resourceName="monitor"
-        code="FILTER"
-        springFilterBuilder={springFilterBuilder}
-        apiRef={filterRef}
-        buttonControlled
-        commonFieldComponentProps={{ size: 'small' }}
-        componentProps={{ sx: { my: 2 } }}
-        >
-        <Grid container columnSpacing={1} rowSpacing={1}>
-            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="codi" /></Grid>
-            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="dataDesde" /></Grid>
-            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="dataFins" /></Grid>
-            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="descripcio" /></Grid>
-            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="tipus" /></Grid>
-            <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="estat" /></Grid>
-            <Grid size={12} sx={{ display: 'flex', justifyContent: 'end' }}>
-                <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }} >
-                    <Button variant="outlined" onClick={clear} sx={{ flexBasis: { xs: 'calc(50% - 0.5rem)', sm: 'auto' }, flexGrow: 0, flex: '1 1 auto', minWidth: 'fit-content', borderRadius: 1 }} >
-                        <Icon sx={{ mr: 1 }}>clear</Icon>
-                        {t('components.clear')}
-                    </Button>
-                    <Button variant="contained" onClick={filter} sx={{ flexBasis: { xs: 'calc(50% - 0.5rem)', sm: 'auto' }, flexGrow: 0, flex: '1 1 auto', minWidth: 'fit-content', borderRadius: 1 }} >
-                        <Icon sx={{ mr: 1 }}>filter_alt</Icon>
-                        {t('components.search')}
-                    </Button>
-                </Box>
+    return (
+        <><MuiFilter
+            resourceName="monitor"
+            code="FILTER"
+            springFilterBuilder={springFilterBuilder}
+            apiRef={filterRef}
+            buttonControlled
+            commonFieldComponentProps={{ size: 'small' }}
+            componentProps={{ sx: { my: 2 } }}
+            >
+            <Grid container columnSpacing={1} rowSpacing={1}>
+                <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="codi" /></Grid>
+                <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="dataDesde" /></Grid>
+                <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="dataFins" /></Grid>
+                <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="descripcio" /></Grid>
+                <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="tipus" /></Grid>
+                <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="estat" /></Grid>
+                <Grid size={12} sx={{ display: 'flex', justifyContent: 'end' }}>
+                    <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }} >
+                        <Button variant="outlined" onClick={clear} sx={{ flexBasis: { xs: 'calc(50% - 0.5rem)', sm: 'auto' }, flexGrow: 0, flex: '1 1 auto', minWidth: 'fit-content', borderRadius: 1 }} >
+                            <Icon sx={{ mr: 1 }}>clear</Icon>
+                            {t($ => $.components.clear)}
+                        </Button>
+                        <Button variant="contained" onClick={filter} sx={{ flexBasis: { xs: 'calc(50% - 0.5rem)', sm: 'auto' }, flexGrow: 0, flex: '1 1 auto', minWidth: 'fit-content', borderRadius: 1 }} >
+                            <Icon sx={{ mr: 1 }}>filter_alt</Icon>
+                            {t($ => $.components.search)}
+                        </Button>
+                    </Box>
+                </Grid>
             </Grid>
-        </Grid>
-    </MuiFilter></>
+        </MuiFilter></>
+    );
 };
 
 const Monitors: React.FC = () => {
@@ -166,7 +170,7 @@ const Monitors: React.FC = () => {
     const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
     const showDetail = (data: any) => {
         detailDialogShow(
-            t('page.monitors.detail.title'),
+            t($ => $.page.monitors.detail.title),
             <MonitorDetails data={data} />,
             closeDialogButton,
             { maxWidth: 'lg', fullWidth: true, }
@@ -176,23 +180,25 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
-    return <GridPage>
-        <MuiGrid
-            title={t('page.monitors.title')}
-            toolbarAdditionalRow={
-                <> <MonitorFilter></MonitorFilter>
-                <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
-            }
-            resourceName="monitor"
-            columns={columns}
-            toolbarType="upper"
-            paginationActive
-            readOnly
-            onRowClick={(params: any) => showDetail(params.row)}
-            staticFilter={`modul:'${selectedModule}'`}
-        />
-        {detailDialogComponent}
-    </GridPage>;
+    return (
+        <GridPage>
+            <MuiGrid
+                title={t($ => $.page.monitors.title)}
+                toolbarAdditionalRow={
+                    <> <MonitorFilter></MonitorFilter>
+                    <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
+                }
+                resourceName="monitor"
+                columns={columns}
+                toolbarType="upper"
+                paginationActive
+                readOnly
+                onRowClick={(params: any) => showDetail(params.row)}
+                staticFilter={`modul:'${selectedModule}'`}
+            />
+            {detailDialogComponent}
+        </GridPage>
+    );
 }
 
 export default Monitors;

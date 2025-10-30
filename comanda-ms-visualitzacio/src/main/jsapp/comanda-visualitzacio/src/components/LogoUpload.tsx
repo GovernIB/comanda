@@ -82,7 +82,7 @@ const ImageField: React.FC<ImageFieldProps> = ({
                     }}
                 >
                     {editable && (
-                        <div title={t('form.field.file.edit')}>
+                        <div title={t($ => $.form.field.file.edit)}>
                             <label
                                 htmlFor={buttonAvatarId}
                                 style={{
@@ -104,14 +104,14 @@ const ImageField: React.FC<ImageFieldProps> = ({
                         </div>
                     )}
                     {!hideDownloadButton && (
-                        <div title={t('form.field.file.download')}>
+                        <div title={t($ => $.form.field.file.download)}>
                             <IconButton onClick={onDownloadClick} sx={{ color: '#ffffff' }}>
                                 <Icon>file_download</Icon>
                             </IconButton>
                         </div>
                     )}
                     {editable && (
-                        <div title={t('form.field.file.clear')}>
+                        <div title={t($ => $.form.field.file.clear)}>
                             <IconButton
                                 onClick={() => {
                                     onClear();

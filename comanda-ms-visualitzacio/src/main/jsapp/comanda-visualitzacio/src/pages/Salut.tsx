@@ -329,7 +329,7 @@ const Salut: FunctionComponent = () => {
         <BasePage
             toolbar={
                 <SalutToolbar
-                    title={t('page.salut.title')}
+                    title={t($ => $.page.salut.title)}
                     ready={salutData.ready}
                     onRefreshClick={() => refreshAll()}
                     appDataLoading={salutData.loading}

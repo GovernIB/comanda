@@ -156,7 +156,7 @@ const useCustomGridItemActions = (refresh?: () => void) => {
     const content = <>
         <MuiFormDialog
             resourceName={'dashboardTitol'}
-            title={t('page.dashboards.action.llistarTitle.label')}
+            title={t($ => $.page.dashboards.action.llistarTitle.label)}
             apiRef={formApiRef}
         >
             <AfegirTitolFormContent/>

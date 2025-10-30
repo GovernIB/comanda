@@ -142,7 +142,7 @@ const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
             filter={filter}
             rowAdditionalActions={[
                 {
-                    label: t('page.widget.action.add.label'),
+                    label: t($ => $.page.widget.action.add.label),
                     icon: 'add',
                     onClick: onAddClick,
                 },
@@ -175,7 +175,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
     return (
         <Dialog maxWidth="lg" open={open} onClose={onClose}>
             <DialogTitle>
-                {t('page.dashboards.action.addWidget.title')}
+                {t($ => $.page.dashboards.action.addWidget.title)}
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
@@ -207,15 +207,15 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
                     <>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                             <Tabs value={tab} onChange={handleChange}>
-                                <Tab label={t('page.widget.simple.tab.title')} />
-                                <Tab label={t('page.widget.grafic.tab.title')} />
-                                <Tab label={t('page.widget.taula.tab.title')} />
+                                <Tab label={t($ => $.page.widget.simple.tab.title)} />
+                                <Tab label={t($ => $.page.widget.grafic.tab.title)} />
+                                <Tab label={t($ => $.page.widget.taula.tab.title)} />
                             </Tabs>
                         </Box>
                         {tab === 0 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaSimpleWidget"
-                                title={t('page.widget.simple.title')}
+                                title={t($ => $.page.widget.simple.title)}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -223,7 +223,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
                         {tab === 1 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaGraficWidget"
-                                title={t('page.widget.grafic.title')}
+                                title={t($ => $.page.widget.grafic.title)}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -231,7 +231,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
                         {tab === 2 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaTaulaWidget"
-                                title={t('page.widget.taula.title')}
+                                title={t($ => $.page.widget.taula.title)}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -362,13 +362,13 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                     {
                         field: 'position',
                         flex: 1,
-                        headerName: t('page.widget.grid.position'),
+                        headerName: t($ => $.page.widget.grid.position),
                         valueGetter: (_value, row) => `${row.posX}, ${row.posY}`,
                     },
                     {
                         field: 'size',
                         flex: 1,
-                        headerName: t('page.widget.grid.size'),
+                        headerName: t($ => $.page.widget.grid.size),
                         valueGetter: (_value, row) => `${row.width}, ${row.height}`,
                     },
                 ]}
@@ -477,7 +477,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
     const openCreateTitolForm = () => {
         titolFormDialogShow(null, {
-            title: t('page.dashboards.action.afegirTitle.title'),
+            title: t($ => $.page.dashboards.action.afegirTitle.title),
             formContent: <AfegirTitolFormContent />,
             additionalData: { dashboard: { id: dashboardId }, ...defaultSizeAndPosition },
             dialogComponentProps: { maxWidth: 'md', fullWidth: true },
@@ -497,12 +497,12 @@ const EstadisticaDashboardEdit: React.FC = () => {
             },
         })
             .then(async () => {
-                temporalMessageShow(null, t('page.dashboards.action.addWidget.success'), 'success');
+                temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.success), 'success');
                 forceRefreshDashboardWidgets();
                 closeAddWidgetDialog();
             })
             .catch((reason) => {
-                temporalMessageShow(null, t('page.dashboards.action.addWidget.error'), 'error');
+                temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.error), 'error');
                 console.error('Widget add error', reason);
             });
     };
@@ -517,7 +517,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             );
 
             if (newDashboardItem === undefined) {
-                console.error(t('page.dashboards.action.patchItem.warning', oldDashboardItem));
+                console.error(t($ => $.page.dashboards.action.patchItem.warning, oldDashboardItem));
             } else if (!isEqual(oldDashboardItem, newDashboardItem)) {
                 const patchArgs = {
                     data: {
@@ -537,11 +537,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
         Promise.all(promises)
             .then(() => {
-                temporalMessageShow(null, t('page.dashboards.action.patchItem.success'), 'success');
+                temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.success), 'success');
             })
             .catch((reason) => {
-                temporalMessageShow(null, t('page.dashboards.action.patchItem.error'), 'error');
-                console.error(t('page.dashboards.action.patchItem.saveError'), reason);
+                temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error');
+                console.error(t($ => $.page.dashboards.action.patchItem.saveError), reason);
             });
     };
 
@@ -554,14 +554,14 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     severity="warning"
                     action={
                         <Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>
-                            {t('page.dashboards.alert.tornarLlistat')}
+                            {t($ => $.page.dashboards.alert.tornarLlistat)}
                         </Button>
                     }
                 >
-                    {t('page.dashboards.alert.notExists')}
+                    {t($ => $.page.dashboards.alert.notExists)}
                 </Alert>
             );
-        } else return <Alert severity="error">{t('page.dashboards.alert.carregar')}</Alert>;
+        } else return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}</Alert>;
     }
 
     return (
@@ -617,11 +617,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 {errorDashboardWidgets?.length ? (
                                     <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
                                 ) : undefined}
-                                <ButtonMenu title={t('page.dashboards.components.llistar')}>
+                                <ButtonMenu title={t($ => $.page.dashboards.components.llistar)}>
                                     {[
                                         {
                                             icon: 'widgets',
-                                            title: t('page.dashboards.action.llistarWidget.label'),
+                                            title: t($ => $.page.dashboards.action.llistarWidget.label),
                                             resourceName: 'dashboardItem',
                                             baseColumns: [
                                                 {
@@ -636,7 +636,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         },
                                         {
                                             icon: 'title',
-                                            title: t('page.dashboards.action.llistarTitle.label'),
+                                            title: t($ => $.page.dashboards.action.llistarTitle.label),
                                             resourceName: 'dashboardTitol',
                                             form: <AfegirTitolFormContent />,
                                             baseColumns: [
@@ -676,7 +676,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     ))}
                                 </ButtonMenu>
                                 <ButtonMenu
-                                    title={t('page.dashboards.components.afegir')}
+                                    title={t($ => $.page.dashboards.components.afegir)}
                                     disabled={!apiDashboardItemIsReady || !dashboard}
                                     buttonIcon={<AddIcon />}
                                 >
@@ -685,7 +685,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             <Icon fontSize="small">widgets</Icon>
                                         </ListItemIcon>
                                         <ListItemText>
-                                            {t('page.dashboards.action.addWidget.label')}
+                                            {t($ => $.page.dashboards.action.addWidget.label)}
                                         </ListItemText>
                                     </MenuItem>
                                     <MenuItem onClick={openCreateTitolForm}>
@@ -693,7 +693,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             <Icon fontSize="small">title</Icon>
                                         </ListItemIcon>
                                         <ListItemText>
-                                            {t('page.dashboards.action.afegirTitle.label')}
+                                            {t($ => $.page.dashboards.action.afegirTitle.label)}
                                         </ListItemText>
                                     </MenuItem>
                                 </ButtonMenu>
@@ -715,7 +715,6 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     )}
                 </BasePage>
             )}
-
             <AddWidgetDialog
                 open={addWidgetDialogOpen}
                 onClose={closeAddWidgetDialog}
@@ -775,58 +774,60 @@ const DashboardSideMenu = (props:any) => {
     }, [filterString]);
 
     const width = 400
-    return <>
-        <IconButton
-            color="inherit"
-            aria-label="open menu"
-            onClick={handelOpen}
-            edge="start"
-            sx={{ mr: 2 }}
-        >
-            <Icon sx={{ fontSize: '24px'}} fontSize={'medium'}>menu</Icon>
-        </IconButton>
-        {open && <ShrinkableDrawer
-            className={"side-menu"}
-            variant={'permanent'}
-            open={true}
-            {...{ width: width }}
-            sx={{
-                '& .MuiDrawer-paper': { right: 0, left: 'auto', backgroundColor: '#ef955e', color: '#fff', pt: '64px' },
-            }}>
-            <SideWrapper style={{width: `calc(100% - ${width}px)`}} onOutsideClick={handelClose}>
-                <Box sx={{p: 1}}>
-                    <Typography variant={'h5'} color={'white'}>{t('page.dashboards.action.addWidget.title')}</Typography>
+    return (
+        <>
+            <IconButton
+                color="inherit"
+                aria-label="open menu"
+                onClick={handelOpen}
+                edge="start"
+                sx={{ mr: 2 }}
+            >
+                <Icon sx={{ fontSize: '24px'}} fontSize={'medium'}>menu</Icon>
+            </IconButton>
+            {open && <ShrinkableDrawer
+                className={"side-menu"}
+                variant={'permanent'}
+                open={true}
+                {...{ width: width }}
+                sx={{
+                    '& .MuiDrawer-paper': { right: 0, left: 'auto', backgroundColor: '#ef955e', color: '#fff', pt: '64px' },
+                }}>
+                <SideWrapper style={{width: `calc(100% - ${width}px)`}} onOutsideClick={handelClose}>
+                    <Box sx={{p: 1}}>
+                        <Typography variant={'h5'} color={'white'}>{t($ => $.page.dashboards.action.addWidget.title)}</Typography>
 
-                    <EntornAppFilter
-                        onDataChange={setFilterData}
-                        onSpringFilterChange={setFilterString}
-                        initialData={{
-                            app: dashboard?.aplicacio,
-                            entorn: dashboard?.entorn
-                        }}
-                    />
+                        <EntornAppFilter
+                            onDataChange={setFilterData}
+                            onSpringFilterChange={setFilterString}
+                            initialData={{
+                                app: dashboard?.aplicacio,
+                                entorn: dashboard?.entorn
+                            }}
+                        />
 
-                    <List hidden={!filterData?.entorn?.id}>
-                        <ExpandElementList label={t('page.widget.simple.tab.title')} icon={'border_clear'}>
-                            {widgetsSimple.map((widget:any) => <Box key={`simple-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-                                <SimpleWidgetVisualization {...widget}/>
-                            </Box>)}
-                        </ExpandElementList>
-                        <ExpandElementList label={t('page.widget.grafic.tab.title')} icon={'align_vertical_bottom'}>
-                            {widgetsGrafic.map((widget:any) => <Box key={`grafic-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-                                <GraficWidgetVisualization {...widget}/>
-                            </Box>)}
-                        </ExpandElementList>
-                        <ExpandElementList label={t('page.widget.taula.tab.title')} icon={'table_view'}>
-                            {widgetsTaula.map((widget:any) => <Box key={`taula-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-                                <TaulaWidgetVisualization {...widget}/>
-                            </Box>)}
-                        </ExpandElementList>
-                    </List>
-                </Box>
-            </SideWrapper>
-        </ShrinkableDrawer>}
-    </>
+                        <List hidden={!filterData?.entorn?.id}>
+                            <ExpandElementList label={t($ => $.page.widget.simple.tab.title)} icon={'border_clear'}>
+                                {widgetsSimple.map((widget:any) => <Box key={`simple-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+                                    <SimpleWidgetVisualization {...widget}/>
+                                </Box>)}
+                            </ExpandElementList>
+                            <ExpandElementList label={t($ => $.page.widget.grafic.tab.title)} icon={'align_vertical_bottom'}>
+                                {widgetsGrafic.map((widget:any) => <Box key={`grafic-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+                                    <GraficWidgetVisualization {...widget}/>
+                                </Box>)}
+                            </ExpandElementList>
+                            <ExpandElementList label={t($ => $.page.widget.taula.tab.title)} icon={'table_view'}>
+                                {widgetsTaula.map((widget:any) => <Box key={`taula-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+                                    <TaulaWidgetVisualization {...widget}/>
+                                </Box>)}
+                            </ExpandElementList>
+                        </List>
+                    </Box>
+                </SideWrapper>
+            </ShrinkableDrawer>}
+        </>
+    );
 }
 
 const ExpandElementList = (props:any) => {

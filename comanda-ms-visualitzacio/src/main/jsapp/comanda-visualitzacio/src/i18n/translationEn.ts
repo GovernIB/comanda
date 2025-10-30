@@ -1,4 +1,6 @@
-const translationEn = {
+import type { translationResourcesType } from './translationCa';
+
+const translationEn: translationResourcesType = {
     enum: {
         appEstat: {
             UP: {
@@ -74,6 +76,8 @@ const translationEn = {
         dashboard: "Dashboards",
         calendari: "Calendar",
         parametre: "Parameters",
+        dimensio: "Dimensions",
+        indicador: "Indicators",
         user: {
             options: {
                 profile: {
@@ -333,7 +337,9 @@ const translationEn = {
                 eliminacioMesos: "Deletion (months)",
             },
             tooltips: {
-                compactacioMesos: "How many full months the statistics will be kept before...\n - compacting them by week\n - compacting them by month\n - deleting them.\nIf the fields are left empty, or with value 0, the ... will not be performed",
+                compactacioSetmanes: "How many full months the statistics will be kept before compacting them by week.\nIf the fields are left empty, or with value 0, no weekly compaction will be performed.",
+                compactacioMesos: "How many full months the statistics will be kept before...\n - compacting them by week\n - compacting them by month\n - deleting them.\nIf the fields are left empty, or with value 0, the corresponding operation will not be performed.",
+                borratMesos: "How many full months the statistics will be kept before deleting them.\nIf the fields are left empty, or with value 0, no deletion will be performed.",
             },
             progress: {
                 diaries: "daily statistics",
@@ -380,7 +386,7 @@ const translationEn = {
                 agrupacions: "Has groupings",
             },
         },
-        indicators: {
+        indicadors: {
             title: "Indicators",
             edit: "Edit",
             column: {

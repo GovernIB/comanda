@@ -78,7 +78,7 @@ const ParametreForm: React.FC = () => {
 const renderParametreValue = ( tipus: ParamTipus, valor: any, t: (key: string) => string ) => {
   if (valor === null || valor === undefined) {
     return (
-      <Tooltip title={t('page.parametres.detail.valuesTootip.null')}>
+      <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.null)}>
         <RemoveCircle color="disabled" />
       </Tooltip>
     );
@@ -87,13 +87,13 @@ const renderParametreValue = ( tipus: ParamTipus, valor: any, t: (key: string) =
   if (tipus === ParamTipus.BOOLEAN) {
     if (valor === true) {
       return (
-        <Tooltip title={t('page.parametres.detail.valuesTootip.true')}>
+        <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.true)}>
           <CheckCircle color="success" />
         </Tooltip>
       );
     } else {
       return (
-        <Tooltip title={t('page.parametres.detail.valuesTootip.false')}>
+        <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.false)}>
           <Cancel color="error" />
         </Tooltip>
       );
@@ -106,7 +106,7 @@ const renderParametreValue = ( tipus: ParamTipus, valor: any, t: (key: string) =
 const translateTipus = (t: any, tipus?: string) => {
   if (!tipus) return '';
   const key = `page.parametres.detail.tipusEnum.${tipus}`;
-  const translated = t(key);
+  const translated = t($ => $[key]);
   return translated === key ? tipus : translated;
 };
 
@@ -114,14 +114,14 @@ const ParametresDetails: React.FC<any> = (props) => {
   const { data } = props;
   const { t } = useTranslation();
   const elementsDetail = [
-    { label: t('page.parametres.detail.grup'), value: data?.grup },
-    { label: t('page.parametres.detail.subGrup'), value: data?.subGrup },
-    { label: t('page.parametres.detail.tipus'), value: translateTipus(t, data?.tipus) },
-    { label: t('page.parametres.detail.codi'), value: data?.codi },
-    { label: t('page.parametres.detail.nom'), value: data?.nom },
-    { label: t('page.parametres.detail.descripcio'), value: data?.descripcio },
+    { label: t($ => $.page.parametres.detail.grup), value: data?.grup },
+    { label: t($ => $.page.parametres.detail.subGrup), value: data?.subGrup },
+    { label: t($ => $.page.parametres.detail.tipus), value: translateTipus(t, data?.tipus) },
+    { label: t($ => $.page.parametres.detail.codi), value: data?.codi },
+    { label: t($ => $.page.parametres.detail.nom), value: data?.nom },
+    { label: t($ => $.page.parametres.detail.descripcio), value: data?.descripcio },
     {
-      label: t('page.parametres.detail.valor'),
+      label: t($ => $.page.parametres.detail.valor),
       contentValue: renderParametreValue(data?.tipus, data?.valorBoolean ?? data?.valor, t)
     },
   ];
@@ -153,7 +153,7 @@ const ParametresGrid: React.FC<{
   const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
   const showDetail = (_id: any, row: any, _event: React.MouseEvent) => {
     detailDialogShow(
-      t('page.parametres.detail.title'),
+      t($ => $.page.parametres.detail.title),
       <ParametresDetails data={row} />,
       closeDialogButton,
       { maxWidth: 'lg', fullWidth: true, }
@@ -212,7 +212,7 @@ const ParametresGrid: React.FC<{
   return (
     <>
       <MuiGrid
-        title={t('page.parametres.title')}
+        title={t($ => $.page.parametres.title)}
         resourceName="parametre"
         columns={columns}
         toolbarType="upper"

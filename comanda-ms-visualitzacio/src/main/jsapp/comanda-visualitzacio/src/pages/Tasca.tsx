@@ -112,7 +112,7 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
                     <Button
                         onClick={() => setUnfinishedOnly(fo => !fo)}
                         variant={unfinishedOnly ? 'contained' : 'outlined'}
-                        title={unfinishedOnly ? t('page.tasques.filter.unfinishedOnlyEnabled') : t('page.tasques.filter.unfinishedOnlyDisabled')}
+                        title={unfinishedOnly ? t($ => $.page.tasques.filter.unfinishedOnlyEnabled) : t($ => $.page.tasques.filter.unfinishedOnlyDisabled)}
                         sx={{ mr: 2 }}>
                         <Icon>pending_actions</Icon>
                     </Button>
@@ -120,19 +120,19 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
                         onClick={() => setOwnTasksOnly(value => !value)}
                         disabled={!currentUserCodi}
                         variant={ownTasksOnly ? 'contained' : 'outlined'}
-                        title={ownTasksOnly ? t('page.tasques.filter.ownTasksOnlyEnabled') : t('page.tasques.filter.ownTasksOnlyDisabled')}
+                        title={ownTasksOnly ? t($ => $.page.tasques.filter.ownTasksOnlyEnabled) : t($ => $.page.tasques.filter.ownTasksOnlyDisabled)}
                         sx={{ mr: 2 }}>
                         <Icon>person</Icon>
                     </Button>
                     <IconButton
                         onClick={netejar}
-                        title={t('components.clear')}
+                        title={t($ => $.components.clear)}
                         sx={{ mr: 1 }}>
                         <Icon>filter_alt_off</Icon>
                     </IconButton>
                     <IconButton
                         onClick={() => setMoreFields((mf) => !mf)}
-                        title={t('page.tasques.filter.more')}>
+                        title={t($ => $.page.tasques.filter.more)}>
                         <Icon>filter_list</Icon>
                     </IconButton>
                 </Box>
@@ -261,7 +261,7 @@ const Tasca = () => {
     } = useTreeData(
         (row) => row?.treePath,
         gridApiRef,
-        t('page.tasques.grid.groupHeader'),
+        t($ => $.page.tasques.grid.groupHeader),
         1.5,
         false,
         false,
@@ -273,7 +273,7 @@ const Tasca = () => {
                   {
                       field: 'treePath',
                       flex: 1.2,
-                      headerName: t('page.tasques.grid.column.appEntorn'),
+                      headerName: t($ => $.page.tasques.grid.column.appEntorn),
                       valueFormatter: (value: any) =>
                           `${value?.[0]} - ${value?.[1]}`,
                   },
@@ -285,7 +285,7 @@ const Tasca = () => {
     ];
     const actions = [{
         icon: 'open_in_new',
-        label: t('page.tasques.grid.action.obrir'),
+        label: t($ => $.page.tasques.grid.action.obrir),
         showInMenu: false,
         linkTo: (row: any) => row?.url,
         linkTarget: '_blank',
@@ -298,7 +298,7 @@ const Tasca = () => {
     return (
         <BasePage expandHeight style={{ height: '100%' }}>
             <MuiDataGrid
-                title={t('menu.tasca')}
+                title={t($ => $.menu.tasca)}
                 datagridApiRef={gridApiRef}
                 resourceName="tasca"
                 columns={columns}

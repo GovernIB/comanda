@@ -64,7 +64,7 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
                     {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'agrupable'} type={'checkbox'} /></Grid>*/}
                     {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'valorAgrupacio'} /></Grid>*/}
                 </Grid>
-                <IconButton onClick={netejar} title={t('components.clear')} sx={{ mr: 1 }}>
+                <IconButton onClick={netejar} title={t($ => $.components.clear)} sx={{ mr: 1 }}>
                     <Icon>filter_alt_off</Icon>
                 </IconButton>
             </Box>
@@ -102,7 +102,7 @@ const DimensioValor: React.FC = () => {
                 position: 0,
                 element: (
                     <IconButton
-                        title={t('form.goBack.title')}
+                        title={t($ => $.form.goBack.title)}
                         onClick={() => goBack('/dimensio')}
                         disabled={backButtonDisabled}
                         sx={{ mr: 1 }}

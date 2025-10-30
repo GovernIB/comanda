@@ -1,4 +1,6 @@
-const translationEs = {
+import type { translationResourcesType } from './translationCa.ts';
+
+const translationEs: translationResourcesType = {
     enum: {
         appEstat: {
             UP: {
@@ -335,7 +337,9 @@ const translationEs = {
                 eliminacioMesos: "Borrado (meses)",
             },
             tooltips: {
-                compactacioMesos: "Cuántos meses completos se mantendrán las estadísticas antes de...\n - compactarlas por semana\n - compactarlas por mes\n - borrarlas.\nSi se dejan los campos sin valor, o valor 0, no se realizará la ...",
+                compactacioSetmanes: "Cuántos meses completos se mantendrán las estadísticas antes de compactarlas por semana.\nSi los campos se dejan sin valor o con valor 0, no se realizará la compactación por semana.",
+                compactacioMesos: "Cuántos meses completos se mantendrán las estadísticas antes de compactarlas por mes.\nSi los campos se dejan sin valor o con valor 0, no se realizará la compactación por mes.",
+                borratMesos: "Cuántos meses completos se mantendrán las estadísticas antes de eliminarlas.\nSi los campos se dejan sin valor o con valor 0, no se realizará el borrado.",
             },
             progress: {
                 diaries: "estadísticas diarias",

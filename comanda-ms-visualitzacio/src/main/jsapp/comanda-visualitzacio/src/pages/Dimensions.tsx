@@ -75,7 +75,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                         <FormField
                             name={'entornApp'}
                             type={'reference'}
-                            label={t('page.dimensions.column.entornApp')}
+                            label={t($ => $.page.dimensions.column.entornApp)}
                             required={false}
                             optionsRequest={(q) => {
                                 const opts = (entornApp ?? []).map((ea: EntornAppItem) => ({
@@ -95,7 +95,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                 </Grid>
                 <IconButton
                     onClick={netejar}
-                    title={t('components.clear')}
+                    title={t($ => $.components.clear)}
                     sx={{ mr: 1 }}>
                     <Icon>filter_alt_off</Icon>
                 </IconButton>
@@ -119,7 +119,7 @@ const Dimensions: React.FC = () => {
     return (
         <GridPage>
             <MuiGrid
-                title={t('page.dimensions.title')}
+                title={t($ => $.page.dimensions.title)}
                 resourceName="dimensio"
                 columns={columns}
                 toolbarType="upper"
@@ -128,7 +128,7 @@ const Dimensions: React.FC = () => {
                 toolbarAdditionalRow={filterElement}
                 filter={filter}
                 rowAdditionalActions={[{
-                    label: t('page.dimensions.values'),
+                    label: t($ => $.page.dimensions.values),
                     icon: 'list',
                     linkTo: 'valor/{{id}}'
                 }]}

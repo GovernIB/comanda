@@ -36,77 +36,79 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
     React.useEffect(() => {
         moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
     }, [unfinishedOnly]);
-    return <>
-        <MuiFilter
-            apiRef={appEntornFilterApiRef}
-            resourceName="entornApp"
-            code="salut_entornApp_filter"
-            commonFieldComponentProps={{ size: 'small' }}
-            springFilterBuilder={data => {
-                moreFormApiRef.current?.setFieldValue('appId', data.app);
-                moreFormApiRef.current?.setFieldValue('entornId', data.entorn);
-                return '';
-            }}>
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-            }}>
-                <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                    <Grid size={6}><FormField name="app" /></Grid>
-                    <Grid size={6}><FormField name="entorn" /></Grid>
+    return (
+        <>
+            <MuiFilter
+                apiRef={appEntornFilterApiRef}
+                resourceName="entornApp"
+                code="salut_entornApp_filter"
+                commonFieldComponentProps={{ size: 'small' }}
+                springFilterBuilder={data => {
+                    moreFormApiRef.current?.setFieldValue('appId', data.app);
+                    moreFormApiRef.current?.setFieldValue('entornId', data.entorn);
+                    return '';
+                }}>
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                }}>
+                    <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
+                        <Grid size={6}><FormField name="app" /></Grid>
+                        <Grid size={6}><FormField name="entorn" /></Grid>
+                    </Grid>
+                    <Button
+                        onClick={() => setUnfinishedOnly(fo => !fo)}
+                        variant={unfinishedOnly ? 'contained' : 'outlined'}
+                        title={unfinishedOnly ? t($ => $.page.avisos.filter.unfinishedOnlyEnabled) : t($ => $.page.avisos.filter.unfinishedOnlyDisabled)}
+                        sx={{ mr: 2 }}>
+                        <Icon>pending_actions</Icon>
+                    </Button>
+                    <IconButton
+                        onClick={netejar}
+                        title={t($ => $.components.clear)}
+                        sx={{ mr: 1 }}>
+                        <Icon>filter_alt_off</Icon>
+                    </IconButton>
+                    <IconButton
+                        onClick={() => setMoreFields((mf) => !mf)}
+                        title={t($ => $.page.avisos.filter.more)}>
+                        <Icon>filter_list</Icon>
+                    </IconButton>
+                </Box>
+            </MuiFilter>
+            <MuiFilter
+                apiRef={moreFilterApiRef}
+                formApiRef={moreFormApiRef}
+                resourceName="avis"
+                code="FILTER"
+                initialData={{ finalitzada: unfinishedOnly }}
+                springFilterBuilder={data => springFilterBuilder.and(
+                    springFilterBuilder.eq('appId', data?.appId?.id),
+                    springFilterBuilder.eq('entornId', data?.entornId?.id),
+                    springFilterBuilder.like('nom', data?.nom),
+                    springFilterBuilder.like('descripcio', data?.descripcio),
+                    springFilterBuilder.eq('tipus', data?.tipus),
+                    data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
+                    data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
+                    data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
+                    data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
+                    data?.finalitzada && springFilterBuilder.eq('dataFi', null),
+                )}
+                onSpringFilterChange={onSpringFilterChange}
+                commonFieldComponentProps={{ size: 'small' }}>
+                <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
+                    <Grid size={{ xs: 12, sm:4}}><FormField name="nom" /></Grid>
+                    <Grid size={{ xs: 6, sm:4}}><FormField name="descripcio" /></Grid>
+                    <Grid size={{ xs: 6, sm:4}}><FormField name="tipus" /></Grid>
+                    <Grid size={{ xs: 6, sm:3}}><FormField name="dataInici1" /></Grid>
+                    <Grid size={{ xs: 6, sm:3}}><FormField name="dataInici2" /></Grid>
+                    <Grid size={{ xs: 6, sm:3}}><FormField name="dataFi1" /></Grid>
+                    <Grid size={{ xs: 6, sm:3}}><FormField name="dataFi2" /></Grid>
                 </Grid>
-                <Button
-                    onClick={() => setUnfinishedOnly(fo => !fo)}
-                    variant={unfinishedOnly ? 'contained' : 'outlined'}
-                    title={unfinishedOnly ? t('page.avisos.filter.unfinishedOnlyEnabled') : t('page.avisos.filter.unfinishedOnlyDisabled')}
-                    sx={{ mr: 2 }}>
-                    <Icon>pending_actions</Icon>
-                </Button>
-                <IconButton
-                    onClick={netejar}
-                    title={t('components.clear')}
-                    sx={{ mr: 1 }}>
-                    <Icon>filter_alt_off</Icon>
-                </IconButton>
-                <IconButton
-                    onClick={() => setMoreFields((mf) => !mf)}
-                    title={t('page.avisos.filter.more')}>
-                    <Icon>filter_list</Icon>
-                </IconButton>
-            </Box>
-        </MuiFilter>
-        <MuiFilter
-            apiRef={moreFilterApiRef}
-            formApiRef={moreFormApiRef}
-            resourceName="avis"
-            code="FILTER"
-            initialData={{ finalitzada: unfinishedOnly }}
-            springFilterBuilder={data => springFilterBuilder.and(
-                springFilterBuilder.eq('appId', data?.appId?.id),
-                springFilterBuilder.eq('entornId', data?.entornId?.id),
-                springFilterBuilder.like('nom', data?.nom),
-                springFilterBuilder.like('descripcio', data?.descripcio),
-                springFilterBuilder.eq('tipus', data?.tipus),
-                data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
-                data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
-                data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
-                data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
-                data?.finalitzada && springFilterBuilder.eq('dataFi', null),
-            )}
-            onSpringFilterChange={onSpringFilterChange}
-            commonFieldComponentProps={{ size: 'small' }}>
-            <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
-                <Grid size={{ xs: 12, sm:4}}><FormField name="nom" /></Grid>
-                <Grid size={{ xs: 6, sm:4}}><FormField name="descripcio" /></Grid>
-                <Grid size={{ xs: 6, sm:4}}><FormField name="tipus" /></Grid>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="dataInici1" /></Grid>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="dataInici2" /></Grid>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="dataFi1" /></Grid>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="dataFi2" /></Grid>
-            </Grid>
-        </MuiFilter>
-    </>;
+            </MuiFilter>
+        </>
+    );
 }
 
 const dataGridCommonColumns: MuiDataGridColDef[] = [{
@@ -158,7 +160,7 @@ const Avis = () => {
     } = useTreeData(
         (row) => row?.treePath,
         gridApiRef,
-        t('page.avisos.grid.groupHeader'),
+        t($ => $.page.avisos.grid.groupHeader),
         1.5,
         false,
         false,
@@ -170,7 +172,7 @@ const Avis = () => {
                   {
                       field: 'treePath',
                       flex: 0.7,
-                      headerName: t('page.avisos.grid.column.appEntorn'),
+                      headerName: t($ => $.page.avisos.grid.column.appEntorn),
                       valueFormatter: (value: any) => `${value?.[0]} - ${value?.[1]}`,
                   },
               ]
@@ -181,23 +183,25 @@ const Avis = () => {
     ];
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
     // Se usa el componente BasePage para evitar posibles conflictos entre la suscripción de eventos y el estado "proceed" de GridPage
-    return <BasePage expandHeight style={{ height: '100%' }}>
-        <MuiDataGrid
-            title={t('menu.avis')}
-            resourceName="avis"
-            columns={columns}
-            perspectives={dataGridPerspectives}
-            datagridApiRef={gridApiRef}
-            findDisabled={filter == null}
-            filter={filter}
-            readOnly
-            toolbarType="upper"
-            toolbarHideQuickFilter
-            toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
-            toolbarAdditionalRow={filterElement}
-            {...treeDataGridProps}
-        />
-    </BasePage>;
+    return (
+        <BasePage expandHeight style={{ height: '100%' }}>
+            <MuiDataGrid
+                title={t($ => $.menu.avis)}
+                resourceName="avis"
+                columns={columns}
+                perspectives={dataGridPerspectives}
+                datagridApiRef={gridApiRef}
+                findDisabled={filter == null}
+                filter={filter}
+                readOnly
+                toolbarType="upper"
+                toolbarHideQuickFilter
+                toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
+                toolbarAdditionalRow={filterElement}
+                {...treeDataGridProps}
+            />
+        </BasePage>
+    );
 }
 
 export default Avis;

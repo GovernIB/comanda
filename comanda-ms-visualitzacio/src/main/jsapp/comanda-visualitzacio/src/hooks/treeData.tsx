@@ -7,13 +7,9 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import Box from '@mui/material/Box';
 import {
-    GRID_ROOT_GROUP_ID,
     GridApiPro,
     GridColumnHeaderTitle,
-    GridEventListener,
     GridGroupingColDefOverride,
-    GridRowId,
-    gridRowTreeSelector,
 } from '@mui/x-data-grid-pro';
 import { MuiDataGridProps } from 'reactlib';
 
@@ -31,7 +27,7 @@ export const useTreeData = (
     const treeViewSwitch = (
         <FormGroup sx={{ ml: 2 }}>
             <FormControlLabel
-                label={t('treeData.treeView')}
+                label={t($ => $.treeData.treeView)}
                 control={
                     <Switch
                         checked={treeView}
@@ -42,40 +38,9 @@ export const useTreeData = (
         </FormGroup>
     );
 
-    // WORKAROUND to maintain the expansion state when isGroupExpandedByDefault is used (https://github.com/mui/mui-x/issues/20049)
-    const expandedParents = React.useRef<{ [key: string]: boolean }>({});
-    const isGroupExpandedByDefault = React.useCallback(
-        (node: { id: string | number }) => {
-            return expandedParents.current[node.id] ?? expandedByDefault ?? false;
-        },
-        [expandedByDefault]
-    );
-    React.useEffect(() => {
-        const onRowExpansionChange: GridEventListener<'rowExpansionChange'> = (node) => {
-            // If node.id is GRID_ROOT_GROUP_ID, expandAllRows or collapseAllRows has been called
-            if (node.id === GRID_ROOT_GROUP_ID) {
-                // node.childrenExpanded should always be true or false
-                const newExpansionState = node.childrenExpanded ?? false;
-                const tree = { ...gridRowTreeSelector(gridApiRef) };
-
-                const traverse = (nodeId: GridRowId) => {
-                    const node = tree[nodeId];
-                    if (node?.type === 'group') {
-                        expandedParents.current[node.id] = newExpansionState;
-                        node.children.forEach(traverse);
-                    }
-                };
-                traverse(GRID_ROOT_GROUP_ID);
-
-                return;
-            }
-
-            expandedParents.current[node.id] = !!node.childrenExpanded;
-        };
-
-        return gridApiRef.current?.subscribeEvent('rowExpansionChange', onRowExpansionChange);
-    }, [gridApiRef]);
-    // WORKAROUND ends here
+    const isGroupExpandedByDefault = React.useCallback(() => {
+        return expandedByDefault ?? false;
+    }, [expandedByDefault]);
 
     const groupingColDef = React.useMemo<GridGroupingColDefOverride>(
         () => ({
