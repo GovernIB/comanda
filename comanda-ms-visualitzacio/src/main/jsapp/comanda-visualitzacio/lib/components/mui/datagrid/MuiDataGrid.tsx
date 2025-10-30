@@ -834,7 +834,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                   params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd',
           }
         : null;
-    const processedRows = [...additionalRows, ...rows];
+    const processedRows = React.useMemo(() => [...additionalRows, ...rows], [additionalRows, rows]);
     const content = (
         <>
             {!toolbarHide && toolbar}

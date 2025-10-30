@@ -25,7 +25,7 @@ import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/Mu
 // TODO Debería añadirse un export de este tipo
 import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 import {Cancel, CheckCircle} from '@mui/icons-material';
-import { GridRowOrderChangeParams } from '@mui/x-data-grid-pro';
+import useReordering from '../hooks/reordering.tsx';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -265,6 +265,40 @@ export const AppForm: React.FC = () => {
     );
 };
 
+const columns = [
+    {
+        field: 'logo',
+        flex: 1,
+        renderCell: (params: any) => {
+            const value = params.value; // Obtenir el valor de la cel·la
+            return value ? (
+                <img
+                    src={`data:image/png;base64,${value}`}
+                    alt="logo"
+                    style={{ maxHeight: '32px' }}
+                />
+            ) : (
+                <span role="img" aria-label="block" style={{ fontSize: '24px' }}>
+                    <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
+                </span>
+            );
+        },
+    },
+    {
+        field: 'codi',
+        flex: 2,
+    },
+    {
+        field: 'nom',
+        flex: 7,
+    },
+    {
+        field: 'activa',
+        flex: 0.5,
+    },
+];
+
+
 const Apps: React.FC = () => {
     const { t } = useTranslation();
     const { appExport } = useActions();
@@ -275,44 +309,8 @@ const Apps: React.FC = () => {
             showInMenu: true,
             onClick: appExport,
         },
-    ]
-    const {patch} = useResourceApiService('app');
-    const onRowOrderChange = (params:GridRowOrderChangeParams) => {
-        patch(params?.row?.id, {data: {ordre: params?.targetIndex + 1 }})
-    }
-
-    const columns = [
-        {
-            field: 'logo',
-            flex: 1,
-            renderCell: (params: any) => {
-                const value = params.value; // Obtenir el valor de la cel·la
-                return value ? (
-                    <img
-                        src={`data:image/png;base64,${value}`}
-                        alt="logo"
-                        style={{ maxHeight: '32px' }}
-                    />
-                ) : (
-                    <span role="img" aria-label="block" style={{ fontSize: '24px' }}>
-                    <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
-                </span>
-                );
-            },
-        },
-        {
-            field: 'codi',
-            flex: 2,
-        },
-        {
-            field: 'nom',
-            flex: 7,
-        },
-        {
-            field: 'activa',
-            flex: 0.5,
-        },
     ];
+    const { dataGridProps, loadingElement } = useReordering("app");
     return (
         <GridPage>
             <MuiDataGrid
@@ -326,8 +324,13 @@ const Apps: React.FC = () => {
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
-                rowReordering
-                onRowOrderChange={onRowOrderChange}
+                toolbarElementsWithPositions={[
+                    {
+                        position: 1,
+                        element: loadingElement,
+                    }
+                ]}
+                {...dataGridProps}
             />
         </GridPage>
     );
