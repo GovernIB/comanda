@@ -124,7 +124,7 @@ public abstract class BasePermissionHelper {
 							resourceClass,
 							type,
 							code,
-							resourceConfig.accessConstraints(),
+							artifact.accessConstraints(),
 							null);
 				} else {
 					// Els artefactes sense restriccions d'accés comproven l'accés al recurs
