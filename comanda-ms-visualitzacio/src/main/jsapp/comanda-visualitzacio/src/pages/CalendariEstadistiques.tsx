@@ -2,7 +2,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import {useBaseAppContext, GridPage, useResourceApiService, Toolbar, springFilterBuilder as builder} from 'reactlib';
-import {useState, useEffect, useCallback, useMemo} from "react";
+import {useState, useEffect, useCallback} from "react";
 import dayjs from 'dayjs';
 import '../fullcalendar-custom.css';
 import {
@@ -14,20 +14,10 @@ import {
     Select,
     Typography,
     CircularProgress,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
     Icon,
     useTheme,
     useMediaQuery,
     Tooltip,
-    OutlinedInput,
-    IconButton,
-    Chip
 } from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
@@ -40,50 +30,9 @@ import {useTranslation} from "react-i18next";
 import * as React from "react";
 import ReactDOM from 'react-dom/client';
 import {useMessage} from "../components/MessageShow.tsx";
-import Grid from "@mui/material/Grid";
-import Checkbox from "@mui/material/Checkbox";
-import FormGroup from "@mui/material/FormGroup";
-import ListItemText from "@mui/material/ListItemText";
-
-interface ErrorInfo {
-    date: string;
-    message: string;
-    trace?: string;
-}
-
-interface PerData {
-    entornAppId: number;
-    dataInici: string;
-}
-
-interface PerInterval {
-    entornAppId: number;
-    dataInici: string;
-    dataFi: string;
-}
-
-interface Temps {
-    data: string;
-    anualitat: number;
-    trimestre: number;
-    mes: number;
-    setmana: number;
-    dia: number;
-    diaSetmana: string;
-}
-
-interface DadesDia {
-    temps: Temps;
-    dimensionsJson: Record<string, string>;
-    indicadorsJson: Record<string, number>;
-    entornAppId: number;
-}
-
-interface CalendarStatusButtonProps {
-  hasError: boolean;
-  isLoading: boolean;
-  esDisponible: boolean;
-}
+import { useCalendarEvents } from '../components/calendari/UseCalendarEventsProps.ts';
+import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps } from '../components/calendari/CalendariTypes.ts';
+import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.tsx';
 
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   hasError,
@@ -128,10 +77,10 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
             startIcon={ isLoading ? ( <CircularProgress size={16} color="inherit" /> ) : ( icon ) }
             disabled={isLoading}
             sx={{
-            whiteSpace: 'nowrap',
-            textTransform: 'none',
-            width: '100%',
-            minWidth: 0,
+                whiteSpace: 'nowrap',
+                textTransform: 'none',
+                width: '100%',
+                minWidth: 0,
             }}
         >
             {!isSmallScreen && label}
@@ -141,6 +90,17 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   );
 
 };
+
+export function useEntornAppData(apiReady: any, getAll: any) {
+  const [entornApps, setEntornApps] = useState([]);
+  useEffect(() => {
+    if (!apiReady) return;
+    getAll({ unpaged: true, filter: 'activa : true AND app.activa : true' })
+      .then((response: { rows: React.SetStateAction<never[]>; }) => setEntornApps(response.rows))
+      .catch(() => setEntornApps([]));
+  }, [apiReady, getAll]);
+  return entornApps;
+}
 
 const CalendariEstadistiques: React.FC = () => {
     const { t } = useTranslation();
@@ -169,19 +129,7 @@ const CalendariEstadistiques: React.FC = () => {
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
 
     // Al obrir la pàgina carreguem el llistat de EntornApp actius
-    const [entornApps, setEntornApps] = useState<any[]>([]);
-    useEffect(() => {
-        if (entornAppApiIsReady) {
-            console.log('EntornApp API ready');
-            entornAppGetAll({
-                unpaged: true,
-                filter: 'activa : true AND app.activa : true',
-            }).then(response => {
-                console.log('EntornApp API response received:', response.rows.length, 'items');
-                setEntornApps(response.rows);
-            });
-        }
-    }, [entornAppApiIsReady, entornAppGetAll]);
+    const entornApps = useEntornAppData(entornAppApiIsReady, entornAppGetAll);
 
     // Obtenir les accions
     const { isReady: apiFetIsReady, artifactAction: apiAction, artifactReport: apiReport } = useResourceApiService('fet');
@@ -255,6 +203,9 @@ const CalendariEstadistiques: React.FC = () => {
     // Obtenir els dies en que es disposa de dades estadístiques
     const obtenirDatesDisponibles = React.useCallback(async (entornAppId: any): Promise<boolean> => {
         console.log('Obtenir dates disponibles per entornApp:', entornAppId);
+        setEmptyDates([]);
+        setLoadingDates([]);
+        setErrors([]);
         try {
             const data = (await apiReport(
                 null,
@@ -333,7 +284,7 @@ const CalendariEstadistiques: React.FC = () => {
             } else {
                 const errorInfo: ErrorInfo = {
                     date: data,
-                    message: ''
+                    message: t($ => $.calendari.error_obtenir_dades),
                 };
                 setErrors(prev => {
                     // Eliminar errors anteriors per a aquesta data
@@ -396,155 +347,18 @@ const CalendariEstadistiques: React.FC = () => {
         setErrorDialogOpen(true);
     };
 
-    // Generar els events per al calendari
-    const daysInMonth = dayjs(`${currentViewYear}-${currentViewMonth + 1}-01`).daysInMonth();
+    const events = useCalendarEvents({
+        currentViewMonth,
+        currentViewYear,
+        entornAppId,
+        datesAmbDades,
+        emptyDates,
+        loadingDates,
+        errors,
+        datesDisponiblesError
+    });
 
-    const events = Array.from({ length: daysInMonth }, (_, i) => {
-        console.log('currentViewMonth', currentViewMonth);
-        const date = dayjs(`${currentViewYear}-${String(currentViewMonth + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`).format('YYYY-MM-DD');
-        const hasError = esDiaAmbError(date);
-        const hasDades = esDiaAmbDades(date);
-        const hasEmptyDades = esDiaAmbEmptyDades(date);
-        const isLoading = loadingDates.includes(date);
-        console.log('Es disposa de dades:', hasDades, datesAmbDades);
-        console.log('Es disposa de dades buides:', hasEmptyDades, emptyDates);
-
-        // Si no hi ha un entornApp seleccionat, o hi ha hagut un error en obtenir dates disponibles, o la data és anterior a avui, no mostrem cap informació
-        if (entornAppId === '' || datesDisponiblesError || !dayjs(date).isBefore(dayjs(), 'day')) {
-            console.log('No mostrar event per a', date);
-            return null; // Return null instead of an empty event to completely hide it
-        }
-        
-        console.log('Mostrar event per a', date);
-        console.log('Es disposa de dades:', hasDades);
-        console.log('Hi ha error:', hasError);
-        console.log('Està carregant:', isLoading);
-        
-        // Si la data està carregant, mostrem un indicador de càrrega
-        if (isLoading) {
-            return [
-                // Event de background per donar color a la cel·la
-                {
-                    title: t($ => $.calendari.carregant),
-                    date,
-                    backgroundColor: '#f5f5f5',
-                    extendedProps: {
-                        esDisponible: false,
-                        hasError: false,
-                        isLoading: true
-                    },
-                    allDay: true,
-                    display: 'background'
-                },
-                // Event de block amb l'indicador de càrrega
-                {
-                    title: t($ => $.calendari.carregant),
-                    date,
-                    classNames: ['cal-event-loading'],
-                    textColor: '#888',
-                    backgroundColor: '#fff',
-                    extendedProps: {
-                        esDisponible: false,
-                        hasError: false,
-                        isLoading: true,
-                        hasContent: true,
-                        content: `<div class="material-button-container">
-                            <div class="loading-indicator">
-                                <div class="spinner"></div>
-                            </div>
-                        </div>`
-                    },
-                    allDay: true
-                }
-            ];
-        }
-
-        // Per a dies sense dades i que no siguin anteriors a avui, generem dos events: un de background i un de block
-        else if (!hasDades && !hasError) {
-            return [
-                // Event de background per donar color a la cel·la
-                {
-                    title: hasEmptyDades ? t($ => $.calendari.dades_buides) : t($ => $.calendari.sense_dades),
-                    date,
-                    backgroundColor: hasEmptyDades ? '#f6af2a' : '#79b2ef',
-                    extendedProps: {
-                        esDisponible: false,
-                        hasError: false,
-                        isLoading: false
-                    },
-                    allDay: true,
-                    display: 'background'
-                },
-                // Event de block amb l'enllaç per obtenir dades
-                {
-                    title: t($ => $.calendari.obtenir_dades),
-                    date,
-                    classNames: ['cal-event-download'],
-                    textColor: '#888',
-                    backgroundColor: '#fff',
-                    extendedProps: {
-                        esDisponible: false,
-                        hasError: false,
-                        isLoading: false,
-                        hasContent: true,
-                        content: `<div class="material-button-container">
-                            <button class="material-download-button" title="${t($ => $.calendari.obtenir_dades_tooltip)}">
-                                <span class="material-icon">download</span>
-                                <span>${t($ => $.calendari.obtenir_dades)}</span>
-                            </button>
-                        </div>`
-                    },
-                    allDay: true
-                }
-            ];
-        } else {
-            // Per a dies amb dades o amb errors, mantenim un sol event
-            return [
-                // Event de background per donar color a la cel·la
-                {
-                    title: hasDades ? '' : t($ => $.calendari.error_dades),
-                    date,
-                    backgroundColor: hasDades ? '#b7ecaf' : '#dc7352',
-                    extendedProps: {
-                        esDisponible: hasDades,
-                        hasError: hasError,
-                        isLoading: false
-                    },
-                    allDay: true,
-                    display: 'background'
-                },
-                {
-                    title: hasDades ? t($ => $.calendari.dades_disponibles) : t($ => $.calendari.error_dades),
-                    date,
-                    backgroundColor: hasDades ? '#e9f9e6' : '#dc7352',
-                    borerColor: hasDades ? '#b7ecaf' : '#dc7352',
-                    textColor: '#fff',
-                    extendedProps: {
-                        esDisponible: hasDades,
-                        hasError: hasError,
-                        isLoading: false,
-                        hasContent: true,
-                        content: hasError
-                            ? `<div class="material-button-container">
-                                <button class="material-error-button" title="${t($ => $.calendari.error_dades_tooltip)}">
-                                    <span class="material-icon">error</span>
-                                    <span>${t($ => $.calendari.error_dades)}</span>
-                                </button>
-                              </div>`
-                            : `<div class="material-button-container">
-                                <button class="material-success-button" title="${t($ => $.calendari.dades_disponibles_tooltip)}">
-                                    <span class="material-icon">check_circle</span>
-                                    <span>${t($ => $.calendari.dades_disponibles)}</span>
-                                </button>
-                              </div>`
-                    },
-                    allDay: true,
-                }
-            ];
-        }
-    }).flat();
-
-    const handleEventClick = (info: any) => {
+    const handleEventClick = useCallback((info: any) => {
         // Si no hi ha un entornApp seleccionat, no fem res
         if (entornAppId === '') {
             return;
@@ -584,7 +398,7 @@ const CalendariEstadistiques: React.FC = () => {
             // Obtenir dades estadístiques
             obtenirDadesEstadistiques(data);
         }
-    };
+    }, [entornAppId, globalLoading, obtenirDadesDia, obtenirDadesEstadistiques, getErrorForDate]);
 
     const {isReady: dimensioIsReady, find: dimensioFind} = useResourceApiService('dimensio')
     const [dimensions, setDimensions] = useState<any[]>([])
@@ -632,8 +446,6 @@ const CalendariEstadistiques: React.FC = () => {
                                 onChange={(e) => {
                                     const newEntornAppId = e.target.value as number | '';
                                     setEntornAppId(newEntornAppId);
-                                    // Netejar les dates disponibles quan canvia l'entorn
-                                    setDatesAmbDades([]);
                                     // Si s'ha seleccionat un entorn, carregar les dates disponibles
                                     if (newEntornAppId !== '') {
                                         obtenirDatesDisponibles(newEntornAppId);
@@ -642,8 +454,8 @@ const CalendariEstadistiques: React.FC = () => {
                             >
                                 <MenuItem value="">{t($ => $.calendari.seleccionar)}</MenuItem>
                                 {entornApps.map((entornApp) => (
-                                    <MenuItem key={entornApp.id} value={entornApp.id}>
-                                        {entornApp.app.description} - {entornApp.entorn.description}
+                                    <MenuItem key={entornApp?.id} value={entornApp?.id}>
+                                        {entornApp?.app?.description} - {entornApp?.entorn?.description}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -745,11 +557,6 @@ const CalendariEstadistiques: React.FC = () => {
                         console.log('Current view month:', currentViewMonth, 'Current view year:', currentViewYear);
                         console.log('Start date:', startDate);
                         console.log(dateInfo);
-                        
-                        // // Refresh the dates with data if an entornApp is selected
-                        // if (entornAppId !== '') {
-                        //     obtenirDatesDisponibles(entornAppId);
-                        // }
                     }}
                     customButtons={{
                         intervalButton: {
@@ -795,14 +602,14 @@ const CalendariEstadistiques: React.FC = () => {
                         <DatePicker
                             label={t($ => $.calendari.data_inici)}
                             value={dataInici}
-                            onChange={(newValue) => setDataInici(newValue)}
-                            renderInput={(params) => <TextField {...params} fullWidth />}
+                            onChange={(newValue:any) => setDataInici(newValue)}
+                            renderInput={(params:any) => <TextField {...params} fullWidth />}
                         />
                         <DatePicker
                             label={t($ => $.calendari.data_fi)}
                             value={dataFi}
-                            onChange={(newValue) => setDataFi(newValue)}
-                            renderInput={(params) => <TextField {...params} fullWidth />}
+                            onChange={(newValue:any) => setDataFi(newValue)}
+                            renderInput={(params:any) => <TextField {...params} fullWidth />}
                         />
                     </Box>
                 </DialogContent>
@@ -856,7 +663,7 @@ const CalendariEstadistiques: React.FC = () => {
                     <Button onClick={() => setErrorDialogOpen(false)}>{t($ => $.calendari.tancar)}</Button>
                 </DialogActions>
             </Dialog>
-            <CaliendariDadesDialog
+            <CalendariDadesDialog
                 dimensions={dimensions}
                 indicadors={indicadors}
                 currentDadesDia={currentDadesDia}
@@ -868,195 +675,5 @@ const CalendariEstadistiques: React.FC = () => {
         </GridPage>
     );
 };
-
-const CaliendariDadesDialog = (props:any) => {
-    const { dimensions, indicadors, currentDadesDia, currentDataDia, dadesDiaModalOpen, setDadesDiaModalOpen } = props;
-    const { t } = useTranslation();
-
-    const dimensionsCodis = dimensions.map((i:any)=>i.codi);
-    const indicadorsCodis = indicadors.map((i:any)=>i.codi);
-
-    const [indicadorsShow, setIndicadorsShow] = useState<any[]>(indicadorsCodis)
-    const [open, setOpen] = useState<boolean>(true)
-    const [filterForm, setFilterForm] = useState<any>({})
-    const currentDadesDiaFiltered = useMemo<DadesDia[]>(()=>{
-        if (!filterForm) return currentDadesDia
-        return currentDadesDia.filter((currentDada: DadesDia) =>
-            Object.entries(filterForm).every(([key, value]) =>
-                currentDada.dimensionsJson?.[key]?.toLowerCase?.().includes?.(value?.toLowerCase?.())
-            )
-        );
-    },[filterForm])
-
-    useEffect(() => {
-        setFilterForm({})
-        if (currentDadesDia[0]?.indicadorsJson)
-            setIndicadorsShow(Object.keys(currentDadesDia[0]?.indicadorsJson))
-    }, [currentDadesDia]);
-
-    {/* Dialog per mostrar les dades del dia */}
-    return (
-        <Dialog
-            open={dadesDiaModalOpen}
-            onClose={() => setDadesDiaModalOpen(false)}
-            maxWidth="xl"
-            fullWidth
-            fullScreen
-        >
-            <DialogTitle>
-                {t($ => $.calendari.modal_dades_dia)} - {dayjs(currentDataDia).format('DD/MM/YYYY')}
-            </DialogTitle>
-            <DialogContent>
-                {currentDadesDia.length > 0 ? (<>
-                    <FormGroup>
-                        <Grid container spacing={1} p={1} sx={{ maxWidth: '100%' }}>
-                            <Grid size={11}>
-                                <FormControl sx={{ width: '100%' }} size={'small'}>
-                                    <InputLabel>{t($ => $.calendari.indicadors)}</InputLabel>
-                                    <Select
-                                        multiple
-                                        value={indicadorsShow}
-                                        onChange={(event) => {
-                                            const value = event.target.value
-                                            if (value.includes("all")) {
-                                                if (indicadorsShow.length === indicadorsCodis.length) {
-                                                    // Si ya todos están seleccionados → desmarcar todos
-                                                    setIndicadorsShow([]);
-                                                } else {
-                                                    // Seleccionar todos
-                                                    setIndicadorsShow(indicadorsCodis);
-                                                }
-                                            } else {
-                                                setIndicadorsShow(value);
-                                            }
-                                        }}
-                                        input={<OutlinedInput label={t($ => $.calendari.indicadors)}/>}
-                                        renderValue={(selected) => selected.join(', ')}
-                                    >
-                                        {/* Opción select all */}
-                                        <MenuItem key="all" value="all">
-                                            <Checkbox
-                                                checked={indicadorsShow.length === indicadorsCodis.length}
-                                                indeterminate={
-                                                    indicadorsShow.length > 0 &&
-                                                    indicadorsShow.length < indicadorsCodis.length
-                                                }
-                                            />
-                                            <ListItemText primary="Seleccionar todo"/>
-                                        </MenuItem>
-
-                                        {indicadors.map((indicador:any) => (
-                                            <MenuItem key={indicador.codi} value={indicador.codi}>
-                                                <Checkbox checked={indicadorsShow.includes(indicador.codi)}/>
-                                                <ListItemText primary={indicador.nom}/>
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-
-                            <Grid size={1} display={'flex'} justifyContent={'center'}>
-                                <IconButton
-                                    title={t($ => $.components.clear)}
-                                    onClick={() => {
-                                        setIndicadorsShow([]);
-                                        setFilterForm({});
-                                    }}
-                                ><Icon>filter_alt_off</Icon></IconButton>
-                                <IconButton
-                                    title={t($ => $.page.avisos.filter.more)}
-                                    onClick={() => setOpen((prev) => !prev)}
-                                ><Icon>filter_list</Icon></IconButton>
-                            </Grid>
-
-                            {dimensions.map((dimension:any) => (
-                                <Grid size={3} hidden={open}>
-                                    <TextField id={`textField-${dimension.codi}`}
-                                               label={dimension.nom}
-                                               variant="outlined"
-                                               value={filterForm[dimension.codi] || ""}
-                                               size={'small'}
-                                               fullWidth
-                                               onChange={(event)=>{
-                                                   setFilterForm({
-                                                       ...filterForm,
-                                                       [dimension.codi]: event.target.value
-                                                   })
-                                               }}/>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </FormGroup>
-
-                    <TableContainer component={Paper} sx={{ maxHeight: 'calc(95vh - 200px)' }}>
-                        <Table stickyHeader aria-label={t($ => $.calendari.modal_dades_dia)}>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell colSpan={dimensionsCodis.length}>
-                                        <Typography variant="subtitle1" fontWeight="bold">
-                                            {t($ => $.calendari.dimensions)}
-                                        </Typography>
-                                    </TableCell>
-                                    {!!indicadorsShow.length && <TableCell colSpan={indicadorsShow.length}>
-                                        <Typography variant="subtitle1" fontWeight="bold">
-                                            {t($ => $.calendari.indicadors)}
-                                        </Typography>
-                                    </TableCell>}
-                                </TableRow>
-                                <TableRow>
-                                    {/* Dimensions column headers */}
-                                    {dimensions.map((dimensio:any) => (
-                                        <TableCell key={`dim-${dimensio.codi}`} title={dimensio.descripcio}>
-                                            {dimensio.nom}
-                                        </TableCell>
-                                    ))}
-
-                                    {/* Indicators column headers */}
-                                    {indicadors.map((indicator:any) => {
-                                        if (indicadorsShow.includes(indicator.codi)) {
-                                            return <TableCell key={`ind-${indicator.codi}`}
-                                                              align="right"
-                                                              title={indicator.descripcio}>
-                                                {indicator.nom}
-                                            </TableCell>
-                                        }
-                                    })}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {currentDadesDiaFiltered.map((fet, index) => (
-                                    <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50" }}>
-                                        {/* Dimensions values */}
-                                        {dimensionsCodis.map((key:any, i:number) => (
-                                            <TableCell key={`dim-val-${index}-${i}`}>
-                                                {fet.dimensionsJson[key]}
-                                            </TableCell>
-                                        ))}
-
-                                        {/* Indicators values */}
-                                        {indicadorsCodis.map((key:any, i:number) => {
-                                            if (indicadorsShow.includes(key)) {
-                                                return <TableCell key={`ind-val-${index}-${i}`} align="right">
-                                                    {fet.indicadorsJson[key]}
-                                                </TableCell>
-                                            }})
-                                        }
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </>) : (
-                    <Typography variant="body1">
-                        {t($ => $.calendari.sense_dades)}
-                    </Typography>
-                )}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => setDadesDiaModalOpen(false)}>{t($ => $.calendari.tancar)}</Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
 
 export default CalendariEstadistiques;
