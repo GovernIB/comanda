@@ -1,6 +1,6 @@
 import Skeleton from '@mui/material/Skeleton';
 import Box from '@mui/material/Box';
-import estils from './estadistiques/WidgetEstils.ts';
+import estils from '../estadistiques/WidgetEstils.ts';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import * as React from 'react';
@@ -12,7 +12,7 @@ import {
     useBaseAppContext,
 } from 'reactlib';
 import { Button, Paper, styled } from '@mui/material';
-import { SalutGenericTooltip } from './SalutChipTooltip.tsx';
+import { SalutField, SalutGenericTooltip } from './SalutChipTooltip.tsx';
 import {
     ENUM_APP_ESTAT_PREFIX,
     getColorByIntegracio,
@@ -22,22 +22,23 @@ import {
     SalutEstatEnum,
     SalutModel,
     TITLE,
-} from '../types/salut.model.tsx';
-import { ChipColor } from '../util/colorUtil.ts';
+} from '../../types/salut.model.tsx';
+import { ChipColor } from '../../util/colorUtil.ts';
 import { ItemStateChip } from './SalutItemStateChip.tsx';
 import { DataGridPro, GridRowId, GridSlots } from '@mui/x-data-grid-pro';
 import { PieChart, useDrawingArea } from '@mui/x-charts';
-import DataGridNoRowsOverlay from '../../lib/components/mui/datagrid/DataGridNoRowsOverlay.tsx';
-import UpdownBarChart from './UpdownBarChart.tsx';
-import { SalutData } from '../pages/Salut.tsx';
-import { ErrorBoundaryFallback } from '../pages/SalutAppInfo.tsx';
+import DataGridNoRowsOverlay from '../../../lib/components/mui/datagrid/DataGridNoRowsOverlay.tsx';
+import UpdownBarChart from './UpdownBarChart';
+import { SalutData } from '../../pages/salut/Salut.tsx';
 import { ErrorBoundary } from 'react-error-boundary';
 import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import useSizeTracker from '../hooks/useSizeTracker';
-import {AppModel, EntornAppModel} from "../types/app.model.tsx";
-import {EntornModel} from "../types/entorn.model.tsx";
+import useSizeTracker from '../../hooks/useSizeTracker';
+import {AppModel, EntornAppModel} from "../../types/app.model.tsx";
+import {EntornModel} from "../../types/entorn.model.tsx";
+import useTranslationStringKey from '../../hooks/useTranslationStringKey';
+import { SalutErrorBoundaryFallback } from './SalutErrorBoundaryFallback';
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
@@ -58,7 +59,7 @@ function PieCenterLabel({ children }: { children: React.ReactNode }) {
 
 const UpdownPieChart: React.FC<{ salutLastItems: SalutModel[] }> = React.memo((props) => {
     const { salutLastItems } = props;
-    const { t } = useTranslation();
+    const { t } = useTranslationStringKey();
 
     const upValue = salutLastItems.filter(
         (salutItem) => salutItem.appEstat === SalutEstatEnum.UP
@@ -173,7 +174,7 @@ const AppDataTable: React.FC<{
     );
 
     const renderItemStateChip = React.useCallback(
-        (id: GridRowId, salutField: keyof SalutModel) => {
+        (id: GridRowId, salutField: SalutField.APP_ESTAT | SalutField.BD_ESTAT) => {
             const salutItem: SalutModel | null = findSalutItem(id);
             if (salutItem == null) {
                 return undefined;
@@ -233,7 +234,7 @@ const AppDataTable: React.FC<{
                 field: 'estat',
                 headerName: t($ => $.page.salut.apps.column.estat),
                 minWidth: 100,
-                renderCell: ({ id }) => renderItemStateChip(id, SalutModel.APP_ESTAT),
+                renderCell: ({ id }) => renderItemStateChip(id, SalutField.APP_ESTAT),
             },
             {
                 flex: 0.3,
@@ -268,7 +269,7 @@ const AppDataTable: React.FC<{
                 field: 'bd',
                 headerName: t($ => $.page.salut.apps.column.bd),
                 minWidth: 100,
-                renderCell: ({ id }) => renderItemStateChip(id, SalutModel.BD_ESTAT),
+                renderCell: ({ id }) => renderItemStateChip(id, SalutField.BD_ESTAT),
             },
             {
                 flex: 0.3,
@@ -611,13 +612,13 @@ export const SalutWidgetContent: React.FC<{
                             justifyContent: 'center',
                         }}
                     >
-                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                        <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
                             <UpdownPieChart salutLastItems={salutLastItems} />
                         </ErrorBoundary>
                     </Box>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 9 }} sx={{ height: '200px' }}>
-                    <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                    <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
                         <UpdownBarChart
                             agrupacio={agrupacio}
                             estats={estats}

@@ -10,8 +10,9 @@ import {
     SalutEstatEnum,
     TITLE,
     TOOLTIP
-} from "../types/salut.model.tsx";
-import {Trans, useTranslation} from "react-i18next";
+} from "../../types/salut.model.tsx";
+import {Trans} from "react-i18next";
+import useTranslationStringKey from '../../hooks/useTranslationStringKey';
 
 export enum SalutField {
   APP_ESTAT = "appEstat",
@@ -56,10 +57,22 @@ const getPrefixByField = (field: SalutField): string => {
 };
 
 export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salutField, children, ...props }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslationStringKey();
 
     const prefix = getPrefixByField(salutField);
     const existTranslation: boolean = !(t(prefix + stateEnum + TOOLTIP) === (prefix + stateEnum + TOOLTIP));
+
+    const translationElement: React.ReactNode = existTranslation && (
+        <Trans
+            // @ts-expect-error i18next still accepts string as a key (see useTranslationStringKey)
+            i18nKey={prefix + stateEnum + TOOLTIP}
+            components={{
+                bold: <b />,
+                underline: <u />,
+                italic: <em />,
+            }}
+        />
+    );
 
     const titleContent: React.ReactNode = (
         <React.Fragment>
@@ -69,15 +82,7 @@ export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salut
                     {t(ENUM_APP_ESTAT_PREFIX + stateEnum + TITLE)}
                 </Typography>
             </Box>
-            {existTranslation &&
-                <Trans
-                    i18nKey={prefix + stateEnum + TOOLTIP}
-                    components={{
-                        bold: <b/>,
-                        underline: <u/>,
-                        italic: <em/>
-                    }}
-                />}
+            {translationElement}
         </React.Fragment>
     );
 

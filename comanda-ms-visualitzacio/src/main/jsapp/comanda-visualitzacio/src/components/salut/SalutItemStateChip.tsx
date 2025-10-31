@@ -1,4 +1,3 @@
-import {useTranslation} from "react-i18next";
 import {SalutChipTooltip, SalutField} from "./SalutChipTooltip.tsx";
 import Chip from "@mui/material/Chip";
 import {
@@ -7,9 +6,10 @@ import {
     getMaterialIconByState,
     SalutEstatEnum,
     TITLE
-} from "../types/salut.model.tsx";
-import {ChipColor} from "../util/colorUtil.ts";
+} from "../../types/salut.model.tsx";
+import {ChipColor} from "../../util/colorUtil.ts";
 import {ChipProps, Typography} from "@mui/material";
+import useTranslationStringKey from '../../hooks/useTranslationStringKey';
 
 interface ItemStateChipProps extends ChipProps {
     salutField: SalutField;
@@ -18,7 +18,7 @@ interface ItemStateChipProps extends ChipProps {
 }
 
 export const ItemStateChip: React.FC<ItemStateChipProps> = ({ salutField, salutStatEnum, date, sx,...props }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslationStringKey();
 
     const renderChip = (state: SalutEstatEnum) => (
         <SalutChipTooltip stateEnum={state} salutField={salutField}>

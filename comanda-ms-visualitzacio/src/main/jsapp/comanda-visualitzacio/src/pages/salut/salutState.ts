@@ -1,4 +1,4 @@
-import { SalutData } from '../pages/Salut.tsx';
+import { SalutData } from './Salut.tsx';
 import { useCallback, useState } from 'react';
 
 export const useSalutLlistatExpansionState = () => {

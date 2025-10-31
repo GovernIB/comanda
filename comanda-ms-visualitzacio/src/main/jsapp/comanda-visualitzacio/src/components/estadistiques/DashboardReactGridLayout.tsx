@@ -7,7 +7,6 @@ import GraficWidgetVisualization from './GraficWidgetVisualization.tsx';
 import TaulaWidgetVisualization from './TaulaWidgetVisualization.tsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { ErrorBoundaryFallback } from '../../pages/SalutAppInfo.tsx';
 import { Box, Icon, Menu, MenuItem } from '@mui/material';
 import 'react-grid-layout/css/styles.css';
 import './react-resizable-custom.css';
@@ -15,6 +14,7 @@ import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
 import {MuiFormDialog, MuiFormDialogApi, useBaseAppContext, useConfirmDialogButtons, useResourceApiService} from "reactlib";
 import {useTranslation} from "react-i18next";
 import {AfegirTitolFormContent} from "../../pages/EstadisticaDashboardEdit.tsx";
+import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback';
 
 const CustomGridLayout = WidthProvider(Responsive);
 
@@ -434,7 +434,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         if(dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
                         return (
                             <CustomGridItemComponent key={item.id} refresh={refresh} entity={dashboardWidget ?? dashboardTitol} editable={editable}>
-                                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
                                     {(() => {
                                         switch (item.type) {
                                             case 'SIMPLE':

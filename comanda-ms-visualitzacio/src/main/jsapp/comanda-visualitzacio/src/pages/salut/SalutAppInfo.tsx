@@ -17,181 +17,34 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import { useTheme } from '@mui/material/styles';
 import { MarkPlot } from '@mui/x-charts/LineChart';
-import {
-    useResourceApiService,
-    dateFormatLocale,
-    springFilterBuilder as builder,
-} from 'reactlib';
-import { agrupacioFromMinutes } from '../components/SalutToolbar';
-import UpdownBarChart from '../components/UpdownBarChart';
-import { isDataInGroup, toXAxisDataGroups } from '../util/dataGroup';
+import { dateFormatLocale } from 'reactlib';
+import UpdownBarChart from '../../components/salut/UpdownBarChart';
+import { isDataInGroup, toXAxisDataGroups } from '../../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
 import {
+    ChartContainer,
+    ChartsTooltip,
     ChartsXAxis,
     ChartsYAxis,
     LinePlot,
     LineSeriesType,
-    ChartContainer,
-    ChartsTooltip,
 } from '@mui/x-charts';
-import {getColorByMissatge, getColorByNivellEnum, NivellEnum, SalutModel} from "../types/salut.model.tsx";
-import {ChipColor} from "../util/colorUtil.ts";
-import {SalutField, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
-import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
+import {
+    getColorByMissatge,
+    getColorByNivellEnum,
+    NivellEnum,
+    SalutModel,
+} from '../../types/salut.model.tsx';
+import { ChipColor } from '../../util/colorUtil.ts';
+import { SalutField, SalutGenericTooltip } from '../../components/salut/SalutChipTooltip.tsx';
+import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
 import { Alert, Tooltip } from '@mui/material';
-import { useCallback, useEffect } from 'react';
-import { EntornAppModel } from '../types/app.model.tsx';
-import dayjs from 'dayjs';
-import { ISO_DATE_FORMAT } from '../util/dateUtils.ts';
 import { SalutData } from './Salut.tsx';
+import { AppDataState, SalutInformeLatenciaItem } from './dataFetching';
+import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
 
-export const ErrorBoundaryFallback = () => {
-    const { t } = useTranslation();
-    return (
-        <Typography sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-        }} color="error">{t($ => $.page.salut.latencia.error)}</Typography>
-    );
-}
-
-// es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem
-type SalutInformeLatenciaItem = {
-    data: string;
-    latenciaMitja: number;
-};
-
-interface AppDataState {
-    loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
-    entornApp: EntornAppModel | null;
-    estats: Record<string, any> | null;
-    latencies: SalutInformeLatenciaItem[] | null;
-    salutCurrentApp: SalutModel | null;
-    agrupacio?: string;
-    error?: any;
-    grupsDates: string[] | null;
-}
-
-const appDataStateInitialValue: AppDataState = {
-    loading: null,
-    entornApp: null,
-    estats: null,
-    latencies: null,
-    salutCurrentApp: null,
-    grupsDates: null,
-};
-
-export const useAppInfoData = (id: any, dataRangeMinutes: number ) => {
-    const {
-        isReady: entornAppApiIsReady,
-        getOne: entornAppGetOne,
-    } = useResourceApiService('entornApp');
-    const {
-        isReady: salutApiIsReady,
-        find: salutApiFind,
-        artifactReport: salutApiReport,
-    } = useResourceApiService('salut');
-    const [appDataState, setAppDataState] = React.useState<AppDataState>(appDataStateInitialValue);
-    const ready = entornAppApiIsReady && salutApiIsReady;
-    // TODO Considerar implementar bloqueig o cancelar peticions antigues si se fa una nova
-    const refresh = useCallback(async () => {
-        if (id == null) {
-            setAppDataState(appDataStateInitialValue);
-            return;
-        }
-
-        if (ready) {
-            setAppDataState((prevState) => ({
-                ...prevState,
-                loading: true,
-                error: undefined,
-            }));
-            try {
-                const entornApp = await entornAppGetOne(id);
-                const entornAppId = entornApp.id;
-                const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
-                const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
-                const reportData = {
-                    dataReferencia,
-                    agrupacio,
-                    entornAppId,
-                };
-                const grupDatesReportItems = await salutApiReport(null, {
-                    code: 'grups_dates',
-                    data: {
-                        dataReferencia,
-                        agrupacio,
-                    },
-                });
-                const estatReportItems = await salutApiReport(null, {
-                    code: 'estat',
-                    data: reportData,
-                });
-                const latenciaReportItems = await salutApiReport(null, {
-                    code: 'latencia',
-                    data: reportData,
-                });
-                const findArgs = {
-                    page: 0,
-                    size: 1,
-                    sorts: ['data,desc'],
-                    perspectives: [
-                        'SAL_INTEGRACIONS',
-                        'SAL_SUBSISTEMES',
-                        'SAL_CONTEXTS',
-                        'SAL_MISSATGES',
-                        'SAL_DETALLS',
-                    ],
-                    filter: builder.and(
-                        builder.eq('tipusRegistre', `'MINUT'`),
-                        builder.eq('entornAppId', `'${entornAppId}'`),
-                    ),
-                };
-                const { rows } = await salutApiFind(findArgs);
-                const salutCurrentApp: SalutModel = rows?.[0];
-                setAppDataState((state) => ({
-                    ...state,
-                    loading: false,
-                    entornApp,
-                    estats: { [entornAppId]: estatReportItems },
-                    latencies: latenciaReportItems as any[],
-                    salutCurrentApp,
-                    agrupacio,
-                    grupsDates: (grupDatesReportItems as { data: string }[]).map((item) => item.data),
-                }));
-            } catch (e) {
-                // TODO Mostrar error en la UI
-                setAppDataState({
-                    ...appDataStateInitialValue,
-                    loading: false,
-                    error: e,
-                })
-            }
-        }
-    }, [dataRangeMinutes, ready, entornAppGetOne, id, salutApiReport, salutApiFind]);
-
-    useEffect(() => {
-        if (!ready) {
-            return;
-        }
-        refresh();
-    }, [ready, refresh]);
-
-    return {
-        ready,
-        refresh,
-        ...appDataState,
-    };
-}
-
-const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: any}) => {
-    const {
-        salutCurrentApp: app,
-        entornApp: entornApp,
-    } = props;
+const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: any }> = props => {
+    const { salutCurrentApp: app, entornApp: entornApp } = props;
     const { t } = useTranslation();
     const versio = entornApp && <Typography>{entornApp.versio}</Typography>;
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
@@ -227,8 +80,10 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent sx={{ height: '100%' }}>
-                <Typography gutterBottom variant="h5" component="div">{t($ => $.page.salut.info.title)}</Typography>
-                <Table size="small" sx={{ width: '100%', tableLayout: 'fixed'}}>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.info.title)}
+                </Typography>
+                <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
                     <TableBody>
                         <TableRow key={1}>
                             <TableCell>{t($ => $.page.salut.info.versio)}</TableCell>
@@ -263,20 +118,22 @@ const AppInfo: React.FC<any> = (props: {salutCurrentApp: SalutModel, entornApp: 
             </CardContent>
         </Card>
     );
-}
+};
 
 const LatenciaLineChart: React.FC<{
     agrupacio: string;
     latencies: SalutInformeLatenciaItem[];
     grupsDates: string[];
-}> = (props) => {
+}> = props => {
     const { agrupacio, latencies, grupsDates: baseDataGroups } = props;
     const { t } = useTranslation();
     if (!latencies || latencies.length === 0) {
         return (
             <Card variant="outlined" sx={{ height: '100%' }}>
                 <CardContent sx={{ height: '100%' }}>
-                    <Typography gutterBottom variant="h5" component="div">{t($ => $.page.salut.latencia.title)}</Typography>
+                    <Typography gutterBottom variant="h5" component="div">
+                        {t($ => $.page.salut.latencia.title)}
+                    </Typography>
                     <Typography
                         sx={{
                             height: '100%',
@@ -292,18 +149,20 @@ const LatenciaLineChart: React.FC<{
             </Card>
         );
     }
-    const seriesDataLatencia = baseDataGroups.map((group) => {
-        return latencies.find((latenciaData) => {
-            if (!latenciaData || !latenciaData.data) return false;
-            return isDataInGroup(latenciaData.data, group, agrupacio);
-        })?.latenciaMitja ?? null;
+    const seriesDataLatencia = baseDataGroups.map(group => {
+        return (
+            latencies.find(latenciaData => {
+                if (!latenciaData || !latenciaData.data) return false;
+                return isDataInGroup(latenciaData.data, group, agrupacio);
+            })?.latenciaMitja ?? null
+        );
     });
     const lineSeries: LineSeriesType[] = [
         {
             data: seriesDataLatencia,
             type: 'line',
             showMark: true,
-            valueFormatter: (v) => (v == null ? '' : `${v} ms`),
+            valueFormatter: v => (v == null ? '' : `${v} ms`),
         },
     ];
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
@@ -315,14 +174,18 @@ const LatenciaLineChart: React.FC<{
                 </Typography>
                 <ChartContainer
                     series={[...lineSeries]}
-                    xAxis={[{
-                        scaleType: 'band',
-                        data: dataGroups,
-                        id: 'latencia-x-axis-id',
-                        // TODO Fer un formatter generic per a totes les agrupacions
-                        valueFormatter: (value: string) => agrupacio === 'HORA' ? value.substring(3) : value
-                    }]}
-                    yAxis={[{ label: ' ms', id: 'latencia-y-axis-id', }]}>
+                    xAxis={[
+                        {
+                            scaleType: 'band',
+                            data: dataGroups,
+                            id: 'latencia-x-axis-id',
+                            // TODO Fer un formatter generic per a totes les agrupacions
+                            valueFormatter: (value: string) =>
+                                agrupacio === 'HORA' ? value.substring(3) : value,
+                        },
+                    ]}
+                    yAxis={[{ label: ' ms', id: 'latencia-y-axis-id' }]}
+                >
                     <LinePlot />
                     <MarkPlot />
                     <ChartsTooltip />
@@ -332,13 +195,13 @@ const LatenciaLineChart: React.FC<{
             </CardContent>
         </Card>
     );
-}
+};
 
 const EstatsBarCard: React.FC<{
     agrupacio: string;
     estats: SalutData['estats'];
     grupsDates: string[];
-}> = (props) => {
+}> = props => {
     const { grupsDates, agrupacio, estats } = props;
     const { t } = useTranslation();
     const hasData = estats && Object.keys(estats).length > 0;
@@ -366,19 +229,21 @@ const EstatsBarCard: React.FC<{
             </CardContent>
         </Card>
     );
-}
+};
 
-const PeticionsOkError: React.FC<any> = (props) => {
+const PeticionsOkError: React.FC<{ ok?: number, error?: number }> = props => {
     const { ok, error } = props;
     const theme = useTheme();
-    return <>
-        <span style={{ color: theme.palette.success.main }}>{ok ?? 0}</span>
-        &nbsp;/&nbsp;
-        <span style={{ color: theme.palette.error.main }}>{error ?? 0}</span>
-    </>
-}
+    return (
+        <>
+            <span style={{ color: theme.palette.success.main }}>{ok ?? 0}</span>
+            &nbsp;/&nbsp;
+            <span style={{ color: theme.palette.error.main }}>{error ?? 0}</span>
+        </>
+    );
+};
 
-const IntegracioRow: React.FC<any> = (props) => {
+const IntegracioRow: React.FC<any> = props => {
     const { integracio, fills, padLeft, toggleOpen, open } = props;
     const { t } = useTranslation();
     const displayName = integracio.nom ?? integracio.codi;
@@ -386,34 +251,66 @@ const IntegracioRow: React.FC<any> = (props) => {
         <>
             <TableRow>
                 <TableCell padding="none" align="center">
-                    {fills?.length ? <IconButton size="small" onClick={toggleOpen}>
-                        {open ? <Icon>keyboard_arrow_up</Icon> : <Icon>keyboard_arrow_down</Icon>}
-                    </IconButton> : null}
+                    {fills?.length ? (
+                        <IconButton size="small" onClick={toggleOpen}>
+                            {open ? (
+                                <Icon>keyboard_arrow_up</Icon>
+                            ) : (
+                                <Icon>keyboard_arrow_down</Icon>
+                            )}
+                        </IconButton>
+                    ) : null}
                 </TableCell>
                 <TableCell>
-                    <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        height: '100%',
-                        gap: '10px',
-                        paddingLeft: padLeft ? '20px' : '0px',
-                    }}>
-                        {integracio.logo && <img src={`data:image/png;base64,${integracio.logo}`} alt="logo" style={{ height: '32px' }}/>}
-                        {integracio.endpoint ? <Tooltip title={integracio.endpoint}>{displayName}</Tooltip> : displayName}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            height: '100%',
+                            gap: '10px',
+                            paddingLeft: padLeft ? '20px' : '0px',
+                        }}
+                    >
+                        {integracio.logo && (
+                            <img
+                                src={`data:image/png;base64,${integracio.logo}`}
+                                alt="logo"
+                                style={{ height: '32px' }}
+                            />
+                        )}
+                        {integracio.endpoint ? (
+                            <Tooltip title={integracio.endpoint}>{displayName}</Tooltip>
+                        ) : (
+                            displayName
+                        )}
                     </Box>
-
                 </TableCell>
                 <TableCell>
-                    <ItemStateChip sx={{ ml: 1 }} salutField={SalutField.INTEGRACIO_ESTAT} salutStatEnum={integracio.estat} />
+                    <ItemStateChip
+                        sx={{ ml: 1 }}
+                        salutField={SalutField.INTEGRACIO_ESTAT}
+                        salutStatEnum={integracio.estat}
+                    />
                 </TableCell>
                 <TableCell>
                     <PeticionsOkError ok={integracio.totalOk} error={integracio.totalError} />
                 </TableCell>
-                <TableCell>{integracio.totalTempsMig != null ? integracio.totalTempsMig + ' ms' : t($ => $.page.salut.nd)}</TableCell>
                 <TableCell>
-                    <PeticionsOkError ok={integracio.peticionsOkUltimPeriode} error={integracio.peticionsErrorUltimPeriode} />
+                    {integracio.totalTempsMig != null
+                        ? integracio.totalTempsMig + ' ms'
+                        : t($ => $.page.salut.nd)}
                 </TableCell>
-                <TableCell>{integracio.tempsMigUltimPeriode != null ? integracio.tempsMigUltimPeriode + ' ms' : t($ => $.page.salut.nd)}</TableCell>
+                <TableCell>
+                    <PeticionsOkError
+                        ok={integracio.peticionsOkUltimPeriode}
+                        error={integracio.peticionsErrorUltimPeriode}
+                    />
+                </TableCell>
+                <TableCell>
+                    {integracio.tempsMigUltimPeriode != null
+                        ? integracio.tempsMigUltimPeriode + ' ms'
+                        : t($ => $.page.salut.nd)}
+                </TableCell>
                 {/*<TableCell>*/}
                 {/*    {integracio.endpoint && <IconButton*/}
                 {/*        component="a"*/}
@@ -425,18 +322,21 @@ const IntegracioRow: React.FC<any> = (props) => {
                 {/*</TableCell>*/}
             </TableRow>
             {/*<Collapse in={open} timeout="auto" unmountOnExit>*/}
-            {(open && fills?.length) ?
-                fills.map((childIntegracio: any) => <IntegracioRow
-                    padLeft
-                    integracio={childIntegracio}
-                    key={`integracioRowChild-${childIntegracio.id}`}
-                />) : undefined}
+            {open && fills?.length
+                ? fills.map((childIntegracio: any) => (
+                      <IntegracioRow
+                          padLeft
+                          integracio={childIntegracio}
+                          key={`integracioRowChild-${childIntegracio.id}`}
+                      />
+                  ))
+                : undefined}
             {/*</Collapse>*/}
         </>
     );
-}
+};
 
-const Integracions: React.FC<any> = (props) => {
+const Integracions: React.FC<any> = props => {
     const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand } = props;
     const { t } = useTranslation();
     const integracions = salutCurrentApp?.integracions;
@@ -471,12 +371,11 @@ const Integracions: React.FC<any> = (props) => {
             </CardContent>
         </Card>
     );
-}
+};
 
-const Subsistemes: React.FC<any> = (props) => {
-    const { salutCurrentApp } = props;
+const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
-    const subsistemes = salutCurrentApp?.subsistemes;
+    const subsistemes = salutCurrentApp.subsistemes;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
@@ -484,7 +383,7 @@ const Subsistemes: React.FC<any> = (props) => {
                 {!subsistemes?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
                     {t($ => $.page.salut.subsistemes.noInfo)}
                 </Typography>}
-                {subsistemes?.length > 0 && <Table size="small">
+                {subsistemes?.length && <Table size="small">
                     <TableHead>
                         <TableRow>
                             <TableCell>{t($ => $.page.salut.subsistemes.column.codi)}</TableCell>
@@ -497,7 +396,7 @@ const Subsistemes: React.FC<any> = (props) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {subsistemes.map((s: any, key: number) => <TableRow key={key}>
+                        {subsistemes.map((s, key: number) => <TableRow key={key}>
                             <TableCell>{s.codi}</TableCell>
                             <TableCell>{s.nom}</TableCell>
                             <TableCell>
@@ -517,12 +416,11 @@ const Subsistemes: React.FC<any> = (props) => {
             </CardContent>
         </Card>
     );
-}
+};
 
-const Contexts: React.FC<any> = (props) => {
-    const { salutCurrentApp } = props;
+const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
-    const contexts = salutCurrentApp?.contexts;
+    const contexts = salutCurrentApp.contexts;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
@@ -530,7 +428,7 @@ const Contexts: React.FC<any> = (props) => {
                 {!contexts?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
                     {t($ => $.page.salut.contexts.noInfo)}
                 </Typography>}
-                {contexts?.length > 0 && <Table size="small">
+                {contexts?.length && <Table size="small">
                     <TableHead>
                         <TableRow>
                             <TableCell>{t($ => $.page.salut.contexts.column.codi)}</TableCell>
@@ -541,14 +439,14 @@ const Contexts: React.FC<any> = (props) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {contexts.map((s: any, key: number) => <TableRow key={key}>
+                        {contexts.map((s, key: number) => <TableRow key={key}>
                             <TableCell>{s.codi}</TableCell>
                             <TableCell>{s.nom}</TableCell>
                             <TableCell>{s.path && <Button href={s.path} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{s.path}</Button>}</TableCell>
                             <TableCell>{s.api && <Button href={s.api} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>API</Button>}</TableCell>
                             <TableCell>
-                                {s.manuals && s.manuals.map((manual: any, index: number) => (
-                                    <Button key={index} href={manual.path} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{manual.nom}</Button>
+                                {s.manuals && s.manuals.map((manual, index: number) => (
+                                    <Button key={index} href={manual.path ?? ""} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{manual.nom}</Button>
                                 ))}
                             </TableCell>
                         </TableRow>)}
@@ -557,12 +455,11 @@ const Contexts: React.FC<any> = (props) => {
             </CardContent>
         </Card>
     );
-}
+};
 
-const Missatges: React.FC<any> = (props) => {
-    const { salutCurrentApp } = props;
+const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
-    const missatges = salutCurrentApp?.missatges;
+    const missatges = salutCurrentApp.missatges;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
@@ -570,7 +467,7 @@ const Missatges: React.FC<any> = (props) => {
                 {!missatges?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
                     {t($ => $.page.salut.missatges.noInfo)}
                 </Typography>}
-                {missatges?.length > 0 && <Table size="small">
+                {missatges?.length && <Table size="small">
                     <TableHead>
                         <TableRow>
                             <TableCell>{t($ => $.page.salut.missatges.column.data)}</TableCell>
@@ -589,12 +486,11 @@ const Missatges: React.FC<any> = (props) => {
             </CardContent>
         </Card>
     );
-}
+};
 
-const DetallInfo: React.FC<any> = (props) => {
-    const { salutCurrentApp } = props;
+const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
-    const detalls = salutCurrentApp?.detalls;
+    const detalls = salutCurrentApp.detalls;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
@@ -602,9 +498,9 @@ const DetallInfo: React.FC<any> = (props) => {
                 {!detalls?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
                     {t($ => $.page.salut.detalls.noInfo)}
                 </Typography>}
-                {detalls?.length > 0 && <Table size="small" sx={{ width: '100%', tableLayout: 'fixed'}}>
+                {detalls?.length && <Table size="small" sx={{ width: '100%', tableLayout: 'fixed'}}>
                     <TableBody>
-                        {detalls.map((d: any) => <TableRow key={d.id}>
+                        {detalls.map((d) => <TableRow key={d.id}>
                             <TableCell sx={{minWidth: '165px'}}>{d.nom}</TableCell>
                             <TableCell>{d.valor}</TableCell>
                         </TableRow>)}
@@ -613,22 +509,20 @@ const DetallInfo: React.FC<any> = (props) => {
             </CardContent>
         </Card>
     );
-}
+};
 
-const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsDates?: string[] }> = ({
-    appInfoData,
-    grupsDates,
-    ready,
-}) => {
+const SalutAppInfo: React.FC<{
+    appInfoData: AppDataState;
+    ready: boolean;
+    grupsDates?: string[];
+}> = ({ appInfoData, grupsDates, ready }) => {
     const { t } = useTranslation();
-    const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } =
-        appInfoData;
+    const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
     const [integracionsExpandState, setIntegracionsExpandState] = React.useState<number[]>([]);
     const toggleIntegracioExpand = (id: number) => {
         if (integracionsExpandState.includes(id))
             setIntegracionsExpandState(integracionsExpandState.filter((i: number) => i !== id));
-        else
-            setIntegracionsExpandState([...integracionsExpandState, id]);
+        else setIntegracionsExpandState([...integracionsExpandState, id]);
     };
     const dataLoaded = ready && loading != null && !loading;
 
@@ -643,7 +537,7 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
                         <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
-                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                        <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
                             {agrupacio != null && estats != null && grupsDates != null && (
                                 <EstatsBarCard
                                     agrupacio={agrupacio}
@@ -679,7 +573,7 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
                 <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
             </Grid>
             <Grid size={{ sm: 12, lg: 9 }}>
-                <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
+                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
                     {agrupacio != null && estats != null && grupsDates != null && (
                         <EstatsBarCard
                             agrupacio={agrupacio}
@@ -699,20 +593,27 @@ const SalutAppInfo: React.FC<{ appInfoData: AppDataState; ready: boolean, grupsD
                         <DetallInfo salutCurrentApp={salutCurrentApp} />
                     </Grid>
                     <Grid size={{ sm: 12, lg: 9 }}>
-                        <ErrorBoundary fallback={<ErrorBoundaryFallback />}>
-                            {agrupacio != null && latencies != null && estats != null && grupsDates != null && (
-                                <>
-                                    <LatenciaLineChart
-                                        agrupacio={agrupacio}
-                                        latencies={latencies}
-                                        grupsDates={grupsDates}
-                                    />
-                                </>
-                            )}
+                        <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                            {agrupacio != null &&
+                                latencies != null &&
+                                estats != null &&
+                                grupsDates != null && (
+                                    <>
+                                        <LatenciaLineChart
+                                            agrupacio={agrupacio}
+                                            latencies={latencies}
+                                            grupsDates={grupsDates}
+                                        />
+                                    </>
+                                )}
                         </ErrorBoundary>
                     </Grid>
                     <Grid size={{ sm: 12, lg: 6 }}>
-                        <Integracions salutCurrentApp={salutCurrentApp}  toggleIntegracioExpand={toggleIntegracioExpand} integracionsExpandState={integracionsExpandState} />
+                        <Integracions
+                            salutCurrentApp={salutCurrentApp}
+                            toggleIntegracioExpand={toggleIntegracioExpand}
+                            integracionsExpandState={integracionsExpandState}
+                        />
                     </Grid>
                     <Grid size={{ sm: 12, lg: 6 }}>
                         <Subsistemes salutCurrentApp={salutCurrentApp} />

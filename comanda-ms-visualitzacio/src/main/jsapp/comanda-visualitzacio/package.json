@@ -5,8 +5,9 @@
     "type": "module",
     "scripts": {
         "dev": "vite --open",
-        "build": "tsc -b && vite build",
-        "build-jboss": "tsc && vite build --base=/comandaback/",
+        "build": "tsc -b && vitest --run && vite build",
+        "build-jboss": "tsc && vitest --run && vite build --base=/comandaback/",
+        "test": "vitest",
         "lint": "eslint .",
         "preview": "vite preview",
         "postinstall": "patch-package"
@@ -54,6 +55,7 @@
         "typescript": "~5.9.3",
         "typescript-eslint": "^8.45.0",
         "vite": "^7.1.12",
-        "vite-tsconfig-paths": "^5.1.4"
+        "vite-tsconfig-paths": "^5.1.4",
+        "vitest": "^3.2.4"
     }
 }

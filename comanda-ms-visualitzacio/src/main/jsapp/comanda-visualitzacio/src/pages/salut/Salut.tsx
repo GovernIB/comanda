@@ -1,7 +1,7 @@
 import { Activity, FunctionComponent, useCallback, useEffect, useState } from 'react';
-import { SalutModel } from '../types/salut.model';
+import { SalutModel } from '../../types/salut.model';
 import { BasePage, springFilterBuilder, useResourceApiService } from 'reactlib';
-import { BaseEntity } from '../types/base-entity.model';
+import { BaseEntity } from '../../types/base-entity.model';
 import dayjs from 'dayjs';
 import SalutToolbar, {
     agrupacioFromMinutes,
@@ -9,18 +9,20 @@ import SalutToolbar, {
     salutEntornAppFilterBuilder,
     SalutFilterDataType,
     useSalutToolbarState,
-} from '../components/SalutToolbar';
-import useInterval from '../hooks/useInterval';
+} from '../../components/salut/SalutToolbar';
+import useInterval from '../../hooks/useInterval';
 import { useTranslation } from 'react-i18next';
-import { SalutLlistat } from '../components/SalutPrincipalWidgets';
+import { SalutLlistat } from '../../components/salut/SalutPrincipalWidgets';
 import { useParams } from 'react-router-dom';
-import SalutAppInfo, { useAppInfoData } from './SalutAppInfo';
-import { ItemStateChip } from '../components/SalutItemStateChip';
-import {AppModel, EntornAppModel} from "../types/app.model.tsx";
-import {EntornModel} from "../types/entorn.model.tsx";
-import { useSalutLlistatExpansionState } from '../hooks/salutState.ts';
-import { ISO_DATE_FORMAT } from '../util/dateUtils.ts';
-import { filterNumericObjectKeys } from '../util/objectUtils.ts';
+import SalutAppInfo from './SalutAppInfo';
+import { ItemStateChip } from '../../components/salut/SalutItemStateChip';
+import {AppModel, EntornAppModel} from "../../types/app.model.tsx";
+import {EntornModel} from "../../types/entorn.model.tsx";
+import { useSalutLlistatExpansionState } from './salutState.ts';
+import { ISO_DATE_FORMAT } from '../../util/dateUtils.ts';
+import { filterNumericObjectKeys } from '../../util/objectUtils.ts';
+import { SalutField } from '../../components/salut/SalutChipTooltip';
+import { useAppInfoData } from './dataFetching';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 type SalutInformeEstatItem = {
@@ -315,7 +317,7 @@ const Salut: FunctionComponent = () => {
               state: appInfoData.salutCurrentApp?.appEstat ? (
                   <ItemStateChip
                       sx={{ ml: 1 }}
-                      salutField={SalutModel.APP_ESTAT}
+                      salutField={SalutField.APP_ESTAT}
                       salutStatEnum={appInfoData.salutCurrentApp.appEstat}
                   />
               ) : undefined,

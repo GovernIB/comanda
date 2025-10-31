@@ -1,11 +1,16 @@
 import * as React from 'react';
 import {BarChart} from '@mui/x-charts/BarChart';
-import { isDataInGroup, toXAxisDataGroups} from '../util/dataGroup';
-import {useTranslation} from "react-i18next";
-import {ENUM_APP_ESTAT_PREFIX, getColorByStatEnum, SalutEstatEnum, TITLE} from "../types/salut.model.tsx";
+import { isDataInGroup, toXAxisDataGroups} from '../../util/dataGroup';
+import {
+    ENUM_APP_ESTAT_PREFIX,
+    getColorByStatEnum,
+    SalutEstatEnum,
+    TITLE,
+} from '../../types/salut.model.tsx';
 import { XAxis } from '@mui/x-charts';
-import { SalutData } from '../pages/Salut.tsx';
-import { numericObjectKeys } from '../util/objectUtils.ts';
+import { SalutData } from '../../pages/salut/Salut.tsx';
+import { numericObjectKeys } from '../../util/objectUtils.ts';
+import useTranslationStringKey from '../../hooks/useTranslationStringKey';
 
 export const calculateEstatsSeries = (
     baseDataGroups: string[],
@@ -38,7 +43,7 @@ const UpdownBarChart: React.FC<{
     grupsDates: string[];
 }> = React.memo((props) => {
     const { agrupacio, estats, grupsDates: baseDataGroups } = props;
-    const { t } = useTranslation();
+    const { t } = useTranslationStringKey();
 
     const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'upPercent');
     const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'warnPercent');
