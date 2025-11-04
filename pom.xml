@@ -87,6 +87,7 @@
 		<module>comanda-ms-alarmes</module>
 		<module>comanda-ms-permisos</module>
 		<module>comanda-ms-usuaris</module>
+		<module>comanda-ms-acl</module>
 		<module>comanda-back</module>
 		<module>comanda-api-interna</module>
 		<module>comanda-ear</module>

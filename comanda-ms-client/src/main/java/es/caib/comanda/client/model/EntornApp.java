@@ -37,6 +37,7 @@ public class EntornApp implements Serializable {
 	private String estadisticaUrl;
 	private String estadisticaCron;
 
+    @Builder.Default
     private Boolean compactable = false;
     private Integer compactacioSetmanalMesos;
     private Integer compactacioMensualMesos;

@@ -1,0 +1,209 @@
+databaseChangeLog:
+- changeSet:
+    id: acl-init-table-1
+    author: limit
+    changes:
+      - createTable:
+          tableName: ${db_prefix}acl_class
+          columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                  primaryKey: true
+                  primaryKeyName: ${db_prefix}acl_class_pk
+                  nullable: false
+            - column:
+                name: class
+                type: varchar(255 ${varcharUnit})
+                constraints:
+                  nullable: false
+
+      - createTable:
+          tableName: ${db_prefix}acl_sid
+          columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                  primaryKey: true
+                  primaryKeyName: ${db_prefix}acl_sid_pk
+                  nullable: false
+            - column:
+                name: principal
+                type: boolean
+                constraints:
+                  nullable: false
+            - column:
+                name: sid
+                type: varchar(255 ${varcharUnit})
+                constraints:
+                  nullable: false
+
+      - createTable:
+          tableName: ${db_prefix}acl_object_identity
+          columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                  primaryKey: true
+                  primaryKeyName: ${db_prefix}acl_obj_id_pk
+                  nullable: false
+            - column:
+                name: object_id_class
+                type: bigint
+                constraints:
+                  nullable: false
+            - column:
+                name: object_id_identity
+                type: bigint
+                constraints:
+                  nullable: false
+            - column:
+                name: parent_object
+                type: bigint
+            - column:
+                name: owner_sid
+                type: bigint
+            - column:
+                name: entries_inheriting
+                type: boolean
+                constraints:
+                  nullable: false
+
+      - createTable:
+          tableName: ${db_prefix}acl_entry
+          columns:
+            - column:
+                name: id
+                type: bigint
+                autoIncrement: true
+                constraints:
+                  primaryKey: true
+                  primaryKeyName: ${db_prefix}acl_entry_pk
+                  nullable: false
+            - column:
+                name: acl_object_identity
+                type: bigint
+                constraints:
+                  nullable: false
+            - column:
+                name: ace_order
+                type: integer
+                constraints:
+                  nullable: false
+            - column:
+                name: sid
+                type: bigint
+                constraints:
+                  nullable: false
+            - column:
+                name: mask
+                type: integer
+                constraints:
+                  nullable: false
+            - column:
+                name: granting
+                type: boolean
+                constraints:
+                  nullable: false
+            - column:
+                name: audit_success
+                type: boolean
+                constraints:
+                  nullable: false
+            - column:
+                name: audit_failure
+                type: boolean
+                constraints:
+                  nullable: false
+
+      - createTable:
+          tableName: ${db_prefix}acl_entry_map
+          columns:
+            - column:
+                name: id
+                type: BIGINT
+                autoIncrement: true
+                constraints:
+                  primaryKey: true
+                  nullable: false
+                  primaryKeyName: ${db_prefix}acl_entry_map_pk
+            - column:
+                name: subject_type
+                type: VARCHAR(16 ${varcharUnit})
+                constraints:
+                  nullable: false
+            - column:
+                name: subject_value
+                type: VARCHAR(128 ${varcharUnit})
+                constraints:
+                  nullable: false
+            - column:
+                name: resource_type
+                type: VARCHAR(32 ${varcharUnit})
+                constraints:
+                  nullable: false
+            - column:
+                name: resource_id
+                type: BIGINT
+                constraints:
+                  nullable: false
+            - column:
+                name: entorn_app_id
+                type: BIGINT
+            - column:
+                name: action
+                type: VARCHAR(16 ${varcharUnit})
+                constraints:
+                  nullable: false
+            - column:
+                name: effect
+                type: VARCHAR(8 ${varcharUnit})
+                constraints:
+                  nullable: false
+            - column:
+                name: created_by
+                type: VARCHAR(64 ${varcharUnit})
+                constraints:
+                  nullable: false
+            - column:
+                name: created_date
+                type: TIMESTAMP
+                constraints:
+                  nullable: false
+            - column:
+                name: lastmod_by
+                type: VARCHAR(64 ${varcharUnit})
+            - column:
+                name: lastmod_date
+                type: TIMESTAMP
+            - column:
+                name: v
+                type: BIGINT
+      - createIndex:
+          indexName: ${db_prefix}acl_entry_map_idx_subject
+          tableName: ${db_prefix}acl_entry_map
+          columns:
+            - column:
+                name: subject_type
+            - column:
+                name: subject_value
+      - createIndex:
+          indexName: ${db_prefix}acl_entry_map_idx_resource
+          tableName: ${db_prefix}acl_entry_map
+          columns:
+            - column:
+                name: resource_type
+            - column:
+                name: resource_id
+      - createIndex:
+          indexName: ${db_prefix}acl_entry_map_idx_entapp
+          tableName: ${db_prefix}acl_entry_map
+          columns:
+            - column:
+                name: entorn_app_id

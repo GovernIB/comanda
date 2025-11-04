@@ -1,0 +1,54 @@
+databaseChangeLog:
+- changeSet:
+    id: acl-init-constraint-1
+    author: limit
+    changes:
+      - addUniqueConstraint:
+          tableName: ${db_prefix}acl_sid
+          columnNames: principal, sid
+          constraintName: ${db_prefix}acl_sid_principal_sid_uk
+
+      - addUniqueConstraint:
+          tableName: ${db_prefix}acl_object_identity
+          columnNames: object_id_class, object_id_identity
+          constraintName: ${db_prefix}acl_obj_id_uk
+      - addForeignKeyConstraint:
+          baseTableName: ${db_prefix}acl_object_identity
+          baseColumnNames: object_id_class
+          constraintName: ${db_prefix}acl_obj_id_class_fk
+          referencedTableName: ${db_prefix}acl_class
+          referencedColumnNames: id
+          onDelete: CASCADE
+      - addForeignKeyConstraint:
+          baseTableName: ${db_prefix}acl_object_identity
+          baseColumnNames: parent_object
+          constraintName: ${db_prefix}acl_obj_id_parent_fk
+          referencedTableName: ${db_prefix}acl_object_identity
+          referencedColumnNames: id
+          onDelete: CASCADE
+      - addForeignKeyConstraint:
+          baseTableName: ${db_prefix}acl_object_identity
+          baseColumnNames: owner_sid
+          constraintName: ${db_prefix}acl_obj_id_owner_fk
+          referencedTableName: ${db_prefix}acl_sid
+          referencedColumnNames: id
+          onDelete: SET NULL
+
+      - addForeignKeyConstraint:
+          baseTableName: ${db_prefix}acl_entry
+          baseColumnNames: acl_object_identity
+          constraintName: ${db_prefix}acl_entry_obj_fk
+          referencedTableName: ${db_prefix}acl_object_identity
+          referencedColumnNames: id
+          onDelete: CASCADE
+      - addForeignKeyConstraint:
+          baseTableName: ${db_prefix}acl_entry
+          baseColumnNames: sid
+          constraintName: ${db_prefix}acl_entry_sid_fk
+          referencedTableName: ${db_prefix}acl_sid
+          referencedColumnNames: id
+          onDelete: CASCADE
+      - addUniqueConstraint:
+          tableName: ${db_prefix}acl_entry
+          columnNames: acl_object_identity, ace_order
+          constraintName: ${db_prefix}acl_entry_identity_order_uk

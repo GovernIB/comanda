@@ -10,6 +10,7 @@ import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -37,8 +38,9 @@ public class AppServiceImplTest {
                                       ConfiguracioSchedulerService schedulerService,
                                       CacheHelper cacheHelper,
                                       ObjectMapper objectMapper,
-                                      AppExportMapper appExportMapper) {
-            super(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper);
+                                      AppExportMapper appExportMapper,
+                                      AppRepository appRepository) {
+            super(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository);
         }
         
         @Override
@@ -67,6 +69,9 @@ public class AppServiceImplTest {
     @Mock
     private AppExportMapper appExportMapper;
 
+    @Mock
+    private AppRepository appRepository;
+
     private TestableAppServiceImpl appService;
 
     private AppEntity appEntity;
@@ -77,7 +82,7 @@ public class AppServiceImplTest {
     @BeforeEach
     void setUp() {
         // Initialize the service with mocked dependencies
-        appService = new TestableAppServiceImpl(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper);
+        appService = new TestableAppServiceImpl(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository);
         
         // Setup test data
         appEntity = new AppEntity();
