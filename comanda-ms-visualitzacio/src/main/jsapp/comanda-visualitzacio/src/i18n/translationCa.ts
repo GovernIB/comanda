@@ -315,6 +315,9 @@ const translationCa = {
                 overwrite: "Sobreescriure",
                 combine: "Combinar entorns (afegeix només els inexistents)",
                 skip: "Ometre",
+                success: "Importació executada correctament",
+                noFile: "No s'ha seleccionat cap fitxer",
+                parseError: "Error en analitzar el fitxer",
             },
         },
         entorns: {

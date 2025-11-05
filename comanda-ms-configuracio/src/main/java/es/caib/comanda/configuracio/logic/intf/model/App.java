@@ -71,7 +71,8 @@ public class App extends BaseResource<Long> {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	public static class AppImportForm implements Serializable {
-		private String jsonContent;
+		@NotNull
+        private String jsonContent;
 		private String decision; // OVERWRITE | COMBINE | SKIP (opcional)
 	}
 }

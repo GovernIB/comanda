@@ -302,6 +302,18 @@ const translationEn = {
             },
             action: {
                 export: "Export application",
+                import: "Import application",
+            },
+            import: {
+                title: "Import application",
+                detectedCodes: "Detected application codes in file:",
+                conflict: "Some applications already exist. Select what to do:",
+                overwrite: "Overwrite",
+                combine: "Combine environments (add only non-existent)",
+                skip: "Skip",
+                success: "Import executed successfully",
+                noFile: "No file selected",
+                parseError: "Error when parsing the file",
             },
         },
         entorns: {

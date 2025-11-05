@@ -6,6 +6,7 @@ import {
     FormField,
     FormPage,
     GridPage,
+    MuiActionReportButton,
     MuiDataGrid,
     MuiForm,
     MuiFormTabContent,
@@ -29,6 +30,7 @@ import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/Mu
 // TODO Debería añadirse un export de este tipo
 import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 import {Cancel, CheckCircle} from '@mui/icons-material';
+import { FormFieldDataActionType } from '../../lib/components/form/FormContext';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -269,108 +271,100 @@ export const AppForm: React.FC = () => {
     );
 };
 
-const ImportAppsButton: React.FC = () => {
+const parseCodesFromJson = (jsonContent: string) => {
+    let parsedJson = JSON.parse(jsonContent);
+    if (!Array.isArray(parsedJson)) parsedJson = [parsedJson];
+    const parsedCodes = (parsedJson || [])
+        .map((a: any) => a?.codi)
+        .filter((c: any) => typeof c === 'string');
+    return parsedCodes;
+};
+
+const existsAnyInParsedCodes = (parsedCodes: any[], existingCodes: Set<any>) => {
+    return parsedCodes.some((c: any) => existingCodes.has(c));
+}
+
+const AppImportFormContent = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
-    const { artifactAction: appAction } = useResourceApiService('app');
+    const { data, dataDispatchAction, fieldErrors } = useFormContext();
+    const jsonContentValidationError = fieldErrors?.find((err) => err.field === 'jsonContent');
     const gridContext = useOptionalDataGridContext();
-
-    const [open, setOpen] = React.useState(false);
-    const [jsonContent, setJsonContent] = React.useState<string>('');
-    const [parsedCodes, setParsedCodes] = React.useState<string[]>([]);
-    const [existsAny, setExistsAny] = React.useState<boolean>(false);
-    const [decision, setDecision] = React.useState<'OVERWRITE' | 'COMBINE' | 'SKIP' | ''>('');
-
     const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
-
-    const onOpen = () => {
-        setOpen(true);
-        setJsonContent('');
-        setParsedCodes([]);
-        setExistsAny(false);
-        setDecision('');
-    };
-    const onClose = () => setOpen(false);
+    const parsedCodes = React.useMemo(() => data?.jsonContent ? parseCodesFromJson(data?.jsonContent) : [], [data?.jsonContent]);
+    const existsAny = React.useMemo(() => existsAnyInParsedCodes(parsedCodes, existingCodes), [existingCodes, parsedCodes]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
             const text = await file.text();
-            setJsonContent(text);
-            let json: any = JSON.parse(text);
-            if (!Array.isArray(json)) json = [json];
-            const codes: string[] = (json || []).map((a: any) => a?.codi).filter((c: any) => typeof c === 'string');
-            setParsedCodes(codes);
-            const anyExists = codes.some((c) => existingCodes.has(c));
-            setExistsAny(anyExists);
+
             // Preselect default decision if conflicts
-            if (anyExists) setDecision('COMBINE');
+            // Doing existsAnyInJson before setting jsonContent ensures that the json is valid, as JSON.parse has already been called
+            if (existsAnyInParsedCodes(parseCodesFromJson(text), existingCodes))
+                dataDispatchAction({
+                    type: FormFieldDataActionType.FIELD_CHANGE,
+                    payload: { fieldName: 'decision', field: 'decision', value: 'COMBINE' },
+                });
+
+            dataDispatchAction({
+                type: FormFieldDataActionType.FIELD_CHANGE,
+                payload: { fieldName: 'jsonContent', field: 'jsonContent', value: text },
+            });
         } catch (err: any) {
             temporalMessageShow(t('common.error'), t('page.apps.import.parseError') || 'Error analitzant el fitxer JSON', 'error');
         }
     };
 
-    const onAccept = async () => {
-        if (!jsonContent) {
-            temporalMessageShow(null, t('page.apps.import.noFile') || 'Selecciona un fitxer JSON', 'warning');
-            return;
-        }
-        try {
-            const data: any = { jsonContent } as any;
-            if (existsAny && decision) data.decision = decision;
-            await appAction(null, { code: 'app_import', data });
-            temporalMessageShow(null, t('page.apps.import.success') || 'Importació executada correctament', 'success');
-            // refresh grid
-            gridContext?.apiRef?.current?.refresh?.();
-            setOpen(false);
-        } catch (error: any) {
-            const msg = error?.message || 'Error important aplicacions';
-            temporalMessageShow(t('common.error'), msg, 'error');
-        }
-    };
+    React.useEffect(() => {
+        if (jsonContentValidationError?.code === 'NotNull')
+            temporalMessageShow(
+                null,
+                t('page.apps.import.noFile'),
+                'error'
+            );
+        else if (jsonContentValidationError?.message)
+            temporalMessageShow(
+                null,
+                jsonContentValidationError.message,
+                'error'
+            );
+    }, [jsonContentValidationError]);
 
-    return (
-        <>
-            <Button size="medium" startIcon={<UploadIcon />} onClick={onOpen} title={t('page.apps.action.import') || 'Importar'}></Button>
-            <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-                <DialogTitle>{t('page.apps.import.title') || 'Importar aplicacions'}</DialogTitle>
-                <DialogContent>
-                    <input type="file" accept="application/json" onChange={handleFileChange} />
-                    {parsedCodes.length > 0 && (
-                        <>
-                            <Typography variant="body2" sx={{ mt: 2 }}>
-                                {t('page.apps.import.detectedCodes') || 'Codis detectats al fitxer:'} {parsedCodes.join(', ')}
-                            </Typography>
-                            {existsAny && (
-                                <FormControl sx={{ mt: 2 }}>
-                                    <Typography variant="body2" sx={{ mb: 1 }}>
-                                        {t('page.apps.import.conflict') || 'Algunes aplicacions ja existeixen. Selecciona què fer:'}
-                                    </Typography>
-                                    <RadioGroup
-                                        value={decision}
-                                        onChange={(e) => setDecision(e.target.value as any)}
-                                    >
-                                        <FormControlLabel value="OVERWRITE" control={<Radio />} label={t('page.apps.import.overwrite') || 'Sobreescriure'} />
-                                        <FormControlLabel value="COMBINE" control={<Radio />} label={t('page.apps.import.combine') || 'Combinar entorns (afegeix només els inexistents)'} />
-                                        <FormControlLabel value="SKIP" control={<Radio />} label={t('page.apps.import.skip') || 'Ometre'} />
-                                    </RadioGroup>
-                                </FormControl>
-                            )}
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>{t('buttons.confirm.cancel') || 'Cancel·lar'}</Button>
-                    <Button onClick={onAccept} variant="contained">{t('buttons.confirm.accept') || 'Acceptar'}</Button>
-                </DialogActions>
-            </Dialog>
-        </>
-    );
-};
+    return <>
+        <input type="file" accept="application/json" onChange={handleFileChange} />
+        {parsedCodes.length > 0 && (
+            <>
+                <Typography variant="body2" sx={{ mt: 2 }}>
+                    {t('page.apps.import.detectedCodes') || 'Codis detectats al fitxer:'} {parsedCodes.join(', ')}
+                </Typography>
+                {existsAny && (
+                    <FormControl sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                            {t('page.apps.import.conflict') || 'Algunes aplicacions ja existeixen. Selecciona què fer:'}
+                        </Typography>
+                        <RadioGroup
+                            value={data?.decision || ''}
+                            onChange={(e) => dataDispatchAction({
+                                type: FormFieldDataActionType.FIELD_CHANGE,
+                                payload: { fieldName: 'decision', field: 'decision', value: e.target.value },
+                            })}
+                        >
+                            <FormControlLabel value="OVERWRITE" control={<Radio />} label={t('page.apps.import.overwrite') || 'Sobreescriure'} />
+                            <FormControlLabel value="COMBINE" control={<Radio />} label={t('page.apps.import.combine') || 'Combinar entorns (afegeix només els inexistents)'} />
+                            <FormControlLabel value="SKIP" control={<Radio />} label={t('page.apps.import.skip') || 'Ometre'} />
+                        </RadioGroup>
+                    </FormControl>
+                )}
+            </>
+        )}</>
+}
 
 const Apps: React.FC = () => {
     const { t } = useTranslation();
+    const { temporalMessageShow } = useBaseAppContext();
+    const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
     const appActions: DataCommonAdditionalAction[] = [
         {
@@ -414,11 +408,27 @@ const Apps: React.FC = () => {
         },
     ];
     const toolbarElementsWithPositions: ReactElementWithPosition[] = [
-        { position: 2, element: <ImportAppsButton /> },
+        {
+            position: 2,
+            element: (
+                <MuiActionReportButton
+                    action="app_import"
+                    resourceName="app"
+                    icon={"upload"}
+                    title={t('page.apps.action.import')}
+                    formDialogContent={<AppImportFormContent />}
+                    onSuccess={() => {
+                        temporalMessageShow(null, t('page.apps.import.success'), 'success');
+                        gridApiRef?.current?.refresh?.();
+                    }}
+                />
+            ),
+        },
     ];
     return (
         <GridPage>
             <MuiDataGrid
+                apiRef={gridApiRef}
                 title={t('page.apps.title')}
                 resourceName="app"
                 columns={columns}
