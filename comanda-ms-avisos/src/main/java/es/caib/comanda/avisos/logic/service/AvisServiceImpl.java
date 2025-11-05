@@ -38,20 +38,15 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
 
     @JmsListener(destination = CUA_AVISOS)
     public void receiveMessage(es.caib.comanda.ms.broker.model.Avis avisBroker) {
+
         log.debug("Processat avís de la cua " + CUA_TASQUES + " (avís={})", avisBroker);
-        Optional<EntornApp> entornApp = avisClientHelper.entornAppFindByEntornCodiAndAppCodi(
-                avisBroker.getEntornCodi(),
-                avisBroker.getAppCodi());
+        var entornApp = avisClientHelper.entornAppFindByEntornCodiAndAppCodi(avisBroker.getEntornCodi(), avisBroker.getAppCodi());
         if (entornApp.isEmpty()) {
-            throw new ResourceNotFoundException(
-                    EntornApp.class,
-                    "(entornCodi=" + avisBroker.getEntornCodi() + ", appCodi=" + avisBroker.getAppCodi() + ")");
+            throw new ResourceNotFoundException(EntornApp.class, "(entornCodi=" + avisBroker.getEntornCodi() + ", appCodi=" + avisBroker.getAppCodi() + ")");
         }
-        Optional<AvisEntity> avisExistent = ((AvisRepository)entityRepository).findByEntornAppIdAndIdentificador(
-                entornApp.get().getId(),
-                avisBroker.getIdentificador());
+        var avisExistent = ((AvisRepository)entityRepository).findByEntornAppIdAndIdentificador(entornApp.get().getId(), avisBroker.getIdentificador());
         if (avisExistent.isEmpty()) {
-            Avis avis = new Avis();
+            var avis = new Avis();
             avis.setEntornAppId(entornApp.get().getId());
             avis.setEntornId(entornApp.get().getEntorn().getId());
             avis.setAppId(entornApp.get().getApp().getId());
@@ -63,11 +58,13 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
             avis.setDataFi(convertToLocalDateTime(avisBroker.getDataFi()));
             entityRepository.save(AvisEntity.builder().avis(avis).build());
         } else {
-            avisExistent.get().setTipus(avisBroker.getTipus());
-            avisExistent.get().setNom(avisBroker.getNom());
-            avisExistent.get().setDescripcio(avisBroker.getDescripcio());
-            avisExistent.get().setDataInici(convertToLocalDateTime(avisBroker.getDataInici()));
-            avisExistent.get().setDataFi(convertToLocalDateTime(avisBroker.getDataFi()));
+            var avis = avisExistent.get();
+            avis.setTipus(avisBroker.getTipus());
+            avis.setNom(avisBroker.getNom());
+            avis.setDescripcio(avisBroker.getDescripcio());
+            avis.setDataInici(convertToLocalDateTime(avisBroker.getDataInici()));
+            avis.setDataFi(convertToLocalDateTime(avisBroker.getDataFi()));
+            entityRepository.save(avis);
         }
     }
 
