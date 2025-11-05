@@ -10,11 +10,13 @@ import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.AllArgsConstructor;
 import org.springframework.hateoas.InputType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
+import java.io.Serializable;
 
 /**
  * Informació d'una aplicació a monitoritzar.
@@ -41,6 +43,7 @@ import java.util.List;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = App.APP_EXPORT, requiresId = true),
+				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT, formClass = App.AppImportForm.class)
 		})
 public class App extends BaseResource<Long> {
 
@@ -62,4 +65,13 @@ public class App extends BaseResource<Long> {
 
 	private List<EntornApp> entornApps;
 
+	// Formulari per a la importació (HAL-FORMS)
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class AppImportForm implements Serializable {
+		private String jsonContent;
+		private String decision; // OVERWRITE | COMBINE | SKIP (opcional)
+	}
 }

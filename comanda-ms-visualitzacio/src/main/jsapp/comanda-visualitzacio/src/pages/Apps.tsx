@@ -16,7 +16,11 @@ import {
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
+import UploadIcon from '@mui/icons-material/Upload';
 import LogoUpload from "../components/LogoUpload";
+import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
+import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
@@ -265,6 +269,106 @@ export const AppForm: React.FC = () => {
     );
 };
 
+const ImportAppsButton: React.FC = () => {
+    const { t } = useTranslation();
+    const { temporalMessageShow } = useBaseAppContext();
+    const { artifactAction: appAction } = useResourceApiService('app');
+    const gridContext = useOptionalDataGridContext();
+
+    const [open, setOpen] = React.useState(false);
+    const [jsonContent, setJsonContent] = React.useState<string>('');
+    const [parsedCodes, setParsedCodes] = React.useState<string[]>([]);
+    const [existsAny, setExistsAny] = React.useState<boolean>(false);
+    const [decision, setDecision] = React.useState<'OVERWRITE' | 'COMBINE' | 'SKIP' | ''>('');
+
+    const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
+
+    const onOpen = () => {
+        setOpen(true);
+        setJsonContent('');
+        setParsedCodes([]);
+        setExistsAny(false);
+        setDecision('');
+    };
+    const onClose = () => setOpen(false);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            setJsonContent(text);
+            let json: any = JSON.parse(text);
+            if (!Array.isArray(json)) json = [json];
+            const codes: string[] = (json || []).map((a: any) => a?.codi).filter((c: any) => typeof c === 'string');
+            setParsedCodes(codes);
+            const anyExists = codes.some((c) => existingCodes.has(c));
+            setExistsAny(anyExists);
+            // Preselect default decision if conflicts
+            if (anyExists) setDecision('COMBINE');
+        } catch (err: any) {
+            temporalMessageShow(t('common.error'), t('page.apps.import.parseError') || 'Error analitzant el fitxer JSON', 'error');
+        }
+    };
+
+    const onAccept = async () => {
+        if (!jsonContent) {
+            temporalMessageShow(null, t('page.apps.import.noFile') || 'Selecciona un fitxer JSON', 'warning');
+            return;
+        }
+        try {
+            const data: any = { jsonContent } as any;
+            if (existsAny && decision) data.decision = decision;
+            await appAction(null, { code: 'app_import', data });
+            temporalMessageShow(null, t('page.apps.import.success') || 'Importació executada correctament', 'success');
+            // refresh grid
+            gridContext?.apiRef?.current?.refresh?.();
+            setOpen(false);
+        } catch (error: any) {
+            const msg = error?.message || 'Error important aplicacions';
+            temporalMessageShow(t('common.error'), msg, 'error');
+        }
+    };
+
+    return (
+        <>
+            <Button size="medium" startIcon={<UploadIcon />} onClick={onOpen} title={t('page.apps.action.import') || 'Importar'}></Button>
+            <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+                <DialogTitle>{t('page.apps.import.title') || 'Importar aplicacions'}</DialogTitle>
+                <DialogContent>
+                    <input type="file" accept="application/json" onChange={handleFileChange} />
+                    {parsedCodes.length > 0 && (
+                        <>
+                            <Typography variant="body2" sx={{ mt: 2 }}>
+                                {t('page.apps.import.detectedCodes') || 'Codis detectats al fitxer:'} {parsedCodes.join(', ')}
+                            </Typography>
+                            {existsAny && (
+                                <FormControl sx={{ mt: 2 }}>
+                                    <Typography variant="body2" sx={{ mb: 1 }}>
+                                        {t('page.apps.import.conflict') || 'Algunes aplicacions ja existeixen. Selecciona què fer:'}
+                                    </Typography>
+                                    <RadioGroup
+                                        value={decision}
+                                        onChange={(e) => setDecision(e.target.value as any)}
+                                    >
+                                        <FormControlLabel value="OVERWRITE" control={<Radio />} label={t('page.apps.import.overwrite') || 'Sobreescriure'} />
+                                        <FormControlLabel value="COMBINE" control={<Radio />} label={t('page.apps.import.combine') || 'Combinar entorns (afegeix només els inexistents)'} />
+                                        <FormControlLabel value="SKIP" control={<Radio />} label={t('page.apps.import.skip') || 'Ometre'} />
+                                    </RadioGroup>
+                                </FormControl>
+                            )}
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onClose}>{t('buttons.confirm.cancel') || 'Cancel·lar'}</Button>
+                    <Button onClick={onAccept} variant="contained">{t('buttons.confirm.accept') || 'Acceptar'}</Button>
+                </DialogActions>
+            </Dialog>
+        </>
+    );
+};
+
 const Apps: React.FC = () => {
     const { t } = useTranslation();
     const { appExport } = useActions();
@@ -309,6 +413,9 @@ const Apps: React.FC = () => {
             flex: 0.5,
         },
     ];
+    const toolbarElementsWithPositions: ReactElementWithPosition[] = [
+        { position: 2, element: <ImportAppsButton /> },
+    ];
     return (
         <GridPage>
             <MuiDataGrid
@@ -322,6 +429,7 @@ const Apps: React.FC = () => {
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
+                toolbarElementsWithPositions={toolbarElementsWithPositions}
             />
         </GridPage>
     );
