@@ -313,7 +313,7 @@ const AppImportFormContent = () => {
                 payload: { fieldName: 'jsonContent', field: 'jsonContent', value: text },
             });
         } catch (err: any) {
-            temporalMessageShow(t('common.error'), t('page.apps.import.parseError') || 'Error analitzant el fitxer JSON', 'error');
+            temporalMessageShow("", t('page.apps.import.parseError') || 'Error analitzant el fitxer JSON', 'error');
         }
     };
 
