@@ -102,13 +102,13 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 				out.write(content);
 
                 // Genera nom del fitxer
-                String exportFileName = "aplicacions.exp";
+                String exportFileName = "aplicacions.json";
                 try {
                     if (data != null && data.size() == 1) {
-                        exportFileName = ((AppExport)data.get(0)).getNom() + ".exp";
+                        exportFileName = ((AppExport)data.get(0)).getNom() + ".json";
                     }
                 } catch (Exception ex) {
-                    log.error("Error grnrrant el nom del fitxer d'exportació de Apps", ex);
+                    log.error("Error generant el nom del fitxer d'exportació de Apps", ex);
                 }
 				
 				return new DownloadableFile(exportFileName, "application/json", content);

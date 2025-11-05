@@ -140,7 +140,7 @@ public class AppImportExportTest {
         DownloadableFile file = generator.generateFile(App.APP_EXPORT, data, ReportFileType.JSON, out);
 
         assertNotNull(file);
-        assertEquals("App X.exp", file.getName());
+        assertEquals("App X.json", file.getName());
         assertEquals("application/json", file.getContentType());
         assertNotNull(file.getContent());
         assertTrue(file.getContent().length > 0);
