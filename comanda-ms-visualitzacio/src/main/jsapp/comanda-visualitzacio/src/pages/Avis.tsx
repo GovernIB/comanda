@@ -8,6 +8,7 @@ import {
     springFilterBuilder,
     useFormApiRef,
     useFilterApiRef,
+    useAuthContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -17,12 +18,13 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
+import {GridSortModel, useGridApiRef} from '@mui/x-data-grid-pro';
 
 const AvisFilter = (props: any) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
     const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
+    const [ownAvisOnly, setOwnAvisOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
@@ -34,6 +36,21 @@ const AvisFilter = (props: any) => {
     React.useEffect(() => {
         moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
     }, [finishedOnly]);
+    React.useEffect(() => {
+        moreFormApiRef.current?.setFieldValue('avisPropi', ownAvisOnly);
+    }, [ownAvisOnly]);
+
+    // TODO Recuperar el nombre de usuario usando el contexto de usuario que hay en la rama comanda-wip
+    const [tokenParsed, setTokenParsed] = React.useState<{
+        name: string;
+        preferred_username: string;
+    }>();
+    const { getTokenParsed } = useAuthContext();
+    React.useEffect(() => {
+        setTokenParsed(getTokenParsed());
+    }, []);
+    const currentUsername = tokenParsed?.preferred_username;
+
     return <>
         <MuiFilter
             apiRef={appEntornFilterApiRef}
@@ -57,9 +74,17 @@ const AvisFilter = (props: any) => {
                 <Button
                     onClick={() => setFinishedOnly(fo => !fo)}
                     variant={finishedOnly ? 'contained' : 'outlined'}
-                    title={t('page.avisos.filter.unfinished')}
+                    title={finishedOnly ? t('page.avisos.filter.unfinishedOnlyEnabled') : t('page.avisos.filter.unfinishedOnlyDisabled')}
                     sx={{ mr: 2 }}>
                     <Icon>pending_actions</Icon>
+                </Button>
+                <Button
+                    onClick={() => setOwnAvisOnly(value => !value)}
+                    disabled={!currentUsername}
+                    variant={ownAvisOnly ? 'contained' : 'outlined'}
+                    title={ownAvisOnly ? t('page.avisos.filter.ownAvisOnlyEnabled') : t('page.avisos.filter.ownAvisOnlyDisabled')}
+                    sx={{ mr: 2 }}>
+                    <Icon>person</Icon>
                 </Button>
                 <IconButton
                     onClick={netejar}
@@ -91,6 +116,7 @@ const AvisFilter = (props: any) => {
                 data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
                 data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
                 data?.finalitzada && springFilterBuilder.eq('dataFi', null),
+                data?.avisPropi && currentUsername && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
             )}
             onSpringFilterChange={onSpringFilterChange}
             commonFieldComponentProps={{ size: 'small' }}>
@@ -136,6 +162,10 @@ const dataGridCommonColumns = [{
             {param?.formattedValue}
         </Typography>;
     }
+},
+{
+    field: 'responsable',
+    flex: 1,
 }, {
     field: 'dataInici',
     flex: 0.5,
@@ -144,6 +174,7 @@ const dataGridCommonColumns = [{
     flex: 0.5,
 }];
 const dataGridPerspectives = ['PATH'];
+const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
 const Avis = () => {
     const { t } = useTranslation();
@@ -159,12 +190,31 @@ const Avis = () => {
         t('page.avisos.grid.groupHeader'),
         1.5,
         true,
-        true,
+        false,
         { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
     const columns = [
-        ...(!treeView ? [{ field: 'nom', flex: 1 }] : []),
+        ...(!treeView ?
+            [
+                { field: 'nom', flex: 1 },
+                {
+                    field: 'treePath',
+                    flex: 1.2,
+                    headerName: t('page.tasques.grid.column.appEntorn'),
+                    valueFormatter: (value: any) =>
+                        `${value?.[0]} - ${value?.[1]}`,
+                },
+            ]  : []),
         ...(filter?.includes('dataFi is null') ? dataGridCommonColumns.slice(0, -1) : dataGridCommonColumns),
     ];
+    const actions = [{
+        icon: 'open_in_new',
+        label: t('page.avisos.grid.action.obrir'),
+        showInMenu: false,
+        linkTo: (row: any) => row?.url,
+        linkTarget: '_blank',
+        disabled: (row: any) => !row?.url,
+        hidden: (row: any) => !row?.url,
+    }];
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
     return <GridPage>
         <MuiDataGrid
@@ -172,7 +222,8 @@ const Avis = () => {
             resourceName="avis"
             columns={columns}
             perspectives={dataGridPerspectives}
-            datagridApiRef={gridApiRef}
+            // datagridApiRef={gridApiRef}
+            sortModel={dataGridSortModel}
             findDisabled={filter == null}
             filter={filter}
             readOnly
@@ -180,6 +231,7 @@ const Avis = () => {
             toolbarHideQuickFilter
             toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
             toolbarAdditionalRow={filterElement}
+            rowAdditionalActions={actions}
             {...treeDataGridProps}
         />
     </GridPage>;

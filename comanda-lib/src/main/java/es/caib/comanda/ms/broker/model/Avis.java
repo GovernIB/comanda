@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Date;
+import java.util.List;
 
 @Builder
 @Getter
@@ -24,4 +26,9 @@ public class Avis implements Serializable {
     private Date dataInici;
     private Date dataFi;
 
+    private URL redireccio;
+    private String responsable;
+    private String grup;
+    private List<String> usuarisAmbPermis;
+    private List<String> grupsAmbPermis;
 }

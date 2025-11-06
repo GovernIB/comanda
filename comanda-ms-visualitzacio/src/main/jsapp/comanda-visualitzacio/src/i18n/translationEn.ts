@@ -275,9 +275,16 @@ const translationEn = {
                 more: "More fields",
                 finished: "Finished only",
                 unfinished: "Unfinished",
+                unfinishedOnlyDisabled: "Show only unfinished notices (disabled)",
+                unfinishedOnlyEnabled: "Show only unfinished notices (enabled)",
+                ownAvisOnlyDisabled: "Show only my notices (disabled)",
+                ownAvisOnlyEnabled: "Show only my notices (enabled)",
             },
             grid: {
                 groupHeader: "Name",
+                action: {
+                    obrir: "Open notice",
+                },
             }
         },
         apps: {

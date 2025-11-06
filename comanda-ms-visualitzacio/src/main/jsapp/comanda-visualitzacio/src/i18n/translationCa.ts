@@ -277,9 +277,16 @@ const translationCa = {
                 more: "Més camps",
                 finished: "Només finalitzats",
                 unfinished: "Pendents",
+                unfinishedOnlyDisabled: "Visualitzar únicament els avisos pendents (desactivat)",
+                unfinishedOnlyEnabled: "Visualitzar únicament els avisos pendents (activat)",
+                ownAvisOnlyDisabled: "Visualitzar únicament els meus avisos (desactivat)",
+                ownAvisOnlyEnabled: "Visualitzar únicament els meus avisos (activat)",
             },
             grid: {
                 groupHeader: "Nom",
+                action: {
+                    obrir: "Obrir avís",
+                },
             }
         },
         apps: {

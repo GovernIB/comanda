@@ -18,7 +18,9 @@ import org.springframework.data.annotation.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -57,6 +59,16 @@ public class Avis extends BaseResource<Long> {
     private String descripcio;
     private LocalDateTime dataInici;
     private LocalDateTime dataFi;
+
+    @Size(max = 255)
+    private URL url;
+    @Size(max = 128)
+    private String responsable;
+    @Size(max = 128)
+    private String grup;
+
+    private List<String> usuarisAmbPermis;
+    private List<String> grupsAmbPermis;
 
     @Transient private String[] treePath;
 
