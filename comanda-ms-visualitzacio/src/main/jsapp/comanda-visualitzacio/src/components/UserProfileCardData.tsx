@@ -3,7 +3,6 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import { ReactNode } from 'react';
 
-const cardBorder = { border: '1px solid #e3e3e3', borderRadius: '4px' };
 const cardHeader = { backgroundColor: '#f5f5f5', borderBottom: '1px solid #e3e3e3' };
 const iconButton = {
     p: 0.5,
@@ -29,13 +28,7 @@ const CardButton = (props: CardButtonProps) => {
     }
 
     return (
-        <Grid
-            size={flex ?? 12}
-            sx={{
-                display: 'flex',
-                justifyContent: 'end',
-            }}
-        >
+        <Grid size={flex ?? 12} sx={{ display: 'flex', justifyContent: 'end', }} >
             <IconButton sx={{ ...iconButton, ...buttonProps }} title={text} onClick={onClick}>
                 <Typography
                     sx={{ display: 'flex', alignItems: 'center' }}
@@ -58,7 +51,7 @@ export const UserProfileCardData = (props: {
     xs?: number;
     hidden?: boolean;
     buttons?: CardButtonProps[];
-    cardProps: SxProps;
+    cardProps?: SxProps;
     headerProps?: SxProps;
 }) => {
     const {
@@ -80,7 +73,7 @@ export const UserProfileCardData = (props: {
 
     return (
         <Grid size={xs ?? 12}>
-            <Card sx={{ ...cardBorder, ...cardProps }}>
+            <Card elevation={2} sx={{...cardProps,}} >
                 {title && (
                     <CardHeader
                         title={
@@ -115,17 +108,9 @@ export const CardPage = (props: {
 }) => {
     const { title, header, headerProps = cardHeader, children } = props;
     return (
-        <Card
-            sx={{
-                ...cardBorder,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-            }}
-        >
+        <Card elevation={2} sx={{height: '100%', display: 'flex', flexDirection: 'column',}} >
             {title && <CardHeader title={title} sx={headerProps} />}
             {header && <CardContent sx={headerProps}>{header}</CardContent>}
-
             <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {children}
             </CardContent>
