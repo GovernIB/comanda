@@ -23,7 +23,7 @@ import {GridSortModel, useGridApiRef} from '@mui/x-data-grid-pro';
 const AvisFilter = (props: any) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
-    const [finishedOnly, setFinishedOnly] = React.useState<boolean>(true);
+    const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [ownAvisOnly, setOwnAvisOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
@@ -31,11 +31,11 @@ const AvisFilter = (props: any) => {
     const moreFormApiRef = useFormApiRef();
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear({ finalitzada: finishedOnly });
+        moreFilterApiRef?.current?.clear({ finalitzada: unfinishedOnly });
     }
     React.useEffect(() => {
-        moreFormApiRef.current?.setFieldValue('finalitzada', finishedOnly);
-    }, [finishedOnly]);
+        moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
+    }, [unfinishedOnly]);
     React.useEffect(() => {
         moreFormApiRef.current?.setFieldValue('avisPropi', ownAvisOnly);
     }, [ownAvisOnly]);
@@ -72,9 +72,9 @@ const AvisFilter = (props: any) => {
                     <Grid size={6}><FormField name="entorn" /></Grid>
                 </Grid>
                 <Button
-                    onClick={() => setFinishedOnly(fo => !fo)}
-                    variant={finishedOnly ? 'contained' : 'outlined'}
-                    title={finishedOnly ? t('page.avisos.filter.unfinishedOnlyEnabled') : t('page.avisos.filter.unfinishedOnlyDisabled')}
+                    onClick={() => setUnfinishedOnly(fo => !fo)}
+                    variant={unfinishedOnly ? 'contained' : 'outlined'}
+                    title={unfinishedOnly ? t('page.avisos.filter.unfinishedOnlyEnabled') : t('page.avisos.filter.unfinishedOnlyDisabled')}
                     sx={{ mr: 2 }}>
                     <Icon>pending_actions</Icon>
                 </Button>
@@ -104,7 +104,7 @@ const AvisFilter = (props: any) => {
             formApiRef={moreFormApiRef}
             resourceName="avis"
             code="FILTER"
-            initialData={{ finalitzada: finishedOnly }}
+            initialData={{ finalitzada: unfinishedOnly, avisPropi: ownAvisOnly  }}
             springFilterBuilder={data => springFilterBuilder.and(
                 springFilterBuilder.eq('appId', data?.appId?.id),
                 springFilterBuilder.eq('entornId', data?.entornId?.id),
