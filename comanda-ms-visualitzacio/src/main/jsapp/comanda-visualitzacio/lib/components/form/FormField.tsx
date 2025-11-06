@@ -30,7 +30,7 @@ export type FormFieldCommonProps = {
     readOnly?: boolean;
     /** Event que es llença quan es canvia el valor del camp */
     onChange?: (value: any) => void;
-    /** Event que es llença quan es canvia el valor del camp */
+    /** Propietats addicionals del component */
     componentProps?: any;
 };
 
