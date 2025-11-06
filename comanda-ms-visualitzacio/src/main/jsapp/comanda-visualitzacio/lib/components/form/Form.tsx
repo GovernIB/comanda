@@ -351,8 +351,8 @@ export const Form: React.FC<FormProps> = (props) => {
         setIsDataInitialized(true);
         idFromExternalResetRef.current = null;
     };
-    const refresh = () => {
-        if (fields && !isDataInitialized) {
+    const refresh = (force?: boolean) => {
+        if (fields && (force || !isDataInitialized)) {
             if (initialDataProp != null) {
                 reset(initialDataProp);
             } else {
@@ -620,7 +620,7 @@ export const Form: React.FC<FormProps> = (props) => {
     apiRef.current = {
         getId,
         getData,
-        refresh,
+        refresh: () => refresh(true),
         reset: externalReset,
         revert,
         validate,
@@ -633,7 +633,7 @@ export const Form: React.FC<FormProps> = (props) => {
         if (apiRefProp.current) {
             apiRefProp.current.getId = getId;
             apiRefProp.current.getData = getData;
-            apiRefProp.current.refresh = refresh;
+            apiRefProp.current.refresh = () => refresh(true);
             apiRefProp.current.reset = externalReset;
             apiRefProp.current.revert = revert;
             apiRefProp.current.validate = validate;

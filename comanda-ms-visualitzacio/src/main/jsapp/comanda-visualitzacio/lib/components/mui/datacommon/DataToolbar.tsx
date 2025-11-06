@@ -27,15 +27,25 @@ export const useDataToolbar = (
     quickFilterComponent: React.ReactElement,
     doRefresh: () => void,
     doExport: () => void,
+    toolbarShowBack?: boolean,
     toolbarHideExport?: boolean,
     toolbarHideRefresh?: boolean,
     toolbarHideQuickFilter?: boolean,
     toolbarElementsWithPositions?: ReactElementWithPosition[]
 ) => {
-    const { t } = useBaseAppContext();
+    const { t, goBack } = useBaseAppContext();
     const isUpperToolbarType = toolbarType === 'upper';
     const isHiddenToolbarType = toolbarType === 'hidden';
     const elementsWithPosition: ReactElementWithPosition[] = [];
+    toolbarShowBack &&
+        elementsWithPosition.push({
+            position: 0,
+            element: toToolbarIcon('arrow_back', {
+                title: t('datacommon.back.label'),
+                onClick: () => goBack(),
+                sx: { mr: 1 },
+            }),
+        });
     const toolbarNodesPosition = 2;
     !toolbarHideExport &&
         elementsWithPosition.push({

@@ -54,6 +54,7 @@ export type MuiDataListProps = {
     perspectives?: string[];
     formAdditionalData?: any;
     toolbarHide?: true;
+    toolbarBackButton?: true;
     toolbarHideExport?: false;
     toolbarHideCreate?: boolean;
     toolbarHideRefresh?: boolean;
@@ -184,6 +185,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         perspectives,
         formAdditionalData,
         toolbarHide,
+        toolbarBackButton,
         toolbarHideExport = true,
         toolbarHideCreate,
         toolbarHideRefresh,
@@ -305,6 +307,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         quickFilterComponent,
         refresh,
         exportt,
+        toolbarBackButton,
         toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,

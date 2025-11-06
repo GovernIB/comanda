@@ -109,6 +109,8 @@ export type MuiDataGridProps = {
     readOnly?: true;
     /** Desactiva les peticions automàtiques al backend per a obtenir la informació a mostrar a la graella */
     findDisabled?: boolean;
+    /** Text pel missatge de que no hi ha resultats */
+    noRowsText?: string;
     /** Activa la persistència de l'estat (paginació, ordenació, selecció, ...) */
     persistentState?: true;
     /** Activa la selecció de files */
@@ -117,8 +119,6 @@ export type MuiDataGridProps = {
     paginationActive?: true;
     /** Model de paginació inicial */
     paginationModel?: GridPaginationModel;
-    /** Text pel missatge de que no hi ha resultats */
-    paginationNoRowsText?: string;
     /** Model d'ordenació inicial */
     sortModel?: GridSortModel;
     /** Model d'ordenació que s'aplicarà sempre (ignorant el valor de sortModel) */
@@ -147,6 +147,8 @@ export type MuiDataGridProps = {
     toolbarType?: DataToolbarType;
     /** Oculta la barra d'eines de la part superior */
     toolbarHide?: true;
+    /** Indica si el toolbar ha de mostrar un botó per a tornar enrere */
+    toolbarBackButton?: true;
     /** Oculta el botó d'exportació de la barra d'eines */
     toolbarHideExport?: false;
     /** Oculta el botó de creació de la barra d'eines */
@@ -506,11 +508,11 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         columns,
         readOnly,
         findDisabled,
+        noRowsText,
         persistentState,
         selectionActive,
         paginationActive,
         paginationModel: paginationModelProp,
-        paginationNoRowsText,
         sortModel,
         staticSortModel,
         quickFilterInitialValue,
@@ -525,6 +527,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         treeDataAdditionalRows,
         toolbarType = 'default',
         toolbarHide,
+        toolbarBackButton,
         toolbarHideExport = true,
         toolbarHideCreate,
         toolbarHideRefresh,
@@ -755,6 +758,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         quickFilterComponent,
         refresh,
         gridExport,
+        toolbarBackButton,
         toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
@@ -844,8 +848,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
             {formDialogComponent}
             <DataGridCustomStyle
                 {...otherProps}
-                loading={loading}
-                rows={processedRows}
+                loading={otherProps?.loading ?? loading}
+                rows={otherProps?.rows ?? processedRows}
                 columns={processedColumns}
                 onRowClick={onRowClick}
                 onRowOrderChange={onRowOrderChange}
@@ -875,8 +879,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                         setAutoPageSize: setFooterAutoPageSize,
                     },
                     noRowsOverlay: {
-                        findDisabled,
-                        noRowsText: paginationNoRowsText,
+                        requestPending: findDisabled && !('rows' in otherProps),
+                        noRowsText: noRowsText,
                     },
                 }}
                 semiBordered={semiBordered}

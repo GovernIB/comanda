@@ -15,6 +15,9 @@ const componentsEs = {
         },
     },
     datacommon: {
+        back: {
+            label: 'Volver atrás',
+        },
         details: {
             label: 'Detalles',
         },
@@ -43,8 +46,7 @@ const componentsEs = {
         toolbar: {
             error: 'Se ha producido un error',
         },
-        findDisabled: 'Sin consultar',
-        noRows: 'Sin datos',
+        noRows: 'Sin resultados',
         error: 'Error',
     },
     grid: {
@@ -54,6 +56,7 @@ const componentsEs = {
         },
         pageInfo: '{{from}} a {{to}} de {{count}}',
         sizeAuto: 'Automático',
+        requestPending: 'Pendiente de consultar',
     },
     form: {
         goBack: {
@@ -118,9 +121,11 @@ const componentsEs = {
                 title: 'Confirmación',
                 message: '¿Está seguro de que desea ejecutar la acción {{action}}?',
             },
+            success: 'Acción ejecutada correctamente',
             error: 'Error ejecutando la acción',
         },
         report: {
+            success: 'Informe generado correctamente',
             error: 'Error generando el informe',
         },
     },
