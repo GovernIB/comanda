@@ -33,4 +33,9 @@ public class EntornAppExport implements Serializable {
 	private String estadisticaUrl;
 	private String estadisticaCron;
 
+    private Boolean compactable;
+    private Integer compactacioSetmanalMesos;
+    private Integer compactacioMensualMesos;
+    private Integer eliminacioMesos;
+
 }

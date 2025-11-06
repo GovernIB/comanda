@@ -21,6 +21,7 @@ public class AppExport implements Serializable {
 
 	private String codi;
 	private String nom;
+	private String descripcio;
     @Builder.Default
 	private boolean activa = true;
 	private byte[] logo;
