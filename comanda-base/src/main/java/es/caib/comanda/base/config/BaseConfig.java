@@ -60,6 +60,15 @@ public class BaseConfig {
     // Propietats de SALUT
     public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";
 
+    // Propietats de tasques
+    public static final String PROP_TASCA_PREFIX = PROPERTY_PREFIX + "tasca.";
+    public static final String PROP_TASCA_BORRAT_DIES = PROP_TASCA_PREFIX + "borrat.dies";
+    public static final String PROP_TASCA_PEND_BORRAT_DIES = PROP_TASCA_PREFIX + "pendent.borrat.dies";
+
+    // Propietats de avisos
+    public static final String PROP_AVIS_PREFIX = PROPERTY_PREFIX + "avis.";
+    public static final String PROP_AVIS_BORRAT_DIES = PROP_AVIS_PREFIX + "borrat.dies";
+
     // Propietats de ESTADISTIQUES
     public static final String PROP_STATS_PREFIX = PROPERTY_PREFIX + "stats.";
     public static final String PROP_STATS_COMPACTAR_ACTIU = PROP_STATS_PREFIX + "compactar.actiu";
