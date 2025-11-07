@@ -81,10 +81,13 @@ export const UserProfileFormDialog = ({
             title={t($ => $.menu.user.options.profile.title)}
             onClose={(reason?: string) => reason !== 'backdropClick'}
             apiRef={dialogApiRef}
-            dialogComponentProps={{ fullWidth: true, maxWidth: 'lg', sx: { p: 0, }, }}
-            formComponentProps={{ onSaveSuccess: setUser, sx: { p: 0, }, }}
+            dialogComponentProps={{ fullWidth: true, maxWidth: 'lg', }}
+            formComponentProps={{
+                onSaveSuccess: setUser,
+                componentProps: { sx: { mt: 0 } },
+            }}
         >
-            <Grid container spacing={1} p={1} sx={{ maxWidth: "100%" }}>
+            <Grid container spacing={1} sx={{ px: 1, }}>
                 <Grid size={{ xs: 12 }}>
                     <Divider sx={{ mb: 2 }}>
                         {t($ => $.menu.user.options.profile.form.userData)}
