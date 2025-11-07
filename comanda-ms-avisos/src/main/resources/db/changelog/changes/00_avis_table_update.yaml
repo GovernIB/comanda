@@ -55,3 +55,14 @@ databaseChangeLog:
             referencedTableName: com_avis
             referencedColumnNames: id
             onDelete: CASCADE
+
+  - changeSet:
+      id: avis-upd-table-2
+      author: limit
+      changes:
+        - createIndex:
+            indexName: com_avis_lastmod_date_i
+            tableName: com_avis
+            columns:
+              - column:
+                  name: lastmod_date

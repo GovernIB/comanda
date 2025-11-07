@@ -28,17 +28,20 @@ public class TascaSchedulerService {
 
         Integer diesBorrar = parametresHelper.getParametreEnter(BaseConfig.PROP_TASCA_BORRAT_DIES, 0);
         Integer pendentsDiesBorrar = parametresHelper.getParametreEnter(BaseConfig.PROP_TASCA_PEND_BORRAT_DIES, 0);
-        if (diesBorrar <= 0) return;
 
-        LocalDateTime dataLimit = LocalDateTime.now().minusDays(diesBorrar);
-        int eliminats = tascaRepository.deleteByDataFiBefore(dataLimit);
+        if (diesBorrar >= 0) {
+            LocalDateTime dataLimit = LocalDateTime.now().minusDays(diesBorrar);
+            int eliminats = tascaRepository.deleteByDataFiBefore(dataLimit);
+            log.debug("BuidatTasquesScheduler - Eliminats {} tasques", eliminats);
+        }
 
-        log.debug("BuidatTasquesScheduler - Eliminats {} tasques", eliminats);
+        if (pendentsDiesBorrar > 0) {
+            LocalDateTime dataLimitPendents = LocalDateTime.now().minusDays(pendentsDiesBorrar);
+            int eliminats = tascaRepository.deleteByDataIniciBeforeAndDataFiIsNull(dataLimitPendents);
+            log.debug("BuidatTasquesScheduler - Pendents - Eliminats {} tasques", eliminats);
+        }
 
-        LocalDateTime dataLimitPendents = LocalDateTime.now().minusDays(pendentsDiesBorrar);
-        eliminats = tascaRepository.deleteByDataIniciBeforeAndDataFiIsNull(dataLimit);
-
-        log.debug("BuidatTasquesScheduler end - Pendents eliminats {} tasques", eliminats);
+        log.debug("BuidatTasquesScheduler end");
     }
 
 }

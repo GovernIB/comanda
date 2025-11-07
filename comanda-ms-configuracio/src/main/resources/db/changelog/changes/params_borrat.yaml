@@ -26,7 +26,7 @@ databaseChangeLog:
                   value: null
               - column:
                   name: DESCRIPCIO
-                  value: "El valor 0 indica que no es borren les tasques finalitzades"
+                  value: "Un valor menor que 0 indica que no es borren les tasques finalitzades"
               - column:
                   name: DESCRIPCIO_KEY
                   value: null

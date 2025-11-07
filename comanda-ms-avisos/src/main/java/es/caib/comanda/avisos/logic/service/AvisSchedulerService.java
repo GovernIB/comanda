@@ -27,12 +27,13 @@ public class AvisSchedulerService {
         log.debug("BuidatAvisScheduler start");
 
         Integer diesBorrar = parametresHelper.getParametreEnter(BaseConfig.PROP_AVIS_BORRAT_DIES, 0);
-        if (diesBorrar <= 0) return;
+        if (diesBorrar > 0) {
+            LocalDateTime dataLimit = LocalDateTime.now().minusDays(diesBorrar);
+            int eliminats = avisRepository.deleteByLastModifiedDateBefore(dataLimit);
+            log.debug("BuidatAvisScheduler - Eliminats {} avisos", eliminats);
+        }
 
-        LocalDateTime dataLimit = LocalDateTime.now().minusDays(diesBorrar);
-        int eliminats = avisRepository.deleteByLastModifiedDateBefore(dataLimit);
-
-        log.debug("BuidatAvisScheduler end - Eliminats {} avisos", eliminats);
+        log.debug("BuidatAvisScheduler end");
     }
 
 }
