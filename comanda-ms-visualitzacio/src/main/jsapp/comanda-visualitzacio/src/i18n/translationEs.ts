@@ -348,6 +348,18 @@ const translationEs: translationResourcesType = {
             },
             action: {
                 export: "Exportar aplicación",
+                import: "Importar aplicación",
+            },
+            import: {
+                title: "Importar aplicación",
+                detectedCodes: "Códigos de aplicaciones detectados en el fichero:",
+                conflict: "Algunas aplicaciones ya existen. Selecciona qué hacer:",
+                overwrite: "Sobreescribir",
+                combine: "Combinar entornos (añadir sólo los inexistentes)",
+                skip: "Omitir",
+                success: "Importación ejecutada correctamente",
+                noFile: "No se ha seleccionado ningún fichero",
+                parseError: "Error al analizar el fichero",
             },
         },
         entorns: {

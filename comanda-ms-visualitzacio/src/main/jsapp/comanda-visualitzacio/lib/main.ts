@@ -81,6 +81,8 @@ export type { MenuEntry } from './components/mui/Menu';
 export type { MuiDataGridProps, MuiDataGridColDef } from './components/mui/datagrid/MuiDataGrid';
 export type { MuiDataGridApi, MuiDataGridApiRef } from './components/mui/datagrid/DataGridContext';
 export type { MuiFormProps } from './components/mui/form/MuiForm';
+export type { FormTabsValue } from './components/mui/form/MuiFormTabs';
+export type { ActionReportCustomButtonProps as MuiActionReportCustomButtonProps } from './components/mui/ActionReportButton';
 export type { FormApi, FormApiRef } from './components/form/FormContext';
 export type { FilterApi, FilterApiRef } from './components/form/FilterContext';
 export type { FormFieldProps, FormFieldCustomProps } from './components/form/FormField';

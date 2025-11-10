@@ -15,6 +15,9 @@ const componentsCa = {
         },
     },
     datacommon: {
+        back: {
+            label: 'Tornar enrere',
+        },
         details: {
             label: 'Detalls',
         },
@@ -43,8 +46,7 @@ const componentsCa = {
         toolbar: {
             error: "S'ha produit un error",
         },
-        findDisabled: 'Sense consultar',
-        noRows: 'Sense dades',
+        noRows: 'Sense resultats',
         error: 'Error',
     },
     grid: {
@@ -54,6 +56,7 @@ const componentsCa = {
         },
         pageInfo: '{{from}} a {{to}} de {{count}}',
         sizeAuto: 'Automàtic',
+        requestPending: 'Pendent de consultar',
     },
     form: {
         goBack: {
@@ -118,9 +121,11 @@ const componentsCa = {
                 title: 'Confirmació',
                 message: "Estau segur que voleu executar l'acció {{action}}?",
             },
+            success: 'Acció executada correctament',
             error: "Error executant l'acció",
         },
         report: {
+            success: 'Informe generat correctament',
             error: "Error generant l'informe",
         },
     },

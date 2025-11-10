@@ -348,6 +348,18 @@ const translationCa = {
             },
             action: {
                 export: "Exportar aplicació",
+                import: "Importar aplicació",
+            },
+            import: {
+                title: "Importar aplicació",
+                detectedCodes: "Codis d'aplicacions detectats al fitxer:",
+                conflict: "Algunes aplicacions ja existeixen. Selecciona què fer:",
+                overwrite: "Sobreescriure",
+                combine: "Combinar entorns (afegeix només els inexistents)",
+                skip: "Ometre",
+                success: "Importació executada correctament",
+                noFile: "No s'ha seleccionat cap fitxer",
+                parseError: "Error en analitzar el fitxer",
             },
         },
         entorns: {

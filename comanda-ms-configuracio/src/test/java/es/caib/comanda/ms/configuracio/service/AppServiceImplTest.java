@@ -10,10 +10,12 @@ import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
-import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.configuracio.persist.repository.AppRepository;
+import es.caib.comanda.configuracio.persist.repository.EntornRepository;
+import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,8 +41,10 @@ public class AppServiceImplTest {
                                       CacheHelper cacheHelper,
                                       ObjectMapper objectMapper,
                                       AppExportMapper appExportMapper,
-                                      AppRepository appRepository) {
-            super(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository);
+                                      AppRepository appRepository,
+                                      EntornRepository entornRepository,
+                                      EntornAppRepository entornAppRepository) {
+            super(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
         }
         
         @Override
@@ -72,6 +76,12 @@ public class AppServiceImplTest {
     @Mock
     private AppRepository appRepository;
 
+    @Mock
+    private EntornRepository entornRepository;
+
+    @Mock
+    private EntornAppRepository entornAppRepository;
+
     private TestableAppServiceImpl appService;
 
     private AppEntity appEntity;
@@ -82,7 +92,7 @@ public class AppServiceImplTest {
     @BeforeEach
     void setUp() {
         // Initialize the service with mocked dependencies
-        appService = new TestableAppServiceImpl(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository);
+        appService = new TestableAppServiceImpl(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
         
         // Setup test data
         appEntity = new AppEntity();

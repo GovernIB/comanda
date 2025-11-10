@@ -5,7 +5,9 @@ import Grid from '@mui/material/Grid';
 import {
     FormField,
     FormPage,
+    FormTabsValue,
     GridPage,
+    MuiActionReportButton,
     MuiDataGrid,
     MuiForm,
     MuiFormTabContent,
@@ -16,16 +18,19 @@ import {
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
+import { FormControl, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
+import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
+import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
 // TODO Debería añadirse un export de este tipo
-import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 import {Cancel, CheckCircle} from '@mui/icons-material';
 import useReordering from '../hooks/reordering.tsx';
+import { FormFieldDataActionType } from '../../lib/components/form/FormContext';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -298,9 +303,100 @@ const columns = [
     },
 ];
 
+const parseCodesFromJson = (jsonContent: string) => {
+    let parsedJson = JSON.parse(jsonContent);
+    if (!Array.isArray(parsedJson)) parsedJson = [parsedJson];
+    const parsedCodes = (parsedJson || [])
+        .map((a: any) => a?.codi)
+        .filter((c: any) => typeof c === 'string');
+    return parsedCodes;
+};
+
+const existsAnyInParsedCodes = (parsedCodes: any[], existingCodes: Set<any>) => {
+    return parsedCodes.some((c: any) => existingCodes.has(c));
+}
+
+const AppImportFormContent = () => {
+    const { t } = useTranslation();
+    const { temporalMessageShow } = useBaseAppContext();
+    const { data, dataDispatchAction, fieldErrors } = useFormContext();
+    const jsonContentValidationError = fieldErrors?.find((err) => err.field === 'jsonContent');
+    const gridContext = useOptionalDataGridContext();
+    const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
+    const parsedCodes = React.useMemo(() => data?.jsonContent ? parseCodesFromJson(data?.jsonContent) : [], [data?.jsonContent]);
+    const existsAny = React.useMemo(() => existsAnyInParsedCodes(parsedCodes, existingCodes), [existingCodes, parsedCodes]);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+
+            // Preselect default decision if conflicts
+            // Doing existsAnyInJson before setting jsonContent ensures that the json is valid, as JSON.parse has already been called
+            if (existsAnyInParsedCodes(parseCodesFromJson(text), existingCodes))
+                dataDispatchAction({
+                    type: FormFieldDataActionType.FIELD_CHANGE,
+                    payload: { fieldName: 'decision', field: 'decision', value: 'COMBINE' },
+                });
+
+            dataDispatchAction({
+                type: FormFieldDataActionType.FIELD_CHANGE,
+                payload: { fieldName: 'jsonContent', field: 'jsonContent', value: text },
+            });
+        } catch (err: any) {
+            temporalMessageShow("", t($ => $.page.apps.import.parseError), 'error');
+        }
+    };
+
+    React.useEffect(() => {
+        if (jsonContentValidationError?.code === 'NotNull')
+            temporalMessageShow(
+                null,
+                t($ => $.page.apps.import.noFile),
+                'error'
+            );
+        else if (jsonContentValidationError?.message)
+            temporalMessageShow(
+                null,
+                jsonContentValidationError.message,
+                'error'
+            );
+    }, [jsonContentValidationError]);
+
+    return <>
+        <input type="file" accept="application/json" onChange={handleFileChange} />
+        {parsedCodes.length > 0 && (
+            <>
+                <Typography variant="body2" sx={{ mt: 2 }}>
+                    {t($ => $.page.apps.import.detectedCodes)} {parsedCodes.join(', ')}
+                </Typography>
+                {existsAny && (
+                    <FormControl sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                            {t($ => $.page.apps.import.conflict)}
+                        </Typography>
+                        <RadioGroup
+                            value={data?.decision || ''}
+                            onChange={(e) => dataDispatchAction({
+                                type: FormFieldDataActionType.FIELD_CHANGE,
+                                payload: { fieldName: 'decision', field: 'decision', value: e.target.value },
+                            })}
+                        >
+                            <FormControlLabel value="OVERWRITE" control={<Radio />} label={t($ => $.page.apps.import.overwrite)} />
+                            <FormControlLabel value="COMBINE" control={<Radio />} label={t($ => $.page.apps.import.combine)} />
+                            <FormControlLabel value="SKIP" control={<Radio />} label={t($ => $.page.apps.import.skip)} />
+                        </RadioGroup>
+                    </FormControl>
+                )}
+            </>
+        )}</>
+}
 
 const Apps: React.FC = () => {
     const { t } = useTranslation();
+    const { temporalMessageShow } = useBaseAppContext();
+    const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
     const appActions: DataCommonAdditionalAction[] = [
         {
@@ -311,9 +407,32 @@ const Apps: React.FC = () => {
         },
     ];
     const { dataGridProps, loadingElement } = useReordering("app");
+    const toolbarElementsWithPositions: ReactElementWithPosition[] = [
+        {
+            position: 1,
+            element: loadingElement,
+        },
+        {
+            position: 2,
+            element: (
+                <MuiActionReportButton
+                    action="app_import"
+                    resourceName="app"
+                    icon={"upload"}
+                    title={t($ => $.page.apps.action.import)}
+                    formDialogContent={<AppImportFormContent />}
+                    onSuccess={() => {
+                        temporalMessageShow(null, t($ => $.page.apps.import.success), 'success');
+                        gridApiRef?.current?.refresh?.();
+                    }}
+                />
+            ),
+        },
+    ];
     return (
         <GridPage>
             <MuiDataGrid
+                apiRef={gridApiRef}
                 title={t($ => $.page.apps.title)}
                 resourceName="app"
                 columns={columns}
@@ -324,12 +443,7 @@ const Apps: React.FC = () => {
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
-                toolbarElementsWithPositions={[
-                    {
-                        position: 1,
-                        element: loadingElement,
-                    }
-                ]}
+                toolbarElementsWithPositions={toolbarElementsWithPositions}
                 {...dataGridProps}
             />
         </GridPage>
