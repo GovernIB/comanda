@@ -1,9 +1,9 @@
 package es.caib.comanda.acl.persist.repository;
 
 import es.caib.comanda.acl.persist.entity.AclEntryMapEntity;
-import es.caib.comanda.acl.persist.enums.AclAction;
-import es.caib.comanda.acl.persist.enums.ResourceType;
-import es.caib.comanda.acl.persist.enums.SubjectType;
+import es.caib.comanda.client.model.acl.AclAction;
+import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,10 +1,10 @@
 package es.caib.comanda.acl.persist.entity;
 
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
-import es.caib.comanda.acl.persist.enums.AclAction;
-import es.caib.comanda.acl.persist.enums.AclEffect;
-import es.caib.comanda.acl.persist.enums.ResourceType;
-import es.caib.comanda.acl.persist.enums.SubjectType;
+import es.caib.comanda.client.model.acl.AclAction;
+import es.caib.comanda.client.model.acl.AclEffect;
+import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
@@ -22,7 +22,6 @@ import javax.persistence.*;
         indexes = {
                 @Index(name = BaseConfig.DB_PREFIX + "acl_entry_map_idx_subject", columnList = "subject_type, subject_value"),
                 @Index(name = BaseConfig.DB_PREFIX + "acl_entry_map_idx_resource", columnList = "resource_type, resource_id"),
-                @Index(name = BaseConfig.DB_PREFIX + "acl_entry_map_idx_entapp", columnList = "entorn_app_id")
         })
 @Getter
 @Setter
@@ -43,8 +42,8 @@ public class AclEntryMapEntity extends BaseAuditableEntity<AclEntry> {
     @Column(name = "resource_id", nullable = false)
     private Long resourceId;
 
-    @Column(name = "entorn_app_id")
-    private Long entornAppId;
+//    @Column(name = "entorn_app_id")
+//    private Long entornAppId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action", length = 16, nullable = false)

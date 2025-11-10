@@ -153,9 +153,9 @@ databaseChangeLog:
                 type: BIGINT
                 constraints:
                   nullable: false
-            - column:
-                name: entorn_app_id
-                type: BIGINT
+#            - column:
+#                name: entorn_app_id
+#                type: BIGINT
             - column:
                 name: action
                 type: VARCHAR(16 ${varcharUnit})

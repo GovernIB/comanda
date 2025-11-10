@@ -19,9 +19,3 @@ databaseChangeLog:
                 name: resource_type
             - column:
                 name: resource_id
-      - createIndex:
-          indexName: ${db_prefix}acl_entry_map_idx_entapp
-          tableName: ${db_prefix}acl_entry_map
-          columns:
-            - column:
-                name: entorn_app_id

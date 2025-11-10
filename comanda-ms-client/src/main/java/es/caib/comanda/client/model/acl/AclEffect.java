@@ -1,4 +1,4 @@
-package es.caib.comanda.acl.persist.enums;
+package es.caib.comanda.client.model.acl;
 
 /**
  * Resultat d'una regla ACL.

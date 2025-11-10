@@ -3,11 +3,11 @@ package es.caib.comanda.acl.logic.service;
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
 import es.caib.comanda.acl.logic.intf.service.AclEntryService;
 import es.caib.comanda.acl.persist.entity.AclEntryMapEntity;
-import es.caib.comanda.acl.persist.enums.AclAction;
-import es.caib.comanda.acl.persist.enums.AclEffect;
-import es.caib.comanda.acl.persist.enums.ResourceType;
-import es.caib.comanda.acl.persist.enums.SubjectType;
 import es.caib.comanda.acl.persist.repository.AclEntryMapRepository;
+import es.caib.comanda.client.model.acl.AclAction;
+import es.caib.comanda.client.model.acl.AclEffect;
+import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException.AnswerValue;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -61,14 +60,15 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, Lo
             case READ:
                 return Collections.singletonList(BasePermission.READ);
             case WRITE:
-                return Arrays.asList(BasePermission.WRITE, BasePermission.ADMINISTRATION);
+                // WRITE should not imply ADMINISTRATION
+                return Collections.singletonList(BasePermission.WRITE);
             case ADMIN:
             default:
                 return Collections.singletonList(BasePermission.ADMINISTRATION);
         }
     }
 
-    private String cacheKey(String user, Collection<String> roles, ResourceType resourceType, Long resourceId, AclAction action) {
+    public String cacheKey(String user, Collection<String> roles, ResourceType resourceType, Long resourceId, AclAction action) {
         String rolesStr = roles == null ? "" : roles.stream().sorted().collect(Collectors.joining(","));
         return String.join("|",
                 Optional.ofNullable(user).orElse(""),
@@ -115,28 +115,46 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, Lo
     }
 
     private void syncSpringAclForResource(ResourceType resourceType, Long resourceId) {
-        ObjectIdentity oi = buildObjectIdentity(resourceType, resourceId);
-        MutableAcl acl;
+        // Ensure an Authentication exists for Spring ACL createAcl() which requires a non-null principal
+        org.springframework.security.core.Authentication prevAuth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean tempAuthSet = false;
+        if (prevAuth == null) {
+            org.springframework.security.authentication.UsernamePasswordAuthenticationToken tempAuth =
+                    new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                            "system", "N/A",
+                            java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN")));
+            org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(tempAuth);
+            tempAuthSet = true;
+        }
         try {
-            acl = (MutableAcl) mutableAclService.readAclById(oi);
-            for (int i = acl.getEntries().size() - 1; i >= 0; i--) {
-                acl.deleteAce(i);
+            ObjectIdentity oi = buildObjectIdentity(resourceType, resourceId);
+            MutableAcl acl;
+            try {
+                acl = (MutableAcl) mutableAclService.readAclById(oi);
+                for (int i = acl.getEntries().size() - 1; i >= 0; i--) {
+                    acl.deleteAce(i);
+                }
+            } catch (org.springframework.security.acls.model.NotFoundException nf) {
+                acl = (MutableAcl) mutableAclService.createAcl(oi);
             }
-        } catch (org.springframework.security.acls.model.NotFoundException nf) {
-            acl = (MutableAcl) mutableAclService.createAcl(oi);
-        }
-        // Reconstrueix ACEs a partir de mapping table
-        List<AclEntryMapEntity> all = aclEntryMapRepository.findAllByResource(resourceType, resourceId);
-        int index = 0;
-        for (AclEntryMapEntity e : all) {
-            boolean granting = e.getEffect() == AclEffect.ALLOW;
-            Sid sid = (e.getSubjectType() == SubjectType.USER) ? new PrincipalSid(e.getSubjectValue()) : new GrantedAuthoritySid(e.getSubjectValue());
-            List<Permission> perms = toSpringPermissions(e.getAction());
-            for (Permission p : perms) {
-                acl.insertAce(index++, p, sid, granting);
+            // Reconstrueix ACEs a partir de mapping table
+            List<AclEntryMapEntity> all = aclEntryMapRepository.findAllByResource(resourceType, resourceId);
+            int index = 0;
+            for (AclEntryMapEntity e : all) {
+                boolean granting = e.getEffect() == AclEffect.ALLOW;
+                Sid sid = (e.getSubjectType() == SubjectType.USER) ? new PrincipalSid(e.getSubjectValue()) : new GrantedAuthoritySid(e.getSubjectValue());
+                List<Permission> perms = toSpringPermissions(e.getAction());
+                for (Permission p : perms) {
+                    acl.insertAce(index++, p, sid, granting);
+                }
+            }
+            mutableAclService.updateAcl(acl);
+        } finally {
+            if (tempAuthSet) {
+                // Clear temporary authentication
+                org.springframework.security.core.context.SecurityContextHolder.clearContext();
             }
         }
-        mutableAclService.updateAcl(acl);
     }
 
     // Invalidate cache en canvis i sincronitza Spring ACL
@@ -167,5 +185,74 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, Lo
         Long rid = entity.getResourceId();
         super.delete(id, answers);
         syncSpringAclForResource(type, rid);
+    }
+
+    @Override
+    public boolean checkPermissionsAny(String user, List<String> roles, ResourceType resourceType, Long resourceId, List<AclAction> actions) {
+        if (actions == null || actions.isEmpty()) return false;
+        for (AclAction a : actions) {
+            if (checkPermission(user, roles, resourceType, resourceId, a)) return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean checkPermissionsAll(String user, List<String> roles, ResourceType resourceType, Long resourceId, List<AclAction> actions) {
+        if (actions == null || actions.isEmpty()) return false;
+        for (AclAction a : actions) {
+            if (!checkPermission(user, roles, resourceType, resourceId, a)) return false;
+        }
+        return true;
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "aclCheckCache", allEntries = true)
+    public List<AclEntry> createAll(List<AclEntry> entries) {
+        if (entries == null || entries.isEmpty()) return Collections.emptyList();
+        List<AclEntry> created = new ArrayList<>();
+        for (AclEntry e : entries) {
+            AclEntry c = super.create(e, Collections.emptyMap());
+            created.add(c);
+            syncSpringAclForResource(c.getResourceType(), c.getResourceId());
+        }
+        return created;
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "aclCheckCache", allEntries = true)
+    public List<AclEntry> updateAll(List<AclEntry> entries) {
+        if (entries == null || entries.isEmpty()) return Collections.emptyList();
+        List<AclEntry> updated = new ArrayList<>();
+        for (AclEntry e : entries) {
+            if (e.getId() == null) continue;
+            try {
+                AclEntry u = super.update(e.getId(), e, Collections.emptyMap());
+                updated.add(u);
+                syncSpringAclForResource(u.getResourceType(), u.getResourceId());
+            } catch (ResourceNotFoundException ex) {
+                log.debug("ACL entry not found for bulk update: {}", e.getId());
+            }
+        }
+        return updated;
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "aclCheckCache", allEntries = true)
+    public void deleteAll(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        for (Long id : ids) {
+            try {
+                AclEntryMapEntity entity = getEntity(id, null);
+                ResourceType type = entity.getResourceType();
+                Long rid = entity.getResourceId();
+                super.delete(id, Collections.emptyMap());
+                syncSpringAclForResource(type, rid);
+            } catch (ResourceNotFoundException ex) {
+                log.debug("ACL entry not found for bulk delete: {}", id);
+            }
+        }
     }
 }

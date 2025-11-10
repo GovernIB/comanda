@@ -1,4 +1,4 @@
-package es.caib.comanda.acl.persist.enums;
+package es.caib.comanda.client.model.acl;
 
 /**
  * Tipus de recurs sobre el qual s'aplica un permís.

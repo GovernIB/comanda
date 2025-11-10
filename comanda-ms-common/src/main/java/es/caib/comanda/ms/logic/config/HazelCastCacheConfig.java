@@ -17,6 +17,10 @@ public class HazelCastCacheConfig {
     public static final String DASHBOARD_WIDGET_CACHE = "dashboardWidgetCache";
     public static final String PARAMETRE_CACHE = "parametreCache";
 
+    // ACLs
+    public static final String ACL_CHECK_CACHE = "aclCheckCache";
+    public static final String ACL_SPRING_CACHE = "springAclCache";
+
     @Bean
     public Config hazelcastConfig() {
         Config config = new Config();
@@ -33,6 +37,11 @@ public class HazelCastCacheConfig {
         config.addMapConfig(new MapConfig().setName(ENTORN_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(DASHBOARD_WIDGET_CACHE).setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
         config.addMapConfig(new MapConfig().setName(PARAMETRE_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
+
+        // Caché per a resolució ràpida d'ACL (invalidada quan es modifiquen permisos)
+        config.addMapConfig(new MapConfig().setName("aclCheckCache").setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig())); // 15 min TTL
+        // Caché per al motor Spring Security ACL
+        config.addMapConfig(new MapConfig().setName("springAclCache").setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig()));
         return config;
     }
 

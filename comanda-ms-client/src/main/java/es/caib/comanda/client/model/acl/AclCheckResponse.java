@@ -1,4 +1,4 @@
-package es.caib.comanda.acl.logic.intf.dto;
+package es.caib.comanda.client.model.acl;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

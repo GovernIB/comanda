@@ -1,10 +1,10 @@
 package es.caib.comanda.acl.logic.service;
 
 import es.caib.comanda.acl.persist.entity.AclEntryMapEntity;
-import es.caib.comanda.acl.persist.enums.AclAction;
-import es.caib.comanda.acl.persist.enums.AclEffect;
-import es.caib.comanda.acl.persist.enums.ResourceType;
-import es.caib.comanda.acl.persist.enums.SubjectType;
+import es.caib.comanda.client.model.acl.AclAction;
+import es.caib.comanda.client.model.acl.AclEffect;
+import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.acl.persist.repository.AclEntryMapRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,14 +1,13 @@
 package es.caib.comanda.acl.back.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.client.model.acl.AclCheckRequest;
-import es.caib.comanda.client.model.acl.AclCheckResponse;
 import es.caib.comanda.acl.logic.intf.service.AclEntryService;
 import es.caib.comanda.client.model.acl.AclAction;
+import es.caib.comanda.client.model.acl.AclCheckRequest;
+import es.caib.comanda.client.model.acl.AclCheckResponse;
 import es.caib.comanda.client.model.acl.ResourceType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -16,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class AclControllerTest {
+class AclControllerMultiPermissionsTest {
 
     private MockMvc mockMvc;
     private AclEntryService aclEntryService;
@@ -40,53 +40,57 @@ class AclControllerTest {
     }
 
     @Test
-    void check_returnsAllowedTrue_whenServiceGrants() throws Exception {
-        when(aclEntryService.checkPermission(anyString(), anyList(), any(), anyLong(), any()))
-                .thenReturn(true);
+    void check_multi_any_returnsTrue_ifAnyGranted() throws Exception {
+        when(aclEntryService.checkPermissionsAny(anyString(), anyList(), any(), anyLong(), anyList())).thenReturn(true);
 
         AclCheckRequest req = new AclCheckRequest();
         req.setUser("user1");
         req.setRoles(Arrays.asList("ROLE_A"));
         req.setResourceType(ResourceType.ENTORN_APP);
         req.setResourceId(11L);
-        req.setAction(AclAction.READ);
-
-        String json = objectMapper.writeValueAsString(req);
+        req.setActions(Arrays.asList(AclAction.READ, AclAction.WRITE));
+        req.setMode(AclCheckRequest.Mode.ANY);
 
         String response = mockMvc.perform(post("/api/acl/check")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
         AclCheckResponse body = objectMapper.readValue(response, AclCheckResponse.class);
         assertThat(body.isAllowed()).isTrue();
-
-        // Verify arguments passed to service
-        ArgumentCaptor<String> userCap = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<java.util.List<String>> rolesCap = ArgumentCaptor.forClass(java.util.List.class);
-        ArgumentCaptor<ResourceType> typeCap = ArgumentCaptor.forClass(ResourceType.class);
-        ArgumentCaptor<Long> idCap = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<AclAction> actionCap = ArgumentCaptor.forClass(AclAction.class);
-        Mockito.verify(aclEntryService).checkPermission(
-                userCap.capture(), rolesCap.capture(), typeCap.capture(), idCap.capture(), actionCap.capture());
-        assertThat(userCap.getValue()).isEqualTo("user1");
-        assertThat(rolesCap.getValue()).containsExactly("ROLE_A");
-        assertThat(typeCap.getValue()).isEqualTo(ResourceType.ENTORN_APP);
-        assertThat(idCap.getValue()).isEqualTo(11L);
-        assertThat(actionCap.getValue()).isEqualTo(AclAction.READ);
     }
 
     @Test
-    void check_returnsAllowedFalse_whenServiceDenies() throws Exception {
-        when(aclEntryService.checkPermission(anyString(), anyList(), any(), anyLong(), any()))
-                .thenReturn(false);
+    void check_multi_all_returnsTrue_onlyIfAllGranted() throws Exception {
+        when(aclEntryService.checkPermissionsAll(anyString(), anyList(), any(), anyLong(), anyList())).thenReturn(true);
 
         AclCheckRequest req = new AclCheckRequest();
-        req.setRoles(Arrays.asList("ROLE_X")); // sense user
+        req.setUser("user1");
+        req.setRoles(Arrays.asList("ROLE_A"));
         req.setResourceType(ResourceType.DASHBOARD);
-        req.setResourceId(7L);
-        req.setAction(AclAction.WRITE);
+        req.setResourceId(77L);
+        req.setActions(Arrays.asList(AclAction.READ, AclAction.WRITE));
+        req.setMode(AclCheckRequest.Mode.ALL);
+
+        String response = mockMvc.perform(post("/api/acl/check")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        AclCheckResponse body = objectMapper.readValue(response, AclCheckResponse.class);
+        assertThat(body.isAllowed()).isTrue();
+    }
+
+    @Test
+    void check_multi_emptyActions_returnsFalse() throws Exception {
+        AclCheckRequest req = new AclCheckRequest();
+        req.setRoles(Collections.singletonList("ROLE_X"));
+        req.setResourceType(ResourceType.ENTORN_APP);
+        req.setResourceId(12L);
+        req.setActions(Collections.emptyList());
+        // mode omitted → default ANY, but actions empty → false
 
         String response = mockMvc.perform(post("/api/acl/check")
                         .contentType(MediaType.APPLICATION_JSON)

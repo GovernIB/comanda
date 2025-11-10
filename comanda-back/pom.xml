@@ -63,6 +63,11 @@
 			<artifactId>comanda-ms-broker</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-ms-acl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 	</dependencies>
 	<profiles>
 		<profile>
