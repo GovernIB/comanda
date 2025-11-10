@@ -692,6 +692,7 @@ const translationCa = {
             },
         },
         notFound: "No trobat",
+        noPermissions: "Sense permisos",
     },
     generic: {
         tipus: "Tipus",

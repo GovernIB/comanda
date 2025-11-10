@@ -692,6 +692,7 @@ const translationEs: translationResourcesType = {
             },
         },
         notFound: "No encontrado",
+        noPermissions: "Sin permisos",
     },
     generic: {
         tipus: "Tipo",

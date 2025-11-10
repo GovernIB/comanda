@@ -91,7 +91,7 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
 
 };
 
-export function useEntornAppData(apiReady: any, getAll: any) {
+export function useEntornAppData(apiReady: boolean, getAll: any) {
   const [entornApps, setEntornApps] = useState([]);
   useEffect(() => {
     if (!apiReady) return;
