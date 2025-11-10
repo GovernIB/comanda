@@ -20,8 +20,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = BaseConfig.DB_PREFIX + "acl_entry_map",
         indexes = {
-                @Index(name = BaseConfig.DB_PREFIX + "acl_entry_map_idx_subject", columnList = "subject_type, subject_value"),
-                @Index(name = BaseConfig.DB_PREFIX + "acl_entry_map_idx_resource", columnList = "resource_type, resource_id"),
+                @Index(name = BaseConfig.DB_PREFIX + "acl_entry_map_subject_i", columnList = "subject_type, subject_value"),
+                @Index(name = BaseConfig.DB_PREFIX + "acl_entry_map_resource_i", columnList = "resource_type, resource_id"),
         })
 @Getter
 @Setter
@@ -41,9 +41,6 @@ public class AclEntryMapEntity extends BaseAuditableEntity<AclEntry> {
 
     @Column(name = "resource_id", nullable = false)
     private Long resourceId;
-
-//    @Column(name = "entorn_app_id")
-//    private Long entornAppId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action", length = 16, nullable = false)

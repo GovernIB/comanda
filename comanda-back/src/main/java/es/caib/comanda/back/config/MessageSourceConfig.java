@@ -22,6 +22,7 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 				"comanda.alarmes-messages",
 				"comanda.tasques-messages",
 				"comanda.usuaris-messages",
+				"comanda.acl-messages",
 		};
 	}
 

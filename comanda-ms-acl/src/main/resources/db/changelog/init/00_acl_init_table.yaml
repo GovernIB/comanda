@@ -9,7 +9,6 @@ databaseChangeLog:
             - column:
                 name: id
                 type: bigint
-                autoIncrement: true
                 constraints:
                   primaryKey: true
                   primaryKeyName: ${db_prefix}acl_class_pk
@@ -26,7 +25,6 @@ databaseChangeLog:
             - column:
                 name: id
                 type: bigint
-                autoIncrement: true
                 constraints:
                   primaryKey: true
                   primaryKeyName: ${db_prefix}acl_sid_pk
@@ -48,7 +46,6 @@ databaseChangeLog:
             - column:
                 name: id
                 type: bigint
-                autoIncrement: true
                 constraints:
                   primaryKey: true
                   primaryKeyName: ${db_prefix}acl_obj_id_pk
@@ -81,7 +78,6 @@ databaseChangeLog:
             - column:
                 name: id
                 type: bigint
-                autoIncrement: true
                 constraints:
                   primaryKey: true
                   primaryKeyName: ${db_prefix}acl_entry_pk
@@ -153,9 +149,6 @@ databaseChangeLog:
                 type: BIGINT
                 constraints:
                   nullable: false
-#            - column:
-#                name: entorn_app_id
-#                type: BIGINT
             - column:
                 name: action
                 type: VARCHAR(16 ${varcharUnit})
@@ -185,25 +178,78 @@ databaseChangeLog:
             - column:
                 name: v
                 type: BIGINT
-      - createIndex:
-          indexName: ${db_prefix}acl_entry_map_idx_subject
-          tableName: ${db_prefix}acl_entry_map
-          columns:
-            - column:
-                name: subject_type
-            - column:
-                name: subject_value
-      - createIndex:
-          indexName: ${db_prefix}acl_entry_map_idx_resource
-          tableName: ${db_prefix}acl_entry_map
-          columns:
-            - column:
-                name: resource_type
-            - column:
-                name: resource_id
-      - createIndex:
-          indexName: ${db_prefix}acl_entry_map_idx_entapp
-          tableName: ${db_prefix}acl_entry_map
-          columns:
-            - column:
-                name: entorn_app_id
+
+      # Oracle-specific sequences and triggers for Spring Security ACL compatibility
+- changeSet:
+    id: acl-init-seq-1
+    author: limit
+    changes:
+      # acl_class
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE SEQUENCE ${db_prefix}acl_class_seq START WITH 1 INCREMENT BY 1 NOCACHE
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE OR REPLACE TRIGGER ${db_prefix}acl_class_bi
+            BEFORE INSERT ON ${db_prefix}acl_class
+            FOR EACH ROW
+            WHEN (NEW.id IS NULL)
+            BEGIN
+              SELECT ${db_prefix}acl_class_seq.NEXTVAL INTO :NEW.id FROM dual;
+            END;
+      # acl_sid
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE SEQUENCE ${db_prefix}acl_sid_seq START WITH 1 INCREMENT BY 1 NOCACHE
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE OR REPLACE TRIGGER ${db_prefix}acl_sid_bi
+            BEFORE INSERT ON ${db_prefix}acl_sid
+            FOR EACH ROW
+            WHEN (NEW.id IS NULL)
+            BEGIN
+              SELECT ${db_prefix}acl_sid_seq.NEXTVAL INTO :NEW.id FROM dual;
+            END;
+      # acl_object_identity
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE SEQUENCE ${db_prefix}acl_object_identity_seq START WITH 1 INCREMENT BY 1 NOCACHE
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE OR REPLACE TRIGGER ${db_prefix}acl_object_identity_bi
+            BEFORE INSERT ON ${db_prefix}acl_object_identity
+            FOR EACH ROW
+            WHEN (NEW.id IS NULL)
+            BEGIN
+              SELECT ${db_prefix}acl_object_identity_seq.NEXTVAL INTO :NEW.id FROM dual;
+            END;
+      # acl_entry
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE SEQUENCE ${db_prefix}acl_entry_seq START WITH 1 INCREMENT BY 1 NOCACHE
+      - sql:
+          dbms: oracle
+          splitStatements: false
+          sql: |
+            CREATE OR REPLACE TRIGGER ${db_prefix}acl_entry_bi
+            BEFORE INSERT ON ${db_prefix}acl_entry
+            FOR EACH ROW
+            WHEN (NEW.id IS NULL)
+            BEGIN
+              SELECT ${db_prefix}acl_entry_seq.NEXTVAL INTO :NEW.id FROM dual;
+            END;
+

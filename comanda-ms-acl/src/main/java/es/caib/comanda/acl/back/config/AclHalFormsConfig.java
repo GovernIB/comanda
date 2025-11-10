@@ -1,5 +1,6 @@
 package es.caib.comanda.acl.back.config;
 
+import es.caib.comanda.acl.back.controller.AclController;
 import es.caib.comanda.ms.back.config.BaseHalFormsConfig;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -16,7 +17,7 @@ public class AclHalFormsConfig extends BaseHalFormsConfig {
 	@Override
 	protected String[] getControllerPackages() {
 		return new String[] {
-				"es.caib.comanda.acl.back.controller"
+				AclController.class.getPackageName()
 		};
 	}
 

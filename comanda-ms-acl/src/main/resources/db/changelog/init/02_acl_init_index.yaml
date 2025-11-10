@@ -4,7 +4,7 @@ databaseChangeLog:
     author: limit
     changes:
       - createIndex:
-          indexName: ${db_prefix}acl_entry_map_idx_subject
+          indexName: ${db_prefix}acl_entry_map_subject_i
           tableName: ${db_prefix}acl_entry_map
           columns:
             - column:
@@ -12,7 +12,7 @@ databaseChangeLog:
             - column:
                 name: subject_value
       - createIndex:
-          indexName: ${db_prefix}acl_entry_map_idx_resource
+          indexName: ${db_prefix}acl_entry_map_resource_i
           tableName: ${db_prefix}acl_entry_map
           columns:
             - column:

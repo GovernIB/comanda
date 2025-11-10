@@ -1,21 +1,7 @@
 databaseChangeLog:
 preConditions:
   - dbms:
-      type: oracle
-  - changeSet:
-      id: acl-init-synonyms-1
-      author: limit
-      preConditions:
-        onFail: MARK_RAN
-      changes:
-        - sql:
-            splitStatements: true
-            sql: |
-              -- Synonyms to expose unprefixed Spring ACL table names in Oracle
-              CREATE OR REPLACE SYNONYM acl_class FOR ${db_prefix}acl_class;
-              CREATE OR REPLACE SYNONYM acl_sid FOR ${db_prefix}acl_sid;
-              CREATE OR REPLACE SYNONYM acl_object_identity FOR ${db_prefix}acl_object_identity;
-              CREATE OR REPLACE SYNONYM acl_entry FOR ${db_prefix}acl_entry;
+      type: postgresql
   - changeSet:
       id: acl-init-synonyms-2
       author: limit

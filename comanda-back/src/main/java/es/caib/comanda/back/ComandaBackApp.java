@@ -34,7 +34,7 @@ import java.util.jar.Manifest;
 				"es.caib.comanda.tasques",
 				"es.caib.comanda.usuaris",
 				"es.caib.comanda.broker",
-                "es.caib.comanda.usuaris"
+                "es.caib.comanda.acl",
 		},
 		excludeFilters = @ComponentScan.Filter(
 				type = FilterType.REGEX,
@@ -57,6 +57,8 @@ import java.util.jar.Manifest;
 						"es\\.caib\\.comanda\\.tasques\\.persist\\.config\\..*",
 						"es\\.caib\\.comanda\\.usuaris\\.back\\.config\\..*",
 						"es\\.caib\\.comanda\\.usuaris\\.persist\\.config\\..*",
+						"es\\.caib\\.comanda\\.acl\\.back\\.config\\..*",
+						"es\\.caib\\.comanda\\.acl\\.persist\\.config\\..*",
 				})
 )
 public class ComandaBackApp extends SpringBootServletInitializer {
