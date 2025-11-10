@@ -23,6 +23,7 @@ import Avis from './pages/Avis';
 import Alarmes from './pages/Alarmes';
 import AlarmaConfig, { AlarmaConfigForm } from './pages/AlarmaConfig';
 import Parametres from './pages/Parametres';
+import ProtectedRoute from './components/ProtectedRoute';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -30,8 +31,8 @@ export const ESTADISTIQUES_PATH = 'estadistiques';
 const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            <Route index element={<Salut />} />
-            <Route path="/appinfo/:id" element={<Salut />} />
+            <Route index element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
+            <Route path="/appinfo/:id" element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
             <Route path={DASHBOARDS_PATH}>
                 <Route index element={<EstadisticaDashboards />} />
                 <Route path=":id" element={<EstadisticaDashboardEdit />} />
@@ -86,7 +87,7 @@ const AppRoutes: React.FC = () => {
                 </Route>
             </Route>
             <Route path="alarmes">
-                <Route index element={<Alarmes />} />
+                <Route index element={<ProtectedRoute resourceName="alarma"><Alarmes /></ProtectedRoute>} />
             </Route>
             <Route path="broker">
                 <Route index element={<Broker />} />

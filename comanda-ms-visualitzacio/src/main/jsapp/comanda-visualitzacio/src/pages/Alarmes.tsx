@@ -24,12 +24,13 @@ const Alarmes = () => {
     const { t } = useTranslation();
     const gridApiRef = useMuiDataGridApiRef();
     const {
-        initialized: actionInitialized,
+        available: actionInitialized,
         formDialogComponent,
         exec,
     } = useMuiActionReportLogic(
         'alarma',
         'ALARMA_ESBORRAR',
+        undefined,
         undefined,
         undefined,
         undefined,
