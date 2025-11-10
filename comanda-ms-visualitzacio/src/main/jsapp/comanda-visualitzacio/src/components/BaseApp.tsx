@@ -185,6 +185,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const location = useLocation();
     const { user } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
+    const { indexState } = useResourceApiContext();
     const {
         i18nUseTranslation,
         i18nCurrentLanguage,
@@ -201,6 +202,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             console.warn('[BACK] No s\'ha pogut tornar enrere, ni s\'ha especificat una ruta alternativa ni existeix una entrada prèvia a l\'historial de navegació');
         }
     }
+    const showAlarms = indexState?.links?.has('alarma');
     return <MuiBaseApp
         code={code}
         headerTitle={title}
@@ -213,7 +215,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAdditionalComponents={[
             ...generateMenuItems(menuEntries), // Menú
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
-            <Alarms key="alarms" />,
+            ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
             ...generateAppMenu(appMenuEntries), // Menú lateral
         ]}
