@@ -41,6 +41,7 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	@Column(name = "admin", nullable = false)
 	private boolean admin;
 	@Column(name = "periode_unitat", length = 10)
+    @Enumerated(EnumType.STRING)
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	@Column(name = "periode_valor")
 	private BigDecimal periodeValor;
