@@ -77,7 +77,7 @@ public interface AclServiceClient {
 
     // Validar permisos
     @PostMapping("/check")
-    ResponseEntity<EntityModel<AclCheckResponse>> programar(
+    ResponseEntity<EntityModel<AclCheckResponse>> check(
             @RequestBody final AclCheckRequest request,
             @RequestHeader("Authorization") final String authorizationHeader);
 
