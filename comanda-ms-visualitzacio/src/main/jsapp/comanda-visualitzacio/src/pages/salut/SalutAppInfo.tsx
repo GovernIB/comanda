@@ -32,8 +32,10 @@ import {
     LineSeriesType,
 } from '@mui/x-charts';
 import {
+    getColorByIntegracio,
     getColorByNivellEnum,
     getColorByStatEnum,
+    getColorBySubsistema,
     getMaterialIconByState,
     NivellEnum,
     SalutIntegracioModel,
@@ -906,26 +908,54 @@ const SalutAppInfo: React.FC<{
 
     const tabs = [
         {
+            id: 'general',
             label: t($ => $.page.salut.tabs.general),
             icon: <Icon>info</Icon>,
         },
         {
+            id: 'estatActual',
             label: t($ => $.page.salut.tabs.estatActual),
             icon: <Icon>troubleshoot</Icon>,
         },
         {
-            label: t($ => $.page.salut.tabs.integracions),
+            id: 'integracions',
+            label: (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {t($ => $.page.salut.tabs.integracions)}
+                    {!!salutCurrentApp?.integracioDownCount && (
+                        <SalutChip
+                            label={salutCurrentApp.integracioDownCount}
+                            tooltip={t($ => $.page.salut.integracions.integracioDownCount)}
+                            backgroundColor={getColorByIntegracio(SalutModel.INTEGRACIO_DOWN_COUNT)}
+                        />
+                    )}
+                </Box>
+            ),
             icon: <Icon>account_tree</Icon>,
         },
         {
-            label: t($ => $.page.salut.tabs.subsistemes),
+            id: 'subsistemes',
+            label: (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {t($ => $.page.salut.tabs.subsistemes)}
+                    {!!salutCurrentApp?.subsistemaDownCount && (
+                        <SalutChip
+                            label={salutCurrentApp.subsistemaDownCount}
+                            tooltip={t($ => $.page.salut.subsistemes.subsistemaDownCount)}
+                            backgroundColor={getColorBySubsistema(SalutModel.SUBSISTEMA_DOWN_COUNT)}
+                        />
+                    )}
+                </Box>
+            ),
             icon: <Icon>widgets</Icon>,
         },
         {
+            id: 'historic',
             label: t($ => $.page.salut.tabs.historic),
             icon: <Icon>timeline</Icon>,
         },
         {
+            id: 'logs',
             label: t($ => $.page.salut.tabs.logs),
             icon: <Icon>notes</Icon>,
             disabled: true,
@@ -942,7 +972,7 @@ const SalutAppInfo: React.FC<{
                 }}
             >
                 {tabs.map(tab => (
-                    <Tab key={tab.label} iconPosition="start" label={tab.label} icon={tab.icon} disabled={tab.disabled} />
+                    <Tab key={"salutAppInfoTabs-"+tab.id} iconPosition="start" label={tab.label} icon={tab.icon} disabled={tab.disabled} />
                 ))}
             </Tabs>
             <Box
