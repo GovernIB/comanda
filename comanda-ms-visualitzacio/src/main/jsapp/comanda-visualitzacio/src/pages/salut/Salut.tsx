@@ -1,6 +1,6 @@
-import { Activity, FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { SalutModel } from '../../types/salut.model';
-import { BasePage, springFilterBuilder, useResourceApiService } from 'reactlib';
+import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import { BaseEntity } from '../../types/base-entity.model';
 import dayjs from 'dayjs';
 import SalutToolbar, {
@@ -23,6 +23,8 @@ import { ISO_DATE_FORMAT } from '../../util/dateUtils.ts';
 import { filterNumericObjectKeys } from '../../util/objectUtils.ts';
 import { SalutField } from '../../components/salut/SalutChipTooltip';
 import { useAppInfoData } from './dataFetching';
+import { Box } from '@mui/material';
+import useDisableMargins from '../../hooks/useDisableMargins';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 type SalutInformeEstatItem = {
@@ -267,6 +269,7 @@ const useSalutData = ({
 };
 
 const Salut: FunctionComponent = () => {
+    useDisableMargins();
     const { id } = useParams();
     const { t } = useTranslation();
     const toolbarState = useSalutToolbarState();
@@ -328,32 +331,37 @@ const Salut: FunctionComponent = () => {
         : null;
 
     return (
-        <BasePage
-            toolbar={
-                <SalutToolbar
-                    title={t($ => $.page.salut.title)}
-                    ready={salutData.ready}
-                    onRefreshClick={() => refreshAll()}
-                    appDataLoading={salutData.loading}
-                    lastRefresh={salutData.lastRefresh}
-                    nextRefresh={nextRefresh}
-                    groupingActive
-                    {...toolbarState}
-                    {...appInfoToolbarProps}
-                />
-            }
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+            }}
         >
-            <Activity mode={isAppInfoRouteActive ? 'hidden' : 'visible'}>
-                <SalutLlistat
-                    apps={salutData.apps}
-                    entorns={salutData.entorns}
-                    salutGroups={salutData.groups}
-                    agrupacio={salutData.agrupacio}
-                    springFilter={additionalFilter}
-                    grupsDates={salutData.grupsDates}
-                    {...salutLlistatState}
-                />
-            </Activity>
+            <SalutToolbar
+                title={t($ => $.page.salut.title)}
+                ready={salutData.ready}
+                onRefreshClick={() => refreshAll()}
+                appDataLoading={salutData.loading}
+                lastRefresh={salutData.lastRefresh}
+                nextRefresh={nextRefresh}
+                groupingActive
+                {...toolbarState}
+                {...appInfoToolbarProps}
+            />
+            {!isAppInfoRouteActive && (
+                <Box sx={{ p: 2 }}>
+                    <SalutLlistat
+                        apps={salutData.apps}
+                        entorns={salutData.entorns}
+                        salutGroups={salutData.groups}
+                        agrupacio={salutData.agrupacio}
+                        springFilter={additionalFilter}
+                        grupsDates={salutData.grupsDates}
+                        {...salutLlistatState}
+                    />
+                </Box>
+            )}
             {isAppInfoRouteActive && (
                 <SalutAppInfo
                     appInfoData={appInfoData}
@@ -361,7 +369,7 @@ const Salut: FunctionComponent = () => {
                     grupsDates={salutData.grupsDates}
                 />
             )}
-        </BasePage>
+        </Box>
     );
 };
 export default Salut;

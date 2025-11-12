@@ -141,6 +141,14 @@ const translationCa = {
                 P7D: "Darrera setmana",
                 P1M: "Darrer mes",
             },
+            tabs: {
+                general: "Entorn",
+                estatActual: "Estat actual",
+                integracions: "Integracions",
+                subsistemes: "Subsistemes",
+                historic: "Històric",
+                logs: "Logs",
+            },
             info: {
                 title: "Informació",
                 versio: "Versió",
@@ -151,6 +159,8 @@ const translationCa = {
                 data: "Darrera actualització",
                 bdEstat: "Base de dades",
                 appLatencia: "Latència",
+                integracions: "Integracions",
+                subsistemes: "Subsistemes",
                 missatges: "Missatges",
                 detalls: "Detalls",
                 noInfo: 'No hi ha dades disponibles per a aquest entorn',
@@ -167,9 +177,10 @@ const translationCa = {
             integracions: {
                 title: "Integracions",
                 integracioUpCount: "Actives",
+                integracioWarnCount: "Alerta",
                 integracioDownCount: "Inactives",
                 integracioDesconegutCount: "Estat desconegut",
-                noInfo: "No hi ha informació de integracions",
+                noInfo: "No hi ha informació d'integracions",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
@@ -183,6 +194,7 @@ const translationCa = {
             subsistemes: {
                 title: "Subsistemes",
                 subsistemaUpCount: "Actives",
+                subsistemaWarnCount: "Alerta",
                 subsistemaDownCount: "Inactives",
                 subsistemaDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de subsistemes",
@@ -217,7 +229,7 @@ const translationCa = {
                     codi: "Códi",
                     nom: "Nom",
                     path: "Ruta",
-                    api: "Api",
+                    api: "API",
                     manuals: "Manuals",
                 },
             },

@@ -4,6 +4,8 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -30,93 +32,65 @@ import {
     LineSeriesType,
 } from '@mui/x-charts';
 import {
-    getColorByMissatge,
     getColorByNivellEnum,
+    getColorByStatEnum,
+    getMaterialIconByState,
     NivellEnum,
+    SalutIntegracioModel,
     SalutModel,
+    useSalutEstatTranslation,
 } from '../../types/salut.model.tsx';
-import { ChipColor } from '../../util/colorUtil.ts';
-import { SalutField, SalutGenericTooltip } from '../../components/salut/SalutChipTooltip.tsx';
+import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
 import { Alert, Tooltip } from '@mui/material';
 import { SalutData } from './Salut.tsx';
 import { AppDataState, SalutInformeLatenciaItem } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
+import { EntornAppModel } from '../../types/app.model';
+import SalutChip from '../../components/salut/SalutChip';
+import { getLowestCommonIntegracioEstat, getLowestCommonSubsistemesEstat } from './utils';
+import SalutIntegracionsChips from '../../components/salut/SalutIntegracionsChips.tsx';
+import SalutSubsistemesChips from '../../components/salut/SalutSubsistemesChips.tsx';
+import SalutMissatgesChips from '../../components/salut/SalutMissatgesChips';
+import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 
-const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: any }> = props => {
+const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
     const { t } = useTranslation();
     const versio = entornApp && <Typography>{entornApp.versio}</Typography>;
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
     const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
     const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
-    const bdEstat = app && <ItemStateChip salutField={SalutField.BD_ESTAT} salutStatEnum={app.bdEstat} />;
-    const appLatencia = app && <Typography>{app.appLatencia != null ? app.appLatencia + ' ms' : t($ => $.page.salut.nd)}</Typography>;
-    const missatges = app && <>
-        <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeErrorCount)}>
-            <Chip
-                sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_ERROR_COUNT), color: ChipColor.WHITE }}
-                label={app.missatgeErrorCount}
-                size="small"
-            />
-        </SalutGenericTooltip>
-        &nbsp;/&nbsp;
-        <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeWarnCount)}>
-            <Chip
-                sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT), color: ChipColor.WHITE }}
-                label={app.missatgeWarnCount}
-                size="small"
-            />
-        </SalutGenericTooltip>
-        &nbsp;/&nbsp;
-        <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeInfoCount)}>
-            <Chip
-                sx={{ bgcolor: getColorByMissatge(SalutModel.MISSATGE_INFO_COUNT), color: ChipColor.WHITE }}
-                label={app.missatgeInfoCount}
-                size="small"
-            />
-        </SalutGenericTooltip>
-    </>;
+
+    const tableSections = [
+        {
+            id: 'versio',
+            headerName: t($ => $.page.salut.info.versio),
+            cellContent: versio,
+        },
+        {
+            id: 'revisio',
+            headerName: t($ => $.page.salut.info.revisio),
+            cellContent: revisio,
+        },
+        {
+            id: 'jdk',
+            headerName: t($ => $.page.salut.info.jdk.versio),
+            cellContent: jdk,
+        },
+        {
+            id: 'data',
+            headerName: t($ => $.page.salut.info.data),
+            cellContent: data,
+        },
+    ];
+
     return (
-        <Card variant="outlined" sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%' }}>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t($ => $.page.salut.info.title)}
-                </Typography>
-                <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
-                    <TableBody>
-                        <TableRow key={1}>
-                            <TableCell>{t($ => $.page.salut.info.versio)}</TableCell>
-                            <TableCell>{versio}</TableCell>
-                        </TableRow>
-                        <TableRow key={2}>
-                            <TableCell>{t($ => $.page.salut.info.revisio)}</TableCell>
-                            <TableCell>{revisio}</TableCell>
-                        </TableRow>
-                        <TableRow key={3}>
-                            <TableCell>{t($ => $.page.salut.info.jdk.versio)}</TableCell>
-                            <TableCell>{jdk}</TableCell>
-                        </TableRow>
-                        <TableRow key={4}>
-                            <TableCell>{t($ => $.page.salut.info.data)}</TableCell>
-                            <TableCell>{data}</TableCell>
-                        </TableRow>
-                        <TableRow key={5}>
-                            <TableCell>{t($ => $.page.salut.info.bdEstat)}</TableCell>
-                            <TableCell>{bdEstat}</TableCell>
-                        </TableRow>
-                        <TableRow key={6}>
-                            <TableCell>{t($ => $.page.salut.info.appLatencia)}</TableCell>
-                            <TableCell>{appLatencia}</TableCell>
-                        </TableRow>
-                        <TableRow key={7}>
-                            <TableCell>{t($ => $.page.salut.info.missatges)}</TableCell>
-                            <TableCell>{missatges}</TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+        <ResponsiveCardTable
+            title={t($ => $.page.salut.info.title)}
+            tableSections={tableSections}
+            breakpoint="lg"
+        />
     );
 };
 
@@ -231,7 +205,7 @@ const EstatsBarCard: React.FC<{
     );
 };
 
-const PeticionsOkError: React.FC<{ ok?: number, error?: number }> = props => {
+const PeticionsOkError: React.FC<{ ok?: number; error?: number }> = props => {
     const { ok, error } = props;
     const theme = useTheme();
     return (
@@ -243,7 +217,13 @@ const PeticionsOkError: React.FC<{ ok?: number, error?: number }> = props => {
     );
 };
 
-const IntegracioRow: React.FC<any> = props => {
+const IntegracioRow: React.FC<{
+    integracio: SalutIntegracioModel;
+    fills?: SalutIntegracioModel[];
+    padLeft?: boolean;
+    toggleOpen: () => void;
+    open: boolean;
+}> = props => {
     const { integracio, fills, padLeft, toggleOpen, open } = props;
     const { t } = useTranslation();
     const displayName = integracio.nom ?? integracio.codi;
@@ -279,7 +259,7 @@ const IntegracioRow: React.FC<any> = props => {
                             />
                         )}
                         {integracio.endpoint ? (
-                            <Tooltip title={integracio.endpoint}>{displayName}</Tooltip>
+                            <Tooltip title={integracio.endpoint}><span>{displayName}</span></Tooltip>
                         ) : (
                             displayName
                         )}
@@ -323,11 +303,14 @@ const IntegracioRow: React.FC<any> = props => {
             </TableRow>
             {/*<Collapse in={open} timeout="auto" unmountOnExit>*/}
             {open && fills?.length
-                ? fills.map((childIntegracio: any) => (
+                ? fills.map((childIntegracio) => (
                       <IntegracioRow
                           padLeft
                           integracio={childIntegracio}
                           key={`integracioRowChild-${childIntegracio.id}`}
+                          // IntegracioRow children don't have an expansion state
+                          toggleOpen={() => {}}
+                          open={false}
                       />
                   ))
                 : undefined}
@@ -336,38 +319,65 @@ const IntegracioRow: React.FC<any> = props => {
     );
 };
 
-const Integracions: React.FC<any> = props => {
+const Integracions: React.FC<{
+    salutCurrentApp: SalutModel;
+    integracionsExpandState: string[];
+    toggleIntegracioExpand: (id: string) => void;
+}> = props => {
     const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand } = props;
     const { t } = useTranslation();
     const integracions = salutCurrentApp?.integracions;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">{t($ => $.page.salut.integracions.title)}</Typography>
-                {!integracions?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                    {t($ => $.page.salut.integracions.noInfo)}
-                </Typography>}
-                {integracions?.length > 0 && <Table size="small">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell></TableCell>
-                            <TableCell>{t($ => $.page.salut.integracions.column.nom)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.integracions.column.estat)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.integracions.column.peticionsTotals)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.integracions.column.tempsMigTotal)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.integracions.column.peticionsPeriode)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.integracions.column.tempsMigPeriode)}</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {integracions.filter((i: any) => i.pare == null).map((i: any) => <IntegracioRow
-                            open={integracionsExpandState.includes(i.codi)}
-                            toggleOpen={() => toggleIntegracioExpand(i.codi)}
-                        integracio={i}
-                        fills={integracions.filter((i2: any) => i2.pare?.id === i.id)}
-                        key={`integracioRow-${i.id}`} />)}
-                    </TableBody>
-                </Table>}
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.integracions.title)}
+                </Typography>
+                {!integracions?.length && (
+                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                        {t($ => $.page.salut.integracions.noInfo)}
+                    </Typography>
+                )}
+                {!!integracions?.length && (
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell></TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.integracions.column.nom)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.integracions.column.estat)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.integracions.column.peticionsTotals)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.integracions.column.tempsMigTotal)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.integracions.column.peticionsPeriode)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.integracions.column.tempsMigPeriode)}
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {integracions
+                                .filter(i => i.pare == null)
+                                .map(i => (
+                                    <IntegracioRow
+                                        open={integracionsExpandState.includes(i.codi)}
+                                        toggleOpen={() => toggleIntegracioExpand(i.codi)}
+                                        integracio={i}
+                                        fills={integracions.filter(i2 => i2.pare?.id === i.id)}
+                                        key={`integracioRow-${i.id}`}
+                                    />
+                                ))}
+                        </TableBody>
+                    </Table>
+                )}
             </CardContent>
         </Card>
     );
@@ -379,40 +389,75 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">{t($ => $.page.salut.subsistemes.title)}</Typography>
-                {!subsistemes?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                    {t($ => $.page.salut.subsistemes.noInfo)}
-                </Typography>}
-                {subsistemes?.length && <Table size="small">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>{t($ => $.page.salut.subsistemes.column.codi)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.subsistemes.column.nom)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.subsistemes.column.estat)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.subsistemes.column.peticionsTotals)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.subsistemes.column.tempsMigTotal)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.subsistemes.column.peticionsPeriode)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.subsistemes.column.tempsMigPeriode)}</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {subsistemes.map((s, key: number) => <TableRow key={key}>
-                            <TableCell>{s.codi}</TableCell>
-                            <TableCell>{s.nom}</TableCell>
-                            <TableCell>
-                                <ItemStateChip sx={{ ml: 1 }} salutField={SalutField.INTEGRACIO_ESTAT} salutStatEnum={s.estat} />
-                            </TableCell>
-                            <TableCell>
-                                <PeticionsOkError ok={s.totalOk} error={s.totalError} />
-                            </TableCell>
-                            <TableCell>{s.totalTempsMig != null ? s.totalTempsMig + ' ms' : t($ => $.page.salut.nd)}</TableCell>
-                            <TableCell>
-                                <PeticionsOkError ok={s.peticionsOkUltimPeriode} error={s.peticionsErrorUltimPeriode} />
-                            </TableCell>
-                            <TableCell>{s.tempsMigUltimPeriode != null ? s.tempsMigUltimPeriode + ' ms' : t($ => $.page.salut.nd)}</TableCell>
-                        </TableRow>)}
-                    </TableBody>
-                </Table>}
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.subsistemes.title)}
+                </Typography>
+                {!subsistemes?.length && (
+                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                        {t($ => $.page.salut.subsistemes.noInfo)}
+                    </Typography>
+                )}
+                {!!subsistemes?.length && (
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>
+                                    {t($ => $.page.salut.subsistemes.column.codi)}
+                                </TableCell>
+                                <TableCell>{t($ => $.page.salut.subsistemes.column.nom)}</TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.subsistemes.column.estat)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.subsistemes.column.peticionsTotals)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.subsistemes.column.tempsMigTotal)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.subsistemes.column.peticionsPeriode)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.subsistemes.column.tempsMigPeriode)}
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {subsistemes.map((s, key: number) => (
+                                <TableRow key={key}>
+                                    <TableCell>{s.codi}</TableCell>
+                                    <TableCell>{s.nom}</TableCell>
+                                    <TableCell>
+                                        <ItemStateChip
+                                            sx={{ ml: 1 }}
+                                            salutField={SalutField.INTEGRACIO_ESTAT}
+                                            salutStatEnum={s.estat}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <PeticionsOkError ok={s.totalOk} error={s.totalError} />
+                                    </TableCell>
+                                    <TableCell>
+                                        {s.totalTempsMig != null
+                                            ? s.totalTempsMig + ' ms'
+                                            : t($ => $.page.salut.nd)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <PeticionsOkError
+                                            ok={s.peticionsOkUltimPeriode}
+                                            error={s.peticionsErrorUltimPeriode}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        {s.tempsMigUltimPeriode != null
+                                            ? s.tempsMigUltimPeriode + ' ms'
+                                            : t($ => $.page.salut.nd)}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
             </CardContent>
         </Card>
     );
@@ -424,34 +469,73 @@ const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">{t($ => $.page.salut.contexts.title)}</Typography>
-                {!contexts?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                    {t($ => $.page.salut.contexts.noInfo)}
-                </Typography>}
-                {contexts?.length && <Table size="small">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>{t($ => $.page.salut.contexts.column.codi)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.contexts.column.nom)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.contexts.column.path)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.contexts.column.api)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.contexts.column.manuals)}</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {contexts.map((s, key: number) => <TableRow key={key}>
-                            <TableCell>{s.codi}</TableCell>
-                            <TableCell>{s.nom}</TableCell>
-                            <TableCell>{s.path && <Button href={s.path} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{s.path}</Button>}</TableCell>
-                            <TableCell>{s.api && <Button href={s.api} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>API</Button>}</TableCell>
-                            <TableCell>
-                                {s.manuals && s.manuals.map((manual, index: number) => (
-                                    <Button key={index} href={manual.path ?? ""} target="_blank" rel="noopener noreferrer" sx={{textTransform: 'none'}}>{manual.nom}</Button>
-                                ))}
-                            </TableCell>
-                        </TableRow>)}
-                    </TableBody>
-                </Table>}
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.contexts.title)}
+                </Typography>
+                {!contexts?.length && (
+                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                        {t($ => $.page.salut.contexts.noInfo)}
+                    </Typography>
+                )}
+                {contexts?.length && (
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>{t($ => $.page.salut.contexts.column.nom)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.contexts.column.path)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.contexts.column.api)}</TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.contexts.column.manuals)}
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {contexts.map((s, key: number) => (
+                                <TableRow key={key}>
+                                    <TableCell>{s.nom}</TableCell>
+                                    <TableCell>
+                                        {s.path && (
+                                            <Button
+                                                href={s.path}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{ textTransform: 'none' }}
+                                            >
+                                                {s.path}
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {s.api && (
+                                            <Button
+                                                href={s.api}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{ textTransform: 'none' }}
+                                            >
+                                                {s.api}
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {s.manuals &&
+                                            s.manuals.map((manual, index: number) => (
+                                                <Button
+                                                    key={index}
+                                                    href={manual.path ?? ''}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    sx={{ textTransform: 'none', display: 'block' }}
+                                                >
+                                                    {manual.nom}
+                                                </Button>
+                                            ))}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
             </CardContent>
         </Card>
     );
@@ -463,95 +547,319 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">{t($ => $.page.salut.missatges.title)}</Typography>
-                {!missatges?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                    {t($ => $.page.salut.missatges.noInfo)}
-                </Typography>}
-                {missatges?.length && <Table size="small">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>{t($ => $.page.salut.missatges.column.data)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.missatges.column.nivell)}</TableCell>
-                            <TableCell>{t($ => $.page.salut.missatges.column.missatge)}</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {missatges.map((m: any, key: number) => <TableRow key={key}>
-                            <TableCell><Typography>{dateFormatLocale(m.data, true)}</Typography></TableCell>
-                            <TableCell><Chip label={m.nivell} size="small" sx={{backgroundColor: getColorByNivellEnum(m.nivell as NivellEnum), color: 'white'}} /></TableCell>
-                            <TableCell>{m.missatge}</TableCell>
-                        </TableRow>)}
-                    </TableBody>
-                </Table>}
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.missatges.title)}
+                </Typography>
+                {!missatges?.length && (
+                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
+                        {t($ => $.page.salut.missatges.noInfo)}
+                    </Typography>
+                )}
+                {!!missatges?.length && (
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>{t($ => $.page.salut.missatges.column.data)}</TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.missatges.column.nivell)}
+                                </TableCell>
+                                <TableCell>
+                                    {t($ => $.page.salut.missatges.column.missatge)}
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {missatges.map((m, key: number) => (
+                                <TableRow key={key}>
+                                    <TableCell>
+                                        <Typography>{dateFormatLocale(m.data, true)}</Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Chip
+                                            label={m.nivell}
+                                            size="small"
+                                            sx={{
+                                                backgroundColor: getColorByNivellEnum(
+                                                    m.nivell as NivellEnum
+                                                ),
+                                                color: 'white',
+                                            }}
+                                        />
+                                    </TableCell>
+                                    <TableCell>{m.missatge}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
             </CardContent>
         </Card>
+    );
+};
+
+const EstatInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+    const { t } = useTranslation();
+    const { tTitle: tSalutEstatTitle } = useSalutEstatTranslation();
+    const bdEstat = salutCurrentApp && (
+        <ItemStateChip salutField={SalutField.BD_ESTAT} salutStatEnum={salutCurrentApp.bdEstat} />
+    );
+    const integracionsEstat = getLowestCommonIntegracioEstat(salutCurrentApp);
+    const integracionsEstatChip = salutCurrentApp && (
+        <SalutChip
+            icon={getMaterialIconByState(integracionsEstat)}
+            label={tSalutEstatTitle(integracionsEstat)}
+            backgroundColor={getColorByStatEnum(integracionsEstat)}
+        />
+    );
+    const subsistemesEstat = getLowestCommonSubsistemesEstat(salutCurrentApp);
+    const subsistemesEstatChip = salutCurrentApp && (
+        <SalutChip
+            icon={getMaterialIconByState(subsistemesEstat)}
+            label={tSalutEstatTitle(subsistemesEstat)}
+            backgroundColor={getColorByStatEnum(subsistemesEstat)}
+        />
+    );
+
+    const appLatencia = salutCurrentApp && (
+        <Typography>
+            {salutCurrentApp.appLatencia != null
+                ? salutCurrentApp.appLatencia + ' ms'
+                : t($ => $.page.salut.nd)}
+        </Typography>
+    );
+    const missatges = salutCurrentApp && <SalutMissatgesChips salutItem={salutCurrentApp} />;
+    const integracions = salutCurrentApp && <SalutIntegracionsChips salutItem={salutCurrentApp} />;
+    const subsistemes = salutCurrentApp && <SalutSubsistemesChips salutItem={salutCurrentApp} />;
+
+    const tableSections = [
+        {
+            id: 'bdEstat',
+            headerName: t($ => $.page.salut.info.bdEstat),
+            cellContent: bdEstat,
+        },
+        {
+            id: 'integracionsEstat',
+            headerName: t($ => $.page.salut.info.integracions),
+            cellContent: integracionsEstatChip,
+        },
+        {
+            id: 'subsistemesEstat',
+            headerName: t($ => $.page.salut.info.subsistemes),
+            cellContent: subsistemesEstatChip,
+        },
+        {
+            id: 'appLatencia',
+            headerName: t($ => $.page.salut.info.appLatencia),
+            cellContent: appLatencia,
+        },
+        {
+            id: 'integracions',
+            headerName: t($ => $.page.salut.info.integracions),
+            cellContent: integracions,
+        },
+        {
+            id: 'subsistemes',
+            headerName: t($ => $.page.salut.info.subsistemes),
+            cellContent: subsistemes,
+        },
+        {
+            id: 'missatges',
+            headerName: t($ => $.page.salut.info.missatges),
+            cellContent: missatges,
+        },
+    ];
+
+    return (
+        <ResponsiveCardTable
+            title={t($ => $.page.salut.estats.title)}
+            noInfoMessage={t($ => $.page.salut.detalls.noInfo)}
+            tableSections={tableSections}
+            breakpoint="xl"
+        />
     );
 };
 
 const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
     const detalls = salutCurrentApp.detalls;
+    const tableSections = [
+        ...(detalls ?? []).map(detall => ({
+            id: detall.id,
+            headerName: detall.nom,
+            cellContent: detall.valor,
+        })),
+    ];
     return (
-        <Card variant="outlined" sx={{ height: '100%' }}>
-            <CardContent>
-                <Typography gutterBottom variant="h5" component="div">{t($ => $.page.salut.detalls.title)}</Typography>
-                {!detalls?.length && <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                    {t($ => $.page.salut.detalls.noInfo)}
-                </Typography>}
-                {detalls?.length && <Table size="small" sx={{ width: '100%', tableLayout: 'fixed'}}>
-                    <TableBody>
-                        {detalls.map((d) => <TableRow key={d.id}>
-                            <TableCell sx={{minWidth: '165px'}}>{d.nom}</TableCell>
-                            <TableCell>{d.valor}</TableCell>
-                        </TableRow>)}
-                    </TableBody>
-                </Table>}
-            </CardContent>
-        </Card>
+        <ResponsiveCardTable
+            title={t($ => $.page.salut.detalls.title)}
+            noInfoMessage={t($ => $.page.salut.detalls.noInfo)}
+            tableSections={tableSections}
+            breakpoint="xl"
+        />
     );
 };
 
-const SalutAppInfo: React.FC<{
-    appInfoData: AppDataState;
-    ready: boolean;
-    grupsDates?: string[];
-}> = ({ appInfoData, grupsDates, ready }) => {
+interface SalutAppInfoTabProps {
+    salutCurrentApp: SalutModel;
+    entornApp: EntornAppModel;
+    dataLoaded: boolean;
+}
+
+const WarningNoInfo = () => {
     const { t } = useTranslation();
-    const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
-    const [integracionsExpandState, setIntegracionsExpandState] = React.useState<number[]>([]);
-    const toggleIntegracioExpand = (id: number) => {
-        if (integracionsExpandState.includes(id))
-            setIntegracionsExpandState(integracionsExpandState.filter((i: number) => i !== id));
-        else setIntegracionsExpandState([...integracionsExpandState, id]);
-    };
-    const dataLoaded = ready && loading != null && !loading;
+    return <Alert severity="warning">{t($ => $.page.salut.info.noInfo)}</Alert>;
+};
+const DownAlert = () => {
+    const { t } = useTranslation();
+    return <Alert severity="error">{t($ => $.page.salut.info.downAlert)}</Alert>;
+};
 
-    if (dataLoaded && salutCurrentApp == null)
-        return <Alert severity="warning">{t($ => $.page.salut.info.noInfo)}</Alert>;
-
-    if (dataLoaded && salutCurrentApp?.peticioError)
-        return (
-            <>
-                <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid size={{ sm: 12, lg: 3 }}>
-                        <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 9 }}>
-                        <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                            {agrupacio != null && estats != null && grupsDates != null && (
-                                <EstatsBarCard
-                                    agrupacio={agrupacio}
-                                    estats={estats}
-                                    grupsDates={grupsDates}
-                                />
-                            )}
-                        </ErrorBoundary>
-                    </Grid>
+const TabGeneral: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp }) => {
+    return (
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid size={{ sm: 12, lg: 12 }}>
+                <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
+            </Grid>
+            {salutCurrentApp.peticioError ? (
+                <Grid size={{ sm: 12, lg: 12 }}>
+                    <DownAlert />
                 </Grid>
-                <Alert severity="error">{t($ => $.page.salut.info.downAlert)}</Alert>
-            </>
-        );
+            ) : (
+                <>
+                    <Grid size={{ sm: 12, lg: 12 }}>
+                        <Contexts salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                    <Grid size={{ sm: 12, lg: 12 }}>
+                        <Missatges salutCurrentApp={salutCurrentApp} />
+                    </Grid>
+                </>
+            )}
+        </Grid>
+    );
+};
 
+const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
+    if (salutCurrentApp.peticioError) {
+        return (
+            <Grid>
+                <DownAlert />
+            </Grid>
+        );
+    }
+    return (
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid size={{ sm: 12, lg: 12 }}>
+                <DetallInfo salutCurrentApp={salutCurrentApp} />
+            </Grid>
+            <Grid size={{ sm: 12, lg: 12 }}>
+                <EstatInfo salutCurrentApp={salutCurrentApp} />
+            </Grid>
+        </Grid>
+    );
+};
+
+type TabIntegracionsOtherProps = {
+    integracionsExpandState: string[];
+    toggleIntegracioExpand: (id: string) => void;
+};
+
+const TabIntegracions: React.FC<
+    SalutAppInfoTabProps & { otherProps: TabIntegracionsOtherProps }
+> = ({ salutCurrentApp, otherProps: { integracionsExpandState, toggleIntegracioExpand } }) => {
+    if (salutCurrentApp.peticioError) {
+        return (
+            <Grid>
+                <DownAlert />
+            </Grid>
+        );
+    }
+    return (
+        <Box
+            sx={{
+                height: 'auto',
+            }}
+        >
+            <Integracions
+                salutCurrentApp={salutCurrentApp}
+                toggleIntegracioExpand={toggleIntegracioExpand}
+                integracionsExpandState={integracionsExpandState}
+            />
+        </Box>
+    );
+};
+
+const TabSubsistemes: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
+    if (salutCurrentApp.peticioError) {
+        return (
+            <Grid>
+                <DownAlert />
+            </Grid>
+        );
+    }
+    return (
+        <Box
+            sx={{
+                height: 'auto',
+            }}
+        >
+            <Subsistemes salutCurrentApp={salutCurrentApp} />
+        </Box>
+    );
+};
+
+type TabHistoricOtherProps = Pick<AppDataState, 'agrupacio' | 'estats' | 'latencies'> & {
+    grupsDates?: string[];
+};
+
+const TabHistoric: React.FC<SalutAppInfoTabProps & { otherProps: TabHistoricOtherProps }> = ({
+    otherProps: { agrupacio, estats, grupsDates, latencies },
+}) => {
+    if (agrupacio == null || estats == null || grupsDates == null) return;
+
+    return (
+        <Grid container gap={2}>
+            <Grid size={12}>
+                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                    <EstatsBarCard agrupacio={agrupacio} estats={estats} grupsDates={grupsDates} />
+                </ErrorBoundary>
+            </Grid>
+            <Grid size={12}>
+                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                    {latencies != null && (
+                        <>
+                            <LatenciaLineChart
+                                agrupacio={agrupacio}
+                                latencies={latencies}
+                                grupsDates={grupsDates}
+                            />
+                        </>
+                    )}
+                </ErrorBoundary>
+            </Grid>
+        </Grid>
+    );
+};
+
+/**
+ * Component wrapper per als tabs que depenen del valor de salutCurrentApp
+ * Accepta una sèrie de props, gestiona els casos d'error i renderitza el component childrenTabComponent
+ * amb les props validades per a la interfície SalutAppInfoTabProps i a més passa sense tractar
+ * les props especificades al genèric T.
+ */
+function TabSalutCurrentApp<T>({
+    salutCurrentApp,
+    entornApp,
+    dataLoaded,
+    childrenTabComponent: ChildrenTabComponent,
+    childrenTabOtherProps,
+}: {
+    salutCurrentApp: SalutModel | null;
+    entornApp: EntornAppModel | null;
+    dataLoaded: boolean;
+    childrenTabComponent: React.FC<SalutAppInfoTabProps & { otherProps: T }>;
+    childrenTabOtherProps: T;
+}) {
+    if (dataLoaded && salutCurrentApp == null) return <WarningNoInfo />;
     if (salutCurrentApp == null || entornApp == null)
         return (
             <Box
@@ -560,73 +868,144 @@ const SalutAppInfo: React.FC<{
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    minHeight: 'calc(100vh - 80px)',
+                    height: '100%',
                 }}
             >
                 <CircularProgress size={100} />
             </Box>
         );
+    return (
+        <ChildrenTabComponent
+            salutCurrentApp={salutCurrentApp}
+            entornApp={entornApp}
+            dataLoaded={dataLoaded}
+            otherProps={childrenTabOtherProps}
+        />
+    );
+}
+
+const SalutAppInfo: React.FC<{
+    appInfoData: AppDataState;
+    ready: boolean;
+    grupsDates?: string[];
+}> = ({ appInfoData, grupsDates, ready }) => {
+    const { t } = useTranslation();
+    const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
+    const [integracionsExpandState, setIntegracionsExpandState] = React.useState<string[]>([]);
+    const toggleIntegracioExpand = (id: string) => {
+        if (integracionsExpandState.includes(id))
+            setIntegracionsExpandState(integracionsExpandState.filter((i: string) => i !== id));
+        else setIntegracionsExpandState([...integracionsExpandState, id]);
+    };
+    const dataLoaded = ready && loading != null && !loading;
+
+    const [tabValue, setTabValue] = React.useState(0);
+    const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+        setTabValue(newValue);
+    };
+
+    const tabs = [
+        {
+            label: t($ => $.page.salut.tabs.general),
+            icon: <Icon>info</Icon>,
+        },
+        {
+            label: t($ => $.page.salut.tabs.estatActual),
+            icon: <Icon>troubleshoot</Icon>,
+        },
+        {
+            label: t($ => $.page.salut.tabs.integracions),
+            icon: <Icon>account_tree</Icon>,
+        },
+        {
+            label: t($ => $.page.salut.tabs.subsistemes),
+            icon: <Icon>widgets</Icon>,
+        },
+        {
+            label: t($ => $.page.salut.tabs.historic),
+            icon: <Icon>timeline</Icon>,
+        },
+        {
+            label: t($ => $.page.salut.tabs.logs),
+            icon: <Icon>notes</Icon>,
+            disabled: true,
+        },
+    ];
 
     return (
-        <Grid container spacing={2}>
-            <Grid size={{ sm: 12, lg: 3 }}>
-                <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
-            </Grid>
-            <Grid size={{ sm: 12, lg: 9 }}>
-                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                    {agrupacio != null && estats != null && grupsDates != null && (
-                        <EstatsBarCard
-                            agrupacio={agrupacio}
-                            estats={estats}
-                            grupsDates={grupsDates}
-                        />
-                    )}
-                </ErrorBoundary>
-            </Grid>
-            {salutCurrentApp?.peticioError ? (
-                <Grid>
-                    <Alert severity="error">{t($ => $.page.salut.info.downAlert)}</Alert>
-                </Grid>
-            ) : (
-                <>
-                    <Grid size={{ sm: 12, lg: 3 }}>
-                        <DetallInfo salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 9 }}>
-                        <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                            {agrupacio != null &&
-                                latencies != null &&
-                                estats != null &&
-                                grupsDates != null && (
-                                    <>
-                                        <LatenciaLineChart
-                                            agrupacio={agrupacio}
-                                            latencies={latencies}
-                                            grupsDates={grupsDates}
-                                        />
-                                    </>
-                                )}
-                        </ErrorBoundary>
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Integracions
-                            salutCurrentApp={salutCurrentApp}
-                            toggleIntegracioExpand={toggleIntegracioExpand}
-                            integracionsExpandState={integracionsExpandState}
-                        />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Subsistemes salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Contexts salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                    <Grid size={{ sm: 12, lg: 6 }}>
-                        <Missatges salutCurrentApp={salutCurrentApp} />
-                    </Grid>
-                </>
-            )}
-        </Grid>
+        <>
+            <Tabs
+                value={tabValue}
+                onChange={handleChange}
+                sx={{
+                    mx: 2,
+                }}
+            >
+                {tabs.map(tab => (
+                    <Tab key={tab.label} iconPosition="start" label={tab.label} icon={tab.icon} disabled={tab.disabled} />
+                ))}
+            </Tabs>
+            <Box
+                sx={{
+                    p: 2,
+                    height: '100%',
+                }}
+            >
+                {tabValue === 0 && (
+                    <TabSalutCurrentApp
+                        salutCurrentApp={salutCurrentApp}
+                        entornApp={entornApp}
+                        dataLoaded={dataLoaded}
+                        childrenTabComponent={TabGeneral}
+                        childrenTabOtherProps={{}}
+                    />
+                )}
+                {tabValue === 1 && (
+                    <TabSalutCurrentApp
+                        salutCurrentApp={salutCurrentApp}
+                        entornApp={entornApp}
+                        dataLoaded={dataLoaded}
+                        childrenTabComponent={TabEstatActual}
+                        childrenTabOtherProps={{}}
+                    />
+                )}
+                {tabValue === 2 && (
+                    <TabSalutCurrentApp<TabIntegracionsOtherProps>
+                        salutCurrentApp={salutCurrentApp}
+                        entornApp={entornApp}
+                        dataLoaded={dataLoaded}
+                        childrenTabComponent={TabIntegracions}
+                        childrenTabOtherProps={{
+                            integracionsExpandState: integracionsExpandState,
+                            toggleIntegracioExpand: toggleIntegracioExpand,
+                        }}
+                    />
+                )}
+                {tabValue === 3 && (
+                    <TabSalutCurrentApp
+                        salutCurrentApp={salutCurrentApp}
+                        entornApp={entornApp}
+                        dataLoaded={dataLoaded}
+                        childrenTabComponent={TabSubsistemes}
+                        childrenTabOtherProps={{}}
+                    />
+                )}
+                {tabValue === 4 && (
+                    <TabSalutCurrentApp<TabHistoricOtherProps>
+                        salutCurrentApp={salutCurrentApp}
+                        entornApp={entornApp}
+                        dataLoaded={dataLoaded}
+                        childrenTabComponent={TabHistoric}
+                        childrenTabOtherProps={{
+                            agrupacio,
+                            estats,
+                            grupsDates,
+                            latencies,
+                        }}
+                    />
+                )}
+            </Box>
+        </>
     );
 };
 

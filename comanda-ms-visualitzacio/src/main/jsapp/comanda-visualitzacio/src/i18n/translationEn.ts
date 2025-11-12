@@ -141,6 +141,14 @@ const translationEn: translationResourcesType = {
                 P7D: "Last week",
                 P1M: "Last month",
             },
+            tabs: {
+                general: "Environment",
+                estatActual: "Current state",
+                integracions: "Integrations",
+                subsistemes: "Subsystems",
+                historic: "Historic",
+                logs: "Logs",
+            },
             info: {
                 title: "Information",
                 versio: "Version",
@@ -151,6 +159,8 @@ const translationEn: translationResourcesType = {
                 data: "Last update",
                 bdEstat: "Database",
                 appLatencia: "Latency",
+                integracions: "Integrations",
+                subsistemes: "Subsystems",
                 missatges: "Messages",
                 detalls: "Details",
                 noInfo: 'No data available for this environment',
@@ -167,6 +177,7 @@ const translationEn: translationResourcesType = {
             integracions: {
                 title: "Integrations",
                 integracioUpCount: "Active",
+                integracioWarnCount: "Warning",
                 integracioDownCount: "Inactive",
                 integracioDesconegutCount: "Unknown state",
                 noInfo: "There is no information about integrations",
@@ -184,6 +195,7 @@ const translationEn: translationResourcesType = {
                 title: "Subsystems",
                 subsistemaUpCount: "Active",
                 subsistemaDownCount: "Inactive",
+                subsistemaWarnCount: "Warning",
                 subsistemaDesconegutCount: "Unknown state",
                 noInfo: "There is no information about subsystems",
                 column: {
@@ -217,7 +229,7 @@ const translationEn: translationResourcesType = {
                     codi: "Code",
                     nom: "Name",
                     path: "Path",
-                    api: "Api",
+                    api: "API",
                     manuals: "Manuals",
                 },
             },

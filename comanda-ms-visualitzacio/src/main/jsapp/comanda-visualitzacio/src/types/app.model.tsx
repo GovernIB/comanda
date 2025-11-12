@@ -82,9 +82,13 @@ export class EntornAppModel extends BaseEntity implements Partial<IEntornAppMode
     app    : IAppRef;
     entorn : IEntornRef;
 
-    infoUrl?    : string;
-    infoData?   : string;
-    versio?     : string;
+    infoUrl?              : string;
+    infoData?             : string;
+    versio?               : string;
+    revisio?              : string;
+    revisioSimplificat?   : string;
+
+    jdkVersion? : string;
     activa?     : boolean;
 
     salutUrl?   : string;
@@ -96,14 +100,15 @@ export class EntornAppModel extends BaseEntity implements Partial<IEntornAppMode
     subsistemes?    : IAppSubsistema[];
     contexts?       : IAppContext[];
 
-    estadisticaInfoUrl? : string | null
-    estadisticaUrl?     : string | null
-    estadisticaCron?    : string | null
+    estadisticaInfoUrl? : string | null;
+    estadisticaUrl?     : string | null;
+    estadisticaCron?    : string | null;
 
     compactable?              : boolean;
     compactacioSetmanalMesos? : number | null;
     compactacioMensualMesos?  : number | null;
     eliminacioMesos?          : number | null;
+
 
 
     /**

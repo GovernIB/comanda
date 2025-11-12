@@ -137,9 +137,17 @@ const translationEs: translationResourcesType = {
             timerange: {
                 PT15M: "Últimos 15 minutos",
                 PT1H: "Última hora",
-                P1D: "Último dia",
+                P1D: "Último día",
                 P7D: "Última semana",
                 P1M: "Último mes",
+            },
+            tabs: {
+                general: "Entorno",
+                estatActual: "Estado actual",
+                integracions: "Integraciones",
+                subsistemes: "Subsistemas",
+                historic: "Histórico",
+                logs: "Logs",
             },
             info: {
                 title: "Información",
@@ -151,6 +159,8 @@ const translationEs: translationResourcesType = {
                 data: "Última actualización",
                 bdEstat: "Base de datos",
                 appLatencia: "Latencia",
+                integracions: "Integraciones",
+                subsistemes: "Subsistemas",
                 missatges: "Mensajes",
                 detalls: "Detalles",
                 noInfo: 'No hay datos disponibles para este entorno',
@@ -167,6 +177,7 @@ const translationEs: translationResourcesType = {
             integracions: {
                 title: "Integraciones",
                 integracioUpCount: "Activas",
+                integracioWarnCount: "Alerta",
                 integracioDownCount: "Inactivas",
                 integracioDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de integraciones",
@@ -183,6 +194,7 @@ const translationEs: translationResourcesType = {
             subsistemes: {
                 title: "Subsistemas",
                 subsistemaUpCount: "Activos",
+                subsistemaWarnCount: "Alerta",
                 subsistemaDownCount: "Inactivos",
                 subsistemaDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de subsistemas",
@@ -217,7 +229,7 @@ const translationEs: translationResourcesType = {
                     codi: "Código",
                     nom: "Nombre",
                     path: "Ruta",
-                    api: "Api",
+                    api: "API",
                     manuals: "Manuales",
                 },
             },

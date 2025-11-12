@@ -2,12 +2,72 @@ import {BaseEntity, IBaseEntity} from "./base-entity.model.ts";
 import Icon from "@mui/material/Icon";
 import {JSX} from "react";
 import {IAppContext} from "./app.model.tsx";
+import { useTranslation } from 'react-i18next';
 
+/**
+ * @deprecated i18next recomana usar l'API de selectors per a les traduccions
+ */
 export const ENUM_APP_ESTAT_PREFIX: string = 'enum.appEstat.';
+/**
+ * @deprecated i18next recomana usar l'API de selectors per a les traduccions
+ */
 export const ENUM_BD_ESTAT_PREFIX: string = 'enum.bdEstat.';
+/**
+ * @deprecated i18next recomana usar l'API de selectors per a les traduccions
+ */
 export const ENUM_INTEGRACIO_ESTAT_PREFIX: string = 'enum.integracioEstat.';
+/**
+ * @deprecated i18next recomana usar l'API de selectors per a les traduccions
+ */
 export const TITLE = ".title";
+/**
+ * @deprecated i18next recomana usar l'API de selectors per a les traduccions
+ */
 export const TOOLTIP = ".tooltip";
+
+export const useSalutEstatTranslation = () => {
+    const { t } = useTranslation();
+    const tTitle = (estat: SalutEstatEnum) => {
+        switch (estat) {
+            case SalutEstatEnum.UP:
+                return t($ => $.enum.appEstat.UP.title);
+            case SalutEstatEnum.WARN:
+                return t($ => $.enum.appEstat.WARN.title);
+            case SalutEstatEnum.DEGRADED:
+                return t($ => $.enum.appEstat.DEGRADED.title);
+            case SalutEstatEnum.DOWN:
+                return t($ => $.enum.appEstat.DOWN.title);
+            case SalutEstatEnum.MAINTENANCE:
+                return t($ => $.enum.appEstat.MAINTENANCE.title);
+            case SalutEstatEnum.UNKNOWN:
+                return t($ => $.enum.appEstat.UNKNOWN.title);
+            case SalutEstatEnum.ERROR:
+                return t($ => $.enum.appEstat.ERROR.title);
+        }
+    };
+    const tTooltip = (estat: SalutEstatEnum) => {
+        switch (estat) {
+            case SalutEstatEnum.UP:
+                return t($ => $.enum.appEstat.UP.tooltip);
+            case SalutEstatEnum.WARN:
+                return t($ => $.enum.appEstat.WARN.tooltip);
+            case SalutEstatEnum.DEGRADED:
+                return t($ => $.enum.appEstat.DEGRADED.tooltip);
+            case SalutEstatEnum.DOWN:
+                return t($ => $.enum.appEstat.DOWN.tooltip);
+            case SalutEstatEnum.MAINTENANCE:
+                return t($ => $.enum.appEstat.MAINTENANCE.tooltip);
+            case SalutEstatEnum.UNKNOWN:
+                return t($ => $.enum.appEstat.UNKNOWN.tooltip);
+            case SalutEstatEnum.ERROR:
+                return t($ => $.enum.appEstat.ERROR.tooltip);
+        }
+    }
+    return {
+        tTitle,
+        tTooltip,
+    };
+}
 
 export enum SalutEstatEnum {
     UP='UP',
@@ -67,9 +127,11 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     static readonly INTEGRACIONS: keyof SalutModel = "integracions";
     static readonly SUBSISTEMES: keyof SalutModel = "subsistemes";
     static readonly INTEGRACIO_UP_COUNT: keyof SalutModel = "integracioUpCount";
+    static readonly INTEGRACIO_WARN_COUNT: keyof SalutModel = "integracioWarnCount";
     static readonly INTEGRACIO_DOWN_COUNT: keyof SalutModel = "integracioDownCount";
     static readonly INTEGRACIO_DESCONEGUT_COUNT: keyof SalutModel = "integracioDesconegutCount";
     static readonly SUBSISTEMA_UP_COUNT: keyof SalutModel = "subsistemaUpCount";
+    static readonly SUBSISTEMA_WARN_COUNT: keyof SalutModel = "subsistemaWarnCount";
     static readonly SUBSISTEMA_DOWN_COUNT: keyof SalutModel = "subsistemaDownCount";
     static readonly SUBSISTEMA_DESCONEGUT_COUNT: keyof SalutModel = "subsistemaDesconegutCount";
     static readonly MISSATGE_ERROR_COUNT: keyof SalutModel = "missatgeErrorCount";
@@ -89,9 +151,11 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     bdUp?: boolean;
 
     integracioUpCount?: number;
+    integracioWarnCount?: number;
     integracioDownCount?: number;
     integracioDesconegutCount?: number;
     subsistemaUpCount?: number;
+    subsistemaWarnCount?: number;
     subsistemaDownCount?: number;
     subsistemaDesconegutCount?: number;
     missatgeErrorCount?: number;
@@ -373,6 +437,8 @@ export function getColorByNivellEnum(nivellEnum: NivellEnum): string {
 export function getColorByIntegracio(integracioField: keyof SalutModel): string {
     if (SalutModel.INTEGRACIO_UP_COUNT === integracioField) {
         return GREEN;
+    } else if (SalutModel.INTEGRACIO_WARN_COUNT === integracioField) {
+        return ORANGE;
     } else if (SalutModel.INTEGRACIO_DOWN_COUNT === integracioField) {
         return RED_DARK;
     } else if (SalutModel.INTEGRACIO_DESCONEGUT_COUNT === integracioField) {
@@ -385,6 +451,8 @@ export function getColorByIntegracio(integracioField: keyof SalutModel): string 
 export function getColorBySubsistema(subsistemaField: keyof SalutModel): string {
     if (SalutModel.SUBSISTEMA_UP_COUNT === subsistemaField) {
         return GREEN;
+    } else if (SalutModel.SUBSISTEMA_WARN_COUNT === subsistemaField) {
+        return ORANGE;
     } else if (SalutModel.SUBSISTEMA_DOWN_COUNT === subsistemaField) {
         return RED_DARK;
     } else if (SalutModel.SUBSISTEMA_DESCONEGUT_COUNT === subsistemaField) {

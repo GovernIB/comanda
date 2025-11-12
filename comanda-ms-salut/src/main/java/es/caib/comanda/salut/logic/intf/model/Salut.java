@@ -84,8 +84,10 @@ public class Salut extends BaseResource<Long> {
 
 	private Integer integracioUpCount;
 	private Integer integracioDownCount;
+	private Integer integracioWarnCount;
     private Integer integracioDesconegutCount;
 	private Integer subsistemaUpCount;
+	private Integer subsistemaWarnCount;
 	private Integer subsistemaDownCount;
     private Integer subsistemaDesconegutCount;
 	private Integer missatgeErrorCount;

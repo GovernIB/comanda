@@ -2,7 +2,6 @@ import Skeleton from '@mui/material/Skeleton';
 import Box from '@mui/material/Box';
 import estils from '../estadistiques/WidgetEstils.ts';
 import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
 import * as React from 'react';
 import Grid from '@mui/material/Grid';
 import { useTranslation } from 'react-i18next';
@@ -12,18 +11,14 @@ import {
     useBaseAppContext,
 } from 'reactlib';
 import { Button, Paper, styled } from '@mui/material';
-import { SalutField, SalutGenericTooltip } from './SalutChipTooltip.tsx';
+import { SalutField } from './SalutChipTooltip.tsx';
 import {
     ENUM_APP_ESTAT_PREFIX,
-    getColorByIntegracio,
-    getColorByMissatge,
     getColorByStatEnum,
-    getColorBySubsistema,
     SalutEstatEnum,
     SalutModel,
     TITLE,
 } from '../../types/salut.model.tsx';
-import { ChipColor } from '../../util/colorUtil.ts';
 import { ItemStateChip } from './SalutItemStateChip.tsx';
 import { DataGridPro, GridRowId, GridSlots } from '@mui/x-data-grid-pro';
 import { PieChart, useDrawingArea } from '@mui/x-charts';
@@ -39,6 +34,9 @@ import {AppModel, EntornAppModel} from "../../types/app.model.tsx";
 import {EntornModel} from "../../types/entorn.model.tsx";
 import useTranslationStringKey from '../../hooks/useTranslationStringKey';
 import { SalutErrorBoundaryFallback } from './SalutErrorBoundaryFallback';
+import SalutIntegracionsChips from './SalutIntegracionsChips.tsx';
+import SalutSubsistemesChips from './SalutSubsistemesChips.tsx';
+import SalutMissatgesChips from './SalutMissatgesChips';
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
@@ -290,7 +288,7 @@ const AppDataTable: React.FC<{
                 flex: 0.1,
                 field: SalutModel.INTEGRACIONS,
                 headerName: t($ => $.page.salut.apps.column.integ),
-                minWidth: 130,
+                minWidth: 155,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
@@ -298,114 +296,21 @@ const AppDataTable: React.FC<{
                         return null;
                     }
 
-                    return (
-                        <>
-                            <SalutGenericTooltip
-                                title={t($ => $.page.salut.integracions.integracioUpCount)}
-                            >
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorByIntegracio(
-                                            SalutModel.INTEGRACIO_UP_COUNT
-                                        ),
-                                        color: ChipColor.WHITE,
-                                        '& .MuiChip-label': {
-                                            // fontSize: "0.7rem !important",
-                                        },
-                                    }}
-                                    label={salutItem.integracioUpCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip
-                                title={t($ => $.page.salut.integracions.integracioDownCount)}
-                            >
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorByIntegracio(
-                                            SalutModel.INTEGRACIO_DOWN_COUNT
-                                        ),
-                                        color: ChipColor.WHITE,
-                                        '& .MuiChip-label': {
-                                            // fontSize: "0.7rem !important",
-                                        },
-                                    }}
-                                    label={salutItem.integracioDownCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip
-                                title={t($ => $.page.salut.integracions.integracioDesconegutCount)}
-                            >
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorByIntegracio(
-                                            SalutModel.INTEGRACIO_DESCONEGUT_COUNT
-                                        ),
-                                        color: ChipColor.WHITE,
-                                    }}
-                                    label={salutItem.integracioDesconegutCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                        </>
-                    );
+                    return <SalutIntegracionsChips salutItem={salutItem} />;
                 },
             },
             {
                 flex: 0.2,
                 field: SalutModel.SUBSISTEMES,
                 headerName: t($ => $.page.salut.apps.column.subsis),
-                minWidth: 100,
+                minWidth: 155,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
                     if (!salutItem) {
                         return null;
                     }
-                    return (
-                        <>
-                            <SalutGenericTooltip
-                                title={t($ => $.page.salut.subsistemes.subsistemaUpCount)}
-                            >
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorBySubsistema(
-                                            SalutModel.SUBSISTEMA_UP_COUNT
-                                        ),
-                                        color: ChipColor.WHITE,
-                                    }}
-                                    label={salutItem.subsistemaUpCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip
-                                title={t($ => $.page.salut.subsistemes.subsistemaDownCount)}
-                            >
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorBySubsistema(
-                                            SalutModel.SUBSISTEMA_DOWN_COUNT
-                                        ),
-                                        color: ChipColor.WHITE,
-                                    }}
-                                    label={salutItem.subsistemaDownCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t($ => $.page.salut.subsistemes.subsistemaDesconegutCount)}>
-                                <Chip
-                                    sx={{ bgcolor: getColorBySubsistema(SalutModel.SUBSISTEMA_DESCONEGUT_COUNT), color: ChipColor.WHITE }}
-                                    label={salutItem.subsistemaDesconegutCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                        </>
-                    );
+                    return <SalutSubsistemesChips salutItem={salutItem} />;
                 },
             },
             {
@@ -419,44 +324,7 @@ const AppDataTable: React.FC<{
                     if (!salutItem) {
                         return null;
                     }
-                    return (
-                        <>
-                            <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeErrorCount)}>
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorByMissatge(
-                                            SalutModel.MISSATGE_ERROR_COUNT
-                                        ),
-                                        color: ChipColor.WHITE,
-                                    }}
-                                    label={salutItem.missatgeErrorCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeWarnCount)}>
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT),
-                                        color: ChipColor.WHITE,
-                                    }}
-                                    label={salutItem.missatgeWarnCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                            &nbsp;/&nbsp;
-                            <SalutGenericTooltip title={t($ => $.page.salut.msgs.missatgeInfoCount)}>
-                                <Chip
-                                    sx={{
-                                        bgcolor: getColorByMissatge(SalutModel.MISSATGE_INFO_COUNT),
-                                        color: ChipColor.WHITE,
-                                    }}
-                                    label={salutItem.missatgeInfoCount}
-                                    size="small"
-                                />
-                            </SalutGenericTooltip>
-                        </>
-                    );
+                    return <SalutMissatgesChips salutItem={salutItem} />;
                 },
             },
             {
