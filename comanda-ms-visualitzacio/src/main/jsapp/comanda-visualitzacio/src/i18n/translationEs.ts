@@ -302,7 +302,7 @@ const translationEs: translationResourcesType = {
             grid: {
                 groupHeader: "Nombre",
                 action: {
-                    obrir: "Obrir tasca",
+                    obrir: "Abrir tarea",
                 },
                 column: {
                     appEntorn: "Aplicación - Entorno",
@@ -312,13 +312,20 @@ const translationEs: translationResourcesType = {
         avisos: {
             filter: {
                 more: "Más campos",
+                finished: "Sólo finalitzados",
+                unfinished: "Pendientes",
                 unfinishedOnlyDisabled: "Visualizar únicamente los avisos pendientes (desactivado)",
                 unfinishedOnlyEnabled: "Visualizar únicamente los avisos pendientes (activado)",
+                ownAvisOnlyDisabled: "Visualizar únicamente mis avisos (desactivado)",
+                ownAvisOnlyEnabled: "Visualizar únicamente mis avisos (activado)",
             },
             grid: {
                 groupHeader: "Nombre",
                 column: {
                     appEntorn: "Aplicación - Entorno",
+                },
+                action: {
+                    obrir: "Abrir aviso",
                 },
             }
         },

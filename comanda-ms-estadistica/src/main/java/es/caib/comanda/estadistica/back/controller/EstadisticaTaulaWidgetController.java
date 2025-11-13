@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("estadisticaTaulaWidgetController")
 @RequestMapping(BaseConfig.API_PATH + "/widgetsTaula")
-@Tag(name = "Dimensio", description = "Servei de consulta de widgets tipus taula")
+@Tag(name = "16. Widget taula", description = "Servei de consulta de widgets tipus taula")
 public class EstadisticaTaulaWidgetController extends BaseMutableResourceController<EstadisticaTaulaWidget, Long> {
 
 }

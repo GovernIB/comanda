@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController("permisController")
 @RequestMapping(BaseConfig.API_PATH + "/permisos")
-@Tag(name = "Permis", description = "Servei de gestió de permisos")
+@Tag(name = "20. Permis", description = "Servei de gestió de permisos")
 public class PermisController extends BaseMutableResourceController<Permis, Long> {
 
 }

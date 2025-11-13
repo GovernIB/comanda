@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController("avisController")
 @RequestMapping(BaseConfig.API_PATH + "/avisos")
-@Tag(name = "Avis", description = "Servei de gestió d'avisos'")
+@Tag(name = "19. Avis", description = "Servei de gestió d'avisos'")
 public class AvisController extends BaseMutableResourceController<Avis, Long> {
 
 }

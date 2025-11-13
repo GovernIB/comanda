@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("appController")
 @RequestMapping(BaseConfig.API_PATH + "/apps")
-@Tag(name = "Aplicacions", description = "Servei de gestió d'aplicacions")
+@Tag(name = "01. Aplicacions", description = "Servei de gestió d'aplicacions")
 public class AppController extends BaseMutableResourceController<App, Long> {
 
 }

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController("dashboardController")
 @RequestMapping(BaseConfig.API_PATH + "/dashboards")
-@Tag(name = "Dashboard", description = "Servei de consulta de dashboards")
+@Tag(name = "11. Dashboard", description = "Servei de consulta de dashboards")
 public class DashboardController extends BaseMutableResourceController<Dashboard, Long> {
 
 //    private static final long DEFAULT_TIMEOUT = 0L; // Temps de caducitat per a SSE

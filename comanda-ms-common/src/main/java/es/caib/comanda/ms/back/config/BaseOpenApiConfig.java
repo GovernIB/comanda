@@ -10,16 +10,23 @@ import org.springframework.context.annotation.Bean;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 /**
  * Configuració de Springdoc OpenAPI.
+ * Permet configurar autenticació via Bearer token (JWT) o Basic.
  * 
  * @author Límit Tecnologies
  */
 @Slf4j
 public abstract class BaseOpenApiConfig {
+
+	public enum AuthType {
+		BEARER,
+		BASIC
+	}
 
 	@Bean
 	public OpenAPI customOpenAPI() {
@@ -33,28 +40,51 @@ public abstract class BaseOpenApiConfig {
 		}
 		OpenAPI openapi = new OpenAPI().info(new Info().title(getTitle()).version(version));
 		if (enableAuthComponent()) {
-			return openapi.
-					components(
-							new Components().addSecuritySchemes(
+			AuthType type = getAuthType();
+			switch (type) {
+				case BASIC:
+					return openapi
+							.components(new Components().addSecuritySchemes(
+									"basicAuth",
+									new SecurityScheme()
+											.type(SecurityScheme.Type.HTTP)
+											.scheme("basic")
+											.in(SecurityScheme.In.HEADER)
+											.name("Authorization")))
+						.addSecurityItem(new SecurityRequirement().addList("basicAuth", Collections.emptyList()));
+				case BEARER:
+				default:
+					return openapi
+							.components(new Components().addSecuritySchemes(
 									"Bearer token",
-									new SecurityScheme().
-									type(SecurityScheme.Type.HTTP).
-									scheme("bearer").
-									bearerFormat("JWT").
-									in(SecurityScheme.In.HEADER).
-									name("Authorization"))).
-					addSecurityItem(
-							new SecurityRequirement().addList(
-									"Bearer token",
-									Arrays.asList("read", "write")));
+									new SecurityScheme()
+											.type(SecurityScheme.Type.HTTP)
+											.scheme("bearer")
+											.bearerFormat("JWT")
+											.in(SecurityScheme.In.HEADER)
+											.name("Authorization")))
+						.addSecurityItem(new SecurityRequirement().addList("Bearer token", Arrays.asList("read", "write")));
+			}
 		} else {
 			return openapi;
 		}
 	}
 
-
+	/**
+	 * Títol a mostrar a la documentació OpenAPI.
+	 */
 	protected abstract String getTitle();
 
+	/**
+	 * Indica si s'ha d'incloure el component de seguretat a l'esquema OpenAPI.
+	 */
 	protected abstract boolean enableAuthComponent();
 
+	/**
+	 * Tipus d'autenticació a emprar quan {@link #enableAuthComponent()} és true.
+	 * Per defecte: BEARER.
+	 */
+	protected AuthType getAuthType() {
+		return AuthType.BEARER;
+	}
 }

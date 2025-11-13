@@ -9,6 +9,7 @@ import {
     useFilterApiRef,
     BasePage,
     MuiDataGridColDef,
+    useAuthContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -18,13 +19,14 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
+import { GridSortModel, useGridApiRef} from '@mui/x-data-grid-pro';
 import { SxProps } from '@mui/material';
 
 const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
     const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
+    const [ownAvisOnly, setOwnAvisOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
@@ -36,6 +38,21 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
     React.useEffect(() => {
         moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
     }, [unfinishedOnly]);
+    React.useEffect(() => {
+        moreFormApiRef.current?.setFieldValue('avisPropi', ownAvisOnly);
+    }, [ownAvisOnly]);
+
+    // TODO Recuperar el nombre de usuario usando el contexto de usuario que hay en la rama comanda-wip
+    const [tokenParsed, setTokenParsed] = React.useState<{
+        name: string;
+        preferred_username: string;
+    }>();
+    const { getTokenParsed } = useAuthContext();
+    React.useEffect(() => {
+        setTokenParsed(getTokenParsed());
+    }, []);
+    const currentUsername = tokenParsed?.preferred_username;
+
     return (
         <>
             <MuiFilter
@@ -60,9 +77,17 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                     <Button
                         onClick={() => setUnfinishedOnly(fo => !fo)}
                         variant={unfinishedOnly ? 'contained' : 'outlined'}
-                        title={unfinishedOnly ? t($ => $.page.avisos.filter.unfinishedOnlyEnabled) : t($ => $.page.avisos.filter.unfinishedOnlyDisabled)}
+                        title={unfinishedOnly ? t( $ => $.page.avisos.filter.unfinishedOnlyEnabled) : t($ => $.page.avisos.filter.unfinishedOnlyDisabled)}
                         sx={{ mr: 2 }}>
                         <Icon>pending_actions</Icon>
+                    </Button>
+                    <Button
+                        onClick={() => setOwnAvisOnly(value => !value)}
+                        disabled={!currentUsername}
+                        variant={ownAvisOnly ? 'contained' : 'outlined'}
+                        title={ownAvisOnly ? t($ => $.page.avisos.filter.ownAvisOnlyEnabled) : t($ => $.page.avisos.filter.ownAvisOnlyDisabled)}
+                        sx={{ mr: 2 }}>
+                        <Icon>person</Icon>
                     </Button>
                     <IconButton
                         onClick={netejar}
@@ -82,7 +107,7 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                 formApiRef={moreFormApiRef}
                 resourceName="avis"
                 code="FILTER"
-                initialData={{ finalitzada: unfinishedOnly }}
+                initialData={{ finalitzada: unfinishedOnly, avisPropi: ownAvisOnly  }}
                 springFilterBuilder={data => springFilterBuilder.and(
                     springFilterBuilder.eq('appId', data?.appId?.id),
                     springFilterBuilder.eq('entornId', data?.entornId?.id),
@@ -94,6 +119,7 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                     data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
                     data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
                     data?.finalitzada && springFilterBuilder.eq('dataFi', null),
+                    data?.avisPropi && currentUsername && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
                 )}
                 onSpringFilterChange={onSpringFilterChange}
                 commonFieldComponentProps={{ size: 'small' }}>
@@ -141,6 +167,9 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [{
         </Typography>;
     }
 }, {
+    field: 'responsable',
+    flex: 1,
+}, {
     field: 'dataInici',
     flex: 0.5,
 }, {
@@ -148,6 +177,7 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [{
     flex: 0.5,
 }];
 const dataGridPerspectives = ['PATH'];
+const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
 const Avis = () => {
     const { t } = useTranslation();
@@ -181,6 +211,15 @@ const Avis = () => {
             ? dataGridCommonColumns.slice(0, -1)
             : dataGridCommonColumns),
     ];
+    const actions = [{
+        icon: 'open_in_new',
+        label: t($ => $.page.avisos.grid.action.obrir),
+        showInMenu: false,
+        linkTo: (row: any) => row?.url,
+        linkTarget: '_blank',
+        disabled: (row: any) => !row?.url,
+        hidden: (row: any) => !row?.url,
+    }];
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
     // Se usa el componente BasePage para evitar posibles conflictos entre la suscripción de eventos y el estado "proceed" de GridPage
     return (
@@ -190,7 +229,8 @@ const Avis = () => {
                 resourceName="avis"
                 columns={columns}
                 perspectives={dataGridPerspectives}
-                datagridApiRef={gridApiRef}
+                // datagridApiRef={gridApiRef}
+                sortModel={dataGridSortModel}
                 findDisabled={filter == null}
                 filter={filter}
                 readOnly
@@ -198,6 +238,7 @@ const Avis = () => {
                 toolbarHideQuickFilter
                 toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
                 toolbarAdditionalRow={filterElement}
+                rowAdditionalActions={actions}
                 {...treeDataGridProps}
             />
         </BasePage>

@@ -3,6 +3,7 @@ package es.caib.comanda.broker.controller;
 import es.caib.comanda.broker.dto.BrokerInfoDTO;
 import es.caib.comanda.broker.dto.MessageInfoDTO;
 import es.caib.comanda.broker.dto.QueueInfoDTO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
@@ -45,6 +46,7 @@ import static es.caib.comanda.ms.broker.model.Cues.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/broker")
+@Tag(name = "23. Broker", description = "Servei de gestió del broker")
 @PreAuthorize("hasRole(T(es.caib.comanda.base.config.BaseConfig).ROLE_ADMIN)")
 public class BrokerRestController {
 

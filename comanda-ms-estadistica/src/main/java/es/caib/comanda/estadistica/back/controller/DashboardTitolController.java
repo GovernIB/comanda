@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("dashboardTitolController")
 @RequestMapping(BaseConfig.API_PATH + "/dashboardTitols")
-@Tag(name = "DashboardTitol", description = "Servei de consulta de títols de dashboards")
+@Tag(name = "13. DashboardTitol", description = "Servei de consulta de títols de dashboards")
 public class DashboardTitolController extends BaseMutableResourceController<DashboardTitol, Long> {
 
 }

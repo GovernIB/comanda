@@ -312,13 +312,20 @@ const translationEn: translationResourcesType = {
         avisos: {
             filter: {
                 more: "More fields",
-                unfinishedOnlyDisabled: "Show only unfinished warnings (disabled)",
-                unfinishedOnlyEnabled: "Show only unfinished warnings (enabled)",
+                finished: "Finished only",
+                unfinished: "Unfinished",
+                unfinishedOnlyDisabled: "Show only unfinished notices (disabled)",
+                unfinishedOnlyEnabled: "Show only unfinished notices (enabled)",
+                ownAvisOnlyDisabled: "Show only my notices (disabled)",
+                ownAvisOnlyEnabled: "Show only my notices (enabled)",
             },
             grid: {
                 groupHeader: "Name",
                 column: {
                     appEntorn: "Application - Environment",
+                },
+                action: {
+                    obrir: "Open notice",
                 },
             }
         },
