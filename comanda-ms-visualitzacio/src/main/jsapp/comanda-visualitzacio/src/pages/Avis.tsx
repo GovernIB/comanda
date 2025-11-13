@@ -229,7 +229,7 @@ const Avis = () => {
                 resourceName="avis"
                 columns={columns}
                 perspectives={dataGridPerspectives}
-                // datagridApiRef={gridApiRef}
+                datagridApiRef={gridApiRef}
                 sortModel={dataGridSortModel}
                 findDisabled={filter == null}
                 filter={filter}
