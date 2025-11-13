@@ -16,7 +16,7 @@ import java.util.List;
 @Slf4j
 @RestController("aclEntryController")
 @RequestMapping(BaseConfig.API_PATH + "/acl/entries")
-@Tag(name = "ACL Entries", description = "Gestió de regles ACL")
+@Tag(name = "27. ACL Entries", description = "Gestió de regles ACL")
 public class AclEntryController extends BaseMutableResourceController<AclEntry, Long> {
 
     @Autowired

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping(BaseConfig.API_PATH + "/alarmaConfigs")
-@Tag(name = "AlarmaConfig", description = "Servei de gestió de configuracions d'alarmes")
+@Tag(name = "25. AlarmaConfig", description = "Servei de gestió de configuracions d'alarmes")
 public class AlarmaConfigController extends BaseMutableResourceController<AlarmaConfig, Long> {
 
 }

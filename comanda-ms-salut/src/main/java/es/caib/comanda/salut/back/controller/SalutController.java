@@ -27,7 +27,7 @@ import javax.validation.groups.Default;
 @Slf4j
 @RestController("salutController")
 @RequestMapping(BaseConfig.API_PATH + "/saluts")
-@Tag(name = "6. Salut", description = "Servei de consulta d'informació de salut")
+@Tag(name = "06. Salut", description = "Servei de consulta d'informació de salut")
 public class SalutController extends BaseReadonlyResourceController<Salut, Long> {
 
     @Autowired

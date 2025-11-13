@@ -19,7 +19,7 @@ import java.util.List;
 @Slf4j
 @RestController("aclController")
 @RequestMapping(BaseConfig.API_PATH + "/acl")
-@Tag(name = "ACL", description = "Operacions ACL")
+@Tag(name = "26. ACL", description = "Operacions ACL")
 @RequiredArgsConstructor
 public class AclController {
 
