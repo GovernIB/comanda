@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("estadisticaSimpleWidgetController")
 @RequestMapping(BaseConfig.API_PATH + "/widgetsSimple")
-@Tag(name = "Dimensio", description = "Servei de consulta de widgets simples")
+@Tag(name = "14. Widget simple", description = "Servei de consulta de widgets simples")
 public class EstadisticaSimpleWidgetController extends BaseMutableResourceController<EstadisticaSimpleWidget, Long> {
 
 }

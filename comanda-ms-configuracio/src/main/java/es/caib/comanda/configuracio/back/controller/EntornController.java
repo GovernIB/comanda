@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("entornController")
 @RequestMapping(BaseConfig.API_PATH + "/entorns")
-@Tag(name = "Entorns", description = "Servei de gestió d'entorns")
+@Tag(name = "02. Entorns", description = "Servei de gestió d'entorns")
 public class EntornController extends BaseMutableResourceController<Entorn, Long> {
 
 }

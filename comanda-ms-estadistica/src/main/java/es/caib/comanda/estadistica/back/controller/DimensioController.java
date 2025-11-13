@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("dimensioController")
 @RequestMapping(BaseConfig.API_PATH + "/dimensions")
-@Tag(name = "Dimensio", description = "Servei de consulta de dimensions")
+@Tag(name = "08. Dimensio", description = "Servei de consulta de dimensions")
 public class DimensioController extends BaseReadonlyResourceController<Dimensio, Long> {
 
 }

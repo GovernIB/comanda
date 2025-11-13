@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("integracioController")
 @RequestMapping(BaseConfig.API_PATH + "/integracions")
-@Tag(name = "Integracions", description = "Servei de gestió d'integracions")
+@Tag(name = "04. Integracions", description = "Servei de gestió d'integracions")
 public class IntegracioController extends BaseMutableResourceController<Integracio, Long> {
 
 }

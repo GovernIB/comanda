@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("cacheController")
 @RequestMapping(BaseConfig.API_PATH + "/caches")
-@Tag(name = "Cache", description = "Servei de gestió de caché")
+@Tag(name = "17. Cache", description = "Servei de gestió de caché")
 public class CacheController extends BaseMutableResourceController<ComandaCache, String> {
 
 }

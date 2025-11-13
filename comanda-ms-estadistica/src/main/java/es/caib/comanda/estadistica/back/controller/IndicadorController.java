@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("indicadorController")
 @RequestMapping(BaseConfig.API_PATH + "/indicadors")
-@Tag(name = "Indicador", description = "Servei de consulta de indicadors")
+@Tag(name = "10. Indicador", description = "Servei de consulta de indicadors")
 public class IndicadorController extends BaseMutableResourceController<Indicador, Long> {
 
 }

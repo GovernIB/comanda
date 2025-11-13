@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController("objecteController")
 @RequestMapping(BaseConfig.API_PATH + "/objectes")
-@Tag(name = "Objecte", description = "Servei de gestió d'objectes")
+@Tag(name = "21. Objecte", description = "Servei de gestió d'objectes per permisos")
 public class ObjecteController extends BaseMutableResourceController<Objecte, Long> {
 
 }

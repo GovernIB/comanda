@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController("monitorController")
 @RequestMapping(BaseConfig.API_PATH + "/monitors")
-@Tag(name = "Monitor", description = "Servei de consulta del monitor")
+@Tag(name = "22. Monitor", description = "Servei de consulta del monitor")
 public class MonitorController extends BaseMutableResourceController<Monitor, Long> {
 
     @Autowired

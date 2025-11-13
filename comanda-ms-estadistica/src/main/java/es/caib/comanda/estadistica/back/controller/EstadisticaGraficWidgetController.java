@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("estadisticaGraficWidgetController")
 @RequestMapping(BaseConfig.API_PATH + "/widgetsGrafic")
-@Tag(name = "Dimensio", description = "Servei de consulta de widgets gràfics")
+@Tag(name = "15. Widget gràfic", description = "Servei de consulta de widgets gràfics")
 public class EstadisticaGraficWidgetController extends BaseMutableResourceController<EstadisticaGraficWidget, Long> {
 
 }

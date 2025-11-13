@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController("parametreController")
 @RequestMapping(BaseConfig.API_PATH + "/parametres")
-@Tag(name = "Parametres", description = "Servei de gestió de paràmetres")
+@Tag(name = "05. Parametres", description = "Servei de gestió de paràmetres")
 public class ParametreController extends BaseMutableResourceController<Parametre, Long> {
 
 }

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController("fetController")
 @RequestMapping(BaseConfig.API_PATH + "/fets")
-@Tag(name = "Fet", description = "Servei de consulta de fets")
+@Tag(name = "07. Fet", description = "Servei de consulta de fets")
 public class FetController extends BaseMutableResourceController<Fet, Long> {
 
     @Autowired

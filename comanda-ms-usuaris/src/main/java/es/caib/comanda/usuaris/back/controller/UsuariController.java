@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController("usuariController")
 @RequestMapping(BaseConfig.API_PATH + "/usuaris")
-@Tag(name = "Usuari", description = "Servei de gestió d'usuaris")
+@Tag(name = "19. Usuari", description = "Servei de gestió d'usuaris")
 public class UsuariController extends BaseMutableResourceController<Usuari, Long> {
 
     // Mètode per obtenir un usuari per codi amb la mínima sobrecàrrega possible (per utilitzar al client feign)

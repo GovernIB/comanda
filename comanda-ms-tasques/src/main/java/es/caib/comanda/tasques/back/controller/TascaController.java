@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController("tascaController")
 @RequestMapping(BaseConfig.API_PATH + "/tasques")
-@Tag(name = "Tasca", description = "Servei de gestió de tasques")
+@Tag(name = "18. Tasca", description = "Servei de gestió de tasques")
 public class TascaController extends BaseMutableResourceController<Tasca, Long> {
 
 }
