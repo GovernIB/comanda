@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.HashMap;
@@ -40,4 +41,8 @@ public class IntegracioPeticions {
     @Builder.Default
     private Map<String, IntegracioPeticions> peticionsPerEntorn = new HashMap<>();
 
+    @AssertTrue(message = "No pot existir cap entrada amb codi (clau) null a peticionsPerEntorn")
+    private boolean isPeticionsPerEntornSenseClausNulles() {
+        return peticionsPerEntorn == null || !(peticionsPerEntorn.containsKey(null) || peticionsPerEntorn.containsKey(""));
+    }
 }

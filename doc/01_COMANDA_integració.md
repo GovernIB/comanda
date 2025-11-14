@@ -115,6 +115,10 @@ Aquesta llibreria inclou el model de dades que Comanda espera rebre per a les in
 Tambés serà necessari disposar d’un **client HTTP o JMS** per a l’enviament de la informació de Tasques i Avisos (per exemple RestTemplate i JmsTemplate).  
 Comanda disposa d’un broker de missatges JMS per rebre la informació de tasques i avisos. Al mateix temps s’ha implementat un servei REST amb la mateixa funcionalitat per si no es disposa de client JMS o si el proxy bloqueja els missatges enviats al broker.
 
+La documentació en format OpenApi de la API de tasques i avisos és accessible a:
+
+[https://\[SERVER\_PATH\]/comandaapi/interna/api-docs](https://[SERVER_PATH]/comandaapi/interna/api-docs)
+
 3. # **Salut** {#salut}
 
 Cada aplicació que es vulgui integrar amb el mòdul de Salut de comanda haurà d’implementar 2 endpoints de tipus GET. Els noms dels endpoinds son lliures, tot i que en aquest document utilitzarem com a exemple /appInfo i /salut
