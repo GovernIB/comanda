@@ -185,8 +185,12 @@ public class SalutInfoHelper {
         List<IntegracioSalut> filteredIntegracions = integracions != null ? integracions.stream()
                 .filter(i -> {
                     var violations = validateObject(i);
-                    if (!violations.isEmpty()) {
-                        log.warn("SalutIntegracio {} (salut: {}) no validat: {}", i.getCodi(), salut.getId(), violations);
+                     if (!violations.isEmpty()) {
+                         if (violations.size() == 1 && violations.stream().anyMatch(v -> "peticions.peticionsPerEntornSenseClausNulles".equals(v.getPropertyPath().toString()))) {
+                            log.warn("SalutIntegracio {} (salut: {}) peticionsPerEntorn amb claus buides!: {}", i.getCodi(), salut.getId(), violations);
+                            return true;
+                         }
+                         log.warn("SalutIntegracio {} (salut: {}) no validat: {}", i.getCodi(), salut.getId(), violations);
                         return false;
                     }
                     return true;
@@ -213,10 +217,8 @@ public class SalutInfoHelper {
                     i.getPeticions().getPeticionsPerEntorn().keySet().forEach(peticioEntornKey -> {
                         IntegracioPeticions peticioEntorn = i.getPeticions().getPeticionsPerEntorn().get(peticioEntornKey);
                         SalutIntegracioEntity salutIntegracioFilla = new SalutIntegracioEntity();
-                        salutIntegracioFilla.setCodi(peticioEntornKey);
+                        salutIntegracioFilla.setCodi((peticioEntornKey != null && !peticioEntornKey.isEmpty()) ? peticioEntornKey : "--");
                         salutIntegracioFilla.setEstat(toSalutEstat(i.getEstat()));
-//                        salutIntegracioFilla.setLatencia(i.getLatencia());
-//                        salutIntegracioFilla.setLatenciaMitjana(i.getLatencia());
                         salutIntegracioFilla.setTotalOk(peticioEntorn.getTotalOk());
                         salutIntegracioFilla.setTotalError(peticioEntorn.getTotalError());
                         salutIntegracioFilla.setTotalTempsMig(peticioEntorn.getTotalTempsMig());
