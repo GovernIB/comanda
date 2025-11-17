@@ -186,24 +186,21 @@ const AppsEntorns: React.FC = () => {
         },
     ]
     return (
-        <GridPage>
-            <MuiDataGrid
-                apiRef={apiRef}
-                title={t($ => $.page.appsEntorns.title)}
-                resourceName="entornApp"
-                staticFilter={`app.id : ${appId}`}
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                popupEditActive
-                popupEditFormContent={<AppEntornForm />}
-                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
-                formAdditionalData={{
-                    app: { id: appId },
-                }}
-                rowAdditionalActions={actions}
-            />
-        </GridPage>
+        <MuiDataGrid
+            apiRef={apiRef}
+            title={t($ => $.page.appsEntorns.title)}
+            resourceName="entornApp"
+            staticFilter={`app.id : ${appId}`}
+            columns={columns}
+            paginationActive
+            popupEditActive
+            popupEditFormContent={<AppEntornForm />}
+            popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
+            formAdditionalData={{
+                app: { id: appId },
+            }}
+            rowAdditionalActions={actions}
+        />
     );
 };
 

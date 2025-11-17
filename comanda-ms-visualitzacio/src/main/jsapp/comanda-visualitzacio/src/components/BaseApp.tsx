@@ -237,7 +237,8 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
         defaultMuiComponentProps={defaultMuiComponentProps}
-        fixedContentExpandsToAvailableHeight
+        fixedContentExpandsToAvailableHeightEnabled
+        marginsDisabled
     >
         <UserProfileFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>

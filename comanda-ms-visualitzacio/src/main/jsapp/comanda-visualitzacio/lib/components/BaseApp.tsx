@@ -50,6 +50,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     detailFieldComponent?: React.FC<DetailFieldCustomProps>;
     contentComponentSlots: ContentComponentSlots;
     fixedContentExpandsToAvailableHeight?: boolean;
+    marginsDisabled?: boolean;
 };
 
 export type BaseAppContentComponentProps = React.PropsWithChildren & {
@@ -275,10 +276,12 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         detailFieldComponent,
         contentComponentSlots,
         fixedContentExpandsToAvailableHeight,
+        marginsDisabled: marginsDisabledProp,
         children,
     } = props;
     const { offline } = useResourceApiContext();
-    const [marginsDisabled, setMarginsDisabled] = React.useState<boolean>(false);
+    const [marginsDisabled, setMarginsDisabled] =
+        React.useState<boolean>(marginsDisabledProp ?? false);
     const [contentExpandsToAvailableHeight, setContentExpandsToAvailableHeight] =
         React.useState<boolean>(fixedContentExpandsToAvailableHeight ?? false);
     const getLinkComponent = () => linkComponent;
@@ -306,7 +309,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const context = {
         getFormFieldComponent,
         getDetailFieldComponent,
-        setMarginsDisabled,
+        setMarginsDisabled: marginsDisabledProp == null ? setMarginsDisabled : emptyFunction,
         contentExpandsToAvailableHeight,
         setContentExpandsToAvailableHeight: fixedContentExpandsToAvailableHeight == null ? setContentExpandsToAvailableHeight : emptyFunction,
         getLinkComponent,
