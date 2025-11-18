@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     GridPage,
-    MuiDataGrid,
     useMuiContentDialog,
     useCloseDialogButtons,
     useAuthContext,
@@ -25,6 +24,7 @@ import {
 } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
+import { DataGridPro } from '@mui/x-data-grid-pro';
 
 // Types for queue and message data
 interface QueueInfo {
@@ -410,17 +410,17 @@ const QueueMessages: React.FC = () => {
                 </Box>
 
                 {/* Messages grid */}
-                <MuiDataGrid
+                <DataGridPro
                     rows={messages}
                     columns={columns}
                     getRowId={(row) => row.messageID}
                     onRowClick={(params) => handleShowMessageDetails(params.row)}
                     autoHeight
                     disableColumnMenu
-                    disableSelectionOnClick
+                    // disableSelectionOnClick
                     hideFooter={messages.length <= 10}
-                    pageSize={10}
-                    rowsPerPageOptions={[10]}
+                    // pageSize={10}
+                    // rowsPerPageOptions={[10]}
                     sx={{ height: 400 }}
                 />
 

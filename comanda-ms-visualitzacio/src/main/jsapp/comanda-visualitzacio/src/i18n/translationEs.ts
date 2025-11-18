@@ -1,6 +1,15 @@
 import type { translationResourcesType } from './translationCa.ts';
 
 const translationEs: translationResourcesType = {
+    common: {
+        yes: "Sí",
+        no: "No",
+        none: "Ninguno",
+        loading: "Cargando...",
+        delete: "Eliminar",
+        cancel: "Cancelar",
+        confirm: "Confirmar",
+    },
     enum: {
         appEstat: {
             UP: {

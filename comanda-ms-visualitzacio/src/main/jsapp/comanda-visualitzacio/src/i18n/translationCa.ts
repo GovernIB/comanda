@@ -1,6 +1,15 @@
 export type translationResourcesType = typeof translationCa;
 
 const translationCa = {
+    common: {
+        yes: "Sí",
+        no: "No",
+        none: "Cap",
+        loading: "Carregant...",
+        delete: "Eliminar",
+        cancel: "Cancelar",
+        confirm: "Confirmar",
+    },
     enum: {
         appEstat: {
             UP: {
