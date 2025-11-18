@@ -185,7 +185,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
     const [filterData, setFilterData] = useState<any>(null);
     const [filterString, setFilterString] = useState<string | null>(null);
 
-    const onAddClick = (id) => {
+    const onAddClick = (id: any) => {
         onAdd(id, filterData.entorn.id);
     };
 
@@ -217,7 +217,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
             >
                 <EntornAppFilter
                     onDataChange={setFilterData}
-                    onSpringFilterChange={setFilterString}
+                    onSpringFilterChange={(filter) => setFilterString(filter ?? null)}
                     initialData={initialData}
                 />
                 {filterData?.app && filterData?.entorn && (
