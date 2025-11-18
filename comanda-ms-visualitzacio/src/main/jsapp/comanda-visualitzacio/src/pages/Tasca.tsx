@@ -8,7 +8,6 @@ import {
     useFormApiRef,
     useFilterApiRef,
     MuiDataGridColDef,
-    BasePage,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -294,9 +293,8 @@ const Tasca = () => {
     }];
     const filterElement = <TascaFilter onSpringFilterChange={setFilter}/>;
 
-    // Se usa el componente BasePage para evitar posibles conflictos entre la suscripción de eventos y el estado "proceed" de GridPage
     return (
-        <BasePage expandHeight style={{ height: '100%' }}>
+        <Box sx={{ height: '100%' }}>
             <MuiDataGrid
                 title={t($ => $.menu.tasca)}
                 datagridApiRef={gridApiRef}
@@ -314,7 +312,7 @@ const Tasca = () => {
                 rowAdditionalActions={actions}
                 {...treeDataGridProps}
             />
-        </BasePage>
+        </Box>
     );
 }
 

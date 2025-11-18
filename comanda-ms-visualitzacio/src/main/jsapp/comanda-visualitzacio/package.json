@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite --open",
+        "dev": "vite",
         "build": "tsc -b && vitest --run && vite build",
         "build-jboss": "tsc && vitest --run && vite build --base=/comandaback/",
         "test": "vitest",
@@ -43,6 +43,7 @@
     "devDependencies": {
         "@eslint/js": "^9.36.0",
         "@types/lodash": "4.17.20",
+        "@types/node": "^24.10.1",
         "@types/react": "^19.2.2",
         "@types/react-dom": "^19.2.2",
         "@types/react-grid-layout": "^1.3.5",
