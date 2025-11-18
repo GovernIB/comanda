@@ -131,7 +131,7 @@ const addWidgetDialogGridColumns = [
 const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
     const { t } = useTranslation();
     return (
-        <MuiGrid
+        <MuiDataGrid
             resourceName={resourceName}
             title={title}
             columns={addWidgetDialogGridColumns}
