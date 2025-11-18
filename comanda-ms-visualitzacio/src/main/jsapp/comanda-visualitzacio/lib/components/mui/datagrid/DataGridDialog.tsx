@@ -51,19 +51,27 @@ export const useDataGridDialog: UseDataGridDialogFn = (
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string>();
     const [height, setHeight] = React.useState<number>();
-    const [dialogComponentProps, setDialogComponentProps] = React.useState<any>(defaultDialogComponentProps);
-    const [dataGridComponentProps, setDataGridComponentProps] = React.useState<any>(defaultDataGridComponentProps);
+    const [dialogComponentProps, setDialogComponentProps] = React.useState<any>(
+        defaultDialogComponentProps
+    );
+    const [dataGridComponentProps, setDataGridComponentProps] = React.useState<any>(
+        defaultDataGridComponentProps
+    );
     const [resolveFn, setResolveFn] = React.useState<(value?: any) => void>();
     const [rejectFn, setRejectFn] = React.useState<(value: any) => void>();
     const showDialog = (args?: DataGridDialogShowArgs) => {
         setTitle(args?.title);
         setHeight(args?.height);
-        setDialogComponentProps(args?.dialogComponentProps != null ?
-            { ...defaultDialogComponentProps, ...args?.dialogComponentProps } :
-            defaultDialogComponentProps);
-        setDataGridComponentProps(args?.dataGridComponentProps != null ?
-            { ...defaultDataGridComponentProps, ...args?.dataGridComponentProps } :
-            defaultDataGridComponentProps);
+        setDialogComponentProps(
+            args?.dialogComponentProps != null
+                ? { ...defaultDialogComponentProps, ...args?.dialogComponentProps }
+                : defaultDialogComponentProps
+        );
+        setDataGridComponentProps(
+            args?.dataGridComponentProps != null
+                ? { ...defaultDataGridComponentProps, ...args?.dataGridComponentProps }
+                : defaultDataGridComponentProps
+        );
         setOpen(true);
         return new Promise<string>((resolve, reject) => {
             setResolveFn(() => resolve);

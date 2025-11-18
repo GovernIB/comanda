@@ -88,12 +88,16 @@ export const useFormDialog: UseFormDialogFn = (
         setFormContent(args?.formContent ?? defaultFormContent);
         setAdditionalData(args?.additionalData ?? null);
         setInitOnChangeRequest(args?.initOnChangeRequest ?? initOnChangeRequestProp);
-        setDialogComponentProps(args?.dialogComponentProps != null ?
-            { ...defaultDialogComponentProps, ...args?.dialogComponentProps } :
-            defaultDialogComponentProps);
-        setFormComponentProps(args?.formComponentProps != null ?
-            { ...otherFormComponentProps, ...args?.formComponentProps } :
-            otherFormComponentProps);
+        setDialogComponentProps(
+            args?.dialogComponentProps != null
+                ? { ...defaultDialogComponentProps, ...args?.dialogComponentProps }
+                : defaultDialogComponentProps
+        );
+        setFormComponentProps(
+            args?.formComponentProps != null
+                ? { ...otherFormComponentProps, ...args?.formComponentProps }
+                : otherFormComponentProps
+        );
         setOpen(true);
         setSubmitReturnedContent(undefined);
         return new Promise<any>((resolve, reject) => {

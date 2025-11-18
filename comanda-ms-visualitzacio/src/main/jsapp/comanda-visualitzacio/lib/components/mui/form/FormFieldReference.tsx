@@ -98,7 +98,7 @@ const AdvancedSearchDialog: React.FC<AdvancedSearchDialogProps> = (props) => {
         {
             fullWidth: true,
             maxWidth: 'md',
-            ...dialogComponentProps
+            ...dialogComponentProps,
         }
     );
     const show = () => {
@@ -116,7 +116,7 @@ const AdvancedSearchDialog: React.FC<AdvancedSearchDialogProps> = (props) => {
                 sortModel,
                 namedQueries,
                 perspectives,
-            }
+            },
         });
     };
     apiRef.current = { show };
