@@ -1,255 +1,137 @@
 databaseChangeLog:
 - changeSet:
-    id: acl-init-table-1
+    id: acl_init_table-1
     author: limit
     changes:
-      - createTable:
-          tableName: ${db_prefix}acl_class
-          columns:
-            - column:
-                name: id
-                type: bigint
-                constraints:
-                  primaryKey: true
-                  primaryKeyName: ${db_prefix}acl_class_pk
-                  nullable: false
-            - column:
-                name: class
-                type: varchar(255 ${varcharUnit})
-                constraints:
-                  nullable: false
-
-      - createTable:
-          tableName: ${db_prefix}acl_sid
-          columns:
-            - column:
-                name: id
-                type: bigint
-                constraints:
-                  primaryKey: true
-                  primaryKeyName: ${db_prefix}acl_sid_pk
-                  nullable: false
-            - column:
-                name: principal
-                type: boolean
-                constraints:
-                  nullable: false
-            - column:
-                name: sid
-                type: varchar(255 ${varcharUnit})
-                constraints:
-                  nullable: false
-
-      - createTable:
-          tableName: ${db_prefix}acl_object_identity
-          columns:
-            - column:
-                name: id
-                type: bigint
-                constraints:
-                  primaryKey: true
-                  primaryKeyName: ${db_prefix}acl_obj_id_pk
-                  nullable: false
-            - column:
-                name: object_id_class
-                type: bigint
-                constraints:
-                  nullable: false
-            - column:
-                name: object_id_identity
-                type: bigint
-                constraints:
-                  nullable: false
-            - column:
-                name: parent_object
-                type: bigint
-            - column:
-                name: owner_sid
-                type: bigint
-            - column:
-                name: entries_inheriting
-                type: boolean
-                constraints:
-                  nullable: false
-
-      - createTable:
-          tableName: ${db_prefix}acl_entry
-          columns:
-            - column:
-                name: id
-                type: bigint
-                constraints:
-                  primaryKey: true
-                  primaryKeyName: ${db_prefix}acl_entry_pk
-                  nullable: false
-            - column:
-                name: acl_object_identity
-                type: bigint
-                constraints:
-                  nullable: false
-            - column:
-                name: ace_order
-                type: integer
-                constraints:
-                  nullable: false
-            - column:
-                name: sid
-                type: bigint
-                constraints:
-                  nullable: false
-            - column:
-                name: mask
-                type: integer
-                constraints:
-                  nullable: false
-            - column:
-                name: granting
-                type: boolean
-                constraints:
-                  nullable: false
-            - column:
-                name: audit_success
-                type: boolean
-                constraints:
-                  nullable: false
-            - column:
-                name: audit_failure
-                type: boolean
-                constraints:
-                  nullable: false
-
-      - createTable:
-          tableName: ${db_prefix}acl_entry_map
-          columns:
-            - column:
-                name: id
-                type: BIGINT
-                autoIncrement: true
-                constraints:
-                  primaryKey: true
-                  nullable: false
-                  primaryKeyName: ${db_prefix}acl_entry_map_pk
-            - column:
-                name: subject_type
-                type: VARCHAR(16 ${varcharUnit})
-                constraints:
-                  nullable: false
-            - column:
-                name: subject_value
-                type: VARCHAR(128 ${varcharUnit})
-                constraints:
-                  nullable: false
-            - column:
-                name: resource_type
-                type: VARCHAR(32 ${varcharUnit})
-                constraints:
-                  nullable: false
-            - column:
-                name: resource_id
-                type: BIGINT
-                constraints:
-                  nullable: false
-            - column:
-                name: action
-                type: VARCHAR(16 ${varcharUnit})
-                constraints:
-                  nullable: false
-            - column:
-                name: effect
-                type: VARCHAR(8 ${varcharUnit})
-                constraints:
-                  nullable: false
-            - column:
-                name: created_by
-                type: VARCHAR(64 ${varcharUnit})
-                constraints:
-                  nullable: false
-            - column:
-                name: created_date
-                type: TIMESTAMP
-                constraints:
-                  nullable: false
-            - column:
-                name: lastmod_by
-                type: VARCHAR(64 ${varcharUnit})
-            - column:
-                name: lastmod_date
-                type: TIMESTAMP
-            - column:
-                name: v
-                type: BIGINT
-
-      # Oracle-specific sequences and triggers for Spring Security ACL compatibility
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_object_identity_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: object_id_class
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: object_id_identity
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            name: parent_object
+            type: BIGINT
+        - column:
+            name: owner_sid
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: entries_inheriting
+            type: BOOLEAN
+        tableName: ${db_prefix}acl_object_identity
 - changeSet:
-    id: acl-init-seq-1
+    id: acl_init_table-2
     author: limit
     changes:
-      # acl_class
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE SEQUENCE ${db_prefix}acl_class_seq START WITH 1 INCREMENT BY 1 NOCACHE
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE OR REPLACE TRIGGER ${db_prefix}acl_class_bi
-            BEFORE INSERT ON ${db_prefix}acl_class
-            FOR EACH ROW
-            WHEN (NEW.id IS NULL)
-            BEGIN
-              SELECT ${db_prefix}acl_class_seq.NEXTVAL INTO :NEW.id FROM dual;
-            END;
-      # acl_sid
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE SEQUENCE ${db_prefix}acl_sid_seq START WITH 1 INCREMENT BY 1 NOCACHE
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE OR REPLACE TRIGGER ${db_prefix}acl_sid_bi
-            BEFORE INSERT ON ${db_prefix}acl_sid
-            FOR EACH ROW
-            WHEN (NEW.id IS NULL)
-            BEGIN
-              SELECT ${db_prefix}acl_sid_seq.NEXTVAL INTO :NEW.id FROM dual;
-            END;
-      # acl_object_identity
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE SEQUENCE ${db_prefix}acl_object_identity_seq START WITH 1 INCREMENT BY 1 NOCACHE
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE OR REPLACE TRIGGER ${db_prefix}acl_object_identity_bi
-            BEFORE INSERT ON ${db_prefix}acl_object_identity
-            FOR EACH ROW
-            WHEN (NEW.id IS NULL)
-            BEGIN
-              SELECT ${db_prefix}acl_object_identity_seq.NEXTVAL INTO :NEW.id FROM dual;
-            END;
-      # acl_entry
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE SEQUENCE ${db_prefix}acl_entry_seq START WITH 1 INCREMENT BY 1 NOCACHE
-      - sql:
-          dbms: oracle
-          splitStatements: false
-          sql: |
-            CREATE OR REPLACE TRIGGER ${db_prefix}acl_entry_bi
-            BEFORE INSERT ON ${db_prefix}acl_entry
-            FOR EACH ROW
-            WHEN (NEW.id IS NULL)
-            BEGIN
-              SELECT ${db_prefix}acl_entry_seq.NEXTVAL INTO :NEW.id FROM dual;
-            END;
-
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_sid_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: principal
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: sid
+            type: VARCHAR(100 ${varcharUnit})
+        tableName: ${db_prefix}acl_sid
+- changeSet:
+    id: acl_init_table-3
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_entry_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: acl_object_identity
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: ace_order
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: sid
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: mask
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: granting
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: audit_success
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: audit_failure
+            type: BOOLEAN
+        tableName: ${db_prefix}acl_entry
+- changeSet:
+    id: acl_init_table-4
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_class_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: class
+            type: VARCHAR(100 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: class_id_type
+            type: VARCHAR(255 ${varcharUnit})
+        tableName: ${db_prefix}acl_class

@@ -2,7 +2,7 @@ import * as React from 'react';
 import MuiToolbar from '@mui/material/Toolbar';
 import {
     BasePage,
-    MuiGrid,
+    MuiDataGrid,
     useBaseAppContext,
     useResourceApiService,
     MuiFilter,
@@ -344,7 +344,7 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                 width: '900px',
             }}
         >
-            <MuiGrid
+            <MuiDataGrid
                 title={title}
                 apiRef={gridApiRef}
                 height={500}

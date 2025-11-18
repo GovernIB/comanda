@@ -391,6 +391,7 @@ const translationEs: translationResourcesType = {
                 toolbarActiva: {
                     activar: "Activar",
                     desactivar: "Desactivar",
+                    permisos: "Permisos",
                     ok: "La acción se ha ejecutado correctamente",
                 }
             }

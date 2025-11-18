@@ -391,6 +391,7 @@ const translationCa = {
                 toolbarActiva: {
                     activar: "Activar",
                     desactivar: "Desactivar",
+                    permisos: "Permisos",
                     ok: "L'acció s'ha executat correctament",
                 }
             }

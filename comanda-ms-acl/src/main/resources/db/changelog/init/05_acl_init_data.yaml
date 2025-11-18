@@ -1,4 +1,0 @@
-databaseChangeLog:
-- changeSet:
-    id: acl-init-data-1
-    author: limit

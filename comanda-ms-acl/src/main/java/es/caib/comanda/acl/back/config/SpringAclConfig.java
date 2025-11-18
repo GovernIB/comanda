@@ -26,7 +26,7 @@ import java.sql.DatabaseMetaData;
  * Configuració de Spring Security ACL com a motor intern.
  */
 @Slf4j
-@Configuration
+//@Configuration
 //@Profile("!back")
 public class SpringAclConfig {
 

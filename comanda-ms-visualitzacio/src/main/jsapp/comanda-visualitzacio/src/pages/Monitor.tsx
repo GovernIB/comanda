@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     MuiFilter,
     FormField,
     dateFormatLocale,
@@ -182,7 +182,7 @@ const Monitors: React.FC = () => {
     };
     return (
         <GridPage>
-            <MuiGrid
+            <MuiDataGrid
                 title={t($ => $.page.monitors.title)}
                 toolbarAdditionalRow={
                     <> <MonitorFilter></MonitorFilter>

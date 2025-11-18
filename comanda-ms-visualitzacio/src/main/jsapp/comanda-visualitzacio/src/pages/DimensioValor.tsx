@@ -7,7 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     FormField,
@@ -118,7 +118,7 @@ const DimensioValor: React.FC = () => {
 
     return (
         <GridPage>
-            <MuiGrid
+            <MuiDataGrid
                 title={`Valors dimensió ${dimensionName ?? ''}`}
                 resourceName="dimensioValor"
                 columns={columns}

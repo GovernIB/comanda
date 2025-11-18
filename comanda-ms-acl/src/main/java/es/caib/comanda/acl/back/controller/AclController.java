@@ -1,20 +1,11 @@
 package es.caib.comanda.acl.back.controller;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.client.model.acl.AclCheckRequest;
-import es.caib.comanda.client.model.acl.AclCheckResponse;
-import es.caib.comanda.acl.logic.intf.service.AclEntryService;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Slf4j
 @RestController("aclController")
@@ -23,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AclController {
 
-    private final AclEntryService aclEntryService;
+    /*private final AclEntryService aclEntryService;
 
     @Operation(summary = "Comprova si un subjecte té permís sobre un recurs")
     @PostMapping("/check")
@@ -51,5 +42,6 @@ public class AclController {
             }
         }
         return new AclCheckResponse(allowed);
-    }
+    }*/
+
 }

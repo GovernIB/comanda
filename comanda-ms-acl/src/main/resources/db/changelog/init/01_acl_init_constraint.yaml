@@ -1,54 +1,97 @@
 databaseChangeLog:
 - changeSet:
-    id: acl-init-constraint-1
+    id: acl_init_constraint-1
     author: limit
     changes:
-      - addUniqueConstraint:
-          tableName: ${db_prefix}acl_sid
-          columnNames: principal, sid
-          constraintName: ${db_prefix}acl_sid_principal_sid_uk
-
-      - addUniqueConstraint:
-          tableName: ${db_prefix}acl_object_identity
-          columnNames: object_id_class, object_id_identity
-          constraintName: ${db_prefix}acl_obj_id_uk
-      - addForeignKeyConstraint:
-          baseTableName: ${db_prefix}acl_object_identity
-          baseColumnNames: object_id_class
-          constraintName: ${db_prefix}acl_obj_id_class_fk
-          referencedTableName: ${db_prefix}acl_class
-          referencedColumnNames: id
-          onDelete: CASCADE
-      - addForeignKeyConstraint:
-          baseTableName: ${db_prefix}acl_object_identity
-          baseColumnNames: parent_object
-          constraintName: ${db_prefix}acl_obj_id_parent_fk
-          referencedTableName: ${db_prefix}acl_object_identity
-          referencedColumnNames: id
-          onDelete: CASCADE
-      - addForeignKeyConstraint:
-          baseTableName: ${db_prefix}acl_object_identity
-          baseColumnNames: owner_sid
-          constraintName: ${db_prefix}acl_obj_id_owner_fk
-          referencedTableName: ${db_prefix}acl_sid
-          referencedColumnNames: id
-          onDelete: SET NULL
-
-      - addForeignKeyConstraint:
-          baseTableName: ${db_prefix}acl_entry
-          baseColumnNames: acl_object_identity
-          constraintName: ${db_prefix}acl_entry_obj_fk
-          referencedTableName: ${db_prefix}acl_object_identity
-          referencedColumnNames: id
-          onDelete: CASCADE
-      - addForeignKeyConstraint:
-          baseTableName: ${db_prefix}acl_entry
-          baseColumnNames: sid
-          constraintName: ${db_prefix}acl_entry_sid_fk
-          referencedTableName: ${db_prefix}acl_sid
-          referencedColumnNames: id
-          onDelete: CASCADE
-      - addUniqueConstraint:
-          tableName: ${db_prefix}acl_entry
-          columnNames: acl_object_identity, ace_order
-          constraintName: ${db_prefix}acl_entry_identity_order_uk
+    - addForeignKeyConstraint:
+        baseColumnNames: parent_object
+        baseTableName: ${db_prefix}acl_object_identity
+        constraintName: ${db_prefix}acloid_acloid_fk_1
+        referencedColumnNames: id
+        referencedTableName: ${db_prefix}acl_object_identity
+        validate: true
+- changeSet:
+    id: acl_init_constraint-2
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        constraintName: ${db_prefix}aclentry_acloid_fk
+        baseTableName: ${db_prefix}acl_entry
+        baseColumnNames: acl_object_identity
+        referencedTableName: ${db_prefix}acl_object_identity
+        referencedColumnNames: id
+        validate: true
+- changeSet:
+    id: acl_init_constraint-3
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        constraintName: ${db_prefix}aclentry_aclsid_fk
+        baseTableName: ${db_prefix}acl_entry
+        baseColumnNames: sid
+        referencedTableName: ${db_prefix}acl_sid
+        referencedColumnNames: id
+        validate: true
+- changeSet:
+    id: acl_init_constraint-4
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        constraintName: ${db_prefix}acloid_aclclass_fk_2
+        baseTableName: ${db_prefix}acl_object_identity
+        baseColumnNames: object_id_class
+        referencedTableName: ${db_prefix}acl_class
+        referencedColumnNames: id
+        validate: true
+- changeSet:
+    id: acl_init_constraint-5
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        constraintName: ${db_prefix}acloid_aclsid_fk_3
+        baseTableName: ${db_prefix}acl_object_identity
+        baseColumnNames: owner_sid
+        referencedTableName: ${db_prefix}acl_sid
+        referencedColumnNames: id
+        validate: true
+- changeSet:
+    id: acl_init_constraint-6
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        constraintName: ${db_prefix}acloid_uk
+        tableName: ${db_prefix}acl_object_identity
+        columnNames: object_id_class, object_id_identity
+- changeSet:
+    id: acl_init_constraint-7
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        constraintName: ${db_prefix}aclsid_uk
+        tableName: ${db_prefix}acl_sid
+        columnNames: sid, principal
+- changeSet:
+    id: acl_init_constraint-8
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        constraintName: ${db_prefix}aclentry_uk
+        tableName: ${db_prefix}acl_entry
+        columnNames: acl_object_identity, ace_order
+- changeSet:
+    id: acl_init_constraint-9
+    author: limit
+    changes:
+    - addUniqueConstraint:
+        constraintName: ${db_prefix}aclclass_uk
+        tableName: ${db_prefix}acl_class
+        columnNames: class
+-  changeSet:
+    id: acl_init_constraint-14
+    author: limit
+    changes:
+    - sqlFile:
+        dbms: oracle
+        splitStatements: false
+        path: scripts/oracle_current_value_fn.sql
+        relativeToChangelogFile: true

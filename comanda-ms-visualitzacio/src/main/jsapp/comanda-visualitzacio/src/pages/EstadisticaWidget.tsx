@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
 } from 'reactlib';
 import { Box, Tab, Tabs } from '@mui/material';
 import EstadisticaSimpleWidgetForm  from "../components/estadistiques/EstadisticaSimpleWidgetForm";
@@ -29,7 +29,7 @@ const defaultPopupEditFormDialogComponentProps = { fullWidth: true, maxWidth: 'x
 const EstadisticaSimpleWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
     return (
-        <MuiGrid
+        <MuiDataGrid
             title={t($ => $.page.widget.simple.title)}
             resourceName="estadisticaSimpleWidget"
             columns={columns}
@@ -46,7 +46,7 @@ const EstadisticaSimpleWidgetGrid: React.FC = () => {
 const EstadisticaGraficWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
     return (
-        <MuiGrid
+        <MuiDataGrid
             title={t($ => $.page.widget.grafic.title)}
             resourceName="estadisticaGraficWidget"
             columns={columns}
@@ -63,7 +63,7 @@ const EstadisticaGraficWidgetGrid: React.FC = () => {
 const EstadisticaTaulaWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
     return (
-        <MuiGrid
+        <MuiDataGrid
             title={t($ => $.page.widget.taula.title)}
             resourceName="estadisticaTaulaWidget"
             columns={columns}

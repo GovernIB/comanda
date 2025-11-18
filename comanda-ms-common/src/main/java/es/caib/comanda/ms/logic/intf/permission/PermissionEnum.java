@@ -33,7 +33,6 @@ public enum PermissionEnum {
 		case CREATE: return ExtendedPermission.CREATE;
 		case DELETE: return ExtendedPermission.DELETE;
 		case ADMINISTRATION: return ExtendedPermission.ADMINISTRATION;
-		case SYNCHRONIZATION: return ExtendedPermission.SYNCHRONIZATION;
 		case PERM0: return ExtendedPermission.PERM0;
 		case PERM1: return ExtendedPermission.PERM1;
 		case PERM2: return ExtendedPermission.PERM2;
@@ -59,8 +58,6 @@ public enum PermissionEnum {
 			return DELETE;
 		} else if (ExtendedPermission.ADMINISTRATION.equals(permission)) {
 			return ADMINISTRATION;
-		} else if (ExtendedPermission.SYNCHRONIZATION.equals(permission)) {
-			return SYNCHRONIZATION;
 		} else if (ExtendedPermission.PERM0.equals(permission)) {
 			return PERM0;
 		} else if (ExtendedPermission.PERM1.equals(permission)) {

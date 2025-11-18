@@ -6,7 +6,7 @@ import {
     DashboardReactGridLayout,
     useMapDashboardItems,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
-import { BasePage, MuiGrid, useCloseDialogButtons, useResourceApiService } from 'reactlib';
+import { BasePage, MuiDataGrid, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -50,7 +50,7 @@ function useDashboardSelect(currentDashboardId: any) {
                     width: '600px',
                 }}
             >
-                <MuiGrid
+                <MuiDataGrid
                     title={t($ => $.page.dashboards.action.select.title)}
                     resourceName="dashboard"
                     columns={columns}

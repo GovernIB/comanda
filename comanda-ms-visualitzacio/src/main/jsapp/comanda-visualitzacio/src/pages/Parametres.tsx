@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
   GridPage,
-  MuiGrid,
+  MuiDataGrid,
   FormField,
   useCloseDialogButtons,
   useMuiContentDialog,
@@ -211,7 +211,7 @@ const ParametresGrid: React.FC<{
 
   return (
     <>
-      <MuiGrid
+      <MuiDataGrid
         title={t($ => $.page.parametres.title)}
         resourceName="parametre"
         columns={columns}

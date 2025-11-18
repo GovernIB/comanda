@@ -23,13 +23,10 @@ export { DetailPage } from './components/DetailPage';
 
 export {
     MuiDataGrid,
-    /**
-     * @deprecated use MuiDataGrid instead
-     */
-    MuiDataGrid as MuiGrid,
     useMuiDataGridApiRef,
     useMuiDataGridApiContext,
 } from './components/mui/datagrid/MuiDataGrid';
+export { DataGridDialog as MuiDataGridDialog } from './components/mui/datacommon/DataGridDialog';
 export { MuiDataList } from './components/mui/datalist/MuiDataList';
 export { MuiForm } from './components/mui/form/MuiForm';
 export { DataFormDialog as MuiFormDialog } from './components/mui/datacommon/DataFormDialog';
@@ -80,6 +77,7 @@ export type { DialogButton } from './components/BaseAppContext';
 export type { MenuEntry } from './components/mui/Menu';
 export type { MuiDataGridProps, MuiDataGridColDef } from './components/mui/datagrid/MuiDataGrid';
 export type { MuiDataGridApi, MuiDataGridApiRef } from './components/mui/datagrid/DataGridContext';
+export type { DataGridDialogApi as MuiDataGridDialogApi } from './components/mui/datacommon/DataGridDialog';
 export type { MuiFormProps } from './components/mui/form/MuiForm';
 export type { FormTabsValue } from './components/mui/form/MuiFormTabs';
 export type { ActionReportCustomButtonProps as MuiActionReportCustomButtonProps } from './components/mui/ActionReportButton';

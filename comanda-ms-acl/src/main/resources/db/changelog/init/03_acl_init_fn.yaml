@@ -1,0 +1,10 @@
+databaseChangeLog:
+-  changeSet:
+    id: acl_init_fn-1
+    author: limit
+    changes:
+    - sqlFile:
+        dbms: oracle
+        splitStatements: false
+        path: scripts/oracle_current_value_fn.sql
+        relativeToChangelogFile: true

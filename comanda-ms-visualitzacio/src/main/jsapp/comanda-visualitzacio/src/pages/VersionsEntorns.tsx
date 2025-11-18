@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { GridPage, MuiGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib';
+import { GridPage, MuiDataGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib';
 import { Chip } from '@mui/material';
 
 const toSortedVersions = (versions: string[]) =>
@@ -82,7 +82,7 @@ const Entorns: React.FC = () => {
 
     return (
         <GridPage disableMargins>
-            <MuiGrid
+            <MuiDataGrid
                 title={t($ => $.page.versionsEntorns.title)}
                 resourceName="app"
                 columns={columns}

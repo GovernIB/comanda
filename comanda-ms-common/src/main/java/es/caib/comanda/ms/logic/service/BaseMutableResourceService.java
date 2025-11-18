@@ -43,7 +43,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 
 	@Override
 	public R newResourceInstance() {
-		log.trace("Creating new resource instance"); // log canviat a trace per a evitar omplir els logs de missatges newResourceInstance
+		log.debug("Creating new resource instance");
 		return newClassInstance(getResourceClass());
 	}
 
@@ -58,13 +58,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		Map<String, Persistable<?>> referencedEntities = resourceReferenceToEntityHelper.getReferencedEntitiesForResource(
 				resource,
 				getEntityClass());
-		E entity = resourceEntityMappingHelper.resourceToEntity(
-				resource,
-				pk,
-				getEntityClass(),
-				referencedEntities);
+		E entity = resourceToEntity(resource, pk, referencedEntities);
 		beforeCreateEntity(entity, resource, answers);
-		resourceEntityMappingHelper.updateEntityWithResource(entity, resource, referencedEntities);
+		updateEntityWithResource(entity, resource, referencedEntities);
 		beforeCreateSave(entity, resource, answers);
 		boolean anyOrderChanged = reorderIfReorderable(
 				entity,
@@ -72,15 +68,10 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 				null,
 				true,
 				false);
-		E saved = saveFlushAndRefresh(entity);
+		E saved = entitySaveFlushAndRefresh(entity);
 		fieldFilesSave(resource, saved);
 		afterCreateSave(saved, resource, answers, anyOrderChanged);
-		entityRepository.detach(saved);
-		R response = resourceEntityMappingHelper.entityToResource(saved, getResourceClass());
-		E merged = entityRepository.merge(saved);
-		afterConversion(merged, response);
-		afterCreate(merged, response, answers);
-		return response;
+		return entityDetachConvertAndMerge(saved, answers, true);
 	}
 
 	@Override
@@ -91,16 +82,16 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
 		log.debug("Updating resource (id={}, resource={})", id, resource);
 		completeResource(resource);
-		E entity = getEntity(id, null);
+		E entity = getEntity(id);
 		ID reorderPreviousParentId = reorderGetParentId(entity);
 		Long reorderResourceSequence = reorderGetSequenceFromResourceOrEntity(resource, entity);
 		beforeUpdateEntity(entity, resource, answers);
 		Map<String, Persistable<?>> referencedEntities = resourceReferenceToEntityHelper.getReferencedEntitiesForResource(
 				resource,
 				getEntityClass());
-		resourceEntityMappingHelper.updateEntityWithResource(entity, resource, referencedEntities);
+		updateEntityWithResource(entity, resource, referencedEntities);
 		beforeUpdateSave(entity, resource, answers);
-		E saved = saveFlushAndRefresh(entity);
+		E saved = entitySaveFlushAndRefresh(entity);
 		boolean anyOrderChanged = reorderIfReorderable(
 				saved,
 				reorderResourceSequence,
@@ -109,12 +100,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 				false);
 		fieldFilesSave(resource, saved);
 		afterUpdateSave(saved, resource, answers, anyOrderChanged);
-		entityRepository.detach(saved);
-		R response = resourceEntityMappingHelper.entityToResource(saved, getResourceClass());
-		E merged = entityRepository.merge(saved);
-		afterConversion(merged, response);
-		afterUpdate(merged, response, answers);
-		return response;
+		return entityDetachConvertAndMerge(saved, answers, false);
 	}
 
 	@Override
@@ -123,9 +109,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			ID id,
 			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotFoundException {
 		log.debug("Deleting resource (id={})", id);
-		E entity = getEntity(id, null);
+		E entity = getEntity(id);
 		beforeDelete(entity, answers);
-		entityRepository.delete(entity);
+		entityRepositoryDelete(entity);
 		reorderIfReorderable(
 				entity,
 				null,
@@ -133,7 +119,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 				true,
 				true);
 		fieldFilesDelete(entity);
-		entityRepository.flush();
+		entityRepositoryFlush();
 		afterDelete(entity, answers);
 	}
 
@@ -172,7 +158,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		if (executor != null) {
 			E entity = null;
 			if (id != null) {
-				entity = getEntity(id, null);
+				entity = getEntity(id);
 			}
 			try {
 				return executor.exec(code, entity, params);
@@ -357,7 +343,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		ID pk = getPkFromResource(resource);
 		// Si la pk no és null comprova si el recurs ja existeix
 		if (pk != null) {
-			Optional<E> existingEntity = entityRepository.findById(pk);
+			Optional<E> existingEntity = entityRepositoryFindOne(pk);
 			if (existingEntity.isPresent()) {
 				throw new ResourceAlreadyExistsException(
 						resource.getClass(),
@@ -367,8 +353,27 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return pk;
 	}
 
+
+	protected E resourceToEntity(
+			R resource,
+			ID pk,
+			Map<String, Persistable<?>> referencedEntities) {
+		return resourceEntityMappingHelper.resourceToEntity(
+				resource,
+				pk,
+				getEntityClass(),
+				referencedEntities);
+	}
+
+	protected void updateEntityWithResource(
+			E entity,
+			R resource,
+			Map<String, Persistable<?>> referencedEntities) {
+		resourceEntityMappingHelper.updateEntityWithResource(entity, resource, referencedEntities);
+	}
+
 	protected List<E> reorderFindLinesWithParent(Serializable parentId) {
-		return entityRepository.findAll();
+		return Collections.emptyList();
 	}
 	protected Integer reorderGetIncrement() {
 		return null;
@@ -394,13 +399,10 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		}
 	}
 	protected long reorderSetNextSequence(ReorderableEntity<ID> reorderableEntity, long index) {
-		long nextValue = reorderGetNextSequence(index);
+		Integer increment = reorderGetIncrement();
+		long nextValue = index * (increment != null ? increment : 1);
 		reorderableEntity.setOrder(nextValue);
 		return nextValue;
-	}
-	private long reorderGetNextSequence(long index) {
-		Integer increment = reorderGetIncrement();
-		return index * (increment != null ? increment : 1);
 	}
 	protected boolean reorderIfReorderable(
 			E entity,
@@ -453,32 +455,24 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		long index = 1;
 		for (E value: linesToReorder) {
 			ReorderableEntity<ID> line = (ReorderableEntity<ID>)value;
-			if (line.equals(reorderableEntity)) {
-				log.debug("\tIgnorant ordre de l'entitat {}", line);
-				continue;
-			}
-			Long sequence = null;
-			Long currentSequence = line.getOrder();
-			if (!inserted && !parentIdChanged) {
-				Integer compareTo = currentSequence != null && sequenceForEntity != null ?
-						currentSequence.compareTo(sequenceForEntity) : null;
-				boolean insertHere = compareTo != null && (sameSequenceInsertBefore ? compareTo >= 0 : compareTo > 0);
-				if (insertHere) {
-					if (reorderGetNextSequence(index) < sequenceForEntity) {
-						sequence = reorderSetNextSequence(line, index++);
-					}
-					long sequenceEntity = reorderSetNextSequence(reorderableEntity, index++);
-					log.debug("\tInsertant entitat {} amb ordre {}", reorderableEntity, sequenceEntity);
+			if (!line.equals(reorderableEntity)) {
+				Long currentSequence = line.getOrder();
+				boolean insertHere = !parentIdChanged && sequenceForEntity != null && (sameSequenceInsertBefore ?
+						currentSequence != null && currentSequence.compareTo(sequenceForEntity) >= 0 :
+						currentSequence != null && currentSequence.compareTo(sequenceForEntity) > 0);
+				if (!inserted && insertHere) {
+					long sequence = reorderSetNextSequence(reorderableEntity, index++);
+					log.debug("\tInsertant entitat {} amb ordre {}", reorderableEntity, sequence);
 					inserted = true;
 					anyOrderChanged = true;
 				}
-			}
-			if (sequence == null) {
-				sequence = reorderSetNextSequence(line, index++);
-			}
-			log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, sequence, currentSequence);
-			if (currentSequence == null || !currentSequence.equals(sequence)) {
-				anyOrderChanged = true;
+				long sequence = reorderSetNextSequence(line, index++);
+				log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, sequence, currentSequence);
+				if (currentSequence == null || sequence != currentSequence) {
+					anyOrderChanged = true;
+				}
+			} else {
+				log.debug("\tIgnorant ordre de l'entitat {}", line);
 			}
 		}
 		if (!inserted && reorderableEntity != null) {
@@ -520,10 +514,42 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		fieldOptionsProviderMap.put(fieldName, fieldOptionsProvider);
 	}
 
-	private E saveFlushAndRefresh(E entity) {
+	protected E entitySaveFlushAndRefresh(E entity) {
 		E saved = entityRepository.saveAndFlush(entity);
 		entityRepository.refresh(saved);
 		return saved;
+	}
+
+	protected R entityDetachConvertAndMerge(
+			E entity,
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			boolean create) {
+		entityRepository.detach(entity);
+		R response = entityToResource(entity);
+		E merged = entityRepository.merge(entity);
+		entityAfterMergeLogic(response, merged, answers, create);
+		return response;
+	}
+
+	protected void entityRepositoryDelete(E entity) {
+		entityRepository.delete(entity);
+	}
+
+	protected void entityRepositoryFlush() {
+		entityRepository.flush();
+	}
+
+	protected void entityAfterMergeLogic(
+			R response,
+			E merged,
+			Map<String, AnswerRequiredException.AnswerValue> answers,
+			boolean create) {
+		afterConversion(merged, response);
+		if (create) {
+			afterCreate(merged, response, answers);
+		} else {
+			afterUpdate(merged, response, answers);
+		}
 	}
 
 	private void fieldFilesRead(R resource, E entity) {

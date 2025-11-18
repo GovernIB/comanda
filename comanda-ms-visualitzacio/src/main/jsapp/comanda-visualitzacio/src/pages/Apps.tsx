@@ -9,6 +9,8 @@ import {
     GridPage,
     MuiActionReportButton,
     MuiDataGrid,
+    MuiDataGridDialog,
+    MuiDataGridDialogApi,
     MuiForm,
     MuiFormTabContent,
     MuiFormTabs,
@@ -141,6 +143,7 @@ const AppEntornForm: React.FC = () => {
 const AppsEntorns: React.FC = () => {
     const { t } = useTranslation();
     const { id: appId } = useParams();
+    const dataGridDialogApiRef = React.useRef<MuiDataGridDialogApi | any>({});
     const columns = [
         {
             field: 'entorn',
@@ -171,6 +174,17 @@ const AppsEntorns: React.FC = () => {
 
     const actions = [
         {
+            label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
+            icon: "lock",
+            onClick: (id: any) => {
+                dataGridDialogApiRef.current?.show({
+                    dataGridComponentProps: {
+                        filter: "resourceType:'ENTORN_APP' and resourceId:" + id
+                    }
+                });
+            }
+        },
+        {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
             icon: "check_circle",
             showInMenu: true,
@@ -186,21 +200,37 @@ const AppsEntorns: React.FC = () => {
         },
     ]
     return (
-        <MuiDataGrid
-            apiRef={apiRef}
-            title={t($ => $.page.appsEntorns.title)}
-            resourceName="entornApp"
-            staticFilter={`app.id : ${appId}`}
-            columns={columns}
-            paginationActive
-            popupEditActive
-            popupEditFormContent={<AppEntornForm />}
-            popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
-            formAdditionalData={{
-                app: { id: appId },
-            }}
-            rowAdditionalActions={actions}
-        />
+        <>
+            <MuiDataGrid
+                apiRef={apiRef}
+                title={t($ => $.page.appsEntorns.title)}
+                resourceName="entornApp"
+                staticFilter={`app.id : ${appId}`}
+                columns={columns}
+                paginationActive
+                popupEditActive
+                popupEditFormContent={<AppEntornForm />}
+                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
+                formAdditionalData={{
+                    app: { id: appId },
+                }}
+                rowAdditionalActions={actions}
+                rowActionsColumnProps={{ flex: .3 }}
+            />
+            <MuiDataGridDialog
+                resourceName="aclEntry"
+                columns={[{
+                    field: 'subjectType',
+                    flex: 2
+                }, {
+                    field: 'subjectValue',
+                    flex: 3
+                }, {
+                    field: 'readAllowed',
+                    flex: 1
+                }]}
+                apiRef={dataGridDialogApiRef} />
+        </>
     );
 };
 

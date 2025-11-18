@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     useMuiContentDialog,
     useCloseDialogButtons,
     useAuthContext,
@@ -410,7 +410,7 @@ const QueueMessages: React.FC = () => {
                 </Box>
 
                 {/* Messages grid */}
-                <MuiGrid
+                <MuiDataGrid
                     rows={messages}
                     columns={columns}
                     getRowId={(row) => row.messageID}

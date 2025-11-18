@@ -1,14 +1,11 @@
 package es.caib.comanda.acl.logic.intf.service;
 
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
-import es.caib.comanda.client.model.acl.AclAction;
-import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
-import java.util.List;
+public interface AclEntryService extends MutableResourceService<AclEntry, String> {
 
-public interface AclEntryService extends MutableResourceService<AclEntry, Long> {
-
+	/*
     boolean checkPermission(
             String user,
             List<String> roles,
@@ -46,4 +43,6 @@ public interface AclEntryService extends MutableResourceService<AclEntry, Long> 
     List<AclEntry> updateAll(List<AclEntry> entries);
 
     void deleteAll(List<Long> ids);
+	 */
+
 }

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     FormField, useResourceApiService, useBaseAppContext, useConfirmDialogButtons, MuiDataGridApiRef,
 } from 'reactlib';
 import {ResourceApiError} from "../../lib/components/ResourceApiProvider.tsx";
@@ -99,7 +99,7 @@ const Caches: React.FC = () => {
     ];
     return (
         <GridPage>
-            <MuiGrid
+            <MuiDataGrid
                 apiRef={gridApiRef}
                 title={t($ => $.page.caches.title)}
                 resourceName="comandaCache"
