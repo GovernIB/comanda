@@ -17,12 +17,10 @@
 			<artifactId>comanda-ms-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<!-- Spring Security ACL for internal ACL engine -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-acl</artifactId>
 		</dependency>
-		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

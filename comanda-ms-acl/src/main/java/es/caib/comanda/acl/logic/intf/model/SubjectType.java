@@ -1,4 +1,4 @@
-package es.caib.comanda.client.model.acl;
+package es.caib.comanda.acl.logic.intf.model;
 
 /**
  * Tipus de subjecte del permís: usuari o rol.

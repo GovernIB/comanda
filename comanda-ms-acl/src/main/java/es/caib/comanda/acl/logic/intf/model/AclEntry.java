@@ -1,8 +1,6 @@
 package es.caib.comanda.acl.logic.intf.model;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.client.model.acl.ResourceType;
-import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;

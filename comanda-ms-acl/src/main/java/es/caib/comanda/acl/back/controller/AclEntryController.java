@@ -1,37 +1,50 @@
 package es.caib.comanda.acl.back.controller;
 
+import es.caib.comanda.acl.logic.intf.model.ResourceType;
+import es.caib.comanda.acl.logic.intf.service.AclEntryService;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
 import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
+
 @Slf4j
+@RequiredArgsConstructor
 @RestController("aclEntryController")
-@RequestMapping(BaseConfig.API_PATH + "/acl/entries")
-@Tag(name = "27. ACL Entries", description = "Gestió de regles ACL")
+@RequestMapping(BaseConfig.API_PATH + "/aclEntries")
+@Tag(name = "26. ACL Entries", description = "Gestió de regles ACL")
 public class AclEntryController extends BaseMutableResourceController<AclEntry, String> {
 
-    /*@Autowired
-    private AclEntryService aclEntryService;
+	private final AclEntryService aclEntryService;
 
-    @Operation(summary = "Crea múltiples entrades ACL en una sola crida")
-    @PostMapping("/bulk")
-    public List<AclEntry> createBulk(@RequestBody @Validated List<AclEntry> entries) {
-        return aclEntryService.createAll(entries);
-    }
+	@GetMapping("/anyPermissionGranted")
+	public ResponseEntity<Boolean> anyPermissionGranted(
+			@RequestParam ResourceType resourceType,
+			@RequestParam Serializable resourceId,
+			@RequestParam List<PermissionEnum> permissions) {
+		boolean granted = aclEntryService.anyPermissionGranted(
+				resourceType,
+				resourceId,
+				permissions);
+		return ResponseEntity.ok(granted);
+	}
 
-    @Operation(summary = "Actualitza múltiples entrades ACL en una sola crida")
-    @PutMapping("/bulk")
-    public List<AclEntry> updateBulk(@RequestBody @Validated List<AclEntry> entries) {
-        return aclEntryService.updateAll(entries);
-    }
-
-    @Operation(summary = "Elimina múltiples entrades ACL en una sola crida")
-    @DeleteMapping("/bulk")
-    public void deleteBulk(@RequestBody List<Long> ids) {
-        aclEntryService.deleteAll(ids);
-    }*/
+	@GetMapping("/findIdsWithAnyPermission")
+	public ResponseEntity<Set<Serializable>> findIdsWithAnyPermission(
+			@RequestParam ResourceType resourceType,
+			@RequestParam List<PermissionEnum> permissions) {
+		Set<Serializable> ids = aclEntryService.findIdsWithAnyPermission(
+				resourceType,
+				permissions);
+		return ResponseEntity.ok(ids);
+	}
 
 }

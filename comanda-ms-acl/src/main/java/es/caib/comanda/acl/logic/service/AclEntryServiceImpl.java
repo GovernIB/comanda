@@ -2,10 +2,10 @@ package es.caib.comanda.acl.logic.service;
 
 import es.caib.comanda.acl.logic.helper.AclHelper;
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
+import es.caib.comanda.acl.logic.intf.model.ResourceType;
+import es.caib.comanda.acl.logic.intf.model.SubjectType;
 import es.caib.comanda.acl.logic.intf.service.AclEntryService;
 import es.caib.comanda.acl.persist.entity.AclEntryEntity;
-import es.caib.comanda.client.model.acl.ResourceType;
-import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.permission.ExtendedPermission;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
@@ -40,20 +40,28 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 	public boolean anyPermissionGranted(
 			ResourceType resourceType,
 			Serializable resourceId,
-			List<Permission> permissions) {
+			List<PermissionEnum> permissions) {
+		List<Permission> aclPermissions = Optional.ofNullable(permissions).
+				orElseGet(List::of).stream().
+				map(PermissionEnum::toPermission).
+				collect(Collectors.toList());
 		return aclHelper.anyPermissionGranted(
 				getClassFromResourceType(resourceType),
 				resourceId,
-				permissions);
+				aclPermissions);
 	}
 
 	@Override
 	public Set<Serializable> findIdsWithAnyPermission(
 			ResourceType resourceType,
-			List<Permission> permissions) {
+			List<PermissionEnum> permissions) {
+		List<Permission> aclPermissions = Optional.ofNullable(permissions).
+				orElseGet(List::of).stream().
+				map(PermissionEnum::toPermission).
+				collect(Collectors.toList());
 		return aclHelper.findIdsWithAnyPermission(
 				getClassFromResourceType(resourceType),
-				permissions);
+				aclPermissions);
 	}
 
 	@Override

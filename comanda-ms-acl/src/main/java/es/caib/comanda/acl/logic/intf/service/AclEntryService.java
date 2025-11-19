@@ -1,9 +1,9 @@
 package es.caib.comanda.acl.logic.intf.service;
 
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
-import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.acl.logic.intf.model.ResourceType;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
-import org.springframework.security.acls.model.Permission;
 
 import java.io.Serializable;
 import java.util.List;
@@ -14,10 +14,10 @@ public interface AclEntryService extends MutableResourceService<AclEntry, String
 	boolean anyPermissionGranted(
 			ResourceType resourceType,
 			Serializable resourceId,
-			List<Permission> permissions);
+			List<PermissionEnum> permissions);
 
 	Set<Serializable> findIdsWithAnyPermission(
 			ResourceType resourceType,
-			List<Permission> permissions);
+			List<PermissionEnum> permissions);
 
 }

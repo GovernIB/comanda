@@ -1,7 +1,7 @@
 package es.caib.comanda.acl.persist.entity;
 
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
-import es.caib.comanda.client.model.acl.SubjectType;
+import es.caib.comanda.acl.logic.intf.model.SubjectType;
 import es.caib.comanda.ms.persist.entity.ResourceEntity;
 import lombok.Builder;
 import lombok.Getter;
