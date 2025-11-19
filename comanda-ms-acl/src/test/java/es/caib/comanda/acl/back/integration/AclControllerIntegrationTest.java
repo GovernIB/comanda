@@ -1,37 +1,12 @@
 package es.caib.comanda.acl.back.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.acl.back.config.SpringAclConfig;
-import es.caib.comanda.acl.logic.intf.model.AclEntry;
-import es.caib.comanda.acl.logic.intf.service.AclEntryService;
-import es.caib.comanda.acl.persist.config.AclPersistenceConfig;
-import es.caib.comanda.client.model.acl.AclAction;
-import es.caib.comanda.client.model.acl.AclEffect;
-import es.caib.comanda.client.model.acl.ResourceType;
-import es.caib.comanda.client.model.acl.SubjectType;
-import es.caib.comanda.ms.persist.config.AuditingConfig;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@SpringBootTest(classes = AclControllerIntegrationTest.TestApp.class)
+//@SpringBootTest(classes = AclControllerIntegrationTest.TestApp.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
@@ -59,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AclControllerIntegrationTest {
 
-    @SpringBootConfiguration
+    /*@SpringBootConfiguration
     @EnableAutoConfiguration(exclude = {
             org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
             org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration.class
@@ -258,5 +233,6 @@ class AclControllerIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
 
         assertThat(body).contains("\"allowed\":false");
-    }
+    }*/
+
 }

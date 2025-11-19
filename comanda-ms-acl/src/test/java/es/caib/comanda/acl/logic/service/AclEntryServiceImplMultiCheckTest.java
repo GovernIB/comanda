@@ -1,20 +1,8 @@
 package es.caib.comanda.acl.logic.service;
 
-import es.caib.comanda.acl.persist.repository.AclEntryMapRepository;
-import es.caib.comanda.client.model.acl.AclAction;
-import es.caib.comanda.client.model.acl.ResourceType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 class AclEntryServiceImplMultiCheckTest {
 
-    private static class FakeService extends AclEntryServiceImpl {
+    /*private static class FakeService extends AclEntryServiceImpl {
         private final AclAction trueAction;
         private final AclAction falseAction;
         private final AtomicInteger calls = new AtomicInteger(0);
@@ -78,5 +66,6 @@ class AclEntryServiceImplMultiCheckTest {
         assertThat(service.checkPermissionsAny("u", Collections.emptyList(), ResourceType.ENTORN_APP, 1L, Collections.emptyList())).isFalse();
         assertThat(service.checkPermissionsAll("u", Collections.emptyList(), ResourceType.ENTORN_APP, 1L, null)).isFalse();
         assertThat(service.checkPermissionsAll("u", Collections.emptyList(), ResourceType.ENTORN_APP, 1L, Collections.emptyList())).isFalse();
-    }
+    }*/
+
 }

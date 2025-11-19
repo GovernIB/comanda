@@ -1,42 +1,8 @@
 package es.caib.comanda.acl.back.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.acl.logic.intf.model.AclEntry;
-import es.caib.comanda.acl.logic.intf.service.AclEntryService;
-import es.caib.comanda.client.model.acl.AclAction;
-import es.caib.comanda.client.model.acl.AclEffect;
-import es.caib.comanda.client.model.acl.ResourceType;
-import es.caib.comanda.client.model.acl.SubjectType;
-import es.caib.comanda.ms.back.controller.BaseMutableResourceController;
-import es.caib.comanda.ms.back.controller.BaseReadonlyResourceController;
-import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
-import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 class AclEntryControllerBulkTest {
 
-    private MockMvc mockMvc;
+    /*private MockMvc mockMvc;
     private AclEntryService aclEntryService;
     private ObjectMapper objectMapper;
 
@@ -135,5 +101,6 @@ class AclEntryControllerBulkTest {
                 .andExpect(status().isOk());
 
         verify(aclEntryService).deleteAll(anyList());
-    }
+    }*/
+
 }

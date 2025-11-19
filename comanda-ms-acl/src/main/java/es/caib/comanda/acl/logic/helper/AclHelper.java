@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Helper encarregat de gestionar els permisos amb ACLs.
+ * Helper encarregat de gestionar les ACLs.
  *
  * @author Limit Tecnologies
  */
@@ -157,7 +157,7 @@ public class AclHelper {
 	 *            la llista de SIDs. Si no es passa cap valor s'utilitzaran els SIDs de l'usuari actual.
 	 * @return true si es tenen permisos o false en cas contrari.
 	 */
-	public boolean isPermissionGranted(
+	public boolean anyPermissionGranted(
 			Class<?> resourceClass,
 			Serializable resourceId,
 			List<Permission> permissions,
@@ -192,7 +192,7 @@ public class AclHelper {
 	 *            la llista de SIDs. Si no es passa cap valor s'utilitzaran els SIDs de l'usuari actual.
 	 * @return la llista d'ids.
 	 */
-	public Set<Serializable> findIdsWithPermission(
+	public Set<Serializable> findIdsWithAnyPermission(
 			Class<?> resourceClass,
 			List<Permission> permissions,
 			Sid... sids) {
@@ -235,7 +235,12 @@ public class AclHelper {
 				});
 	}
 
-	private List<Sid> getCurrentUserSids() {
+	/**
+	 * Retorna la llista de SIDs de l'usuari autenticat.
+	 *
+	 * @return la llista de SIDs (principal + grantedAuthorities).
+	 */
+	public List<Sid> getCurrentUserSids() {
 		List<Sid> sids = new ArrayList<>();
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth != null) {

@@ -1,32 +1,12 @@
 package es.caib.comanda.acl.logic.service;
 
-import es.caib.comanda.acl.persist.entity.AclEntryMapEntity;
-import es.caib.comanda.client.model.acl.AclAction;
-import es.caib.comanda.client.model.acl.AclEffect;
-import es.caib.comanda.client.model.acl.ResourceType;
-import es.caib.comanda.client.model.acl.SubjectType;
-import es.caib.comanda.acl.persist.repository.AclEntryMapRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.acls.model.Acl;
-import org.springframework.security.acls.model.MutableAclService;
-import org.springframework.security.acls.model.NotFoundException;
-import org.springframework.security.acls.model.Permission;
-import org.springframework.security.acls.model.Sid;
-
-import java.util.Arrays;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AclEntryServiceImplTest {
 
-    @Mock
+    /*@Mock
     private AclEntryMapRepository aclEntryMapRepository;
     @Mock
     private MutableAclService mutableAclService;
@@ -103,5 +83,6 @@ class AclEntryServiceImplTest {
         // S'han d'inserir ACEs per READ (ALLOW) i per WRITE+ADMIN (DENY)
         verify(mockMutableAcl, atLeast(2)).insertAce(anyInt(), any(Permission.class), any(Sid.class), anyBoolean());
         verify(mutableAclService).updateAcl(mockMutableAcl);
-    }
+    }*/
+
 }

@@ -18,6 +18,7 @@ import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,26 @@ import java.util.stream.Collectors;
 public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, String, AclEntryEntity> implements AclEntryService {
 
 	private final AclHelper aclHelper;
+
+	@Override
+	public boolean anyPermissionGranted(
+			ResourceType resourceType,
+			Serializable resourceId,
+			List<Permission> permissions) {
+		return aclHelper.anyPermissionGranted(
+				getClassFromResourceType(resourceType),
+				resourceId,
+				permissions);
+	}
+
+	@Override
+	public Set<Serializable> findIdsWithAnyPermission(
+			ResourceType resourceType,
+			List<Permission> permissions) {
+		return aclHelper.findIdsWithAnyPermission(
+				getClassFromResourceType(resourceType),
+				permissions);
+	}
 
 	@Override
 	protected boolean isEntityRepositoryOptional() {

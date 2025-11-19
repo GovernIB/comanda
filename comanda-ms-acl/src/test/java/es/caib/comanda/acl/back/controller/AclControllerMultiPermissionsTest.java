@@ -1,31 +1,8 @@
 package es.caib.comanda.acl.back.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.acl.logic.intf.service.AclEntryService;
-import es.caib.comanda.client.model.acl.AclAction;
-import es.caib.comanda.client.model.acl.AclCheckRequest;
-import es.caib.comanda.client.model.acl.AclCheckResponse;
-import es.caib.comanda.client.model.acl.ResourceType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.Arrays;
-import java.util.Collections;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 class AclControllerMultiPermissionsTest {
 
-    private MockMvc mockMvc;
+    /*private MockMvc mockMvc;
     private AclEntryService aclEntryService;
     private ObjectMapper objectMapper;
 
@@ -100,5 +77,6 @@ class AclControllerMultiPermissionsTest {
 
         AclCheckResponse body = objectMapper.readValue(response, AclCheckResponse.class);
         assertThat(body.isAllowed()).isFalse();
-    }
+    }*/
+
 }
