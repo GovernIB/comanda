@@ -154,32 +154,28 @@ public abstract class BaseAclConfig {
 		return mutableAclService;
 	}
 
-	public String getIdsWithPermissionQuery(boolean anyPermission) {
+	public String getIdsWithPermissionQuery(
+			boolean anyPermission,
+			boolean anyPrincipalSid,
+			boolean anyGrantedAuthoritiesSids) {
 		String tableClass = getDbTablePrefix() + "acl_class";
 		String tableSid = getDbTablePrefix() + "acl_sid";
 		String tableOid = getDbTablePrefix() + "acl_object_identity";
 		String tableEntry = getDbTablePrefix() + "acl_entry";
+		String sidsCondition;
+		if (anyPrincipalSid && anyGrantedAuthoritiesSids) {
+			sidsCondition = "and ( " +
+					"    " + tableEntry + ".sid in (select " + tableSid + ".id from " + tableSid + " where " + tableSid + ".principal = :isTrue and " + tableSid + ".sid = :principal) " +
+					"    or " + tableEntry + ".sid in (select " + tableSid + ".id from " + tableSid + " where " + tableSid + ".principal = :isFalse and " + tableSid + ".sid in (:grantedAuthorities))) ";
+		} else if (anyPrincipalSid) {
+			sidsCondition = "and " + tableEntry + ".sid in (select " + tableSid + ".id from " + tableSid + " where " + tableSid + ".principal = :isTrue and " + tableSid + ".sid = :principal)";
+		} else if (anyGrantedAuthoritiesSids) {
+			sidsCondition = "and " + tableEntry + ".sid in (select " + tableSid + ".id from " + tableSid + " where " + tableSid + ".principal = :isFalse and " + tableSid + ".sid in (:grantedAuthorities)) ";;
+		} else {
+			sidsCondition = "";
+		}
 		return "select " +
 				"    distinct " + tableOid + ".object_id_identity id " +
-				"from " +
-				"    " + tableEntry + " " +
-				"	 left join " + tableOid + " on " + tableOid + ".id = " + tableEntry + ".acl_object_identity " +
-				"where " +
-				"    " + tableEntry + ".granting = :isTrue " +
-				(anyPermission ? "and " + tableEntry + ".mask in (:masks) " : "") +
-				"and " + tableOid + ".object_id_class = (select id from " + tableClass + " where class = :className) " +
-				"and ( " +
-				"    " + tableEntry + ".sid in (select " + tableSid + ".id from " + tableSid + " where " + tableSid + ".principal = :isTrue and " + tableSid + ".sid = :principal) " +
-				"    or " + tableEntry + ".sid in (select " + tableSid + ".id from " + tableSid + " where " + tableSid + ".principal = :isFalse and " + tableSid + ".sid in (:grantedAuthorities))) ";
-	}
-
-	public String getResourceIdsWithPermissionQuery(boolean anyPermission) {
-		String tableClass = getDbTablePrefix() + "acl_class";
-		String tableSid = getDbTablePrefix() + "acl_sid";
-		String tableOid = getDbTablePrefix() + "acl_object_identity";
-		String tableEntry = getDbTablePrefix() + "acl_entry";
-		return "select " +
-				"    distinct " + tableOid + ".object_id_identity " +
 				"from " +
 				"    " + tableEntry + " " +
 				"    left join " + tableOid + " on " + tableOid + ".id = " + tableEntry + ".acl_object_identity " +
@@ -187,7 +183,7 @@ public abstract class BaseAclConfig {
 				"    " + tableEntry + ".granting = :isTrue " +
 				(anyPermission ? "and " + tableEntry + ".mask in (:masks) " : "") +
 				"and " + tableOid + ".object_id_class = (select id from " + tableClass + " where class = :className) " +
-				"and (" + tableEntry + ".sid in (select " + tableSid + ".id from " + tableSid + " where " + tableSid + ".principal = :isPrincipal and " + tableSid + ".sid in (:sids))) ";
+				sidsCondition;
 	}
 
 	protected abstract String getDbTablePrefix();

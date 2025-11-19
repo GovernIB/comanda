@@ -35,6 +35,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 
 	private final AclHelper aclHelper;
 
+	@Override
 	protected boolean isEntityRepositoryOptional() {
 		return true;
 	}
@@ -278,13 +279,6 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 			} catch (Exception ex) {
 				log.error("Couldn't find class for resource type " + resourceType);
 			}
-		}
-		return null;
-	}
-
-	private ResourceType getResourceTypeFromClass(Class<?> resourceClass) {
-		if (resourceClass != null) {
-			return getResourceTypeFromClassName(resourceClass.getName());
 		}
 		return null;
 	}

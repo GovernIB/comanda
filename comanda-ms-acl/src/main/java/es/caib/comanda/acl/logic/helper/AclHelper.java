@@ -5,6 +5,7 @@ import es.caib.comanda.ms.logic.intf.permission.ExtendedPermission;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -14,11 +15,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,8 +32,27 @@ import java.util.stream.Collectors;
 public class AclHelper {
 
 	private final AclConfig aclConfig;
+	private final DataSource dataSource;
 	private final MutableAclService mutableAclService;
 
+	private NamedParameterJdbcTemplate jdbcTemplate;
+
+	@PostConstruct
+	public void initJdbcTemplate() {
+		jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+	}
+
+	/**
+	 * Obté la informació de l'ACL que correspon al recurs especificat.
+	 *
+	 * @param resourceClass
+	 *            la classe del recurs.
+	 * @param resourceId
+	 *            l'id del recurs.
+	 * @param sids
+	 *            els SIDs per a filtrar les ACEs que retornarà l'ACL. Si es passa null es retornaran totes les ACEs.
+	 * @return la informació de l'ACL.
+	 */
 	public Acl get(
 			Class<?> resourceClass,
 			Serializable resourceId,
@@ -45,7 +64,21 @@ public class AclHelper {
 				false);
 	}
 
-	public List<PermissionEnum> set(
+	/**
+	 * Modifica la informació de l'ACL del recurs especificat.
+	 *
+	 * @param resourceClass
+	 *            la classe del recurs.
+	 * @param resourceId
+	 *            l'id del recurs.
+	 * @param sidName
+	 *            el nom del SID a modificar.
+	 * @param sidGrantedAuthority
+	 *            true si el nom del sid correspon a una GrantedAuthority (rol) false en cas contrari.
+	 * @param permissionsGranted
+	 *            la llista de permisos que te el SID especificat sobre el recurs.
+	 */
+	public void set(
 			Class<?> resourceClass,
 			Serializable resourceId,
 			String sidName,
@@ -84,12 +117,20 @@ public class AclHelper {
 					true);
 		}
 		mutableAclService.updateAcl(acl);
-		return getResourcePermissionsList(
-				resourceClass,
-				resourceId,
-				sid);
 	}
 
+	/**
+	 * Esborra tots els permisos del SID sobre el recurs especificat.
+	 *
+	 * @param resourceClass
+	 *            la classe del recurs.
+	 * @param resourceId
+	 *            l'id del recurs.
+	 * @param sidName
+	 *            el nom del SID a modificar.
+	 * @param sidGrantedAuthority
+	 *            true si el nom del sid correspon a una GrantedAuthority (rol) false en cas contrari.
+	 */
 	public void delete(
 			Class<?> resourceClass,
 			Serializable resourceId,
@@ -103,7 +144,98 @@ public class AclHelper {
 				new ArrayList<>());
 	}
 
-	public List<Sid> getCurrentUserSids() {
+	/**
+	 * Indica si es tenen permisos sobre el recurs especificat.
+	 *
+	 * @param resourceClass
+	 *            la classe del recurs.
+	 * @param resourceId
+	 *            l'id del recurs.
+	 * @param permissions
+	 *            els permísos a comprovar. Es retornarà true si el recurs te permès ALGUN dels permisos.
+	 * @param sids
+	 *            la llista de SIDs. Si no es passa cap valor s'utilitzaran els SIDs de l'usuari actual.
+	 * @return true si es tenen permisos o false en cas contrari.
+	 */
+	public boolean isPermissionGranted(
+			Class<?> resourceClass,
+			Serializable resourceId,
+			List<Permission> permissions,
+			Sid... sids) {
+		MutableAcl acl = getMutableAcl(
+				resourceClass,
+				resourceId,
+				Arrays.asList(sids),
+				false);
+		if (acl != null) {
+			try {
+				return acl.isGranted(
+						permissions,
+						sids.length > 0 ? Arrays.asList(sids) : getCurrentUserSids(),
+						true);
+			} catch (NotFoundException ex) {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Retorna les ids sobre les quals els SIDs especificats tenen algun permís.
+	 *
+	 * @param resourceClass
+	 *            la classe del recurs.
+	 * @param permissions
+	 *            els permísos a comprovar. Es retornaran les ids que tenen permès ALGUN dels permisos.
+	 * @param sids
+	 *            la llista de SIDs. Si no es passa cap valor s'utilitzaran els SIDs de l'usuari actual.
+	 * @return la llista d'ids.
+	 */
+	public Set<Serializable> findIdsWithPermission(
+			Class<?> resourceClass,
+			List<Permission> permissions,
+			Sid... sids) {
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("isTrue", true);
+		paramsMap.put("isFalse", false);
+		paramsMap.put("className", resourceClass.getName());
+		List<Sid> sidsList = sids.length > 0 ? Arrays.asList(sids) : getCurrentUserSids();
+		Optional<String> principal = sidsList.stream().
+				filter(s -> s instanceof PrincipalSid).
+				map(s -> ((PrincipalSid)s).getPrincipal()).
+				findFirst();
+		principal.ifPresent(principalSid -> paramsMap.put("principal", principal));
+		List<String> grantedAuthorities = sidsList.stream().
+				filter(s -> s instanceof GrantedAuthoritySid).
+				map(s -> ((GrantedAuthoritySid)s).getGrantedAuthority()).
+				collect(Collectors.toList());
+		if (!grantedAuthorities.isEmpty()) {
+			paramsMap.put("grantedAuthorities", grantedAuthorities);
+		}
+		boolean anyPermission = permissions != null && !permissions.isEmpty();
+		if (anyPermission) {
+			paramsMap.put(
+					"masks",
+					permissions.stream().map(Permission::getMask).collect(Collectors.toSet()));
+		}
+		return jdbcTemplate.query(
+				aclConfig.getIdsWithPermissionQuery(
+						anyPermission,
+						principal.isPresent(),
+						!grantedAuthorities.isEmpty()),
+				paramsMap,
+				rs -> {
+					Set<Serializable> ids1 = new HashSet<>();
+					while (rs.next()) {
+						Serializable s = (Serializable) rs.getObject(1);
+						if (s != null) ids1.add(s);
+					}
+					return ids1;
+				});
+	}
+
+	private List<Sid> getCurrentUserSids() {
 		List<Sid> sids = new ArrayList<>();
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth != null) {
@@ -113,66 +245,6 @@ public class AclHelper {
 			}
 		}
 		return sids;
-	}
-
-	public List<PermissionEnum> getResourcePermissionsList(
-			Class<?> resourceClass,
-			Serializable resourceId,
-			Sid... sids) {
-		List<PermissionEnum> permissions = new ArrayList<>();
-		MutableAcl acl = getMutableAcl(
-				resourceClass,
-				resourceId,
-				Arrays.asList(sids),
-				false);
-		if (acl != null) {
-			if (isPermissionGranted(acl, ExtendedPermission.READ, sids)) {
-				permissions.add(PermissionEnum.READ);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.WRITE, sids)) {
-				permissions.add(PermissionEnum.WRITE);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.CREATE, sids)) {
-				permissions.add(PermissionEnum.CREATE);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.DELETE, sids)) {
-				permissions.add(PermissionEnum.DELETE);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.ADMINISTRATION, sids)) {
-				permissions.add(PermissionEnum.ADMINISTRATION);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM0, sids)) {
-				permissions.add(PermissionEnum.PERM0);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM1, sids)) {
-				permissions.add(PermissionEnum.PERM1);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM2, sids)) {
-				permissions.add(PermissionEnum.PERM2);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM3, sids)) {
-				permissions.add(PermissionEnum.PERM3);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM4, sids)) {
-				permissions.add(PermissionEnum.PERM4);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM5, sids)) {
-				permissions.add(PermissionEnum.PERM5);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM6, sids)) {
-				permissions.add(PermissionEnum.PERM6);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM7, sids)) {
-				permissions.add(PermissionEnum.PERM7);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM8, sids)) {
-				permissions.add(PermissionEnum.PERM8);
-			}
-			if (isPermissionGranted(acl, ExtendedPermission.PERM9, sids)) {
-				permissions.add(PermissionEnum.PERM9);
-			}
-		}
-		return permissions;
 	}
 
 	private MutableAcl getMutableAcl(
@@ -187,8 +259,6 @@ public class AclHelper {
 		} catch (NotFoundException ex) {
 			if (createIfNotExists) {
 				acl = mutableAclService.createAcl(objectIdentity);
-				//acl.setParent(newParent);
-				//acl.setEntriesInheriting(true);
 			} else {
 				acl = null;
 			}
