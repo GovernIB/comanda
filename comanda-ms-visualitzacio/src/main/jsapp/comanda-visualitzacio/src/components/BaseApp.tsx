@@ -5,7 +5,6 @@ import {
     useLocation,
     useNavigate
 } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import Button from '@mui/material/Button';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -30,6 +29,7 @@ import i18n from '../i18n/i18n';
 import drassana from '../assets/drassana.png';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
+import useTranslationStringKey from '../hooks/useTranslationStringKey';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -148,6 +148,11 @@ const generateFooter = () => {
     );
 };
 
+const useI18nUseTranslation = (ns?: string) => {
+    // @ts-expect-error baseReact defineix el namespace com a string, però comanda només suporta actualment 'translations'
+    return useTranslationStringKey(ns);
+}
+
 const useI18n = () => {
     const { user } = useUserContext();
     const currentUserLanguage = user?.idioma.toLowerCase();
@@ -158,7 +163,7 @@ const useI18n = () => {
         i18n.addResourceBundle(language, namespace, bundle);
     }
     return {
-        i18nUseTranslation: useTranslation,
+        i18nUseTranslation: useI18nUseTranslation,
         i18nCurrentLanguage: currentUserLanguage ?? i18n.language,
         i18nHandleLanguageChange,
         i18nAddResourceBundleCallback,

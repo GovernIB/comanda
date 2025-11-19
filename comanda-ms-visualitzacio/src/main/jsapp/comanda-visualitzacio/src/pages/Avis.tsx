@@ -7,7 +7,6 @@ import {
     springFilterBuilder,
     useFormApiRef,
     useFilterApiRef,
-    BasePage,
     MuiDataGridColDef,
     useAuthContext,
 } from 'reactlib';
@@ -221,9 +220,9 @@ const Avis = () => {
         hidden: (row: any) => !row?.url,
     }];
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
-    // Se usa el componente BasePage para evitar posibles conflictos entre la suscripción de eventos y el estado "proceed" de GridPage
+
     return (
-        <BasePage expandHeight style={{ height: '100%' }}>
+        <Box sx={{ height: '100%' }}>
             <MuiDataGrid
                 title={t($ => $.menu.avis)}
                 resourceName="avis"
@@ -241,7 +240,7 @@ const Avis = () => {
                 rowAdditionalActions={actions}
                 {...treeDataGridProps}
             />
-        </BasePage>
+        </Box>
     );
 }
 

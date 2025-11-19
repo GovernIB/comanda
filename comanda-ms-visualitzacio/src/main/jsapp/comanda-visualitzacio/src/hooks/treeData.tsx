@@ -85,7 +85,12 @@ export const useTreeData = (
         }),
         [gridApiRef, groupingColDefAdditionalProps, headerFlex, headerName]
     );
-    const dataGridProps: Partial<MuiDataGridProps> = treeView
+    const dataGridProps: Partial<
+        Pick<
+            MuiDataGridProps,
+            'treeData' | 'isGroupExpandedByDefault' | 'getTreeDataPath' | 'groupingColDef'
+        >
+    > = treeView
         ? {
               treeData: true,
               isGroupExpandedByDefault,
@@ -93,9 +98,9 @@ export const useTreeData = (
               groupingColDef,
           }
         : {
-            // If getTreeDataPath is not provided when disabling treeData, an error will be thrown
-            getTreeDataPath,
-        };
+              // If getTreeDataPath is not provided when disabling treeData, an error will be thrown
+              getTreeDataPath,
+          };
     return {
         treeView,
         treeViewSwitch,

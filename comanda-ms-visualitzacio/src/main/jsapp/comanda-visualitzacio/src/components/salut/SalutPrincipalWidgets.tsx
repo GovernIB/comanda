@@ -196,11 +196,14 @@ const AppDataTable: React.FC<{
                 headerName: t($ => $.page.salut.apps.column.group),
                 minWidth: 150,
                 valueGetter: (_value, row) => {
-                    const isGroupedByApp = groupedApp != null;
                     const entorn =
                         entorns != null && entorns.find((entorn) => entorn.id === row.entorn.id);
+                    const app = apps != null && apps.find((app) => app.id === row.app.id);
+                    if (!entorn || !app) return;
 
-                    if (isGroupedByApp && entorn) return entorn.nom ?? entorn.codi;
+                    const isGroupedByEntorn = groupedEntorn != null;
+                    if (isGroupedByEntorn) return app.nom;
+                    return entorn.nom ?? entorn.codi;
                 },
                 renderCell: (params) => {
                     const isGroupedByEntorn = groupedEntorn != null;
@@ -222,7 +225,7 @@ const AppDataTable: React.FC<{
                                         style={{ height: '48px' }}
                                     />
                                 )}
-                                {app.nom}
+                                {params.value}
                             </Box>
                         );
                 },
@@ -288,7 +291,7 @@ const AppDataTable: React.FC<{
                 flex: 0.1,
                 field: SalutModel.INTEGRACIONS,
                 headerName: t($ => $.page.salut.apps.column.integ),
-                minWidth: 155,
+                minWidth: 160,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
@@ -303,7 +306,7 @@ const AppDataTable: React.FC<{
                 flex: 0.2,
                 field: SalutModel.SUBSISTEMES,
                 headerName: t($ => $.page.salut.apps.column.subsis),
-                minWidth: 155,
+                minWidth: 160,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 

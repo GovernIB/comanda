@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
     GridPage,
-    MuiGrid,
     useMuiContentDialog,
     useCloseDialogButtons,
 } from 'reactlib';

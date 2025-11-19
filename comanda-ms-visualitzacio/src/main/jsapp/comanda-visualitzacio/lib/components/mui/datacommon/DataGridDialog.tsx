@@ -42,11 +42,13 @@ export const DataGridDialog: React.FC<DataGridDialogProps> = (props) => {
         resourceFieldName,
         onRowClickEnabled,
         dialogComponentProps ?? { fullWidth: true, maxWidth: 'md' },
-        dataGridComponentProps);
-    const show = (args?: DataGridDialogShowArgs) => dataGridDialogShow({
-        title: titleProp ?? resourceName,
-        ...args
-    });
+        dataGridComponentProps
+    );
+    const show = (args?: DataGridDialogShowArgs) =>
+        dataGridDialogShow({
+            title: titleProp ?? resourceName,
+            ...args,
+        });
     const close = () => dataGridDialogClose();
     if (apiRef != null) {
         apiRef.current = { show, close };
