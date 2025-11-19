@@ -133,8 +133,10 @@ const translationCa = {
                 detalls: "Detalls",
             },
             groupingSelect: {
+                label: "Agrupació",
                 BY_APPLICATION: "Per aplicació",
                 BY_ENVIRONMENT: "Per entorn",
+                NONE: "Sense agrupació",
             },
             refreshperiod: {
                 PT1M: "1 minut",

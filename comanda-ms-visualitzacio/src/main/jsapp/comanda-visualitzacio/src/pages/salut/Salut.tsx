@@ -16,8 +16,8 @@ import { SalutLlistat } from '../../components/salut/SalutPrincipalWidgets';
 import { useParams } from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip';
-import {AppModel, EntornAppModel} from "../../types/app.model.tsx";
-import {EntornModel} from "../../types/entorn.model.tsx";
+import { AppModel, EntornAppModel } from '../../types/app.model.tsx';
+import { EntornModel } from '../../types/entorn.model.tsx';
 import { useSalutLlistatExpansionState } from './salutState.ts';
 import { ISO_DATE_FORMAT } from '../../util/dateUtils.ts';
 import { filterNumericObjectKeys } from '../../util/objectUtils.ts';
@@ -67,16 +67,21 @@ const splitSalutDataIntoGroups = ({
 }) => {
     const groups: SalutData[] = [];
 
-    const generateGroup = ({ groupedApp, groupedEntorn, entornApps }: Pick<SalutData, 'groupedApp' | 'groupedEntorn' | 'entornApps'>) => {
-        const filteredEntornAppIds = entornApps
-            .map(({ id }) => id as number);
+    const generateGroup = ({
+        groupedApp,
+        groupedEntorn,
+        entornApps,
+    }: Pick<SalutData, 'groupedApp' | 'groupedEntorn' | 'entornApps'>) => {
+        const filteredEntornAppIds = entornApps.map(({ id }) => id as number);
         return {
             groupedApp,
             groupedEntorn,
             entornApps,
-            estats: filterNumericObjectKeys(estats, (key) => filteredEntornAppIds.includes(Number(key))),
-            salutLastItems: salutLastItems.filter(
-                ({ entornAppId }) => filteredEntornAppIds.includes(entornAppId)
+            estats: filterNumericObjectKeys(estats, key =>
+                filteredEntornAppIds.includes(Number(key))
+            ),
+            salutLastItems: salutLastItems.filter(({ entornAppId }) =>
+                filteredEntornAppIds.includes(entornAppId)
             ),
         };
     };
@@ -86,30 +91,38 @@ const splitSalutDataIntoGroups = ({
             throw new Error('[splitSalutDataIntoGroups] apps is required when groupBy is APP');
 
         const appIds = apps.map(({ id }) => id as number);
-        appIds.forEach((appId) => {
-            const filteredEntornApps = entornApps
-                .filter(({ app }) => app.id === appId);
+        appIds.forEach(appId => {
+            const filteredEntornApps = entornApps.filter(({ app }) => app.id === appId);
 
-            groups.push(generateGroup({
-                groupedApp: apps.find(({ id }) => id === appId),
-                entornApps: filteredEntornApps,
-            }));
+            groups.push(
+                generateGroup({
+                    groupedApp: apps.find(({ id }) => id === appId),
+                    entornApps: filteredEntornApps,
+                })
+            );
         });
-    } else {
+    } else if (groupBy === GroupingEnum.ENVIRONMENT) {
         if (entorns == null)
             throw new Error(
                 '[splitSalutDataIntoGroups] entorns is required when groupBy is ENTORN'
             );
 
         const entornIds = entorns.map(({ id }) => id as number);
-        entornIds.forEach((entornId) => {
-            const filteredEntornApps = entornApps
-                .filter(({ entorn }) => entorn.id === entornId);
+        entornIds.forEach(entornId => {
+            const filteredEntornApps = entornApps.filter(({ entorn }) => entorn.id === entornId);
 
-            groups.push(generateGroup({
-                groupedEntorn: entorns.find(({ id }) => id === entornId),
-                entornApps: filteredEntornApps,
-            }));
+            groups.push(
+                generateGroup({
+                    groupedEntorn: entorns.find(({ id }) => id === entornId),
+                    entornApps: filteredEntornApps,
+                })
+            );
+        });
+    } else if (groupBy === GroupingEnum.NONE) {
+        groups.push({
+            entornApps,
+            estats,
+            salutLastItems,
         });
     }
 
@@ -152,51 +165,55 @@ const useSalutData = ({
             return;
         }
 
-        setSalutData((prevState) => ({ ...prevState, loading: true, error: undefined }));
+        setSalutData(prevState => ({ ...prevState, loading: true, error: undefined }));
 
         try {
             const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
             const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
-            const [activeEntornAppsResponse, activeAppsResponse, entornsResponse, grupsDatesResponse] =
-                await Promise.all([
-                    entornAppFind({
-                        unpaged: true,
-                        filter: springFilterBuilder.and(
-                            springFilterBuilder.eq('activa', true),
-                            springFilterBuilder.eq('app.activa', true),
-                            filterData?.app != null
-                                ? springFilterBuilder.eq('app.id', filterData.app.id)
-                                : null,
-                            filterData?.entorn != null
-                                ? springFilterBuilder.eq('entorn.id', filterData.entorn.id)
-                                : null
-                        ),
-                    }),
-                    appFind({
-                        unpaged: true,
-                        filter: springFilterBuilder.and(
-                            springFilterBuilder.eq('activa', true),
-                            filterData?.app != null
-                                ? springFilterBuilder.eq('id', filterData.app.id)
-                                : null
-                        ),
-                    }),
-                    entornFind({
-                        unpaged: true,
-                        filter: springFilterBuilder.and(
-                            filterData?.entorn != null
-                                ? springFilterBuilder.eq('id', filterData.entorn.id)
-                                : null
-                        ),
-                    }),
-                    salutApiReport(null, {
-                        code: 'grups_dates',
-                        data: {
-                            dataReferencia,
-                            agrupacio,
-                        },
-                    }),
-                ]);
+            const [
+                activeEntornAppsResponse,
+                activeAppsResponse,
+                entornsResponse,
+                grupsDatesResponse,
+            ] = await Promise.all([
+                entornAppFind({
+                    unpaged: true,
+                    filter: springFilterBuilder.and(
+                        springFilterBuilder.eq('activa', true),
+                        springFilterBuilder.eq('app.activa', true),
+                        filterData?.app != null
+                            ? springFilterBuilder.eq('app.id', filterData.app.id)
+                            : null,
+                        filterData?.entorn != null
+                            ? springFilterBuilder.eq('entorn.id', filterData.entorn.id)
+                            : null
+                    ),
+                }),
+                appFind({
+                    unpaged: true,
+                    filter: springFilterBuilder.and(
+                        springFilterBuilder.eq('activa', true),
+                        filterData?.app != null
+                            ? springFilterBuilder.eq('id', filterData.app.id)
+                            : null
+                    ),
+                }),
+                entornFind({
+                    unpaged: true,
+                    filter: springFilterBuilder.and(
+                        filterData?.entorn != null
+                            ? springFilterBuilder.eq('id', filterData.entorn.id)
+                            : null
+                    ),
+                }),
+                salutApiReport(null, {
+                    code: 'grups_dates',
+                    data: {
+                        dataReferencia,
+                        agrupacio,
+                    },
+                }),
+            ]);
 
             const reportData = {
                 dataReferencia,
@@ -213,7 +230,7 @@ const useSalutData = ({
             ]);
 
             const salutLastItems = (salutLastItemsResponse as SalutModel[]).map(
-                (item) => new SalutModel(item)
+                item => new SalutModel(item)
             );
             // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars
             const { [BaseEntity.LINKS]: _links, ...estats } = (estatsResponse as any[])[0];
@@ -230,7 +247,7 @@ const useSalutData = ({
                     entorns: entornsResponse?.rows,
                     entornApps: activeEntornAppsResponse.rows,
                 }),
-                grupsDates: (grupsDatesResponse as { data: string }[]).map((item) => item.data),
+                grupsDates: (grupsDatesResponse as { data: string }[]).map(item => item.data),
                 agrupacio,
                 error: undefined,
                 initialized: true,

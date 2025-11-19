@@ -133,8 +133,10 @@ const translationEn: translationResourcesType = {
                 detalls: "Details",
             },
             groupingSelect: {
+                label: "Group",
                 BY_APPLICATION: "By application",
                 BY_ENVIRONMENT: "By environment",
+                NONE: "None",
             },
             refreshperiod: {
                 PT1M: "1 minute",

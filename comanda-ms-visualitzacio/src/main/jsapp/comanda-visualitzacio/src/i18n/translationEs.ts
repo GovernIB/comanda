@@ -133,8 +133,10 @@ const translationEs: translationResourcesType = {
                 detalls: "Detalles",
             },
             groupingSelect: {
+                label: "Agrupación",
                 BY_APPLICATION: "Por aplicación",
                 BY_ENVIRONMENT: "Por entorno",
+                NONE: "Sin agrupación",
             },
             refreshperiod: {
                 PT1M: "1 minuto",

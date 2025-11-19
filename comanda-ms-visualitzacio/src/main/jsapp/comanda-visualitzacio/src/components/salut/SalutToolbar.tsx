@@ -19,11 +19,11 @@ import {
     useFilterApiRef,
     useFormContext,
 } from 'reactlib';
-import { Box } from '@mui/material';
+import { Box, InputLabel } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import { GroupWork } from '@mui/icons-material';
+import { useId } from 'react';
 
 export type SalutToolbarProps = {
     title: string;
@@ -66,6 +66,7 @@ export const agrupacioFromMinutes = (
 export enum GroupingEnum {
     APPLICATION = "APPLICATION",
     ENVIRONMENT = "ENVIRONMENT",
+    NONE = "NONE",
 }
 
 const isValidGrouping = (grouping: string): grouping is GroupingEnum => {
@@ -89,6 +90,8 @@ const getInitialGrouping = () => {
 const GroupForViewSelect = (props: { disabled?: boolean; onChange: (grouping: GroupingEnum) => void; value: GroupingEnum }) => {
     const { value, onChange, disabled } = props;
     const { t } = useTranslation();
+    const labelId = useId();
+    const selectId = useId();
 
     const handleChange = (event: SelectChangeEvent) => {
         const selectedGrouping = event.target.value;
@@ -99,18 +102,26 @@ const GroupForViewSelect = (props: { disabled?: boolean; onChange: (grouping: Gr
     }
 
     return (
-        <FormControl>
+        <FormControl sx={{ ml: 2, width: '12rem' }}>
+            <InputLabel id={labelId}>{t($ => $.page.salut.groupingSelect.label)}</InputLabel>
             <Select
-                labelId="grouping-select-label"
-                id="grouping-select"
+                label={t($ => $.page.salut.groupingSelect.label)}
+                labelId={labelId}
+                id={selectId}
                 value={value}
                 size="small"
                 disabled={disabled}
                 onChange={handleChange}
-                startAdornment={<InputAdornment position="start"><GroupWork/></InputAdornment>}
-                sx={{ ml: 1, width: '12rem' }}>
-                <MenuItem value={GroupingEnum.APPLICATION}>{t($ => $.page.salut.groupingSelect.BY_APPLICATION)}</MenuItem>
-                <MenuItem value={GroupingEnum.ENVIRONMENT}>{t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}</MenuItem>
+            >
+                <MenuItem value={GroupingEnum.APPLICATION}>
+                    {t($ => $.page.salut.groupingSelect.BY_APPLICATION)}
+                </MenuItem>
+                <MenuItem value={GroupingEnum.ENVIRONMENT}>
+                    {t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}
+                </MenuItem>
+                <MenuItem value={GroupingEnum.NONE}>
+                    {t($ => $.page.salut.groupingSelect.NONE)}
+                </MenuItem>
             </Select>
         </FormControl>
     );
@@ -260,7 +271,7 @@ const useTimeUntilNextRefreshFormatted = (nextRefresh?: Date | null) => {
 const SalutEntornAppFilterForm: React.FC = () => {
     const { data } = useFormContext();
 
-    return <Grid container spacing={2}>
+    return <Grid container spacing={1}>
         <Grid size={6}>
             <FormField name="app" componentProps={{ size: 'small', }}
                        filter={

@@ -13,31 +13,16 @@ import {
 } from '@mui/x-data-grid-pro';
 import { MuiDataGridProps } from 'reactlib';
 
-export const useTreeData = (
+export const useTreeDataWithoutSwitch = (
     getTreeDataPath: (row: any) => string[],
     gridApiRef: React.RefObject<GridApiPro | null>,
     headerName?: string,
     headerFlex?: number,
     expandedByDefault?: boolean,
-    enabledByDefault?: boolean,
+    // By default, treeView is enabled
+    enabled: boolean = true,
     groupingColDefAdditionalProps?: any
 ) => {
-    const { t } = useTranslation();
-    const [treeView, setTreeView] = React.useState<boolean>(enabledByDefault ?? true);
-    const treeViewSwitch = (
-        <FormGroup sx={{ ml: 2 }}>
-            <FormControlLabel
-                label={t($ => $.treeData.treeView)}
-                control={
-                    <Switch
-                        checked={treeView}
-                        onChange={(event) => setTreeView(event.target.checked)}
-                    />
-                }
-            />
-        </FormGroup>
-    );
-
     const isGroupExpandedByDefault = React.useCallback(() => {
         return expandedByDefault ?? false;
     }, [expandedByDefault]);
@@ -58,7 +43,7 @@ export const useTreeData = (
                     }}
                 >
                     <GridColumnHeaderTitle
-                        label={params?.colDef?.headerName ?? ""}
+                        label={params?.colDef?.headerName ?? ''}
                         columnWidth={params.colDef.computedWidth}
                     />
                     <Box sx={{ display: 'flex', gap: 1, ml: 1 }}>
@@ -90,7 +75,7 @@ export const useTreeData = (
             MuiDataGridProps,
             'treeData' | 'isGroupExpandedByDefault' | 'getTreeDataPath' | 'groupingColDef'
         >
-    > = treeView
+    > = enabled
         ? {
               treeData: true,
               isGroupExpandedByDefault,
@@ -101,6 +86,45 @@ export const useTreeData = (
               // If getTreeDataPath is not provided when disabling treeData, an error will be thrown
               getTreeDataPath,
           };
+    return {
+        dataGridProps,
+    };
+};
+
+export const useTreeData = (
+    getTreeDataPath: (row: any) => string[],
+    gridApiRef: React.RefObject<GridApiPro | null>,
+    headerName?: string,
+    headerFlex?: number,
+    expandedByDefault?: boolean,
+    enabledByDefault?: boolean,
+    groupingColDefAdditionalProps?: any
+) => {
+    const { t } = useTranslation();
+    const [treeView, setTreeView] = React.useState<boolean>(enabledByDefault ?? true);
+    const treeViewSwitch = (
+        <FormGroup sx={{ ml: 2 }}>
+            <FormControlLabel
+                label={t($ => $.treeData.treeView)}
+                control={
+                    <Switch
+                        checked={treeView}
+                        onChange={(event) => setTreeView(event.target.checked)}
+                    />
+                }
+            />
+        </FormGroup>
+    );
+
+    const { dataGridProps } = useTreeDataWithoutSwitch(
+        getTreeDataPath,
+        gridApiRef,
+        headerName,
+        headerFlex,
+        expandedByDefault,
+        treeView,
+        groupingColDefAdditionalProps
+    );
     return {
         treeView,
         treeViewSwitch,
