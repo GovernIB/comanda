@@ -15,6 +15,7 @@ import lombok.Setter;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.Base64;
 
 @Getter
@@ -25,7 +26,7 @@ import java.util.Base64;
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
 						roles = { BaseConfig.ROLE_ADMIN },
-						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.ADMINISTRATION }
+						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
 				),
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
@@ -44,7 +45,7 @@ public class AclEntry extends BaseResource<String> {
 	@NotNull
 	private ResourceType resourceType;
 	@NotNull
-	private Long resourceId;
+	private Serializable resourceId;
 	private boolean readAllowed;
 	private boolean writeAllowed;
 	private boolean createAllowed;
@@ -67,10 +68,11 @@ public class AclEntry extends BaseResource<String> {
 	@RequiredArgsConstructor
 	public static class AclEntryPk {
 		private final ResourceType resourceType;
-		private final Long resourceId;
-		private final Long entryId;
+		private final Serializable resourceId;
+		private final boolean sidPrincipal;
+		private final String sidName;
 		public String serializeToString() {
-			String joined = resourceType + "|" + resourceId + "|" + entryId;
+			String joined = resourceType + "|" + resourceId + "|" + (sidPrincipal ? 0 : 1) + "|" + sidName;
 			return Base64.getEncoder().encodeToString(joined.getBytes());
 		}
 		public static AclEntryPk deserializeFromString(String str) {
@@ -79,7 +81,8 @@ public class AclEntry extends BaseResource<String> {
 			return new AclEntryPk(
 					ResourceType.valueOf(parts[0]),
 					Long.parseLong(parts[1]),
-					Long.parseLong(parts[2]));
+					"1".equals(parts[2]),
+					parts[3]);
 		}
 	}
 

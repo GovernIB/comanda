@@ -729,6 +729,10 @@ const translationEs: translationResourcesType = {
         copiarContingut: "Copiar contenido",
         copiarContingutTitle: "Copiar el contenido",
         copiarContingutSuccess: "Contenido copiado al portapapeles",
+        permisos: {
+            title: "Permisos",
+            resourceTitle: "permiso"
+        }
     },
     form: {
         field: {

@@ -23,9 +23,4 @@ public class AclConfig extends BaseAclConfig {
 		return BaseConfig.DB_PREFIX;
 	}
 
-	@Override
-	protected boolean isOracleSequenceLegacy() {
-		return true;
-	}
-
 }

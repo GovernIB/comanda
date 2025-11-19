@@ -729,6 +729,10 @@ const translationCa = {
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
+        permisos: {
+            title: "Permisos",
+            resourceTitle: "permís"
+        }
     },
     form: {
         field: {

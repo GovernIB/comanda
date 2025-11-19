@@ -9,8 +9,6 @@ import {
     GridPage,
     MuiActionReportButton,
     MuiDataGrid,
-    MuiDataGridDialog,
-    MuiDataGridDialogApi,
     MuiForm,
     MuiFormTabContent,
     MuiFormTabs,
@@ -27,6 +25,7 @@ import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/Da
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
+import { useAclPermissionManager } from '../components/AclPermissionManager';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
 // TODO Debería añadirse un export de este tipo
@@ -143,7 +142,6 @@ const AppEntornForm: React.FC = () => {
 const AppsEntorns: React.FC = () => {
     const { t } = useTranslation();
     const { id: appId } = useParams();
-    const dataGridDialogApiRef = React.useRef<MuiDataGridDialogApi | any>({});
     const columns = [
         {
             field: 'entorn',
@@ -171,18 +169,15 @@ const AppsEntorns: React.FC = () => {
         apiRef?.current?.refresh?.()
     }
     const { toogleActiva } = useActions(refresh)
-
+    const {
+        show: permissionShow,
+        component: permissionComponent
+    } = useAclPermissionManager('ENTORN_APP');
     const actions = [
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
             icon: "lock",
-            onClick: (id: any) => {
-                dataGridDialogApiRef.current?.show({
-                    dataGridComponentProps: {
-                        filter: "resourceType:'ENTORN_APP' and resourceId:" + id
-                    }
-                });
-            }
+            onClick: (id: any, row: any) => permissionShow(id, row.entorn.description)
         },
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
@@ -217,19 +212,7 @@ const AppsEntorns: React.FC = () => {
                 rowAdditionalActions={actions}
                 rowActionsColumnProps={{ flex: .3 }}
             />
-            <MuiDataGridDialog
-                resourceName="aclEntry"
-                columns={[{
-                    field: 'subjectType',
-                    flex: 2
-                }, {
-                    field: 'subjectValue',
-                    flex: 3
-                }, {
-                    field: 'readAllowed',
-                    flex: 1
-                }]}
-                apiRef={dataGridDialogApiRef} />
+            {permissionComponent}
         </>
     );
 };

@@ -1,6 +1,7 @@
 package es.caib.comanda.acl.persist.entity;
 
 import es.caib.comanda.acl.logic.intf.model.AclEntry;
+import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.ms.persist.entity.ResourceEntity;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,6 +32,21 @@ public class AclEntryEntity implements ResourceEntity<AclEntry, String> {
 	@Override
 	public boolean isNew() {
 		return null == getId();
+	}
+
+	public SubjectType getSubjectType() {
+		if (getResource() != null) {
+			return getResource().getSubjectType();
+		} else {
+			return null;
+		}
+	}
+	public String getSubjectValue() {
+		if (getResource() != null) {
+			return getResource().getSubjectValue();
+		} else {
+			return null;
+		}
 	}
 
 	@Builder

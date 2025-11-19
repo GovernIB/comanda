@@ -7,11 +7,13 @@ import es.caib.comanda.acl.persist.entity.AclEntryEntity;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.client.model.acl.SubjectType;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.permission.ExtendedPermission;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
@@ -19,10 +21,9 @@ import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.io.Serializable;
+import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -48,12 +49,14 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 					pk.getResourceId(),
 					null);
 			if (acl != null) {
-				Optional<AccessControlEntry> entry = acl.getEntries().stream().
-						filter(e -> e.getId().equals(pk.getEntryId())).
-						findFirst();
-				if (entry.isPresent()) {
-					return Optional.of(
-							formAccessControlEntryToAclEntryEntity(entry.get(), pk));
+				List<AclEntryEntity> entries = toAclEntries(acl).stream().
+						filter(e -> {
+							AclEntry.AclEntryPk epk = AclEntry.AclEntryPk.deserializeFromString(e.getId());
+							return epk.getSidName().equals(pk.getSidName()) && epk.isSidPrincipal() == pk.isSidPrincipal();
+						}).
+						collect(Collectors.toList());
+				if (!entries.isEmpty()) {
+					return Optional.of(entries.get(0));
 				}
 			}
 		}
@@ -84,19 +87,16 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 			Long resourceId = Long.parseLong(filterResourceId);
 			Acl acl = aclHelper.get(
 					resourceClass,
-					filterResourceId,
+					resourceId,
 					null);
 			if (acl != null) {
-				List<AclEntryEntity> resultList = acl.getEntries().stream().
-						map(e -> {
-							AclEntry.AclEntryPk pk = new AclEntry.AclEntryPk(
-									getResourceTypeFromClass(resourceClass),
-									resourceId,
-									(Long) e.getId());
-							return formAccessControlEntryToAclEntryEntity(e, pk);
-						}).
-						collect(Collectors.toList());
-				return new PageImpl<>(resultList, pageable, resultList.size());
+				List<AclEntryEntity> resultList = toAclEntries(acl);
+				return new PageImpl<>(
+						pageable.getSort().isUnsorted() ? resultList : resultList.stream().
+								sorted(createGetterBasedComparator(pageable.getSort())).
+								collect(Collectors.toList()),
+						pageable,
+						resultList.size());
 			} else {
 				return Page.empty();
 			}
@@ -127,7 +127,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		aclHelper.set(
 				getClassFromResourceType(resource.getResourceType()),
 				resource.getResourceId(),
-				resource.getSubjectName(),
+				resource.getSubjectValue(),
 				resource.getSubjectType().equals(SubjectType.ROLE),
 				permissionsGranted);
 		return entity;
@@ -149,7 +149,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		aclHelper.delete(
 				getClassFromResourceType(resource.getResourceType()),
 				resource.getResourceId(),
-				resource.getSubjectName(),
+				resource.getSubjectValue(),
 				resource.getSubjectType().equals(SubjectType.ROLE));
 	}
 
@@ -179,11 +179,30 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		entity.setResource(resource);
 	}
 
+	private List<AclEntryEntity> toAclEntries(Acl acl) {
+		List<AccessControlEntry> accessControlEntries = acl.getEntries();
+		if (accessControlEntries == null) {
+			return Collections.emptyList();
+		}
+		Map<Sid, List<AccessControlEntry>> entriesBySid = accessControlEntries.stream().
+				collect(Collectors.groupingBy(AccessControlEntry::getSid));
+		String resourceClassName = acl.getObjectIdentity().getType();
+		Serializable resourceId = acl.getObjectIdentity().getIdentifier();
+		return entriesBySid.entrySet().stream().
+				map(entry -> formAccessControlEntryToAclEntryEntity(
+						resourceClassName,
+						resourceId,
+						entry.getKey(),
+						entry.getValue())).
+				collect(Collectors.toList());
+	}
+
 	private AclEntryEntity formAccessControlEntryToAclEntryEntity(
-			AccessControlEntry ace,
-			AclEntry.AclEntryPk pk) {
+			String resourceClassName,
+			Serializable resourceId,
+			Sid sid,
+			List<AccessControlEntry> aces) {
 		AclEntry aclEntry = new AclEntry();
-		Sid sid = ace.getSid();
 		if (sid instanceof PrincipalSid) {
 			aclEntry.setSubjectType(SubjectType.USER);
 			aclEntry.setSubjectValue(((PrincipalSid)sid).getPrincipal());
@@ -191,8 +210,33 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 			aclEntry.setSubjectType(SubjectType.ROLE);
 			aclEntry.setSubjectValue(((GrantedAuthoritySid)sid).getGrantedAuthority());
 		}
-		aclEntry.setResourceType(pk.getResourceType());
-		aclEntry.setResourceId(pk.getResourceId());
+		ResourceType resourceType = getResourceTypeFromClassName(resourceClassName);
+		aclEntry.setResourceType(resourceType);
+		aclEntry.setResourceId(resourceId);
+		AclEntry.AclEntryPk pk = new AclEntry.AclEntryPk(
+				resourceType,
+				resourceId,
+				aclEntry.getSubjectType().equals(SubjectType.ROLE),
+				aclEntry.getSubjectValue());
+		aclEntry.setId(pk.serializeToString());
+		aces.forEach(a -> {
+			int mask = a.getPermission().getMask();
+			if ((mask & BasePermission.READ.getMask()) != 0) aclEntry.setReadAllowed(true);
+			if ((mask & BasePermission.WRITE.getMask()) != 0) aclEntry.setWriteAllowed(true);
+			if ((mask & BasePermission.CREATE.getMask()) != 0) aclEntry.setCreateAllowed(true);
+			if ((mask & BasePermission.DELETE.getMask()) != 0) aclEntry.setDeleteAllowed(true);
+			if ((mask & BasePermission.ADMINISTRATION.getMask()) != 0) aclEntry.setAdminAllowed(true);
+			if ((mask & ExtendedPermission.PERM0.getMask()) != 0) aclEntry.setPerm0Allowed(true);
+			if ((mask & ExtendedPermission.PERM1.getMask()) != 0) aclEntry.setPerm1Allowed(true);
+			if ((mask & ExtendedPermission.PERM2.getMask()) != 0) aclEntry.setPerm2Allowed(true);
+			if ((mask & ExtendedPermission.PERM3.getMask()) != 0) aclEntry.setPerm3Allowed(true);
+			if ((mask & ExtendedPermission.PERM4.getMask()) != 0) aclEntry.setPerm4Allowed(true);
+			if ((mask & ExtendedPermission.PERM5.getMask()) != 0) aclEntry.setPerm5Allowed(true);
+			if ((mask & ExtendedPermission.PERM6.getMask()) != 0) aclEntry.setPerm6Allowed(true);
+			if ((mask & ExtendedPermission.PERM7.getMask()) != 0) aclEntry.setPerm7Allowed(true);
+			if ((mask & ExtendedPermission.PERM8.getMask()) != 0) aclEntry.setPerm8Allowed(true);
+			if ((mask & ExtendedPermission.PERM9.getMask()) != 0) aclEntry.setPerm9Allowed(true);
+		});
 		return resourceToEntity(
 				aclEntry,
 				pk.serializeToString(),
@@ -240,231 +284,52 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 
 	private ResourceType getResourceTypeFromClass(Class<?> resourceClass) {
 		if (resourceClass != null) {
-			if (resourceClass.getName().equals("es.caib.comanda.client.model.EntornApp")) {
+			return getResourceTypeFromClassName(resourceClass.getName());
+		}
+		return null;
+	}
+
+	private ResourceType getResourceTypeFromClassName(String className) {
+		if (className != null) {
+			if (className.equals("es.caib.comanda.client.model.EntornApp")) {
 				return ResourceType.ENTORN_APP;
-			} else if (resourceClass.getName().equals("es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard")) {
+			} else if (className.equals("es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard")) {
 				return ResourceType.DASHBOARD;
 			} else {
-				log.error("Couldn't find ResourceType for class " + resourceClass);
+				log.error("Couldn't find ResourceType for className " + className);
 			}
 		}
 		return null;
 	}
 
-	/*
-    private final AclEntryMapRepository aclEntryMapRepository;
-    private final MutableAclService mutableAclService;
-
-//    @Override
-//    protected Class<AclEntry> getResourceClass() {
-//        return AclEntry.class;
-//    }
-//
-//    @Override
-//    protected Class<AclEntryMapEntity> getEntityClass() {
-//        return AclEntryMapEntity.class;
-//    }
-
-    private List<Permission> toSpringPermissions(AclAction action) {
-        switch (action) {
-            case READ:
-                return Collections.singletonList(BasePermission.READ);
-            case WRITE:
-                // WRITE should not imply ADMINISTRATION
-                return Collections.singletonList(BasePermission.WRITE);
-            case ADMIN:
-            default:
-                return Collections.singletonList(BasePermission.ADMINISTRATION);
-        }
-    }
-
-    public String cacheKey(String user, Collection<String> roles, ResourceType resourceType, Long resourceId, AclAction action) {
-        String rolesStr = roles == null ? "" : roles.stream().sorted().collect(Collectors.joining(","));
-        return String.join("|",
-                Optional.ofNullable(user).orElse(""),
-                rolesStr,
-                resourceType.name(),
-                String.valueOf(resourceId),
-                action.name());
-    }
-
-    private ObjectIdentity buildObjectIdentity(ResourceType resourceType, Long resourceId) {
-        return new ObjectIdentityImpl(resourceType.name(), resourceId);
-    }
-
-    private List<Sid> buildSids(String user, List<String> roles) {
-        List<Sid> sids = new ArrayList<>();
-        if (user != null && !user.isBlank()) {
-            sids.add(new PrincipalSid(user));
-        }
-        if (!CollectionUtils.isEmpty(roles)) {
-            for (String r : roles) {
-                if (r != null && !r.isBlank()) sids.add(new GrantedAuthoritySid(r));
-            }
-        }
-        return sids;
-    }
-
-    @Override
-    @Cacheable(value = "aclCheckCache", key = "#root.target.cacheKey(#user, #roles, #resourceType, #resourceId, #action)")
-    public boolean checkPermission(String user, List<String> roles, ResourceType resourceType, Long resourceId, AclAction action) {
-        try {
-            ObjectIdentity oi = buildObjectIdentity(resourceType, resourceId);
-            List<Sid> sids = buildSids(user, roles);
-            if (sids.isEmpty()) return false;
-            List<Permission> permissions = toSpringPermissions(action);
-            Acl acl = mutableAclService.readAclById(oi, sids);
-            return acl.isGranted(permissions, sids, false);
-        } catch (org.springframework.security.acls.model.NotFoundException nf) {
-            log.debug("No ACL found in Spring ACL for {}:{}", resourceType, resourceId);
-            return false;
-        } catch (Exception e) {
-            log.warn("Spring ACL check error (type={}, id={})", resourceType, resourceId, e);
-            return false;
-        }
-    }
-
-    private void syncSpringAclForResource(ResourceType resourceType, Long resourceId) {
-        // Ensure an Authentication exists for Spring ACL createAcl() which requires a non-null principal
-        org.springframework.security.core.Authentication prevAuth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        boolean tempAuthSet = false;
-        if (prevAuth == null) {
-            org.springframework.security.authentication.UsernamePasswordAuthenticationToken tempAuth =
-                    new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                            "system", "N/A",
-                            java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN")));
-            org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(tempAuth);
-            tempAuthSet = true;
-        }
-        try {
-            ObjectIdentity oi = buildObjectIdentity(resourceType, resourceId);
-            MutableAcl acl;
-            try {
-                acl = (MutableAcl) mutableAclService.readAclById(oi);
-                for (int i = acl.getEntries().size() - 1; i >= 0; i--) {
-                    acl.deleteAce(i);
-                }
-            } catch (org.springframework.security.acls.model.NotFoundException nf) {
-                acl = (MutableAcl) mutableAclService.createAcl(oi);
-            }
-            // Reconstrueix ACEs a partir de mapping table
-            List<AclEntryMapEntity> all = aclEntryMapRepository.findAllByResource(resourceType, resourceId);
-            int index = 0;
-            for (AclEntryMapEntity e : all) {
-                boolean granting = e.getEffect() == AclEffect.ALLOW;
-                Sid sid = (e.getSubjectType() == SubjectType.USER) ? new PrincipalSid(e.getSubjectValue()) : new GrantedAuthoritySid(e.getSubjectValue());
-                List<Permission> perms = toSpringPermissions(e.getAction());
-                for (Permission p : perms) {
-                    acl.insertAce(index++, p, sid, granting);
-                }
-            }
-            mutableAclService.updateAcl(acl);
-        } finally {
-            if (tempAuthSet) {
-                // Clear temporary authentication
-                org.springframework.security.core.context.SecurityContextHolder.clearContext();
-            }
-        }
-    }
-
-    // Invalidate cache en canvis i sincronitza Spring ACL
-    @Override
-    @Transactional
-    @CacheEvict(value = "aclCheckCache", allEntries = true)
-    public AclEntry create(AclEntry resource, Map<String, AnswerValue> answers) {
-        AclEntry created = super.create(resource, answers);
-        syncSpringAclForResource(resource.getResourceType(), resource.getResourceId());
-        return created;
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "aclCheckCache", allEntries = true)
-    public AclEntry update(Long id, AclEntry resource, Map<String, AnswerValue> answers) throws ResourceNotFoundException {
-        AclEntry updated = super.update(id, resource, answers);
-        syncSpringAclForResource(resource.getResourceType(), resource.getResourceId());
-        return updated;
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "aclCheckCache", allEntries = true)
-    public void delete(Long id, Map<String, AnswerValue> answers) throws ResourceNotFoundException {
-        AclEntryMapEntity entity = getEntity(id);
-        ResourceType type = entity.getResourceType();
-        Long rid = entity.getResourceId();
-        super.delete(id, answers);
-        syncSpringAclForResource(type, rid);
-    }
-
-    @Override
-    public boolean checkPermissionsAny(String user, List<String> roles, ResourceType resourceType, Long resourceId, List<AclAction> actions) {
-        if (actions == null || actions.isEmpty()) return false;
-        for (AclAction a : actions) {
-            if (checkPermission(user, roles, resourceType, resourceId, a)) return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean checkPermissionsAll(String user, List<String> roles, ResourceType resourceType, Long resourceId, List<AclAction> actions) {
-        if (actions == null || actions.isEmpty()) return false;
-        for (AclAction a : actions) {
-            if (!checkPermission(user, roles, resourceType, resourceId, a)) return false;
-        }
-        return true;
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "aclCheckCache", allEntries = true)
-    public List<AclEntry> createAll(List<AclEntry> entries) {
-        if (entries == null || entries.isEmpty()) return Collections.emptyList();
-        List<AclEntry> created = new ArrayList<>();
-        for (AclEntry e : entries) {
-            AclEntry c = super.create(e, Collections.emptyMap());
-            created.add(c);
-            syncSpringAclForResource(c.getResourceType(), c.getResourceId());
-        }
-        return created;
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "aclCheckCache", allEntries = true)
-    public List<AclEntry> updateAll(List<AclEntry> entries) {
-        if (entries == null || entries.isEmpty()) return Collections.emptyList();
-        List<AclEntry> updated = new ArrayList<>();
-        for (AclEntry e : entries) {
-            if (e.getId() == null) continue;
-            try {
-                AclEntry u = super.update(e.getId(), e, Collections.emptyMap());
-                updated.add(u);
-                syncSpringAclForResource(u.getResourceType(), u.getResourceId());
-            } catch (ResourceNotFoundException ex) {
-                log.debug("ACL entry not found for bulk update: {}", e.getId());
-            }
-        }
-        return updated;
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "aclCheckCache", allEntries = true)
-    public void deleteAll(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) return;
-        for (Long id : ids) {
-            try {
-                AclEntryMapEntity entity = getEntity(id);
-                ResourceType type = entity.getResourceType();
-                Long rid = entity.getResourceId();
-                super.delete(id, Collections.emptyMap());
-                syncSpringAclForResource(type, rid);
-            } catch (ResourceNotFoundException ex) {
-                log.debug("ACL entry not found for bulk delete: {}", id);
-            }
-        }
-    }
-	 */
+	private <T> Comparator<T> createGetterBasedComparator(Sort sort) {
+		return sort.stream().
+				map(this::<T>createComparatorForOrder).
+				reduce(Comparator::thenComparing).
+				orElse((a, b) -> 0);
+	}
+	@SuppressWarnings("unchecked")
+	private <T> Comparator<T> createComparatorForOrder(Sort.Order order) {
+		switch (order.getProperty()) {
+			case "subjectType":
+				return (Comparator<T>)createComparator(AclEntryEntity::getSubjectType, order.getDirection());
+			case "subjectValue":
+				return (Comparator<T>)createComparator(AclEntryEntity::getSubjectValue, order.getDirection());
+			default:
+				return (a, b) -> 0;
+		}
+	}
+	private <T, U extends Comparable<U>> Comparator<T> createComparator(
+			Function<T, U> extractor, Sort.Direction direction) {
+		return (a, b) -> {
+			U valueA = extractor.apply(a);
+			U valueB = extractor.apply(b);
+			if (valueA == null && valueB == null) return 0;
+			if (valueA == null) return direction == Sort.Direction.ASC ? -1 : 1;
+			if (valueB == null) return direction == Sort.Direction.ASC ? 1 : -1;
+			int result = valueA.compareTo(valueB);
+			return direction == Sort.Direction.ASC ? result : -result;
+		};
+	}
 
 }

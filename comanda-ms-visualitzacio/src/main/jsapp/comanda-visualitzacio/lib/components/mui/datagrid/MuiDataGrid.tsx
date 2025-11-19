@@ -801,7 +801,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
     };
     const sortingProps: any = {
         sortingMode: 'server',
-        sortModel: internalSortModel,
+        sortModel: staticSortModel ?? internalSortModel,
         onSortModelChange: setInternalSortModel,
     };
     const paginationProps: any = paginationActive
