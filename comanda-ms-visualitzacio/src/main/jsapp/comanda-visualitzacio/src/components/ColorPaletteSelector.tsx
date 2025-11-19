@@ -37,14 +37,17 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColor
     }, [colors, newColor, onPaletteChange]);
 
     // Maneja l'eliminació d'un color de la paleta
-    const handleDeleteColor = useCallback((colorToDelete) => {
-        const updatedColors = colors.filter(color => color !== colorToDelete);
-        setColors(updatedColors);
-        // Notifica el canvi al component pare
-        if (onPaletteChange) {
-            onPaletteChange(updatedColors);
-        }
-    }, [colors, onPaletteChange]);
+    const handleDeleteColor = useCallback(
+        (colorToDelete: string) => {
+            const updatedColors = colors.filter((color) => color !== colorToDelete);
+            setColors(updatedColors);
+            // Notifica el canvi al component pare
+            if (onPaletteChange) {
+                onPaletteChange(updatedColors);
+            }
+        },
+        [colors, onPaletteChange]
+    );
 
     const fileInputRef = React.useRef<HTMLInputElement>(undefined);
     const endAdornment = <>
@@ -105,11 +108,10 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColor
                 </Typography>
             ) : (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {colors.map((color: string, index: number) => (
+                    {colors.map((color: string) => (
                         <Chip
                             key={color} // Utilitzem el color com a key (assumint que són únics)
                             label={color.toUpperCase()}
-                            size={'xs'}
                             sx={{
                                 bgcolor: color,
                                 fontSize: '0.75rem',
