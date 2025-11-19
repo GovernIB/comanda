@@ -33,12 +33,14 @@ const FormActionDialog = (props:FormActionDialogProp) => {
         apiRef,
         formDialogResultProcessor,
         onSuccess = () => temporalMessageShow(null, '', 'success'),
-        onError = (error:any) => {
-            error?.message && temporalMessageShow(null, error?.description, 'error');
-        }
+        onError = (error: any) => {
+            if (error?.message) {
+                temporalMessageShow(null, error?.description, 'error');
+            }
+        },
     } = props;
     const {
-        initialized,
+        available,
         formDialogComponent,
         exec: actionExecutor,
         close,
@@ -48,6 +50,7 @@ const FormActionDialog = (props:FormActionDialogProp) => {
         undefined,
         undefined,
         false,
+        undefined,
         undefined,
         undefined,
         initialOnChange,
@@ -61,7 +64,7 @@ const FormActionDialog = (props:FormActionDialogProp) => {
     )
 
     const exec = (id: any, formAdditionalData?: any) :void => {
-        if(initialized) {
+        if(available) {
             const customTitle = (typeof title === 'function') ? title?.(formAdditionalData) : title;
             actionExecutor(id, customTitle, formAdditionalData)
         }
@@ -86,11 +89,15 @@ export const FormReportDialog = (props:FormReportDialogProp) => {
         apiRef,
         formDialogResultProcessor,
         onSuccess = () => temporalMessageShow(null, '', 'info'),
-        onError = (error:any) => error?.message && temporalMessageShow(null, error?.message, 'error'),
+        onError = (error: any) => {
+            if (error?.message) {
+                temporalMessageShow(null, error?.message, 'error');
+            }
+        },
     } = props;
 
     const {
-        initialized,
+        available,
         formDialogComponent,
         exec: reportExecutor,
         close,
@@ -100,6 +107,7 @@ export const FormReportDialog = (props:FormReportDialogProp) => {
         report,
         reportFileType,
         false,
+        undefined,
         undefined,
         undefined,
         initialOnChange,
@@ -113,7 +121,7 @@ export const FormReportDialog = (props:FormReportDialogProp) => {
     )
 
     const exec = (id: any, formAdditionalData?: any) :void => {
-        if(initialized) {
+        if(available) {
             const customTitle = (typeof title === 'function') ? title?.(formAdditionalData) : title;
             reportExecutor(id, customTitle, formAdditionalData)
         }
