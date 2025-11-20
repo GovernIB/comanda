@@ -192,6 +192,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		return entity.getResource();
 	}
 
+	@Override
 	protected AclEntryEntity resourceToEntity(
 			AclEntry resource,
 			String pk,
@@ -202,6 +203,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 				build();
 	}
 
+	@Override
 	protected void updateEntityWithResource(
 			AclEntryEntity entity,
 			AclEntry resource,

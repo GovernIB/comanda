@@ -22,15 +22,15 @@ public interface AclServiceClient {
 
 	@GetMapping("/anyPermissionGranted")
 	ResponseEntity<Boolean> anyPermissionGranted(
-			@RequestParam ResourceType resourceType,
-			@RequestParam Serializable resourceId,
-			@RequestParam List<PermissionEnum> permissions, // Ha de ser una llista de PermissionEnum
+			@RequestParam("resourceType") ResourceType resourceType,
+			@RequestParam("resourceId") Serializable resourceId,
+			@RequestParam("permissions") List<PermissionEnum> permissions, // Ha de ser una llista de PermissionEnum
 			@RequestHeader("Authorization") final String authorizationHeader);
 
 	@GetMapping("/findIdsWithAnyPermission")
 	ResponseEntity<Set<Serializable>> findIdsWithAnyPermission(
-			@RequestParam ResourceType resourceType,
-			@RequestParam List<PermissionEnum> permissions, // Ha de ser una llista de PermissionEnum
+			@RequestParam("resourceType") ResourceType resourceType,
+			@RequestParam("permissions") List<PermissionEnum> permissions, // Ha de ser una llista de PermissionEnum
 			@RequestHeader("Authorization") final String authorizationHeader);
 
 }

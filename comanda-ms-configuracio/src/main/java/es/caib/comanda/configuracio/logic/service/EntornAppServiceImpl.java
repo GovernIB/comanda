@@ -67,6 +67,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final RestTemplate restTemplate;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final ApplicationEventPublisher eventPublisher;
+	/*private final AclServiceClient aclServiceClient;
+	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;*/
 
     @PostConstruct
     public void init() {
@@ -74,6 +76,18 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
     }
+
+	@Override
+	protected String additionalSpringFilter(
+			String currentSpringFilter,
+			String[] namedQueries) {
+		/*ResponseEntity<Set<Serializable>> idsResponseEntity = aclServiceClient.findIdsWithAnyPermission(
+				ResourceType.ENTORN_APP,
+				Collections.singletonList(PermissionEnum.READ),
+				httpAuthorizationHeaderHelper.getAuthorizationHeader());
+		System.out.println(">>> allowedIds: " + idsResponseEntity.getBody());*/
+		return null;
+	}
 
     @Override
     protected void afterConversion(EntornAppEntity entity, EntornApp resource) {

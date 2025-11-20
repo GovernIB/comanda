@@ -18,9 +18,6 @@ const AclEntryForm: React.FC = () => {
         <Grid size={12}>
             <FormField name="readAllowed" />
         </Grid>
-        <Grid size={12}>
-            <FormField name="writeAllowed" />
-        </Grid>
     </Grid>;
 }
 
@@ -55,17 +52,17 @@ export const useAclPermissionManager = (resourceType: string) => {
         }, {
             field: 'subjectValue',
             sortable: false,
-            flex: 3
+            flex: 5
         }, {
             field: 'readAllowed',
             sortable: false,
             flex: 1
-        }, {
-            field: 'writeAllowed',
-            sortable: false,
-            flex: 1
         }]}
-        apiRef={dataGridDialogApiRef} />;
+        apiRef={dataGridDialogApiRef}
+        dialogComponentProps={{
+            fullWidth: true,
+            maxWidth: 'lg'
+        }}/>;
     return {
         show,
         close,

@@ -205,7 +205,7 @@ public class AclHelper {
 				filter(s -> s instanceof PrincipalSid).
 				map(s -> ((PrincipalSid)s).getPrincipal()).
 				findFirst();
-		principal.ifPresent(principalSid -> paramsMap.put("principal", principal));
+		principal.ifPresent(principalSid -> paramsMap.put("principal", principal.get()));
 		List<String> grantedAuthorities = sidsList.stream().
 				filter(s -> s instanceof GrantedAuthoritySid).
 				map(s -> ((GrantedAuthoritySid)s).getGrantedAuthority()).
@@ -219,11 +219,12 @@ public class AclHelper {
 					"masks",
 					permissions.stream().map(Permission::getMask).collect(Collectors.toSet()));
 		}
+		String query = aclConfig.getIdsWithPermissionQuery(
+				anyPermission,
+				principal.isPresent(),
+				!grantedAuthorities.isEmpty());
 		return jdbcTemplate.query(
-				aclConfig.getIdsWithPermissionQuery(
-						anyPermission,
-						principal.isPresent(),
-						!grantedAuthorities.isEmpty()),
+				query,
 				paramsMap,
 				rs -> {
 					Set<Serializable> ids1 = new HashSet<>();

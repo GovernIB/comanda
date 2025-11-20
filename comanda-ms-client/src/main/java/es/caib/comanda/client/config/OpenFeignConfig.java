@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableFeignClients(clients = {
+		AclServiceClient.class,
 		AppServiceClient.class,
 		EntornServiceClient.class,
 		EntornAppServiceClient.class,
