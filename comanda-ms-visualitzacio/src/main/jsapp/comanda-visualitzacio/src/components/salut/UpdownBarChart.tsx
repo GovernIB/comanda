@@ -11,6 +11,7 @@ import { XAxis } from '@mui/x-charts';
 import { SalutData } from '../../pages/salut/Salut.tsx';
 import { numericObjectKeys } from '../../util/objectUtils.ts';
 import useTranslationStringKey from '../../hooks/useTranslationStringKey';
+import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 
 export const calculateEstatsSeries = (
     baseDataGroups: string[],
@@ -119,6 +120,7 @@ const UpdownBarChart: React.FC<{
         {
             scaleType: 'band',
             data: dataGroups,
+            height: MUI_AXIS_WORKAROUND_HEIGHT,
             // TODO Fer un formatter generic per a totes les agrupacions
             valueFormatter: (value: string) => (agrupacio === 'HORA' ? value.substring(3) : value),
         },

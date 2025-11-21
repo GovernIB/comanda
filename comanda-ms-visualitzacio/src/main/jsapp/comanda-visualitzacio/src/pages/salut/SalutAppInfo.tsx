@@ -48,6 +48,7 @@ import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBou
 import { EntornAppModel } from '../../types/app.model';
 import SalutChip from '../../components/salut/SalutChip';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
+import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -145,6 +146,7 @@ const LatenciaLineChart: React.FC<{
                     series={[...lineSeries]}
                     xAxis={[
                         {
+                            height: MUI_AXIS_WORKAROUND_HEIGHT,
                             scaleType: 'band',
                             data: dataGroups,
                             id: 'latencia-x-axis-id',
