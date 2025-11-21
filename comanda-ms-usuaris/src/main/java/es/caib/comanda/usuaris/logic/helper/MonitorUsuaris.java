@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
@@ -63,10 +64,10 @@ public class MonitorUsuaris {
         usuarisClientHelper.monitorCreate(monitor);
     }
 
-    public void endAction(Throwable t) {
+    public void endAction(Throwable t, String errorDescripcio) {
         monitor.setEstat(EstatEnum.ERROR);
         monitor.setTempsResposta(System.currentTimeMillis() - this.startTime);
-        monitor.setErrorDescripcio(USUARI_DADES_ERROR);
+        monitor.setErrorDescripcio(Strings.isBlank(errorDescripcio) ? USUARI_DADES_ERROR : errorDescripcio);
         monitor.setExcepcioMessage(ExceptionUtils.getMessage(t));
         monitor.setExcepcioStacktrace(ExceptionUtils.getStackTrace(t));
         usuarisClientHelper.monitorCreate(monitor);

@@ -150,7 +150,6 @@ public class AppInfoHelper {
                 throw new MalformedURLException("URL de salut invàlida o no absoluta");
             }
 			AppInfo appInfo = restTemplate.getForObject(entornApp.getInfoUrl(), AppInfo.class);
-			monitorApp.endAction();
 			// Guardar la informació de l'app a la base de dades
 			if (appInfo != null) {
 				entornApp.setVersio(appInfo.getVersio());
@@ -161,15 +160,22 @@ public class AppInfoHelper {
 				refreshSubsistemes(entornApp, appInfo.getSubsistemes());
 				refreshContexts(entornApp, appInfo.getContexts());
 			}
+            monitorApp.endAction();
 		} catch (RestClientException | MalformedURLException ex) {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom(),
 				ex.getLocalizedMessage());
 			if (!monitorApp.isFinishedAction()) {
-				monitorApp.endAction(ex);
+				monitorApp.endAction(ex, null);
 			}
-		}
+		} catch (Exception ex) {
+            log.error("Error al recuperar i guardar la informació de salut de l'app {}, entorn {}: {}",
+                    entornApp.getApp().getNom(),
+                    entornApp.getEntorn().getNom(),
+                    ex.getLocalizedMessage());
+            monitorApp.endAction(ex, "Error intern de Comanda");
+        }
 	}
 
     private boolean isValidUri(URI uri) {
