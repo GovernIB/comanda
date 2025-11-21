@@ -153,7 +153,7 @@ const translationEn: translationResourcesType = {
                 P1M: "Last month",
             },
             tabs: {
-                general: "Environment",
+                entorn: "Environment",
                 estatActual: "Current state",
                 integracions: "Integrations",
                 subsistemes: "Subsystems",
@@ -234,7 +234,7 @@ const translationEn: translationResourcesType = {
                 missatgeInfoCount: "Info"
             },
             contexts: {
-                title: "Contexts",
+                title: "Contexts and manuals",
                 noInfo: "There is no information about contexts",
                 column: {
                     codi: "Code",
@@ -245,7 +245,7 @@ const translationEn: translationResourcesType = {
                 },
             },
             detalls: {
-                title: "Details",
+                title: "System",
                 noInfo: "There is no information about application details",
             },
             estats: {

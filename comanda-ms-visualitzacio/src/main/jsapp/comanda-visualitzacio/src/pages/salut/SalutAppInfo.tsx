@@ -34,13 +34,10 @@ import {
 import {
     getColorByIntegracio,
     getColorByNivellEnum,
-    getColorByStatEnum,
     getColorBySubsistema,
-    getMaterialIconByState,
     NivellEnum,
     SalutIntegracioModel,
     SalutModel,
-    useSalutEstatTranslation,
 } from '../../types/salut.model.tsx';
 import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
@@ -50,10 +47,6 @@ import { AppDataState, SalutInformeLatenciaItem } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
 import { EntornAppModel } from '../../types/app.model';
 import SalutChip from '../../components/salut/SalutChip';
-import { getLowestCommonIntegracioEstat, getLowestCommonSubsistemesEstat } from './utils';
-import SalutIntegracionsChips from '../../components/salut/SalutIntegracionsChips.tsx';
-import SalutSubsistemesChips from '../../components/salut/SalutSubsistemesChips.tsx';
-import SalutMissatgesChips from '../../components/salut/SalutMissatgesChips';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
@@ -143,7 +136,7 @@ const LatenciaLineChart: React.FC<{
     ];
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
     return (
-        <Card variant="outlined" sx={{ height: '350px' }}>
+        <Card variant="outlined" sx={{ height: '340px' }}>
             <CardContent sx={{ height: '100%' }}>
                 <Typography gutterBottom variant="h5" component="div">
                     {t($ => $.page.salut.latencia.title)}
@@ -182,7 +175,7 @@ const EstatsBarCard: React.FC<{
     const { t } = useTranslation();
     const hasData = estats && Object.keys(estats).length > 0;
     return (
-        <Card variant="outlined" sx={{ height: '350px' }}>
+        <Card variant="outlined" sx={{ height: '340px' }}>
             <CardContent sx={{ height: '100%' }}>
                 <Typography gutterBottom variant="h5" component="div">
                     {t($ => $.page.salut.estats.title)}
@@ -480,63 +473,96 @@ const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }
                     </Typography>
                 )}
                 {contexts?.length && (
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>{t($ => $.page.salut.contexts.column.nom)}</TableCell>
-                                <TableCell>{t($ => $.page.salut.contexts.column.path)}</TableCell>
-                                <TableCell>{t($ => $.page.salut.contexts.column.api)}</TableCell>
-                                <TableCell>
-                                    {t($ => $.page.salut.contexts.column.manuals)}
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {contexts.map((s, key: number) => (
-                                <TableRow key={key}>
-                                    <TableCell>{s.nom}</TableCell>
+                    <>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
                                     <TableCell>
-                                        {s.path && (
-                                            <Button
-                                                href={s.path}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                sx={{ textTransform: 'none' }}
-                                            >
-                                                {s.path}
-                                            </Button>
-                                        )}
+                                        {t($ => $.page.salut.contexts.column.nom)}
                                     </TableCell>
                                     <TableCell>
-                                        {s.api && (
-                                            <Button
-                                                href={s.api}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                sx={{ textTransform: 'none' }}
-                                            >
-                                                {s.api}
-                                            </Button>
-                                        )}
+                                        {t($ => $.page.salut.contexts.column.path)}
                                     </TableCell>
                                     <TableCell>
-                                        {s.manuals &&
-                                            s.manuals.map((manual, index: number) => (
+                                        {t($ => $.page.salut.contexts.column.api)}
+                                    </TableCell>
+                                    {/*<TableCell>*/}
+                                    {/*    {t($ => $.page.salut.contexts.column.manuals)}*/}
+                                    {/*</TableCell>*/}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {contexts.map((s, key: number) => (
+                                    <TableRow key={key}>
+                                        <TableCell>{s.nom}</TableCell>
+                                        <TableCell>
+                                            {s.path && (
                                                 <Button
-                                                    key={index}
-                                                    href={manual.path ?? ''}
+                                                    href={s.path}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    sx={{ textTransform: 'none', display: 'block' }}
+                                                    sx={{ textTransform: 'none' }}
                                                 >
-                                                    {manual.nom}
+                                                    {s.path}
                                                 </Button>
-                                            ))}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            {s.api && (
+                                                <IconButton
+                                                    component="a"
+                                                    href={s.api}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    size="small"
+                                                >
+                                                    <Icon>launch</Icon>
+                                                </IconButton>
+                                            )}
+                                        </TableCell>
+                                        {/*<TableCell>*/}
+                                        {/*    {s.manuals &&*/}
+                                        {/*        s.manuals.map((manual, index: number) => (*/}
+                                        {/*            <Button*/}
+                                        {/*                key={index}*/}
+                                        {/*                href={manual.path ?? ''}*/}
+                                        {/*                target="_blank"*/}
+                                        {/*                rel="noopener noreferrer"*/}
+                                        {/*                sx={{*/}
+                                        {/*                    textTransform: 'none',*/}
+                                        {/*                    display: 'block',*/}
+                                        {/*                }}*/}
+                                        {/*            >*/}
+                                        {/*                {manual.nom}*/}
+                                        {/*            </Button>*/}
+                                        {/*        ))}*/}
+                                        {/*</TableCell>*/}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <Box sx={{
+                            mt: 2,
+                            display: 'flex',
+                        }}>
+                            {contexts.map((s, key: number) =>
+                                s.manuals?.map((manual, index: number) => (
+                                    <Button
+                                        key={`manual${key}-${index}`}
+                                        href={manual.path ?? ''}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        sx={{
+                                            textTransform: 'none',
+                                            display: 'block',
+                                        }}
+                                    >
+                                        {manual.nom}
+                                    </Button>
+                                ))
+                            )}
+                        </Box>
+                    </>
                 )}
             </CardContent>
         </Card>
@@ -599,27 +625,75 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
     );
 };
 
-const EstatInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+// const EstatInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+//     const { t } = useTranslation();
+//     const { tTitle: tSalutEstatTitle } = useSalutEstatTranslation();
+//     const integracionsEstat = getLowestCommonIntegracioEstat(salutCurrentApp);
+//     const integracionsEstatChip = salutCurrentApp && (
+//         <SalutChip
+//             icon={getMaterialIconByState(integracionsEstat)}
+//             label={tSalutEstatTitle(integracionsEstat)}
+//             backgroundColor={getColorByStatEnum(integracionsEstat)}
+//         />
+//     );
+//     const subsistemesEstat = getLowestCommonSubsistemesEstat(salutCurrentApp);
+//     const subsistemesEstatChip = salutCurrentApp && (
+//         <SalutChip
+//             icon={getMaterialIconByState(subsistemesEstat)}
+//             label={tSalutEstatTitle(subsistemesEstat)}
+//             backgroundColor={getColorByStatEnum(subsistemesEstat)}
+//         />
+//     );
+//
+//     const missatges = salutCurrentApp && <SalutMissatgesChips salutItem={salutCurrentApp} />;
+//     const integracions = salutCurrentApp && <SalutIntegracionsChips salutItem={salutCurrentApp} />;
+//     const subsistemes = salutCurrentApp && <SalutSubsistemesChips salutItem={salutCurrentApp} />;
+//
+//     const tableSections = [
+//
+//         {
+//             id: 'integracionsEstat',
+//             headerName: t($ => $.page.salut.info.integracions),
+//             cellContent: integracionsEstatChip,
+//         },
+//         {
+//             id: 'subsistemesEstat',
+//             headerName: t($ => $.page.salut.info.subsistemes),
+//             cellContent: subsistemesEstatChip,
+//         },
+//
+//         {
+//             id: 'integracions',
+//             headerName: t($ => $.page.salut.info.integracions),
+//             cellContent: integracions,
+//         },
+//         {
+//             id: 'subsistemes',
+//             headerName: t($ => $.page.salut.info.subsistemes),
+//             cellContent: subsistemes,
+//         },
+//         {
+//             id: 'missatges',
+//             headerName: t($ => $.page.salut.info.missatges),
+//             cellContent: missatges,
+//         },
+//     ];
+//
+//     return (
+//         <ResponsiveCardTable
+//             title={t($ => $.page.salut.estats.title)}
+//             noInfoMessage={t($ => $.page.salut.detalls.noInfo)}
+//             tableSections={tableSections}
+//             breakpoint="xl"
+//         />
+//     );
+// };
+
+const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
-    const { tTitle: tSalutEstatTitle } = useSalutEstatTranslation();
+    const detalls = salutCurrentApp.detalls;
     const bdEstat = salutCurrentApp && (
         <ItemStateChip salutField={SalutField.BD_ESTAT} salutStatEnum={salutCurrentApp.bdEstat} />
-    );
-    const integracionsEstat = getLowestCommonIntegracioEstat(salutCurrentApp);
-    const integracionsEstatChip = salutCurrentApp && (
-        <SalutChip
-            icon={getMaterialIconByState(integracionsEstat)}
-            label={tSalutEstatTitle(integracionsEstat)}
-            backgroundColor={getColorByStatEnum(integracionsEstat)}
-        />
-    );
-    const subsistemesEstat = getLowestCommonSubsistemesEstat(salutCurrentApp);
-    const subsistemesEstatChip = salutCurrentApp && (
-        <SalutChip
-            icon={getMaterialIconByState(subsistemesEstat)}
-            label={tSalutEstatTitle(subsistemesEstat)}
-            backgroundColor={getColorByStatEnum(subsistemesEstat)}
-        />
     );
 
     const appLatencia = salutCurrentApp && (
@@ -629,67 +703,23 @@ const EstatInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
                 : t($ => $.page.salut.nd)}
         </Typography>
     );
-    const missatges = salutCurrentApp && <SalutMissatgesChips salutItem={salutCurrentApp} />;
-    const integracions = salutCurrentApp && <SalutIntegracionsChips salutItem={salutCurrentApp} />;
-    const subsistemes = salutCurrentApp && <SalutSubsistemesChips salutItem={salutCurrentApp} />;
 
-    const tableSections = [
-        {
-            id: 'bdEstat',
-            headerName: t($ => $.page.salut.info.bdEstat),
-            cellContent: bdEstat,
-        },
-        {
-            id: 'integracionsEstat',
-            headerName: t($ => $.page.salut.info.integracions),
-            cellContent: integracionsEstatChip,
-        },
-        {
-            id: 'subsistemesEstat',
-            headerName: t($ => $.page.salut.info.subsistemes),
-            cellContent: subsistemesEstatChip,
-        },
-        {
-            id: 'appLatencia',
-            headerName: t($ => $.page.salut.info.appLatencia),
-            cellContent: appLatencia,
-        },
-        {
-            id: 'integracions',
-            headerName: t($ => $.page.salut.info.integracions),
-            cellContent: integracions,
-        },
-        {
-            id: 'subsistemes',
-            headerName: t($ => $.page.salut.info.subsistemes),
-            cellContent: subsistemes,
-        },
-        {
-            id: 'missatges',
-            headerName: t($ => $.page.salut.info.missatges),
-            cellContent: missatges,
-        },
-    ];
-
-    return (
-        <ResponsiveCardTable
-            title={t($ => $.page.salut.estats.title)}
-            noInfoMessage={t($ => $.page.salut.detalls.noInfo)}
-            tableSections={tableSections}
-            breakpoint="xl"
-        />
-    );
-};
-
-const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
-    const { t } = useTranslation();
-    const detalls = salutCurrentApp.detalls;
     const tableSections = [
         ...(detalls ?? []).map(detall => ({
             id: detall.id,
             headerName: detall.nom,
             cellContent: detall.valor,
         })),
+        {
+            id: 'bdEstat',
+            headerName: t($ => $.page.salut.info.bdEstat),
+            cellContent: bdEstat,
+        },
+        {
+            id: 'appLatencia',
+            headerName: t($ => $.page.salut.info.appLatencia),
+            cellContent: appLatencia,
+        },
     ];
     return (
         <ResponsiveCardTable
@@ -716,7 +746,7 @@ const DownAlert = () => {
     return <Alert severity="error">{t($ => $.page.salut.info.downAlert)}</Alert>;
 };
 
-const TabGeneral: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp }) => {
+const TabEntorn: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp }) => {
     return (
         <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid size={{ sm: 12, lg: 12 }}>
@@ -754,8 +784,11 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
                 <DetallInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
-                <EstatInfo salutCurrentApp={salutCurrentApp} />
+                <Subsistemes salutCurrentApp={salutCurrentApp} />
             </Grid>
+            {/*<Grid size={{ sm: 12, lg: 12 }}>*/}
+            {/*    <EstatInfo salutCurrentApp={salutCurrentApp} />*/}
+            {/*</Grid>*/}
         </Grid>
     );
 };
@@ -786,25 +819,6 @@ const TabIntegracions: React.FC<
                 toggleIntegracioExpand={toggleIntegracioExpand}
                 integracionsExpandState={integracionsExpandState}
             />
-        </Box>
-    );
-};
-
-const TabSubsistemes: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
-    if (salutCurrentApp.peticioError) {
-        return (
-            <Grid>
-                <DownAlert />
-            </Grid>
-        );
-    }
-    return (
-        <Box
-            sx={{
-                height: 'auto',
-            }}
-        >
-            <Subsistemes salutCurrentApp={salutCurrentApp} />
         </Box>
     );
 };
@@ -908,13 +922,24 @@ const SalutAppInfo: React.FC<{
 
     const tabs = [
         {
-            id: 'general',
-            label: t($ => $.page.salut.tabs.general),
+            id: 'entorn',
+            label: t($ => $.page.salut.tabs.entorn),
             icon: <Icon>info</Icon>,
         },
         {
             id: 'estatActual',
-            label: t($ => $.page.salut.tabs.estatActual),
+            label: (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {t($ => $.page.salut.tabs.estatActual)}
+                    {!!salutCurrentApp?.subsistemaDownCount && (
+                        <SalutChip
+                            label={salutCurrentApp.subsistemaDownCount}
+                            tooltip={t($ => $.page.salut.subsistemes.subsistemaDownCount)}
+                            backgroundColor={getColorBySubsistema(SalutModel.SUBSISTEMA_DOWN_COUNT)}
+                        />
+                    )}
+                </Box>
+            ),
             icon: <Icon>troubleshoot</Icon>,
         },
         {
@@ -932,22 +957,6 @@ const SalutAppInfo: React.FC<{
                 </Box>
             ),
             icon: <Icon>account_tree</Icon>,
-        },
-        {
-            id: 'subsistemes',
-            label: (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {t($ => $.page.salut.tabs.subsistemes)}
-                    {!!salutCurrentApp?.subsistemaDownCount && (
-                        <SalutChip
-                            label={salutCurrentApp.subsistemaDownCount}
-                            tooltip={t($ => $.page.salut.subsistemes.subsistemaDownCount)}
-                            backgroundColor={getColorBySubsistema(SalutModel.SUBSISTEMA_DOWN_COUNT)}
-                        />
-                    )}
-                </Box>
-            ),
-            icon: <Icon>widgets</Icon>,
         },
         {
             id: 'historic',
@@ -986,7 +995,7 @@ const SalutAppInfo: React.FC<{
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
                         dataLoaded={dataLoaded}
-                        childrenTabComponent={TabGeneral}
+                        childrenTabComponent={TabEntorn}
                         childrenTabOtherProps={{}}
                     />
                 )}
@@ -1012,15 +1021,6 @@ const SalutAppInfo: React.FC<{
                     />
                 )}
                 {tabValue === 3 && (
-                    <TabSalutCurrentApp
-                        salutCurrentApp={salutCurrentApp}
-                        entornApp={entornApp}
-                        dataLoaded={dataLoaded}
-                        childrenTabComponent={TabSubsistemes}
-                        childrenTabOtherProps={{}}
-                    />
-                )}
-                {tabValue === 4 && (
                     <TabSalutCurrentApp<TabHistoricOtherProps>
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}

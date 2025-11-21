@@ -153,7 +153,7 @@ const translationEs: translationResourcesType = {
                 P1M: "Último mes",
             },
             tabs: {
-                general: "Entorno",
+                entorn: "Entorno",
                 estatActual: "Estado actual",
                 integracions: "Integraciones",
                 subsistemes: "Subsistemas",
@@ -234,7 +234,7 @@ const translationEs: translationResourcesType = {
                 missatgeInfoCount: "Información"
             },
             contexts: {
-                title: "Contextos",
+                title: "Contextos y manuales",
                 noInfo: "No hay información de contextos",
                 column: {
                     codi: "Código",
@@ -245,7 +245,7 @@ const translationEs: translationResourcesType = {
                 },
             },
             detalls: {
-                title: "Detalles",
+                title: "Sistema",
                 noInfo: "No hay información sobre detalles de la aplicación",
             },
             estats: {

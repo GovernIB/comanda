@@ -153,7 +153,7 @@ const translationCa = {
                 P1M: "Darrer mes",
             },
             tabs: {
-                general: "Entorn",
+                entorn: "Entorn",
                 estatActual: "Estat actual",
                 integracions: "Integracions",
                 subsistemes: "Subsistemes",
@@ -234,7 +234,7 @@ const translationCa = {
                 missatgeInfoCount: "Informació"
             },
             contexts: {
-                title: "Contexts",
+                title: "Contexts i manuals",
                 noInfo: "No hi ha informació de contexts",
                 column: {
                     codi: "Códi",
@@ -245,7 +245,7 @@ const translationCa = {
                 },
             },
             detalls: {
-                title: "Detalls",
+                title: "Sistema",
                 noInfo: "No hi ha informació sobre detalls de l'aplicació",
             },
             estats: {
