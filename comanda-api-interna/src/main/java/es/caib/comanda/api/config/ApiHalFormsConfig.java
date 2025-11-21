@@ -1,6 +1,6 @@
 package es.caib.comanda.api.config;
 
-import es.caib.comanda.acl.back.controller.AclController;
+import es.caib.comanda.acl.back.controller.AclEntryController;
 import es.caib.comanda.configuracio.back.controller.AppController;
 import es.caib.comanda.estadistica.back.controller.FetController;
 import es.caib.comanda.monitor.back.controller.MonitorController;
@@ -25,7 +25,7 @@ public class ApiHalFormsConfig extends BaseHalFormsConfig {
 				SalutController.class.getPackageName(),
 				FetController.class.getPackageName(),
 				MonitorController.class.getPackageName(),
-				AclController.class.getPackageName(),
+				AclEntryController.class.getPackageName(),
 		};
 	}
 
