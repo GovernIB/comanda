@@ -518,9 +518,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                         display: 'flex',
                         flexWrap: 'wrap',
                         gap: 1,
-                        maxWidth: { sm: '210px', lg: '400px' },
                     }}
-                    minWidth={{ xs: '110px' }}
                 >
                     <RefreshTimeoutSelect
                         value={refreshDuration}
