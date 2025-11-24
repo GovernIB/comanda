@@ -4,11 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
     GridPage,
-    useMuiContentDialog,
-    useCloseDialogButtons,
 } from 'reactlib';
 import { ContentDetail } from '../components/ContentDetail';
-import { Tabs, Tab, Chip, Box, Button, Icon, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
+import { Chip, Box, Button, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
 
@@ -130,7 +128,7 @@ const QueueList: React.FC<{ queues: QueueInfo[] }> = ({ queues }) => {
     return (
         <Grid container spacing={2}>
             {queues.map((queue) => (
-                <Grid item xs={12} sm={6} md={4} key={queue.name}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={queue.name}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" component="div">
