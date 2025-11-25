@@ -25,6 +25,7 @@ import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
 import HeaderLanguageSelector from './HeaderLanguageSelector';
 import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog';
+import RoleSelector from './RoleSelector';
 import theme from '../theme';
 import i18n from '../i18n/i18n';
 import drassana from '../assets/drassana.png';
@@ -188,7 +189,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useUserContext();
+    const { user, currentRole } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
     const { indexState } = useResourceApiContext();
     const {
@@ -224,11 +225,13 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ...generateLanguageItems(availableLanguages), // Idioma
             ...generateAppMenu(appMenuEntries), // Menú lateral
         ]}
-        headerAdditionalAuthComponents={
+        headerAdditionalAuthComponents={[
             <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
                 user?.id,
-            )} />
-        }
+            )} />,
+            <RoleSelector />
+        ]}
+        headerAuthBadgeIcon={currentRole === 'COM_ADMIN' ? 'settings' : undefined}
         footer={generateFooter()}
         persistentSession
         persistentLanguage

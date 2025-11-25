@@ -43,6 +43,8 @@ export type ResourceApiContextType = {
     setUserSessionAttributes: (attributeValuePairs: ResourceApiUserSessionValuePair[]) => boolean;
     clearUserSession: () => void;
     setCurrentLanguage: (currentLanguage?: string) => void;
+    httpHeaders?: Record<string, string>[];
+    setHttpHeaders: (httpHeaders?: Record<string, string>[]) => void;
     getOpenAnswerRequiredDialog: () => OpenAnswerRequiredDialogFn | undefined;
     setOpenAnswerRequiredDialog: (openAnswerRequiredDialog: OpenAnswerRequiredDialogFn) => void;
 };

@@ -63,6 +63,10 @@ const translationCa = {
             UNKNOWN: {
                 tooltip: "No es disposa d'informació de l'estat del servei",
             },
+        },
+        userRole: {
+            COM_ADMIN: 'Administrador',
+            COM_CONSULTA: 'Consultor'
         }
     },
     menu: {

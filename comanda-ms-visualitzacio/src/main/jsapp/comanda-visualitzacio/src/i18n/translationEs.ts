@@ -64,6 +64,10 @@ const translationEs: translationResourcesType = {
                 tooltip: "No se dispone de información sobre el estado del servicio",
             },
         },
+        userRole: {
+            COM_ADMIN: 'Administrador',
+            COM_CONSULTA: 'Consultor'
+        }
     },
     menu: {
         salut: "Salud",

@@ -39,6 +39,7 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerAppbarBackgroundImg?: string;
     headerAdditionalComponents?: React.ReactElement | React.ReactElement[];
     headerAdditionalAuthComponents?: React.ReactElement | React.ReactElement[];
+    headerAuthBadgeIcon?: string;
     footer?: React.ReactElement;
     menuTitle?: string;
     menuEntries?: MenuEntry[];
@@ -183,6 +184,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         headerAppbarBackgroundImg,
         headerAdditionalComponents,
         headerAdditionalAuthComponents,
+        headerAuthBadgeIcon,
         footer,
         menuTitle,
         menuEntries,
@@ -214,6 +216,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 style={headerAppbarStyle}
                 backgroundColor={headerAppbarBackgroundColor}
                 backgroundImg={headerAppbarBackgroundImg}
+                authBadgeIcon={headerAuthBadgeIcon}
             />
         ) : undefined;
     const offlineComponent = <OfflineMessage />;

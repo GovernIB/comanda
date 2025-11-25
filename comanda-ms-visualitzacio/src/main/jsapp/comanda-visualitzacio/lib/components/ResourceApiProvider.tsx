@@ -1193,7 +1193,8 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const getToken = authContext?.getToken;
     const kettingClientRef = React.useRef<Client>(undefined);
     const openAnswerRequiredDialogRef = React.useRef<OpenAnswerRequiredDialogFn>(undefined);
-    const [userSession, setUserSession] = React.useState<any | undefined>(defaultUserSession);
+    const [userSession, setUserSession] = React.useState<any>(defaultUserSession);
+    const [httpHeaders, setHttpHeaders] = React.useState<Record<string, string>[]>();
     const [currentLanguage, setCurrentLanguage] = useControlledUncontrolledState<
         string | undefined
     >(defaultLanguage, currentLanguageProp, onCurrentLanguageChange);
@@ -1203,7 +1204,11 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const [offline, setOffline] = React.useState<boolean>(false);
     const indexPath = new URL(apiUrl).pathname;
     const indexPathWithoutApi = indexPath.endsWith('/api') ? indexPath.slice(0, -4) : indexPath;
-    const refreshKettingClient = (userSession: any, currentLanguage: string | undefined) => {
+    const refreshKettingClient = (
+        currentUserSession: any,
+        currentLanguage: string | undefined,
+        currentHttpHeaders: Record<string, string>[] | undefined
+    ) => {
         const kettingClient = new Client(apiUrl);
         kettingClient.use((request, next) => {
             // Crear una nova instància de Request amb les propietats modificades
@@ -1215,11 +1220,16 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
             if (isAuthenticated && bearerTokenActive && token) {
                 newRequest.headers.set('Authorization', 'Bearer ' + token);
             }
-            if (userSession && Object.keys(userSession).length > 0) {
-                newRequest.headers.set('Bb-Session', JSON.stringify(userSession));
-            }
             if (currentLanguage && currentLanguage.length) {
                 newRequest.headers.set('Accept-Language', currentLanguage);
+            }
+            if (currentUserSession && Object.keys(currentUserSession).length > 0) {
+                newRequest.headers.set('X-App-Session', JSON.stringify(currentUserSession));
+            }
+            if (currentHttpHeaders && Object.keys(currentHttpHeaders).length > 0) {
+                currentHttpHeaders.forEach((e) => {
+                    Object.entries(e).forEach(([key, value]) => newRequest.headers.set(key, value));
+                });
             }
             return next(newRequest);
         });
@@ -1290,7 +1300,7 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     React.useEffect(() => {
         const sessionInitialized = userSessionActive ? userSession != null : true;
         if (sessionInitialized && (authContext == null || isAuthReady)) {
-            refreshKettingClient(userSession, currentLanguage);
+            refreshKettingClient(userSession, currentLanguage, httpHeaders);
             refreshApiIndex();
         }
     }, [isAuthReady, currentLanguage, userSession]);
@@ -1318,16 +1328,24 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
             const changes: any = {};
             changedPairs.forEach((c) => (changes[c.attribute] = c.value));
             setUserSession((s: any) => ({ ...s, ...changes }));
-            refreshKettingClient({ ...userSession, ...changes }, currentLanguage);
+            refreshKettingClient({ ...userSession, ...changes }, currentLanguage, httpHeaders);
             return true;
         } else {
             return false;
         }
     };
+    const setUserSessionForContext = React.useCallback(
+        (userSession: any) => {
+            setUserSession(userSession);
+            refreshKettingClient(userSession, currentLanguage, httpHeaders);
+        },
+        [currentLanguage]
+    );
     const clearUserSession = React.useCallback(() => {
         setUserSession({});
+        refreshKettingClient({}, currentLanguage, httpHeaders);
         refreshApiIndex();
-    }, []);
+    }, [currentLanguage, httpHeaders]);
     const setOpenAnswerRequiredDialog = React.useCallback(
         (oarDialog: OpenAnswerRequiredDialogFn) => {
             openAnswerRequiredDialogRef.current = oarDialog;
@@ -1338,8 +1356,12 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
         return openAnswerRequiredDialogRef.current;
     }, []);
     const setCurrentLanguageInternal = (currentLanguage?: string) => {
-        refreshKettingClient(userSession, currentLanguage);
         setCurrentLanguage(currentLanguage);
+        refreshKettingClient(userSession, currentLanguage, httpHeaders);
+    };
+    const setHttpHeadersInternal = (currentHttpHeaders?: Record<string, string>[]) => {
+        setHttpHeaders(currentHttpHeaders);
+        refreshKettingClient(userSession, currentLanguage, currentHttpHeaders);
     };
     const isReady = !isIndexLoading && !indexError && !offline;
     const context = {
@@ -1355,10 +1377,12 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
         getKettingClient,
         requestHref,
         isDebugRequests,
-        setUserSession,
+        setUserSession: setUserSessionForContext,
         setUserSessionAttributes,
         clearUserSession,
         setCurrentLanguage: setCurrentLanguageInternal,
+        httpHeaders,
+        setHttpHeaders: setHttpHeadersInternal,
         setOpenAnswerRequiredDialog,
         getOpenAnswerRequiredDialog,
     };

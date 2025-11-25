@@ -2,9 +2,10 @@ import { createContext, useContext } from 'react';
 import { UsuariModel } from '../types/usuari.model';
 
 export type UserContextType = {
-    user: UsuariModel | undefined;
-    setUser: (user: UsuariModel) => void;
-    loading: boolean;
+    user?: UsuariModel;
+    refresh: () => void;
+    currentRole?: string;
+    setCurrentRole: (currentRole: string | undefined) => void;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);

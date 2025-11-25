@@ -70,10 +70,10 @@ export const TemaObscurSelector: React.FC = () => {
 export const UserProfileFormDialog = ({
     dialogApiRef,
 }: {
-    dialogApiRef: React.MutableRefObject<DataFormDialogApi | undefined>;
+    dialogApiRef: React.RefObject<DataFormDialogApi | undefined>;
 }) => {
     const { t } = useTranslation();
-    const { setUser } = useUserContext();
+    const { refresh } = useUserContext();
 
     return (
         <MuiFormDialog
@@ -83,7 +83,7 @@ export const UserProfileFormDialog = ({
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg', }}
             formComponentProps={{
-                onSaveSuccess: setUser,
+                onSaveSuccess: () => refresh(),
                 componentProps: { sx: { mt: 0 } },
             }}
         >
