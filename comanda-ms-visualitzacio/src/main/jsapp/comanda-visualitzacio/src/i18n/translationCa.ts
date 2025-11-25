@@ -137,6 +137,7 @@ const translationCa = {
                 BY_APPLICATION: "Per aplicació",
                 BY_ENVIRONMENT: "Per entorn",
                 NONE: "Sense agrupació",
+                titleNoGrouping: "Totes les aplicacions i entorns",
             },
             refreshperiod: {
                 PT1M: "1 minut",

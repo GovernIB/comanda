@@ -439,10 +439,13 @@ export const SalutWidgetTitle: React.FC<{
     loading?: boolean;
     midaFontTitol?: number;
 }> = ({ app, entorn, loading, midaFontTitol }) => {
+    const { t } = useTranslation();
     const titleEstils = {
         ...estils.titleText,
         fontSize: midaFontTitol ? `${midaFontTitol}px` : estils.titleText.fontSize,
     };
+
+    const titleText = app?.nom || entorn?.nom || t($ => $.page.salut.groupingSelect.titleNoGrouping);
 
     return (
         <Box>
@@ -461,17 +464,17 @@ export const SalutWidgetTitle: React.FC<{
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px',
+                                height: '38px',
                             }}
                         >
                             {app?.logo && (
                                 <img
                                     src={'data:image/png;base64,' + app.logo}
-                                    alt="Logo"
-                                    style={{ height: '38px' }}
+                                    alt={'Logo ' + app.nom}
+                                    style={{ height: '100%' }}
                                 />
                             )}
-                            {app && <Typography sx={titleEstils}>{app.nom}</Typography>}
-                            {entorn && <Typography sx={titleEstils}>{entorn.nom}</Typography>}
+                            <Typography sx={titleEstils}>{titleText}</Typography>
                         </Box>
                     }
                 </>

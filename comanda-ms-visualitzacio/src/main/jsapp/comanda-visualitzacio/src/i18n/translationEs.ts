@@ -137,6 +137,7 @@ const translationEs: translationResourcesType = {
                 BY_APPLICATION: "Por aplicación",
                 BY_ENVIRONMENT: "Por entorno",
                 NONE: "Sin agrupación",
+                titleNoGrouping: "Todas las aplicaciones y entornos",
             },
             refreshperiod: {
                 PT1M: "1 minuto",

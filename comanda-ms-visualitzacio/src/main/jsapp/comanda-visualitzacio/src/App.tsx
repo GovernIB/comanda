@@ -7,6 +7,8 @@ import AppRoutes from './AppRoutes';
 import { useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 
+const APPBAR_HEIGHT = '64px';
+
 export const App: React.FC = () => {
     const { user } = useUserContext();
     const { t } = useTranslation();
@@ -179,7 +181,7 @@ export const App: React.FC = () => {
             }}
             title={
                 <img
-                    style={{ height: '64px', verticalAlign: 'middle' }}
+                    style={{ height: APPBAR_HEIGHT, verticalAlign: 'middle' }}
                     src={comandaLogo}
                     alt="Logo de l'aplicació de Comanda"
                 />
@@ -190,7 +192,7 @@ export const App: React.FC = () => {
             appMenuEntries={appMenuEntries}
             appbarBackgroundColor="#fff"
             appbarStyle={{
-                cssText: 'min-height: 64px !important; background-color: #fff !important',
+                cssText: `min-height: ${APPBAR_HEIGHT} !important; background-color: #fff !important`,
             }}
             // appbarBackgroundImg={headerBackground}
             defaultMuiComponentProps={{
