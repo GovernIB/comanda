@@ -8,7 +8,6 @@ import {
     useFormApiRef,
     useFilterApiRef,
     MuiDataGridColDef,
-    useAuthContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -20,10 +19,12 @@ import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
 import { GridSortModel, useGridApiRef} from '@mui/x-data-grid-pro';
 import { SxProps } from '@mui/material';
+import { useUserContext } from '../components/UserContext';
 
 const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
+    const { user } = useUserContext();
     const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [ownAvisOnly, setOwnAvisOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
@@ -41,16 +42,8 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
         moreFormApiRef.current?.setFieldValue('avisPropi', ownAvisOnly);
     }, [ownAvisOnly]);
 
-    // TODO Recuperar el nombre de usuario usando el contexto de usuario que hay en la rama comanda-wip
-    const [tokenParsed, setTokenParsed] = React.useState<{
-        name: string;
-        preferred_username: string;
-    }>();
-    const { getTokenParsed } = useAuthContext();
-    React.useEffect(() => {
-        setTokenParsed(getTokenParsed());
-    }, []);
-    const currentUsername = tokenParsed?.preferred_username;
+    const currentUsername = user?.codi;
+    const ownAvisOnlyFilterAvailable = currentUsername != null;
 
     return (
         <>
@@ -82,7 +75,7 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                     </Button>
                     <Button
                         onClick={() => setOwnAvisOnly(value => !value)}
-                        disabled={!currentUsername}
+                        disabled={!ownAvisOnlyFilterAvailable}
                         variant={ownAvisOnly ? 'contained' : 'outlined'}
                         title={ownAvisOnly ? t($ => $.page.avisos.filter.ownAvisOnlyEnabled) : t($ => $.page.avisos.filter.ownAvisOnlyDisabled)}
                         sx={{ mr: 2 }}>
@@ -118,7 +111,7 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                     data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
                     data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
                     data?.finalitzada && springFilterBuilder.eq('dataFi', null),
-                    data?.avisPropi && currentUsername && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
+                    data?.avisPropi && ownAvisOnlyFilterAvailable && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
                 )}
                 onSpringFilterChange={onSpringFilterChange}
                 commonFieldComponentProps={{ size: 'small' }}>
