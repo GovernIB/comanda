@@ -46,7 +46,8 @@ public class ArtemisEmbeddedConfig {
                 .setLargeMessagesDirectory(propFiles + "/broker/large-messages")
                 .setPagingDirectory(propFiles + "/broker/paging")
                 .setSecurityEnabled(true)
-                .addAcceptorConfiguration("tcp", "tcp://0.0.0.0:" + brokerPort);
+                .addAcceptorConfiguration("tcp", "tcp://0.0.0.0:" + brokerPort)
+                .setMaxDiskUsage(99);
         embedded = new EmbeddedActiveMQ();
         embedded.setConfiguration(config);
         // Assignem el SecurityManager personalitzat

@@ -15,10 +15,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jms.annotation.JmsListener;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import java.time.LocalDateTime;
@@ -44,7 +47,9 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
 
     @JmsListener(destination = CUA_TASQUES)
     @Transactional
-    public void receiveMessage(es.caib.comanda.ms.broker.model.Tasca tascaBroker) {
+    public void receiveMessage(@Payload es.caib.comanda.ms.broker.model.Tasca tascaBroker,
+                               Message message) throws JMSException {
+        message.acknowledge();
         log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker);
         Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
                 tascaBroker.getEntornCodi(),
