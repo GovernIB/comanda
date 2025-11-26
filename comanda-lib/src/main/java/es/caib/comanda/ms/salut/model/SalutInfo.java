@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -20,22 +22,32 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "SalutInfo", description = "Estat de salut funcional de l'aplicació i metadades associades")
 public class SalutInfo {
+    @Schema(description = "Codi identificador de l'aplicació", example = "NOTIB")
     @NotNull @Size(min = 1)
     private String codi;
+    @Schema(description = "Instant de generació de l'estat de salut", type = "string", format = "date-time")
     @NotNull
     private Date data;
+    @Schema(description = "Estat global de l'aplicació")
     @NotNull @Valid
     private EstatSalut estat;
+    @Schema(description = "Estat de la base de dades")
     @NotNull @Valid
     private EstatSalut bd;
+    @Schema(description = "Integracions amb el seu estat")
     @Valid
     private List<IntegracioSalut> integracions;
+    @Schema(description = "Altres detalls rellevants de salut")
     @Valid
     private List<DetallSalut> altres;
+    @Schema(description = "Missatges informatius o d'alerta")
     @Valid
     private List<MissatgeSalut> missatges;
+    @Schema(description = "Versió de l'aplicació", example = "1.4.3")
     private String versio;
+    @Schema(description = "Subsistemes interns amb el seu estat")
     @Valid
     private List<SubsistemaSalut> subsistemes;
 

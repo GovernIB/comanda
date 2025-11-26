@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
@@ -20,21 +22,39 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "AppInfo", description = "Informació bàsica de l'aplicació consultada per COMANDA")
 public class AppInfo {
+    @Schema(description = "Codi identificador de l'aplicació", example = "NOTIB")
     @NotNull @Size(min = 1)
     private String codi;
+
+    @Schema(description = "Nom complet de l'aplicació", example = "NOTIB - Notificacions")
     @NotNull @Size(min = 1)
     private String nom;
+
+    @Schema(description = "Versió desplegada de l'aplicació", example = "1.4.3")
     @NotNull @Size(min = 1)
     private String versio;
+
+    @Schema(description = "Data de compilació o de la informació reportada", type = "string", format = "date-time")
     @NotNull
     private Date data;
+
+    @Schema(description = "Revisió o identificador de commit de la build", example = "a1b2c3d")
     private String revisio;
+
+    @Schema(description = "Versió de JDK amb la qual s'executa l'aplicació", example = "Temurin-17.0.9")
     private String jdkVersion;
+
+    @Schema(description = "Llista d'integracions exposades per l'aplicació")
     @Valid
     private List<IntegracioInfo> integracions;
+
+    @Schema(description = "Llista de subsistemes interns amb el seu estat")
     @Valid
     private List<SubsistemaInfo> subsistemes;
+
+    @Schema(description = "Contextos o endpoints base exposats per l'aplicació")
     @Valid
     private List<ContextInfo> contexts;
 

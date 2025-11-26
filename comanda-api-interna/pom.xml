@@ -1,58 +1,233 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>es.caib.comanda</groupId>
-		<artifactId>comanda-bom</artifactId>
-		<version>0.1.0</version>
-		<relativePath>../comanda-bom</relativePath>
-	</parent>
-	<artifactId>comanda-api-interna</artifactId>
-	<version>0.1.0</version>
-	<packaging>war</packaging>
-	<description>API interna de l'aplicació</description>
-	<dependencies>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-configuracio</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-salut</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-estadistica</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-monitor</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.2</version>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
-							<Implementation-Vendor>${implementation.vendor}</Implementation-Vendor>
-							<Implementation-Version>${project.version}</Implementation-Version>
-							<Implementation-SCM-Branch>${scmBranch}</Implementation-SCM-Branch>
-							<Implementation-SCM-Revision>${buildNumber}</Implementation-SCM-Revision>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>es.caib.comanda</groupId>
+        <artifactId>comanda-bom</artifactId>
+        <version>0.1.0</version>
+        <relativePath>../comanda-bom</relativePath>
+    </parent>
+    <artifactId>comanda-api-interna</artifactId>
+    <version>0.1.0</version>
+    <packaging>war</packaging>
+    <description>API interna de l'aplicació</description>
+    <!-- El contracte OpenAPI es GENERA automàticament a build time a partir d'anotacions.
+         No es manté cap JSON/YAML a src/main/openapi. -->
+    <properties>
+        <!-- Valors per defecte per a propietats de manifest (podran ser sobreescrits pel reactor arrel) -->
+        <scmBranch>local</scmBranch>
+        <buildNumber>0</buildNumber>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-ms-configuracio</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-ms-salut</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-ms-estadistica</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-ms-monitor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>io.github.kbuntrock</groupId>
+                <artifactId>openapi-maven-plugin</artifactId>
+                <version>0.0.28</version>
+
+                <executions>
+                    <execution>
+                        <id>generate-openapi</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>documentation</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <!-- On es generaran els fitxers -->
+                    <outputDirectory>${project.basedir}/src/main/openapi</outputDirectory>
+
+                    <!-- Config general (opcional, però correcte per Spring MVC) -->
+                    <apiConfiguration>
+                        <library>SPRING_MVC</library>
+                        <!-- Per defecte ja és RestController, però ho fem explícit -->
+                        <tagAnnotations>
+                            <annotation>RestController</annotation>
+                        </tagAnnotations>
+                    </apiConfiguration>
+
+                    <apis>
+                        <api>
+                            <!-- Paquet(s) on tens els teus controllers REST -->
+                            <locations>
+                                <location>es.caib.comanda.api.controller.v1</location>
+                            </locations>
+
+                            <!-- Nom i extensió del fitxer generat -->
+                            <!-- Per defecte és 'spec-open-api.yml' -->
+                            <filename>openapi-app-comanda-v1.yml</filename>
+                        </api>
+                        <api>
+                            <locations>
+                                <location>es.caib.comanda.api.client.controller.v1</location>
+                            </locations>
+                            <filename>openapi-comanda-app-v1.yml</filename>
+                        </api>
+                    </apis>
+                </configuration>
+            </plugin>
+
+<!--            &lt;!&ndash; 1) Arrencar/parar Spring Boot durant integration-test &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.springframework.boot</groupId>-->
+<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    &lt;!&ndash; Necessari perquè el plugin la pugui aturar &ndash;&gt;-->
+<!--                    <jvmArguments>-->
+<!--                        -Dspring.application.admin.enabled=true-->
+<!--                        -Dspring.profiles.active=openapi-->
+<!--                    </jvmArguments>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>pre-integration-test</id>-->
+<!--                        <goals>-->
+<!--                            <goal>start</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>post-integration-test</id>-->
+<!--                        <goals>-->
+<!--                            <goal>stop</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+
+<!--            &lt;!&ndash; 2) Generar l’OpenAPI JSON durant el build &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.springdoc</groupId>-->
+<!--                <artifactId>springdoc-openapi-maven-plugin</artifactId>-->
+<!--                <version>1.5</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>integration-test</id>-->
+<!--                        <goals>-->
+<!--                            <goal>generate</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <apiDocsUrl>http://localhost:8080/api-docs/docs</apiDocsUrl>-->
+<!--                            <outputDir>${project.basedir}/src/main/openapi</outputDir>-->
+<!--                            <outputFileName>openapi-interna-v1.json</outputFileName>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+
+            <!-- Generar el client Java (RestTemplate) a partir del JSON generat -->
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.10.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/openapi/openapi-comanda-app-v1.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>resttemplate</library>
+                            <output>${project.build.directory}/generated-sources/openapi</output>
+                            <apiPackage>es.caib.comanda.interna.client.api</apiPackage>
+                            <modelPackage>es.caib.comanda.interna.client.model</modelPackage>
+                            <skipValidateSpec>true</skipValidateSpec>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <configOptions>
+                                <sourceFolder>src/gen/java</sourceFolder>
+                                <dateLibrary>java8</dateLibrary>
+                                <useRuntimeException>true</useRuntimeException>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <!-- Ensure no tests are generated inside configOptions either (for older generators) -->
+                                <apiTests>false</apiTests>
+                                <modelTests>false</modelTests>
+                            </configOptions>
+                            <addCompileSourceRoot>true</addCompileSourceRoot>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+<!--            &lt;!&ndash; Empaquetar el client generat com a JAR addicional amb classifier 'client' &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-jar-plugin</artifactId>-->
+<!--                <version>3.3.0</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>attach-client-jar</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>jar</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <classifier>client</classifier>-->
+<!--                            <includes>-->
+<!--                                <include>es/caib/comanda/interna/client/**</include>-->
+<!--                            </includes>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
+                            <Implementation-Vendor>${implementation.vendor}</Implementation-Vendor>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-SCM-Branch>${scmBranch}</Implementation-SCM-Branch>
+                            <Implementation-SCM-Revision>${buildNumber}</Implementation-SCM-Revision>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

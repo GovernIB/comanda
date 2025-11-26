@@ -82,6 +82,9 @@ public abstract class BaseWebSecurityConfig {
 	protected RequestMatcher[] internalRequestMatchers() {
 		return new RequestMatcher[] {
 				new AntPathRequestMatcher("/"),
+                new AntPathRequestMatcher("/api-docs/docs"),
+                new AntPathRequestMatcher("/api-docs"),
+                new AntPathRequestMatcher("/api-docs/**"),
 				new AntPathRequestMatcher("/apidocs"),
 				new AntPathRequestMatcher("/apidocs/*"),
 				new AntPathRequestMatcher("/swagger-ui/*"),

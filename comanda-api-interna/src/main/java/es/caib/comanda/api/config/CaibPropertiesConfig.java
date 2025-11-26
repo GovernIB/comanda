@@ -2,6 +2,7 @@ package es.caib.comanda.api.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWarDeployment;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 
 /**
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.PropertySource;
  * 
  * @author Límit Tecnologies
  */
+@Profile("!openapi")
 @Configuration
 @ConditionalOnWarDeployment
 @PropertySource("classpath:/caib-application.properties")

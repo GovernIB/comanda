@@ -12,10 +12,9 @@
 	<version>0.1.0</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
 	<properties>
-		<!-- El .jar que es genera s'ha d'utilitzar des d'altres projectes que es compilen en Java 11 -->
-		<!-- Si no forçam la compilació en Java 11 -->
-		<maven.compiler.target>7</maven.compiler.target>
-		<maven.compiler.source>7</maven.compiler.source>
+		<!-- Compile amb Java 11 per poder anotar amb Swagger OpenAPI v3 -->
+		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -29,6 +28,13 @@
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>1.1.0.Final</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- Swagger OpenAPI v3 annotations to document DTOs -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>2.2.9</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

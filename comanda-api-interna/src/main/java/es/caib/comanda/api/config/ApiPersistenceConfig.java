@@ -3,6 +3,7 @@ package es.caib.comanda.api.config;
 import es.caib.comanda.ms.persist.config.BasePersistenceConfig;
 import es.caib.comanda.ms.persist.repository.BaseRepositoryImpl;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * 
  * @author Límit Tecnologies
  */
+@Profile("!openapi")
 @Configuration
 @EnableJpaRepositories(
 		basePackages = {

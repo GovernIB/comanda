@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.constraints.NotNull;
 import java.util.Calendar;
 import java.util.Date;
@@ -13,19 +15,27 @@ import java.util.Date;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "Temps", description = "Desglossament temporal associat als registres d'estadística")
 public class Temps {
+    @Schema(description = "Instant temporal de referència", type = "string", format = "date-time")
     @NotNull
     private Date data;
+    @Schema(description = "Any corresponent a la data", example = "2025")
     @Builder.ObtainVia(field = "data")
     private int anualitat;
+    @Schema(description = "Trimestre (1-4) derivat de la data", example = "4")
     @Builder.ObtainVia(field = "data")
     private int trimestre;
+    @Schema(description = "Mes (1-12) derivat de la data", example = "11")
     @Builder.ObtainVia(field = "data")
     private int mes;
+    @Schema(description = "Setmana de l'any derivada de la data", example = "47")
     @Builder.ObtainVia(field = "data")
     private int setmana;
+    @Schema(description = "Dia de la setmana", implementation = DiaSetmanaEnum.class)
     @Builder.ObtainVia(field = "data")
     private DiaSetmanaEnum diaSetmana;
+    @Schema(description = "Dia del mes", example = "25")
     @Builder.ObtainVia(field = "data")
     private int dia;
 

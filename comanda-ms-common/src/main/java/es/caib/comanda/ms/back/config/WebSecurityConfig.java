@@ -7,6 +7,7 @@ import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,6 +29,7 @@ import java.util.*;
  *
  * @author Límit Tecnologies
  */
+@Profile("!openapi")
 @Slf4j
 @Configuration
 public class WebSecurityConfig extends BaseWebSecurityConfig {

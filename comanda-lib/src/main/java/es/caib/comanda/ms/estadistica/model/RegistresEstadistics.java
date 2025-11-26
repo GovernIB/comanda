@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
@@ -18,9 +20,12 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "RegistresEstadistics", description = "Registres estadístics d'un instant de temps amb les seves mesures")
 public class RegistresEstadistics {
+    @Schema(description = "Informació temporal associada als registres (data/hora, període, etc.)")
     @NotNull @Valid
     private Temps temps;
+    @Schema(description = "Llista de registres o fets estadístics recollits en l'instant indicat")
     @Valid
     private List<RegistreEstadistic> fets;
 
