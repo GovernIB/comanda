@@ -17,6 +17,17 @@ Quadre de control per coneixer l'estat d'una aplicació via cridades REST
 >         <version>0.1.0</version>  
 >     </dependency>
 >     ```
+>
+>   - Java7: ([comanda-lib-0.1.0-java7.jar](https://github.com/GovernIB/maven/raw/gh-pages/maven/es/caib/comanda/comanda-lib/0.1.0/comanda-lib-0.1.0-java7.jar))  
+>  
+>     ```
+>     <dependency>  
+>         <groupId>es.caib.comanda</groupId>  
+>         <artifactId>comanda-lib</artifactId>  
+>         <version>0.1.0</version>
+>         <classifier>java7</classifier>
+>     </dependency>
+>     ```
 
 **Documentació**
 
