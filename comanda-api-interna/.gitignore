@@ -37,3 +37,5 @@ build/
 **/node_modules/
 /derby.log
 /application.properties
+/src/main/resources/openapi/openapi-app-comanda-v1.yml
+/src/main/resources/openapi/openapi-comanda-app-v1.yml
