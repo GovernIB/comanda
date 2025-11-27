@@ -73,7 +73,6 @@
 		<module>comanda-bom</module>
 		<module>comanda-bom-ms</module>
 		<module>comanda-lib</module>
-		<module>comanda-lib7</module>
 		<module>comanda-ms-common</module>
 		<module>comanda-ms-configuracio</module>
 		<module>comanda-ms-salut</module>

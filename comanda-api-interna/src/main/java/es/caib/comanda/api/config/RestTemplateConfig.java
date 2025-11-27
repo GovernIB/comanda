@@ -18,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 
-@Profile("!openapi")
 @Configuration
 public class RestTemplateConfig {
 

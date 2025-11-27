@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * 
  * @author Límit Tecnologies
  */
-@Profile("!openapi")
 @Configuration
 @EnableJpaRepositories(
 		basePackages = {

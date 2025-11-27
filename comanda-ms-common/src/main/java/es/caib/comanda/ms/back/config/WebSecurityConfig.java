@@ -29,7 +29,6 @@ import java.util.*;
  *
  * @author Límit Tecnologies
  */
-@Profile("!openapi")
 @Slf4j
 @Configuration
 public class WebSecurityConfig extends BaseWebSecurityConfig {

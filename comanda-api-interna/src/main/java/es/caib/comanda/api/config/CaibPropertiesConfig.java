@@ -10,7 +10,6 @@ import org.springframework.context.annotation.PropertySource;
  * 
  * @author Límit Tecnologies
  */
-@Profile("!openapi")
 @Configuration
 @ConditionalOnWarDeployment
 @PropertySource("classpath:/caib-application.properties")

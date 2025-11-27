@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Profile;
  * 
  * @author Límit Tecnologies
  */
-@Profile("!openapi")
 @Configuration
 @EnableAspectJAutoProxy(proxyTargetClass = false)
 public class ApiHalFormsConfig extends BaseHalFormsConfig {

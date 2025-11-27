@@ -74,7 +74,7 @@
 
                 <configuration>
                     <!-- On es generaran els fitxers -->
-                    <outputDirectory>${project.basedir}/src/main/openapi</outputDirectory>
+                    <outputDirectory>${project.basedir}/src/main/resources/openapi</outputDirectory>
 
                     <!-- Config general (opcional, però correcte per Spring MVC) -->
                     <apiConfiguration>
@@ -106,53 +106,6 @@
                 </configuration>
             </plugin>
 
-<!--            &lt;!&ndash; 1) Arrencar/parar Spring Boot durant integration-test &ndash;&gt;-->
-<!--            <plugin>-->
-<!--                <groupId>org.springframework.boot</groupId>-->
-<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    &lt;!&ndash; Necessari perquè el plugin la pugui aturar &ndash;&gt;-->
-<!--                    <jvmArguments>-->
-<!--                        -Dspring.application.admin.enabled=true-->
-<!--                        -Dspring.profiles.active=openapi-->
-<!--                    </jvmArguments>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>pre-integration-test</id>-->
-<!--                        <goals>-->
-<!--                            <goal>start</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>post-integration-test</id>-->
-<!--                        <goals>-->
-<!--                            <goal>stop</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-
-<!--            &lt;!&ndash; 2) Generar l’OpenAPI JSON durant el build &ndash;&gt;-->
-<!--            <plugin>-->
-<!--                <groupId>org.springdoc</groupId>-->
-<!--                <artifactId>springdoc-openapi-maven-plugin</artifactId>-->
-<!--                <version>1.5</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>integration-test</id>-->
-<!--                        <goals>-->
-<!--                            <goal>generate</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <apiDocsUrl>http://localhost:8080/api-docs/docs</apiDocsUrl>-->
-<!--                            <outputDir>${project.basedir}/src/main/openapi</outputDir>-->
-<!--                            <outputFileName>openapi-interna-v1.json</outputFileName>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-
             <!-- Generar el client Java (RestTemplate) a partir del JSON generat -->
             <plugin>
                 <groupId>org.openapitools</groupId>
@@ -166,26 +119,29 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/openapi/openapi-comanda-app-v1.yml</inputSpec>
-                            <generatorName>java</generatorName>
-                            <library>resttemplate</library>
-                            <output>${project.build.directory}/generated-sources/openapi</output>
-                            <apiPackage>es.caib.comanda.interna.client.api</apiPackage>
-                            <modelPackage>es.caib.comanda.interna.client.model</modelPackage>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-app-v1.yml</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <output>${project.basedir}/../api-server-comanda-app-v1</output>
+                            <apiPackage>es.caib.comanda.app.v1.api</apiPackage>
+                            <modelPackage>es.caib.comanda.app.v1.model</modelPackage>
+                            <invokerPackage>es.caib.comanda.app.v1.service</invokerPackage>
                             <skipValidateSpec>true</skipValidateSpec>
                             <generateSupportingFiles>false</generateSupportingFiles>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <configOptions>
-                                <sourceFolder>src/gen/java</sourceFolder>
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-app-client-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest - Comanda --> App v1</artifactDescription>
                                 <dateLibrary>java8</dateLibrary>
-                                <useRuntimeException>true</useRuntimeException>
+                                <useTags>true</useTags>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                                <!-- Ensure no tests are generated inside configOptions either (for older generators) -->
-                                <apiTests>false</apiTests>
-                                <modelTests>false</modelTests>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe>
+                                <usePrimitives>true</usePrimitives>
                             </configOptions>
-                            <addCompileSourceRoot>true</addCompileSourceRoot>
+                            <addCompileSourceRoot>false</addCompileSourceRoot>
                         </configuration>
                     </execution>
                 </executions>
