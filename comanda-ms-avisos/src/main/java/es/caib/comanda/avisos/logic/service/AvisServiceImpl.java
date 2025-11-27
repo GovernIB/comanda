@@ -14,9 +14,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jms.annotation.JmsListener;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 
@@ -43,7 +46,9 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
 
     @JmsListener(destination = CUA_AVISOS)
-    public void receiveMessage(es.caib.comanda.ms.broker.model.Avis avisBroker) {
+    public void receiveMessage(@Payload es.caib.comanda.ms.broker.model.Avis avisBroker,
+                               Message message) throws JMSException {
+        message.acknowledge();
         log.debug("Processat avís de la cua " + CUA_TASQUES + " (avís={})", avisBroker);
         Optional<EntornApp> entornApp = avisClientHelper.entornAppFindByEntornCodiAndAppCodi(
                 avisBroker.getEntornCodi(),
