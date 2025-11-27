@@ -9,11 +9,13 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeEspecificAny;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -25,6 +27,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID> {
 
     @NotNull
@@ -35,6 +38,7 @@ public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID
 
 
     @NotNull
+    @ResourceField(onChangeActive = true)
     protected ResourceReference<AppResource, Long> aplicacio;
     protected Long appId;
 

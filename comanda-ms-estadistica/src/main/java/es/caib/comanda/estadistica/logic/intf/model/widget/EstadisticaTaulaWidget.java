@@ -18,6 +18,7 @@ import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -76,6 +77,7 @@ import java.util.List;
         }
 )
 @ValidTaulaWidget
+@FieldNameConstants
 public class EstadisticaTaulaWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
 
     // Camps en cas de vist tipus TABLE

@@ -5,9 +5,11 @@ import es.caib.comanda.estadistica.logic.helper.EstadisticaGraficWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
+import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetBaseResource;
 import es.caib.comanda.estadistica.logic.intf.service.EstadisticaGraficWidgetService;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -15,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Implementació del servei EstadisticaGraficWidgetService per gestionar les operacions sobre widgets de Grafic d'estadístiques.
@@ -86,4 +90,14 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
         resource.setAppId(resource.getAplicacio().getId());
     }
 
+    @Override
+    public Map<String, Object> onChange(Long aLong, EstadisticaGraficWidget previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException {
+        HashMap<String, Object> changes = new HashMap<>();
+        if (fieldName.equals(WidgetBaseResource.Fields.aplicacio) && !Objects.equals(previous.getAplicacio(), fieldValue)) {
+            changes.put(WidgetBaseResource.Fields.dimensionsValor, null);
+            changes.put(EstadisticaGraficWidget.Fields.indicador, null);
+            changes.put(EstadisticaGraficWidget.Fields.descomposicioDimensio, null);
+        }
+        return changes;
+    }
 }
