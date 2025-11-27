@@ -53,6 +53,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
         quickFilterFields = { "codi", "nom" },
         descriptionField = "codiNomDescription",
@@ -77,6 +78,7 @@ public class Indicador extends BaseResource<Long> {
     /** Named Filter para devolver un solo resultado por el atributo nom **/
     public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
     public static final String INDICADOR_FILTER = "indicadorFilter";
+    public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")

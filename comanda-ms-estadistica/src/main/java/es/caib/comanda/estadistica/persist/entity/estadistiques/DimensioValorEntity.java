@@ -59,6 +59,9 @@ public class DimensioValorEntity extends BaseEntity<DimensioValor> {
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dim_valor_dim_fk"))
     private DimensioEntity dimensio;
 
+    @Column(name = "dimensio_id", updatable = false, insertable = false)
+    private Long dimensioId;
+
     @Column(name = "agrupable", nullable = false)
     private Boolean agrupable = false;
     @Column(name = "valor_agrupacio", length = 255)

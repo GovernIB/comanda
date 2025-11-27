@@ -1,5 +1,8 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import com.turkraft.springfilter.FilterBuilder;
+import com.turkraft.springfilter.parser.Filter;
+import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
@@ -10,7 +13,10 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Classe d'implementació del servei per a la gestió de la lògica de negoci relacionada amb l'entitat Dimensio.
@@ -32,6 +38,11 @@ import java.util.Objects;
 @Slf4j
 @Service
 public class DimensioServiceImpl  extends BaseReadonlyResourceService<Dimensio, Long, DimensioEntity> implements DimensioService {
+    private final SpringFilterHelper springFilterHelper;
+
+    public DimensioServiceImpl(SpringFilterHelper springFilterHelper) {
+        this.springFilterHelper = springFilterHelper;
+    }
 
     @Override
     protected Specification<DimensioEntity> namedFilterToSpecification(String name) {
@@ -51,5 +62,26 @@ public class DimensioServiceImpl  extends BaseReadonlyResourceService<Dimensio, 
             return cb.equal(root.get("entornAppId"), subquery);
         };
     }
+
+    @Override
+    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
+        List<Filter> filters = new ArrayList<>();
+        if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
+            filters.add(Filter.parse(currentSpringFilter));
+        }
+        if (namedQueries != null) {
+            for (String namedQuery : namedQueries) {
+                if (namedQuery.contains(Dimensio.FILTER_BY_APP_NAMEDFILTER)){
+                    long appId = Long.parseLong(namedQuery.split(":")[1]);
+                    filters.add(springFilterHelper.filterByApp(appId, Dimensio.Fields.entornAppId));
+                }
+            }
+        }
+        List<Filter> result = filters.stream().
+                filter(f -> f != null && !String.valueOf(f).isEmpty()).
+                collect(Collectors.toList());
+        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+    }
+
 
 }
