@@ -98,19 +98,6 @@
                             </target>
                         </configuration>
                     </execution>
-
-                    <!-- Renombrar JAR Java 7 -->
-                    <execution>
-                        <id>rename-java7-jar</id>
-                        <phase>install</phase>
-                        <goals><goal>run</goal></goals>
-                        <configuration>
-                            <target>
-                                <move file="${project.build.directory}/${project.artifactId}-${project.version}-java7.jar"
-                                      tofile="${project.build.directory}/comanda-lib7-${project.version}.jar"/>
-                            </target>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
 

@@ -1,6 +1,7 @@
 package es.caib.comanda.api.config;
 
 import es.caib.comanda.ms.back.config.BaseOpenApiConfig;
+import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.License;
@@ -53,6 +54,16 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                         "/api/**/monitor/**",
                         "/api/v1/jms/**"
                 )
+                .addOpenApiCustomiser(openApi -> {
+                    if (openApi.getInfo() != null) {
+                        openApi.getInfo()
+                                .description("API que COMANDA utilitza per cridar a les aplicacions integrades. ");
+                    }
+                    ExternalDocumentation externalDocs = new ExternalDocumentation();
+                    externalDocs.setDescription("Exemple el servei generat automàticament a partir d'aquest contracte OpenAPI (Codi font Java)");
+                    externalDocs.setUrl("https://github.com/GovernIB/comanda/tree/comanda-dev/api-server-comanda-app-v1");
+                    openApi.setExternalDocs(externalDocs);
+                })
                 .build();
     }
 
