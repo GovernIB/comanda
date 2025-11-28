@@ -4,6 +4,7 @@ import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaGraficWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaGraficWidget;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetBaseResource;
 import es.caib.comanda.estadistica.logic.intf.service.EstadisticaGraficWidgetService;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Implementació del servei EstadisticaGraficWidgetService per gestionar les operacions sobre widgets de Grafic d'estadístiques.
@@ -97,6 +99,15 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
             changes.put(WidgetBaseResource.Fields.dimensionsValor, null);
             changes.put(EstadisticaGraficWidget.Fields.indicador, null);
             changes.put(EstadisticaGraficWidget.Fields.descomposicioDimensio, null);
+            if (previous.getIndicadorsInfo() != null) {
+                var indicadorsInfoWithoutIndicador = previous.getIndicadorsInfo().stream()
+                        .peek(indicadorTaula -> indicadorTaula.setIndicador(null))
+                        .collect(Collectors.toList());
+                changes.put(EstadisticaGraficWidget.Fields.indicadorsInfo, indicadorsInfoWithoutIndicador);
+                for (int i = 0; i < previous.getIndicadorsInfo().size(); i++) {
+                    changes.put(EstadisticaGraficWidget.Fields.indicadorsInfo + "." + i + "." + IndicadorTaula.Fields.indicador, null);
+                }
+            }
         }
         return changes;
     }
