@@ -2,7 +2,7 @@ import Grid from "@mui/material/Grid";
 import {Divider, Box, Typography} from "@mui/material";
 import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
-import {useState, useMemo, useEffect, useRef} from "react";
+import { useMemo, useEffect, useRef} from "react";
 import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
 import GraficWidgetVisualization from "./GraficWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
@@ -10,11 +10,10 @@ import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns
 import { useTranslation } from "react-i18next";
 import ColorPaletteSelector from "../ColorPaletteSelector";
 import ColumnesTable from "./ColumnesTable.tsx";
-import {FormFieldDataActionType, FormFieldError} from "../../../lib/components/form/FormContext.tsx";
 import FormFieldAdvancedSearchFilters from "../FormFieldAdvancedSearchFilters.tsx";
 
 const EstadisticaGraficWidgetForm: React.FC = () => {
-    const { data, dataDispatchAction } = useFormContext();
+    const { data, apiRef } = useFormContext();
     const { t } = useTranslation();
     const previewData = useMemo(() =>({
         titol: data.titol || 'Títol del gràfic',
@@ -83,30 +82,19 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
         return [];
     }, [isPieTypeVisible, isScatterTypeVisible, isHeatTypeVisible, isBarTypeVisible, isLineTypeVisible, isSparkLineTypeVisible, isGaugeTypeVisible]);
 
-    const [appPalette, setAppPalette] = useState<string>(data.colorsPaleta);
     const handlePaletteChange = (newPalette: string[]) => {
         const paletteString = newPalette.join(',');
-        setAppPalette(paletteString);
-        dataDispatchAction({
-            type: FormFieldDataActionType.FIELD_CHANGE,
-            payload: { fieldName: 'colorsPaleta', value: paletteString, }
-        })
+        apiRef.current?.setFieldValue('colorsPaleta', paletteString);
     };
 
     const handleAgruparPerDimensioChange = (value: boolean) => {
         if (value) {
-            dataDispatchAction({
-                type: FormFieldDataActionType.FIELD_CHANGE,
-                payload: {fieldName: 'tempsAgrupacio', value: undefined,}
-            })
+            apiRef.current?.setFieldValue('tempsAgrupacio', undefined);
         }
     }
     const handleTempsAgrupacioChange = (value: string) => {
         if (value) {
-            dataDispatchAction({
-                type: FormFieldDataActionType.FIELD_CHANGE,
-                payload: {fieldName: 'agruparPerDimensioDescomposicio', value: undefined,}
-            })
+            apiRef.current?.setFieldValue('agruparPerDimensioDescomposicio', undefined);
         }
     }
 
@@ -114,14 +102,11 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
     useEffect(() => {
         if (!initializedRef.current) {
             if (data?.mostrarCapcalera === undefined) {
-                dataDispatchAction({
-                    type: FormFieldDataActionType.FIELD_CHANGE,
-                    payload: { fieldName: "lineWidth", value: 2 }
-                });
+                apiRef.current?.setFieldValue('lineWidth', 2);
             }
             initializedRef.current = true;
         }
-    }, [data, dataDispatchAction]);
+    }, [data]);
 
     return (
         <Grid container spacing={2}>
@@ -135,12 +120,15 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             <Grid size={4}><FormField name="tempsAgrupacio" onChange={handleTempsAgrupacioChange} disabled={data.agruparPerDimensioDescomposicio === true}/></Grid>
                             { (isUnIndicador || isUnIndicadorAmbDescomposicio || isDosIndicadors) && (
                                 <>
-                                    <Grid size={4}><FormFieldAdvancedSearchFilters
-                                        name="indicador"
-                                        namedQueries= {["groupByNom"]}
-                                        advancedSearchColumns={columnesIndicador}
-                                        advancedSearchDataGridProps={{ rowHeight: 30, }}
-                                        advancedSearchDialogHeight={500}/></Grid>
+                                    <Grid size={4}>
+                                        <FormFieldAdvancedSearchFilters
+                                            name="indicador"
+                                            namedQueries= {["groupByNom"]}
+                                            advancedSearchColumns={columnesIndicador}
+                                            advancedSearchDataGridProps={{ rowHeight: 30, }}
+                                            advancedSearchDialogHeight={500}
+                                        />
+                                    </Grid>
                                     <Grid size={4}><FormField name="titolIndicador" /></Grid>
                                     <Grid size={2}><FormField name="agregacio" hiddenEnumValues={['FIRST_SEEN', 'LAST_SEEN']}/></Grid>
                                     <Grid size={2}><FormField name="unitatAgregacio" disabled={data.agregacio !== 'AVERAGE'}/></Grid>
@@ -160,11 +148,9 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                                                    mostrarUnitat={true}
                                                    hiddenAgregacioValues={['FIRST_SEEN', 'LAST_SEEN']}
                                                    onChange={(value) => {
-                                        dataDispatchAction({
-                                            type: FormFieldDataActionType.FIELD_CHANGE,
-                                            payload: { fieldName: "indicadorsInfo", value }
-                                        });
-                                    }} />
+                                                       apiRef.current?.setFieldValue('indicadorsInfo', value);
+                                                   }}
+                                    />
                                 </Grid>
                             )}
                             {/*<Grid size={4}><FormField name="tipusValors" /></Grid>*/}
@@ -185,7 +171,6 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                         <Box sx={{ height: '240px' }}>
                             <GraficWidgetVisualization
                                 preview={true}
-                                tipusGrafic={chartType}
                                 {...previewData}
                             />
                         </Box>
@@ -211,7 +196,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                     </>
                 )}
                 {/*<Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" type="color" /></Grid>*/}
-                <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><ColorPaletteSelector initialColors={appPalette} onPaletteChange={handlePaletteChange} /></Grid>
+                <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><ColorPaletteSelector initialColors={data?.colorsPaleta} onPaletteChange={handlePaletteChange} /></Grid>
                 { (isBarTypeVisible || isLineTypeVisible || isScatterTypeVisible) && (
                     <Grid size={12}><FormField name="mostrarReticula" label={t($ => $.page.widget.atributsVisuals.mostrarReticula)} type="checkbox" /></Grid>)
                 }

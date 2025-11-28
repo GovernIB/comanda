@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {useFormContext, FormFieldDataActionType, FormFieldError} from '../../../lib/components/form/FormContext';
+import {useFormContext, FormFieldError} from '../../../lib/components/form/FormContext';
 import {FormField} from 'reactlib';
 import {columnesIndicador} from '../sharedAdvancedSearch/advancedSearchColumns';
 import {Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography} from '@mui/material';
@@ -25,7 +25,7 @@ interface ColumnesTableProps {
 }
 
 const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat = true, hiddenAgregacioValues, value = [], onChange}) => {
-    const {data, dataDispatchAction, fields, fieldErrors = []} = useFormContext();
+    const {data, apiRef, fields, fieldErrors = []} = useFormContext();
     const {t} = useTranslation();
 
     // Initialize with at least one empty row if none provided
@@ -140,10 +140,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
 
     // Update form data
     const updateFormData = (newColumnes: ColumnaItem[]) => {
-        dataDispatchAction({
-            type: FormFieldDataActionType.FIELD_CHANGE,
-            payload: {fieldName: name, value: newColumnes}
-        });
+        apiRef.current?.setFieldValue(name, newColumnes);
 
         if (onChange) {
             onChange(newColumnes);

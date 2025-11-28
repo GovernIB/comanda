@@ -28,10 +28,8 @@ import UrlPingAdornment from '../components/UrlPingAdornment';
 import { useAclPermissionManager } from '../components/AclPermissionManager';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
-// TODO Debería añadirse un export de este tipo
 import {Cancel, CheckCircle} from '@mui/icons-material';
 import useReordering from '../hooks/reordering.tsx';
-import { FormFieldDataActionType } from '../../lib/components/form/FormContext';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -70,7 +68,9 @@ const useActions = (refresh?: () => void) => {
                 temporalMessageShow(null, t($ => $.page.appsEntorns.action.toolbarActiva.ok), 'success');
             })
             .catch((error) => {
-                error?.message && temporalMessageShow(null, error?.message, 'error');
+                if (error?.message) {
+                    temporalMessageShow(null, error?.message, 'error');
+                }
             });
     }
 
@@ -329,7 +329,7 @@ const existsAnyInParsedCodes = (parsedCodes: any[], existingCodes: Set<any>) => 
 const AppImportFormContent = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
-    const { data, dataDispatchAction, fieldErrors } = useFormContext();
+    const { data, apiRef, fieldErrors } = useFormContext();
     const jsonContentValidationError = fieldErrors?.find((err) => err.field === 'jsonContent');
     const gridContext = useOptionalDataGridContext();
     const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
@@ -345,15 +345,9 @@ const AppImportFormContent = () => {
             // Preselect default decision if conflicts
             // Doing existsAnyInJson before setting jsonContent ensures that the json is valid, as JSON.parse has already been called
             if (existsAnyInParsedCodes(parseCodesFromJson(text), existingCodes))
-                dataDispatchAction({
-                    type: FormFieldDataActionType.FIELD_CHANGE,
-                    payload: { fieldName: 'decision', field: 'decision', value: 'COMBINE' },
-                });
+                apiRef.current?.setFieldValue('decision', 'COMBINE');
 
-            dataDispatchAction({
-                type: FormFieldDataActionType.FIELD_CHANGE,
-                payload: { fieldName: 'jsonContent', field: 'jsonContent', value: text },
-            });
+            apiRef.current?.setFieldValue('jsonContent', text);
         } catch (err: any) {
             temporalMessageShow("", t($ => $.page.apps.import.parseError), 'error');
         }
@@ -388,10 +382,9 @@ const AppImportFormContent = () => {
                         </Typography>
                         <RadioGroup
                             value={data?.decision || ''}
-                            onChange={(e) => dataDispatchAction({
-                                type: FormFieldDataActionType.FIELD_CHANGE,
-                                payload: { fieldName: 'decision', field: 'decision', value: e.target.value },
-                            })}
+                            onChange={(e) =>{
+                                apiRef.current?.setFieldValue('decision', e.target.value);
+                            }}
                         >
                             <FormControlLabel value="OVERWRITE" control={<Radio />} label={t($ => $.page.apps.import.overwrite)} />
                             <FormControlLabel value="COMBINE" control={<Radio />} label={t($ => $.page.apps.import.combine)} />

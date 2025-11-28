@@ -30,7 +30,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
         label = "Icona",
         onChange
 }) => {
-    const { data, dataDispatchAction, dataGetFieldValue } = useFormContext();
+    const { data, apiRef, dataGetFieldValue } = useFormContext();
     const iconValue = dataGetFieldValue(name);
 
     const [selectedIcon, setSelectedIcon] = useState<string | null>(iconValue || null);
@@ -104,10 +104,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
         setSelectedIcon(iconName || null);
 
         // Update form context
-        dataDispatchAction({
-            type: FormFieldDataActionType.FIELD_CHANGE,
-            payload: { fieldName: name, field: name, value: iconName || null }
-        });
+        apiRef.current?.setFieldValue(name, iconName || null);
 
         onChange?.(iconName);
         handleClose();

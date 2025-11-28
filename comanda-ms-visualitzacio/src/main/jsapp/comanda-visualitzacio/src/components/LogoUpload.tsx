@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'reactlib';
-import { FormFieldDataActionType } from '../../lib/components/form/FormContext.tsx';
 import { Box, IconButton, SxProps, Typography } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Icon from '@mui/material/Icon';
@@ -149,7 +148,7 @@ type LogoUploadProps = {
 };
 
 const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
-    const { data, dataDispatchAction } = useFormContext();
+    const { data, apiRef } = useFormContext();
     const previewUrl = data[name] ? `data:image/png;base64,${data[name]}` : null;
 
     const handleFileSelect = (event?: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,10 +182,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
                 const base64 = canvas.toDataURL('image/png').split(',')[1];
 
                 // Update form data
-                dataDispatchAction({
-                    type: FormFieldDataActionType.FIELD_CHANGE,
-                    payload: { fieldName: name, value: base64 },
-                });
+                apiRef.current?.setFieldValue(name, base64);
             };
             img.src = e.target?.result as string;
         };
@@ -194,10 +190,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
     };
 
     const handleRemoveLogo = () => {
-        dataDispatchAction({
-            type: FormFieldDataActionType.FIELD_CHANGE,
-            payload: { fieldName: name, value: null },
-        });
+        apiRef.current?.setFieldValue(name, null);
     };
 
     return (
