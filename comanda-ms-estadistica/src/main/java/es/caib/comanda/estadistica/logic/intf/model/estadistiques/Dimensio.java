@@ -47,6 +47,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
         quickFilterFields = { "nom", "descripcio" },
         descriptionField = "nom",
@@ -73,6 +74,7 @@ public class Dimensio extends BaseResource<Long> {
     public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
     public final static String DIMENSIO_FILTER = "dimensioFilter";
     public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
+    public final static String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
