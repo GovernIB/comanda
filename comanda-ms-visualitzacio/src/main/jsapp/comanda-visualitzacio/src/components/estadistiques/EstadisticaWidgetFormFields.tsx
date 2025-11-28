@@ -45,81 +45,136 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                 <Grid size={12}>
                     <FormField
                         name="aplicacio"
-                        optionsRequest={(quickFilter: string) => findOptions(appFind, 'nom', quickFilter, 'activa:true')}
+                        optionsRequest={(quickFilter: string) =>
+                            findOptions(appFind, 'nom', quickFilter, 'activa:true')
+                        }
                     />
                 </Grid>
-                <Grid size={12}><FormField name="titol" /></Grid>
-                <Grid size={12}><FormField name="descripcio" type="textarea"/></Grid>
-
                 <Grid size={12}>
-                    <FormFieldAdvancedSearchFilters
-                        name="dimensionsValor"
-                        advancedSearchFilterResourceName="dimensio"
-                        advancedSearchFilterCode="filterByDimensio"
-                        advancedSearchFilterContent={
-                            <Box sx={{ my: 1 }}>
-                                <FormField
-                                    componentProps={{
-                                        size: 'small',
-                                    }}
-                                    name="dimensio"
-                                />
-                            </Box>
-                        }
-                        advancedSearchFilterBuilder={(data) =>
-                            data.dimensio ? `dimensio.id : ${data.dimensio.id}` : undefined
-                        }
-                        advancedSearchDataGridProps={{
-                            rowHeight: 30,
-                        }}
-                        advancedSearchDialogHeight={500}
-                        multiple
-                        advancedSearchColumns={columnesDimensioValor}
-                    />
+                    <FormField name="titol" />
                 </Grid>
-
-                <Grid size={12}><Divider sx={{ my: 1 }} >{t($ => $.page.widget.form.periode)}</Divider></Grid>
-
-                {/* Periodo base, depenent des tipus apareixeran o no els camps de abaix */}
-                <Grid size={12}><FormField name="periodeMode" /></Grid>
-
-                {/* Camps PRESET */}
-                {periodeMode === 'PRESET' && (<Grid size={12}><FormField name="presetPeriode" /></Grid>)}
-                {isPresetCountVisible && (<Grid size={12}><FormField name="presetCount" /></Grid>)}
-
-                {/* Camps RELATIU */}
-                {isRelatiuVisible && (
+                <Grid size={12}>
+                    <FormField name="descripcio" type="textarea" />
+                </Grid>
+                {data?.aplicacio != null &&
                     <>
-                        <Grid size={12}><FormField name="relatiuPuntReferencia" /></Grid>
-                        <Grid size={6}><FormField name="relatiuCount" /></Grid>
-                        <Grid size={6}><FormField name="relatiueUnitat" /></Grid>
-                        <Grid size={12}><FormField name="relatiuAlineacio" /></Grid>
+                        <Grid size={12}>
+                            <FormFieldAdvancedSearchFilters
+                                name="dimensionsValor"
+                                advancedSearchFilterResourceName="dimensio"
+                                advancedSearchFilterCode="filterByDimensio"
+                                advancedSearchFilterContent={
+                                    <Box sx={{ my: 1 }}>
+                                        <FormField
+                                            componentProps={{
+                                                size: 'small',
+                                            }}
+                                            name="dimensio"
+                                            namedQueries={[`filterByApp:${data.aplicacio.id}`]}
+                                        />
+                                    </Box>
+                                }
+                                advancedSearchFilterBuilder={data =>
+                                    data.dimensio ? `dimensio.id : ${data.dimensio.id}` : undefined
+                                }
+                                advancedSearchDataGridProps={{
+                                    rowHeight: 30,
+                                }}
+                                advancedSearchDialogHeight={500}
+                                multiple
+                                advancedSearchColumns={columnesDimensioValor}
+                                namedQueries={[
+                                    `filterByApp:${data.aplicacio.id}`,
+                                    'groupByValor',
+                                ]}
+                            />
+                        </Grid>
+
+                        <Grid size={12}>
+                            <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.periode)}</Divider>
+                        </Grid>
+
+                        {/* Periodo base, depenent des tipus apareixeran o no els camps de abaix */}
+                        <Grid size={12}>
+                            <FormField name="periodeMode" />
+                        </Grid>
+
+                        {/* Camps PRESET */}
+                        {periodeMode === 'PRESET' && (
+                            <Grid size={12}>
+                                <FormField name="presetPeriode" />
+                            </Grid>
+                        )}
+                        {isPresetCountVisible && (
+                            <Grid size={12}>
+                                <FormField name="presetCount" />
+                            </Grid>
+                        )}
+
+                        {/* Camps RELATIU */}
+                        {isRelatiuVisible && (
+                            <>
+                                <Grid size={12}>
+                                    <FormField name="relatiuPuntReferencia" />
+                                </Grid>
+                                <Grid size={6}>
+                                    <FormField name="relatiuCount" />
+                                </Grid>
+                                <Grid size={6}>
+                                    <FormField name="relatiueUnitat" />
+                                </Grid>
+                                <Grid size={12}>
+                                    <FormField name="relatiuAlineacio" />
+                                </Grid>
+                            </>
+                        )}
+
+                        {/* Camps ABSOLUT */}
+                        {isAbsolutVisible && (
+                            <Grid size={12}>
+                                <FormField name="absolutTipus" />
+                            </Grid>
+                        )}
+
+                        {/* Camps DATE_RANGE fields */}
+                        {isDateRangeVisible && (
+                            <>
+                                <Grid size={6}>
+                                    <FormField name="absolutDataInici" />
+                                </Grid>
+                                <Grid size={6}>
+                                    <FormField name="absolutDataFi" />
+                                </Grid>
+                            </>
+                        )}
+
+                        {/* Camps SPECIFIC_PERIOD_OF_YEAR fields */}
+                        {isSpecificPeriodVisible && (
+                            <>
+                                <Grid size={8}>
+                                    <FormField name="absolutAnyReferencia" />
+                                </Grid>
+                                <Grid size={4}>
+                                    <FormField
+                                        name="absolutAnyValor"
+                                        disabled={!isAbsolutAnyValorVisible}
+                                    />
+                                </Grid>
+                                <Grid size={12}>
+                                    <FormField name="absolutPeriodeUnitat" />
+                                </Grid>
+                                <Grid size={6}>
+                                    <FormField name="absolutPeriodeInici" />
+                                </Grid>
+                                <Grid size={6}>
+                                    <FormField name="absolutPeriodeFi" />
+                                </Grid>
+                            </>
+                        )}
+
+                        {children}
                     </>
-                )}
-
-                {/* Camps ABSOLUT */}
-                {isAbsolutVisible && (<Grid size={12}><FormField name="absolutTipus" /></Grid>)}
-
-                {/* Camps DATE_RANGE fields */}
-                {isDateRangeVisible && (
-                    <>
-                        <Grid size={6}><FormField name="absolutDataInici" /></Grid>
-                        <Grid size={6}><FormField name="absolutDataFi" /></Grid>
-                    </>
-                )}
-
-                {/* Camps SPECIFIC_PERIOD_OF_YEAR fields */}
-                {isSpecificPeriodVisible && (
-                    <>
-                        <Grid size={8}><FormField name="absolutAnyReferencia" /></Grid>
-                        <Grid size={4}><FormField name="absolutAnyValor" disabled={!isAbsolutAnyValorVisible} /></Grid>
-                        <Grid size={12}><FormField name="absolutPeriodeUnitat" /></Grid>
-                        <Grid size={6}><FormField name="absolutPeriodeInici" /></Grid>
-                        <Grid size={6}><FormField name="absolutPeriodeFi" /></Grid>
-                    </>
-                )}
-
-                { children }
+                }
             </Grid>
         </>
     );

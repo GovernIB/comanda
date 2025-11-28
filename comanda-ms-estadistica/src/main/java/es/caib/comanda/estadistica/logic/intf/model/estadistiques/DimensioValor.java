@@ -48,6 +48,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
         quickFilterFields = { "dimensio.nom", "valor" },
         descriptionField = "desc",
@@ -69,6 +70,8 @@ import java.io.Serializable;
 )
 public class DimensioValor extends BaseResource<Long> {
 
+    public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
+    public static final String NAMED_FILTER_GROUP_BY_VALOR = "groupByValor";
     public static final String DIMENSIO_VALOR_FILTER = "dimensioValorFilter";
 
     @NotNull

@@ -18,6 +18,8 @@ import es.caib.comanda.salut.persist.repository.SalutRepository;
 import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.CannotAcquireLockException;
@@ -223,7 +225,7 @@ public class SalutInfoHelper {
                     i.getPeticions().getPeticionsPerEntorn().keySet().forEach(peticioEntornKey -> {
                         IntegracioPeticions peticioEntorn = i.getPeticions().getPeticionsPerEntorn().get(peticioEntornKey);
                         SalutIntegracioEntity salutIntegracioFilla = new SalutIntegracioEntity();
-                        salutIntegracioFilla.setCodi((peticioEntornKey != null && !peticioEntornKey.isEmpty()) ? peticioEntornKey : "--");
+                        salutIntegracioFilla.setCodi((!Strings.isBlank(peticioEntornKey)) ? StringUtils.truncate(peticioEntornKey, SalutIntegracioEntity.CODI_MAX_LENGTH) : "--");
                         salutIntegracioFilla.setEstat(toSalutEstat(i.getEstat()));
                         salutIntegracioFilla.setTotalOk(peticioEntorn.getTotalOk());
                         salutIntegracioFilla.setTotalError(peticioEntorn.getTotalError());

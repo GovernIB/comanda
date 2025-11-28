@@ -1,5 +1,8 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import com.turkraft.springfilter.FilterBuilder;
+import com.turkraft.springfilter.parser.Filter;
+import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.estadistica.logic.intf.service.IndicadorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
@@ -10,7 +13,10 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Classe de servei que implementa la interfície IndicadorService. Aquesta classe proporciona operacions específiques per gestionar
@@ -30,6 +36,11 @@ import java.util.Objects;
 @Slf4j
 @Service
 public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, Long, IndicadorEntity> implements IndicadorService {
+    private final SpringFilterHelper springFilterHelper;
+
+    public IndicadorServiceImpl(SpringFilterHelper springFilterHelper) {
+        this.springFilterHelper = springFilterHelper;
+    }
 
 	@Override
 	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {
@@ -49,5 +60,26 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
 			return cb.equal(root.get("entornAppId"), subquery);
 		};
 	}
+
+    @Override
+    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
+        List<Filter> filters = new ArrayList<>();
+        if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
+            filters.add(Filter.parse(currentSpringFilter));
+        }
+        if (namedQueries != null) {
+            for (String namedQuery : namedQueries) {
+                if (namedQuery.contains(Indicador.FILTER_BY_APP_NAMEDFILTER)){
+                    long appId = Long.parseLong(namedQuery.split(":")[1]);
+                    filters.add(springFilterHelper.filterByApp(appId, Indicador.Fields.entornAppId));
+                }
+            }
+        }
+        List<Filter> result = filters.stream().
+                filter(f -> f != null && !String.valueOf(f).isEmpty()).
+                collect(Collectors.toList());
+        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+    }
+
 
 }

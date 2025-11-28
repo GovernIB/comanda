@@ -90,7 +90,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                     <Grid size={6}>
                         <FormField
                             name="dimensioAgrupacio"
-                            namedQueries={['groupByNom']}
+                            namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]}
                             advancedSearchColumns={columnesDimensio}
                         />
                     </Grid>

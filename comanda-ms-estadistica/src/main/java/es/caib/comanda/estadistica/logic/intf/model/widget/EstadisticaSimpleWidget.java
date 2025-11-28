@@ -15,6 +15,7 @@ import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -73,6 +74,7 @@ import javax.validation.constraints.Size;
         }
 )
 @ValidSimpleWidget
+@FieldNameConstants
 public class EstadisticaSimpleWidget extends EstadisticaWidget { // WidgetBaseResource<Long> {
 
     //    @NotNull
