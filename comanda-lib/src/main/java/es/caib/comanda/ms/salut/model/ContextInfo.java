@@ -22,7 +22,7 @@ public class ContextInfo {
     @NotNull @Size(min = 1)
     private String codi;
     @Schema(description = "Nom descriptiu del context", example = "Context públic")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 255)
     private String nom;
     @Schema(description = "Path base del context", example = "/app/public")
     @NotNull @Size(min = 1)

@@ -10,4 +10,4 @@ databaseChangeLog:
         - modifyDataType:
             tableName: ${db_prefix}salut_subsistema
             columnName: codi
-            newDataType: varchar(32 ${varcharUnit})
+            newDataType: varchar(64 ${varcharUnit})

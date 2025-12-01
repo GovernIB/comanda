@@ -47,7 +47,7 @@ public class SubsistemaInfo {
    * Codi del subsistema
    * @return codi
    */
-  @NotNull @Size(min = 1) 
+  @NotNull @Size(min = 1, max = 64) 
   @Schema(name = "codi", example = "BD", description = "Codi del subsistema", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("codi")
   public String getCodi() {
@@ -67,7 +67,7 @@ public class SubsistemaInfo {
    * Nom del subsistema
    * @return nom
    */
-  @NotNull @Size(min = 1) 
+  @NotNull @Size(min = 1, max = 255) 
   @Schema(name = "nom", example = "Base de Dades", description = "Nom del subsistema", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("nom")
   public String getNom() {

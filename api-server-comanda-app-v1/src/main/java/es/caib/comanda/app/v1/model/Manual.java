@@ -47,7 +47,7 @@ public class Manual {
    * Nom del manual
    * @return nom
    */
-  @NotNull @Size(min = 1) 
+  @NotNull @Size(min = 1, max = 128) 
   @Schema(name = "nom", example = "Guia d'usuari", description = "Nom del manual", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("nom")
   public String getNom() {
@@ -67,7 +67,7 @@ public class Manual {
    * Ruta o URL del manual
    * @return path
    */
-  @NotNull @Size(min = 1) 
+  @NotNull @Size(min = 1, max = 255) 
   @Schema(name = "path", example = "https://www.caib.es/docs/guia-usuari.pdf", description = "Ruta o URL del manual", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("path")
   public String getPath() {

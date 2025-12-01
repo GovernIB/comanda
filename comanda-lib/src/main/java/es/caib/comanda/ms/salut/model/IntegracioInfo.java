@@ -20,7 +20,7 @@ public class IntegracioInfo {
     @NotNull @Size(min = 1)
     private String codi;
     @Schema(description = "Nom descriptiu de la integració", example = "NOTIB - Notificacions")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 255)
     private String nom;
 
     // Custom builder

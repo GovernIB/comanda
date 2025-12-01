@@ -67,7 +67,7 @@ public class IntegracioInfo {
    * Nom descriptiu de la integració
    * @return nom
    */
-  @NotNull @Size(min = 1) 
+  @NotNull @Size(min = 1, max = 255) 
   @Schema(name = "nom", example = "NOTIB - Notificacions", description = "Nom descriptiu de la integració", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("nom")
   public String getNom() {

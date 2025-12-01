@@ -79,7 +79,7 @@ public class ContextInfo {
    * Nom descriptiu del context
    * @return nom
    */
-  @NotNull @Size(min = 1) 
+  @NotNull @Size(min = 1, max = 255) 
   @Schema(name = "nom", example = "Context públic", description = "Nom descriptiu del context", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("nom")
   public String getNom() {

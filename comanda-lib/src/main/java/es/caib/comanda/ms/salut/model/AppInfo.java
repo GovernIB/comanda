@@ -29,7 +29,7 @@ public class AppInfo {
     private String codi;
 
     @Schema(description = "Nom complet de l'aplicació", example = "NOTIB - Notificacions")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 100)
     private String nom;
 
     @Schema(description = "Versió desplegada de l'aplicació", example = "1.4.3")

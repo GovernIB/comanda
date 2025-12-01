@@ -17,9 +17,9 @@ import javax.validation.constraints.Size;
 @Schema(name = "Manual", description = "Referència a un manual o documentació funcional")
 public class Manual {
     @Schema(description = "Nom del manual", example = "Guia d'usuari")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 128)
     private String nom;
     @Schema(description = "Ruta o URL del manual", example = "https://www.caib.es/docs/guia-usuari.pdf")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 255)
     private String path;
 }

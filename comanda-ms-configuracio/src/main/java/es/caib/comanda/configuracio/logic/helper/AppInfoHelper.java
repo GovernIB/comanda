@@ -165,7 +165,8 @@ public class AppInfoHelper {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom(),
-				ex.getLocalizedMessage());
+				ex.getLocalizedMessage(),
+                ex);
 			if (!monitorApp.isFinishedAction()) {
 				monitorApp.endAction(ex);
 			}
@@ -220,7 +221,7 @@ public class AppInfoHelper {
 				if (appIntegracioDb.isPresent()) {
 					// Si la integració ja existeix l'actualitzam
 					log.debug("\tActualitzant informació de la integració {}", iin.getCodi());
-					appIntegracioDb.get().getIntegracio().setNom(iin.getNom());
+					appIntegracioDb.get().getIntegracio().setNom(truncateString(iin.getNom(), 255));
 					appIntegracioDb.get().setActiva(true);
 				} else {
 					// Si la integració no existeix la cream
@@ -234,7 +235,7 @@ public class AppInfoHelper {
 					} else {
 						IntegracioEntity integracioNou = new IntegracioEntity();
 						integracioNou.setCodi(iin.getCodi());
-						integracioNou.setNom(iin.getNom());
+						integracioNou.setNom(truncateString(iin.getNom(), 255));
 						integracioRepository.save(integracioNou);
 						integracioNova.setIntegracio(integracioNou);
 					}
@@ -280,14 +281,14 @@ public class AppInfoHelper {
 				if (subsistemaDb.isPresent()) {
 					// Si la integració ja existeix l'actualitzam
 					log.debug("\tActualitzant informació del subsistema {}", sin.getCodi());
-					subsistemaDb.get().setNom(sin.getNom());
+					subsistemaDb.get().setNom(truncateString(sin.getNom(), 255));
 					subsistemaDb.get().setActiu(true);
 				} else {
 					// Si la integració no existeix la cream
 					log.debug("\tCreant nou subsistema {}", sin.getCodi());
 					AppSubsistemaEntity subsistemaNou = new AppSubsistemaEntity();
 					subsistemaNou.setCodi(sin.getCodi());
-					subsistemaNou.setNom(sin.getNom());
+					subsistemaNou.setNom(truncateString(sin.getNom(), 255));
 					subsistemaNou.setActiu(true);
 					subsistemaNou.setEntornApp(entornApp);
 					subsistemaRepository.save(subsistemaNou);
@@ -330,7 +331,7 @@ public class AppInfoHelper {
 				if (contextDb.isPresent()) {
 					// Si la integració ja existeix l'actualitzam
 					log.debug("\tActualitzant informació del context {}", cin.getCodi());
-					contextDb.get().setNom(cin.getNom());
+					contextDb.get().setNom(truncateString(cin.getNom(), 255));
 					contextDb.get().setPath(cin.getPath());
 					contextDb.get().setApi(cin.getApi());
 					contextDb.get().setActiu(true);
@@ -340,7 +341,7 @@ public class AppInfoHelper {
 					log.debug("\tCreant nou context {}", cin.getCodi());
 					AppContextEntity contextNou = new AppContextEntity();
 					contextNou.setCodi(cin.getCodi());
-					contextNou.setNom(cin.getNom());
+					contextNou.setNom(truncateString(cin.getNom(), 255));
 					contextNou.setPath(cin.getPath());
 					contextNou.setApi(cin.getApi());
 					contextNou.setEntornApp(entornApp);
@@ -362,7 +363,7 @@ public class AppInfoHelper {
 		});
 	}
 
-	private void refreshManuals(AppContextEntity appContext, List<Manual> manuals) {
+    private void refreshManuals(AppContextEntity appContext, List<Manual> manuals) {
 		List<AppManualEntity> manualsDb = manualRepository.findByAppContext(appContext);
 		// Actualitzam els manuals existents i cream els manuals que falten a la base de dades
 		if (manuals != null) {
@@ -397,5 +398,19 @@ public class AppInfoHelper {
 			}
 		});
 	}
+
+    /**
+     * Trunca un string a una mida màxima, afegint "..." al final si l'string supera la mida màxima.
+     *
+     * @param str       String a truncar
+     * @param maxLength Longitud màxima permesa
+     * @return String truncat amb "..." si era més llarg que maxLength
+     */
+    private String truncateString(String str, int maxLength) {
+        if (str == null || str.length() <= maxLength) {
+            return str;
+        }
+        return str.substring(0, maxLength - 3) + "...";
+    }
 
 }
