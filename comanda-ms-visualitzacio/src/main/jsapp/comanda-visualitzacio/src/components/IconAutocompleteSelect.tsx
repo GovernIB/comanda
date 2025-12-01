@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import * as Icons from "@mui/icons-material";
 import { FixedSizeList } from "react-window";
-import { useFormContext, FormFieldDataActionType } from '../../lib/components/form/FormContext';
+import { useFormContext } from '../../lib/components/form/FormContext';
 
 const allIconNames = Object.keys(Icons).filter(
     (name) => !name.match(/(Outlined|Rounded|Sharp|TwoTone)$/)
@@ -23,6 +23,12 @@ interface IconAutocompleteSelectProps {
     name?: string;
     label?: string;
     onChange?: (value: any) => void;
+}
+
+const getIconOrNull = (iconKey?: string | null) => {
+    if (iconKey && iconKey in Icons)
+        return Icons[iconKey as keyof typeof Icons];
+    return null;
 }
 
 const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
@@ -112,7 +118,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
 
     const renderRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
         const name = matchingIcons[index];
-        const Icon = name ? Icons[name] : null;
+        const Icon = getIconOrNull(name);
 
         return (
             <MenuItem
@@ -133,6 +139,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
     };
 
     const displayValue = selectedIcon || "";
+    const selectedIconComponentType = getIconOrNull(selectedIcon);
 
     return (
         <>
@@ -145,7 +152,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
                     readOnly: true,
                     startAdornment: selectedIcon ? (
                         <Box display="flex" alignItems="center" mr={1}>
-                            {React.createElement(Icons[selectedIcon])}
+                            {selectedIconComponentType != null ? React.createElement(selectedIconComponentType) : null}
                         </Box>
                     ) : null,
                 }}

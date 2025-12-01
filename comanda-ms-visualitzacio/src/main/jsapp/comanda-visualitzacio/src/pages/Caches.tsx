@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import Grid from '@mui/material/Grid';
 import {
     GridPage,
     MuiDataGrid,
-    FormField, useResourceApiService, useBaseAppContext, useConfirmDialogButtons, MuiDataGridApiRef,
+    useResourceApiService,
+    useBaseAppContext,
+    useConfirmDialogButtons,
+    MuiDataGridApiRef,
 } from 'reactlib';
 import {ResourceApiError} from "../../lib/components/ResourceApiProvider.tsx";
 import Icon from "@mui/material/Icon";
@@ -19,7 +21,6 @@ const Caches: React.FC = () => {
     const {
         messageDialogShow,
         temporalMessageShow,
-        t: tLib,
     } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };

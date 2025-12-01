@@ -1,4 +1,4 @@
-import { Icon, IconButton } from '@mui/material';
+import { DialogProps, Icon, IconButton } from '@mui/material';
 import React, { useState } from 'react';
 import {
     FormField,
@@ -20,7 +20,7 @@ type AdvancedSearchWithFiltersParams = {
     fieldName: FormFieldProps['name'];
     advancedSearchColumns: FormFieldProps['advancedSearchColumns'];
     advancedSearchDialogHeight?: FormFieldProps['advancedSearchDialogHeight'];
-    advancedSearchDialogComponentProps?: FormFieldProps['advancedSearchDialogComponentProps'];
+    advancedSearchDialogComponentProps?: Partial<DialogProps>;
     filter?: FormFieldProps['filter'];
     namedQueries?: FormFieldProps['namedQueries'];
     perspectives?: FormFieldProps['perspectives'];
@@ -61,7 +61,7 @@ const useAdvancedSearchWithFilters = ({
         </MuiFilter>
     );
 
-    const handleRowClick = ({ row }) => {
+    const handleRowClick = ({ row }: { row: any }) => {
         closeDialog();
         const field = fields?.find((f) => f.name === fieldName);
         const value = data?.[fieldName];
@@ -138,6 +138,7 @@ type FormFieldAdvancedSearchFiltersProps = FormFieldProps & {
     advancedSearchFilterContent: React.ReactNode;
     advancedSearchFilterBuilder: (data: any) => string | undefined;
     advancedSearchDataGridProps?: any;
+    advancedSearchDialogComponentProps?: Partial<DialogProps>;
 };
 
 const FormFieldAdvancedSearchFilters: React.FC<FormFieldAdvancedSearchFiltersProps> = (props) => {

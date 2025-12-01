@@ -9,24 +9,14 @@ import {
     PieChart,
     ChartsTooltip,
     ChartsLegend,
-    ChartsXAxis,
-    ChartsYAxis,
-    ChartsGrid,
-    BarPlot,
-    LinePlot,
-    PieArcPlot,
-    PieArcLabel,
     SparkLineChart,
     Gauge,
     gaugeClasses,
-    ScatterChart,
     XAxis,
     LineSeries,
 } from '@mui/x-charts';
-// import { Heatmap } from '@mui/x-charts-pro/Heatmap';
 import estils from "./WidgetEstils.ts";
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
-import {TaulaWidgetVisualizationProps} from "./TaulaWidgetVisualization.tsx";
 import Chip from "@mui/material/Chip";
 import Skeleton from '@mui/material/Skeleton';
 import Accordion from '@mui/material/Accordion';
@@ -407,7 +397,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         );
     };
 
-    // Render a gauge chart (Line version) //TODO Modificar back para devolver multiples valores para el valor X 
+    // Render a gauge chart (Line version) //TODO Modificar back para devolver multiples valores para el valor X
     const renderScatterChart = () => {
         // //Opciones graficas
         // const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
