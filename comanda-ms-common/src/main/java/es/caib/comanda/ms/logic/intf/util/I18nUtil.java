@@ -25,6 +25,7 @@ public class I18nUtil implements ApplicationContextAware {
 		return messageSource.getMessage(
 				code,
 				args,
+                code,
 				LocaleContextHolder.getLocale());
 	}
 
