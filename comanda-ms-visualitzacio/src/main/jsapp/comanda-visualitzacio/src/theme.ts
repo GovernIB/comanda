@@ -1,6 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
+export const lightTheme = createTheme({
     typography: {
         fontFamily: "'Noto Sans', sans-serif",
         fontWeightRegular: 400,
@@ -8,9 +8,13 @@ const theme = createTheme({
         fontWeightBold: 700,
     },
     palette: {
+        mode: 'light',
         primary: {
             main: '#004B99',
-            contrastText: '#fff'
+            contrastText: '#fff',
+        },
+        secondary: {
+            main: '#2E2E2E',
         },
     },
     components: {
@@ -120,7 +124,24 @@ const theme = createTheme({
                 },
             },
         },*/
-    }
+    },
 });
 
-export default theme;
+export const darkTheme = createTheme({
+    typography: {
+        fontFamily: "'Noto Sans', sans-serif",
+        fontWeightRegular: 400,
+        fontWeightMedium: 500,
+        fontWeightBold: 700,
+    },
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#004B99',
+            contrastText: '#fff',
+        },
+        secondary: {
+            main: '#F6F6F6',
+        },
+    },
+});

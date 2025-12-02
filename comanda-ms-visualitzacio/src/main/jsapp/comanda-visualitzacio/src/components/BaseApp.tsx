@@ -26,11 +26,11 @@ import { useUserContext } from './UserContext';
 import HeaderLanguageSelector from './HeaderLanguageSelector';
 import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog';
 import RoleSelector from './RoleSelector';
-import theme from '../theme';
 import i18n from '../i18n/i18n';
 import drassana from '../assets/drassana.png';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
+import { useTheme } from '@mui/material/styles';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -86,6 +86,7 @@ const CustomLocalizationProvider = ({ children }: React.PropsWithChildren) => {
 
 // Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
 const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) => {
+    const theme = useTheme();
     const { indexState: apiIndex } = useResourceApiContext();
     const filteredAppMenuEntries = appMenuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
     return filteredAppMenuEntries?.length
@@ -114,6 +115,7 @@ const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) 
 }
 // Selector d'idioma (només si hi ha idiomes disponibles)
 const generateLanguageItems = (availableLanguages: string[] | undefined) => {
+    const theme = useTheme();
     const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
     return availableLanguages?.length && isLgUp && false
         ? [

@@ -2,16 +2,19 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BaseApp } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
+import logoDark from './assets/goib_logo.png';
 import comandaLogo from './assets/COM_DRA_COL.svg';
 import AppRoutes from './AppRoutes';
 import { useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
+import { useTheme } from '@mui/material/styles';
 
 const APPBAR_HEIGHT = '64px';
 
 export const App: React.FC = () => {
     const { user } = useUserContext();
     const { t } = useTranslation();
+    const theme = useTheme();
     const menuSalut = {
         id: 'salut',
         title: t($ => $.menu.salut),
@@ -171,7 +174,7 @@ export const App: React.FC = () => {
     return (
         <BaseApp
             code="com"
-            logo={logo}
+            logo={theme.palette.mode === "dark" ? logoDark : logo}
             logoStyle={{
                 '& img': { height: '38px' },
                 pl: 2,

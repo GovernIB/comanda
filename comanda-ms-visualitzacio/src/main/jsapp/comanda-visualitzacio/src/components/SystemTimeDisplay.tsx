@@ -1,9 +1,10 @@
 import React from 'react';
 import { AccessTime, CalendarMonth } from '@mui/icons-material';
 import dayjs from 'dayjs';
-import theme from "../theme.ts";
+import { useTheme } from '@mui/material/styles';
 
 export const SystemTimeDisplay = React.memo(() => {
+    const theme = useTheme();
     const [currentTime, setCurrentTime] = React.useState(dayjs());
     React.useEffect(() => {
         const timer = setInterval(() => {
