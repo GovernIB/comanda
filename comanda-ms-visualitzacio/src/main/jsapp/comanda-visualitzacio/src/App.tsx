@@ -157,13 +157,13 @@ export const App: React.FC = () => {
             }
         ]
     };
-    const menuEntries = [
+    const headerMenuEntries = [
         menuSalut,
         menuEstadistiques,
         menuTasca,
         menuAvis,
     ];
-    const appMenuEntries = [
+    const caibMenuEntries = [
         menuSalut,
         menuEstadistiques,
         menuTasca,
@@ -191,8 +191,9 @@ export const App: React.FC = () => {
             }
             version="0.1"
             availableLanguages={['ca', 'es']}
-            menuEntries={menuEntries}
-            appMenuEntries={appMenuEntries}
+            menuEntries={caibMenuEntries}
+            headerMenuEntries={headerMenuEntries}
+            caibMenuEntries={caibMenuEntries}
             appbarBackgroundColor="#fff"
             appbarStyle={{
                 cssText: `min-height: ${APPBAR_HEIGHT} !important; background-color: #fff !important`,

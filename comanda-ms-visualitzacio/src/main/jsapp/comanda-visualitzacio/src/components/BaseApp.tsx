@@ -49,7 +49,8 @@ export type BaseAppProps = React.PropsWithChildren & {
     version: string;
     availableLanguages?: string[];
     menuEntries?: MenuEntryWithResource[];
-    appMenuEntries?: MenuEntryWithResource[];
+    headerMenuEntries?: MenuEntryWithResource[];
+    caibMenuEntries?: MenuEntryWithResource[];
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
     appbarStyle?: any;
@@ -136,6 +137,25 @@ const generateAppMenu = (menuEntries: MenuEntryWithResource[] | undefined) => {
         : [];
 }
 
+const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
+    const [processedMenuEntries, setprocessedMenuEntries] = React.useState<MenuEntry[]>();
+    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
+    React.useEffect(() => {
+        if (apiIsReady) {
+            const apiLinks = apiIndex?.links.getAll();
+            const resourceNames = apiLinks?.map((l: any) => l.rel);
+            const processedMenuEntries = menuEntries?.
+                filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
+                map(e => {
+                    const { resourceName, ...otherProps } = e;
+                    return otherProps;
+                });
+            setprocessedMenuEntries(processedMenuEntries);
+        }
+    }, [apiIsReady, apiIndex]);
+    return processedMenuEntries;
+}
+
 const generateFooter = () => {
     return (
         <>
@@ -182,7 +202,8 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         version,
         availableLanguages,
         menuEntries,
-        appMenuEntries,
+        headerMenuEntries,
+        caibMenuEntries,
         appbarBackgroundColor,
         appbarBackgroundImg,
         appbarStyle,
@@ -191,6 +212,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
+    const baseAppMenuEntries = useBaseAppMenuEntries(menuEntries);
     const { user, currentRole } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
     const { indexState } = useResourceApiContext();
@@ -221,11 +243,11 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAppbarBackgroundImg={appbarBackgroundImg}
         headerAppbarStyle={appbarStyle}
         headerAdditionalComponents={[
-            ...generateMenuItems(menuEntries), // Menú
+            ...generateMenuItems(headerMenuEntries), // Menú
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
             ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
-            ...generateAppMenu(appMenuEntries), // Menú lateral
+            ...generateAppMenu(caibMenuEntries), // Menú lateral
         ]}
         headerAdditionalAuthComponents={[
             <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
@@ -246,10 +268,10 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerUseLocationPath={useLocationPath}
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
+        menuEntries={baseAppMenuEntries}
         defaultMuiComponentProps={defaultMuiComponentProps}
         fixedContentExpandsToAvailableHeightEnabled
-        marginsDisabled
-    >
+        marginsDisabled>
         <UserProfileFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>
             {children}

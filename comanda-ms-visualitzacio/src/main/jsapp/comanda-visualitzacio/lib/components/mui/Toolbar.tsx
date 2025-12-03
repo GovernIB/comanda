@@ -50,6 +50,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <Typography variant="h6">{title}</Typography>
     );
     const flexGrow = !noFlexGrow ? <div style={{ flexGrow: 1 }} /> : <></>;
+    const upperToolbarBgColor =
+        theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900];
     const toolbarElements: React.ReactElement[] =
         title != null ? [titleElement, flexGrow] : [flexGrow];
     return (
@@ -66,7 +68,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                     backgroundColor: error
                         ? red[100]
                         : upperToolbar
-                          ? theme.palette.grey[200]
+                          ? upperToolbarBgColor
                           : undefined,
                     ...sxProp,
                 }}>
