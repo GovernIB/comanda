@@ -102,6 +102,7 @@ const translationEs: translationResourcesType = {
                     tema: {
                         clar: "Claro",
                         obscur: "Oscuro",
+                        sistema: "Sistema",
                     },
                 }
             }

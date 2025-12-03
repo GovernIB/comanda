@@ -102,6 +102,7 @@ const translationEn: translationResourcesType = {
                     tema: {
                         clar: "Light",
                         obscur: "Dark",
+                        sistema: "System",
                     },
                 }
             }

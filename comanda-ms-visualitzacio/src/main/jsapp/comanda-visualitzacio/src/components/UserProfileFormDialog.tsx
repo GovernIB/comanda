@@ -37,33 +37,36 @@ export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void }
 };
 
 export const TemaObscurSelector: React.FC = () => {
-  const { t } = useTranslation();
-  const { data, apiRef } = useFormContext();
-  const handleChange = (_event: any, newValue: boolean | null) => {
-    if (newValue !== null) {
-        apiRef?.current?.setFieldValue("temaObscur", newValue);
-    }
-  };
-  return (
-      <ToggleButtonGroup
-        value={data?.temaObscur}
-        exclusive
-        onChange={handleChange}
-        size="small"
-        sx={{
-          display: 'flex',
-          width: '100%',
-          justifyContent: 'center',
-        }}
-      >
-          <ToggleButton value={false} sx={{ flex: 1, gap: 1 }} >
-            <Icon>light_mode</Icon> {t($ => $.menu.user.options.profile.tema.clar)}
-          </ToggleButton>
-          <ToggleButton value={true} sx={{ flex: 1, gap: 1 }} >
-            <Icon>dark_mode</Icon> {t($ => $.menu.user.options.profile.tema.obscur)}
-          </ToggleButton>
-      </ToggleButtonGroup>
-  );
+    const { t } = useTranslation();
+    const { data, apiRef } = useFormContext();
+    const handleChange = (_event: React.MouseEvent<HTMLElement>, newValue: boolean | null) => {
+        if (newValue !== null) {
+            apiRef?.current?.setFieldValue('temaObscur', newValue);
+        }
+    };
+    return (
+        <ToggleButtonGroup
+            value={data?.temaObscur ?? ""}
+            exclusive
+            onChange={handleChange}
+            size="small"
+            sx={{
+                display: 'flex',
+                width: '100%',
+                justifyContent: 'center',
+            }}
+        >
+            <ToggleButton value={false} sx={{ flex: 1, gap: 1 }}>
+                <Icon>light_mode</Icon> {t($ => $.menu.user.options.profile.tema.clar)}
+            </ToggleButton>
+            <ToggleButton value={true} sx={{ flex: 1, gap: 1 }}>
+                <Icon>dark_mode</Icon> {t($ => $.menu.user.options.profile.tema.obscur)}
+            </ToggleButton>
+            <ToggleButton value={""} sx={{ flex: 1, gap: 1 }}>
+                <Icon>settings_brightness</Icon> {t($ => $.menu.user.options.profile.tema.sistema)}
+            </ToggleButton>
+        </ToggleButtonGroup>
+    );
 };
 
 

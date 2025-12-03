@@ -628,7 +628,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 ml: 0,
                                 mr: 0,
                                 mt: 0,
-                                backgroundColor: (theme) => theme.palette.grey[200],
+                                backgroundColor: (theme) => theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900],
                             }}
                         >
                             <Box>

@@ -102,6 +102,7 @@ const translationCa = {
                     tema: {
                         clar: "Clar",
                         obscur: "Obscur",
+                        sistema: "Sistema",
                     },
                 },
             },
