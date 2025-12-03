@@ -627,6 +627,9 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
                 title={title}
                 elementsWithPositions={toolbarElementsWithPositions}
                 upperToolbar
+                sx={{
+                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey['900'] : theme.palette.grey['200'],
+                }}
             />
             {dialog}
         </>

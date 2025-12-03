@@ -225,7 +225,7 @@ export type MuiDataGridProps = {
     /** Referència a l'api del component */
     apiRef?: MuiDataGridApiRef;
     /** Referència a l'api interna del component DataGrid de MUI */
-    datagridApiRef?: React.MutableRefObject<GridApiPro | null>;
+    datagridApiRef?: React.RefObject<GridApiPro | null>;
     /** Alçada del component en píxels */
     height?: number;
     /**
@@ -474,7 +474,7 @@ const useGridColumns = (
  *
  * @returns referència a l'API del component MuiDataGrid.
  */
-export const useMuiDataGridApiRef: () => React.MutableRefObject<MuiDataGridApi> = () => {
+export const useMuiDataGridApiRef: () => React.RefObject<MuiDataGridApi> = () => {
     const gridApiRef = React.useRef<MuiDataGridApi | any>({});
     return gridApiRef;
 };

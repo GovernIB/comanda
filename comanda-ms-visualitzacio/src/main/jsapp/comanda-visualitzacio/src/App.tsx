@@ -15,6 +15,7 @@ export const App: React.FC = () => {
     const { user } = useUserContext();
     const { t } = useTranslation();
     const theme = useTheme();
+    const darkThemeActive = theme.palette.mode === "dark";
     const menuSalut = {
         id: 'salut',
         title: t($ => $.menu.salut),
@@ -174,13 +175,15 @@ export const App: React.FC = () => {
     return (
         <BaseApp
             code="com"
-            logo={theme.palette.mode === "dark" ? logoDark : logo}
+            logo={darkThemeActive ? logoDark : logo}
             logoStyle={{
                 '& img': { height: '38px' },
                 pl: 2,
                 pr: 4,
                 mr: 4,
-                borderRight: '2px solid #000',
+                borderRightWidth: "1px",
+                borderRightStyle: "solid",
+                borderRightColor: theme.palette.divider,
             }}
             title={
                 <img
@@ -194,9 +197,9 @@ export const App: React.FC = () => {
             menuEntries={caibMenuEntries}
             headerMenuEntries={headerMenuEntries}
             caibMenuEntries={caibMenuEntries}
-            appbarBackgroundColor="#fff"
+            appbarBackgroundColor={darkThemeActive ? undefined : '#fff'}
             appbarStyle={{
-                cssText: `min-height: ${APPBAR_HEIGHT} !important; background-color: #fff !important`,
+                cssText: `min-height: ${APPBAR_HEIGHT} !important`,
             }}
             // appbarBackgroundImg={headerBackground}
             defaultMuiComponentProps={{
@@ -212,13 +215,13 @@ export const App: React.FC = () => {
                 },
                 form: {
                     commonFieldComponentProps: {
-                        size: 'small'
-                    }
+                        size: 'small',
+                    },
                 },
                 filter: {
                     commonFieldComponentProps: {
-                        size: 'small'
-                    }
+                        size: 'small',
+                    },
                 },
             }}
         >
