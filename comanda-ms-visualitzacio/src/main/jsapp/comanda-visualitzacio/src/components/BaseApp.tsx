@@ -244,7 +244,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAppbarBackgroundImg={appbarBackgroundImg}
         headerAppbarStyle={appbarStyle}
         headerAdditionalComponents={[
-            <MenuItems appMenuEntries={headerMenuEntries} />, // Menú
+            <MenuItems key="menuItems" appMenuEntries={headerMenuEntries} />, // Menú
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
             ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
