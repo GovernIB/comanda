@@ -6,7 +6,8 @@ import {
     useNavigate
 } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import MuiLink from '@mui/material/Link';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -86,34 +87,34 @@ const CustomLocalizationProvider = ({ children }: React.PropsWithChildren) => {
 }
 
 // Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
-const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) => {
-    const theme = useTheme();
+const MenuItems = ({ appMenuEntries }: { appMenuEntries: MenuEntryWithResource[] | undefined }) => {
     const { indexState: apiIndex } = useResourceApiContext();
-    const filteredAppMenuEntries = appMenuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
-    return filteredAppMenuEntries?.length
-        ? filteredAppMenuEntries.map((entry) => (
-            <Button
-                className="appMenuItem"
-                key={entry.id}
-                component={Link}
-                to={entry.to ?? ''} // Navegació amb React Router
-                sx={{
-                    color: theme.palette.text.primary,
-                    display: { xs: 'none', md: 'inline' },
-                    mr: 1,
-                    textTransform: 'none',
-                    '&:hover': {
-                        textDecoration: 'underline',
-                        '--variant-containedBg': '#fff',
-                        '--variant-textBg': '#fff',
-                        '--variant-outlinedBg': '#fff',
-                    }
-                }}>
-                {entry.title}
-            </Button>
-        ))
-        : [];
-}
+    const filteredAppMenuEntries = appMenuEntries?.filter(
+        e => e.resourceName == null || apiIndex?.links.has(e.resourceName)
+    );
+    return (
+        <Box sx={{ display: 'flex', gap: 2 }}>
+            {filteredAppMenuEntries?.length
+                ? filteredAppMenuEntries.map(entry => (
+                      <MuiLink
+                          className="appMenuItem"
+                          key={entry.id}
+                          component={Link}
+                          to={entry.to ?? ''} // Navegació amb React Router
+                          underline="hover"
+                          color="textPrimary"
+                          sx={{
+                              display: { xs: 'none', md: 'inline' },
+                              mr: 1,
+                          }}
+                      >
+                          {entry.title}
+                      </MuiLink>
+                  ))
+                : []}
+        </Box>
+    );
+};
 // Selector d'idioma (només si hi ha idiomes disponibles)
 const generateLanguageItems = (availableLanguages: string[] | undefined) => {
     const theme = useTheme();
@@ -243,7 +244,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAppbarBackgroundImg={appbarBackgroundImg}
         headerAppbarStyle={appbarStyle}
         headerAdditionalComponents={[
-            ...generateMenuItems(headerMenuEntries), // Menú
+            <MenuItems appMenuEntries={headerMenuEntries} />, // Menú
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
             ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
