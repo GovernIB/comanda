@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { BaseApp } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
 import logoDark from './assets/goib_logo.png';
-import comandaLogo from './assets/COM_DRA_COL.svg';
+import ComandaLogo from './assets/COM_DRA_COL.svg?react';
 import AppRoutes from './AppRoutes';
 import { useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 
 const APPBAR_HEIGHT = '64px';
 
@@ -16,6 +17,7 @@ export const App: React.FC = () => {
     const { t } = useTranslation();
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
+    const appbarBackgroundColor = darkThemeActive ? undefined : '#fff';
     const menuSalut = {
         id: 'salut',
         title: t($ => $.menu.salut),
@@ -186,20 +188,28 @@ export const App: React.FC = () => {
                 borderRightColor: theme.palette.divider,
             }}
             title={
-                <img
-                    style={{ height: APPBAR_HEIGHT, verticalAlign: 'middle' }}
-                    src={comandaLogo}
-                    alt="Logo de l'aplicació de Comanda"
-                />
+                <Box
+                    sx={{
+                        '& .cls-1': {
+                            fill: darkThemeActive ? 'white' : undefined,
+                        },
+                    }}
+                >
+                    <ComandaLogo
+                        style={{ height: APPBAR_HEIGHT, verticalAlign: 'middle' }}
+                        title="Logo de l'aplicació de Comanda"
+                    />
+                </Box>
             }
             version="0.1"
             availableLanguages={['ca', 'es']}
             menuEntries={caibMenuEntries}
             headerMenuEntries={headerMenuEntries}
             caibMenuEntries={caibMenuEntries}
-            appbarBackgroundColor={darkThemeActive ? undefined : '#fff'}
+            appbarBackgroundColor={appbarBackgroundColor}
             appbarStyle={{
                 cssText: `min-height: ${APPBAR_HEIGHT} !important`,
+                color: appbarBackgroundColor ? theme.palette.getContrastText(appbarBackgroundColor) : undefined,
             }}
             // appbarBackgroundImg={headerBackground}
             defaultMuiComponentProps={{
