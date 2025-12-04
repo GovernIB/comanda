@@ -139,22 +139,21 @@ const generateAppMenu = (menuEntries: MenuEntryWithResource[] | undefined) => {
 }
 
 const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
-    const [processedMenuEntries, setprocessedMenuEntries] = React.useState<MenuEntry[]>();
     const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
-    React.useEffect(() => {
+    return React.useMemo(() => {
         if (apiIsReady) {
             const apiLinks = apiIndex?.links.getAll();
             const resourceNames = apiLinks?.map((l: any) => l.rel);
-            const processedMenuEntries = menuEntries?.
+            return menuEntries?.
                 filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
                 map(e => {
                     const { resourceName, ...otherProps } = e;
                     return otherProps;
                 });
-            setprocessedMenuEntries(processedMenuEntries);
+        } else {
+            return [];
         }
     }, [apiIsReady, apiIndex]);
-    return processedMenuEntries;
 }
 
 const generateFooter = () => {
