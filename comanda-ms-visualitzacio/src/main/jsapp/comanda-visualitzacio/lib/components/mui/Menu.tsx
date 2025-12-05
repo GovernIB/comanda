@@ -109,6 +109,7 @@ const isCurrentMenuEntryOrAnyChildrenSelected = (
     menuEntry: MenuEntry,
     locationPath: string
 ): boolean => {
+    const anyChildSelected = menuEntry.children?.find((e) => isCurrentMenuEntryOrAnyChildrenSelected(e, locationPath)) != null;
     if (menuEntry.to != null) {
         const menuEntryTo = locationPath.startsWith('/')
             ? menuEntry.to.startsWith('/')
@@ -116,14 +117,9 @@ const isCurrentMenuEntryOrAnyChildrenSelected = (
                 : '/' + menuEntry.to
             : menuEntry.to;
         const selected = menuEntryTo === locationPath || locationPath.startsWith(menuEntryTo + '/');
-        return (
-            selected ||
-            menuEntry.children?.find((e) =>
-                isCurrentMenuEntryOrAnyChildrenSelected(e, locationPath)
-            ) != null
-        );
+        return selected || anyChildSelected;
     } else {
-        return false;
+        return anyChildSelected;
     }
 };
 
