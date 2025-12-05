@@ -32,9 +32,9 @@ import {
     LineSeriesType,
 } from '@mui/x-charts';
 import {
-    getColorByIntegracio,
-    getColorByNivellEnum,
-    getColorBySubsistema,
+    useGetColorByIntegracio,
+    useGetColorByNivellEnum,
+    useGetColorBySubsistema,
     NivellEnum,
     SalutIntegracioModel,
     SalutModel,
@@ -572,6 +572,7 @@ const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }
 };
 
 const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+    const getColorByNivellEnum = useGetColorByNivellEnum();
     const { t } = useTranslation();
     const missatges = salutCurrentApp.missatges;
     return (
@@ -908,6 +909,8 @@ const SalutAppInfo: React.FC<{
     grupsDates?: string[];
 }> = ({ appInfoData, grupsDates, ready }) => {
     const { t } = useTranslation();
+    const getColorBySubsistema = useGetColorBySubsistema();
+    const getColorByIntegracio = useGetColorByIntegracio();
     const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
     const [integracionsExpandState, setIntegracionsExpandState] = React.useState<string[]>([]);
     const toggleIntegracioExpand = (id: string) => {

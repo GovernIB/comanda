@@ -3,7 +3,7 @@ import {BarChart} from '@mui/x-charts/BarChart';
 import { isDataInGroup, toXAxisDataGroups} from '../../util/dataGroup';
 import {
     ENUM_APP_ESTAT_PREFIX,
-    getColorByStatEnum,
+    useGetColorByStatEnum,
     SalutEstatEnum,
     TITLE,
 } from '../../types/salut.model.tsx';
@@ -45,6 +45,7 @@ const UpdownBarChart: React.FC<{
 }> = React.memo((props) => {
     const { agrupacio, estats, grupsDates: baseDataGroups } = props;
     const { t } = useTranslationStringKey();
+    const getColorByStatEnum = useGetColorByStatEnum();
 
     const seriesUp = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'upPercent');
     const seriesWarn = calculateEstatsSeries(baseDataGroups, estats, agrupacio, 'warnPercent');

@@ -1,9 +1,10 @@
 import SalutChip from './SalutChip';
-import { getColorBySubsistema, SalutModel } from '../../types/salut.model';
+import { useGetColorBySubsistema, SalutModel } from '../../types/salut.model';
 import { useTranslation } from 'react-i18next';
 
 const SalutSubsistemesChips = ({ salutItem }: { salutItem: SalutModel }) => {
     const { t } = useTranslation();
+    const getColorBySubsistema = useGetColorBySubsistema();
     return (
         <>
             <SalutChip

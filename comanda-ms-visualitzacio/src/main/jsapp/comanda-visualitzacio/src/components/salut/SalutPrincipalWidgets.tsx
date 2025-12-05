@@ -14,7 +14,7 @@ import { Button, Paper, styled } from '@mui/material';
 import { SalutField } from './SalutChipTooltip.tsx';
 import {
     ENUM_APP_ESTAT_PREFIX,
-    getColorByStatEnum,
+    useGetColorByStatEnum,
     SalutEstatEnum,
     SalutModel,
     TITLE,
@@ -66,6 +66,7 @@ function PieCenterLabel({ children }: { children: React.ReactNode }) {
 const UpdownPieChart: React.FC<{ salutLastItems: SalutModel[] }> = React.memo((props) => {
     const { salutLastItems } = props;
     const { t } = useTranslationStringKey();
+    const getColorByStatEnum = useGetColorByStatEnum();
 
     const upValue = salutLastItems.filter(
         (salutItem) => salutItem.appEstat === SalutEstatEnum.UP

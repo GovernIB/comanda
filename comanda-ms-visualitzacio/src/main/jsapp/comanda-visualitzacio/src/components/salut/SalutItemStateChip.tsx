@@ -2,7 +2,7 @@ import {SalutChipTooltip, SalutField} from "./SalutChipTooltip.tsx";
 import Chip from "@mui/material/Chip";
 import {
     ENUM_APP_ESTAT_PREFIX,
-    getColorByStatEnum,
+    useGetColorByStatEnum,
     getMaterialIconByState,
     SalutEstatEnum,
     TITLE
@@ -19,6 +19,7 @@ interface ItemStateChipProps extends ChipProps {
 
 export const ItemStateChip: React.FC<ItemStateChipProps> = ({ salutField, salutStatEnum, date, sx,...props }) => {
     const { t } = useTranslationStringKey();
+    const getColorByStatEnum = useGetColorByStatEnum();
 
     const renderChip = (state: SalutEstatEnum) => (
         <SalutChipTooltip stateEnum={state} salutField={salutField}>

@@ -1,9 +1,10 @@
 import SalutChip from './SalutChip';
-import { getColorByMissatge, SalutModel } from '../../types/salut.model';
+import { useGetColorByMissatge, SalutModel } from '../../types/salut.model';
 import { useTranslation } from 'react-i18next';
 
 const SalutMissatgesChips = ({ salutItem }: { salutItem: SalutModel }) => {
     const { t } = useTranslation();
+    const getColorByMissatge = useGetColorByMissatge();
     return (
         <>
             <SalutChip

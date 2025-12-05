@@ -1,8 +1,10 @@
-import {BaseEntity, IBaseEntity} from "./base-entity.model.ts";
-import Icon from "@mui/material/Icon";
-import {JSX} from "react";
-import {IAppContext} from "./app.model.tsx";
+import { BaseEntity, IBaseEntity } from './base-entity.model.ts';
+import Icon from '@mui/material/Icon';
+import { JSX, useCallback, useMemo } from 'react';
+import { IAppContext } from './app.model.tsx';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '@mui/material/styles';
+import { darken } from '@mui/material';
 
 /**
  * @deprecated i18next recomana usar l'API de selectors per a les traduccions
@@ -390,89 +392,133 @@ export class SalutInformeEstatItemModel extends BaseEntity {
     }
 }
 
-export const GREEN: string = "#72bd75"  // Verde suave, transmite "ok"
-export const YELLOW: string = "#efe271" // Amarillo claro, alerta ligera
-export const ORANGE: string = "#FFCC80" // Naranja suave, indica problema moderado
-export const BLUE: string = "#90CAF9" // Azul claro, estado informativo
-export const GRAY: string = "#9c9c9c" // Gris claro, estado desconocido
-export const RED_LIGHT: string = "#EF9A9A" // Rojo claro, grave
-export const RED_DARK: string = "#e36161" // Rojo intenso, crítico
+const LIGHT_MODE_COLORS = {
+    GREEN: "#72bd75",  // Verde suave, transmite "ok"
+    YELLOW: "#efe271", // Amarillo claro, alerta ligera
+    ORANGE: "#FFCC80", // Naranja suave, indica problema moderado
+    BLUE: "#90CAF9", // Azul claro, estado informativo
+    GRAY: "#9c9c9c", // Gris claro, estado desconocido
+    RED_LIGHT: "#EF9A9A", // Rojo claro, grave
+    RED_DARK: "#e36161", // Rojo intenso, crítico
+}
+
+const DARK_MODE_COLORS = {
+    GREEN: darken(LIGHT_MODE_COLORS.GREEN, 0.1),
+    YELLOW: darken(LIGHT_MODE_COLORS.YELLOW, 0.1),
+    ORANGE: darken(LIGHT_MODE_COLORS.ORANGE, 0.1),
+    BLUE: darken(LIGHT_MODE_COLORS.BLUE, 0.1),
+    GRAY: darken(LIGHT_MODE_COLORS.GRAY, 0.1),
+    RED_LIGHT: darken(LIGHT_MODE_COLORS.RED_LIGHT, 0.1),
+    RED_DARK: darken(LIGHT_MODE_COLORS.RED_DARK, 0.1),
+}
+
+const useCurrentColorScheme = () => {
+    const theme = useTheme();
+    return useMemo(
+        () => (theme.palette.mode === 'light' ? LIGHT_MODE_COLORS : DARK_MODE_COLORS),
+        [theme.palette.mode]
+    );
+}
 
 /**
  * Devuelve el color predeterminado en función del estado
  * @param salutEstatEnum
  */
-export function getColorByStatEnum(salutEstatEnum: SalutEstatEnum): string {
-    switch (salutEstatEnum) {
-        case SalutEstatEnum.UP:
-            return GREEN;
-        case SalutEstatEnum.WARN:
-            return YELLOW;
-        case SalutEstatEnum.DEGRADED:
-            return ORANGE;
-        case SalutEstatEnum.MAINTENANCE:
-            return BLUE;
-        case SalutEstatEnum.UNKNOWN:
-            return GRAY;
-        case SalutEstatEnum.DOWN:
-            return RED_DARK;
-        case SalutEstatEnum.ERROR:
-        default:
-            return RED_LIGHT;
-    }
+export const useGetColorByStatEnum = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(function (salutEstatEnum: SalutEstatEnum): string {
+        switch (salutEstatEnum) {
+            case SalutEstatEnum.UP:
+                return currentColorScheme.GREEN;
+            case SalutEstatEnum.WARN:
+                return currentColorScheme.YELLOW;
+            case SalutEstatEnum.DEGRADED:
+                return currentColorScheme.ORANGE;
+            case SalutEstatEnum.MAINTENANCE:
+                return currentColorScheme.BLUE;
+            case SalutEstatEnum.UNKNOWN:
+                return currentColorScheme.GRAY;
+            case SalutEstatEnum.DOWN:
+                return currentColorScheme.RED_DARK;
+            case SalutEstatEnum.ERROR:
+            default:
+                return currentColorScheme.RED_LIGHT;
+        }
+    }, [currentColorScheme]);
+};
+
+export const useGetColorByNivellEnum = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(function(nivellEnum: NivellEnum): string {
+        switch (nivellEnum) {
+            case NivellEnum.INFO:
+                return currentColorScheme.BLUE;
+            case NivellEnum.WARN:
+                return currentColorScheme.YELLOW;
+            case NivellEnum.ERROR:
+            default:
+                return currentColorScheme.RED_DARK;
+        }
+    }, [currentColorScheme])
 }
 
-export function getColorByNivellEnum(nivellEnum: NivellEnum): string {
-    switch (nivellEnum) {
-        case NivellEnum.INFO:
-            return BLUE;
-        case NivellEnum.WARN:
-            return YELLOW;
-        case NivellEnum.ERROR:
-        default:
-            return RED_DARK;
-    }
-}
+export const useGetColorByIntegracio = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (integracioField: keyof SalutModel): string {
+            if (SalutModel.INTEGRACIO_UP_COUNT === integracioField) {
+                return currentColorScheme.GREEN;
+            } else if (SalutModel.INTEGRACIO_WARN_COUNT === integracioField) {
+                return currentColorScheme.ORANGE;
+            } else if (SalutModel.INTEGRACIO_DOWN_COUNT === integracioField) {
+                return currentColorScheme.RED_DARK;
+            } else if (SalutModel.INTEGRACIO_DESCONEGUT_COUNT === integracioField) {
+                return currentColorScheme.GRAY;
+            } else {
+                return currentColorScheme.RED_DARK;
+            }
+        },
+        [currentColorScheme]
+    );
+};
 
-export function getColorByIntegracio(integracioField: keyof SalutModel): string {
-    if (SalutModel.INTEGRACIO_UP_COUNT === integracioField) {
-        return GREEN;
-    } else if (SalutModel.INTEGRACIO_WARN_COUNT === integracioField) {
-        return ORANGE;
-    } else if (SalutModel.INTEGRACIO_DOWN_COUNT === integracioField) {
-        return RED_DARK;
-    } else if (SalutModel.INTEGRACIO_DESCONEGUT_COUNT === integracioField) {
-        return GRAY;
-    } else {
-        return RED_DARK;
-    }
-}
+export const useGetColorBySubsistema = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (subsistemaField: keyof SalutModel): string {
+            if (SalutModel.SUBSISTEMA_UP_COUNT === subsistemaField) {
+                return currentColorScheme.GREEN;
+            } else if (SalutModel.SUBSISTEMA_WARN_COUNT === subsistemaField) {
+                return currentColorScheme.ORANGE;
+            } else if (SalutModel.SUBSISTEMA_DOWN_COUNT === subsistemaField) {
+                return currentColorScheme.RED_DARK;
+            } else if (SalutModel.SUBSISTEMA_DESCONEGUT_COUNT === subsistemaField) {
+                return currentColorScheme.GRAY;
+            } else {
+                return currentColorScheme.RED_DARK;
+            }
+        },
+        [currentColorScheme]
+    );
+};
 
-export function getColorBySubsistema(subsistemaField: keyof SalutModel): string {
-    if (SalutModel.SUBSISTEMA_UP_COUNT === subsistemaField) {
-        return GREEN;
-    } else if (SalutModel.SUBSISTEMA_WARN_COUNT === subsistemaField) {
-        return ORANGE;
-    } else if (SalutModel.SUBSISTEMA_DOWN_COUNT === subsistemaField) {
-        return RED_DARK;
-    } else if (SalutModel.SUBSISTEMA_DESCONEGUT_COUNT === subsistemaField) {
-        return GRAY;
-    } else {
-        return RED_DARK;
-    }
-}
-
-export function getColorByMissatge(missatgeField: keyof SalutModel): string {
-    if (SalutModel.MISSATGE_ERROR_COUNT === missatgeField) {
-        return RED_DARK;
-    } else if (SalutModel.MISSATGE_WARN_COUNT === missatgeField) {
-        return ORANGE;
-    } else if (SalutModel.MISSATGE_INFO_COUNT === missatgeField) {
-        return BLUE;
-    } else {
-        return RED_DARK;
-    }
-}
+export const useGetColorByMissatge = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (missatgeField: keyof SalutModel): string {
+            if (SalutModel.MISSATGE_ERROR_COUNT === missatgeField) {
+                return currentColorScheme.RED_DARK;
+            } else if (SalutModel.MISSATGE_WARN_COUNT === missatgeField) {
+                return currentColorScheme.ORANGE;
+            } else if (SalutModel.MISSATGE_INFO_COUNT === missatgeField) {
+                return currentColorScheme.BLUE;
+            } else {
+                return currentColorScheme.RED_DARK;
+            }
+        },
+        [currentColorScheme]
+    );
+};
 
 /**
  * Devuelve un icono de Material UI para un estado dado

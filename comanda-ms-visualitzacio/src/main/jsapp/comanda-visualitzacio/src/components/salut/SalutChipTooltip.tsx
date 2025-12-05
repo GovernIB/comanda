@@ -5,7 +5,7 @@ import {
     ENUM_APP_ESTAT_PREFIX,
     ENUM_BD_ESTAT_PREFIX,
     ENUM_INTEGRACIO_ESTAT_PREFIX,
-    getColorByStatEnum,
+    useGetColorByStatEnum,
     getMaterialIconByState,
     SalutEstatEnum,
     TITLE,
@@ -58,6 +58,7 @@ const getPrefixByField = (field: SalutField): string => {
 
 export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salutField, children, ...props }) => {
     const { t } = useTranslationStringKey();
+    const getColorByStatEnum = useGetColorByStatEnum();
 
     const prefix = getPrefixByField(salutField);
     const existTranslation: boolean = !(t(prefix + stateEnum + TOOLTIP) === (prefix + stateEnum + TOOLTIP));
