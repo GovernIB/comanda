@@ -17,6 +17,7 @@ import { GridGroupingColDefOverride, GridSlots, GridTreeDataGroupingCell, isAuto
 import { Icon, IconButton, Tooltip } from '@mui/material';
 import { ContentDetail } from '../components/ContentDetail';
 import { Cancel, CheckCircle, RemoveCircle } from '@mui/icons-material';
+import useTranslationStringKey from '../hooks/useTranslationStringKey';
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
 
@@ -75,54 +76,56 @@ const ParametreForm: React.FC = () => {
   );
 };
 
-const renderParametreValue = ( tipus: ParamTipus, valor: any, t: (key: string) => string ) => {
-  if (valor === null || valor === undefined) {
-    return (
-      <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.null)}>
-        <RemoveCircle color="disabled" />
-      </Tooltip>
-    );
-  }
-
-  if (tipus === ParamTipus.BOOLEAN) {
-    if (valor === true) {
-      return (
-        <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.true)}>
-          <CheckCircle color="success" />
-        </Tooltip>
-      );
-    } else {
-      return (
-        <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.false)}>
-          <Cancel color="error" />
-        </Tooltip>
-      );
+const ParametreValue = ({ tipus, valor }: { tipus: ParamTipus; valor: any }) => {
+    const { t } = useTranslation();
+    if (valor === null || valor === undefined) {
+        return (
+            <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.null)}>
+                <RemoveCircle color="disabled" />
+            </Tooltip>
+        );
     }
-  }
 
-  return valor;
+    if (tipus === ParamTipus.BOOLEAN) {
+        if (valor === true) {
+            return (
+                <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.true)}>
+                    <CheckCircle color="success" />
+                </Tooltip>
+            );
+        } else {
+            return (
+                <Tooltip title={t($ => $.page.parametres.detail.valuesTootip.false)}>
+                    <Cancel color="error" />
+                </Tooltip>
+            );
+        }
+    }
+
+    return valor;
 };
 
-const translateTipus = (t: any, tipus?: string) => {
-  if (!tipus) return '';
-  const key = `page.parametres.detail.tipusEnum.${tipus}`;
-  const translated = t($ => $[key]);
-  return translated === key ? tipus : translated;
+const translateTipus = (t: (key: string) => string, tipus?: string) => {
+    if (!tipus) return '';
+    const key = `page.parametres.detail.tipusEnum.${tipus}`;
+    const translated = t(key);
+    return translated === key ? tipus : translated;
 };
 
 const ParametresDetails: React.FC<any> = (props) => {
   const { data } = props;
   const { t } = useTranslation();
+  const { t: tStringKey } = useTranslationStringKey();
   const elementsDetail = [
     { label: t($ => $.page.parametres.detail.grup), value: data?.grup },
     { label: t($ => $.page.parametres.detail.subGrup), value: data?.subGrup },
-    { label: t($ => $.page.parametres.detail.tipus), value: translateTipus(t, data?.tipus) },
+    { label: t($ => $.page.parametres.detail.tipus), value: translateTipus(tStringKey, data?.tipus) },
     { label: t($ => $.page.parametres.detail.codi), value: data?.codi },
     { label: t($ => $.page.parametres.detail.nom), value: data?.nom },
     { label: t($ => $.page.parametres.detail.descripcio), value: data?.descripcio },
     {
       label: t($ => $.page.parametres.detail.valor),
-      contentValue: renderParametreValue(data?.tipus, data?.valorBoolean ?? data?.valor, t)
+      contentValue: <ParametreValue tipus={data?.tipus} valor={data?.valorBoolean ?? data?.valor} />,
     },
   ];
   return <ContentDetail title={""} elements={elementsDetail} />;
@@ -151,7 +154,7 @@ const ParametresGrid: React.FC<{
   const [expand, setExpand] = React.useState<boolean>(true);
   const closeDialogButton = useCloseDialogButtons();
   const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
-  const showDetail = (_id: any, row: any, _event: React.MouseEvent) => {
+  const showDetail = (_id: any, row: any) => {
     detailDialogShow(
       t($ => $.page.parametres.detail.title),
       <ParametresDetails data={row} />,
@@ -164,10 +167,10 @@ const ParametresGrid: React.FC<{
     return [
       { field: 'nom', flex: 1, },
       { field: 'descripcio', flex: 2.5, },
-      { 
+      {
         field: 'valor',
         flex: 1.5,
-        renderCell: ({ row }) => renderParametreValue(row?.tipus, row?.valorBoolean ?? row?.valor, t) ,
+        renderCell: ({ row }) => <ParametreValue tipus={row?.tipus} valor={row?.valorBoolean ?? row?.valor} />,
       },
       { field: 'tipus', flex: 1, },
     ];
