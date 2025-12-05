@@ -56,7 +56,6 @@ const openedMixin = (theme: Theme, width: number): CSSObject => ({
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.enteringScreen,
     }),
-    overflowX: 'hidden',
 });
 
 const closedMixin = (theme: Theme): CSSObject => ({
@@ -64,7 +63,6 @@ const closedMixin = (theme: Theme): CSSObject => ({
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
-    overflowX: 'hidden',
     width: `calc(${theme.spacing(6)} + 1px)`,
     [theme.breakpoints.up('sm')]: {
         width: `calc(${theme.spacing(7)} + 1px)`,
@@ -103,6 +101,8 @@ const StyledList = styled(List)<{ component?: React.ElementType }>({
     },
     paddingTop: 0,
     paddingBottom: 0,
+    overflow: 'auto',
+    overflowX: 'hidden',
 });
 
 const isCurrentMenuEntryOrAnyChildrenSelected = (
