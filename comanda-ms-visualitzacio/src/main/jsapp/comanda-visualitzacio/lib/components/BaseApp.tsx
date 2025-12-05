@@ -251,6 +251,7 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
                         display: 'flex',
                         flexDirection: 'column',
                         flexGrow: 1,
+                        minWidth: 0,
                     }}>
                     <main
                         style={{
