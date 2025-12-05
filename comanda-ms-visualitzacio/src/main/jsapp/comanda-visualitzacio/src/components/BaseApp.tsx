@@ -93,7 +93,7 @@ const MenuItems = ({ appMenuEntries }: { appMenuEntries: MenuEntryWithResource[]
         e => e.resourceName == null || apiIndex?.links.has(e.resourceName)
     );
     return (
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: { md: 1, xl: 3 } }}>
             {filteredAppMenuEntries?.length
                 ? filteredAppMenuEntries.map(entry => (
                       <MuiLink
@@ -105,7 +105,6 @@ const MenuItems = ({ appMenuEntries }: { appMenuEntries: MenuEntryWithResource[]
                           color="textPrimary"
                           sx={{
                               display: { xs: 'none', md: 'inline' },
-                              mr: 1,
                           }}
                       >
                           {entry.title}
