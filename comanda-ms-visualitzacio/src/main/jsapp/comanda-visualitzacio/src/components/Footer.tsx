@@ -93,7 +93,7 @@ export const Footer: React.FC<AppFootProps> = (props) => {
         sx={{
             minHeight: '36px !important',
             lineHeight: '0.5em',
-            zIndex: 1000
+            zIndex: (theme) => theme.zIndex.drawer + 100
         }}>
         <Typography
             variant="caption"

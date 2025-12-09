@@ -155,15 +155,16 @@ const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
     }, [apiIsReady, apiIndex]);
 }
 
+const footerHeight = 36;
 const generateFooter = () => {
     return (
         <>
-            <div style={{ height: '36px', flexShrink: 0, width: '100%' }} />
+            <div style={{ height: `${footerHeight}px`, flexShrink: 0, width: '100%' }} />
             <Footer
                 title="COMANDA"
                 backgroundColor="#5F5D5D"
                 logos={[drassana]}
-                style={{ position: 'fixed', height: '36px', bottom: 0, width: '100%' }}
+                style={{ position: 'fixed', height: `${footerHeight}px`, bottom: 0, width: '100%' }}
                 // style={{display: 'flex', flexDirection: 'row', flexShrink: 0, position: 'sticky', height: '36px', bottom: 0, width: '100%'}}
             />
         </>
@@ -256,6 +257,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         ]}
         headerAuthBadgeIcon={currentRole === 'COM_ADMIN' ? 'settings' : undefined}
         footer={generateFooter()}
+        footerHeight={footerHeight}
         persistentSession
         persistentLanguage
         i18nUseTranslation={i18nUseTranslation}

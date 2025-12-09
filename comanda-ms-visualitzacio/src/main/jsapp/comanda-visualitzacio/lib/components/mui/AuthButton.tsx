@@ -64,18 +64,29 @@ const UserAvatar: React.FC = (props: any) => {
 const IconBadge: React.FC<IconBadgeProps> = (props) => {
     const { icon, children } = props;
     const theme = useTheme();
-    return icon ? <Badge
-        overlap="circular"
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        badgeContent={icon && <Avatar sx={{
-                width: 16,
-                height: 16,
-                border: `2px solid ${theme.palette.background.paper}`,
-                bgcolor: theme.palette.primary.dark,
-            }}><Icon sx={{ fontSize: 10 }}>{icon}</Icon></Avatar>}>
-                {children}
-    </Badge> : children;
-}
+    return icon ? (
+        <Badge
+            overlap="circular"
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            badgeContent={
+                icon && (
+                    <Avatar
+                        sx={{
+                            width: 16,
+                            height: 16,
+                            border: `2px solid ${theme.palette.background.paper}`,
+                            bgcolor: theme.palette.primary.dark,
+                        }}>
+                        <Icon sx={{ fontSize: 10 }}>{icon}</Icon>
+                    </Avatar>
+                )
+            }>
+            {children}
+        </Badge>
+    ) : (
+        children
+    );
+};
 
 const LoginButton: React.FC = () => {
     const { signIn } = useAuthContext();
@@ -105,56 +116,58 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
         setAnchorEl(undefined);
     };
     apiRef.current = {
-        close: handleMenuClose
+        close: handleMenuClose,
     };
-    return <AuthButtonContext.Provider value={{ apiRef }}>
-        <IconBadge icon={badgeIcon}>
-            <IconButton
-                id="auth-button"
-                size="small"
-                aria-label="auth menu"
-                aria-controls={menuOpened ? id : undefined}
-                aria-haspopup="true"
-                aria-expanded={menuOpened ? 'true' : undefined}
-                onClick={handleIconButtonClick}>
-                <UserAvatar />
-            </IconButton>
-        </IconBadge>
-        <Menu
-            id={id}
-            anchorEl={anchorEl}
-            open={menuOpened}
-            onClose={() => handleMenuClose()}
-            MenuListProps={{
-                'aria-labelledby': 'auth-button',
-            }}>
-            <MenuItem
-                disableRipple
-                sx={{
-                    '&.MuiButtonBase-root:hover': {
-                        bgcolor: 'transparent',
-                        cursor: 'default',
-                    },
-                }}>
-                <ListItemAvatar>
+    return (
+        <AuthButtonContext.Provider value={{ apiRef }}>
+            <IconBadge icon={badgeIcon}>
+                <IconButton
+                    id="auth-button"
+                    size="small"
+                    aria-label="auth menu"
+                    aria-controls={menuOpened ? id : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={menuOpened ? 'true' : undefined}
+                    onClick={handleIconButtonClick}>
                     <UserAvatar />
-                </ListItemAvatar>
-                <ListItemText
-                    primary={tokenParsed?.name}
-                    secondary={tokenParsed?.preferred_username}
-                />
-            </MenuItem>
-            <Divider />
-            {additionalComponents}
-            {additionalComponents && <Divider />}
-            <MenuItem onClick={() => signOut?.()}>
-                <ListItemIcon>
-                    <Icon fontSize="small">logout</Icon>
-                </ListItemIcon>
-                <ListItemText>{t('app.auth.logout')}</ListItemText>
-            </MenuItem>
-        </Menu>
-    </AuthButtonContext.Provider>;
+                </IconButton>
+            </IconBadge>
+            <Menu
+                id={id}
+                anchorEl={anchorEl}
+                open={menuOpened}
+                onClose={() => handleMenuClose()}
+                MenuListProps={{
+                    'aria-labelledby': 'auth-button',
+                }}>
+                <MenuItem
+                    disableRipple
+                    sx={{
+                        '&.MuiButtonBase-root:hover': {
+                            bgcolor: 'transparent',
+                            cursor: 'default',
+                        },
+                    }}>
+                    <ListItemAvatar>
+                        <UserAvatar />
+                    </ListItemAvatar>
+                    <ListItemText
+                        primary={tokenParsed?.name}
+                        secondary={tokenParsed?.preferred_username}
+                    />
+                </MenuItem>
+                <Divider />
+                {additionalComponents}
+                {additionalComponents && <Divider />}
+                <MenuItem onClick={() => signOut?.()}>
+                    <ListItemIcon>
+                        <Icon fontSize="small">logout</Icon>
+                    </ListItemIcon>
+                    <ListItemText>{t('app.auth.logout')}</ListItemText>
+                </MenuItem>
+            </Menu>
+        </AuthButtonContext.Provider>
+    );
 };
 
 const AuthButton: React.FC<AuthButtonProps> = (props) => {

@@ -29,6 +29,7 @@ export type MenuProps = {
     shrink?: boolean;
     iconClicked?: boolean;
     drawerWidth?: number;
+    footerHeight?: number;
 };
 
 type ListMenuContentProps = MenuProps & {
@@ -100,7 +101,7 @@ const StyledList = styled(List)<{ component?: React.ElementType }>({
         fontSize: 20,
     },
     paddingTop: 0,
-    paddingBottom: 0,
+    paddingBottom: '8px',
     overflow: 'auto',
     overflowX: 'hidden',
 });
@@ -109,7 +110,9 @@ const isCurrentMenuEntryOrAnyChildrenSelected = (
     menuEntry: MenuEntry,
     locationPath: string
 ): boolean => {
-    const anyChildSelected = menuEntry.children?.find((e) => isCurrentMenuEntryOrAnyChildrenSelected(e, locationPath)) != null;
+    const anyChildSelected =
+        menuEntry.children?.find((e) => isCurrentMenuEntryOrAnyChildrenSelected(e, locationPath)) !=
+        null;
     if (menuEntry.to != null) {
         const menuEntryTo = locationPath.startsWith('/')
             ? menuEntry.to.startsWith('/')
@@ -257,7 +260,15 @@ const MenuTitle: React.FC<MenuTitleProps> = (props) => {
 };
 
 export const Menu: React.FC<MenuProps> = (props) => {
-    const { title, entries, onTitleClose, shrink, iconClicked, drawerWidth = 240 } = props;
+    const {
+        title,
+        entries,
+        onTitleClose,
+        shrink,
+        iconClicked,
+        drawerWidth = 240,
+        footerHeight,
+    } = props;
     const smallScreen = useSmallScreen();
     const smallHeader = useSmallHeader();
     const [open, setOpen] = React.useState<boolean>(false);
@@ -279,6 +290,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                 shrink={!smallScreen ? shrink : false}
                 onMenuItemClick={handleMenuItemClick}
             />
+            {footerHeight && <Box sx={{ mb: footerHeight + 'px' }} />}
         </>
     );
     return !smallScreen ? (

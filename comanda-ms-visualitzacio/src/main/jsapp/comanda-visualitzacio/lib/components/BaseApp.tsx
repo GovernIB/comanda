@@ -237,7 +237,7 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
             style={{
                 display: 'flex',
                 flexDirection: 'column',
-                height: mainBoxHeight
+                height: mainBoxHeight,
             }}>
             {appbarComponent}
             <div
@@ -245,25 +245,17 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
                     display: 'flex',
                     flexGrow: 1,
                 }}>
-                {menuComponent}
-                <div
+                <nav>{menuComponent}</nav>
+                <main
                     style={{
-                        display: 'flex',
-                        flexDirection: 'column',
                         flexGrow: 1,
                         minWidth: 0,
+                        ...(!marginsDisabled ? { margin: '16px 24px' } : null),
                     }}>
-                    <main
-                        style={{
-                            flexGrow: 1,
-                            minWidth: 0,
-                            ...(!marginsDisabled ? { margin: '16px 24px' } : null),
-                        }}>
-                        {appReady ? childrenOrOfflineComponent : null}
-                    </main>
-                    <footer>{footerComponent}</footer>
-                </div>
+                    {appReady ? childrenOrOfflineComponent : null}
+                </main>
             </div>
+            {footerComponent && <footer>{footerComponent}</footer>}
         </div>
     );
 };
@@ -293,8 +285,9 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         children,
     } = props;
     const { offline } = useResourceApiContext();
-    const [marginsDisabled, setMarginsDisabled] =
-        React.useState<boolean>(marginsDisabledProp ?? false);
+    const [marginsDisabled, setMarginsDisabled] = React.useState<boolean>(
+        marginsDisabledProp ?? false
+    );
     const [contentExpandsToAvailableHeight, setContentExpandsToAvailableHeight] =
         React.useState<boolean>(fixedContentExpandsToAvailableHeightEnabled ?? false);
     const getLinkComponent = () => linkComponent;
@@ -324,7 +317,10 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         getDetailFieldComponent,
         setMarginsDisabled: marginsDisabledProp == null ? setMarginsDisabled : emptyFunction,
         contentExpandsToAvailableHeight,
-        setContentExpandsToAvailableHeight: fixedContentExpandsToAvailableHeightEnabled == null ? setContentExpandsToAvailableHeight : emptyFunction,
+        setContentExpandsToAvailableHeight:
+            fixedContentExpandsToAvailableHeightEnabled == null
+                ? setContentExpandsToAvailableHeight
+                : emptyFunction,
         getLinkComponent,
         goBack: routerGoBack,
         navigate: routerNavigate,
