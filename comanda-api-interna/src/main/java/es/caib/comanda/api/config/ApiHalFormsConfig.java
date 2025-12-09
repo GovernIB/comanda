@@ -8,6 +8,7 @@ import es.caib.comanda.ms.back.config.BaseHalFormsConfig;
 import es.caib.comanda.salut.back.controller.SalutController;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Configuració de HAL-FORMS.

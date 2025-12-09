@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
@@ -20,13 +22,23 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "EstadistiquesInfo", description = "Catàleg de dimensions i indicadors d'estadística disponibles per a una APP")
 public class EstadistiquesInfo {
+    @Schema(description = "Codi identificador de l'aplicació", example = "NOTIB")
     @NotNull @Size(min = 1)
     private String codi;
+
+    @Schema(description = "Versió de l'aplicació", example = "1.4.3")
     private String versio;
+
+    @Schema(description = "Data de generació de la informació", type = "string", format = "date-time")
     private Date data;
+
+    @Schema(description = "Dimensions estadístiques disponibles")
     @NotNull @Valid
     private List<DimensioDesc> dimensions;
+
+    @Schema(description = "Indicadors estadístics disponibles")
     @NotNull @Valid
     private List<IndicadorDesc> indicadors;
 

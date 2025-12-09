@@ -21,29 +21,29 @@ import java.util.jar.Manifest;
 @Slf4j
 @SpringBootApplication
 @ComponentScan(
-		basePackages = {
-				"es.caib.comanda.ms",
-				"es.caib.comanda.configuracio",
-				"es.caib.comanda.salut",
-				"es.caib.comanda.estadistica",
-				"es.caib.comanda.monitor",
-				"es.caib.comanda.api",
-				"es.caib.comanda.acl"
-		},
-		excludeFilters = @ComponentScan.Filter(
-				type = FilterType.REGEX,
-				pattern = {
-						"es\\.caib\\.comanda\\.configuracio\\.back\\.config\\..*",
-						"es\\.caib\\.comanda\\.configuracio\\.persist\\.config\\..*",
-						"es\\.caib\\.comanda\\.salut\\.back\\.config\\..*",
-						"es\\.caib\\.comanda\\.salut\\.persist\\.config\\..*",
-						"es\\.caib\\.comanda\\.estadistica\\.back\\.config\\..*",
-						"es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*",
-						"es\\.caib\\.comanda\\.monitor\\.back\\.config\\..*",
-						"es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*",
+        basePackages = {
+                "es.caib.comanda.ms",
+                "es.caib.comanda.configuracio",
+                "es.caib.comanda.salut",
+                "es.caib.comanda.estadistica",
+                "es.caib.comanda.monitor",
+                "es.caib.comanda.api",
+                "es.caib.comanda.acl"
+        },
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.REGEX,
+                pattern = {
+                        "es\\.caib\\.comanda\\.configuracio\\.back\\.config\\..*",
+                        "es\\.caib\\.comanda\\.configuracio\\.persist\\.config\\..*",
+                        "es\\.caib\\.comanda\\.salut\\.back\\.config\\..*",
+                        "es\\.caib\\.comanda\\.salut\\.persist\\.config\\..*",
+                        "es\\.caib\\.comanda\\.estadistica\\.back\\.config\\..*",
+                        "es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*",
+                        "es\\.caib\\.comanda\\.monitor\\.back\\.config\\..*",
+                        "es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*",
                         "es\\.caib\\.comanda\\.acl\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.acl\\.persist\\.config\\..*",
-				})
+                })
 )
 public class ComandaApiApp extends SpringBootServletInitializer {
 

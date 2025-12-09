@@ -2,7 +2,7 @@
 -- Update Database Script
 -- *********************************************************************
 -- Change Log: db/changelog/db.changelog-master.yaml
--- Ran at: 10/10/25 19:39
+-- Ran at: 1/12/25 9:31
 -- Against: null@offline:oracle?changeLogFile=liquibase/databasechangelog.csv
 -- Liquibase version: 4.29.2
 -- *********************************************************************
@@ -379,6 +379,24 @@ CREATE INDEX com_mon_data_i ON com_monitor(data);
 
 CREATE INDEX com_mon_estat_i ON com_monitor(estat);
 
+-- Changeset db/changelog/changes/00_avis_table_update.yaml::avis-upd-table-1::limit
+ALTER TABLE com_avis ADD url VARCHAR2(255);
+
+ALTER TABLE com_avis ADD responsable VARCHAR2(128);
+
+ALTER TABLE com_avis ADD grup VARCHAR2(128);
+
+CREATE TABLE com_avis_usuari (avis_id NUMBER(38, 0) NOT NULL, usuari VARCHAR2(255));
+
+ALTER TABLE com_avis_usuari ADD CONSTRAINT com_avisusr_avis_fk FOREIGN KEY (avis_id) REFERENCES com_avis (id) ON DELETE CASCADE;
+
+CREATE TABLE com_avis_grup (avis_id NUMBER(38, 0) NOT NULL, grup VARCHAR2(255));
+
+ALTER TABLE com_avis_grup ADD CONSTRAINT com_avisgrp_avis_fk FOREIGN KEY (avis_id) REFERENCES com_avis (id) ON DELETE CASCADE;
+
+-- Changeset db/changelog/changes/00_avis_table_update.yaml::avis-upd-table-2::limit
+CREATE INDEX com_avis_lastmod_date_i ON com_avis(lastmod_date);
+
 -- Changeset db/changelog/changes/11.yaml::con-change-11-01::limit
 ALTER TABLE com_entorn_app ADD jdk_version VARCHAR2(10);
 
@@ -388,6 +406,11 @@ ALTER TABLE com_entorn_app ADD revisio VARCHAR2(64);
 ALTER TABLE com_est_dashboard ADD app_id NUMBER(38, 0);
 
 ALTER TABLE com_est_dashboard ADD entorn_id NUMBER(38, 0);
+
+-- Changeset db/changelog/changes/2473.yaml::salut-change-2473-1::Limit
+ALTER TABLE com_salut_integracio MODIFY codi VARCHAR2(32 CHAR);
+
+ALTER TABLE com_salut_subsistema MODIFY codi VARCHAR2(64 CHAR);
 
 -- Changeset db/changelog/changes/30.yaml::salut-change-30-1::Limit
 ALTER TABLE com_salut ADD tipus_registre VARCHAR2(10 CHAR) DEFAULT 'MINUT' NOT NULL;
@@ -566,6 +589,13 @@ ALTER TABLE com_app_ctx_manual ADD CONSTRAINT com_manual_app_ctx_fk FOREIGN KEY 
 -- Changeset db/changelog/changes/8.yaml::ccon-change-08-06::limit
 ALTER TABLE com_app_ctx_manual ADD CONSTRAINT app_manual_appnom_uk UNIQUE (app_ctx_id, nom);
 
+-- Changeset db/changelog/changes/borrat_index.yaml::tasca-change-03::generated
+CREATE INDEX com_tasca_datainici_i ON com_tasca(data_inici);
+
+CREATE INDEX com_tasca_datafi_i ON com_tasca(data_fi);
+
+CREATE INDEX com_tasca_datainici_datafi_i ON com_tasca(data_inici, data_fi);
+
 -- Changeset db/changelog/changes/con_30.yaml::con-change-30-01::limit
 ALTER TABLE com_entorn_app DROP COLUMN info_interval;
 
@@ -579,6 +609,21 @@ ALTER TABLE com_entorn_app ADD compactacio_setmanal INTEGER;
 ALTER TABLE com_entorn_app ADD compactacio_mensual INTEGER;
 
 ALTER TABLE com_entorn_app ADD eliminacio INTEGER;
+
+-- Changeset db/changelog/changes/con_32.yaml::con-change-32-02::limit
+ALTER TABLE com_app_subsistema MODIFY codi VARCHAR2(32 CHAR);
+
+-- Changeset db/changelog/changes/con_32.yaml::con-change-32-03::limit
+ALTER TABLE com_integracio MODIFY codi VARCHAR2(32 CHAR);
+
+-- Changeset db/changelog/changes/conf_2473.yaml::conf-change-2473-1::Limit
+ALTER TABLE com_integracio MODIFY nom VARCHAR2(255 CHAR);
+
+ALTER TABLE com_app_subsistema MODIFY codi VARCHAR2(64 CHAR);
+
+ALTER TABLE com_app_subsistema MODIFY nom VARCHAR2(255 CHAR);
+
+ALTER TABLE com_app_context MODIFY nom VARCHAR2(255 CHAR);
 
 -- Changeset db/changelog/changes/est_32.yaml::est-change-32-1::limit
 ALTER TABLE com_est_dimensio_valor ADD agrupable BOOLEAN DEFAULT 0 NOT NULL;
@@ -606,6 +651,11 @@ CREATE INDEX com_est_dim_entorn_idx ON com_est_dimensio(entorn_app_id);
 -- Changeset db/changelog/changes/est_32.yaml::est-change-32-4::limit
 ALTER TABLE com_est_temps ADD CONSTRAINT com_est_data_unq UNIQUE (data);
 
+-- Changeset db/changelog/changes/est_32.yaml::est-change-32-5::limit
+ALTER TABLE com_est_dimensio MODIFY codi VARCHAR2(32 CHAR);
+
+ALTER TABLE com_est_indicador MODIFY codi VARCHAR2(32 CHAR);
+
 -- Changeset db/changelog/changes/modify_tasca_primary_keys.yaml::tasca-change-01::limit
 ALTER TABLE com_tasca_usuari DROP PRIMARY KEY DROP INDEX;
 
@@ -626,6 +676,13 @@ INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO,
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Monitor', 'Borrat', 'NUMERIC', 'es.caib.comanda.monitor.buidat.retencio.dies', 'Quants dies s''han de mantenir les dades del monitor en BBDD', NULL, NULL, NULL, '3', 1, NULL, NULL);
 
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Monitor', 'Borrat', 'NUMERIC', 'es.caib.comanda.monitor.buidat.periode.minuts', 'Cada quants minuts executar el procés de buidat de dades del monitor', NULL, NULL, NULL, '60', 1, NULL, NULL);
+
+-- Changeset db/changelog/changes/params_borrat.yaml::con-change-params-03::limit
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Tasques', 'Borrat', 'NUMERIC', 'es.caib.comanda.tasca.borrat.dies', 'Número de dies que hem de mantenir les tasques finalitzades en el sistema', NULL, 'Un valor menor que 0 indica que no es borren les tasques finalitzades', NULL, '10', 1, NULL, NULL);
+
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Tasques', 'Borrat', 'NUMERIC', 'es.caib.comanda.tasca.pendent.borrat.dies', 'Número de dies que hem de mantenir les tasques NO finalitzades en el sistema', NULL, 'El valor 0 indica que no es borren les tasques no finalitzades', NULL, '90', 1, NULL, NULL);
+
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Avisos', 'Borrat', 'NUMERIC', 'es.caib.comanda.avis.borrat.dies', 'Número de dies que hem de mantenir els avisos en el sistema', NULL, 'El valor 0 indica que no es borren els avisos', NULL, '10', 1, NULL, NULL);
 
 -- Changeset db/changelog/changes/params_scheduler.yaml::con-change-params-02::limit
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Scheduler', 'Pool', 'NUMERIC', 'es.caib.comanda.scheduler.pool.size', 'Mida del pool de fils del planificador de tasques en segon pla', NULL, 'Defineix el nombre de fils disponibles al planificador de tasques en segon pla. Aquest component no executa la càrrega pesada, sinó que s’encarrega d’orquestrar i programar quan s’han de llançar les tasques cap al pool de executadors. Un valor massa baix pot provocar retards en la planificació si hi ha molts esdeveniments a la vegada, mentre que un valor massa alt pot consumir recursos innecessaris', NULL, '100', 0, NULL, NULL);

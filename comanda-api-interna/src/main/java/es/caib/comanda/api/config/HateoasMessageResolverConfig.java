@@ -2,6 +2,7 @@ package es.caib.comanda.api.config;
 
 import es.caib.comanda.ms.back.config.BaseHateoasMessageResolverConfig;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Configuració del MessageResolver per a spring-hateoas.

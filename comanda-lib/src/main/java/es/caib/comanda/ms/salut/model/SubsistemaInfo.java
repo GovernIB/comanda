@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -12,9 +14,12 @@ import javax.validation.constraints.Size;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "SubsistemaInfo", description = "Informació d'un subsistema intern de l'aplicació")
 public class SubsistemaInfo {
-    @NotNull @Size(min = 1, max = 32)
+    @Schema(description = "Codi del subsistema", example = "BD")
+    @NotNull @Size(min = 1, max = 64)
     private String codi;
-    @NotNull @Size(min = 1, max = 100)
+    @Schema(description = "Nom del subsistema", example = "Base de Dades")
+    @NotNull @Size(min = 1, max = 255)
     private String nom;
 }

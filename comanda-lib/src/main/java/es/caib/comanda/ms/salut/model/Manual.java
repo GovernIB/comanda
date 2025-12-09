@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -12,9 +14,12 @@ import javax.validation.constraints.Size;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "Manual", description = "Referència a un manual o documentació funcional")
 public class Manual {
+    @Schema(description = "Nom del manual", example = "Guia d'usuari")
     @NotNull @Size(min = 1, max = 128)
     private String nom;
+    @Schema(description = "Ruta o URL del manual", example = "https://www.caib.es/docs/guia-usuari.pdf")
     @NotNull @Size(min = 1, max = 255)
     private String path;
 }

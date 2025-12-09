@@ -54,7 +54,7 @@ CREATE TABLE com_entorn_app (
 CREATE TABLE com_integracio (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codi VARCHAR2(32 CHAR) NOT NULL,
-    nom VARCHAR2(100 CHAR) NOT NULL,
+    nom VARCHAR2(255 CHAR) NOT NULL,
     logo BLOB,
     created_by VARCHAR2(64 CHAR) NOT NULL,
     created_date TIMESTAMP NOT NULL,
@@ -79,8 +79,8 @@ CREATE TABLE com_app_integracio (
 -- Table: com_app_subsistema
 CREATE TABLE com_app_subsistema (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    codi VARCHAR2(32 CHAR) NOT NULL,
-    nom VARCHAR2(100 CHAR) NOT NULL,
+    codi VARCHAR2(64 CHAR) NOT NULL,
+    nom VARCHAR2(255 CHAR) NOT NULL,
     actiu NUMBER(1),
     entorn_app_id NUMBER(38) NOT NULL,
     created_by VARCHAR2(64 CHAR) NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE com_app_context (
     lastmod_date     TIMESTAMP,
     v                NUMBER(19),
     codi             VARCHAR2(64 CHAR)    NOT NULL,
-    nom              VARCHAR2(100 CHAR)   NOT NULL,
+    nom              VARCHAR2(255 CHAR)   NOT NULL,
     path             VARCHAR2(255 CHAR)   NOT NULL,
     api              VARCHAR2(255 CHAR),
     actiu            NUMBER(1)            NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE com_salut (
 -- Table: com_salut_integracio
 CREATE TABLE com_salut_integracio (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    codi VARCHAR2(16 CHAR) NOT NULL,
+    codi VARCHAR2(32 CHAR) NOT NULL,
     estat VARCHAR2(20 CHAR) NOT NULL,
     latencia NUMBER(10),
     total_ok NUMBER(10) NOT NULL,
@@ -202,7 +202,7 @@ CREATE TABLE com_salut_integracio (
 -- Table: com_salut_subsistema
 CREATE TABLE com_salut_subsistema (
     id NUMBER(38) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    codi VARCHAR2(16 CHAR) NOT NULL,
+    codi VARCHAR2(64 CHAR) NOT NULL,
     estat VARCHAR2(20 CHAR) NOT NULL,
     latencia NUMBER(10),
     total_ok NUMBER(10) NOT NULL,

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -12,10 +14,13 @@ import javax.validation.constraints.Size;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "IntegracioInfo", description = "Informació d'una integració exposada per l'aplicació")
 public class IntegracioInfo {
+    @Schema(description = "Codi identificador de la integració", example = "NOTIB")
     @NotNull @Size(min = 1, max = 32)
     private String codi;
-    @NotNull @Size(min = 1, max = 64)
+    @Schema(description = "Nom descriptiu de la integració", example = "NOTIB - Notificacions")
+    @NotNull @Size(min = 1, max = 255)
     private String nom;
 
     // Custom builder

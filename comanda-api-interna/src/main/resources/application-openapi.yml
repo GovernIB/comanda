@@ -1,0 +1,26 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+
+  # opcional, per si hi ha més coses que molesten
+  jpa:
+    enabled: false
+
+  # Amb Spring Boot 2.7 + springdoc 1.x convé usar AntPathMatcher per al matching de paths
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+# assegura't que el port coincideix amb el que uses al apiDocsUrl
+server:
+  port: 8080
+

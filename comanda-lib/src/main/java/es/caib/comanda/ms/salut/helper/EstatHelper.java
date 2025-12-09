@@ -1,6 +1,8 @@
-package es.caib.comanda.ms.salut.model;
+package es.caib.comanda.ms.salut.helper;
 
-public class EstatByPercent {
+import es.caib.comanda.ms.salut.model.EstatSalutEnum;
+
+public class EstatHelper {
 
     public static final int DOWN_PCT = 100;         // 100% errors --> DOWN
     public static final int ERROR_GT_PCT = 50;      // 50% - <100% errors --> ERROR
@@ -8,14 +10,22 @@ public class EstatByPercent {
     public static final int UP_LT_PCT = 10;         // <10% errors --> UP
                                                     // 10% - 20% errors --> WARN
 
-    public static EstatSalutEnum calculaEstat(double percent) {
-        if (percent >= DOWN_PCT) {
+
+    public static EstatSalutEnum calculaEstat(long execucionsOk, long execucionsError) {
+        final long execucionsTotal = execucionsOk + execucionsError;
+        // Percentatge d'errors arrodonit correctament evitant divisió d'enters
+        final int percentatgeErrors = (int) Math.round((execucionsOk * 100.0) / Math.max(1L, execucionsTotal));
+        return calculaEstat(percentatgeErrors);
+    }
+
+    public static EstatSalutEnum calculaEstat(double percentatgeErrors) {
+        if (percentatgeErrors >= DOWN_PCT) {
             return EstatSalutEnum.DOWN;
-        } else if (percent > ERROR_GT_PCT) {
+        } else if (percentatgeErrors > ERROR_GT_PCT) {
             return EstatSalutEnum.ERROR;
-        } else if (percent > DEGRADED_GT_PCT) {
+        } else if (percentatgeErrors > DEGRADED_GT_PCT) {
             return EstatSalutEnum.DEGRADED;
-        } else if (percent <= UP_LT_PCT) {
+        } else if (percentatgeErrors <= UP_LT_PCT) {
             return EstatSalutEnum.UP;
         } else {
             return EstatSalutEnum.WARN;

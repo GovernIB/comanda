@@ -13,10 +13,9 @@
 	<version>0.1.1</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
 	<properties>
-		<!-- El .jar que es genera s'ha d'utilitzar des d'altres projectes que es compilen en Java 11 o Java 7 -->
-		<!-- Si no forçam la compilació en Java 11 -->
-		<maven.compiler.target>7</maven.compiler.target>
-		<maven.compiler.source>7</maven.compiler.source>
+		<!-- Compile amb Java 11 per poder anotar amb Swagger OpenAPI v3 -->
+		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
         <lombok.version>1.18.34</lombok.version>
 	</properties>
 	<dependencies>
@@ -33,9 +32,111 @@
 			<version>1.1.0.Final</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- Swagger OpenAPI v3 annotations to document DTOs -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>2.2.9</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <!-- Compilació per Java 11 amb OpenAPI -->
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <source>11</source>
+                            <target>11</target>
+                        </configuration>
+                    </execution>
+                    <!-- Compilació per Java 7 -->
+                    <execution>
+                        <id>java7-compile</id>
+                        <goals><goal>compile</goal></goals>
+                        <configuration>
+                            <source>1.7</source>
+                            <target>1.7</target>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.build.directory}/generated-sources/java7</compileSourceRoot>
+                            </compileSourceRoots>
+                            <outputDirectory>${project.build.directory}/classes-java7</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>strip-openapi-annotations</id>
+                        <phase>generate-sources</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <!-- Copiar codi font -->
+                                <copy todir="${project.build.directory}/generated-sources/java7">
+                                    <fileset dir="${project.basedir}/src/main/java"/>
+                                </copy>
+                                <!-- Eliminar imports de OpenAPI -->
+                                <replaceregexp match="import io\.swagger\.v3\.oas\.annotations.*;" replace="" flags="g" byline="true">
+                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>
+                                </replaceregexp>
+                                <!-- Eliminar anotacions @Schema en una sola línia -->
+                                <replaceregexp match="^\s*@Schema\([^)]*\)\s*$" replace="" flags="gm" byline="false">
+                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>
+                                </replaceregexp>
+                                <!-- Eliminar anotacions @Schema multilínia -->
+                                <replaceregexp match="@Schema\([^()]*(\([^()]*\)[^()]*)*\)" replace="" flags="gs" byline="false">
+                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>
+                                </replaceregexp>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>delete-generated-java7</id>
+                        <phase>install</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <delete dir="${project.build.directory}/generated-sources/java7" failonerror="false" />
+                                <delete dir="${project.build.directory}/classes-java7" failonerror="false" />
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <!-- JAR Java 11 -->
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>package</phase>
+                        <goals><goal>jar</goal></goals>
+                    </execution>
+                    <!-- JAR Java 7 -->
+                    <execution>
+                        <id>java7-jar</id>
+                        <phase>package</phase>
+                        <goals><goal>jar</goal></goals>
+                        <configuration>
+                            <classifier>java7</classifier>
+                            <classesDirectory>${project.build.directory}/classes-java7</classesDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
