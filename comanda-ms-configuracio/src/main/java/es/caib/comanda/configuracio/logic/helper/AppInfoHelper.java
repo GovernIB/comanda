@@ -91,11 +91,6 @@ public class AppInfoHelper {
 	public void programarTasquesSalutEstadistica(EntornAppEntity entity) {
 		es.caib.comanda.client.model.EntornApp clientEntornApp = toClientEntornApp(entity);
 		try {
-			salutServiceClient.programar(clientEntornApp, httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		} catch (Exception e) {
-			log.error("Error al programar l'actualització d'informació de salut per l'entornApp {}", entity.getId(), e);
-		}
-		try {
 			estadisticaServiceClient.programar(clientEntornApp, httpAuthorizationHeaderHelper.getAuthorizationHeader());
 		} catch (Exception e) {
 			log.error("Error al programar l'actualització d'informació estadística per l'entornApp {}", entity.getId(), e);
