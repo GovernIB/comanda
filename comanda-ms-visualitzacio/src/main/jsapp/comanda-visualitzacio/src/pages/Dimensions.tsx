@@ -77,7 +77,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                             type={'reference'}
                             label={t($ => $.page.dimensions.column.entornApp)}
                             required={false}
-                            optionsRequest={(q) => {
+                            optionsRequest={(q: string) => {
                                 const opts = (entornApp ?? []).map((ea: EntornAppItem) => ({
                                     id: ea?.id,
                                     description: ea.entornAppDescription,

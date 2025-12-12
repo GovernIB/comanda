@@ -20,7 +20,6 @@ import {
 } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
 import Alarms from './Alarms';
-import AppMenu from './AppMenu';
 import Footer from './Footer';
 import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
@@ -128,14 +127,6 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
         ]
         : [];
 }
-// Menú general
-const generateAppMenu = (menuEntries: MenuEntryWithResource[] | undefined) => {
-    const { indexState: apiIndex } = useResourceApiContext();
-    const filteredMenuEntries = menuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
-    return filteredMenuEntries?.length
-        ? [<AppMenu key="app_menu" menuEntries={filteredMenuEntries} />]
-        : [];
-}
 
 const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
     const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
@@ -203,7 +194,6 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         availableLanguages,
         menuEntries,
         headerMenuEntries,
-        caibMenuEntries,
         appbarBackgroundColor,
         appbarBackgroundImg,
         appbarStyle,
@@ -247,7 +237,6 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
             ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
-            ...generateAppMenu(caibMenuEntries), // Menú lateral
         ]}
         headerAdditionalAuthComponents={[
             <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(

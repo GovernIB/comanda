@@ -205,7 +205,6 @@ export const App: React.FC = () => {
             availableLanguages={['ca', 'es']}
             menuEntries={caibMenuEntries}
             headerMenuEntries={headerMenuEntries}
-            caibMenuEntries={caibMenuEntries}
             appbarBackgroundColor={appbarBackgroundColor}
             appbarStyle={{
                 cssText: `min-height: ${APPBAR_HEIGHT} !important`,

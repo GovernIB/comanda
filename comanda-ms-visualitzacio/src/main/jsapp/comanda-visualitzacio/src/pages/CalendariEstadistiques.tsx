@@ -33,6 +33,7 @@ import {useMessage} from "../components/MessageShow.tsx";
 import { useCalendarEvents } from '../components/calendari/UseCalendarEventsProps.ts';
 import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps } from '../components/calendari/CalendariTypes.ts';
 import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.tsx';
+import { EntornAppModel } from '../types/app.model';
 
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   hasError,
@@ -92,11 +93,11 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
 };
 
 export function useEntornAppData(apiReady: boolean, getAll: any) {
-  const [entornApps, setEntornApps] = useState([]);
+  const [entornApps, setEntornApps] = useState<EntornAppModel[]>([]);
   useEffect(() => {
     if (!apiReady) return;
     getAll({ unpaged: true, filter: 'activa : true AND app.activa : true' })
-      .then((response: { rows: React.SetStateAction<never[]>; }) => setEntornApps(response.rows))
+      .then((response: { rows: React.SetStateAction<never[]>; }) => setEntornApps(response.rows as EntornAppModel[]))
       .catch(() => setEntornApps([]));
   }, [apiReady, getAll]);
   return entornApps;
@@ -119,7 +120,7 @@ const CalendariEstadistiques: React.FC = () => {
     const [datesDisponiblesError, setDatesDisponiblesError] = useState<boolean>(true);
     const [currentViewMonth, setCurrentViewMonth] = useState(dayjs().month());
     const [currentViewYear, setCurrentViewYear] = useState(dayjs().year());
-    
+
     // State for the day data modal
     const [dadesDiaModalOpen, setDadesDiaModalOpen] = useState(false);
     const [currentDadesDia, setCurrentDadesDia] = useState<DadesDia[]>([]);
@@ -132,7 +133,7 @@ const CalendariEstadistiques: React.FC = () => {
     const entornApps = useEntornAppData(entornAppApiIsReady, entornAppGetAll);
 
     // Obtenir les accions
-    const { isReady: apiFetIsReady, artifactAction: apiAction, artifactReport: apiReport } = useResourceApiService('fet');
+    const { artifactAction: apiAction, artifactReport: apiReport } = useResourceApiService('fet');
     const { temporalMessageShow } = useBaseAppContext();
     const { show: showMessage, component } = useMessage();
 
@@ -142,7 +143,7 @@ const CalendariEstadistiques: React.FC = () => {
         try {
             // Add the date to the loading dates array
             setLoadingDates(prev => [...prev, additionalData.dataInici]);
-            
+
             const data = await apiAction(null, { code: 'obtenir_per_data', data: additionalData });
             if (data.success)
                 temporalMessageShow(null, t($ => $.calendari.success_obtenir_dades), 'success');
@@ -162,7 +163,7 @@ const CalendariEstadistiques: React.FC = () => {
                 setEmptyDates(prev => [...prev, additionalData.dataInici]);
             }
             console.log('Dades buides:', emptyDates);
-            
+
             // Remove the date from loading dates array
             setLoadingDates(prev => prev.filter(date => date !== additionalData.dataInici));
             return data.success;
@@ -179,7 +180,7 @@ const CalendariEstadistiques: React.FC = () => {
         try {
             // Set global loading to true to show blocking overlay
             setGlobalLoading(true);
-            
+
             const data = await apiAction(null, { code: 'obtenir_per_interval', data: additionalData });
             if (data.success) {
                 showMessage(null, t($ => $.calendari.success_obtenir_dades), 'success');
@@ -188,7 +189,7 @@ const CalendariEstadistiques: React.FC = () => {
             } else {
                 showMessage(null, t($ => $.calendari.error_obtenir_dades) + ": " + data.message, 'error');
             }
-            
+
             // Set global loading to false when done
             setGlobalLoading(false);
             return data.success;
@@ -238,14 +239,14 @@ const CalendariEstadistiques: React.FC = () => {
                 null,
                 {code: 'dades_dia', data: additionalData}
             )) as DadesDia[];
-            
+
             console.log('Consulta de dades correcta:', data);
-            
+
             // Store the fetched data and open the modal
             setCurrentDadesDia(data);
             setCurrentDataDia(dataFormatada);
             setDadesDiaModalOpen(true);
-            
+
             return true;
         } catch (error: any) {
             console.error('Error en obtenir dades per dia:', error);
@@ -256,10 +257,6 @@ const CalendariEstadistiques: React.FC = () => {
 
     // No actualitzem les dates disponibles quan canvia l'entorn d'aplicació
     // Això es farà només quan es carreguin les dates disponibles
-
-    const esDiaAmbDades = useCallback((data: string) => datesAmbDades.includes(data), [datesAmbDades]);
-    const esDiaAmbEmptyDades = useCallback((data: string) => emptyDates.includes(data), [emptyDates]);
-    const esDiaAmbError = useCallback((data: string) => errors.some(error => error.date === data), [errors]);
 
     const getErrorForDate = useCallback((data: string) => {
         return errors.find(error => error.date === data);
@@ -330,11 +327,11 @@ const CalendariEstadistiques: React.FC = () => {
     const getFirstAndLastDayOfMonth = useCallback(() => {
         // Use currentViewMonth and currentViewYear directly
         console.log('Using currentViewMonth and currentViewYear for date calculation');
-        
+
         // Calculate first and last day of month
         const firstDay = dayjs(new Date(currentViewYear, currentViewMonth, 1)).format('YYYY-MM-DD');
         const lastDay = dayjs(new Date(currentViewYear, currentViewMonth + 1, 0)).format('YYYY-MM-DD');
-        
+
         console.log('First day:', firstDay, 'Last day:', lastDay);
         return {
             firstDay,
@@ -363,21 +360,21 @@ const CalendariEstadistiques: React.FC = () => {
         if (entornAppId === '') {
             return;
         }
-        
+
         const data = info.event.startStr;
-        
+
         // Si l'event té display 'background', no fem res (només pels events sense dades)
         // Això permet que només l'event de tipus block respongui als clics
         if (info.event.display === 'background' && !info.event.extendedProps.esDisponible && !info.event.extendedProps.hasError) {
             return;
         }
-        
+
         // Si la cel·la ja està carregant, no fem res
         if (info.event.extendedProps.isLoading) {
             console.log('La cel·la ja està carregant, no fem res');
             return;
         }
-        
+
         // Si ja hi ha una càrrega global en curs, no fem res
         if (globalLoading) {
             console.log('Hi ha una càrrega global en curs, no fem res');
@@ -541,14 +538,6 @@ const CalendariEstadistiques: React.FC = () => {
                         // Otherwise, use the default rendering
                         return null;
                     }}
-                    dayCellDidMount={(info) => {
-                        // Only apply background colors if an entornApp is selected and no error in dates
-                        if (entornAppId !== '' && !datesDisponiblesError) {
-                            const date = dayjs(info.date).format('YYYY-MM-DD');
-                            const hasError = esDiaAmbError(date);
-                            const hasDades = esDiaAmbDades(date);
-                        }
-                    }}
                     datesSet={(dateInfo) => {
                         // When month changes, update the current view month and year
                         const startDate = dayjs(dateInfo.start);
@@ -577,7 +566,7 @@ const CalendariEstadistiques: React.FC = () => {
                                     alert(t($ => $.calendari.seleccionar_entorn_app_primer));
                                     return;
                                 }
-                                
+
                                 // Get the dates using currentViewMonth and currentViewYear
                                 const dates = getFirstAndLastDayOfMonth();
                                 carregarIntervalDades(dates.firstDay, dates.lastDay);

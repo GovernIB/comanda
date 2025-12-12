@@ -15,6 +15,7 @@ import {
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Button, Icon } from '@mui/material';
+import useTranslationStringKey from '../hooks/useTranslationStringKey';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
@@ -28,7 +29,7 @@ type TabMonitorProps = {
 }
 
 const TabMonitor: React.FC<TabMonitorProps> = (props) => {
-    const { t } = useTranslation();
+    const { t } = useTranslationStringKey();
     const { selectedModule, handleTabChange } = props;
     return (
         <Tabs
@@ -38,7 +39,7 @@ const TabMonitor: React.FC<TabMonitorProps> = (props) => {
             indicatorColor="primary"
             sx={{ mb: 2 }} >
             {moduleOptions.map((option) => (
-                <Tab key={option.value} label={t($ => $[option.labelKey])} value={option.value} />
+                <Tab key={option.value} label={t(option.labelKey)} value={option.value} />
             ))}
         </Tabs>
     );
@@ -51,7 +52,7 @@ export const translateEnumValue = (
 ): string => {
   if (!value) return '';
   if (translationMap && t && translationMap[value]) {
-    return t($ => $[translationMap[value]]);
+    return t(translationMap[value]);
   }
   return value;
 };
@@ -67,7 +68,7 @@ const tipusTranslationMap: Record<string, string> = {
 };
 
 const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, children }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslationStringKey();
   const colorMap: Record<string, 'success' | 'error' | 'warning' | 'default'> = {
     OK: 'success',
     ERROR: 'error',
@@ -95,27 +96,34 @@ const columns = [
 const MonitorDetails: React.FC<any> = (props) => {
     const { data } = props;
     const { t } = useTranslation();
+    const { t: tStringKey } = useTranslationStringKey();
     const elementsDetail = [
         { label: t($ => $.page.monitors.detail.data), value: dateFormatLocale(data?.data, true) },
         { label: t($ => $.page.monitors.detail.operacio), value: data?.operacio },
-        { label: t($ => $.page.monitors.detail.tipus), value: translateEnumValue(data?.tipus, tipusTranslationMap, t) },
-        { label: t($ => $.page.monitors.detail.estat), contentValue: <EstatBadge value={data?.estat} /> },
+        {
+            label: t($ => $.page.monitors.detail.tipus),
+            value: translateEnumValue(data?.tipus, tipusTranslationMap, tStringKey),
+        },
+        {
+            label: t($ => $.page.monitors.detail.estat),
+            contentValue: <EstatBadge value={data?.estat} />,
+        },
         { label: t($ => $.page.monitors.detail.codiUsuari), value: data?.codiUsuari },
         { label: t($ => $.page.monitors.detail.errorDescripcio), value: data?.errorDescripcio },
         { label: t($ => $.page.monitors.detail.excepcioMessage), value: data?.excepcioMessage },
-        { 
+        {
             contentValue: (
                 <StacktraceBlock
                     title={t($ => $.page.monitors.detail.excepcioStacktrace)}
                     value={data?.excepcioStacktrace}
                 />
-            )
+            ),
         },
     ];
     return <ContentDetail title={""} elements={elementsDetail} />;
 }
 
-const MonitorFilter: React.FC<any> = () => {
+const MonitorFilter: React.FC = () => {
     const { t } = useTranslation();
     const filterRef = useFilterApiRef();
     const clear = () => filterRef.current.clear();

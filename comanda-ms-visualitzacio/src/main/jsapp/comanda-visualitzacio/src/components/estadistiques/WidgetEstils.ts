@@ -53,7 +53,7 @@ export const estils = {
         pt: 1,
         pb: 0,
     },
-    contentText: (preview: boolean) => ({
+    contentText: (_preview: boolean) => ({
         // height: preview ? '80px' : '120px', // Altura fixa del contenidor
         display: 'flex',
         flexDirection: 'column', // Els elements s'apilen verticalment
@@ -67,13 +67,13 @@ export const estils = {
         fontWeight: '500',
         textAlign: 'center',
         lineHeight: '1',
-        zIndex:2,
+        zIndex: 2,
     }),
     unitText: (preview: boolean) => ({
         fontSize: preview ? '1em' : '1em',
         textAlign: 'center',
         lineHeight: '1',
-        zIndex:2,
+        zIndex: 2,
     }),
     footerContainer: {
         display: 'flex',
@@ -96,7 +96,7 @@ export const estils = {
         whiteSpace: 'nowrap',
         minWidth: '260px',
         color: textColor,
-        zIndex:2,
+        zIndex: 2,
     }),
     percText: (textColor: string) => ({
         flexShrink: 0,
@@ -107,11 +107,10 @@ export const estils = {
         whiteSpace: 'nowrap',
         ml: 2,
         color: textColor,
-        zIndex:2,
+        zIndex: 2,
     }),
-    iconContainer: {
-    },
-    icon: (preview: boolean, color: string, bgColor: string) => ({
+    iconContainer: {},
+    icon: (_preview: boolean, color: string, bgColor: string) => ({
         color,
         // width: preview ? '1em' : '1.4em',
         // height: preview ? '1em' : '1.4em',
@@ -155,7 +154,7 @@ export const estils = {
             borderBottom: `${horDividerAmple ?? 1}px solid ${horDividerColor}`, // Separador de fila
         },
         '& > *:last-child': {
-            borderRight: "none", // Elimina separador de l'última columna
+            borderRight: 'none', // Elimina separador de l'última columna
         },
     }),
     tableRow: (textColor: string, bgColor: string,
@@ -169,7 +168,7 @@ export const estils = {
             borderBottom: horDivider ? `${horDividerAmple ?? 1}px solid ${horDividerColor}` : 'none', // Separador de fila
         },
         '& > *:last-child': {
-            borderRight: "none",
+            borderRight: 'none',
         },
     }),
     entornCodi: {
@@ -178,7 +177,7 @@ export const estils = {
     errorIcon: (theme: Theme) => ({
         color: theme.palette.error.main,
         fontSize: '3rem',
-        marginRight: 1
+        marginRight: 1,
     }),
     errorAccordion: {
         margin: 0,
@@ -189,7 +188,7 @@ export const estils = {
         '&:before': {
             display: 'none',
         },
-        position: "relative",
+        position: 'relative',
         zIndex: 10,
     },
     errorSummary: (theme: Theme) => ({
@@ -205,8 +204,7 @@ export const estils = {
         padding: 2,
         maxHeight: '200px',
         overflow: 'auto',
-    })
-
+    }),
 };
 
 export default estils;

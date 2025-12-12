@@ -24,6 +24,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { PieSeries } from '@mui/x-charts';
 
 interface ColumnLabel {
     id: string;
@@ -345,7 +346,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         // For pie chart, transform data if needed
         const pieData = dades.map((item, index) => ({
             id: index,
-            label: item.label,
+            label: item.label as string | undefined,
             value: typeof item.value === 'number' ? item.value : 0,
             color: paletaColors[index % paletaColors.length]
         }));
@@ -356,16 +357,16 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
         // Define a simple interface for the arc label params
         interface ArcLabelParams {
-            label: string;
+            label?: string;
             [key: string]: any; // Allow any other properties
         }
 
         // Custom label component for pie chart
         const getArcLabel = (params: ArcLabelParams) => {
-            return pieShowLabels ? params.label : '';
+            return pieShowLabels ? (params.label ?? '') : '';
         };
 
-        const series = [
+        const series: Readonly<PieSeries[]> = [
             {
                 data: pieData,
                 innerRadius: +radiInterior,
@@ -457,7 +458,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     height={chartHeight}
                     showTooltip={lineShowPoints}
                     showHighlight={lineShowPoints}
-                    curve={lineSmooth ? 'monotone' : 'linear'}
+                    curve={lineSmooth ? 'monotoneX' : 'linear'}
                     area={area}
                     sx={{
                         '& .MuiLineElement-root': {

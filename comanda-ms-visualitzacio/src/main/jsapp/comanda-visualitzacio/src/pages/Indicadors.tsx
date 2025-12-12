@@ -75,7 +75,7 @@ const IndicadorsFilter = (props: any) => {
                             type={'reference'}
                             label={t($ => $.page.indicadors.column.entornApp)}
                             required={false}
-                            optionsRequest={(q) => {
+                            optionsRequest={(q: string) => {
                                 const opts = (entornApp ?? []).map((ea: any) => ({
                                     id: ea?.id,
                                     description: ea.entornAppDescription,

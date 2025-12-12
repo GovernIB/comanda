@@ -15,22 +15,22 @@ import {
     useFilterApiRef,
     useFormApiRef,
     useResourceApiService,
-    useBaseAppContext, useFormContext,
+    useBaseAppContext,
 } from 'reactlib';
 
-const DimensioValorForm: React.FC = () => {
-    const { data } = useFormContext();
-    console.log('DimensioValorForm data.agrupable:', data?.agrupable);
-    return (
-        <Grid container spacing={2}>
-            <Grid size={12}><FormField name="valor" readOnly disabled /></Grid>
-            <Grid size={12}><FormField name="agrupable" /></Grid>
-            {data?.agrupable === true && (
-                <Grid size={12}><FormField name="valorAgrupacio" /></Grid>
-            )}
-        </Grid>
-    );
-};
+// const DimensioValorForm: React.FC = () => {
+//     const { data } = useFormContext();
+//     console.log('DimensioValorForm data.agrupable:', data?.agrupable);
+//     return (
+//         <Grid container spacing={2}>
+//             <Grid size={12}><FormField name="valor" readOnly disabled /></Grid>
+//             <Grid size={12}><FormField name="agrupable" /></Grid>
+//             {data?.agrupable === true && (
+//                 <Grid size={12}><FormField name="valorAgrupacio" /></Grid>
+//             )}
+//         </Grid>
+//     );
+// };
 
 const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void } > = ({ onSpringFilterChange }) => {
     const { t } = useTranslation();
@@ -102,7 +102,6 @@ const DimensioValor: React.FC = () => {
                 position: 0,
                 element: (
                     <IconButton
-                        title={t($ => $.form.goBack.title)}
                         onClick={() => goBack('/dimensio')}
                         disabled={backButtonDisabled}
                         sx={{ mr: 1 }}
