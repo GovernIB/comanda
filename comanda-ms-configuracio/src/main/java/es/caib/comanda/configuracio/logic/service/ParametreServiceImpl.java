@@ -1,7 +1,6 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
@@ -43,7 +42,6 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.PARAMETRE_CAC
 public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, Long, ParametreEntity> implements ParametreService {
 
     private final MonitorServiceClient monitorServiceClient;
-    private final EstadisticaServiceClient estadisticaServiceClient;
     private final CacheHelper cacheHelper;
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
@@ -71,10 +69,6 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
             case BaseConfig.PROP_MONITOR_BUIDAT_PERIODE_MINUTS:
             case BaseConfig.PROP_MONITOR_BUIDAT_RETENCIO_DIES:
                 monitorServiceClient.programarBorrat(httpAuthorizationHeaderHelper.getAuthorizationHeader());
-                break;
-            case BaseConfig.PROP_STATS_COMPACTAR_ACTIU:
-            case BaseConfig.PROP_STATS_COMPACTAR_CRON:
-                estadisticaServiceClient.programarTot(httpAuthorizationHeaderHelper.getAuthorizationHeader());
                 break;
         }
     }

@@ -58,7 +58,6 @@ import java.util.List;
 				)
 		},
 		artifacts = {
-				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, formClass = EntornApp.EntornAppParamAction.class),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_PING_URL, formClass = String.class),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_TOOGLE_ACTIVA, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class),
@@ -69,7 +68,6 @@ import java.util.List;
 @FieldNameConstants
 public class EntornApp extends BaseResource<Long> {
 
-	public final static String ENTORN_APP_ACTION_REPROGRAMAR = "reprogramar";
 	public final static String ENTORN_APP_ACTION_PING_URL = "pingUrl";
 	public final static String ENTORN_APP_FILTER = "entornApp_filter";
 	public final static String SALUT_ENTORN_APP_FILTER = "salut_entornApp_filter";
@@ -137,14 +135,6 @@ public class EntornApp extends BaseResource<Long> {
 		return revisio != null ? revisio.substring(0, 7) : null;
 	}
 
-
-	@Getter
-	@Setter
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class EntornAppParamAction implements Serializable {
-		private Long entornAppId;
-	}
 
 	@Getter
 	@Setter

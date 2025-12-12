@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -36,15 +37,13 @@ public class AppServiceImplTest {
     // Test subclass to expose protected methods
     static class TestableAppServiceImpl extends AppServiceImpl {
         
-        public TestableAppServiceImpl(AppInfoHelper appInfoHelper,
-                                      ConfiguracioSchedulerService schedulerService,
-                                      CacheHelper cacheHelper,
+        public TestableAppServiceImpl(CacheHelper cacheHelper,
                                       ObjectMapper objectMapper,
                                       AppExportMapper appExportMapper,
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository) {
-            super(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
+            super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
         }
         
         @Override
@@ -57,12 +56,6 @@ public class AppServiceImplTest {
             super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         }
     }
-
-    @Mock
-    private AppInfoHelper appInfoHelper;
-
-    @Mock
-    private ConfiguracioSchedulerService schedulerService;
 
     @Mock
     private CacheHelper cacheHelper;
@@ -92,7 +85,7 @@ public class AppServiceImplTest {
     @BeforeEach
     void setUp() {
         // Initialize the service with mocked dependencies
-        appService = new TestableAppServiceImpl(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
+        appService = new TestableAppServiceImpl(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
         
         // Setup test data
         appEntity = new AppEntity();
@@ -144,11 +137,8 @@ public class AppServiceImplTest {
 
         appService.afterUpdateSave(appEntity, appResource, answers, false);
 
-        // Verify that schedulerService.programarTasca was called for the EntornApp
-        verify(schedulerService, times(1)).programarTasca(entornAppEntity);
-
-        // Verify that appInfoHelper.programarTasquesSalutEstadistica was called for the EntornApp
-        verify(appInfoHelper, times(1)).programarTasquesSalutEstadistica(entornAppEntity);
+        // Verify that cacheHelper.evictCacheItem was called for the App
+        verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
     }
 
     @Test
@@ -161,10 +151,6 @@ public class AppServiceImplTest {
 
         appService.afterUpdateSave(appEntity, appResource, answers, false);
 
-        // Verify that schedulerService.programarTasca was not called
-        verify(schedulerService, never()).programarTasca(any());
-
-        // Verify that appInfoHelper.programarTasquesSalutEstadistica was not called
-        verify(appInfoHelper, never()).programarTasquesSalutEstadistica(any());
+        verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
     }
 }

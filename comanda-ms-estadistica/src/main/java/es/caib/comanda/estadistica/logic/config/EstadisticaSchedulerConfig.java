@@ -5,10 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * Classe de configuració que habilita la funcionalitat de programació per planificar i executar tasques periòdiques
@@ -24,21 +22,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 @EnableScheduling
 public class EstadisticaSchedulerConfig {
 
-    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
-    private Integer schedulerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":4}")
     private Integer workerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":200}")
     private Integer workerQueueSize;
-
-    @Bean(name = "estadisticaTaskScheduler")
-    public TaskScheduler esadisticaTaskScheduler() {
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(schedulerPoolSize);
-        scheduler.setThreadNamePrefix("est-tasques-");
-        scheduler.initialize();
-        return scheduler;
-    }
 
     @Bean(name = "estadisticaWorkerExecutor")
     public TaskExecutor estadisticaWorkerExecutor() {

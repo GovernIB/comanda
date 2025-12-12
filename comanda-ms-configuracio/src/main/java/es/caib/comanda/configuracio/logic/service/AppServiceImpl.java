@@ -1,7 +1,6 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
@@ -53,8 +52,6 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
 @Service
 public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEntity> implements AppService {
 
-	private final AppInfoHelper appInfoHelper;
-	private final ConfiguracioSchedulerService schedulerService;
 	private final CacheHelper cacheHelper;
 	private final ObjectMapper objectMapper;
 	private final AppExportMapper appExportMapper;
@@ -213,13 +210,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 							applyOverwrite(appEntity, appExport);
 						}
 					}
-					// Reprogramar tasques per entornApps d'aquesta app
-					if (appEntity.getEntornApps() != null) {
-						for (EntornAppEntity eae : appEntity.getEntornApps()) {
-							schedulerService.programarTasca(eae);
-							appInfoHelper.programarTasquesSalutEstadistica(eae);
-						}
-					}
 					// Invalidar caché
 					cacheHelper.evictCacheItem(APP_CACHE, appEntity.getId().toString());
 					// Afegir a resultat com a recurs
@@ -349,34 +339,11 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	protected void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
 		super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
 		cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
-
-		// Per assegurar que s'executin les tasques programades correctament, es programen de nou.
-		if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {
-			entity.getEntornApps().forEach(entornAppEntity -> {
-                if (!entity.isActiva()) {
-//                    Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
-                    entornAppEntity.setActiva(false);
-                }
-
-				schedulerService.programarTasca(entornAppEntity);
-				appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
-			});
-		}
 	}
 
     @Override
     protected void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
         cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
-
-        if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {
-            entity.getEntornApps().forEach(entornAppEntity -> {
-//                Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
-                entornAppEntity.setActiva(false);
-
-                schedulerService.programarTasca(entornAppEntity);
-                appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
-            });
-        }
     }
 }

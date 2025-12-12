@@ -4,12 +4,9 @@ import es.caib.comanda.base.config.BaseConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * Configuració de les tasques periòdiques.
@@ -20,22 +17,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 @EnableScheduling
 public class ConfiguracioSchedulerConfig {
 
-    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
-    private Integer schedulerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":4}")
     private Integer workerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":200}")
     private Integer workerQueueSize;
-
-	@Primary
-	@Bean(name = "configuracioTaskScheduler")
-	public TaskScheduler configuracioTaskScheduler() {
-		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-		scheduler.setPoolSize(schedulerPoolSize);
-		scheduler.setThreadNamePrefix("conf-tasques-");
-        scheduler.initialize();
-		return scheduler;
-	}
 
     @Bean(name = "configuracioWorkerExecutor")
     public TaskExecutor configuracioWorkerExecutor() {

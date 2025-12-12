@@ -88,32 +88,6 @@ public class AppInfoHelper {
 		});
 	}
 
-	public void programarTasquesSalutEstadistica(EntornAppEntity entity) {
-		es.caib.comanda.client.model.EntornApp clientEntornApp = toClientEntornApp(entity);
-		try {
-			estadisticaServiceClient.programar(clientEntornApp, httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		} catch (Exception e) {
-			log.error("Error al programar l'actualització d'informació estadística per l'entornApp {}", entity.getId(), e);
-		}
-	}
-
-	private es.caib.comanda.client.model.EntornApp toClientEntornApp(EntornAppEntity entity) {
-		return es.caib.comanda.client.model.EntornApp.builder()
-				.id(entity.getId())
-				.entorn(EntornRef.builder().id(entity.getEntorn().getId()).nom(entity.getEntorn().getNom()).build())
-				.app(AppRef.builder().id(entity.getApp().getId()).nom(entity.getApp().getNom()).build())
-				.infoUrl(entity.getInfoUrl())
-				.salutUrl(entity.getSalutUrl())
-				.estadisticaUrl(entity.getEstadisticaUrl())
-				.estadisticaUrl(entity.getEstadisticaUrl())
-				.estadisticaCron(entity.getEstadisticaCron())
-				.activa(entity.isActiva())
-                .compactable(entity.getCompactable())
-                .eliminacioMesos(entity.getEliminacioMesos())
-                .compactacioMensualMesos(entity.getCompactacioMensualMesos())
-				.build();
-	}
-
 	/**
 	 * Actualitza la informació de l'aplicació associada a un entorn concret.
 	 * <p>
@@ -160,8 +134,7 @@ public class AppInfoHelper {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom(),
-				ex.getLocalizedMessage(),
-                ex);
+				ex.getLocalizedMessage());
 			if (!monitorApp.isFinishedAction()) {
 				monitorApp.endAction(ex, null);
 			}
