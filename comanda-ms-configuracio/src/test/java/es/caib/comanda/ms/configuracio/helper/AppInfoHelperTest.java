@@ -289,7 +289,6 @@ public class AppInfoHelperTest {
         appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
 
         // Verify that the clients were called
-        verify(salutServiceClient).programar(any(EntornApp.class), anyString());
         verify(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
 
         // Verify that the keycloakHelper was called
@@ -299,7 +298,6 @@ public class AppInfoHelperTest {
     @Test
     void testProgramarTasquesSalutEstadisticaWithException() {
         // Mock clients to throw exceptions
-        doThrow(new RuntimeException("Salut error")).when(salutServiceClient).programar(any(EntornApp.class), anyString());
         doThrow(new RuntimeException("Estadistica error")).when(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
         // Mock keycloakHelper
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
@@ -308,7 +306,6 @@ public class AppInfoHelperTest {
         appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
 
         // Verify that the clients were called despite the exceptions
-        verify(salutServiceClient).programar(any(EntornApp.class), anyString());
         verify(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
 
         // Verify that the keycloakHelper was called

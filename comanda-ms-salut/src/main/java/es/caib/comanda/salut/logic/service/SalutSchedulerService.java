@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -38,14 +39,18 @@ public class SalutSchedulerService {
 
     private void executarProces(EntornApp entornApp) {
         // Encuar el treball al worker executor per no bloquejar el scheduler i no perdre execucions
-        salutWorkerExecutor.execute(() -> {
-            try {
-                log.debug("Executant procés per l'entornApp {}", entornApp.getId());
-                salutInfoHelper.getSalutInfo(entornApp);
-            } catch (Exception e) {
-                log.error("Error en l'execució del procés d'obtenció de informació de salut per l'entornApp {}", entornApp.getId(), e);
-            }
-        });
+        try {
+            salutWorkerExecutor.execute(() -> {
+                try {
+                    log.debug("Executant procés per l'entornApp {}", entornApp.getId());
+                    salutInfoHelper.getSalutInfo(entornApp);
+                } catch (Exception e) {
+                    log.error("Error en l'execució del procés d'obtenció de informació de salut per l'entornApp {}", entornApp.getId(), e);
+                }
+            });
+        } catch (TaskRejectedException e) {
+            log.error("Error en programar la tasca al worker de salut per l'entornApp: {}.", entornApp.getId(), e);
+        }
     }
 
     private boolean isLeader() {

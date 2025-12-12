@@ -104,7 +104,7 @@ public class SalutClientHelperTest {
 
         when(entornAppServiceClient.find(
                 isNull(),
-                eq("activa:true and app.activa:true"),
+                any(),
                 isNull(),
                 isNull(),
                 eq("UNPAGED"),
@@ -129,6 +129,45 @@ public class SalutClientHelperTest {
                 eq(authHeader)
         );
     }
+
+    @Test
+    void testEntornAppFindByActivaTrueWithFilter() {
+        // Arrange
+        EntityModel<EntornApp> entityModel = EntityModel.of(entornApp);
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(1, 0, 1);
+        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
+                Collections.singletonList(entityModel),
+                metadata
+        );
+
+        when(entornAppServiceClient.find(
+                isNull(),
+                any(),
+                isNull(),
+                isNull(),
+                eq("UNPAGED"),
+                isNull(),
+                eq(authHeader)
+        )).thenReturn(pagedModel);
+
+        // Act
+        List<EntornApp> result = salutClientHelper.entornAppFindByActivaTrue("filtreAdicional:true");
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId().longValue());
+        verify(entornAppServiceClient).find(
+                isNull(),
+                contains("activa:true and app.activa:true"),
+                isNull(),
+                isNull(),
+                eq("UNPAGED"),
+                isNull(),
+                eq(authHeader)
+        );
+    }
+
 
     @Test
     void testMonitorCreate() {
