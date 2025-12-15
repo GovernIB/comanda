@@ -95,7 +95,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                     }
                     ExternalDocumentation externalDocs = new ExternalDocumentation();
                     externalDocs.setDescription("Exemple el servei generat automàticament a partir d'aquest contracte OpenAPI (Codi font Java)");
-                    externalDocs.setUrl("https://github.com/GovernIB/comanda/tree/comanda-dev/comanda-api-server-salut-v1");
+                    externalDocs.setUrl("https://github.com/GovernIB/comanda/tree/comanda-dev/comanda-api-servers/comanda-api-server-salut-v1");
                     openApi.setExternalDocs(externalDocs);
                     openApi.getPaths().values().forEach(pathItem ->
                             pathItem.readOperations().forEach(op -> op.setSecurity(List.of())));
@@ -117,7 +117,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                     }
                     ExternalDocumentation externalDocs = new ExternalDocumentation();
                     externalDocs.setDescription("Exemple el servei generat automàticament a partir d'aquest contracte OpenAPI (Codi font Java)");
-                    externalDocs.setUrl("https://github.com/GovernIB/comanda/tree/comanda-dev/comanda-api-server-estadistica-v1");
+                    externalDocs.setUrl("https://github.com/GovernIB/comanda/tree/comanda-dev/comanda-api-servers/comanda-api-server-estadistica-v1");
                     openApi.setExternalDocs(externalDocs);
                 })
                 .build();
@@ -137,7 +137,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                     }
                     ExternalDocumentation externalDocs = new ExternalDocumentation();
                     externalDocs.setDescription("Exemple el servei generat automàticament a partir d'aquest contracte OpenAPI (Codi font Java)");
-                    externalDocs.setUrl("https://github.com/GovernIB/comanda/tree/comanda-dev/comanda-api-server-log-v1");
+                    externalDocs.setUrl("https://github.com/GovernIB/comanda/tree/comanda-dev/comanda-api-servers/comanda-api-server-log-v1");
                     openApi.setExternalDocs(externalDocs);
                 })
                 .build();
