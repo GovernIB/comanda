@@ -242,10 +242,14 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
 const dataGridPerspectives = ['PATH', 'EXPIRATION'];
 const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
+const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
+
 const Tasca = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string>();
     const gridApiRef = useGridApiRef();
+    const treePathFormatInvalidEntornApp = (invalidPath: string) =>
+        t('page.tasques.grid.entornAppInvalid') + ` [ID: ${invalidPath.split(' ')[1]}]`;
     const {
         treeView,
         treeViewSwitch,
@@ -257,7 +261,7 @@ const Tasca = () => {
         1.5,
         false,
         false,
-        { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value });
+        { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value?.startsWith?.(INVALID_ENTORNAPP) ? treePathFormatInvalidEntornApp(value) : value });
     const columns = [
         ...(!treeView
             ? [
@@ -267,7 +271,9 @@ const Tasca = () => {
                       flex: 1.2,
                       headerName: t('page.tasques.grid.column.appEntorn'),
                       valueFormatter: (value: any) =>
-                          `${value?.[0]} - ${value?.[1]}`,
+                          value?.[0].startsWith(INVALID_ENTORNAPP)
+                              ? treePathFormatInvalidEntornApp(value[0])
+                              : `${value?.[0]} - ${value?.[1]}`,
                   },
               ]
             : []),

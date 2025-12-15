@@ -174,7 +174,11 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         @Override
         public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
             EntornApp entornApp = tasquesClientHelper.entornAppFindById(entity.getEntornAppId());
-            resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            if (entornApp != null) {
+                resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            } else {
+                resource.setTreePath(new String[]{"INVALID_ENTORNAPP " + entity.getEntornAppId(), resource.getIdentificador()});
+            }
         }
     }
 

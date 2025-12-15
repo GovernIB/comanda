@@ -268,6 +268,7 @@ const translationEn = {
                 column: {
                     appEntorn: "Application - Environment",
                 },
+                entornAppInvalid: "Deleted application environment",
             }
         },
         avisos: {
