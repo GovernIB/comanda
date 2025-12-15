@@ -3,7 +3,7 @@ package es.caib.comanda.estadistica.persist.entity.estadistiques;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.CompactacioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
-import es.caib.comanda.ms.estadistica.model.Format;
+import es.caib.comanda.model.v1.estadistica.Format;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,14 +1,14 @@
 package es.caib.comanda.tasques.logic.intf.model;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.broker.model.Prioritat;
-import es.caib.comanda.ms.broker.model.TascaEstat;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
+import es.caib.comanda.model.v1.tasca.Prioritat;
+import es.caib.comanda.model.v1.tasca.TascaEstat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,6 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Transient;
 
-import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;

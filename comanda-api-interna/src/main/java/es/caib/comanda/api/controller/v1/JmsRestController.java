@@ -1,10 +1,10 @@
 package es.caib.comanda.api.controller.v1;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.model.v1.avis.Avis;
+import es.caib.comanda.model.v1.permis.Permis;
+import es.caib.comanda.model.v1.tasca.Tasca;
 import es.caib.comanda.ms.back.controller.BaseController;
-import es.caib.comanda.ms.broker.model.Avis;
-import es.caib.comanda.ms.broker.model.Permis;
-import es.caib.comanda.ms.broker.model.Tasca;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,18 +18,21 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static es.caib.comanda.ms.broker.model.Cues.*;
+import static es.caib.comanda.base.config.Cues.*;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+@Deprecated
 @RestController
-//@RequestMapping({BaseConfig.API_PATH + "/v1/jms", BaseConfig.API_PATH + "/interna/v1/jms"})
 @RequestMapping(BaseConfig.API_PATH + "/v1/jms")
 @Tag(name = "APP → COMANDA / JMS", description = "Enviament de missatges a les cues JMS de COMANDA: tasques, avisos i permisos. Un missatge és una unitat d'informació publicada a una cua JMS perquè sigui processada de manera asíncrona.")
 @RequiredArgsConstructor

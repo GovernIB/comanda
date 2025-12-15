@@ -29,8 +29,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
-import static es.caib.comanda.ms.broker.model.Cues.CUA_AVISOS;
-import static es.caib.comanda.ms.broker.model.Cues.CUA_TASQUES;
+import static es.caib.comanda.base.config.Cues.CUA_AVISOS;
+import static es.caib.comanda.base.config.Cues.CUA_TASQUES;
+
 
 @Slf4j
 @Service
@@ -46,7 +47,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
 
     @JmsListener(destination = CUA_AVISOS)
-    public void receiveMessage(@Payload es.caib.comanda.ms.broker.model.Avis avisBroker,
+    public void receiveMessage(@Payload es.caib.comanda.model.v1.avis.Avis avisBroker,
                                Message message) throws JMSException {
         message.acknowledge();
         log.debug("Processat avís de la cua " + CUA_TASQUES + " (avís={})", avisBroker);

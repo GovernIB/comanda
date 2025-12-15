@@ -19,6 +19,7 @@
             <url-pattern>/swagger-ui/*</url-pattern>
             <url-pattern>/api-docs</url-pattern>
             <url-pattern>/api-docs/*</url-pattern>
+            <url-pattern>/v1/salut/*</url-pattern>
         </web-resource-collection>
     </security-constraint>
 	<security-constraint>

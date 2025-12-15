@@ -3,19 +3,19 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
-import es.caib.comanda.ms.salut.model.DetallSalut;
-import es.caib.comanda.ms.salut.model.EstatSalut;
-import es.caib.comanda.ms.salut.model.EstatSalutEnum;
-import es.caib.comanda.ms.salut.model.IntegracioPeticions;
-import es.caib.comanda.ms.salut.model.IntegracioSalut;
-import es.caib.comanda.ms.salut.model.MissatgeSalut;
-import es.caib.comanda.ms.salut.model.SalutInfo;
-import es.caib.comanda.ms.salut.model.SalutNivell;
-import es.caib.comanda.ms.salut.model.SubsistemaSalut;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
+import es.caib.comanda.model.v1.salut.EstatSalut;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.InformacioSistema;
+import es.caib.comanda.model.v1.salut.IntegracioPeticions;
+import es.caib.comanda.model.v1.salut.IntegracioSalut;
+import es.caib.comanda.model.v1.salut.MissatgeSalut;
+import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.model.v1.salut.SalutNivell;
+import es.caib.comanda.model.v1.salut.SubsistemaSalut;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
@@ -47,7 +47,8 @@ import java.util.Arrays;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -158,21 +159,19 @@ public class SalutInfoHelperTest {
                 .missatge("Test message")
                 .build();
 
-        DetallSalut detallSalut = DetallSalut.builder()
-                .codi("TEST_DETALL")
-                .nom("Test Detall")
-                .valor("Test Value")
+        InformacioSistema informacioSistema = InformacioSistema.builder()
+                .memoriaTotal("Test Value")
                 .build();
 
         salutInfo = SalutInfo.builder()
                 .codi("TEST")
                 .data(new Date())
-                .estat(appEstat)
-                .bd(bdEstat)
+                .estatGlobal(appEstat)
+                .estatBaseDeDades(bdEstat)
                 .integracions(Arrays.asList(integracioSalut))
                 .subsistemes(Arrays.asList(subsistemaSalut))
                 .missatges(Arrays.asList(missatgeSalut))
-                .altres(Arrays.asList(detallSalut))
+                .informacioSistema(informacioSistema)
                 .versio("1.0.0")
                 .build();
 
@@ -245,10 +244,10 @@ public class SalutInfoHelperTest {
         salutInfo = new SalutInfo(
                 salutInfo.getCodi(),
                 salutInfo.getData(),
-                salutInfo.getEstat(),
-                salutInfo.getBd(),
+                salutInfo.getEstatGlobal(),
+                salutInfo.getEstatBaseDeDades(),
                 Arrays.asList(salutInfo.getIntegracions().get(0), new IntegracioSalut("", null)),
-                Arrays.asList(salutInfo.getAltres().get(0), new DetallSalut("", "codi, valor invalid", "")),
+                salutInfo.getInformacioSistema(),
                 Arrays.asList(salutInfo.getMissatges().get(0), new MissatgeSalut(null, null, "Missatge invalid")),
                 salutInfo.getVersio(),
                 Arrays.asList(salutInfo.getSubsistemes().get(0), new SubsistemaSalut("", null, null, 0, 0L, 0L, 0))

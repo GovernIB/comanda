@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>es.caib.comanda</groupId>
+        <artifactId>comanda</artifactId>
+        <version>0.1.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>comanda-api-test</artifactId>
+    <version>0.1.0</version>
+    <name>comanda-api-test</name>
+    <description>Tests d'integració externs per provar les crides de comanda-lib contra un servidor indicat per paràmetres</description>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.jupiter.version>5.10.2</junit.jupiter.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>es.caib.comanda</groupId>
+            <artifactId>comanda-lib</artifactId>
+<!--            <version>${project.version}</version>-->
+            <version>0.1.0.1</version>
+        </dependency>
+
+        <!-- Clients generats per fer crides a un segon servidor (salut, estadistica i log) -->
+        <dependency>
+            <groupId>es.caib.comanda</groupId>
+            <artifactId>comanda-api-client-salut-v1</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>es.caib.comanda</groupId>
+            <artifactId>comanda-api-client-estadistica-v1</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>es.caib.comanda</groupId>
+            <artifactId>comanda-api-client-log-v1</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.26.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.36</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Bridge per a llibreries que utilitzen Apache Commons Logging (JCL) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.7.36</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <systemPropertyVariables>
+                        <comanda.api.basePath>${comanda.api.basePath}</comanda.api.basePath>
+                        <comanda.api.user>${comanda.api.user}</comanda.api.user>
+                        <comanda.api.password>${comanda.api.password}</comanda.api.password>
+                        <comanda.api.authHeader>${comanda.api.authHeader}</comanda.api.authHeader>
+                        <!-- Paràmetres per al segon servidor (salut/estadistica/log) -->
+                        <comanda.api2.basePath>${comanda.api2.basePath}</comanda.api2.basePath>
+                        <comanda.api2.user>${comanda.api2.user}</comanda.api2.user>
+                        <comanda.api2.password>${comanda.api2.password}</comanda.api2.password>
+                        <comanda.api2.authHeader>${comanda.api2.authHeader}</comanda.api2.authHeader>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -5,13 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import es.caib.comanda.ms.estadistica.model.GenericDimensio;
-import es.caib.comanda.ms.estadistica.model.GenericFet;
+import es.caib.comanda.model.v1.estadistica.GenericDimensio;
+import es.caib.comanda.model.v1.estadistica.GenericFet;
+import es.caib.comanda.model.v1.estadistica.Dimensio;
+import es.caib.comanda.model.v1.estadistica.Fet;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Profile;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
@@ -47,8 +48,8 @@ public class RestTemplateConfig {
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
         SimpleModule module = new SimpleModule();
-        module.addAbstractTypeMapping(es.caib.comanda.ms.estadistica.model.Dimensio.class, GenericDimensio.class);
-        module.addAbstractTypeMapping(es.caib.comanda.ms.estadistica.model.Fet.class, GenericFet.class);
+        module.addAbstractTypeMapping(Dimensio.class, GenericDimensio.class);
+        module.addAbstractTypeMapping(Fet.class, GenericFet.class);
         objectMapper.registerModule(module);
 
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);

@@ -5,7 +5,12 @@ import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
+import es.caib.comanda.configuracio.persist.entity.AppEntity;
+import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
@@ -14,7 +19,10 @@ import es.caib.comanda.configuracio.persist.repository.ManualRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
-import es.caib.comanda.ms.salut.model.*;
+import es.caib.comanda.model.v1.salut.AppInfo;
+import es.caib.comanda.model.v1.salut.ContextInfo;
+import es.caib.comanda.model.v1.salut.IntegracioInfo;
+import es.caib.comanda.model.v1.salut.SubsistemaInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +33,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -146,6 +158,7 @@ public class AppInfoHelperTest {
                 .codi("APP1")
                 .nom("Test App")
                 .versio("1.0.0")
+                .versioJboss("7.4")
                 .data(new Date())
                 .integracions(integracions)
                 .subsistemes(subsistemes)
@@ -236,6 +249,7 @@ public class AppInfoHelperTest {
                 appInfo.getData(),
                 appInfo.getRevisio(),
                 appInfo.getJdkVersion(),
+                appInfo.getVersioJboss(),
                 Arrays.asList(appInfo.getIntegracions().get(0), new IntegracioInfo("INT2", "")),
                 Arrays.asList(appInfo.getSubsistemes().get(0), new SubsistemaInfo("SUB1", "")),
                 List.of(new ContextInfo("CON1", "", "", null, ""))

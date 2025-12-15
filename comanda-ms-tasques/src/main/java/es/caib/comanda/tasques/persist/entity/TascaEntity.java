@@ -1,16 +1,24 @@
 package es.caib.comanda.tasques.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.broker.model.Prioritat;
-import es.caib.comanda.ms.broker.model.TascaEstat;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.model.v1.tasca.Prioritat;
+import es.caib.comanda.model.v1.tasca.TascaEstat;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.JoinColumn;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;

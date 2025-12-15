@@ -1,9 +1,8 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.ms.salut.model.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
-import es.caib.comanda.ms.salut.model.SalutNivell;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

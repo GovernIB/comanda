@@ -2,10 +2,13 @@ package es.caib.comanda.client.config;
 
 import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
+import es.caib.comanda.client.AvisServiceClient;
+import es.caib.comanda.client.PermisServiceClient;
 import es.caib.comanda.client.EntornServiceClient;
 import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.ParametreServiceClient;
+import es.caib.comanda.client.TascaServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -32,9 +35,12 @@ import java.util.stream.Collectors;
 		EntornServiceClient.class,
 		EntornAppServiceClient.class,
 		MonitorServiceClient.class,
-		SalutServiceClient.class,
-		EstadisticaServiceClient.class,
-        ParametreServiceClient.class
+        SalutServiceClient.class,
+        EstadisticaServiceClient.class,
+        ParametreServiceClient.class,
+        TascaServiceClient.class,
+        AvisServiceClient.class,
+        PermisServiceClient.class
 })
 public class OpenFeignConfig {
 
