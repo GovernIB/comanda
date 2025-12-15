@@ -34,7 +34,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
     @Bean
     public GroupedOpenApi apiTasquesGroup() {
         return GroupedOpenApi.builder()
-                .group("Tasques-v1")
+                .group("tasques-v1")
                 .displayName("Tasques v1 | APP → COMANDA")
                 .packagesToScan("es.caib.comanda.api.controller.v1")
                 .pathsToMatch("/v1/tasques/**")
@@ -50,7 +50,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
     @Bean
     public GroupedOpenApi apiAvisosGroup() {
         return GroupedOpenApi.builder()
-                .group("Avisos-v1")
+                .group("avisos-v1")
                 .displayName("Avisos v1 | APP → COMANDA")
                 .packagesToScan("es.caib.comanda.api.controller.v1")
                 .pathsToMatch("/v1/avisos/**")
@@ -66,7 +66,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
     @Bean
     public GroupedOpenApi apiPermisosGroup() {
         return GroupedOpenApi.builder()
-                .group("Permisos-v1")
+                .group("permisos-v1")
                 .displayName("Permisos v1 | APP → COMANDA")
                 .packagesToScan("es.caib.comanda.api.controller.v1")
                 .pathsToMatch("/v1/permisos/**")
@@ -83,7 +83,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
     @Bean
     public GroupedOpenApi apiSalutGroup() {
         return GroupedOpenApi.builder()
-                .group("Salut-v1")
+                .group("salut-v1")
                 .displayName("Salut v1 | COMANDA → APP")
                 .packagesToScan("es.caib.comanda.api.client.controller.v1")
                 .pathsToMatch("/v1/salut/**")
@@ -105,7 +105,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
     @Bean
     public GroupedOpenApi apiEstadistiquesGroup() {
         return GroupedOpenApi.builder()
-                .group("Estadístiques-v1")
+                .group("estadistiques-v1")
                 .displayName("Estadístiques v1 | COMANDA → APP")
                 .packagesToScan("es.caib.comanda.api.client.controller.v1")
                 .pathsToMatch("/v1/estadistiques/**")
@@ -125,7 +125,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
     @Bean
     public GroupedOpenApi apiLogGroup() {
         return GroupedOpenApi.builder()
-                .group("Logs-v1")
+                .group("logs-v1")
                 .displayName("Logs v1 | COMANDA → APP")
                 .packagesToScan("es.caib.comanda.api.client.controller.v1")
                 .pathsToMatch("/v1/logs/**")
