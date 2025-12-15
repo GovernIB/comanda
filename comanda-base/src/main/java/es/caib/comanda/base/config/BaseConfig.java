@@ -60,6 +60,7 @@ public class BaseConfig {
 
     // Propietats de SALUT
     public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";
+	public static final String PROP_SALUT_LOG_REPORT = PROP_SALUT_PREFIX + "log.report";
 
     // Propietats de tasques
     public static final String PROP_TASCA_PREFIX = PROPERTY_PREFIX + "tasca.";

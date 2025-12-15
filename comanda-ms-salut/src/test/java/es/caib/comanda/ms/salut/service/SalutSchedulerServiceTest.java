@@ -3,7 +3,7 @@ package es.caib.comanda.ms.salut.service;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.service.SalutSchedulerService;
@@ -43,7 +43,7 @@ public class SalutSchedulerServiceTest {
     private SalutInfoHelper salutInfoHelper;
 
     @Mock
-    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private ParametresHelper parametresHelper;
 
     @Mock
     private ScheduledFuture<?> scheduledFuture;
@@ -68,7 +68,7 @@ public class SalutSchedulerServiceTest {
                 taskScheduler,
                 salutClientHelper,
                 salutInfoHelper,
-                httpAuthorizationHeaderHelper,
+                parametresHelper,
                 salutWorkerExecutor
         );
 

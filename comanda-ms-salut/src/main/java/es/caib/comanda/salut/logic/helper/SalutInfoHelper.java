@@ -70,8 +70,9 @@ public class SalutInfoHelper {
 
 	private final SalutClientHelper salutClientHelper;
 	private final RestTemplate restTemplate;
-	private final ApplicationEventPublisher eventPublisher;
-	private final MetricsHelper metricsHelper;
+    private final ApplicationEventPublisher eventPublisher;
+    private final MetricsHelper metricsHelper;
+    private final SalutPurgeService salutPurgeService;
 
 	// Locks per assegurar compactació "synchronized" per entornAppId
 	private static final java.util.concurrent.ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
@@ -389,7 +390,6 @@ public class SalutInfoHelper {
         }
     }
 
-    @Transactional
     public void buidar(Long entornAppId, Long salutId) {
         try {
             log.info("Executant buidat de dades de salut. EntornAppId: {}, salutId: {}.",
@@ -424,55 +424,9 @@ public class SalutInfoHelper {
 
     private void eliminarAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime dataLlindar) {
         try {
-            eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
+            salutPurgeService.eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
         } catch (Exception ex) {
             log.warn("Error eliminant dades antigues ({}). Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", tipus.name(), entornAppId, dataLlindar, ex.getMessage(), ex);
-        }
-    }
-
-
-    public void eliminarDadesSalutAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime data) {
-        log.debug("Eliminant dades de salut antigues. EntornAppId: {}, tipus: {}, data: {}", entornAppId, tipus, data);
-//        List<SalutEntity> massaAntics = salutRepository.findByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
-        List<Long> idsAntics = salutRepository.findIdsByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
-
-        // Process ids in batches to avoid memory issues
-        for (int i = 0; i < idsAntics.size(); i += BATCH_SIZE) {
-            int end = Math.min(i + BATCH_SIZE, idsAntics.size());
-            List<Long> batch = idsAntics.subList(i, end);
-            eliminarLlista(batch);
-        }
-    }
-
-    public void eliminarLlista(List<Long> salutIds) {
-        if (salutIds == null || salutIds.isEmpty()) {
-            log.debug("Cap registre de salut per eliminar (null o buit)");
-            return;
-        }
-        int intents = 0;
-        int maxIntents = 3;
-        while (true) {
-            try {
-                log.info("Eliminant {} registres de salut antics...", salutIds.size());
-                // Eliminar fills per assegurar integritat
-                salutIntegracioRepository.deleteAllBySalutIdIn(salutIds);
-                salutSubsistemaRepository.deleteAllBySalutIdIn(salutIds);
-                salutMissatgeRepository.deleteAllBySalutIdIn(salutIds);
-                salutDetallRepository.deleteAllBySalutIdIn(salutIds);
-                // Eliminació en batch per reduir bloquejos
-                salutRepository.deleteAllByIdInBatch(salutIds);
-                log.info("Eliminat {} registres de salut antics", salutIds.size());
-                return;
-            } catch (RuntimeException ex) {
-                intents++;
-                if (isLockAcquisitionException(ex) && intents < maxIntents) {
-                    long sleep = 100L + (long) (Math.random() * 200L);
-                    log.info("Bloqueig en eliminar registres de salut (intent {}/{}). Es tornarà a intentar després de {}ms.", intents, maxIntents, sleep);
-                    try { Thread.sleep(sleep); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
-                } else {
-                    throw ex;
-                }
-            }
         }
     }
 
