@@ -256,7 +256,7 @@ const Tasca = () => {
     const [filter, setFilter] = React.useState<string>();
     const gridApiRef = useGridApiRef();
     const treePathFormatInvalidEntornApp = (invalidPath: string) =>
-        t('page.tasques.grid.entornAppInvalid') + ` [ID: ${invalidPath.split(' ')[1]}]`;
+        t($ => $.page.tasques.grid.entornAppInvalid) + ` [ID: ${invalidPath.split(' ')[1]}]`;
     const {
         treeView,
         treeViewSwitch,
