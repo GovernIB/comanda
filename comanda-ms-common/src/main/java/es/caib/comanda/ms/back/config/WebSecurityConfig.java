@@ -9,7 +9,6 @@ import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.IDToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,7 +22,10 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Optional;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Configuració de Spring Security.
@@ -57,7 +59,8 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
                                 new AntPathRequestMatcher("/api-docs/**"),
 								new AntPathRequestMatcher("/apidocs"),
 								new AntPathRequestMatcher("/apidocs/*"),
-								new AntPathRequestMatcher("/swagger-ui/*")
+								new AntPathRequestMatcher("/swagger-ui/*"),
+								new AntPathRequestMatcher(BaseConfig.API_SALUT_V1 + "/**/*")
 						}
 				).permitAll().
 				requestMatchers(

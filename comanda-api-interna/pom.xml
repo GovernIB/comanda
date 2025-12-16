@@ -57,6 +57,21 @@
             <artifactId>spring-boot-starter-logging</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-mapstruct-binding</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -99,51 +114,167 @@
                         <api>
                             <!-- Paquet(s) on tens els teus controllers REST -->
                             <locations>
-                                <location>es.caib.comanda.api.controller.v1</location>
+                                <location>es.caib.comanda.api.controller.v1.tasca</location>
                             </locations>
-
                             <!-- Nom i extensió del fitxer generat -->
                             <!-- Per defecte és 'spec-open-api.yml' -->
-                            <filename>openapi-app-comanda-v1.yml</filename>
+                            <filename>openapi-comanda-tasca-v1.yml</filename>
                         </api>
                         <api>
                             <locations>
-                                <location>es.caib.comanda.api.client.controller.v1</location>
+                                <location>es.caib.comanda.api.controller.v1.avis</location>
                             </locations>
-                            <filename>openapi-comanda-app-v1.yml</filename>
+                            <filename>openapi-comanda-avis-v1.yml</filename>
+                        </api>
+                        <api>
+                            <!-- Paquet(s) on tens els teus controllers REST -->
+                            <locations>
+                                <location>es.caib.comanda.api.controller.v1.permis</location>
+                            </locations>
+                            <filename>openapi-comanda-permis-v1.yml</filename>
+                        </api>
+                        <api>
+                            <locations>
+                                <location>es.caib.comanda.api.controller.v1.salut</location>
+                            </locations>
+                            <filename>openapi-comanda-salut-v1.yml</filename>
+                        </api>
+                        <api>
+                            <locations>
+                                <location>es.caib.comanda.api.controller.v1.estadistica</location>
+                            </locations>
+                            <filename>openapi-comanda-estadistica-v1.yml</filename>
+                        </api>
+                        <api>
+                            <locations>
+                                <location>es.caib.comanda.api.controller.v1.log</location>
+                            </locations>
+                            <filename>openapi-comanda-log-v1.yml</filename>
                         </api>
                     </apis>
                 </configuration>
             </plugin>
 
-            <!-- Generar el client Java (RestTemplate) a partir del JSON generat -->
+            <!-- Generar els clients Java a partir dels yaml openapi generats -->
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>7.10.0</version>
+                <version>7.17.0</version>
                 <executions>
+                    <!-- Servers -->
                     <execution>
-                        <id>generate-client</id>
+                        <id>generate-salut-jaxrs-server</id>
                         <phase>install</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-app-v1.yml</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <output>${project.basedir}/../api-server-comanda-app-v1</output>
-                            <apiPackage>es.caib.comanda.app.v1.api</apiPackage>
-                            <modelPackage>es.caib.comanda.app.v1.model</modelPackage>
-                            <invokerPackage>es.caib.comanda.app.v1.service</invokerPackage>
-                            <skipValidateSpec>true</skipValidateSpec>
-                            <generateSupportingFiles>false</generateSupportingFiles>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-salut-v1.yml</inputSpec> <!-- Fitxer OpenAPI -->
+                            <generatorName>jaxrs-resteasy</generatorName><!-- Generador de servidor. Altres opcions disponibles: jaxrs, jaxrs-spec, jaxrs-cxf, jaxrs-resteasy -->
+                            <output>${project.basedir}/../comanda-api-servers/comanda-api-server-salut-v1</output> <!-- Directori de sortida -->
+                            <apiPackage>es.caib.comanda.api.v1.salut</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.salut</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.salut</invokerPackage>
+                            <generateModels>false</generateModels><!-- No generem models -->
+                            <templateDirectory>src/main/resources/openapi/templates/server</templateDirectory>
+                            <configOptions> <!-- Opcions de configuració -->
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-server-salut-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Server stub - Salut v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe> <!-- Manté javax.ws.rs -->
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <sourceFolder>src/main/java</sourceFolder>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-estadistica-jaxrs-server</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-estadistica-v1.yml</inputSpec> <!-- Fitxer OpenAPI -->
+                            <generatorName>jaxrs-resteasy</generatorName><!-- Generador de servidor. Altres opcions disponibles: jaxrs, jaxrs-spec, jaxrs-cxf, jaxrs-resteasy -->
+                            <output>${project.basedir}/../comanda-api-servers/comanda-api-server-estadistica-v1</output> <!-- Directori de sortida -->
+                            <apiPackage>es.caib.comanda.api.v1.estadistica</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.estadistica</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.estadistica</invokerPackage>
+                            <generateModels>false</generateModels><!-- No generem models -->
+                            <templateDirectory>src/main/resources/openapi/templates/server</templateDirectory>
+                            <configOptions> <!-- Opcions de configuració -->
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-server-estadistica-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Server stub - Estadistica v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe> <!-- Manté javax.ws.rs -->
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <sourceFolder>src/main/java</sourceFolder>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-log-jaxrs-server</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-log-v1.yml</inputSpec> <!-- Fitxer OpenAPI -->
+                            <generatorName>jaxrs-resteasy</generatorName><!-- Generador de servidor. Altres opcions disponibles: jaxrs, jaxrs-spec, jaxrs-cxf, jaxrs-resteasy -->
+                            <output>${project.basedir}/../comanda-api-servers/comanda-api-server-log-v1</output> <!-- Directori de sortida -->
+                            <apiPackage>es.caib.comanda.api.v1.log</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.log</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.log</invokerPackage>
+                            <generateModels>false</generateModels><!-- No generem models -->
+                            <templateDirectory>src/main/resources/openapi/templates/server</templateDirectory>
+                            <configOptions> <!-- Opcions de configuració -->
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-server-log-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Server stub - Log v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe> <!-- Manté javax.ws.rs -->
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <sourceFolder>src/main/java</sourceFolder>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <!-- Clients -->
+                    <execution>
+                        <id>generate-salut-jaxrs-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-salut-v1.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>resteasy</library>
+                            <output>${project.basedir}/../comanda-api-clients/comanda-api-client-salut-v1</output>
+                            <apiPackage>es.caib.comanda.api.v1.salut</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.salut</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.salut</invokerPackage>
+                            <generateModels>false</generateModels>
+                            <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
+<!--                            <generateApiTests>false</generateApiTests>-->
                             <configOptions>
                                 <groupId>es.caib.comanda</groupId>
-                                <artifactId>comanda-api-app-client-v1</artifactId>
+                                <artifactId>comanda-api-client-salut-v1</artifactId>
                                 <artifactVersion>${project.version}</artifactVersion>
-                                <artifactDescription>Comanda - API Rest - Comanda --> App v1</artifactDescription>
+                                <artifactDescription>Comanda - API Rest Client - Salut v1</artifactDescription>
                                 <dateLibrary>java8</dateLibrary>
                                 <useTags>true</useTags>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
@@ -151,7 +282,157 @@
                                 <useJakartaEe>false</useJakartaEe>
                                 <usePrimitives>true</usePrimitives>
                             </configOptions>
-                            <addCompileSourceRoot>false</addCompileSourceRoot>
+<!--                            <addCompileSourceRoot>false</addCompileSourceRoot>-->
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-estadistica-jaxrs-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-estadistica-v1.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>resteasy</library>
+                            <output>${project.basedir}/../comanda-api-clients/comanda-api-client-estadistica-v1</output>
+                            <apiPackage>es.caib.comanda.api.v1.estadistica</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.estadistica</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.estadistica</invokerPackage>
+                            <generateModels>false</generateModels>
+                            <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
+                            <configOptions>
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-client-estadistica-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Client - Estadistica v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe>
+                                <usePrimitives>true</usePrimitives>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-log-jaxrs-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-log-v1.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>resteasy</library>
+                            <output>${project.basedir}/../comanda-api-clients/comanda-api-client-log-v1</output>
+                            <apiPackage>es.caib.comanda.api.v1.log</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.log</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.log</invokerPackage>
+                            <generateModels>false</generateModels>
+                            <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
+                            <configOptions>
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-client-log-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Client - Log v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe>
+                                <usePrimitives>true</usePrimitives>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-tasca-jaxrs-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-tasca-v1.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>resteasy</library>
+                            <output>${project.basedir}/../comanda-api-clients/comanda-api-client-tasca-v1</output>
+                            <apiPackage>es.caib.comanda.api.v1.tasca</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.tasca</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.tasca</invokerPackage>
+                            <generateModels>false</generateModels>
+                            <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
+                            <configOptions>
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-client-tasca-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Client - Tasca v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe>
+                                <usePrimitives>true</usePrimitives>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-avis-jaxrs-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-avis-v1.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>resteasy</library>
+                            <output>${project.basedir}/../comanda-api-clients/comanda-api-client-avis-v1</output>
+                            <apiPackage>es.caib.comanda.api.v1.avis</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.avis</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.avis</invokerPackage>
+                            <generateModels>false</generateModels>
+                            <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
+                            <configOptions>
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-client-avis-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Client - Avis v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe>
+                                <usePrimitives>true</usePrimitives>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-permis-jaxrs-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-permis-v1.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>resteasy</library>
+                            <output>${project.basedir}/../comanda-api-clients/comanda-api-client-permis-v1</output>
+                            <apiPackage>es.caib.comanda.api.v1.permis</apiPackage>
+                            <modelPackage>es.caib.comanda.model.v1.permis</modelPackage>
+                            <invokerPackage>es.caib.comanda.service.v1.permis</invokerPackage>
+                            <generateModels>false</generateModels>
+                            <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
+                            <configOptions>
+                                <groupId>es.caib.comanda</groupId>
+                                <artifactId>comanda-api-client-permis-v1</artifactId>
+                                <artifactVersion>${project.version}</artifactVersion>
+                                <artifactDescription>Comanda - API Rest Client - Permis v1</artifactDescription>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <java11>true</java11>
+                                <useJakartaEe>false</useJakartaEe>
+                                <usePrimitives>true</usePrimitives>
+                            </configOptions>
                         </configuration>
                     </execution>
                 </executions>
@@ -178,6 +459,30 @@
 <!--                    </execution>-->
 <!--                </executions>-->
 <!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>

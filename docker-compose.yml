@@ -15,7 +15,7 @@ services:
     depends_on:
       - comanda
   comanda:
-    image: comanda:0.1.0
+    image: comanda:0.1.1
     container_name: jboss-comanda
     ports:
       - ${APP_PORT:-8080}:8080

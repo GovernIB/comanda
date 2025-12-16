@@ -324,6 +324,7 @@ const translationEn: translationResourcesType = {
                 column: {
                     appEntorn: "Application - Environment",
                 },
+                entornAppInvalid: "Deleted application environment",
             }
         },
         avisos: {

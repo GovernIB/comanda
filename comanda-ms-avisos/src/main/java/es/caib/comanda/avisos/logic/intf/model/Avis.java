@@ -1,7 +1,7 @@
 package es.caib.comanda.avisos.logic.intf.model;
 
+import es.caib.comanda.model.v1.avis.AvisTipus;
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.broker.model.AvisTipus;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;

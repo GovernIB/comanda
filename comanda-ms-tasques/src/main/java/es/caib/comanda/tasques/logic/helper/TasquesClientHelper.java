@@ -5,6 +5,7 @@ import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,13 +29,15 @@ public class TasquesClientHelper {
 
     @Cacheable(value = "entornAppCache", key = "#entornAppId")
     public EntornApp entornAppFindById(Long entornAppId) {
-        EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
-                entornAppId,
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (entornApp != null) {
-            return entornApp.getContent();
-        }
+        try {
+            EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
+                    entornAppId,
+                    null,
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader());
+            if (entornApp != null) {
+                return entornApp.getContent();
+            }
+        } catch (FeignException.NotFound ignored) {}
         return null;
     }
 

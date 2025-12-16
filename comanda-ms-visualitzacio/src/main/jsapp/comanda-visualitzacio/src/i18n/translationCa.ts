@@ -324,6 +324,7 @@ const translationCa = {
                 column: {
                     appEntorn: "Aplicació - Entorn",
                 },
+                entornAppInvalid: "Entorn de l'aplicació esborrat",
             }
         },
         avisos: {

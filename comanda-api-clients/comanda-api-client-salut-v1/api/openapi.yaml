@@ -1,0 +1,659 @@
+openapi: 3.0.3
+info:
+  title: comanda-api-interna
+  version: 0.1.1
+servers:
+- url: ""
+tags:
+- description: Contracte d'API de salut i metadades de l'aplicació que COMANDA pot
+    consultar
+  name: COMANDA → APP / Salut
+paths:
+  /v1/salut:
+    get:
+      description: "Retorna l'estat de salut funcional i integracions, amb metadades\
+        \ de versió."
+      operationId: salut
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalutInfo"
+          description: successful operation
+      summary: Obtenir informació de l'estat de salut de l'aplicació
+      tags:
+      - COMANDA → APP / Salut
+      x-operation-name: salut
+      x-accepts:
+      - application/json
+  /v1/salut/info:
+    get:
+      description: "Retorna dades bàsiques de l'aplicació (codi, nom, versió, data\
+        \ de build, etc.) i contextos exposats."
+      operationId: salutInfo
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppInfo"
+          description: successful operation
+      summary: Obtenir informació de l'aplicació
+      tags:
+      - COMANDA → APP / Salut
+      x-operation-name: salutInfo
+      x-accepts:
+      - application/json
+components:
+  schemas:
+    AppInfo:
+      description: Informació bàsica de l'aplicació consultada per COMANDA
+      example:
+        revisio: a1b2c3d
+        data: 2000-01-23T04:56:07.000+00:00
+        versio: 2.1.0
+        jdkVersion: Temurin-17.0.9
+        subsistemes:
+        - nom: Alta de elements via REST
+          codi: ALTA_REST
+        - nom: Alta de elements via REST
+          codi: ALTA_REST
+        contexts:
+        - path: /appapi/interna
+          api: https://dev.caib.es/app/internaapi/swagger/index.html
+          nom: Api interna
+          codi: API_INT
+          manuals:
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+        - path: /appapi/interna
+          api: https://dev.caib.es/app/internaapi/swagger/index.html
+          nom: Api interna
+          codi: API_INT
+          manuals:
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+        versioJboss: JBoss EAP 7.2
+        integracions:
+        - nom: Registre
+          codi: REG
+        - nom: Registre
+          codi: REG
+        nom: APLICACIO
+        codi: APP
+      properties:
+        codi:
+          description: Codi identificador de l'aplicació
+          example: APP
+          maxLength: 16
+          minLength: 1
+          type: string
+        nom:
+          description: Nom complet de l'aplicació
+          example: APLICACIO
+          maxLength: 100
+          minLength: 1
+          type: string
+        versio:
+          description: Versió desplegada de l'aplicació
+          example: 2.1.0
+          maxLength: 10
+          minLength: 1
+          type: string
+        data:
+          description: Data de compilació o de la informació reportada
+          format: date-time
+          type: string
+        revisio:
+          description: Revisió o identificador de commit de la build
+          example: a1b2c3d
+          maxLength: 64
+          minLength: 0
+          type: string
+        jdkVersion:
+          description: Versió de JDK amb la qual s'executa l'aplicació
+          example: Temurin-17.0.9
+          maxLength: 10
+          minLength: 0
+          type: string
+        versioJboss:
+          description: Versió de JBoss/WildFly amb la qual s'executa l'aplicació
+          example: JBoss EAP 7.2
+          type: string
+        integracions:
+          description: Llista d'integracions exposades per l'aplicació
+          items:
+            $ref: "#/components/schemas/IntegracioInfo"
+          type: array
+        subsistemes:
+          description: Llista de subsistemes interns amb el seu estat
+          items:
+            $ref: "#/components/schemas/SubsistemaInfo"
+          type: array
+        contexts:
+          description: Contextos o endpoints base exposats per l'aplicació
+          items:
+            $ref: "#/components/schemas/ContextInfo"
+          type: array
+      required:
+      - codi
+      - data
+      - nom
+      - versio
+      type: object
+    ContextInfo:
+      description: Context o 'namespace' funcional exposat per l'aplicació
+      example:
+        path: /appapi/interna
+        api: https://dev.caib.es/app/internaapi/swagger/index.html
+        nom: Api interna
+        codi: API_INT
+        manuals:
+        - path: https://www.caib.es/docs/guia-usuari.pdf
+          nom: Guia d'usuari
+        - path: https://www.caib.es/docs/guia-usuari.pdf
+          nom: Guia d'usuari
+      properties:
+        codi:
+          description: Codi del context
+          example: API_INT
+          maxLength: 64
+          minLength: 1
+          type: string
+        nom:
+          description: Nom descriptiu del context
+          example: Api interna
+          maxLength: 255
+          minLength: 1
+          type: string
+        path:
+          description: Path base del context
+          example: /appapi/interna
+          maxLength: 255
+          minLength: 1
+          type: string
+        manuals:
+          description: Llista de manuals associats al context
+          items:
+            $ref: "#/components/schemas/Manual"
+          type: array
+        api:
+          description: "URL o especificació OpenAPI del context, si està disponible"
+          example: https://dev.caib.es/app/internaapi/swagger/index.html
+          maxLength: 255
+          minLength: 0
+          type: string
+      required:
+      - codi
+      - nom
+      - path
+      type: object
+    EstatSalut:
+      example:
+        latencia: 0
+        estat: UP
+      properties:
+        estat:
+          $ref: "#/components/schemas/EstatSalutEnum"
+        latencia:
+          format: int32
+          type: integer
+      type: object
+    EstatSalutEnum:
+      description: Enumerat d'estats possibles de salut d'un component
+      enum:
+      - UP
+      - WARN
+      - DEGRADED
+      - DOWN
+      - MAINTENANCE
+      - UNKNOWN
+      - ERROR
+      type: string
+    InformacioSistema:
+      description: Informació resum de l'estat del sistema on s'executa l'aplicació
+      example:
+        espaiDiscTotal: 500 GB
+        memoriaDisponible: 8 GB
+        cpuSistema: 45.2%
+        espaiDiscLliure: 250 GB
+        memoriaTotal: 16 GB
+        sistemaOperatiu: Linux 5.4.0
+        processadors: 8
+        dataArrencada: 15/01/2024 10:30
+        carregaSistema: "2.45"
+        tempsFuncionant: "5 dies, 03:25:14"
+      properties:
+        processadors:
+          description: Nombre de processadors disponibles
+          example: 8
+          format: int32
+          type: integer
+        carregaSistema:
+          description: Càrrega actual del sistema
+          example: "2.45"
+          type: string
+        cpuSistema:
+          description: Percentatge d'ús de CPU del sistema
+          example: 45.2%
+          type: string
+        memoriaTotal:
+          description: Memòria total del sistema
+          example: 16 GB
+          type: string
+        memoriaDisponible:
+          description: Memòria disponible del sistema
+          example: 8 GB
+          type: string
+        espaiDiscTotal:
+          description: Espai total del disc
+          example: 500 GB
+          type: string
+        espaiDiscLliure:
+          description: Espai lliure del disc
+          example: 250 GB
+          type: string
+        sistemaOperatiu:
+          description: Sistema operatiu
+          example: Linux 5.4.0
+          type: string
+        dataArrencada:
+          description: Data d'arrencada del sistema
+          example: 15/01/2024 10:30
+          type: string
+        tempsFuncionant:
+          description: Temps de funcionament del sistema
+          example: "5 dies, 03:25:14"
+          type: string
+      type: object
+    IntegracioInfo:
+      description: Informació d'una integració exposada per l'aplicació
+      example:
+        nom: Registre
+        codi: REG
+      properties:
+        codi:
+          description: Codi identificador de la integració
+          example: REG
+          maxLength: 32
+          minLength: 1
+          type: string
+        nom:
+          description: Nom descriptiu de la integració
+          example: Registre
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - codi
+      - nom
+      type: object
+    IntegracioPeticions:
+      description: "Mètriques de peticions d'una integració: totals i darrer perí\
+        ode"
+      example:
+        totalError: 5
+        totalTempsMig: 5
+        endpoint: https://path/to/integracio
+        peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+          :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
+          :0,\"endpoint\":\"https://path/to/entorn1\"},\"ENT2\":{\"totalOk\":0,\"\
+          totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
+          :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"}}"
+        tempsMigUltimPeriode: 9
+        totalOk: 1
+        peticionsOkUltimPeriode: 2
+        peticionsErrorUltimPeriode: 7
+      properties:
+        totalOk:
+          description: Nombre total de peticions amb resultat correcte
+          format: int64
+          type: integer
+        totalError:
+          description: Nombre total de peticions amb error
+          format: int64
+          type: integer
+        totalTempsMig:
+          description: Temps mig total de resposta (ms)
+          format: int32
+          type: integer
+        peticionsOkUltimPeriode:
+          description: Peticions OK en el darrer període
+          format: int64
+          type: integer
+        peticionsErrorUltimPeriode:
+          description: Peticions en error en el darrer període
+          format: int64
+          type: integer
+        tempsMigUltimPeriode:
+          description: Temps mig de resposta en el darrer període (ms)
+          format: int32
+          type: integer
+        endpoint:
+          description: Endpoint concret associat a aquestes mètriques
+          example: https://path/to/integracio
+          maxLength: 255
+          minLength: 0
+          type: string
+        peticionsPerEntorn:
+          additionalProperties:
+            $ref: "#/components/schemas/IntegracioPeticions"
+          description: Mètriques per entorn (clau = codi d'entorn)
+          example: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"\
+            peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
+            :0,\"endpoint\":\"https://path/to/entorn1\"},\"ENT2\":{\"totalOk\":0,\"\
+            totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
+            :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"\
+            }}"
+          type: object
+      required:
+      - peticionsErrorUltimPeriode
+      - peticionsOkUltimPeriode
+      - tempsMigUltimPeriode
+      - totalError
+      - totalOk
+      - totalTempsMig
+      type: object
+    IntegracioSalut:
+      description: Estat de salut d'una integració concreta
+      example:
+        latencia: 6
+        estat: null
+        codi: REG
+        peticions:
+          totalError: 5
+          totalTempsMig: 5
+          endpoint: https://path/to/integracio
+          peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+            :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
+            :0,\"endpoint\":\"https://path/to/entorn1\"},\"ENT2\":{\"totalOk\":0,\"\
+            totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
+            :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"\
+            }}"
+          tempsMigUltimPeriode: 9
+          totalOk: 1
+          peticionsOkUltimPeriode: 2
+          peticionsErrorUltimPeriode: 7
+      properties:
+        estat:
+          $ref: "#/components/schemas/EstatSalutEnum"
+        latencia:
+          format: int32
+          type: integer
+        codi:
+          description: Codi de la integració
+          example: REG
+          maxLength: 32
+          minLength: 1
+          type: string
+        peticions:
+          $ref: "#/components/schemas/IntegracioPeticions"
+      required:
+      - codi
+      type: object
+    Manual:
+      description: Referència a un manual o documentació funcional
+      example:
+        path: https://www.caib.es/docs/guia-usuari.pdf
+        nom: Guia d'usuari
+      properties:
+        nom:
+          description: Nom del manual
+          example: Guia d'usuari
+          maxLength: 128
+          minLength: 1
+          type: string
+        path:
+          description: Ruta o URL del manual
+          example: https://www.caib.es/docs/guia-usuari.pdf
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - nom
+      - path
+      type: object
+    MissatgeSalut:
+      description: Missatge informatiu/alerta de salut amb nivell de gravetat
+      example:
+        missatge: Manteniment programat a les 22:00h
+        data: 2000-01-23T04:56:07.000+00:00
+        nivell: ERROR
+      properties:
+        data:
+          description: Instant del missatge
+          format: date-time
+          type: string
+        nivell:
+          $ref: "#/components/schemas/SalutNivell"
+        missatge:
+          description: Text del missatge
+          example: Manteniment programat a les 22:00h
+          maxLength: 2048
+          minLength: 1
+          type: string
+      required:
+      - data
+      - missatge
+      - nivell
+      type: object
+    SalutInfo:
+      description: Estat de salut funcional de l'aplicació i metadades associades
+      example:
+        estatGlobal:
+          latencia: 0
+          estat: UP
+        missatges:
+        - missatge: Manteniment programat a les 22:00h
+          data: 2000-01-23T04:56:07.000+00:00
+          nivell: ERROR
+        - missatge: Manteniment programat a les 22:00h
+          data: 2000-01-23T04:56:07.000+00:00
+          nivell: ERROR
+        data: 2000-01-23T04:56:07.000+00:00
+        estatBaseDeDades:
+          latencia: 0
+          estat: UP
+        versio: 1.4.3
+        subsistemes:
+        - totalError: 4
+          totalTempsMig: 7
+          latencia: 3
+          tempsMigUltimPeriode: 1
+          estat: null
+          totalOk: 2
+          peticionsOkUltimPeriode: 1
+          codi: BD
+          peticionsErrorUltimPeriode: 1
+        - totalError: 4
+          totalTempsMig: 7
+          latencia: 3
+          tempsMigUltimPeriode: 1
+          estat: null
+          totalOk: 2
+          peticionsOkUltimPeriode: 1
+          codi: BD
+          peticionsErrorUltimPeriode: 1
+        informacioSistema:
+          espaiDiscTotal: 500 GB
+          memoriaDisponible: 8 GB
+          cpuSistema: 45.2%
+          espaiDiscLliure: 250 GB
+          memoriaTotal: 16 GB
+          sistemaOperatiu: Linux 5.4.0
+          processadors: 8
+          dataArrencada: 15/01/2024 10:30
+          carregaSistema: "2.45"
+          tempsFuncionant: "5 dies, 03:25:14"
+        integracions:
+        - latencia: 6
+          estat: null
+          codi: REG
+          peticions:
+            totalError: 5
+            totalTempsMig: 5
+            endpoint: https://path/to/integracio
+            peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+              :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"\
+              tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn1\"},\"\
+              ENT2\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\"\
+              :0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\":0,\"endpoint\"\
+              :\"https://path/to/entorn2\"}}"
+            tempsMigUltimPeriode: 9
+            totalOk: 1
+            peticionsOkUltimPeriode: 2
+            peticionsErrorUltimPeriode: 7
+        - latencia: 6
+          estat: null
+          codi: REG
+          peticions:
+            totalError: 5
+            totalTempsMig: 5
+            endpoint: https://path/to/integracio
+            peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+              :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"\
+              tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn1\"},\"\
+              ENT2\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\"\
+              :0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\":0,\"endpoint\"\
+              :\"https://path/to/entorn2\"}}"
+            tempsMigUltimPeriode: 9
+            totalOk: 1
+            peticionsOkUltimPeriode: 2
+            peticionsErrorUltimPeriode: 7
+        codi: APP
+      properties:
+        codi:
+          description: Codi identificador de l'aplicació
+          example: APP
+          maxLength: 16
+          minLength: 1
+          type: string
+        data:
+          description: Instant de generació de l'estat de salut
+          format: date-time
+          type: string
+        estatGlobal:
+          $ref: "#/components/schemas/EstatSalut"
+        estatBaseDeDades:
+          $ref: "#/components/schemas/EstatSalut"
+        integracions:
+          description: Integracions amb el seu estat
+          items:
+            $ref: "#/components/schemas/IntegracioSalut"
+          type: array
+        informacioSistema:
+          $ref: "#/components/schemas/InformacioSistema"
+        missatges:
+          description: Missatges informatius o d'alerta
+          items:
+            $ref: "#/components/schemas/MissatgeSalut"
+          type: array
+        versio:
+          description: Versió de l'aplicació
+          example: 1.4.3
+          maxLength: 10
+          minLength: 0
+          type: string
+        subsistemes:
+          description: Subsistemes interns amb el seu estat
+          items:
+            $ref: "#/components/schemas/SubsistemaSalut"
+          type: array
+      required:
+      - codi
+      - data
+      - estatBaseDeDades
+      - estatGlobal
+      type: object
+    SalutNivell:
+      description: Nivell de gravetat d'un missatge de salut
+      enum:
+      - ERROR
+      - WARN
+      - INFO
+      type: string
+    SubsistemaInfo:
+      description: Informació d'un subsistema intern de l'aplicació
+      example:
+        nom: Alta de elements via REST
+        codi: ALTA_REST
+      properties:
+        codi:
+          description: Codi del subsistema
+          example: ALTA_REST
+          maxLength: 64
+          minLength: 1
+          type: string
+        nom:
+          description: Nom del subsistema
+          example: Alta de elements via REST
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - codi
+      - nom
+      type: object
+    SubsistemaSalut:
+      description: Estat de salut i mètriques d'un subsistema intern
+      example:
+        totalError: 4
+        totalTempsMig: 7
+        latencia: 3
+        tempsMigUltimPeriode: 1
+        estat: null
+        totalOk: 2
+        peticionsOkUltimPeriode: 1
+        codi: BD
+        peticionsErrorUltimPeriode: 1
+      properties:
+        estat:
+          $ref: "#/components/schemas/EstatSalutEnum"
+        latencia:
+          format: int32
+          type: integer
+        codi:
+          description: Codi del subsistema
+          example: BD
+          maxLength: 32
+          minLength: 1
+          type: string
+        totalOk:
+          description: Total de peticions amb resultat correcte
+          format: int64
+          type: integer
+        totalError:
+          description: Total de peticions amb error
+          format: int64
+          type: integer
+        totalTempsMig:
+          description: Temps mig total de resposta (ms)
+          format: int32
+          type: integer
+        peticionsOkUltimPeriode:
+          description: Peticions OK en el darrer període
+          format: int64
+          type: integer
+        peticionsErrorUltimPeriode:
+          description: Peticions en error en el darrer període
+          format: int64
+          type: integer
+        tempsMigUltimPeriode:
+          description: Temps mig de resposta en el darrer període (ms)
+          format: int32
+          type: integer
+      required:
+      - codi
+      - peticionsErrorUltimPeriode
+      - peticionsOkUltimPeriode
+      - tempsMigUltimPeriode
+      - totalError
+      - totalOk
+      - totalTempsMig
+      type: object
+

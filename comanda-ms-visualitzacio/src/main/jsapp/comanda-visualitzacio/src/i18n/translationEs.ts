@@ -324,6 +324,7 @@ const translationEs: translationResourcesType = {
                 column: {
                     appEntorn: "Aplicación - Entorno",
                 },
+                entornAppInvalid: "Entorno de la aplicación eliminado",
             }
         },
         avisos: {

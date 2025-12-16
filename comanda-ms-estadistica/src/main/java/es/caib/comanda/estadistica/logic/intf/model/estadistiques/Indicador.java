@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.estadistica.model.Format;
+import es.caib.comanda.model.v1.estadistica.Format;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;

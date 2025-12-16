@@ -1,0 +1,599 @@
+openapi: 3.0.3
+info:
+  title: comanda-api-interna
+  version: 0.1.1
+servers:
+- url: ""
+tags:
+- description: "Contracte per a la gestió CRUD d'avisos a Comanda. Les peticions rebudes\
+    \ per aquest servei es processaran asíncronament, de manera que en cap cas es\
+    \ rebrà una resposta amb el resultat de l'operació com a resposta de les peticions."
+  name: APP → COMANDA / Avisos
+paths:
+  /v1/avisos:
+    get:
+      description: Obté un llistat paginat d'avisos amb la possibilitat d'aplicar
+        filtres de cerca.
+      operationId: obtenirLlistatAvisos
+      parameters:
+      - description: Filtre ràpid
+        explode: true
+        in: query
+        name: quickFilter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filtre avançat en format JSON o expressió del MS
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Consultes predefinides
+        explode: true
+        in: query
+        name: namedQueries
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Perspectives de camp
+        explode: true
+        in: query
+        name: perspectives
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Número de pàgina
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Mida de pàgina
+        explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          format: int32
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvisPage"
+          description: successful operation
+      summary: Llistat d'avisos
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: obtenirLlistatAvisos
+      x-accepts:
+      - application/json
+    post:
+      description: Afegeix un missatge d'alta d'avís a una cua de events per a que
+        es crei aquest de forma asíncrona a Comanda.
+      operationId: crearAvis
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Avis"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació d'un avís
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: crearAvis
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/avisos/multiple:
+    post:
+      description: Afegeix múltiples missatges d'alta d'avisos a una cua de events
+        per a que es creïn aquests de forma asíncrona a Comanda.
+      operationId: crearMultiplesAvisos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Avis"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació de múltiples avisos
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: crearMultiplesAvisos
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+    put:
+      description: "Es comprova si els avisos existeixen, i en cas afirmatiu, s'afegeixen\
+        \ missatges de modificació d'avisos a una cua de events per a que es modifiquin\
+        \ aquests de forma asíncrona a Comanda."
+      operationId: modificarMultiplesAvisos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Avis"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació de múltiples avisos
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: modificarMultiplesAvisos
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/avisos/{identificador}:
+    get:
+      description: "Obté les dades d'un avís a partir del seu identificador, codi\
+        \ d'aplicació i codi d'entorn."
+      operationId: consultarAvis
+      parameters:
+      - description: Identificador de l'avís
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Codi de l'aplicació
+        explode: true
+        in: query
+        name: appCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Codi de l'entorn
+        explode: true
+        in: query
+        name: entornCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Avis"
+          description: successful operation
+      summary: Consulta d'un avís
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: consultarAvis
+      x-accepts:
+      - application/json
+    put:
+      description: "Es comprova si l'avís existeix, i en cas afirmatiu, s'afegeix\
+        \ un missatge de modificació d'avís a una cua de events per a que es modifiqui\
+        \ aquest de forma asíncrona a Comanda."
+      operationId: modificarAvis
+      parameters:
+      - description: Identificador de l'avís
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Avis"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació d'un avís existent
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: modificarAvis
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+components:
+  schemas:
+    Avis:
+      description: Representa un avís o notificació publicada a COMANDA
+      example:
+        responsable: usr1234
+        entornCodi: DEV
+        descripcio: Aturada de manteniment el diumenge a les 8:00
+        tipus: NOTICIA
+        nom: Interrupció programada
+        redireccio:
+          userInfo: userInfo
+          handler: null
+          query: query
+          path: path
+          protocol: protocol
+          ref: ref
+          file: file
+          port: 0
+          hashCode: 5
+          authority: authority
+          host: host
+          hostAddress:
+            canonicalHostName: canonicalHostName
+            holder:
+              originalHostName: originalHostName
+              hostName: hostName
+              address: 6
+              family: 1
+          tempState:
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 5
+            hashCode: 2
+            authority: authority
+            host: host
+        usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+        grup: SUPORT
+        appCodi: PFI
+        dataFi: 2025-11-21T10:00:00Z
+        dataInici: 2025-11-21T08:00:00Z
+        grupsAmbPermis: "[\"USUARIS\"]"
+        identificador: AV-2025-0001
+      properties:
+        appCodi:
+          description: Codi de l'aplicació que publica l'avís
+          example: PFI
+          type: string
+        entornCodi:
+          description: Codi de l'entorn de l'aplicació
+          example: DEV
+          type: string
+        identificador:
+          description: Identificador únic de l'avís
+          example: AV-2025-0001
+          type: string
+        tipus:
+          $ref: "#/components/schemas/AvisTipus"
+        nom:
+          description: Títol de l'avís
+          example: Interrupció programada
+          type: string
+        descripcio:
+          description: Descripció de l'avís
+          example: Aturada de manteniment el diumenge a les 8:00
+          type: string
+        dataInici:
+          description: Data d'inici de vigència
+          example: 2025-11-21T08:00:00Z
+          format: date-time
+          type: string
+        dataFi:
+          description: Data de fi de vigència
+          example: 2025-11-21T10:00:00Z
+          format: date-time
+          type: string
+        redireccio:
+          $ref: "#/components/schemas/URL"
+        responsable:
+          description: Usuari responsable
+          example: usr1234
+          type: string
+        grup:
+          description: Grup responsable
+          example: SUPORT
+          type: string
+        usuarisAmbPermis:
+          description: Usuaris amb permís de visualització
+          example: "[\"usr1\", \"usr2\"]"
+          items:
+            type: string
+          type: array
+        grupsAmbPermis:
+          description: Grups amb permís de visualització
+          example: "[\"USUARIS\"]"
+          items:
+            type: string
+          type: array
+      type: object
+    AvisPage:
+      example:
+        links:
+        - rel: rel
+          href: href
+        - rel: rel
+          href: href
+        page:
+          number: 7
+          size: 9
+          totalPages: 2
+          totalElements: 3
+        content:
+        - responsable: usr1234
+          entornCodi: DEV
+          descripcio: Aturada de manteniment el diumenge a les 8:00
+          tipus: NOTICIA
+          nom: Interrupció programada
+          redireccio:
+            userInfo: userInfo
+            handler: null
+            query: query
+            path: path
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 0
+            hashCode: 5
+            authority: authority
+            host: host
+            hostAddress:
+              canonicalHostName: canonicalHostName
+              holder:
+                originalHostName: originalHostName
+                hostName: hostName
+                address: 6
+                family: 1
+            tempState:
+              protocol: protocol
+              ref: ref
+              file: file
+              port: 5
+              hashCode: 2
+              authority: authority
+              host: host
+          usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+          grup: SUPORT
+          appCodi: PFI
+          dataFi: 2025-11-21T10:00:00Z
+          dataInici: 2025-11-21T08:00:00Z
+          grupsAmbPermis: "[\"USUARIS\"]"
+          identificador: AV-2025-0001
+        - responsable: usr1234
+          entornCodi: DEV
+          descripcio: Aturada de manteniment el diumenge a les 8:00
+          tipus: NOTICIA
+          nom: Interrupció programada
+          redireccio:
+            userInfo: userInfo
+            handler: null
+            query: query
+            path: path
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 0
+            hashCode: 5
+            authority: authority
+            host: host
+            hostAddress:
+              canonicalHostName: canonicalHostName
+              holder:
+                originalHostName: originalHostName
+                hostName: hostName
+                address: 6
+                family: 1
+            tempState:
+              protocol: protocol
+              ref: ref
+              file: file
+              port: 5
+              hashCode: 2
+              authority: authority
+              host: host
+          usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+          grup: SUPORT
+          appCodi: PFI
+          dataFi: 2025-11-21T10:00:00Z
+          dataInici: 2025-11-21T08:00:00Z
+          grupsAmbPermis: "[\"USUARIS\"]"
+          identificador: AV-2025-0001
+      properties:
+        content:
+          description: Contingut de la pàgina
+          items:
+            $ref: "#/components/schemas/Avis"
+          type: array
+        page:
+          $ref: "#/components/schemas/PageMetadata"
+        links:
+          description: Enllaços HATEOAS
+          items:
+            $ref: "#/components/schemas/Link"
+          type: array
+      type: object
+    AvisTipus:
+      description: Tipus d'avís publicat a COMANDA
+      enum:
+      - NOTICIA
+      - INFO
+      - ALERTA
+      - ERROR
+      - CRITIC
+      type: string
+    InetAddress:
+      example:
+        canonicalHostName: canonicalHostName
+        holder:
+          originalHostName: originalHostName
+          hostName: hostName
+          address: 6
+          family: 1
+      properties:
+        holder:
+          $ref: "#/components/schemas/InetAddressHolder"
+        canonicalHostName:
+          type: string
+      type: object
+    InetAddressHolder:
+      example:
+        originalHostName: originalHostName
+        hostName: hostName
+        address: 6
+        family: 1
+      properties:
+        originalHostName:
+          type: string
+        hostName:
+          type: string
+        address:
+          format: int32
+          type: integer
+        family:
+          format: int32
+          type: integer
+      type: object
+    Link:
+      example:
+        rel: rel
+        href: href
+      properties:
+        rel:
+          type: string
+        href:
+          type: string
+      type: object
+    PageMetadata:
+      example:
+        number: 7
+        size: 9
+        totalPages: 2
+        totalElements: 3
+      properties:
+        number:
+          format: int64
+          type: integer
+        size:
+          format: int64
+          type: integer
+        totalElements:
+          format: int64
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
+      type: object
+    URL:
+      example:
+        userInfo: userInfo
+        handler: null
+        query: query
+        path: path
+        protocol: protocol
+        ref: ref
+        file: file
+        port: 0
+        hashCode: 5
+        authority: authority
+        host: host
+        hostAddress:
+          canonicalHostName: canonicalHostName
+          holder:
+            originalHostName: originalHostName
+            hostName: hostName
+            address: 6
+            family: 1
+        tempState:
+          protocol: protocol
+          ref: ref
+          file: file
+          port: 5
+          hashCode: 2
+          authority: authority
+          host: host
+      properties:
+        protocol:
+          type: string
+        host:
+          type: string
+        port:
+          format: int32
+          type: integer
+        file:
+          type: string
+        query:
+          type: string
+        authority:
+          type: string
+        path:
+          type: string
+        userInfo:
+          type: string
+        ref:
+          type: string
+        hostAddress:
+          $ref: "#/components/schemas/InetAddress"
+        handler:
+          $ref: "#/components/schemas/URLStreamHandler"
+        hashCode:
+          format: int32
+          type: integer
+        tempState:
+          $ref: "#/components/schemas/UrlDeserializedState"
+      type: object
+    URLStreamHandler:
+      type: object
+    UrlDeserializedState:
+      example:
+        protocol: protocol
+        ref: ref
+        file: file
+        port: 5
+        hashCode: 2
+        authority: authority
+        host: host
+      properties:
+        protocol:
+          type: string
+        host:
+          type: string
+        port:
+          format: int32
+          type: integer
+        authority:
+          type: string
+        file:
+          type: string
+        ref:
+          type: string
+        hashCode:
+          format: int32
+          type: integer
+      type: object
+

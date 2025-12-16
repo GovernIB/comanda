@@ -17,5 +17,10 @@
 			<artifactId>comanda-ms-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>comanda-api-utils</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 </project>

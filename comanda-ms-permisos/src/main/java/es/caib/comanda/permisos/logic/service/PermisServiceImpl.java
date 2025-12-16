@@ -12,14 +12,14 @@ import org.springframework.stereotype.Service;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import static es.caib.comanda.ms.broker.model.Cues.CUA_PERMISOS;
+import static es.caib.comanda.base.config.Cues.CUA_PERMISOS;
 
 @Slf4j
 @Service
 public class PermisServiceImpl extends BaseMutableResourceService<Permis, Long, PermisEntity> implements PermisService {
 
     @JmsListener(destination = CUA_PERMISOS)
-    public void receiveMessage(@Payload es.caib.comanda.ms.broker.model.Permis permis,
+    public void receiveMessage(@Payload es.caib.comanda.model.v1.permis.Permis permis,
                                Message message) throws JMSException {
         message.acknowledge();
         log.debug("Permís rebut: " + permis);

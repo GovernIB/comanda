@@ -27,10 +27,13 @@ import java.util.stream.Collectors;
 		EntornServiceClient.class,
 		EntornAppServiceClient.class,
 		MonitorServiceClient.class,
-		SalutServiceClient.class,
-		EstadisticaServiceClient.class,
-		ParametreServiceClient.class,
-		UsuariServiceClient.class
+        SalutServiceClient.class,
+        EstadisticaServiceClient.class,
+        ParametreServiceClient.class,
+        TascaServiceClient.class,
+        AvisServiceClient.class,
+        PermisServiceClient.class,
+        UsuariServiceClient.class
 })
 public class OpenFeignConfig {
 

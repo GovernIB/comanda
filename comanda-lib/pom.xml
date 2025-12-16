@@ -2,42 +2,42 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-<!--	<parent>-->
-<!--		<groupId>es.caib.comanda</groupId>-->
-<!--		<artifactId>comanda-bom</artifactId>-->
-<!--		<version>0.1.1</version>-->
-<!--		<relativePath>../comanda-bom/pom.xml</relativePath>-->
-<!--	</parent>-->
     <groupId>es.caib.comanda</groupId>
 	<artifactId>comanda-lib</artifactId>
 	<version>0.1.1</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
 	<properties>
 		<!-- Compile amb Java 11 per poder anotar amb Swagger OpenAPI v3 -->
+        <lombok.version>1.18.34</lombok.version>
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.source>11</maven.compiler.source>
-        <lombok.version>1.18.34</lombok.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>provided</scope>
+			<groupId>es.caib.comanda</groupId>
+			<artifactId>comanda-api-models</artifactId>
+			<version>${project.version}</version>
 		</dependency>
-		<!-- Bean Validation API for annotations used in DTOs; provided to avoid forcing implementation on consumers -->
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
-			<version>1.1.0.Final</version>
-			<scope>provided</scope>
+			<groupId>es.caib.comanda</groupId>
+			<artifactId>comanda-api-utils</artifactId>
+			<version>${project.version}</version>
 		</dependency>
-		<!-- Swagger OpenAPI v3 annotations to document DTOs -->
 		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-annotations</artifactId>
-			<version>2.2.9</version>
-			<scope>provided</scope>
+			<groupId>es.caib.comanda</groupId>
+			<artifactId>comanda-api-client-tasca-v1</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>es.caib.comanda</groupId>
+			<artifactId>comanda-api-client-avis-v1</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>es.caib.comanda</groupId>
+			<artifactId>comanda-api-client-permis-v1</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -56,63 +56,63 @@
                         </configuration>
                     </execution>
                     <!-- Compilació per Java 7 -->
-                    <execution>
-                        <id>java7-compile</id>
-                        <goals><goal>compile</goal></goals>
-                        <configuration>
-                            <source>1.7</source>
-                            <target>1.7</target>
-                            <compileSourceRoots>
-                                <compileSourceRoot>${project.build.directory}/generated-sources/java7</compileSourceRoot>
-                            </compileSourceRoots>
-                            <outputDirectory>${project.build.directory}/classes-java7</outputDirectory>
-                        </configuration>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>java7-compile</id>-->
+<!--                        <goals><goal>compile</goal></goals>-->
+<!--                        <configuration>-->
+<!--                            <source>1.7</source>-->
+<!--                            <target>1.7</target>-->
+<!--                            <compileSourceRoots>-->
+<!--                                <compileSourceRoot>${project.build.directory}/generated-sources/java7</compileSourceRoot>-->
+<!--                            </compileSourceRoots>-->
+<!--                            <outputDirectory>${project.build.directory}/classes-java7</outputDirectory>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>strip-openapi-annotations</id>
-                        <phase>generate-sources</phase>
-                        <goals><goal>run</goal></goals>
-                        <configuration>
-                            <target>
-                                <!-- Copiar codi font -->
-                                <copy todir="${project.build.directory}/generated-sources/java7">
-                                    <fileset dir="${project.basedir}/src/main/java"/>
-                                </copy>
-                                <!-- Eliminar imports de OpenAPI -->
-                                <replaceregexp match="import io\.swagger\.v3\.oas\.annotations.*;" replace="" flags="g" byline="true">
-                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>
-                                </replaceregexp>
-                                <!-- Eliminar anotacions @Schema en una sola línia -->
-                                <replaceregexp match="^\s*@Schema\([^)]*\)\s*$" replace="" flags="gm" byline="false">
-                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>
-                                </replaceregexp>
-                                <!-- Eliminar anotacions @Schema multilínia -->
-                                <replaceregexp match="@Schema\([^()]*(\([^()]*\)[^()]*)*\)" replace="" flags="gs" byline="false">
-                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>
-                                </replaceregexp>
-                            </target>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>delete-generated-java7</id>
-                        <phase>install</phase>
-                        <goals><goal>run</goal></goals>
-                        <configuration>
-                            <target>
-                                <delete dir="${project.build.directory}/generated-sources/java7" failonerror="false" />
-                                <delete dir="${project.build.directory}/classes-java7" failonerror="false" />
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-antrun-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>strip-openapi-annotations</id>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <goals><goal>run</goal></goals>-->
+<!--                        <configuration>-->
+<!--                            <target>-->
+<!--                                &lt;!&ndash; Copiar codi font &ndash;&gt;-->
+<!--                                <copy todir="${project.build.directory}/generated-sources/java7">-->
+<!--                                    <fileset dir="${project.basedir}/src/main/java"/>-->
+<!--                                </copy>-->
+<!--                                &lt;!&ndash; Eliminar imports de OpenAPI &ndash;&gt;-->
+<!--                                <replaceregexp match="import io\.swagger\.v3\.oas\.annotations.*;" replace="" flags="g" byline="true">-->
+<!--                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>-->
+<!--                                </replaceregexp>-->
+<!--                                &lt;!&ndash; Eliminar anotacions @Schema en una sola línia &ndash;&gt;-->
+<!--                                <replaceregexp match="^\s*@Schema\([^)]*\)\s*$" replace="" flags="gm" byline="false">-->
+<!--                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>-->
+<!--                                </replaceregexp>-->
+<!--                                &lt;!&ndash; Eliminar anotacions @Schema multilínia &ndash;&gt;-->
+<!--                                <replaceregexp match="@Schema\([^()]*(\([^()]*\)[^()]*)*\)" replace="" flags="gs" byline="false">-->
+<!--                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>-->
+<!--                                </replaceregexp>-->
+<!--                            </target>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>delete-generated-java7</id>-->
+<!--                        <phase>install</phase>-->
+<!--                        <goals><goal>run</goal></goals>-->
+<!--                        <configuration>-->
+<!--                            <target>-->
+<!--                                <delete dir="${project.build.directory}/generated-sources/java7" failonerror="false" />-->
+<!--                                <delete dir="${project.build.directory}/classes-java7" failonerror="false" />-->
+<!--                            </target>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -125,15 +125,15 @@
                         <goals><goal>jar</goal></goals>
                     </execution>
                     <!-- JAR Java 7 -->
-                    <execution>
-                        <id>java7-jar</id>
-                        <phase>package</phase>
-                        <goals><goal>jar</goal></goals>
-                        <configuration>
-                            <classifier>java7</classifier>
-                            <classesDirectory>${project.build.directory}/classes-java7</classesDirectory>
-                        </configuration>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>java7-jar</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals><goal>jar</goal></goals>-->
+<!--                        <configuration>-->
+<!--                            <classifier>java7</classifier>-->
+<!--                            <classesDirectory>${project.build.directory}/classes-java7</classesDirectory>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
                 </executions>
             </plugin>
 

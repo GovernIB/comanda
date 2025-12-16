@@ -3,6 +3,7 @@ package es.caib.comanda.ms.salut.service;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.service.SalutSchedulerService;
@@ -33,6 +34,9 @@ public class SalutSchedulerServiceTest {
     private SalutInfoHelper salutInfoHelper;
 
     @Mock
+    private ParametresHelper parametresHelper;
+
+    @Mock
     private TaskExecutor salutWorkerExecutor;
 
     private SalutSchedulerService salutSchedulerService;
@@ -46,6 +50,7 @@ public class SalutSchedulerServiceTest {
         salutSchedulerService = new SalutSchedulerService(
                 salutClientHelper,
                 salutInfoHelper,
+                parametresHelper,
                 salutWorkerExecutor
         );
 

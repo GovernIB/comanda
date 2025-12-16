@@ -72,6 +72,7 @@
 	<modules>
 		<module>comanda-bom</module>
 		<module>comanda-bom-ms</module>
+		<module>comanda-api-models</module>
 		<module>comanda-lib</module>
 		<module>comanda-ms-common</module>
 		<module>comanda-ms-configuracio</module>
@@ -89,7 +90,14 @@
 		<module>comanda-ms-usuaris</module>
 		<module>comanda-ms-acl</module>
 		<module>comanda-back</module>
+		<module>comanda-api-utils</module>
 		<module>comanda-api-interna</module>
+		<module>comanda-api-clients/comanda-api-client-salut-v1</module>
+		<module>comanda-api-clients/comanda-api-client-estadistica-v1</module>
+		<module>comanda-api-clients/comanda-api-client-log-v1</module>
+		<module>comanda-api-clients/comanda-api-client-tasca-v1</module>
+		<module>comanda-api-clients/comanda-api-client-avis-v1</module>
+		<module>comanda-api-clients/comanda-api-client-permis-v1</module>
 		<module>comanda-ear</module>
 		<module>comanda-base</module>
 	</modules>

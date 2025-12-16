@@ -29,6 +29,7 @@ public class BaseConfig {
 	public static final String AUTH_TOKEN_PATH = "/authToken";
 	public static final String SYSENV_PATH = "/sysenv";
 	public static final String MANIFEST_PATH = "/manifest";
+	public static final String API_SALUT_V1 = "/v1/salut";
 
 	public static final String DEFAULT_LOCALE = "ca";
 
@@ -66,6 +67,7 @@ public class BaseConfig {
 
     // Propietats de SALUT
     public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";
+	public static final String PROP_SALUT_LOG_REPORT = PROP_SALUT_PREFIX + "log.report";
 
     // Propietats de tasques
     public static final String PROP_TASCA_PREFIX = PROPERTY_PREFIX + "tasca.";

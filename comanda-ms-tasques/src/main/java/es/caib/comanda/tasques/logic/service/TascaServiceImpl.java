@@ -29,7 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.ZoneId;
 import java.util.*;
 
-import static es.caib.comanda.ms.broker.model.Cues.CUA_TASQUES;
+import static es.caib.comanda.base.config.Cues.CUA_TASQUES;
 
 @Slf4j
 @Service
@@ -47,7 +47,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
 
     @JmsListener(destination = CUA_TASQUES)
     @Transactional
-    public void receiveMessage(@Payload es.caib.comanda.ms.broker.model.Tasca tascaBroker,
+    public void receiveMessage(@Payload es.caib.comanda.model.v1.tasca.Tasca tascaBroker,
                                Message message) throws JMSException {
         message.acknowledge();
         log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker);
@@ -176,7 +176,11 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         @Override
         public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
             EntornApp entornApp = tasquesClientHelper.entornAppFindById(entity.getEntornAppId());
-            resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            if (entornApp != null) {
+                resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            } else {
+                resource.setTreePath(new String[]{"INVALID_ENTORNAPP " + entity.getEntornAppId(), resource.getIdentificador()});
+            }
         }
     }
 

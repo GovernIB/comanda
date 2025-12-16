@@ -19,7 +19,8 @@ import org.springframework.context.annotation.Configuration;
 import javax.annotation.PostConstruct;
 import java.util.Set;
 
-import static es.caib.comanda.ms.broker.model.Cues.*;
+import static es.caib.comanda.base.config.Cues.*;
+
 
 @Slf4j
 @Configuration

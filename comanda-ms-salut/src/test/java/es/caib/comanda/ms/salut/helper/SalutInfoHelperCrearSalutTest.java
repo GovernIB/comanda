@@ -1,16 +1,16 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.ms.salut.model.DetallSalut;
-import es.caib.comanda.ms.salut.model.EstatSalut;
-import es.caib.comanda.ms.salut.model.EstatSalutEnum;
-import es.caib.comanda.ms.salut.model.IntegracioPeticions;
-import es.caib.comanda.ms.salut.model.IntegracioSalut;
-import es.caib.comanda.ms.salut.model.MissatgeSalut;
-import es.caib.comanda.ms.salut.model.SalutInfo;
-import es.caib.comanda.ms.salut.model.SubsistemaSalut;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
-import es.caib.comanda.ms.salut.model.SalutNivell;
+import es.caib.comanda.model.v1.salut.EstatSalut;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.IntegracioPeticions;
+import es.caib.comanda.model.v1.salut.IntegracioSalut;
+import es.caib.comanda.model.v1.salut.MissatgeSalut;
+import es.caib.comanda.model.v1.salut.InformacioSistema;
+import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.model.v1.salut.SalutNivell;
+import es.caib.comanda.model.v1.salut.SubsistemaSalut;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
@@ -97,17 +97,20 @@ class SalutInfoHelperCrearSalutTest {
                 .build();
         MissatgeSalut msg = MissatgeSalut.builder()
                 .data(new Date()).nivell(SalutNivell.WARN).missatge("m1").build();
-        DetallSalut det = DetallSalut.builder().codi("D1").nom("Detall").valor("V").build();
+        // Nou format: objecte InformacioSistema (mantindrem persistència derivant DetallSalut)
+        InformacioSistema sys = InformacioSistema.builder()
+                .memoriaTotal("V")
+                .build();
 
         SalutInfo info = SalutInfo.builder()
                 .codi("C")
                 .data(new Date())
-                .estat(appEstat)
-                .bd(bdEstat)
+                .estatGlobal(appEstat)
+                .estatBaseDeDades(bdEstat)
                 .integracions(Collections.singletonList(integ))
                 .subsistemes(Collections.singletonList(subs))
                 .missatges(Collections.singletonList(msg))
-                .altres(Collections.singletonList(det))
+                .informacioSistema(sys)
                 .build();
 
         when(salutRepository.save(any(SalutEntity.class))).thenAnswer(inv -> {
@@ -156,8 +159,8 @@ class SalutInfoHelperCrearSalutTest {
 
         verify(salutDetallRepository).save(detallCaptor.capture());
         SalutDetallEntity dSaved = detallCaptor.getValue();
-        assertEquals("D1", dSaved.getCodi());
-        assertEquals("Detall", dSaved.getNom());
+        // S'espera que el codi derivi del camp establert a InformacioSistema (memoriaTotal -> MET)
+        assertEquals("MET", dSaved.getCodi());
         assertEquals("V", dSaved.getValor());
     }
 

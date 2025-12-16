@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
+import es.caib.comanda.salut.logic.helper.SalutPurgeService;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
@@ -14,13 +14,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,18 +33,7 @@ class SalutInfoHelperDeletionTest {
     @Mock private SalutMissatgeRepository salutMissatgeRepository;
     @Mock private SalutDetallRepository salutDetallRepository;
 
-    // Constructor requires these too, but not used here; we can provide dummies via additional mocks
-    @Mock private es.caib.comanda.salut.logic.helper.SalutClientHelper salutClientHelper;
-    @Mock private org.springframework.web.client.RestTemplate restTemplate;
-    @Mock private org.springframework.context.ApplicationEventPublisher eventPublisher;
-
-    @InjectMocks private SalutInfoHelper helper;
-
-    private Object invokePrivate(String name, Class<?>[] types, Object... args) throws Exception {
-        Method m = SalutInfoHelper.class.getDeclaredMethod(name, types);
-        m.setAccessible(true);
-        return m.invoke(helper, args);
-    }
+    @InjectMocks private SalutPurgeService purgeService;
 
     @BeforeEach
     void setup() {
@@ -52,8 +42,8 @@ class SalutInfoHelperDeletionTest {
 
     @Test
     void eliminarLlista_null_or_empty_no_ops() throws Exception {
-        invokePrivate("eliminarLlista", new Class[]{List.class}, new Object[]{null});
-        invokePrivate("eliminarLlista", new Class[]{List.class}, Collections.emptyList());
+        purgeService.eliminarLlista(null);
+        purgeService.eliminarLlista(Collections.emptyList());
         verifyNoInteractions(salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, salutDetallRepository, salutRepository);
     }
 
@@ -72,7 +62,7 @@ class SalutInfoHelperDeletionTest {
             when(salutRepository.findIdsByEntornAppIdAndTipusRegistreAndDataBefore(eq(entornAppId), eq(tipus), any(LocalDateTime.class)))
                     .thenReturn(ids);
 
-            invokePrivate("eliminarDadesSalutAntigues", new Class[]{Long.class, TipusRegistreSalut.class, LocalDateTime.class}, entornAppId, tipus, data);
+            purgeService.eliminarDadesSalutAntigues(entornAppId, tipus, data);
 
             int expectedBatches = (size + 499) / 500; // ceil
             // Verifica crides per lots

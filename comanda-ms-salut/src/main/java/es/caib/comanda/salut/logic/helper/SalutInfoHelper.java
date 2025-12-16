@@ -1,11 +1,18 @@
 package es.caib.comanda.salut.logic.helper;
 
 import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.ms.salut.model.*;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.IntegracioPeticions;
+import es.caib.comanda.model.v1.salut.IntegracioSalut;
+import es.caib.comanda.model.v1.salut.MissatgeSalut;
 import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
+import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.model.v1.salut.InformacioSistema;
+import es.caib.comanda.model.v1.salut.DetallSalut;
+import es.caib.comanda.model.v1.salut.SubsistemaSalut;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
@@ -63,8 +70,9 @@ public class SalutInfoHelper {
 
 	private final SalutClientHelper salutClientHelper;
 	private final RestTemplate restTemplate;
-	private final ApplicationEventPublisher eventPublisher;
-	private final MetricsHelper metricsHelper;
+    private final ApplicationEventPublisher eventPublisher;
+    private final MetricsHelper metricsHelper;
+    private final SalutPurgeService salutPurgeService;
 
 	// Locks per assegurar compactació "synchronized" per entornAppId
 	private static final java.util.concurrent.ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
@@ -153,38 +161,60 @@ public class SalutInfoHelper {
 
 	private Long crearSalut(SalutInfo info, Long entornAppId, LocalDateTime currentMinuteTime) {
 		if (info != null) {
-			// Si es desconeix l'estat de l'aplicació, entenem que està DOWN
+			// Si es desconeix l'estatGlobal de l'aplicació, entenem que està DOWN
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornAppId);
 			salut.setData(currentMinuteTime);
 			salut.setDataApp(toLocalDateTime(info.getData()));
 			salut.setTipusRegistre(TipusRegistreSalut.MINUT);
-			SalutEstat appEstat = toSalutEstat(info.getEstat().getEstat());
+			SalutEstat appEstat = toSalutEstat(info.getEstatGlobal().getEstat());
 			salut.setAppEstat(appEstat);
 			salut.updateAppCountByEstat(appEstat);
-			SalutEstat bdEstat = toSalutEstat(info.getBd().getEstat());
+			SalutEstat bdEstat = toSalutEstat(info.getEstatBaseDeDades().getEstat());
 			salut.setBdEstat(bdEstat);
 			salut.updateBdCountByEstat(bdEstat);
-			salut.setAppLatencia(info.getEstat().getLatencia());
-			salut.setAppLatenciaMitjana(info.getEstat().getLatencia());
-			salut.setBdLatencia(info.getBd().getLatencia());
-			salut.setBdLatenciaMitjana(info.getBd().getLatencia());
+			salut.setAppLatencia(info.getEstatGlobal().getLatencia());
+			salut.setAppLatenciaMitjana(info.getEstatGlobal().getLatencia());
+			salut.setBdLatencia(info.getEstatBaseDeDades().getLatencia());
+			salut.setBdLatenciaMitjana(info.getEstatBaseDeDades().getLatencia());
 			salut.setNumElements(1);
 			SalutEntity saved = salutRepository.save(salut);
 			crearSalutIntegracions(saved, info.getIntegracions());
 			crearSalutSubsistemes(saved, info.getSubsistemes());
-			crearSalutMissatges(saved, info.getMissatges());
-			crearSalutDetalls(saved, info.getAltres());
-			return saved.getId();
-		}
-		return null;
-	}
+            crearSalutMissatges(saved, info.getMissatges());
+            crearSalutDetalls(saved, toDetallSalutList(info.getInformacioSistema()));
+            return saved.getId();
+        }
+        return null;
+    }
 
     private Set<ConstraintViolation<Object>> validateObject(Object object) {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             Validator validator = factory.getValidator();
             return validator.validate(object);
         }
+    }
+
+    /**
+     * Construeix la llista de DetallSalut a partir del nou objecte InformacioSistema per a persistència històrica.
+     * Codis utilitzats (compatibilitat amb format antic):
+     *  PRC (processadors), LAVG (càrrega), SCPU (CPU sistema), MET (memòria total), MED (memòria disponible),
+     *  EDT (disc total), EDL (disc lliure), SO (sistema operatiu), ST (data arrencada), UT (uptime).
+     */
+    private List<DetallSalut> toDetallSalutList(InformacioSistema info) {
+        java.util.ArrayList<DetallSalut> list = new java.util.ArrayList<>();
+        if (info == null) return list;
+        if (info.getProcessadors() != null) list.add(DetallSalut.builder().codi("PRC").nom("Processadors").valor(String.valueOf(info.getProcessadors())).build());
+        if (info.getCarregaSistema() != null) list.add(DetallSalut.builder().codi("LAVG").nom("Càrrega del sistema (LoadAvg)").valor(info.getCarregaSistema()).build());
+        if (info.getCpuSistema() != null) list.add(DetallSalut.builder().codi("SCPU").nom("CPU sistema").valor(info.getCpuSistema()).build());
+        if (info.getMemoriaTotal() != null) list.add(DetallSalut.builder().codi("MET").nom("Memòria total").valor(info.getMemoriaTotal()).build());
+        if (info.getMemoriaDisponible() != null) list.add(DetallSalut.builder().codi("MED").nom("Memòria disponible").valor(info.getMemoriaDisponible()).build());
+        if (info.getEspaiDiscTotal() != null) list.add(DetallSalut.builder().codi("EDT").nom("Espai de disc total").valor(info.getEspaiDiscTotal()).build());
+        if (info.getEspaiDiscLliure() != null) list.add(DetallSalut.builder().codi("EDL").nom("Espai de disc lliure").valor(info.getEspaiDiscLliure()).build());
+        if (info.getSistemaOperatiu() != null) list.add(DetallSalut.builder().codi("SO").nom("Sistema operatiu").valor(info.getSistemaOperatiu()).build());
+        if (info.getDataArrencada() != null) list.add(DetallSalut.builder().codi("ST").nom("Data arrancada").valor(info.getDataArrencada()).build());
+        if (info.getTempsFuncionant() != null) list.add(DetallSalut.builder().codi("UT").nom("Temps funcionant").valor(info.getTempsFuncionant()).build());
+        return list;
     }
 
 	private void crearSalutIntegracions(
@@ -366,7 +396,6 @@ public class SalutInfoHelper {
         }
     }
 
-    @Transactional
     public void buidar(Long entornAppId, Long salutId) {
         try {
             log.debug("Executant buidat de dades de salut. EntornAppId: {}, salutId: {}.",
@@ -401,55 +430,9 @@ public class SalutInfoHelper {
 
     private void eliminarAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime dataLlindar) {
         try {
-            eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
+            salutPurgeService.eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
         } catch (Exception ex) {
             log.warn("Error eliminant dades antigues ({}). Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", tipus.name(), entornAppId, dataLlindar, ex.getMessage(), ex);
-        }
-    }
-
-
-    public void eliminarDadesSalutAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime data) {
-        log.debug("Eliminant dades de salut antigues. EntornAppId: {}, tipus: {}, data: {}", entornAppId, tipus, data);
-//        List<SalutEntity> massaAntics = salutRepository.findByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
-        List<Long> idsAntics = salutRepository.findIdsByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
-
-        // Process ids in batches to avoid memory issues
-        for (int i = 0; i < idsAntics.size(); i += BATCH_SIZE) {
-            int end = Math.min(i + BATCH_SIZE, idsAntics.size());
-            List<Long> batch = idsAntics.subList(i, end);
-            eliminarLlista(batch);
-        }
-    }
-
-    public void eliminarLlista(List<Long> salutIds) {
-        if (salutIds == null || salutIds.isEmpty()) {
-            log.debug("Cap registre de salut per eliminar (null o buit)");
-            return;
-        }
-        int intents = 0;
-        int maxIntents = 3;
-        while (true) {
-            try {
-                log.debug("Eliminant {} registres de salut antics...", salutIds.size());
-                // Eliminar fills per assegurar integritat
-                salutIntegracioRepository.deleteAllBySalutIdIn(salutIds);
-                salutSubsistemaRepository.deleteAllBySalutIdIn(salutIds);
-                salutMissatgeRepository.deleteAllBySalutIdIn(salutIds);
-                salutDetallRepository.deleteAllBySalutIdIn(salutIds);
-                // Eliminació en batch per reduir bloquejos
-                salutRepository.deleteAllByIdInBatch(salutIds);
-                log.debug("Eliminat {} registres de salut antics", salutIds.size());
-                return;
-            } catch (RuntimeException ex) {
-                intents++;
-                if (isLockAcquisitionException(ex) && intents < maxIntents) {
-                    long sleep = 100L + (long) (Math.random() * 200L);
-                    log.warn("Bloqueig en eliminar registres de salut (intent {}/{}). Es tornarà a intentar després de {}ms.", intents, maxIntents, sleep);
-                    try { Thread.sleep(sleep); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
-                } else {
-                    throw ex;
-                }
-            }
         }
     }
 

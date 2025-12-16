@@ -1,0 +1,2 @@
+-- Changeset db/changelog/changes/0.1.0.001.yaml::con-change-0.1.0.001::limit
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Salut', 'Logs', 'BOOLEAN', 'es.caib.comanda.salut.log.report', 'Generació de report d''estat en el logs', NULL, 'Activar generació de report periòdic d''estat del sistema en el logs de l''aplicació', NULL, 'true', 1, NULL, NULL);
