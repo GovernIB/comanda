@@ -75,9 +75,8 @@ public class ComandaClient {
         return avisosApi.modificarMultiplesAvisos(avisos);
     }
 
-    public AvisPage obtenirLlistatAvisos(String quickFilter, String filter, List<String> namedQueries,
-                                         List<String> perspectives, String page, Integer size) throws Exception {
-        return avisosApi.obtenirLlistatAvisos(quickFilter, filter, namedQueries, perspectives, page, size);
+    public AvisPage obtenirLlistatAvisos(String quickFilter, String filter, String page, Integer size) throws Exception {
+        return avisosApi.obtenirLlistatAvisos(quickFilter, filter, null, null, page, size);
     }
 
     public String crearPermis(Permis permis) throws Exception {
@@ -124,9 +123,8 @@ public class ComandaClient {
         return tasquesApi.modificarMultiplesTasques(tasques);
     }
 
-    public TascaPage obtenirLlistatTasques(String quickFilter, String filter, List<String> namedQueries,
-                                           List<String> perspectives, String page, Integer size) throws Exception {
-        return tasquesApi.obtenirLlistatTasques(quickFilter, filter, namedQueries, perspectives, page, size);
+    public TascaPage obtenirLlistatTasques(String quickFilter, String filter, String page, Integer size) throws Exception {
+        return tasquesApi.obtenirLlistatTasques(quickFilter, filter, null, null, page, size);
     }
 
     public static Builder builder(String basePath) { return new Builder(basePath); }
