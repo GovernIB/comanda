@@ -40,7 +40,6 @@ export const StacktraceBlock: React.FC<StacktraceBlockProps> = ({ title, value }
                 overflow: 'auto',
                 whiteSpace: 'pre',
                 fontFamily: 'monospace',
-                backgroundColor: '#f9f9f9'
             }}>
                 <Typography variant="body2" component="pre">
                     {value}

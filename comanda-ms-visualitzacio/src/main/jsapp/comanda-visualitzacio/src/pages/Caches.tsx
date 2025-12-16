@@ -6,7 +6,7 @@ import {
     useResourceApiService,
     useBaseAppContext,
     useConfirmDialogButtons,
-    MuiDataGridApiRef,
+    useMuiDataGridApiRef,
 } from 'reactlib';
 import {ResourceApiError} from "../../lib/components/ResourceApiProvider.tsx";
 import Icon from "@mui/material/Icon";
@@ -17,7 +17,7 @@ const Caches: React.FC = () => {
     const { t } = useTranslation();
     const { isReady: apiIsReady, delete: apiDelete } =
         useResourceApiService('comandaCache');
-    const gridApiRef: MuiDataGridApiRef = React.useRef({});
+    const gridApiRef = useMuiDataGridApiRef();
     const {
         messageDialogShow,
         temporalMessageShow,

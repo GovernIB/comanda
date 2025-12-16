@@ -6,12 +6,11 @@ import ListItemText from '@mui/material/ListItemText';
 import Icon from '@mui/material/Icon';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import { useAuthButtonContext } from 'reactlib';
 import { useUserContext } from './UserContext';
 
 function RoleSelector() {
     const { t } = useTranslation();
-    const { apiRef: authButtonApiRef } = useAuthButtonContext();
+    // const { apiRef: authButtonApiRef } = useAuthButtonContext();
     const { user, currentRole, setCurrentRole } = useUserContext();
     const userRoles = user?.rols as string[];
     const [open, setOpen] = React.useState<boolean>(false);
