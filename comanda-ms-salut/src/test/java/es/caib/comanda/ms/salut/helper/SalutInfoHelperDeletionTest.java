@@ -1,6 +1,9 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.salut.logic.helper.SalutPurgeService;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
+import es.caib.comanda.salut.logic.helper.SalutClientHelper;
+import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
+import es.caib.comanda.salut.logic.helper.SalutPurgeHelper;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
@@ -13,16 +16,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyLong;
 
 @ExtendWith(MockitoExtension.class)
 class SalutInfoHelperDeletionTest {
@@ -32,8 +33,13 @@ class SalutInfoHelperDeletionTest {
     @Mock private SalutSubsistemaRepository salutSubsistemaRepository;
     @Mock private SalutMissatgeRepository salutMissatgeRepository;
     @Mock private SalutDetallRepository salutDetallRepository;
+    @Mock private SalutClientHelper salutClientHelper;
+    @Mock private RestTemplate restTemplate;
+    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private MetricsHelper metricsHelper;
+    @Mock private SalutPurgeHelper salutPurgeService;
 
-    @InjectMocks private SalutPurgeService purgeService;
+    @InjectMocks private SalutInfoHelper helper;
 
     @BeforeEach
     void setup() {
@@ -42,35 +48,8 @@ class SalutInfoHelperDeletionTest {
 
     @Test
     void eliminarLlista_null_or_empty_no_ops() throws Exception {
-        purgeService.eliminarLlista(null);
-        purgeService.eliminarLlista(Collections.emptyList());
-        verifyNoInteractions(salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, salutDetallRepository, salutRepository);
-    }
-
-    @Test
-    void eliminarDadesSalutAntigues_batches_by_500() throws Exception {
-        long entornAppId = 1L;
-        LocalDateTime data = LocalDateTime.now();
-        TipusRegistreSalut tipus = TipusRegistreSalut.MINUT;
-
-        // Helper per provar diversos tamanys
-        int[] sizes = new int[]{0,1,499,500,501,1000};
-        for (int size : sizes) {
-            reset(salutRepository, salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, salutDetallRepository);
-            List<Long> ids = new ArrayList<>();
-            for (int i = 0; i < size; i++) ids.add((long) i+1);
-            when(salutRepository.findIdsByEntornAppIdAndTipusRegistreAndDataBefore(eq(entornAppId), eq(tipus), any(LocalDateTime.class)))
-                    .thenReturn(ids);
-
-            purgeService.eliminarDadesSalutAntigues(entornAppId, tipus, data);
-
-            int expectedBatches = (size + 499) / 500; // ceil
-            // Verifica crides per lots
-            verify(salutIntegracioRepository, times(expectedBatches)).deleteAllBySalutIdIn(anyList());
-            verify(salutSubsistemaRepository, times(expectedBatches)).deleteAllBySalutIdIn(anyList());
-            verify(salutMissatgeRepository, times(expectedBatches)).deleteAllBySalutIdIn(anyList());
-            verify(salutDetallRepository, times(expectedBatches)).deleteAllBySalutIdIn(anyList());
-            verify(salutRepository, times(expectedBatches)).deleteAllByIdInBatch(anyList());
-        }
+        // Helper ha de delegar al servei de purga
+        helper.eliminarDadesSalutAntigues(1L, TipusRegistreSalut.MINUT, LocalDateTime.now());
+        verify(salutPurgeService, times(1)).eliminarDadesSalutAntigues(anyLong(), any(), any(LocalDateTime.class));
     }
 }

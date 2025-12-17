@@ -105,6 +105,16 @@ public class AppInfoHelper {
 		}
 	}
 
+	/**
+	 * Versió segura per ser cridada des de listeners asíncrons o fora de context de persistència.
+	 * Carrega l'entitat des de BD per evitar LazyInitializationException abans de construir el DTO del client.
+	 */
+	public void programarTasquesSalutEstadisticaById(Long entornAppId) {
+		EntornAppEntity entity = entornAppRepository.findById(entornAppId)
+				.orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, String.valueOf(entornAppId)));
+		programarTasquesSalutEstadistica(entity);
+	}
+
 	private es.caib.comanda.client.model.EntornApp toClientEntornApp(EntornAppEntity entity) {
 		return es.caib.comanda.client.model.EntornApp.builder()
 				.id(entity.getId())

@@ -225,7 +225,7 @@ public class EntornAppServiceImplTest {
 //        verify(schedulerService).programarTasca(entornAppEntity);
 
         // Verify that the appInfoHelper was called
-//        verify(appInfoHelper).programarTasquesSalutEstadistica(entornAppEntity);
+//        verify(appInfoHelper).programarTasquesSalutEstadisticaById(entornAppEntity);
 
         verify(eventPublisher).publishEvent(any(EntornAppServiceImpl.ReprogramarEvent.class));
     }
@@ -242,7 +242,7 @@ public class EntornAppServiceImplTest {
 //        verify(schedulerService).programarTasca(entornAppEntity);
 
         // Verify that the appInfoHelper was called
-//        verify(appInfoHelper).programarTasquesSalutEstadistica(entornAppEntity);
+//        verify(appInfoHelper).programarTasquesSalutEstadisticaById(entornAppEntity);
 
         verify(eventPublisher).publishEvent(any(EntornAppServiceImpl.ReprogramarEvent.class));
     }

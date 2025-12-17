@@ -5,15 +5,15 @@ volumes:
     driver: local
 
 services:
-  httpd:
-    image: httpd:2.4
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./comanda-ear/src/main/docker/httpd:/usr/local/apache2/conf
-    depends_on:
-      - comanda
+#  httpd:
+#    image: httpd:2.4
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    volumes:
+#      - ./comanda-ear/src/main/docker/httpd:/usr/local/apache2/conf
+#    depends_on:
+#      - comanda
   comanda:
     image: comanda:0.1.0
     container_name: jboss-comanda

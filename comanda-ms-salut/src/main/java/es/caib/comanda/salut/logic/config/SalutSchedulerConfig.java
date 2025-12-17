@@ -21,9 +21,9 @@ public class SalutSchedulerConfig {
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
     private Integer schedulerPoolSize;
-    @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":12}")
+    @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":5}")
     private Integer workerPoolSize;
-    @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":2000}")
+    @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":1000}")
     private Integer workerQueueSize;
 
 	@Bean(name = "salutTaskScheduler")

@@ -101,9 +101,9 @@ components:
         dataCreacio: 2024-01-15T10:30:00
         dataModificacio: 2024-01-20T14:45:00
         mida: 1024
+        mimeType: application/pdf
         contingut: !!binary |-
           UTI5dWRHbHVaM1YwSUdSbGJDQm1hWFI0WlhJPQ==
-        mimeType: application/pdf
         nom: document.pdf
       properties:
         nom:
@@ -115,6 +115,10 @@ components:
           example: 1024
           format: int64
           type: integer
+        mimeType:
+          description: Tipus MIME del fitxer
+          example: application/pdf
+          type: string
         dataCreacio:
           description: Data de creació del fitxer
           example: 2024-01-15T10:30:00
@@ -130,16 +134,13 @@ components:
             UTI5dWRHbHVaM1YwSUdSbGJDQm1hWFI0WlhJPQ==
           format: binary
           type: string
-        mimeType:
-          description: Tipus MIME del fitxer
-          example: application/pdf
-          type: string
       type: object
     FitxerInfo:
       example:
         dataCreacio: 2024-01-15T10:30:00
         dataModificacio: 2024-01-20T14:45:00
         mida: 1024
+        mimeType: application/pdf
         nom: document.pdf
       properties:
         nom:
@@ -151,6 +152,10 @@ components:
           example: 1024
           format: int64
           type: integer
+        mimeType:
+          description: Tipus MIME del fitxer
+          example: application/pdf
+          type: string
         dataCreacio:
           description: Data de creació del fitxer
           example: 2024-01-15T10:30:00

@@ -147,7 +147,7 @@ public class AppServiceImplTest {
         // Verify that schedulerService.programarTasca was called for the EntornApp
         verify(schedulerService, times(1)).programarTasca(entornAppEntity);
 
-        // Verify that appInfoHelper.programarTasquesSalutEstadistica was called for the EntornApp
+        // Verify that appInfoHelper.programarTasquesSalutEstadisticaById was called for the EntornApp
         verify(appInfoHelper, times(1)).programarTasquesSalutEstadistica(entornAppEntity);
     }
 
@@ -164,7 +164,7 @@ public class AppServiceImplTest {
         // Verify that schedulerService.programarTasca was not called
         verify(schedulerService, never()).programarTasca(any());
 
-        // Verify that appInfoHelper.programarTasquesSalutEstadistica was not called
+        // Verify that appInfoHelper.programarTasquesSalutEstadisticaById was not called
         verify(appInfoHelper, never()).programarTasquesSalutEstadistica(any());
     }
 }

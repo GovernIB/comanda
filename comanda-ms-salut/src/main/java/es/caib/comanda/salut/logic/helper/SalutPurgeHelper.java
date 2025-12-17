@@ -1,5 +1,6 @@
 package es.caib.comanda.salut.logic.helper;
 
+import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
@@ -9,46 +10,41 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.dao.CannotAcquireLockException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.LockTimeoutException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
-/**
- * Servei responsable de l'eliminació en transaccions aïllades (REQUIRES_NEW)
- * per evitar contaminar transaccions més àmplies i garantir que els
- * {@code @Modifying} s'executen dins d'una transacció activa.
- */
-@Service
-@RequiredArgsConstructor
 @Slf4j
-public class SalutPurgeService {
+@Component
+@RequiredArgsConstructor
+public class SalutPurgeHelper {
+
+    public static final int PURGE_BATCH_SIZE = 100;
+    private static final Semaphore PURGE_SEMAPHORE = new Semaphore(1);
 
     private final SalutRepository salutRepository;
     private final SalutIntegracioRepository salutIntegracioRepository;
     private final SalutSubsistemaRepository salutSubsistemaRepository;
     private final SalutMissatgeRepository salutMissatgeRepository;
     private final SalutDetallRepository salutDetallRepository;
+    // Important: separar el mètode transaccional en un altre bean per evitar self-invocation sense proxy
+    private final es.caib.comanda.salut.logic.helper.tx.SalutPurgeTxHelper purgeTxHelper;
 
-    private static final int BATCH_SIZE = 500;
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void eliminarDadesSalutAntigues(Long entornAppId, es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut tipus, LocalDateTime data) {
+    public void eliminarDadesSalutAntigues(Long entornAppId, TipusRegistreSalut tipus, LocalDateTime data) {
         log.debug("Eliminant dades de salut antigues. EntornAppId: {}, tipus: {}, data: {}", entornAppId, tipus, data);
         List<Long> idsAntics = salutRepository.findIdsByEntornAppIdAndTipusRegistreAndDataBefore(entornAppId, tipus, data);
-
-        for (int i = 0; i < idsAntics.size(); i += BATCH_SIZE) {
-            int end = Math.min(i + BATCH_SIZE, idsAntics.size());
+        if (idsAntics == null || idsAntics.isEmpty()) return;
+        for (int i = 0; i < idsAntics.size(); i += PURGE_BATCH_SIZE) {
+            int end = Math.min(i + PURGE_BATCH_SIZE, idsAntics.size());
             List<Long> batch = idsAntics.subList(i, end);
-            eliminarLlista(batch);
+            eliminarLlistaAmbRetry(batch);
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void eliminarLlista(List<Long> salutIds) {
+    private void eliminarLlistaAmbRetry(List<Long> salutIds) {
         if (salutIds == null || salutIds.isEmpty()) {
             log.debug("Cap registre de salut per eliminar (null o buit)");
             return;
@@ -58,21 +54,25 @@ public class SalutPurgeService {
         while (true) {
             try {
                 log.info("Eliminant {} registres de salut antics...", salutIds.size());
-                // Eliminar fills per assegurar integritat
-                salutIntegracioRepository.deleteAllBySalutIdIn(salutIds);
-                salutSubsistemaRepository.deleteAllBySalutIdIn(salutIds);
-                salutMissatgeRepository.deleteAllBySalutIdIn(salutIds);
-                salutDetallRepository.deleteAllBySalutIdIn(salutIds);
-                // Eliminació en batch per reduir bloquejos
-                salutRepository.deleteAllByIdInBatch(salutIds);
+                try {
+                    PURGE_SEMAPHORE.acquire();
+                    try {
+                        purgeTxHelper.eliminarBatchEnNovaTransaccio(salutIds);
+                    } finally {
+                        PURGE_SEMAPHORE.release();
+                    }
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(ie);
+                }
                 log.info("Eliminat {} registres de salut antics", salutIds.size());
                 return;
             } catch (RuntimeException ex) {
                 intents++;
                 if (isLockAcquisitionException(ex) && intents < maxIntents) {
+                    long sleepMs = 200L * intents;
+                    log.warn("Lock detectat eliminant salut (batch {} elements). Reintent {} després de {}ms: {}", salutIds.size(), intents, sleepMs, ex.getMessage());
                     try {
-                        long sleepMs = 200L * intents;
-                        log.warn("Lock detectat eliminant salut (batch {} elements). Reintent {} després de {}ms: {}", salutIds.size(), intents, sleepMs, ex.getMessage());
                         Thread.sleep(sleepMs);
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
@@ -95,4 +95,6 @@ public class SalutPurgeService {
         }
         return false;
     }
+
+    // Nota: el mètode transaccional viu a SalutPurgeTxHelper per assegurar que Spring aplica el proxy
 }

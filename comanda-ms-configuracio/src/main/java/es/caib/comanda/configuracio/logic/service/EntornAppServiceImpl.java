@@ -132,7 +132,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         if (event.isNetejarCache())
             cacheHelper.evictCacheItem(ENTORN_APP_CACHE, event.getEntity().getId().toString());
         schedulerService.programarTasca(event.getEntity());
-        appInfoHelper.programarTasquesSalutEstadistica(event.getEntity());
+        // Cridam a la versió segura que recarrega l'entitat dins context propi
+        appInfoHelper.programarTasquesSalutEstadisticaById(event.getEntity().getId());
     }
 
     @Override
