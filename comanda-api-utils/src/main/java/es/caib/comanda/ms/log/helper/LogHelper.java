@@ -79,14 +79,16 @@ public class LogHelper {
             var dataCreacio = sdf.format(new Date(attr.creationTime().toMillis()));
             var dataModificacio = sdf.format(new Date(attr.lastModifiedTime().toMillis()));
             var contingut = Files.readAllBytes(filePath);
+            var fileName = file.getName();
             var mime = getMimeType(file);
             if (mime == null || isTextPlain(mime)) {
-                contingut = compressFile(contingut, nom + ".zip");
+                contingut = compressFile(contingut, nom);
                 mime = "application/zip";
+                fileName += ".zip";
             }
             return FitxerContingut.builder().contingut(contingut)
                     .mimeType(mime)
-                    .nom(file.getName())
+                    .nom(fileName)
                     .dataCreacio(dataCreacio)
                     .dataModificacio(dataModificacio)
                     .mida(contingut.length).build();
