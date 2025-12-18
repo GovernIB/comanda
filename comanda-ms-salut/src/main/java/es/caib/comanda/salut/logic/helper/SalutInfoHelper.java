@@ -156,7 +156,7 @@ public class SalutInfoHelper {
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornAppId);
 			salut.setData(currentMinuteTime);
-			salut.setDataApp(toLocalDateTime(info.getData()));
+			salut.setDataApp(info.getData() != null ? info.getData().toLocalDateTime() : null);
 			salut.setTipusRegistre(TipusRegistreSalut.MINUT);
 			SalutEstat appEstat = toSalutEstat(info.getEstatGlobal().getEstat());
 			salut.setAppEstat(appEstat);
@@ -310,7 +310,7 @@ public class SalutInfoHelper {
 		if (filteredMissatges != null) {
             filteredMissatges.forEach(m -> {
 				SalutMissatgeEntity salutMissatge = new SalutMissatgeEntity();
-				salutMissatge.setData(toLocalDateTime(m.getData()));
+				salutMissatge.setData(m.getData() != null ? m.getData().toLocalDateTime() : null);
 				salutMissatge.setNivell(m.getNivell());
 				salutMissatge.setMissatge(m.getMissatge());
 				salutMissatge.setSalut(salut);

@@ -2,7 +2,8 @@ package es.caib.comanda.model.v1.salut;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import es.caib.comanda.model.v1.salut.json.InformacioSistemaDeserializer;
+import es.caib.comanda.model.v1.deserializer.InformacioSistemaDeserializer;
+import es.caib.comanda.model.v1.deserializer.OffsetDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +34,8 @@ public class SalutInfo {
     private String codi;
     @Schema(description = "Instant de generació de l'estat de salut", type = "string", format = "date-time")
     @NotNull
-    private Date data;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime data;
     @Schema(description = "Estat global de l'aplicació")
     @NotNull @Valid
     @JsonAlias("estat")

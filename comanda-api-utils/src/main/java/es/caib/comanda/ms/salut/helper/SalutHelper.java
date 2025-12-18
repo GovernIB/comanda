@@ -6,8 +6,9 @@ import lombok.Getter;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
 import java.util.Properties;
 
 public class SalutHelper {
@@ -39,7 +40,7 @@ public class SalutHelper {
     private static BuildInfo generateBuildInfo() {
 
         String commitId = null;
-        Date buildDate = null;
+        OffsetDateTime buildDate = null;
         MonitorHelper.SystemInfo systemInfo = MonitorHelper.getSystemInfo();
 
         try (InputStream in = SalutHelper.class.getClassLoader().getResourceAsStream("git.properties")) {
@@ -59,11 +60,11 @@ public class SalutHelper {
                 .build();
     }
 
-    private static Date getDate(String isoDate) {
+    private static OffsetDateTime getDate(String isoDate) {
 
         try {
             Instant instant = Instant.parse(isoDate);
-            return Date.from(instant);
+            return instant.atZone(ZoneId.systemDefault()).toOffsetDateTime();
         } catch (DateTimeParseException e) {
             System.out.println("El format de la data és incorrecte: " + e.getMessage());
             return null;
@@ -74,7 +75,7 @@ public class SalutHelper {
     @Getter
     public static class BuildInfo {
 
-        private final Date buildDate;
+        private final OffsetDateTime buildDate;
         private final String buildJDK;
         private final String commitId;
     }

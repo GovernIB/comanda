@@ -1,5 +1,7 @@
 package es.caib.comanda.model.v1.avis;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import es.caib.comanda.model.v1.deserializer.OffsetDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +11,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Builder
@@ -39,10 +41,12 @@ public class Avis implements Serializable {
     private String descripcio;
 
     @Schema(description = "Data d'inici de vigència", example = "2025-11-21T08:00:00Z", format = "date-time")
-    private Date dataInici;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime dataInici;
 
     @Schema(description = "Data de fi de vigència", example = "2025-11-21T10:00:00Z", format = "date-time")
-    private Date dataFi;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime dataFi;
 
     @Schema(description = "URL de redirecció associada a l'avís", example = "https://dev.caib.es/app/avis/AV-2025-0001", format = "uri")
     private URL redireccio;

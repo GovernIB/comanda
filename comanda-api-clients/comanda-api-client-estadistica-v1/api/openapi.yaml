@@ -168,7 +168,11 @@ components:
       description: Catàleg de dimensions i indicadors d'estadística disponibles per
         a una APP
       example:
-        data: 2000-01-23T04:56:07.000+00:00
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         indicadors:
         - descripcio: Total de visites registrades per període
           format: LONG
@@ -200,9 +204,7 @@ components:
           example: 2.1.0
           type: string
         data:
-          description: Data de generació de la informació
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         dimensions:
           description: Dimensions estadístiques disponibles
           items:
@@ -266,6 +268,19 @@ components:
       - codi
       - nom
       type: object
+    OffsetDateTime:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        offset:
+          totalSeconds: 0
+          id: id
+      properties:
+        dateTime:
+          format: date-time
+          type: string
+        offset:
+          $ref: "#/components/schemas/ZoneOffset"
+      type: object
     RegistreEstadistic:
       description: Registre d'estadística amb dimensions i fets associats
       example:
@@ -305,7 +320,11 @@ components:
         temps:
           anualitat: 2025
           setmana: 47
-          data: 2025-11-25T00:00:00Z
+          data:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           diaSetmana: DL
           mes: 11
           trimestre: 4
@@ -327,17 +346,18 @@ components:
       example:
         anualitat: 2025
         setmana: 47
-        data: 2025-11-25T00:00:00Z
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         diaSetmana: DL
         mes: 11
         trimestre: 4
         dia: 25
       properties:
         data:
-          description: Instant temporal de referència
-          example: 2025-11-25T00:00:00Z
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         anualitat:
           description: Any corresponent a la data
           example: 2025
@@ -367,5 +387,16 @@ components:
           type: integer
       required:
       - data
+      type: object
+    ZoneOffset:
+      example:
+        totalSeconds: 0
+        id: id
+      properties:
+        totalSeconds:
+          format: int32
+          type: integer
+        id:
+          type: string
       type: object
 

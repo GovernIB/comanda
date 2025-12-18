@@ -51,7 +51,11 @@ components:
       description: Informació bàsica de l'aplicació consultada per COMANDA
       example:
         revisio: a1b2c3d
-        data: 2000-01-23T04:56:07.000+00:00
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         versio: 2.1.0
         jdkVersion: Temurin-17.0.9
         subsistemes:
@@ -104,9 +108,7 @@ components:
           minLength: 1
           type: string
         data:
-          description: Data de compilació o de la informació reportada
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         revisio:
           description: Revisió o identificador de commit de la build
           example: a1b2c3d
@@ -185,7 +187,7 @@ components:
       type: object
     EstatSalut:
       example:
-        latencia: 0
+        latencia: 6
         estat: UP
       properties:
         estat:
@@ -287,17 +289,17 @@ components:
         ode"
       example:
         totalError: 5
-        totalTempsMig: 5
+        totalTempsMig: 2
         endpoint: https://path/to/integracio
         peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
           :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
           :0,\"endpoint\":\"https://path/to/entorn1\"},\"ENT2\":{\"totalOk\":0,\"\
           totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
           :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"}}"
-        tempsMigUltimPeriode: 9
-        totalOk: 1
-        peticionsOkUltimPeriode: 2
-        peticionsErrorUltimPeriode: 7
+        tempsMigUltimPeriode: 3
+        totalOk: 5
+        peticionsOkUltimPeriode: 7
+        peticionsErrorUltimPeriode: 9
       properties:
         totalOk:
           description: Nombre total de peticions amb resultat correcte
@@ -351,12 +353,12 @@ components:
     IntegracioSalut:
       description: Estat de salut d'una integració concreta
       example:
-        latencia: 6
+        latencia: 1
         estat: null
         codi: REG
         peticions:
           totalError: 5
-          totalTempsMig: 5
+          totalTempsMig: 2
           endpoint: https://path/to/integracio
           peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
             :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
@@ -364,10 +366,10 @@ components:
             totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
             :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"\
             }}"
-          tempsMigUltimPeriode: 9
-          totalOk: 1
-          peticionsOkUltimPeriode: 2
-          peticionsErrorUltimPeriode: 7
+          tempsMigUltimPeriode: 3
+          totalOk: 5
+          peticionsOkUltimPeriode: 7
+          peticionsErrorUltimPeriode: 9
       properties:
         estat:
           $ref: "#/components/schemas/EstatSalutEnum"
@@ -410,13 +412,15 @@ components:
       description: Missatge informatiu/alerta de salut amb nivell de gravetat
       example:
         missatge: Manteniment programat a les 22:00h
-        data: 2000-01-23T04:56:07.000+00:00
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         nivell: ERROR
       properties:
         data:
-          description: Instant del missatge
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         nivell:
           $ref: "#/components/schemas/SalutNivell"
         missatge:
@@ -429,40 +433,65 @@ components:
       - missatge
       - nivell
       type: object
+    OffsetDateTime:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        offset:
+          totalSeconds: 0
+          id: id
+      properties:
+        dateTime:
+          format: date-time
+          type: string
+        offset:
+          $ref: "#/components/schemas/ZoneOffset"
+      type: object
     SalutInfo:
       description: Estat de salut funcional de l'aplicació i metadades associades
       example:
         estatGlobal:
-          latencia: 0
+          latencia: 6
           estat: UP
         missatges:
         - missatge: Manteniment programat a les 22:00h
-          data: 2000-01-23T04:56:07.000+00:00
+          data:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           nivell: ERROR
         - missatge: Manteniment programat a les 22:00h
-          data: 2000-01-23T04:56:07.000+00:00
+          data:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           nivell: ERROR
-        data: 2000-01-23T04:56:07.000+00:00
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         estatBaseDeDades:
-          latencia: 0
+          latencia: 6
           estat: UP
         versio: 1.4.3
         subsistemes:
-        - totalError: 4
-          totalTempsMig: 7
-          latencia: 3
-          tempsMigUltimPeriode: 1
+        - totalError: 7
+          totalTempsMig: 1
+          latencia: 2
+          tempsMigUltimPeriode: 6
           estat: null
-          totalOk: 2
+          totalOk: 4
           peticionsOkUltimPeriode: 1
           codi: BD
           peticionsErrorUltimPeriode: 1
-        - totalError: 4
-          totalTempsMig: 7
-          latencia: 3
-          tempsMigUltimPeriode: 1
+        - totalError: 7
+          totalTempsMig: 1
+          latencia: 2
+          tempsMigUltimPeriode: 6
           estat: null
-          totalOk: 2
+          totalOk: 4
           peticionsOkUltimPeriode: 1
           codi: BD
           peticionsErrorUltimPeriode: 1
@@ -478,12 +507,12 @@ components:
           carregaSistema: "2.45"
           tempsFuncionant: "5 dies, 03:25:14"
         integracions:
-        - latencia: 6
+        - latencia: 1
           estat: null
           codi: REG
           peticions:
             totalError: 5
-            totalTempsMig: 5
+            totalTempsMig: 2
             endpoint: https://path/to/integracio
             peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
               :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"\
@@ -491,16 +520,16 @@ components:
               ENT2\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\"\
               :0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\":0,\"endpoint\"\
               :\"https://path/to/entorn2\"}}"
-            tempsMigUltimPeriode: 9
-            totalOk: 1
-            peticionsOkUltimPeriode: 2
-            peticionsErrorUltimPeriode: 7
-        - latencia: 6
+            tempsMigUltimPeriode: 3
+            totalOk: 5
+            peticionsOkUltimPeriode: 7
+            peticionsErrorUltimPeriode: 9
+        - latencia: 1
           estat: null
           codi: REG
           peticions:
             totalError: 5
-            totalTempsMig: 5
+            totalTempsMig: 2
             endpoint: https://path/to/integracio
             peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
               :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"\
@@ -508,10 +537,10 @@ components:
               ENT2\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\"\
               :0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\":0,\"endpoint\"\
               :\"https://path/to/entorn2\"}}"
-            tempsMigUltimPeriode: 9
-            totalOk: 1
-            peticionsOkUltimPeriode: 2
-            peticionsErrorUltimPeriode: 7
+            tempsMigUltimPeriode: 3
+            totalOk: 5
+            peticionsOkUltimPeriode: 7
+            peticionsErrorUltimPeriode: 9
         codi: APP
       properties:
         codi:
@@ -520,9 +549,7 @@ components:
           minLength: 1
           type: string
         data:
-          description: Instant de generació de l'estat de salut
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         estatGlobal:
           $ref: "#/components/schemas/EstatSalut"
         estatBaseDeDades:
@@ -586,12 +613,12 @@ components:
     SubsistemaSalut:
       description: Estat de salut i mètriques d'un subsistema intern
       example:
-        totalError: 4
-        totalTempsMig: 7
-        latencia: 3
-        tempsMigUltimPeriode: 1
+        totalError: 7
+        totalTempsMig: 1
+        latencia: 2
+        tempsMigUltimPeriode: 6
         estat: null
-        totalOk: 2
+        totalOk: 4
         peticionsOkUltimPeriode: 1
         codi: BD
         peticionsErrorUltimPeriode: 1
@@ -638,5 +665,16 @@ components:
       - totalError
       - totalOk
       - totalTempsMig
+      type: object
+    ZoneOffset:
+      example:
+        totalSeconds: 0
+        id: id
+      properties:
+        totalSeconds:
+          format: int32
+          type: integer
+        id:
+          type: string
       type: object
 

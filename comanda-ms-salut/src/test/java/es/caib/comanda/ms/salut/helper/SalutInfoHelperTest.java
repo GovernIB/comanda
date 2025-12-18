@@ -3,10 +3,6 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
-import es.caib.comanda.salut.logic.helper.MetricsHelper;
-import es.caib.comanda.salut.logic.helper.SalutClientHelper;
-import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
-import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.model.v1.salut.EstatSalut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.model.v1.salut.InformacioSistema;
@@ -16,6 +12,10 @@ import es.caib.comanda.model.v1.salut.MissatgeSalut;
 import es.caib.comanda.model.v1.salut.SalutInfo;
 import es.caib.comanda.model.v1.salut.SalutNivell;
 import es.caib.comanda.model.v1.salut.SubsistemaSalut;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
+import es.caib.comanda.salut.logic.helper.SalutClientHelper;
+import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
+import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
@@ -43,8 +43,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -154,7 +154,7 @@ public class SalutInfoHelperTest {
                 .build();
 
         MissatgeSalut missatgeSalut = MissatgeSalut.builder()
-                .data(new Date())
+                .data(OffsetDateTime.now())
                 .nivell(SalutNivell.INFO)
                 .missatge("Test message")
                 .build();
@@ -165,7 +165,7 @@ public class SalutInfoHelperTest {
 
         salutInfo = SalutInfo.builder()
                 .codi("TEST")
-                .data(new Date())
+                .data(OffsetDateTime.now())
                 .estatGlobal(appEstat)
                 .estatBaseDeDades(bdEstat)
                 .integracions(Arrays.asList(integracioSalut))

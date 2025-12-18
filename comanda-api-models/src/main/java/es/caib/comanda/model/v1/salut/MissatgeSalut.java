@@ -1,5 +1,7 @@
 package es.caib.comanda.model.v1.salut;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import es.caib.comanda.model.v1.deserializer.OffsetDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +11,7 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 @Builder
 @Getter
@@ -20,7 +22,8 @@ import java.util.Date;
 public class MissatgeSalut {
     @Schema(description = "Instant del missatge", type = "string", format = "date-time")
     @NotNull
-    private Date data;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime data;
     @Schema(description = "Nivell de gravetat del missatge")
     @NotNull
     private SalutNivell nivell;

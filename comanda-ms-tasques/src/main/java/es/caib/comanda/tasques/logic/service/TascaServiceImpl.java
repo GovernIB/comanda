@@ -73,9 +73,9 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         tasca.setEstat(tascaBroker.getEstat());
         tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
         tasca.setPrioritat(tascaBroker.getPrioritat());
-        tasca.setDataInici(convertToLocalDateTime(tascaBroker.getDataInici()));
-        tasca.setDataFi(convertToLocalDateTime(tascaBroker.getDataFi()));
-        tasca.setDataCaducitat(convertToLocalDateTime(tascaBroker.getDataCaducitat()));
+        tasca.setDataInici(tascaBroker.getDataInici() != null ? tascaBroker.getDataInici().toLocalDateTime() : null);
+        tasca.setDataFi(tascaBroker.getDataFi() != null ? tascaBroker.getDataFi().toLocalDateTime() : null);
+        tasca.setDataCaducitat(tascaBroker.getDataCaducitat() != null ? tascaBroker.getDataCaducitat().toLocalDateTime() : null);
         tasca.setUrl(tascaBroker.getRedireccio());
         tasca.setResponsable(tascaBroker.getResponsable());
         tasca.setGrup(tascaBroker.getGrup());
