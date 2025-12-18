@@ -49,6 +49,7 @@ import { EntornAppModel } from '../../types/app.model';
 import SalutChip from '../../components/salut/SalutChip';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
+import LogsViewer from './LogsViewer';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -859,6 +860,25 @@ const TabHistoric: React.FC<SalutAppInfoTabProps & { otherProps: TabHistoricOthe
     );
 };
 
+const TabLogs = ({ entornApp }: { entornApp: EntornAppModel | null }) => {
+    if (entornApp == null)
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                }}
+            >
+                <CircularProgress size={100} />
+            </Box>
+        );
+
+    return <LogsViewer entornAppId={entornApp.id} />;
+};
+
 /**
  * Component wrapper per als tabs que depenen del valor de salutCurrentApp
  * Accepta una sèrie de props, gestiona els casos d'error i renderitza el component childrenTabComponent
@@ -983,10 +1003,17 @@ const SalutAppInfo: React.FC<{
                 onChange={handleChange}
                 sx={{
                     mx: 2,
+                    borderBottom: 1,
+                    borderColor: 'divider',
                 }}
             >
                 {tabs.map(tab => (
-                    <Tab key={"salutAppInfoTabs-"+tab.id} iconPosition="start" label={tab.label} icon={tab.icon} disabled={tab.disabled} />
+                    <Tab
+                        key={'salutAppInfoTabs-' + tab.id}
+                        iconPosition="start"
+                        label={tab.label}
+                        icon={tab.icon}
+                    />
                 ))}
             </Tabs>
             <Box
@@ -1039,6 +1066,7 @@ const SalutAppInfo: React.FC<{
                         }}
                     />
                 )}
+                {tabValue === 4 && <TabLogs entornApp={entornApp} />}
             </Box>
         </>
     );

@@ -1,11 +1,7 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.logic.intf.model.AppContext;
-import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
-import es.caib.comanda.configuracio.logic.intf.model.AppManual;
-import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
+import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
@@ -16,16 +12,26 @@ import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.model.v1.log.FitxerContingut;
+import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
+import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,7 +40,10 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -67,6 +76,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     @PostConstruct
     public void init() {
         register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
+        register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs(restTemplate));
+        register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
     }
 
@@ -211,6 +222,66 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
+    }
+
+    @RequiredArgsConstructor
+    private static class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
+        private final RestTemplate restTemplate;
+
+        @Override
+        public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth("USER", "PASSWORD"); // TODO
+            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+
+            String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) + "/v1/logs"; // TODO
+            URI uri = URI.create(logsUrl);
+            ResponseEntity<List<FitxerInfo>> response = restTemplate
+                    .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<FitxerInfo>>() {});
+
+            return response.getBody();
+        }
+
+        @Override
+        public void onChange(Serializable id, Long previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Long target) {}
+    }
+
+    @RequiredArgsConstructor
+    public static class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
+        private final RestTemplate restTemplate;
+        private final EntornAppRepository entornAppRepository;
+
+        @Getter
+        @AllArgsConstructor
+        public static class DescarregarLogParams implements Serializable {
+            private Long entornAppId;
+            private String nomFitxer;
+        }
+
+        @Override
+        public List<DescarregarLogParams> generateData(String code, EntornAppEntity entity, String fileParams) throws ReportGenerationException {
+            return List.of(new DescarregarLogParams(entity.getId(), fileParams));
+        }
+
+        @Override
+        public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
+            DescarregarLogParams params = (DescarregarLogParams) data.get(0);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth("USER", "PASSWORD"); // TODO
+            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+
+            EntornAppEntity entornAppEntity = entornAppRepository.findById(params.getEntornAppId()).get();
+            String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) + "/v1/logs/" + params.getNomFitxer(); // TODO
+            URI uri = URI.create(logsUrl);
+            ResponseEntity<FitxerContingut> response = restTemplate
+                    .exchange(uri, HttpMethod.GET, httpEntity, FitxerContingut.class);
+
+            return new DownloadableFile(response.getBody().getNom(), response.getBody().getMimeType(), response.getBody().getContingut());
+        }
+
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
     }
 
 }

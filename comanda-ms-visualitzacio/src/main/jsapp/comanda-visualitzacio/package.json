@@ -25,6 +25,7 @@
         "@mui/x-charts": "^8.19.0",
         "@mui/x-data-grid-pro": "^8.19.0",
         "@mui/x-date-pickers": "^8.19.0",
+        "@tanstack/react-virtual": "^3.13.12",
         "dayjs": "^1.11.18",
         "ketting": "7.5.2",
         "keycloak-js": "^25.0.2",

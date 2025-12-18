@@ -7,12 +7,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.io.Serializable;
+
 @SuperBuilder
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class FitxerInfo {
+public class FitxerInfo implements Serializable {
 
     @Schema(description = "Nom del fitxer", example = "document.pdf")
     private String nom;

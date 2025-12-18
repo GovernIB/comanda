@@ -60,6 +60,8 @@ import java.util.List;
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_PING_URL, formClass = String.class),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_TOOGLE_ACTIVA, requiresId = true),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_LLISTAR_LOGS, requiresId = true),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_DESCARREGAR_LOG, requiresId = true, formClass = String.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class)
 		}
@@ -72,6 +74,8 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String ENTORN_APP_FILTER = "entornApp_filter";
 	public final static String SALUT_ENTORN_APP_FILTER = "salut_entornApp_filter";
 	public final static String ENTORN_APP_TOOGLE_ACTIVA = "toogle_activa";
+	public final static String REPORT_LLISTAR_LOGS = "llistar_logs";
+	public final static String REPORT_DESCARREGAR_LOG = "descarregar_log";
 
 	@NotNull
 	@Transient
