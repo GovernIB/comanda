@@ -47,14 +47,14 @@ public class FetController extends BaseMutableResourceController<Fet, Long> {
             @RequestBody
             @Validated({Resource.OnCreate.class, Default.class})
             final EntornApp entornApp) {
-        log.info("Rebuda petició d'actualització de procés de salut per entornApp: {}", entornApp.getId());
+        log.info("Rebuda petició d'actualització de procés de estadístiques per entornApp: {}", entornApp.getId());
         schedulerService.programarTasques(entornApp);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/programarTot")
     public ResponseEntity<Void> programarTot() {
-        log.info("Rebuda petició d'actualització de procés de salut per a tots els entornApp");
+        log.info("Rebuda petició d'actualització de procés de estadístiques per a tots els entornApp");
         schedulerService.programarTasques();
         return ResponseEntity.ok().build();
     }

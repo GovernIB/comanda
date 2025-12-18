@@ -87,6 +87,10 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	@Column(name = "estadistica_cron", length = 40)
 	private String estadisticaCron;
 
+	// Si les estadístiques requereixen autenticació bàsica
+	@Column(name = "estadistica_auth", nullable = false)
+	private boolean estadisticaAuth = false;
+
     // Dades de compactació
     @Column(name = "compactable", nullable = false)
     private Boolean compactable = false;
