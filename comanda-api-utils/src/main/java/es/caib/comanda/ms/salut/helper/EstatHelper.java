@@ -14,7 +14,7 @@ public class EstatHelper {
     public static EstatSalutEnum calculaEstat(long execucionsOk, long execucionsError) {
         final long execucionsTotal = execucionsOk + execucionsError;
         // Percentatge d'errors arrodonit correctament evitant divisió d'enters
-        final int percentatgeErrors = (int) Math.round((execucionsOk * 100.0) / Math.max(1L, execucionsTotal));
+        final int percentatgeErrors = (int) Math.round((execucionsError * 100.0) / Math.max(1L, execucionsTotal));
         return calculaEstat(percentatgeErrors);
     }
 
