@@ -40,7 +40,6 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URI;
@@ -78,6 +77,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
         register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs(restTemplate));
         register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository));
+        register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
     }
 
@@ -224,15 +224,19 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
     }
 
+    private static HttpHeaders getLogsAuthHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth("USER", "PASSWORD"); // TODO
+        return headers;
+    }
+
     @RequiredArgsConstructor
     private static class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
         private final RestTemplate restTemplate;
 
         @Override
         public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("USER", "PASSWORD"); // TODO
-            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+            HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
 
             String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) + "/v1/logs"; // TODO
             URI uri = URI.create(logsUrl);
@@ -267,9 +271,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
             DescarregarLogParams params = (DescarregarLogParams) data.get(0);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("USER", "PASSWORD"); // TODO
-            HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+            HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
 
             EntornAppEntity entornAppEntity = entornAppRepository.findById(params.getEntornAppId()).get();
             String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) + "/v1/logs/" + params.getNomFitxer(); // TODO
@@ -282,6 +284,29 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
+    }
+
+    @RequiredArgsConstructor
+    public static class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
+        private final RestTemplate restTemplate;
+
+        @Override
+        public List<EntornApp.PrevisualitzarLogResponse> generateData(String code, EntornAppEntity entornAppEntity, EntornApp.PrevisualitzarLogParams params) throws ReportGenerationException {
+            HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
+
+            String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) +
+                    "/v1/logs/" + params.getFileName() + "/linies/" + params.getLineCount(); // TODO
+            URI uri = URI.create(logsUrl);
+            ResponseEntity<List<String>> response = restTemplate
+                    .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<String>>() {});
+
+            return response.getBody().stream()
+                    .map(EntornApp.PrevisualitzarLogResponse::new)
+                    .collect(Collectors.toList());
+        }
+
+        @Override
+        public void onChange(Serializable id, EntornApp.PrevisualitzarLogParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornApp.PrevisualitzarLogParams target) {}
     }
 
 }

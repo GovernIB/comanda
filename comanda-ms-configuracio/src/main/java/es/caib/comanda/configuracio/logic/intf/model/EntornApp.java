@@ -62,6 +62,7 @@ import java.util.List;
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_TOOGLE_ACTIVA, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_LLISTAR_LOGS, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_DESCARREGAR_LOG, requiresId = true, formClass = String.class),
+				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_PREVISUALITZAR_LOG, requiresId = true, formClass = EntornApp.PrevisualitzarLogParams.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class)
 		}
@@ -76,6 +77,7 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String ENTORN_APP_TOOGLE_ACTIVA = "toogle_activa";
 	public final static String REPORT_LLISTAR_LOGS = "llistar_logs";
 	public final static String REPORT_DESCARREGAR_LOG = "descarregar_log";
+	public final static String REPORT_PREVISUALITZAR_LOG = "previsualitzar_log";
 
 	@NotNull
 	@Transient
@@ -173,6 +175,23 @@ public class EntornApp extends BaseResource<Long> {
 	public static class PingUrlResponse implements Serializable {
 		private Boolean success;
 		private String message;
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class PrevisualitzarLogParams implements Serializable {
+		private String fileName;
+		private Integer lineCount;
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class PrevisualitzarLogResponse implements Serializable {
+		private String linia;
 	}
 
 }
