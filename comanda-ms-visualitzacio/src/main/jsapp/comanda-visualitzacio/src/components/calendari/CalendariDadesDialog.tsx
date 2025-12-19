@@ -49,7 +49,7 @@ const CalendariDadesDialog: React.FC<CalendariDadesDialogProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const dimensionsCodis = dimensions.map((i) => i.codi);
+  // const dimensionsCodis = dimensions.map((i) => i.codi);
   const indicadorsCodis = indicadors.map((i) => i.codi);
 
   const [indicadorsShow, setIndicadorsShow] = useState<any[]>(indicadorsCodis);

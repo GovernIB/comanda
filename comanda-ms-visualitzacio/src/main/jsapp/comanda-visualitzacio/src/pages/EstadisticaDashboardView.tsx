@@ -167,7 +167,10 @@ const EstadisticaDashboardView = () => {
                             ml: 0,
                             mr: 0,
                             mt: 0,
-                            backgroundColor: (theme) => theme.palette.grey[200],
+                            backgroundColor: (theme) =>
+                                theme.palette.mode === 'dark'
+                                    ? theme.palette.grey['900']
+                                    : theme.palette.grey['200'],
                         }}
                     >
                         <Button
@@ -175,7 +178,7 @@ const EstadisticaDashboardView = () => {
                             variant="outlined"
                             size="small"
                             onClick={openDashboardSelect}
-                            endIcon={<MenuIcon />}
+                            startIcon={<MenuIcon />}
                             sx={{
                                 borderRadius: 1,
                             }}
