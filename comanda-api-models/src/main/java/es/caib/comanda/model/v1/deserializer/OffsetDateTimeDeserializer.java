@@ -9,7 +9,27 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+
 public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime> {
+
+    private static final DateTimeFormatter ISO_CUSTOM = new DateTimeFormatterBuilder()
+            .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            .appendPattern("[XXX][XX][X]")
+            .toFormatter();
+
+    private static final DateTimeFormatter ISO_DATE_OPTIONAL_TIME = new DateTimeFormatterBuilder()
+            .append(DateTimeFormatter.ISO_LOCAL_DATE)
+            .optionalStart()
+            .appendLiteral('T')
+            .append(DateTimeFormatter.ISO_LOCAL_TIME)
+            .optionalEnd()
+            .appendPattern("[[XXX][XX][X]]")
+            .parseDefaulting(java.time.temporal.ChronoField.HOUR_OF_DAY, 0)
+            .parseDefaulting(java.time.temporal.ChronoField.MINUTE_OF_HOUR, 0)
+            .parseDefaulting(java.time.temporal.ChronoField.SECOND_OF_MINUTE, 0)
+            .toFormatter();
 
     @Override
     public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
@@ -22,6 +42,18 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
             return OffsetDateTime.ofInstant(inst, ZoneId.systemDefault());
         }
         // Delega per a cadenes ISO-8601
-        return OffsetDateTime.parse(p.getValueAsString());
+        String value = p.getValueAsString();
+        try {
+            return OffsetDateTime.parse(value, ISO_CUSTOM);
+        } catch (Exception e) {
+            try {
+                return OffsetDateTime.parse(value, ISO_DATE_OPTIONAL_TIME);
+            } catch (Exception ex) {
+                // Fallback for date-only without offset
+                return java.time.LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toOffsetDateTime();
+            }
+        }
     }
 }
