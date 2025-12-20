@@ -21,7 +21,7 @@ public interface SalutRepository extends BaseRepository<SalutEntity, Long> {
 
     SalutEntity findTopByEntornAppIdAndTipusRegistreOrderByIdDesc(Long entornAppId, TipusRegistreSalut tipusRegistre);
 	List<SalutEntity> findByEntornAppIdAndTipusRegistreAndDataBefore(Long entornAppId, TipusRegistreSalut tipusRegistre, LocalDateTime data);
-    @Query("SELECT s.id FROM SalutEntity s WHERE s.entornAppId = :entornAppId AND s.tipusRegistre = :tipusRegistre AND s.data < :data")
+    @Query("SELECT s.id FROM SalutEntity s WHERE s.entornAppId = :entornAppId AND s.tipusRegistre = :tipusRegistre AND s.data < :data ORDER BY s.id DESC")
     List<Long> findIdsByEntornAppIdAndTipusRegistreAndDataBefore(
             @Param("entornAppId") Long entornAppId,
             @Param("tipusRegistre") TipusRegistreSalut tipusRegistre,

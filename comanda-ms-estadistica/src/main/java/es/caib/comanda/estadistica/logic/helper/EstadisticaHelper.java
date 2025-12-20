@@ -1,15 +1,10 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
-import es.caib.comanda.model.v1.estadistica.DimensioDesc;
-import es.caib.comanda.model.v1.estadistica.Dimensio;
-import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo;
-import es.caib.comanda.model.v1.estadistica.IndicadorDesc;
-import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
-import es.caib.comanda.model.v1.estadistica.RegistresEstadistics;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
@@ -20,11 +15,19 @@ import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import es.caib.comanda.estadistica.persist.repository.TempsRepository;
+import es.caib.comanda.model.v1.estadistica.Dimensio;
+import es.caib.comanda.model.v1.estadistica.DimensioDesc;
+import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo;
+import es.caib.comanda.model.v1.estadistica.IndicadorDesc;
+import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
+import es.caib.comanda.model.v1.estadistica.RegistresEstadistics;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -32,9 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,6 +67,7 @@ public class EstadisticaHelper {
     private final FetRepository fetRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
+    private final ParametresHelper parametresHelper;
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
@@ -143,7 +147,17 @@ public class EstadisticaHelper {
         Object lock = LOCKS.computeIfAbsent(entornApp.getId(), k -> new Object());
         synchronized (lock) {
             monitorEstadistica.startInfoAction();
-            EstadistiquesInfo estadistiquesInfo = restTemplate.getForObject(entornApp.getEstadisticaInfoUrl(), EstadistiquesInfo.class);
+            HttpEntity<Void> httpEntity = buildAuthEntityIfNeeded(entornApp);
+            EstadistiquesInfo estadistiquesInfo;
+            if (httpEntity != null) {
+                estadistiquesInfo = restTemplate.exchange(
+                        entornApp.getEstadisticaInfoUrl(),
+                        org.springframework.http.HttpMethod.GET,
+                        httpEntity,
+                        EstadistiquesInfo.class).getBody();
+            } else {
+                estadistiquesInfo = restTemplate.getForObject(entornApp.getEstadisticaInfoUrl(), EstadistiquesInfo.class);
+            }
             monitorEstadistica.endInfoAction();
             // Guardar la inforció de l'estructura de les dades estadístiques
             crearIndicadorsIDimensions(estadistiquesInfo, entornApp.getId());
@@ -154,31 +168,61 @@ public class EstadisticaHelper {
     private Map<String, Boolean> processEstadisticaDades(EntornApp entornApp, String estadisticaUrl, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica, boolean multiplesDies) throws RestClientException {
         Object lock = LOCKS.computeIfAbsent(entornApp.getId(), k -> new Object());
         Map<String, Boolean> result = new HashMap<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         synchronized (lock) {
             monitorEstadistica.startDadesAction();
+            HttpEntity<Void> httpEntity = buildAuthEntityIfNeeded(entornApp);
             if (multiplesDies) {
                 List<RegistresEstadistics> registresEstadistics = restTemplate.exchange(
                         estadisticaUrl,
                         HttpMethod.GET,
-                        null,
+                        httpEntity,
                         new ParameterizedTypeReference<List<RegistresEstadistics>>() {
                         }).getBody();
                 monitorEstadistica.endDadesAction();
                 // Guardar les dades estadístiques
                 registresEstadistics.forEach(r -> {
                     crearEstadistiques(r, entornApp.getId());
-                    result.put(sdf.format(r.getTemps().getData()), getRegistreEstadisticMessage(r));
+                    result.put(r.getTemps().getData().format(formatter), getRegistreEstadisticMessage(r));
                 });
             } else {
-                RegistresEstadistics registresEstadistics = restTemplate.getForObject(estadisticaUrl, RegistresEstadistics.class);
+                RegistresEstadistics registresEstadistics;
+                if (httpEntity != null) {
+                    registresEstadistics = restTemplate.exchange(
+                            estadisticaUrl,
+                            HttpMethod.GET,
+                            httpEntity,
+                            RegistresEstadistics.class).getBody();
+                } else {
+                    registresEstadistics = restTemplate.getForObject(estadisticaUrl, RegistresEstadistics.class);
+                }
                 monitorEstadistica.endDadesAction();
                 // Guardar les dades estadístiques
                 crearEstadistiques(registresEstadistics, entornApp.getId());
-                result.put(sdf.format(registresEstadistics.getTemps().getData()), getRegistreEstadisticMessage(registresEstadistics));
+                result.put(registresEstadistics.getTemps().getData().format(formatter), getRegistreEstadisticMessage(registresEstadistics));
             }
         }
         return result;
+    }
+
+    private HttpEntity<Void> buildAuthEntityIfNeeded(EntornApp entornApp) {
+        if (!entornApp.isEstadisticaAuth()) {
+            return null;
+        }
+        String user = parametresHelper.getParametreText(BaseConfig.PROP_STATS_AUTH_USER);
+        String password = parametresHelper.getParametreText(BaseConfig.PROP_STATS_AUTH_PASSWORD);
+        if (user == null || password == null) {
+            return null;
+        }
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set("Authorization", basicAuthHeader(user, password));
+        return new org.springframework.http.HttpEntity<>(headers);
+    }
+
+    private String basicAuthHeader(String user, String password) {
+        String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return "Basic " + token;
     }
 
     private Boolean getRegistreEstadisticMessage(RegistresEstadistics registresEstadistics) {

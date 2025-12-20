@@ -1,5 +1,7 @@
 package es.caib.comanda.model.v1.estadistica;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import es.caib.comanda.model.v1.deserializer.OffsetDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +16,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +35,8 @@ public class EstadistiquesInfo {
     private String versio;
 
     @Schema(description = "Data de generació de la informació", type = "string", format = "date-time")
-    private Date data;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime data;
 
     @Schema(description = "Dimensions estadístiques disponibles")
     @NotNull @Valid

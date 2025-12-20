@@ -243,8 +243,8 @@ components:
         holder:
           originalHostName: originalHostName
           hostName: hostName
-          address: 6
-          family: 1
+          address: 1
+          family: 5
       properties:
         holder:
           $ref: "#/components/schemas/InetAddressHolder"
@@ -255,8 +255,8 @@ components:
       example:
         originalHostName: originalHostName
         hostName: hostName
-        address: 6
-        family: 1
+        address: 1
+        family: 5
       properties:
         originalHostName:
           type: string
@@ -279,12 +279,25 @@ components:
         href:
           type: string
       type: object
+    OffsetDateTime:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        offset:
+          totalSeconds: 0
+          id: id
+      properties:
+        dateTime:
+          format: date-time
+          type: string
+        offset:
+          $ref: "#/components/schemas/ZoneOffset"
+      type: object
     PageMetadata:
       example:
-        number: 7
-        size: 9
-        totalPages: 2
-        totalElements: 3
+        number: 9
+        size: 3
+        totalPages: 4
+        totalElements: 2
       properties:
         number:
           format: int64
@@ -312,7 +325,11 @@ components:
       description: Representa una tasca publicada a COMANDA perquè sigui processada
         asíncronament
       example:
-        dataCaducitat: 2025-12-01T00:00:00Z
+        dataCaducitat:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         estatDescripcio: En cua
         responsable: usr1234
         entornCodi: DEV
@@ -328,7 +345,7 @@ components:
           protocol: protocol
           ref: ref
           file: file
-          port: 0
+          port: 6
           hashCode: 5
           authority: authority
           host: host
@@ -337,14 +354,14 @@ components:
             holder:
               originalHostName: originalHostName
               hostName: hostName
-              address: 6
-              family: 1
+              address: 1
+              family: 5
           tempState:
             protocol: protocol
             ref: ref
             file: file
-            port: 5
-            hashCode: 2
+            port: 2
+            hashCode: 7
             authority: authority
             host: host
         usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
@@ -352,8 +369,16 @@ components:
         appCodi: PORTAFIB
         numeroExpedient: EXP-12345/2025
         estat: PENDENT
-        dataFi: 2025-11-20T10:00:00Z
-        dataInici: 2025-11-20T09:30:00Z
+        dataFi:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        dataInici:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         grupsAmbPermis: "[\"GESTORS\", \"SUPORT\"]"
         identificador: TAS-2025-0001
       properties:
@@ -394,20 +419,11 @@ components:
         prioritat:
           $ref: "#/components/schemas/Prioritat"
         dataInici:
-          description: Data d'inici prevista o real
-          example: 2025-11-20T09:30:00Z
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         dataFi:
-          description: Data de finalització
-          example: 2025-11-20T10:00:00Z
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         dataCaducitat:
-          description: Data de caducitat límit
-          example: 2025-12-01T00:00:00Z
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         redireccio:
           $ref: "#/components/schemas/URL"
         responsable:
@@ -448,12 +464,16 @@ components:
         - rel: rel
           href: href
         page:
-          number: 7
-          size: 9
-          totalPages: 2
-          totalElements: 3
+          number: 9
+          size: 3
+          totalPages: 4
+          totalElements: 2
         content:
-        - dataCaducitat: 2025-12-01T00:00:00Z
+        - dataCaducitat:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           estatDescripcio: En cua
           responsable: usr1234
           entornCodi: DEV
@@ -469,7 +489,7 @@ components:
             protocol: protocol
             ref: ref
             file: file
-            port: 0
+            port: 6
             hashCode: 5
             authority: authority
             host: host
@@ -478,14 +498,14 @@ components:
               holder:
                 originalHostName: originalHostName
                 hostName: hostName
-                address: 6
-                family: 1
+                address: 1
+                family: 5
             tempState:
               protocol: protocol
               ref: ref
               file: file
-              port: 5
-              hashCode: 2
+              port: 2
+              hashCode: 7
               authority: authority
               host: host
           usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
@@ -493,11 +513,23 @@ components:
           appCodi: PORTAFIB
           numeroExpedient: EXP-12345/2025
           estat: PENDENT
-          dataFi: 2025-11-20T10:00:00Z
-          dataInici: 2025-11-20T09:30:00Z
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           grupsAmbPermis: "[\"GESTORS\", \"SUPORT\"]"
           identificador: TAS-2025-0001
-        - dataCaducitat: 2025-12-01T00:00:00Z
+        - dataCaducitat:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           estatDescripcio: En cua
           responsable: usr1234
           entornCodi: DEV
@@ -513,7 +545,7 @@ components:
             protocol: protocol
             ref: ref
             file: file
-            port: 0
+            port: 6
             hashCode: 5
             authority: authority
             host: host
@@ -522,14 +554,14 @@ components:
               holder:
                 originalHostName: originalHostName
                 hostName: hostName
-                address: 6
-                family: 1
+                address: 1
+                family: 5
             tempState:
               protocol: protocol
               ref: ref
               file: file
-              port: 5
-              hashCode: 2
+              port: 2
+              hashCode: 7
               authority: authority
               host: host
           usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
@@ -537,8 +569,16 @@ components:
           appCodi: PORTAFIB
           numeroExpedient: EXP-12345/2025
           estat: PENDENT
-          dataFi: 2025-11-20T10:00:00Z
-          dataInici: 2025-11-20T09:30:00Z
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           grupsAmbPermis: "[\"GESTORS\", \"SUPORT\"]"
           identificador: TAS-2025-0001
       properties:
@@ -564,7 +604,7 @@ components:
         protocol: protocol
         ref: ref
         file: file
-        port: 0
+        port: 6
         hashCode: 5
         authority: authority
         host: host
@@ -573,14 +613,14 @@ components:
           holder:
             originalHostName: originalHostName
             hostName: hostName
-            address: 6
-            family: 1
+            address: 1
+            family: 5
         tempState:
           protocol: protocol
           ref: ref
           file: file
-          port: 5
-          hashCode: 2
+          port: 2
+          hashCode: 7
           authority: authority
           host: host
       properties:
@@ -620,8 +660,8 @@ components:
         protocol: protocol
         ref: ref
         file: file
-        port: 5
-        hashCode: 2
+        port: 2
+        hashCode: 7
         authority: authority
         host: host
       properties:
@@ -641,5 +681,16 @@ components:
         hashCode:
           format: int32
           type: integer
+      type: object
+    ZoneOffset:
+      example:
+        totalSeconds: 0
+        id: id
+      properties:
+        totalSeconds:
+          format: int32
+          type: integer
+        id:
+          type: string
       type: object
 

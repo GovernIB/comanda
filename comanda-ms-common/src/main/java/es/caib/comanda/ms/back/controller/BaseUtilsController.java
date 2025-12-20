@@ -143,15 +143,18 @@ public abstract class BaseUtilsController {
 	protected abstract String getViteMappedFrontProperty(String propertyName);
 
 	private Map<String, Object> getManifestProperties() throws IOException {
-		InputStream manifestIs = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF");
-		if (manifestIs != null) {
-			Manifest manifest = new Manifest(manifestIs);
-			Attributes attributes = manifest.getMainAttributes();
-			Map<String, Object> props = attributes.keySet().stream().collect(Collectors.toMap(
-					k -> k.toString(),
-					k -> attributes.get(k)));
-			return props;
-		} else {
+		try (InputStream manifestIs = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF")) {
+			if (manifestIs != null) {
+				Manifest manifest = new Manifest(manifestIs);
+				Attributes attributes = manifest.getMainAttributes();
+				Map<String, Object> props = attributes.keySet().stream().collect(Collectors.toMap(
+						k -> k.toString(),
+						k -> attributes.get(k)));
+				return props;
+			} else {
+				return Collections.emptyMap();
+			}
+		} catch (Exception ex) {
 			return Collections.emptyMap();
 		}
 	}

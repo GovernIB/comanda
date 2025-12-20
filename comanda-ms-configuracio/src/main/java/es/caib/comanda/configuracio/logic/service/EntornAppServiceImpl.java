@@ -69,8 +69,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final RestTemplate restTemplate;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final ApplicationEventPublisher eventPublisher;
-	/*private final AclServiceClient aclServiceClient;
-	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;*/
 
     @PostConstruct
     public void init() {

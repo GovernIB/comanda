@@ -105,8 +105,11 @@ const AppEntornForm: React.FC = () => {
             <Grid size={12}>
                 <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} onClick={pingUrl}/>}}}} />
             </Grid>
-            <Grid size={12}>
+            <Grid size={8}>
                 <FormField name="estadisticaCron" />
+            </Grid>
+            <Grid size={4}>
+                <FormField name="estadisticaAuth" type="checkbox" label={t('page.apps.fields.estadistica.auth')} />
             </Grid>
             <Grid size={12}>
                 <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />

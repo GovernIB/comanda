@@ -1,16 +1,16 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
-import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.model.v1.salut.EstatSalut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.InformacioSistema;
 import es.caib.comanda.model.v1.salut.IntegracioPeticions;
 import es.caib.comanda.model.v1.salut.IntegracioSalut;
 import es.caib.comanda.model.v1.salut.MissatgeSalut;
-import es.caib.comanda.model.v1.salut.InformacioSistema;
 import es.caib.comanda.model.v1.salut.SalutInfo;
 import es.caib.comanda.model.v1.salut.SalutNivell;
 import es.caib.comanda.model.v1.salut.SubsistemaSalut;
+import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
+import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
@@ -34,8 +34,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collections;
-import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -96,7 +96,7 @@ class SalutInfoHelperCrearSalutTest {
                 .peticionsOkUltimPeriode(4L).peticionsErrorUltimPeriode(0L).tempsMigUltimPeriode(228)
                 .build();
         MissatgeSalut msg = MissatgeSalut.builder()
-                .data(new Date()).nivell(SalutNivell.WARN).missatge("m1").build();
+                .data(OffsetDateTime.now()).nivell(SalutNivell.WARN).missatge("m1").build();
         // Nou format: objecte InformacioSistema (mantindrem persistència derivant DetallSalut)
         InformacioSistema sys = InformacioSistema.builder()
                 .memoriaTotal("V")
@@ -104,7 +104,7 @@ class SalutInfoHelperCrearSalutTest {
 
         SalutInfo info = SalutInfo.builder()
                 .codi("C")
-                .data(new Date())
+                .data(OffsetDateTime.now())
                 .estatGlobal(appEstat)
                 .estatBaseDeDades(bdEstat)
                 .integracions(Collections.singletonList(integ))

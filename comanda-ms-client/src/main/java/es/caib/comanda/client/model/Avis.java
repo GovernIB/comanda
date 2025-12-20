@@ -6,7 +6,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -17,8 +17,8 @@ public class Avis implements Serializable {
     private String tipus;
     private String nom;
     private String descripcio;
-    private Date dataInici;
-    private Date dataFi;
+    private LocalDateTime dataInici;
+    private LocalDateTime dataFi;
     private URL redireccio;
     private String responsable;
     private String grup;

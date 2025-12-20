@@ -1,4 +1,4 @@
-package es.caib.comanda.model.v1.salut.json;
+package es.caib.comanda.model.v1.deserializer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;

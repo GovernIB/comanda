@@ -3,13 +3,13 @@ package es.caib.comanda.ms.salut.helper;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
+import es.caib.comanda.model.v1.salut.EstatSalut;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.SalutInfo;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
-import es.caib.comanda.model.v1.salut.EstatSalut;
-import es.caib.comanda.model.v1.salut.EstatSalutEnum;
-import es.caib.comanda.model.v1.salut.SalutInfo;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
@@ -32,7 +32,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -78,7 +78,7 @@ class SalutInfoHelperGetSalutInfoEventTest {
         EstatSalut bd = EstatSalut.builder().estat(EstatSalutEnum.UP).latencia(5).build();
         return SalutInfo.builder()
                 .codi("C")
-                .data(new Date())
+                .data(OffsetDateTime.now())
                 .estatGlobal(app)
                 .estatBaseDeDades(bd)
                 .build();

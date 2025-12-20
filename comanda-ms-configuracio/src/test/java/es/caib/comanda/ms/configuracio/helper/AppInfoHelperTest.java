@@ -17,12 +17,12 @@ import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ManualRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.model.v1.salut.ContextInfo;
 import es.caib.comanda.model.v1.salut.IntegracioInfo;
 import es.caib.comanda.model.v1.salut.SubsistemaInfo;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,9 +33,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -159,7 +159,7 @@ public class AppInfoHelperTest {
                 .nom("Test App")
                 .versio("1.0.0")
                 .versioJboss("7.4")
-                .data(new Date())
+                .data(OffsetDateTime.now())
                 .integracions(integracions)
                 .subsistemes(subsistemes)
                 .build();

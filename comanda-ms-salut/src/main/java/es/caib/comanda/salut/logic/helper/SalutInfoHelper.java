@@ -1,18 +1,18 @@
 package es.caib.comanda.salut.logic.helper;
 
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.model.v1.salut.DetallSalut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.InformacioSistema;
 import es.caib.comanda.model.v1.salut.IntegracioPeticions;
 import es.caib.comanda.model.v1.salut.IntegracioSalut;
 import es.caib.comanda.model.v1.salut.MissatgeSalut;
+import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.model.v1.salut.SubsistemaSalut;
 import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
-import es.caib.comanda.model.v1.salut.SalutInfo;
-import es.caib.comanda.model.v1.salut.InformacioSistema;
-import es.caib.comanda.model.v1.salut.DetallSalut;
-import es.caib.comanda.model.v1.salut.SubsistemaSalut;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
@@ -27,15 +27,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.persistence.LockTimeoutException;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -50,6 +47,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -72,11 +70,10 @@ public class SalutInfoHelper {
 	private final RestTemplate restTemplate;
     private final ApplicationEventPublisher eventPublisher;
     private final MetricsHelper metricsHelper;
-    private final SalutPurgeService salutPurgeService;
+    private final SalutPurgeHelper salutPurgeService;
 
 	// Locks per assegurar compactació "synchronized" per entornAppId
-	private static final java.util.concurrent.ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new java.util.concurrent.ConcurrentHashMap<>();
-	private static final Integer BATCH_SIZE = 500;
+	private static final ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new ConcurrentHashMap<>();
 
 	@Transactional
 	public void getSalutInfo(EntornApp entornApp) {
@@ -165,7 +162,7 @@ public class SalutInfoHelper {
 			SalutEntity salut = new SalutEntity();
 			salut.setEntornAppId(entornAppId);
 			salut.setData(currentMinuteTime);
-			salut.setDataApp(toLocalDateTime(info.getData()));
+			salut.setDataApp(info.getData() != null ? info.getData().toLocalDateTime() : null);
 			salut.setTipusRegistre(TipusRegistreSalut.MINUT);
 			SalutEstat appEstat = toSalutEstat(info.getEstatGlobal().getEstat());
 			salut.setAppEstat(appEstat);
@@ -319,7 +316,7 @@ public class SalutInfoHelper {
 		if (filteredMissatges != null) {
             filteredMissatges.forEach(m -> {
 				SalutMissatgeEntity salutMissatge = new SalutMissatgeEntity();
-				salutMissatge.setData(toLocalDateTime(m.getData()));
+				salutMissatge.setData(m.getData() != null ? m.getData().toLocalDateTime() : null);
 				salutMissatge.setNivell(m.getNivell());
 				salutMissatge.setMissatge(m.getMissatge());
 				salutMissatge.setSalut(salut);
@@ -436,6 +433,14 @@ public class SalutInfoHelper {
         }
     }
 
+    // Expose constant for tests maintaining backward compatibility
+    public static final int PURGE_BATCH_SIZE = SalutPurgeHelper.PURGE_BATCH_SIZE;
+
+    // Backward-compatible delegation method for tests/clients
+    public void eliminarDadesSalutAntigues(Long entornAppId, es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut tipus, LocalDateTime data) {
+        salutPurgeService.eliminarDadesSalutAntigues(entornAppId, tipus, data);
+    }
+
     private void agregarGrupMinuts(Long entornAppId, SalutEntity darreraActualitzacioSalut) {
         if (darreraActualitzacioSalut == null) return;
 
@@ -493,6 +498,10 @@ public class SalutInfoHelper {
             }
         }
     }
+
+    // Purga delegada al servei dedicat
+
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Crea un nou registre SalutEntity agregat a partir d'un únic registre de tipus MINUT.
@@ -757,16 +766,6 @@ public class SalutInfoHelper {
         return dateTime != null && dateTime.getHour() == 0 && dateTime.getMinute() == 0;
     }
 
-    private boolean isLockAcquisitionException(Throwable ex) {
-        Throwable t = ex;
-        while (t != null) {
-            if (t instanceof CannotAcquireLockException || t instanceof LockAcquisitionException || t instanceof LockTimeoutException) {
-                return true;
-            }
-            t = t.getCause();
-        }
-        return false;
-    }
 
 }
 

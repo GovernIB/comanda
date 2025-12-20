@@ -221,12 +221,6 @@ public class EntornAppServiceImplTest {
         
         // Call the method to test
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
-        
-        // Verify that the scheduler service was called
-//        verify(schedulerService).programarTasca(entornAppEntity);
-
-        // Verify that the appInfoHelper was called
-//        verify(appInfoHelper).programarTasquesSalutEstadistica(entornAppEntity);
 
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
     }

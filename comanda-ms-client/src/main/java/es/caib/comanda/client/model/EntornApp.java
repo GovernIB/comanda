@@ -15,27 +15,29 @@ import java.util.List;
 @AllArgsConstructor
 public class EntornApp implements Serializable {
 
-	private Long id;
-	private EntornRef entorn;
-	private AppRef app;
+    private Long id;
+    private EntornRef entorn;
+    private AppRef app;
 
-	private String infoUrl;
-	private LocalDateTime infoData;
-	private String versio;
-	private boolean activa;
+    private String infoUrl;
+    private LocalDateTime infoData;
+    private String versio;
+    private boolean activa;
 
-	private String salutUrl;
+    private String salutUrl;
 
-	private Integer integracioCount;
-	private Integer subsistemaCount;
+    private Integer integracioCount;
+    private Integer subsistemaCount;
 
-	private List<AppIntegracio> integracions;
-	private List<AppSubsistema> subsistemes;
-	private List<AppContext> contexts;
+    private List<AppIntegracio> integracions;
+    private List<AppSubsistema> subsistemes;
+    private List<AppContext> contexts;
 
-	private String estadisticaInfoUrl;
-	private String estadisticaUrl;
-	private String estadisticaCron;
+    private String estadisticaInfoUrl;
+    private String estadisticaUrl;
+    private String estadisticaCron;
+
+    private boolean estadisticaAuth;
 
     @Builder.Default
     private Boolean compactable = false;

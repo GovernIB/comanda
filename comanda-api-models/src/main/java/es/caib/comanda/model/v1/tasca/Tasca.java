@@ -1,5 +1,7 @@
 package es.caib.comanda.model.v1.tasca;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import es.caib.comanda.model.v1.deserializer.OffsetDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +11,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Builder
@@ -51,13 +53,16 @@ public class Tasca implements Serializable {
     private Prioritat prioritat;
 
     @Schema(description = "Data d'inici prevista o real", example = "2025-11-20T09:30:00Z", format = "date-time")
-    private Date dataInici;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime dataInici;
 
     @Schema(description = "Data de finalització", example = "2025-11-20T10:00:00Z", format = "date-time")
-    private Date dataFi;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime dataFi;
 
     @Schema(description = "Data de caducitat límit", example = "2025-12-01T00:00:00Z", format = "date-time")
-    private Date dataCaducitat;
+    @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+    private OffsetDateTime dataCaducitat;
 
     @Schema(description = "URL de redirecció per accedir a la tasca", example = "https://dev.caib.es/app/tasques/TAS-2025-0001", format = "uri")
     private URL redireccio;

@@ -52,8 +52,8 @@ class MonitorHelperTest {
         monitorHelper.buidat(5);
 
         verify(monitorRepository, times(3)).findIdsBeforeDate(any(LocalDateTime.class), any(Pageable.class));
-        verify(monitorRepository).deleteAllById(Arrays.asList(1L, 2L));
-        verify(monitorRepository).deleteAllById(Collections.singletonList(3L));
+        verify(monitorRepository).deleteAllByIdInBatch(Arrays.asList(1L, 2L));
+        verify(monitorRepository).deleteAllByIdInBatch(Collections.singletonList(3L));
         verifyNoMoreInteractions(monitorRepository);
     }
 }

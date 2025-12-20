@@ -71,8 +71,8 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
             avis.setTipus(avisBroker.getTipus());
             avis.setNom(avisBroker.getNom());
             avis.setDescripcio(avisBroker.getDescripcio());
-            avis.setDataInici(convertToLocalDateTime(avisBroker.getDataInici()));
-            avis.setDataFi(convertToLocalDateTime(avisBroker.getDataFi()));
+            avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
+            avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
             avis.setUrl(avisBroker.getRedireccio());
             avis.setResponsable(avisBroker.getResponsable());
             avis.setGrup(avisBroker.getGrup());
@@ -84,8 +84,8 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
             avis.setTipus(avisBroker.getTipus());
             avis.setNom(avisBroker.getNom());
             avis.setDescripcio(avisBroker.getDescripcio());
-            avis.setDataInici(convertToLocalDateTime(avisBroker.getDataInici()));
-            avis.setDataFi(convertToLocalDateTime(avisBroker.getDataFi()));
+            avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
+            avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
             avis.setUrl(avisBroker.getRedireccio());
             avis.setResponsable(avisBroker.getResponsable());
             avis.setGrup(avisBroker.getGrup());

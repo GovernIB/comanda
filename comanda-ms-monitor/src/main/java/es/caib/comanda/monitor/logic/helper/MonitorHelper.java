@@ -18,7 +18,7 @@ public class MonitorHelper {
 
     private final MonitorRepository monitorRepository;
 
-    private static final Integer BATCH_SIZE = 500;
+    private static final Integer BATCH_SIZE = 200;
     private static final int LOG_EVERY_BATCHES = 10;
 
 
@@ -43,7 +43,7 @@ public class MonitorHelper {
                 break;
             }
 
-            monitorRepository.deleteAllById(ids);
+            monitorRepository.deleteAllByIdInBatch(ids);
             totalDeleted += ids.size();
             batch++;
 

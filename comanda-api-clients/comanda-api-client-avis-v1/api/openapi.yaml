@@ -251,7 +251,7 @@ components:
           protocol: protocol
           ref: ref
           file: file
-          port: 0
+          port: 6
           hashCode: 5
           authority: authority
           host: host
@@ -260,21 +260,29 @@ components:
             holder:
               originalHostName: originalHostName
               hostName: hostName
-              address: 6
-              family: 1
+              address: 1
+              family: 5
           tempState:
             protocol: protocol
             ref: ref
             file: file
-            port: 5
-            hashCode: 2
+            port: 2
+            hashCode: 7
             authority: authority
             host: host
         usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
         grup: SUPORT
         appCodi: PFI
-        dataFi: 2025-11-21T10:00:00Z
-        dataInici: 2025-11-21T08:00:00Z
+        dataFi:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        dataInici:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
         grupsAmbPermis: "[\"USUARIS\"]"
         identificador: AV-2025-0001
       properties:
@@ -301,15 +309,9 @@ components:
           example: Aturada de manteniment el diumenge a les 8:00
           type: string
         dataInici:
-          description: Data d'inici de vigència
-          example: 2025-11-21T08:00:00Z
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         dataFi:
-          description: Data de fi de vigència
-          example: 2025-11-21T10:00:00Z
-          format: date-time
-          type: string
+          $ref: "#/components/schemas/OffsetDateTime"
         redireccio:
           $ref: "#/components/schemas/URL"
         responsable:
@@ -341,10 +343,10 @@ components:
         - rel: rel
           href: href
         page:
-          number: 7
-          size: 9
-          totalPages: 2
-          totalElements: 3
+          number: 9
+          size: 3
+          totalPages: 4
+          totalElements: 2
         content:
         - responsable: usr1234
           entornCodi: DEV
@@ -359,7 +361,7 @@ components:
             protocol: protocol
             ref: ref
             file: file
-            port: 0
+            port: 6
             hashCode: 5
             authority: authority
             host: host
@@ -368,21 +370,29 @@ components:
               holder:
                 originalHostName: originalHostName
                 hostName: hostName
-                address: 6
-                family: 1
+                address: 1
+                family: 5
             tempState:
               protocol: protocol
               ref: ref
               file: file
-              port: 5
-              hashCode: 2
+              port: 2
+              hashCode: 7
               authority: authority
               host: host
           usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
           grup: SUPORT
           appCodi: PFI
-          dataFi: 2025-11-21T10:00:00Z
-          dataInici: 2025-11-21T08:00:00Z
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           grupsAmbPermis: "[\"USUARIS\"]"
           identificador: AV-2025-0001
         - responsable: usr1234
@@ -398,7 +408,7 @@ components:
             protocol: protocol
             ref: ref
             file: file
-            port: 0
+            port: 6
             hashCode: 5
             authority: authority
             host: host
@@ -407,21 +417,29 @@ components:
               holder:
                 originalHostName: originalHostName
                 hostName: hostName
-                address: 6
-                family: 1
+                address: 1
+                family: 5
             tempState:
               protocol: protocol
               ref: ref
               file: file
-              port: 5
-              hashCode: 2
+              port: 2
+              hashCode: 7
               authority: authority
               host: host
           usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
           grup: SUPORT
           appCodi: PFI
-          dataFi: 2025-11-21T10:00:00Z
-          dataInici: 2025-11-21T08:00:00Z
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
           grupsAmbPermis: "[\"USUARIS\"]"
           identificador: AV-2025-0001
       properties:
@@ -453,8 +471,8 @@ components:
         holder:
           originalHostName: originalHostName
           hostName: hostName
-          address: 6
-          family: 1
+          address: 1
+          family: 5
       properties:
         holder:
           $ref: "#/components/schemas/InetAddressHolder"
@@ -465,8 +483,8 @@ components:
       example:
         originalHostName: originalHostName
         hostName: hostName
-        address: 6
-        family: 1
+        address: 1
+        family: 5
       properties:
         originalHostName:
           type: string
@@ -489,12 +507,25 @@ components:
         href:
           type: string
       type: object
+    OffsetDateTime:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        offset:
+          totalSeconds: 0
+          id: id
+      properties:
+        dateTime:
+          format: date-time
+          type: string
+        offset:
+          $ref: "#/components/schemas/ZoneOffset"
+      type: object
     PageMetadata:
       example:
-        number: 7
-        size: 9
-        totalPages: 2
-        totalElements: 3
+        number: 9
+        size: 3
+        totalPages: 4
+        totalElements: 2
       properties:
         number:
           format: int64
@@ -518,7 +549,7 @@ components:
         protocol: protocol
         ref: ref
         file: file
-        port: 0
+        port: 6
         hashCode: 5
         authority: authority
         host: host
@@ -527,14 +558,14 @@ components:
           holder:
             originalHostName: originalHostName
             hostName: hostName
-            address: 6
-            family: 1
+            address: 1
+            family: 5
         tempState:
           protocol: protocol
           ref: ref
           file: file
-          port: 5
-          hashCode: 2
+          port: 2
+          hashCode: 7
           authority: authority
           host: host
       properties:
@@ -574,8 +605,8 @@ components:
         protocol: protocol
         ref: ref
         file: file
-        port: 5
-        hashCode: 2
+        port: 2
+        hashCode: 7
         authority: authority
         host: host
       properties:
@@ -595,5 +626,16 @@ components:
         hashCode:
           format: int32
           type: integer
+      type: object
+    ZoneOffset:
+      example:
+        totalSeconds: 0
+        id: id
+      properties:
+        totalSeconds:
+          format: int32
+          type: integer
+        id:
+          type: string
       type: object
 

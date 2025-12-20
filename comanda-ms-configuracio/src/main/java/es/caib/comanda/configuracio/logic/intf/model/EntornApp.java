@@ -126,7 +126,12 @@ public class EntornApp extends BaseResource<Long> {
 	@Size(max = 200)
 	@URL
 	private String estadisticaUrl;
-	private String estadisticaCron;
+ 	private String estadisticaCron;
+
+    // Si les estadístiques requereixen autenticació bàsica
+    @InputType("checkbox")
+    @Builder.Default
+    private boolean estadisticaAuth = false;
 
     @Builder.Default
     private Boolean compactable = false;

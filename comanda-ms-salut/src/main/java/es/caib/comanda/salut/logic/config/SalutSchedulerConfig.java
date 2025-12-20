@@ -17,10 +17,22 @@ import org.springframework.core.task.TaskExecutor;
 @EnableScheduling
 public class SalutSchedulerConfig {
 
-    @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":4}")
+//    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
+//    private Integer schedulerPoolSize;
+    @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":5}")
     private Integer workerPoolSize;
-    @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":2000}")
+    @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":1000}")
     private Integer workerQueueSize;
+
+//	@Bean(name = "salutTaskScheduler")
+//	public TaskScheduler salutTaskScheduler() {
+//		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+//		// El scheduler només orquestra i envia feina al worker; no ha de ser el coll d'ampolla
+//		scheduler.setPoolSize(schedulerPoolSize);
+//		scheduler.setThreadNamePrefix("salut-tasques-");
+//        scheduler.initialize();
+//		return scheduler;
+//	}
 
 	@Bean(name = "salutWorkerExecutor")
 	public TaskExecutor salutWorkerExecutor() {

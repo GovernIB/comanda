@@ -1,12 +1,12 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.salut.logic.helper.MetricsHelper;
-import es.caib.comanda.salut.logic.helper.SalutClientHelper;
-import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.model.v1.salut.EstatSalut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.model.v1.salut.InformacioSistema;
 import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
+import es.caib.comanda.salut.logic.helper.SalutClientHelper;
+import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
@@ -27,7 +27,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -81,7 +81,7 @@ class SalutInfoHelperInformacioSistemaTest {
 
         SalutInfo info = SalutInfo.builder()
                 .codi("APP")
-                .data(new Date())
+                .data(OffsetDateTime.now())
                 .estatGlobal(appEstat)
                 .estatBaseDeDades(bdEstat)
                 .informacioSistema(sys)
