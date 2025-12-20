@@ -47,10 +47,10 @@
 	</dependencies>
 	<build>
 		<plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
                 <executions>
                     <!-- Compilació per Java 11 amb OpenAPI -->
                     <execution>
@@ -60,68 +60,12 @@
                             <target>11</target>
                         </configuration>
                     </execution>
-                    <!-- Compilació per Java 7 -->
-<!--                    <execution>-->
-<!--                        <id>java7-compile</id>-->
-<!--                        <goals><goal>compile</goal></goals>-->
-<!--                        <configuration>-->
-<!--                            <source>1.7</source>-->
-<!--                            <target>1.7</target>-->
-<!--                            <compileSourceRoots>-->
-<!--                                <compileSourceRoot>${project.build.directory}/generated-sources/java7</compileSourceRoot>-->
-<!--                            </compileSourceRoots>-->
-<!--                            <outputDirectory>${project.build.directory}/classes-java7</outputDirectory>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                 </executions>
             </plugin>
-
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-antrun-plugin</artifactId>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>strip-openapi-annotations</id>-->
-<!--                        <phase>generate-sources</phase>-->
-<!--                        <goals><goal>run</goal></goals>-->
-<!--                        <configuration>-->
-<!--                            <target>-->
-<!--                                &lt;!&ndash; Copiar codi font &ndash;&gt;-->
-<!--                                <copy todir="${project.build.directory}/generated-sources/java7">-->
-<!--                                    <fileset dir="${project.basedir}/src/main/java"/>-->
-<!--                                </copy>-->
-<!--                                &lt;!&ndash; Eliminar imports de OpenAPI &ndash;&gt;-->
-<!--                                <replaceregexp match="import io\.swagger\.v3\.oas\.annotations.*;" replace="" flags="g" byline="true">-->
-<!--                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>-->
-<!--                                </replaceregexp>-->
-<!--                                &lt;!&ndash; Eliminar anotacions @Schema en una sola línia &ndash;&gt;-->
-<!--                                <replaceregexp match="^\s*@Schema\([^)]*\)\s*$" replace="" flags="gm" byline="false">-->
-<!--                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>-->
-<!--                                </replaceregexp>-->
-<!--                                &lt;!&ndash; Eliminar anotacions @Schema multilínia &ndash;&gt;-->
-<!--                                <replaceregexp match="@Schema\([^()]*(\([^()]*\)[^()]*)*\)" replace="" flags="gs" byline="false">-->
-<!--                                    <fileset dir="${project.build.directory}/generated-sources/java7" includes="**/*.java"/>-->
-<!--                                </replaceregexp>-->
-<!--                            </target>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>delete-generated-java7</id>-->
-<!--                        <phase>install</phase>-->
-<!--                        <goals><goal>run</goal></goals>-->
-<!--                        <configuration>-->
-<!--                            <target>-->
-<!--                                <delete dir="${project.build.directory}/generated-sources/java7" failonerror="false" />-->
-<!--                                <delete dir="${project.build.directory}/classes-java7" failonerror="false" />-->
-<!--                            </target>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+				<version>2.6</version>
                 <executions>
                     <!-- JAR Java 11 -->
                     <execution>
@@ -129,16 +73,6 @@
                         <phase>package</phase>
                         <goals><goal>jar</goal></goals>
                     </execution>
-                    <!-- JAR Java 7 -->
-<!--                    <execution>-->
-<!--                        <id>java7-jar</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals><goal>jar</goal></goals>-->
-<!--                        <configuration>-->
-<!--                            <classifier>java7</classifier>-->
-<!--                            <classesDirectory>${project.build.directory}/classes-java7</classesDirectory>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                 </executions>
             </plugin>
 

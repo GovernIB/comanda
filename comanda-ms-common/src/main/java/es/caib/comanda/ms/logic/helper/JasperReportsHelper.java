@@ -61,8 +61,7 @@ public class JasperReportsHelper {
 			ExportField[] fields,
 			ReportFileType fileType,
 			OutputStream out) throws ReportGenerationException {
-		try {
-			InputStream is = getClass().getResourceAsStream("/dynamic_template.jrxml");
+		try (InputStream is = getClass().getResourceAsStream("/dynamic_template.jrxml")) {
 			ComponentBuilder<?, ?> dynamicReportsComponent = cmp.horizontalList(cmp.image(getClass().getResource("/logo192.png")).setFixedDimension(60, 60),
 					cmp.verticalList(
 							cmp.text("DynamicReports").setStyle(ReportTemplateStyle.bold22CenteredStyle).setHorizontalTextAlignment(HorizontalTextAlignment.LEFT),
@@ -95,7 +94,7 @@ public class JasperReportsHelper {
 					jasperPrint,
 					fileType,
 					out);
-		} catch (DRException | JRException ex) {
+		} catch (DRException | JRException | IOException ex) {
 			throw new ReportGenerationException(
 					resourceClass,
 					"Couldn't generate export file",
