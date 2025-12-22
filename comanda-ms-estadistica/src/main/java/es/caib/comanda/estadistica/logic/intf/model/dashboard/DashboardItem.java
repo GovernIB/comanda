@@ -78,4 +78,9 @@ public class DashboardItem extends BaseResource<Long> {
 
     private AtributsVisuals atributsVisuals;
 
+    protected ResourceReference<TemplateEstils, Long> template;
+    private Long templateId;
+    private Boolean estilsCustom;
+    private Boolean templateHighlight;
+
 }

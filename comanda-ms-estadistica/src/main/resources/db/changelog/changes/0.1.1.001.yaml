@@ -1,0 +1,110 @@
+databaseChangeLog:
+- changeSet:
+    id: est-change-0.1.1.001
+    author: limit
+    changes:
+    - createTable:
+        tableName: ${db_prefix}est_template_estils
+        columns:
+        - column:
+            name: id
+            type: BIGINT
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+              primaryKeyName: ${db_prefix}template_estils_pk
+              nullable: false
+        - column:
+            name: nom
+            type: VARCHAR(64 ${varcharUnit})
+            constraints:
+              nullable: false
+              unique: true
+              uniqueConstraintName: ${db_prefix}template_nom_uk
+        - column:
+            name: colors_clar
+            type: VARCHAR(1000 ${varcharUnit})
+        - column:
+            name: colors_fosc
+            type: VARCHAR(1000 ${varcharUnit})
+        - column:
+            name: destacats_clar
+            type: VARCHAR(1000 ${varcharUnit})
+        - column:
+            name: destacats_fosc
+            type: VARCHAR(1000 ${varcharUnit})
+        - column:
+            name: estils_default
+            type: VARCHAR(4000 ${varcharUnit})
+        - column:
+              constraints:
+                  nullable: false
+              name: created_by
+              type: VARCHAR(64 ${varcharUnit})
+        - column:
+              constraints:
+                  nullable: false
+              name: created_date
+              type: TIMESTAMP
+        - column:
+              name: lastmod_by
+              type: VARCHAR(64 ${varcharUnit})
+        - column:
+              name: lastmod_date
+              type: TIMESTAMP
+        - column:
+              name: v
+              type: BIGINT
+
+- changeSet:
+    id: est_template_estils-2
+    author: limit
+    changes:
+    - addColumn:
+        tableName: ${db_prefix}est_dashboard
+        columns:
+        - column:
+            name: template_id
+            type: BIGINT
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_dashboard
+        baseColumnNames: template_id
+        constraintName: ${db_prefix}dashboard_template_fk
+        referencedTableName: ${db_prefix}est_template_estils
+        referencedColumnNames: id
+
+- changeSet:
+    id: est_template_estils-3
+    author: limit
+    changes:
+    - addColumn:
+        tableName: ${db_prefix}est_dashboard_item
+        columns:
+        - column:
+            name: template_id
+            type: BIGINT
+        - column:
+            name: estils_custom
+            type: BOOLEAN
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}est_dashboard_item
+        baseColumnNames: template_id
+        constraintName: ${db_prefix}dboard_item_template_fk
+        referencedTableName: ${db_prefix}est_template_estils
+        referencedColumnNames: id
+
+- changeSet:
+    id: est_template_estils-4
+    author: limit
+    changes:
+    - insert:
+        tableName: ${db_prefix}est_template_estils
+        columns:
+        - column: { name: nom, value: "Guia d'estils web" }
+        - column: { name: colors_clar, value: "#00548d,#0076c0,#409ad3,#80bde6,#c0def2" }
+        - column: { name: colors_fosc, value: "#00548d,#0076c0,#409ad3,#80bde6,#c0def2" }
+        - column: { name: destacats_clar, value: "#ff6600,#ff9933" }
+        - column: { name: destacats_fosc, value: "#ff6600,#ff9933" }
+        - column: { name: versio, value: 0 }
+        - column: { name: creat_per, value: "system" }
+        - column: { name: data_creacio, valueComputed: "CURRENT_TIMESTAMP" }

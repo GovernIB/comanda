@@ -15,7 +15,7 @@ import {
     MuiDataGridColDef,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     DashboardReactGridLayout,
     GridLayoutItem,
@@ -479,6 +479,9 @@ export const AfegirTitolFormContent = () => {
     </Grid>);
 };
 
+import DashboardLeftBar from '../components/estadistiques/DashboardLeftBar.tsx';
+import DashboardRightBar from '../components/estadistiques/DashboardRightBar.tsx';
+
 const EstadisticaDashboardEdit: React.FC = () => {
     const { t } = useTranslation();
     const { id: paramsId } = useParams();
@@ -491,7 +494,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const {
         isReady: apiDashboardTitolIsReady,
         patch: patchDashboardTitol,
+        create: createDashboardTitol,
     } = useResourceApiService('dashboardTitol');
+    const { isReady: apiTemplateIsReady, find: findTemplates } = useResourceApiService('templateEstils');
+    const { isReady: apiSimpleWidgetIsReady, find: findSimpleWidgets, create: createSimpleWidget } = useResourceApiService('estadisticaSimpleWidget');
+
     const { temporalMessageShow, t: tLib, goBack } = useBaseAppContext();
     const {
         dashboard,
@@ -506,9 +513,104 @@ const EstadisticaDashboardEdit: React.FC = () => {
     } = useDashboardWidgets(dashboardId);
     const [showContentDialog, contentDialogComponent] = useContentDialog();
     const messageDialogButtons = useMessageDialogButtons();
-    const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
     const navigate = useNavigate();
     const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
+
+    const [selectedItemId, setSelectedItemId] = useState<any>(null);
+    const [selectedItemType, setSelectedItemType] = useState<'WIDGET' | 'TITOL'>('WIDGET');
+    const [templates, setTemplates] = useState<any[]>([]);
+    const [availableWidgets, setAvailableWidgets] = useState<any[]>([]);
+    const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
+
+    const { isReady: isReadyGrafic, find: findGraficWidgets, create: createGraficWidget } = useResourceApiService('estadisticaGraficWidget');
+    const { isReady: isReadyTaula, find: findTaulaWidgets, create: createTaulaWidget } = useResourceApiService('estadisticaTaulaWidget');
+
+    useEffect(() => {
+        if (apiTemplateIsReady) {
+            findTemplates({ unpaged: true }).then((data: any) => setTemplates(data.rows || []));
+        }
+    }, [apiTemplateIsReady]);
+
+    useEffect(() => {
+        if (dashboard?.aplicacio?.id) {
+            const promises = [];
+            if (apiSimpleWidgetIsReady) {
+                promises.push(findSimpleWidgets({ unpaged: true, filter: `aplicacio.id : ${dashboard.aplicacio.id}` })
+                    .then((data: any) => (data.rows || []).map((w: any) => ({ ...w, widgetType: 'SIMPLE' }))));
+            }
+            if (isReadyGrafic) {
+                promises.push(findGraficWidgets({ unpaged: true, filter: `aplicacio.id : ${dashboard.aplicacio.id}` })
+                    .then((data: any) => (data.rows || []).map((w: any) => ({ ...w, widgetType: 'GRAFIC' }))));
+            }
+            if (isReadyTaula) {
+                promises.push(findTaulaWidgets({ unpaged: true, filter: `aplicacio.id : ${dashboard.aplicacio.id}` })
+                    .then((data: any) => (data.rows || []).map((w: any) => ({ ...w, widgetType: 'TAULA' }))));
+            }
+
+            if (promises.length > 0) {
+                Promise.all(promises).then((results) => {
+                    setAvailableWidgets(results.flat());
+                });
+            }
+        }
+    }, [apiSimpleWidgetIsReady, isReadyGrafic, isReadyTaula, dashboard?.aplicacio?.id]);
+
+    const handleSelectItem = (id: any, type: 'WIDGET' | 'TITOL') => {
+        setSelectedItemId(id);
+        setSelectedItemType(type);
+    };
+
+    const handleAddEmptyWidget = (type: 'SIMPLE' | 'GRAFIC' | 'TAULA') => {
+        const widgetData = {
+            titol: 'Nou ' + type,
+            descripcio: 'Widget creat des de l\'editor',
+            aplicacio: { id: dashboard.aplicacio?.id },
+            ...defaultSizeAndPosition,
+        };
+
+        const createWidget = type === 'SIMPLE' ? createSimpleWidget : (type === 'GRAFIC' ? createGraficWidget : createTaulaWidget);
+        
+        createWidget({ data: widgetData })
+        .then((newWidget: any) => {
+            createDashboardItem({
+                data: {
+                    dashboard: { id: dashboardId },
+                    widget: { id: newWidget.id },
+                    entornId: dashboard.entorn?.id || 1,
+                    ...defaultSizeAndPosition,
+                }
+            }).then((resp: any) => {
+                forceRefreshDashboardWidgets();
+                handleSelectItem(resp.id, 'WIDGET');
+            });
+        })
+        .catch(err => {
+            temporalMessageShow(null, 'Error al crear el widget: ' + err.message, 'error');
+        });
+    };
+
+    const handleAddExistingWidget = (widgetId: any) => {
+        createDashboardItem({
+            data: {
+                dashboard: { id: dashboardId },
+                widget: { id: widgetId },
+                entornId: dashboard.entorn?.id || 1,
+                ...defaultSizeAndPosition,
+            }
+        }).then((resp: any) => {
+            forceRefreshDashboardWidgets();
+            handleSelectItem(resp.id, 'WIDGET');
+        });
+    };
+
+    const handleUpdateItem = (data: any) => {
+        const patch = selectedItemType === 'TITOL' ? patchDashboardTitol : patchDashboardItem;
+        patch(selectedItemId, { data }).then(() => {
+            forceRefreshDashboardWidgets();
+        });
+    };
+
+    const selectedItem = dashboardWidgets?.find(w => w.id === selectedItemId);
     const openCreateTitolForm = () => {
         titolFormDialogShow(null, {
             title: t($ => $.page.dashboards.action.afegirTitle.title),
@@ -577,6 +679,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
                 temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error');
                 console.error(t($ => $.page.dashboards.action.patchItem.saveError), reason);
             });
+    };
+
+    const handleSelectItemFromGrid = (id: any, type: 'WIDGET' | 'TITOL') => {
+        handleSelectItem(id, type);
     };
 
     const loading = loadingDashboard || loadingWidgetPositions;
@@ -737,16 +843,38 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     }
                 >
                     {/* Se espera a tener los datos a mostrar y a todas las APIs que puedan ser llamadas por onGridLayoutItemsChange */}
-                    {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
-                        <DashboardReactGridLayout
-                            dashboardId={dashboard.id}
-                            dashboardWidgets={dashboardWidgets}
-                            gridLayoutItems={mappedDashboardItems}
-                            onGridLayoutItemsChange={onGridLayoutItemsChange}
-                            editable
-                            refresh={forceRefreshDashboardWidgets}
+                    <Box sx={{ display: 'flex', height: 'calc(100vh - 120px)' }}>
+                        <DashboardLeftBar 
+                            dashboardWidgets={dashboardWidgets || []}
+                            onSelectWidget={handleSelectItem}
+                            onAddWidget={handleAddEmptyWidget}
+                            availableWidgets={availableWidgets}
+                            onAddExistingWidget={handleAddExistingWidget}
+                            selectedItemId={selectedItemId}
                         />
-                    )}
+                        
+                        <Box sx={{ flexGrow: 1, overflow: 'auto', p: 1 }}>
+                            {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
+                                <DashboardReactGridLayout
+                                    dashboardId={dashboard.id}
+                                    dashboardWidgets={dashboardWidgets}
+                                    gridLayoutItems={mappedDashboardItems}
+                                    onGridLayoutItemsChange={onGridLayoutItemsChange}
+                                    editable
+                                    refresh={forceRefreshDashboardWidgets}
+                                    selectedItemId={selectedItemId}
+                                    onSelectItem={handleSelectItemFromGrid}
+                                />
+                            )}
+                        </Box>
+
+                        <DashboardRightBar 
+                            selectedItem={selectedItem}
+                            selectedItemType={selectedItemType}
+                            onUpdate={handleUpdateItem}
+                            templates={templates}
+                        />
+                    </Box>
                 </BasePage>
             )}
             <AddWidgetDialog

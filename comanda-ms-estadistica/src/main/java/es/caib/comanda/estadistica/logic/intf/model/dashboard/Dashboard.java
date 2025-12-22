@@ -77,4 +77,7 @@ public class Dashboard extends BaseResource<Long> {
     private List<DashboardItem> items;
     private List<DashboardTitol> titols;
 
+    protected ResourceReference<TemplateEstils, Long> template;
+    private Long templateId;
+
 }

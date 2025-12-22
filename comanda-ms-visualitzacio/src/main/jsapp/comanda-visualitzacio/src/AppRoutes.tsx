@@ -14,6 +14,7 @@ import EstadisticaWidget from './pages/EstadisticaWidget';
 import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
+import TemplateEstils from './pages/TemplateEstils';
 import VersionsEntorns from './pages/VersionsEntorns';
 import Broker from './pages/Broker';
 import QueueMessages from './pages/QueueMessages';
@@ -69,6 +70,9 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="estadisticaWidget">
                 <Route index element={<EstadisticaWidget />} />
+            </Route>
+            <Route path="templateEstils">
+                <Route index element={<TemplateEstils />} />
             </Route>
             <Route path="calendari">
                 <Route index element={<CalendariEstadistiques />} />

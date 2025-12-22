@@ -687,8 +687,7 @@ public class ConsultaEstadisticaHelperTest {
         // Use reflection to access the private method
         java.lang.reflect.Method method;
         try {
-            method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getDadesComunsConsulta", DashboardItemEntity.class);
+            method = ConsultaEstadisticaHelper.class.getDeclaredMethod("getDadesComunsConsulta", DashboardItemEntity.class);
             method.setAccessible(true);
 
             // Arrange

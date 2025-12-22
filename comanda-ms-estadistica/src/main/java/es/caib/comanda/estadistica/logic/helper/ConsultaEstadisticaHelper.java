@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.estadistica.logic.helper.PeriodeResolverHelper.PeriodeDates;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
@@ -19,6 +20,7 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
+import es.caib.comanda.estadistica.persist.entity.dashboard.TemplateEstilsEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
@@ -63,6 +65,7 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.DASHBOARD_WID
 public class ConsultaEstadisticaHelper {
 
     private final FetRepository fetRepository;
+    private final ObjectMapper objectMapper;
 
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
@@ -613,10 +616,57 @@ public class ConsultaEstadisticaHelper {
     private AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem) {
         var atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
         var atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+        
+        AtributsVisuals result = null;
         if (atributsVisualsWidget != null && atributsVisualsDash != null) {
-            return atributsVisualsDash.merge(atributsVisualsWidget);
+            result = atributsVisualsDash.merge(atributsVisualsWidget);
+        } else {
+            result = atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
         }
-        return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
+
+        TemplateEstilsEntity template = dashboardItem.getTemplate();
+        if (template == null && dashboardItem.getDashboard() != null) {
+            template = dashboardItem.getDashboard().getTemplate();
+        }
+
+        // Si volem aplicar colors destacats de la plantilla
+        if (dashboardItem.getTemplateHighlight() != null && dashboardItem.getTemplateHighlight() && template != null) {
+            if (result == null) {
+                // Instanciem un objecte del tipus correcte
+                try {
+                    result = (AtributsVisuals) dashboardItem.getWidget().getAtributsVisualsType().getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    log.error("Error instanciant atributs visuals", e);
+                }
+            }
+            if (result instanceof AtributsVisualsSimple) {
+                AtributsVisualsSimple simple = (AtributsVisualsSimple) result;
+                // Apliquem colors destacats (per ara agafem el primer de la llista)
+                String[] colors = template.getDestacatsClar().split(",");
+                if (colors.length > 0) simple.setColorFons(colors[0]);
+                if (colors.length > 1) simple.setColorTextDestacat(colors[1]);
+            }
+        }
+
+        // Si no hi ha estils custom o volem aplicar plantilla
+        if (dashboardItem.getEstilsCustom() == null || !dashboardItem.getEstilsCustom()) {
+            if (template != null && template.getEstilsDefaultJson() != null) {
+                try {
+                    AtributsVisuals defaultAtributs = (AtributsVisuals) objectMapper.readValue(
+                            template.getEstilsDefaultJson(),
+                            dashboardItem.getWidget().getAtributsVisualsType());
+                    if (result != null) {
+                        result = result.merge(defaultAtributs);
+                    } else {
+                        result = defaultAtributs;
+                    }
+                } catch (Exception e) {
+                    log.error("Error aplicant plantilla d'estils", e);
+                }
+            }
+        }
+        
+        return result;
     }
 
     private Map<String, List<String>> createDimensionsFiltre(List<DimensioValorEntity> dimensioValors) {

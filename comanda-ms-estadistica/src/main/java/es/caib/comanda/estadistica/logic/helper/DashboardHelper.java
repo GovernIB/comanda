@@ -17,6 +17,8 @@ import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import es.caib.comanda.estadistica.persist.entity.dashboard.TemplateEstilsEntity;
+import es.caib.comanda.estadistica.persist.repository.TemplateEstilsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -33,6 +36,7 @@ import java.util.Objects;
 public class DashboardHelper {
 
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final TemplateEstilsRepository templateEstilsRepository;
 
     public static final String ANSWER_CODE_APP_ID = "appId";
     public static final String ANSWER_CODE_ENTORN_ID = "entornId";
@@ -49,6 +53,10 @@ public class DashboardHelper {
 
     /** Assigna el nom de l'aplicació a partir de l'appId **/
     private void afterConversionGetAppNom(DashboardEntity entity, Dashboard resource) {
+        if (Objects.isNull(entity.getAppId())) {
+            return;
+        }
+
         try {
             App app = estadisticaClientHelper.appFindById(entity.getAppId());
             if (app != null) {
@@ -61,6 +69,9 @@ public class DashboardHelper {
 
     /** Assigna el nom de l'entorn a partir de l'entornId **/
     private void afterConversionGetEntornNom(DashboardEntity entity, Dashboard resource) {
+        if (Objects.isNull(entity.getEntornId())) {
+            return;
+        }
         try {
             Entorn entorn = estadisticaClientHelper.entornById(entity.getEntornId());
             if (entorn != null) {
@@ -73,6 +84,14 @@ public class DashboardHelper {
 
     public void beforeUpdateEntityLogic(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
         beforeUpdateChangeEntornApp(entity, resource, answers);
+        if (entity.getId() == null && entity.getTemplate() == null) {
+            // Nou dashboard, assignar plantilla per defecte
+            Optional<TemplateEstilsEntity> defaultTemplate = templateEstilsRepository.findByNom("Guia d'estils web");
+            defaultTemplate.ifPresent(entity::setTemplate);
+        }
+        if (resource.getTemplateId() != null) {
+            templateEstilsRepository.findById(resource.getTemplateId()).ifPresent(entity::setTemplate);
+        }
     }
 
     private void beforeUpdateChangeEntornApp(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) {

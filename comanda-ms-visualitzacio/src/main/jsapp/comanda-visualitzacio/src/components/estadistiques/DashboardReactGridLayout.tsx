@@ -253,6 +253,8 @@ type DashboardReactGridLayoutProps = {
     onGridLayoutItemsChange?: (gridLayoutItems: GridLayoutItem[]) => void;
     editable: boolean;
     refresh?: () => void;
+    selectedItemId?: any;
+    onSelectItem?: (id: any, type: 'WIDGET' | 'TITOL') => void;
 };
 
 export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
@@ -278,6 +280,8 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     gridLayoutItems,
     onGridLayoutItemsChange,
     refresh,
+    selectedItemId,
+    onSelectItem,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
@@ -433,38 +437,47 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         );
                         if(dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
                         return (
-                            <CustomGridItemComponent key={item.id} refresh={refresh} entity={dashboardWidget ?? dashboardTitol} editable={editable}>
-                                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                                    {(() => {
-                                        switch (item.type) {
-                                            case 'SIMPLE':
-                                                return (
-                                                    <SimpleChartWrapper
-                                                        dashboardWidget={dashboardWidget}
-                                                    />
-                                                );
-                                            case 'GRAFIC':
-                                                return (
-                                                    <GraficChartWrapper
-                                                        dashboardWidget={dashboardWidget}
-                                                    />
-                                                );
-                                            case 'TAULA':
-                                                return (
-                                                    <TaulaChartWrapper
-                                                        dashboardWidget={dashboardWidget}
-                                                    />
-                                                );
-                                            case 'TITOL':
-                                                return (
-                                                    <TitolChartWrapper
-                                                        dashboardTitol={dashboardTitol}
-                                                    />
-                                                );
-                                        }
-                                    })()}
-                                </ErrorBoundary>
-                            </CustomGridItemComponent>
+                            <Box
+                                key={item.id}
+                                onClick={() => onSelectItem?.(item.id, item.type === 'TITOL' ? 'TITOL' : 'WIDGET')}
+                                sx={{
+                                    border: selectedItemId === item.id ? '2px solid #1976d2' : 'none',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                <CustomGridItemComponent refresh={refresh} entity={dashboardWidget ?? dashboardTitol} editable={editable}>
+                                    <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                                        {(() => {
+                                            switch (item.type) {
+                                                case 'SIMPLE':
+                                                    return (
+                                                        <SimpleChartWrapper
+                                                            dashboardWidget={dashboardWidget}
+                                                        />
+                                                    );
+                                                case 'GRAFIC':
+                                                    return (
+                                                        <GraficChartWrapper
+                                                            dashboardWidget={dashboardWidget}
+                                                        />
+                                                    );
+                                                case 'TAULA':
+                                                    return (
+                                                        <TaulaChartWrapper
+                                                            dashboardWidget={dashboardWidget}
+                                                        />
+                                                    );
+                                                case 'TITOL':
+                                                    return (
+                                                        <TitolChartWrapper
+                                                            dashboardTitol={dashboardTitol}
+                                                        />
+                                                    );
+                                            }
+                                        })()}
+                                    </ErrorBoundary>
+                                </CustomGridItemComponent>
+                            </Box>
                         );
                     })}
                 </CustomGridLayout>

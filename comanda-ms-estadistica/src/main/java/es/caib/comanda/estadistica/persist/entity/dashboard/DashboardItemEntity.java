@@ -64,6 +64,19 @@ public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
     @Column(name = "height", nullable = false)
     private int height;
 
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(
+            name = "template_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dboard_item_template_fk"))
+    private TemplateEstilsEntity template;
+
+    @Column(name = "estils_custom")
+    private Boolean estilsCustom;
+
+    @Column(name = "template_highlight")
+    private Boolean templateHighlight;
+
     // Estils del widget sobreescrits al dashboard (opcionals)
     @Column(name = "atributs_visuals", length = 4000)
     protected String atributsVisualsJson;

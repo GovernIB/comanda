@@ -26,13 +26,16 @@ public class RestApiController {
 	private String appServiceUrl;
 	@Value("${es.caib.comanda.visualitzacio.salut.service.url}")
 	private String salutServiceUrl;
+	@Value("${es.caib.comanda.visualitzacio.estadistica.service.url}")
+	private String estadisticaServiceUrl;
 
 	@GetMapping
 	public ResponseEntity<CollectionModel<?>> index(
 			@RequestHeader HttpHeaders headers) throws MalformedURLException, URISyntaxException {
 		List<Link> indexLinks = Arrays.asList(
 				Link.of(toForwardedHeadersUrl(appServiceUrl, headers)).withRel("app"),
-				Link.of(toForwardedHeadersUrl(salutServiceUrl, headers)).withRel("salut"));
+				Link.of(toForwardedHeadersUrl(salutServiceUrl, headers)).withRel("salut"),
+				Link.of(toForwardedHeadersUrl(estadisticaServiceUrl, headers)).withRel("estadistica"));
 		CollectionModel<?> resources = CollectionModel.of(
 				Collections.emptySet(),
 				indexLinks.toArray(Link[]::new));
