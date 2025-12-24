@@ -47,6 +47,46 @@ public class EstadisticaSchedulerService {
         this.estadisticaWorkerExecutor = estadisticaWorkerExecutor;
     }
 
+    @Scheduled(cron = "0 * * * * *")
+    public void scheduledEstadisticaTasks() {
+        if (!isLeader()) {
+            log.info("Refresc d'estadístiques ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
+        LocalDateTime referenceDate = LocalDateTime.now();
+
+        List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
+        if (entornAppsActives.isEmpty()) {
+            log.debug("No hi ha cap entorn-app activa per a les tasques d'estadístiques");
+            return;
+        }
+        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
+        log.debug("Es van a executar les tasques d'estadístiques per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
+        for (EntornApp entornApp : entornAppsActives) {
+            try {
+                if (comandaCronCheck(entornApp.getEstadisticaCron(), referenceDate)) {
+                    executarProces(entornApp);
+                }
+            } catch (IllegalArgumentException e) {
+                log.warn("EntornApp {}:{} no és un cron vàlid.", entornApp.getId(), entornApp.getEstadisticaCron());
+            }
+        }
+
+        // Compactat d'estadístiques
+        Boolean compactarActiu = parametresHelper.getParametreBoolean(BaseConfig.PROP_STATS_COMPACTAR_ACTIU, false);
+        if (compactarActiu) {
+            String compactarCron = parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 5 * * *");
+            try {
+                if (comandaCronCheck(compactarCron, referenceDate)) {
+                    entornAppsActives.stream()
+                            .filter(EntornApp::getCompactable)
+                            .forEach(this::executarProcesCompactacio);
+                }
+            } catch (IllegalArgumentException e) {
+                log.warn("Compactació d'estadístiques: {} no és un cron vàlid.", compactarCron);
+            }
+        }
+    }
     private void executarProces(EntornApp entornApp) {
         // Encuar el treball al worker executor per no bloquejar el scheduler i no perdre execucions
         try {
@@ -63,6 +103,7 @@ public class EstadisticaSchedulerService {
             log.error("Error en programar la tasca al worker d'estadística per l'entornApp: {}.", entornApp.getId(), e);
         }
     }
+
     private void executarProcesCompactacio(EntornApp entornApp) {
         // Encuar el treball al worker executor per no bloquejar el scheduler i no perdre execucions
         try {
@@ -102,46 +143,5 @@ public class EstadisticaSchedulerService {
             throw new IllegalArgumentException("Segment de cron invàlid", e);
         }
         return referenceDate.getMinute() == minut && referenceDate.getHour() == hora;
-    }
-
-    @Scheduled(cron = "0 * * * * *")
-    public void scheduledEstadisticaTasks() {
-        if (!isLeader()) {
-            log.info("Refresc d'estadístiques ignorada: aquesta instància no és leader per als schedulers");
-            return;
-        }
-        LocalDateTime referenceDate = LocalDateTime.now();
-
-        List<EntornApp> entornAppsActives = estadisticaClientHelper.entornAppFindByActivaTrue();
-        if (entornAppsActives.isEmpty()) {
-            log.debug("No hi ha cap entorn-app activa per a les tasques d'estadístiques");
-            return;
-        }
-        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
-        log.debug("Es van a executar les tasques d'estadístiques per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
-        for (EntornApp entornApp : entornAppsActives) {
-            try {
-                if (comandaCronCheck(entornApp.getEstadisticaCron(), referenceDate)) {
-                    executarProces(entornApp);
-                }
-            } catch (IllegalArgumentException e) {
-                log.warn("EntornApp {}:{} no és un cron vàlid.", entornApp.getId(), entornApp.getEstadisticaCron());
-            }
-        }
-
-        // Compactat d'estadístiques
-        Boolean compactarActiu = parametresHelper.getParametreBoolean(BaseConfig.PROP_STATS_COMPACTAR_ACTIU, false);
-        if (compactarActiu) {
-            String compactarCron = parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 3 * * *");
-            try {
-                if (comandaCronCheck(compactarCron, referenceDate)) {
-                    entornAppsActives.stream()
-                            .filter(EntornApp::getCompactable)
-                            .forEach(this::executarProcesCompactacio);
-                }
-            } catch (IllegalArgumentException e) {
-                log.warn("Compactació d'estadístiques: {} no és un cron vàlid.", compactarCron);
-            }
-        }
     }
 }

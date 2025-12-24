@@ -37,6 +37,23 @@ public class ConfiguracioSchedulerService {
         this.configuracioWorkerExecutor = configuracioWorkerExecutor;
     }
 
+    @Scheduled(cron = "30 0/10 * * * *")
+    public void scheduledConfiguracioTasks() {
+        if (!isLeader()) {
+            log.debug("Refresc de configuració ignorada: aquesta instància no és leader per als schedulers");
+            return;
+        }
+
+        List<EntornAppEntity> entornAppsActives = entornAppRepository.findByActivaTrueAndAppActivaTrue();
+        if (entornAppsActives.isEmpty()) {
+            log.debug("No hi ha cap entorn-app activa per a les tasques de configuració");
+            return;
+        }
+        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
+        log.debug("Es van a executar les tasques de configuració per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
+        entornAppsActives.forEach(entornApp -> executarProces(entornApp.getId()));
+    }
+
     private void executarProces(Long entornAppId) {
         try {
             configuracioWorkerExecutor.execute(() -> {
@@ -56,23 +73,6 @@ public class ConfiguracioSchedulerService {
     private boolean isLeader() {
         // TODO: Implementar per microserveis
         return schedulerLeader && schedulerBack;
-    }
-
-    @Scheduled(cron = "30 0/10 * * * *")
-    public void scheduledConfiguracioTasks() {
-        if (!isLeader()) {
-            log.debug("Refresc de configuració ignorada: aquesta instància no és leader per als schedulers");
-            return;
-        }
-
-        List<EntornAppEntity> entornAppsActives = entornAppRepository.findByActivaTrueAndAppActivaTrue();
-        if (entornAppsActives.isEmpty()) {
-            log.debug("No hi ha cap entorn-app activa per a les tasques de configuració");
-            return;
-        }
-        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
-        log.debug("Es van a executar les tasques de configuració per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
-        entornAppsActives.forEach(entornApp -> executarProces(entornApp.getId()));
     }
 
 }

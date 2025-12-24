@@ -49,6 +49,23 @@ public class SalutSchedulerService {
         this.salutWorkerExecutor = salutWorkerExecutor;
     }
 
+    @Scheduled(cron = "0 * * * * *")
+    public void scheduledSalutTasks() {
+        if (!isLeader()) {
+            log.debug("Refresc de salut ignorat: aquesta instància no és leader per als schedulers");
+            return;
+        }
+
+        List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
+        if (entornAppsActives.isEmpty()) {
+            log.debug("No hi ha cap entorn-app activa per a les tasques de salut");
+            return;
+        }
+        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
+        log.debug("Es van a executar les tasques de salut per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
+        entornAppsActives.forEach(this::executarProces);
+    }
+
     private void executarProces(EntornApp entornApp) {
         // Guard anti-solapament per entorn: si ja hi ha una execució pendent o en curs, saltam
         AtomicBoolean flag = tasquesEnExecucio.computeIfAbsent(entornApp.getId(), k -> new AtomicBoolean(false));
@@ -78,23 +95,6 @@ public class SalutSchedulerService {
     private boolean isLeader() {
         // TODO: Implementar per microserveis
         return schedulerLeader && schedulerBack;
-    }
-
-    @Scheduled(cron = "0 * * * * *")
-    public void scheduledSalutTasks() {
-        if (!isLeader()) {
-            log.debug("Refresc de salut ignorat: aquesta instància no és leader per als schedulers");
-            return;
-        }
-
-        List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
-        if (entornAppsActives.isEmpty()) {
-            log.debug("No hi ha cap entorn-app activa per a les tasques de salut");
-            return;
-        }
-        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
-        log.debug("Es van a executar les tasques de salut per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
-        entornAppsActives.forEach(this::executarProces);
     }
 
     // Informe periòdic cada 5 minuts de l'estat del sistema i del worker
