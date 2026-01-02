@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vitest --run && vite build",
-        "build-jboss": "tsc && vitest --run && vite build --base=/comandaback/",
+        "build-jboss": "tsc -b && vitest --run && vite build --base=/comandaback/",
         "test": "vitest",
         "lint": "eslint .",
         "preview": "vite preview",
