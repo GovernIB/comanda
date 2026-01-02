@@ -11,7 +11,7 @@ import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns
 import { Divider, Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import IconAutocompleteSelect from '../IconAutocompleteSelect';
-import FormFieldAdvancedSearchFilters from '../FormFieldAdvancedSearchFilters';
+import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
 
 const EstadisticaSimpleWidgetForm: React.FC = () => {
     const { data } = useFormContext();
@@ -58,9 +58,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         <FormField name="compararPeriodeAnterior" />
                     </Grid>
                     <Grid size={12}>
-                        {/* TODO Refactorizar y crear componente FormFieldAdvancedSearchCustom para pasar props al grid sin filtro o añadir la opción al
-                             FormFieldReference de /lib */}
-                        <FormFieldAdvancedSearchFilters
+                        <FormFieldCustomAdvancedSearch
                             name="indicador"
                             namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]}
                             advancedSearchColumns={columnesIndicador}

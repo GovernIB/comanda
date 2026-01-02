@@ -3,7 +3,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import {useBaseAppContext, GridPage, useResourceApiService, Toolbar, springFilterBuilder as builder} from 'reactlib';
 import {useState, useEffect, useCallback} from "react";
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import '../fullcalendar-custom.css';
 import {
     Button,
@@ -23,7 +23,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import DialogContent from "@mui/material/DialogContent";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import ErrorIcon from '@mui/icons-material/Error';
 import {useTranslation} from "react-i18next";
@@ -106,8 +105,8 @@ export function useEntornAppData(apiReady: boolean, getAll: any) {
 const CalendariEstadistiques: React.FC = () => {
     const { t } = useTranslation();
     const { currentLanguage } = useBaseAppContext();
-    const [dataInici, setDataInici] = useState<Date | null>(null);
-    const [dataFi, setDataFi] = useState<Date | null>(null);
+    const [dataInici, setDataInici] = useState<Dayjs | null>(null);
+    const [dataFi, setDataFi] = useState<Dayjs | null>(null);
     const [obrirDialog, setObrirDialog] = useState(false);
     const [entornAppId, setEntornAppId] = useState<number | ''>('');
     const [datesAmbDades, setDatesAmbDades] = useState<string[]>([]);
@@ -591,14 +590,12 @@ const CalendariEstadistiques: React.FC = () => {
                         <DatePicker
                             label={t($ => $.calendari.data_inici)}
                             value={dataInici}
-                            onChange={(newValue:any) => setDataInici(newValue)}
-                            renderInput={(params:any) => <TextField {...params} fullWidth />}
+                            onChange={(newValue) => setDataInici(newValue)}
                         />
                         <DatePicker
                             label={t($ => $.calendari.data_fi)}
                             value={dataFi}
-                            onChange={(newValue:any) => setDataFi(newValue)}
-                            renderInput={(params:any) => <TextField {...params} fullWidth />}
+                            onChange={(newValue) => setDataFi(newValue)}
                         />
                     </Box>
                 </DialogContent>

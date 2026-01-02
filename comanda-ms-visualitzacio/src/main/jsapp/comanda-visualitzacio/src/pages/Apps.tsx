@@ -109,7 +109,7 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="estadisticaCron" />
             </Grid>
             <Grid size={4}>
-                <FormField name="estadisticaAuth" type="checkbox" label={t('page.apps.fields.estadistica.auth')} />
+                <FormField name="estadisticaAuth" type="checkbox" label={t($ => $.page.apps.fields.estadistica.auth)} />
             </Grid>
             <Grid size={12}>
                 <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />

@@ -54,7 +54,7 @@ const CalendariDadesDialog: React.FC<CalendariDadesDialogProps> = ({
 
   const [indicadorsShow, setIndicadorsShow] = useState<any[]>(indicadorsCodis);
   const [open, setOpen] = useState<boolean>(true);
-  const [filterForm, setFilterForm] = useState<any>({});
+  const [filterForm, setFilterForm] = useState<Record<string, any>>({});
   const deferredFilter = React.useDeferredValue(filterForm);
 
   const currentDadesDiaFiltered = useMemo(() => {
@@ -146,7 +146,8 @@ const CalendariDadesDialog: React.FC<CalendariDadesDialogProps> = ({
                       multiple
                       value={indicadorsShow}
                       onChange={(event) => {
-                        const value = event.target.value;
+                        // On autofill we get a stringified value.
+                        const value = typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value;
                         if (value.includes("all")) {
                           if (indicadorsShow.length === indicadorsCodis.length) {
                             setIndicadorsShow([]);

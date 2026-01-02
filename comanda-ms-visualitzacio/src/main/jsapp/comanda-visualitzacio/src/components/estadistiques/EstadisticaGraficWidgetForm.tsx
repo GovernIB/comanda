@@ -10,7 +10,7 @@ import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns
 import { useTranslation } from "react-i18next";
 import ColorPaletteSelector from "../ColorPaletteSelector";
 import ColumnesTable from "./ColumnesTable.tsx";
-import FormFieldAdvancedSearchFilters from "../FormFieldAdvancedSearchFilters.tsx";
+import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
 
 const EstadisticaGraficWidgetForm: React.FC = () => {
     const { data, apiRef } = useFormContext();
@@ -121,7 +121,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             { (isUnIndicador || isUnIndicadorAmbDescomposicio || isDosIndicadors) && (
                                 <>
                                     <Grid size={4}>
-                                        <FormFieldAdvancedSearchFilters
+                                        <FormFieldCustomAdvancedSearch
                                             name="indicador"
                                             namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]}
                                             advancedSearchColumns={columnesIndicador}

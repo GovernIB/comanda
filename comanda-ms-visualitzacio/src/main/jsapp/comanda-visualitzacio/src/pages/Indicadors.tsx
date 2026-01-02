@@ -17,8 +17,8 @@ import {
     useResourceApiService,
     useFormContext
 } from 'reactlib';
-import FormFieldAdvancedSearchFilters from '../components/FormFieldAdvancedSearchFilters.tsx';
 import { columnesIndicador } from '../components/sharedAdvancedSearch/advancedSearchColumns';
+import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvancedSearch';
 
 const IndicadorsFilter = (props: any) => {
     const { onSpringFilterChange } = props;
@@ -131,7 +131,7 @@ const Indicadors: React.FC = () => {
                     <Grid size={6}><FormField name="tipusCompactacio" /></Grid>
                     {data?.tipusCompactacio === "MITJANA" && (
                         <Grid size={12}>
-                            <FormFieldAdvancedSearchFilters
+                            <FormFieldCustomAdvancedSearch
                                 name="indicadorComptadorPerMitjana"
                                 namedQueries={["groupByNom"]}
                                 advancedSearchColumns={columnesIndicador}
