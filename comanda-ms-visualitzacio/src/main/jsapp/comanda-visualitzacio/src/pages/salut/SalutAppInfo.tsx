@@ -992,7 +992,6 @@ const SalutAppInfo: React.FC<{
             id: 'logs',
             label: t($ => $.page.salut.tabs.logs),
             icon: <Icon>notes</Icon>,
-            disabled: true,
         },
     ];
 

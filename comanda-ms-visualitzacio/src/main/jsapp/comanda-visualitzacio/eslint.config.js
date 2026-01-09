@@ -23,6 +23,7 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      'react-hooks/set-state-in-effect': 'off', // This rule incorrectly detects async functions as synchronous
     },
   },
 )

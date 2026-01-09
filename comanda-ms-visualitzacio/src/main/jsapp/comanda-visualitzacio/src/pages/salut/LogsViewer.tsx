@@ -16,6 +16,7 @@ import PageviewIcon from '@mui/icons-material/Pageview';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { ResourceApiBlobResponse } from '../../../lib/components/ResourceApiProvider';
 import CircularProgress from '@mui/material/CircularProgress';
+import { mergeSequentialStringArrays } from '../../util/stringUtils';
 
 interface FitxerInfo {
     nom: string;
@@ -34,10 +35,12 @@ const LogList = ({
     entornAppId,
     onDownload,
     onPreview,
+    loading,
 }: {
     entornAppId: number;
     onDownload: (nom: string) => void;
     onPreview: (nom: string) => void;
+    loading: boolean;
 }) => {
     const { isReady, artifactReport } = useResourceApiService('entornApp');
     const [logs, setLogs] = useState<FitxerInfo[]>([]);
@@ -119,7 +122,7 @@ const LogList = ({
     );
     return (
         <DataGridPro
-            loading={!logs.length}
+            loading={!logs.length || loading}
             initialState={{
                 sorting: {
                     sortModel: [{ field: 'showPreview', sort: 'desc' }],
@@ -139,7 +142,15 @@ const LogList = ({
 const getLineNumber = (virtualizerLineIndex: number) =>
     (virtualizerLineIndex + 1).toString().slice(-2);
 
-const Virtualizer = ({ lines, scrollToBottom }: { lines: string[]; scrollToBottom: boolean }) => {
+const Virtualizer = ({
+    lines,
+    scrollToBottom,
+    softWrap,
+}: {
+    lines: string[];
+    scrollToBottom: boolean;
+    softWrap: boolean;
+}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const rowVirtualizer = useVirtualizer({
         count: lines.length,
@@ -160,10 +171,12 @@ const Virtualizer = ({ lines, scrollToBottom }: { lines: string[]; scrollToBotto
                 flexGrow: 1,
                 overflow: 'scroll',
                 overflowY: scrollToBottom ? 'hidden' : 'scroll',
+                overflowX: softWrap ? 'hidden' : 'scroll',
                 contain: 'strict',
                 '& p': {
                     pl: 3,
                     position: 'relative',
+                    textWrap: softWrap ? 'wrap' : 'nowrap',
                 },
                 '& .lineNumber': {
                     position: 'absolute',
@@ -212,33 +225,14 @@ const Virtualizer = ({ lines, scrollToBottom }: { lines: string[]; scrollToBotto
 };
 
 const LivePreview = ({
-    entornAppId,
-    fileName,
+    lines,
     scrollToBottom,
+    softWrap,
 }: {
+    lines?: string[] | null;
     scrollToBottom: boolean;
-    fileName: string;
-    entornAppId: number;
+    softWrap: boolean;
 }) => {
-    const { isReady, artifactReport } = useResourceApiService('entornApp');
-    const [lines, setLines] = useState<string[] | null>(null);
-    useEffect(() => {
-        if (!isReady) {
-            return;
-        }
-        async function requests() {
-            const list = await artifactReport(entornAppId, {
-                code: 'previsualitzar_log',
-                data: {
-                    fileName,
-                    lineCount: 1000,
-                },
-            });
-            setLines((list as any[]).map(liniaDto => liniaDto.linia) as string[]);
-        }
-        requests();
-    }, [isReady, artifactReport, entornAppId, fileName]);
-
     if (lines == null) {
         return (
             <Box
@@ -254,18 +248,46 @@ const LivePreview = ({
             </Box>
         );
     }
-    return <Virtualizer lines={lines} scrollToBottom={scrollToBottom} />;
+    return <Virtualizer lines={lines} scrollToBottom={scrollToBottom} softWrap={softWrap} />;
 };
 
 const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
     const [selected, setSelected] = useState<string>();
+    const [lines, setLines] = useState<string[] | null>(null);
+    const [isRefreshLoading, setIsRefreshLoading] = useState<boolean>(false);
+    const [isDownloadLoading, setIsDownloadLoading] = useState<boolean>(false);
     const closeDialogButtons = useCloseDialogButtons();
     const [dialogOpen, setDialogOpen] = useState(false);
     const { isReady, artifactReport } = useResourceApiService('entornApp');
 
+    const refreshPreview = useCallback(async () => {
+        setIsRefreshLoading(true);
+        const list = await artifactReport(entornAppId, {
+            code: 'previsualitzar_log',
+            data: {
+                fileName: selected,
+                lineCount: 1000,
+            },
+        });
+        setLines(prevState => {
+            const newLines = (list as any[]).map(liniaDto => liniaDto.linia) as string[];
+            return mergeSequentialStringArrays(prevState ?? [], newLines);
+        });
+        setIsRefreshLoading(false);
+    }, [artifactReport, entornAppId, selected]);
+
+    useEffect(() => {
+        if (!isReady) {
+            return;
+        }
+        setLines(null);
+        refreshPreview();
+    }, [isReady, artifactReport, entornAppId, selected, refreshPreview]);
+
     const download = useCallback(
         async (name: string) => {
             if (!isReady) return;
+            setIsDownloadLoading(true);
             const file = (await artifactReport(entornAppId, {
                 code: 'descarregar_log',
                 data: name,
@@ -282,6 +304,7 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
 
             a.remove();
             window.URL.revokeObjectURL(url);
+            setIsDownloadLoading(false);
         },
         [artifactReport, entornAppId, isReady]
     );
@@ -303,7 +326,6 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
                 gap: 2,
                 '& p': {
                     m: 0,
-                    textWrap: softWrap ? 'wrap' : 'nowrap',
                 },
             }}
         >
@@ -316,7 +338,12 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
                 buttons={closeDialogButtons}
             >
                 <Box sx={{ height: '500px' }}>
-                    <LogList entornAppId={entornAppId} onDownload={download} onPreview={preview} />
+                    <LogList
+                        entornAppId={entornAppId}
+                        onDownload={download}
+                        onPreview={preview}
+                        loading={isRefreshLoading || isDownloadLoading}
+                    />
                 </Box>
             </Dialog>
             <Box
@@ -353,16 +380,19 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
                     </Button>
                     {selected && (
                         <>
-                            <IconButton>
+                            <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()}>
                                 <RefreshIcon />
                             </IconButton>
-                            <IconButton onClick={() => download(selected)}>
+                            <IconButton
+                                loading={isDownloadLoading}
+                                onClick={() => download(selected)}
+                            >
                                 <DownloadIcon />
                             </IconButton>
                         </>
                     )}
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1}}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
                     <ToggleButton
                         value="wrapText"
                         size="small"
@@ -389,9 +419,9 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
             {selected ? (
                 <LivePreview
                     key={selected + entornAppId}
-                    entornAppId={entornAppId}
-                    fileName={selected}
+                    lines={lines}
                     scrollToBottom={scrollToBottom}
+                    softWrap={softWrap}
                 />
             ) : (
                 <Box
