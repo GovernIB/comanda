@@ -257,6 +257,20 @@ const translationCa = {
             estats: {
                 title: "Estats",
             },
+            logs: {
+                preview: "Previsualitzar",
+                download: "Descarregar",
+                noSelected: "Seleccionar un fitxer",
+                noPreview: "No hi ha previsualització",
+                logsList: {
+                    title: "Logs",
+                    nom: "Nom",
+                    dataCreacio: "Data de creació",
+                    dataModificacio: "Data de modificació",
+                    mida: "Mida",
+                    showPreview: "Previsualitzable",
+                }
+            },
         },
         dashboards: {
             title: "Taulers de control",

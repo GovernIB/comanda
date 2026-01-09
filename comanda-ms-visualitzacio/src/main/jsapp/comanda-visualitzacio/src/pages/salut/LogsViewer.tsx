@@ -17,6 +17,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { ResourceApiBlobResponse } from '../../../lib/components/ResourceApiProvider';
 import CircularProgress from '@mui/material/CircularProgress';
 import { mergeSequentialStringArrays } from '../../util/stringUtils';
+import { useTranslation } from 'react-i18next';
 
 interface FitxerInfo {
     nom: string;
@@ -42,6 +43,7 @@ const LogList = ({
     onPreview: (nom: string) => void;
     loading: boolean;
 }) => {
+    const { t } = useTranslation();
     const { isReady, artifactReport } = useResourceApiService('entornApp');
     const [logs, setLogs] = useState<FitxerInfo[]>([]);
     useEffect(() => {
@@ -60,16 +62,22 @@ const LogList = ({
         () => [
             {
                 field: 'nom',
+                headerName: t($ => $.page.salut.logs.logsList.nom),
                 flex: 1,
             },
             {
                 field: 'dataCreacio',
+                headerName: t($ => $.page.salut.logs.logsList.dataCreacio),
+                flex: 0.5,
             },
             {
                 field: 'dataModificacio',
+                headerName: t($ => $.page.salut.logs.logsList.dataModificacio),
+                flex: 0.5,
             },
             {
                 field: 'mida',
+                headerName: t($ => $.page.salut.logs.logsList.mida),
                 // type: 'number',
                 valueFormatter: value => {
                     if (value >= 1024 * 1024) {
@@ -82,6 +90,7 @@ const LogList = ({
             },
             {
                 field: 'showPreview',
+                headerName: t($ => $.page.salut.logs.logsList.showPreview),
                 type: 'boolean',
             },
             {
@@ -96,20 +105,20 @@ const LogList = ({
                                 <GridActionsCellItem
                                     icon={<PageviewIcon />}
                                     onClick={() => onPreview(params.row.nom)}
-                                    label="Preview"
+                                    label={t($ => $.page.salut.logs.preview)}
                                 />
                             )}
                             <GridActionsCellItem
                                 icon={<DownloadIcon />}
                                 onClick={() => onDownload(params.row.nom)}
-                                label="Download"
+                                label={t($ => $.page.salut.logs.download)}
                             />
                         </GridActionsCell>
                     );
                 },
             },
         ],
-        [onDownload, onPreview]
+        [onDownload, onPreview, t]
     );
     const rows = useMemo(
         () =>
@@ -252,6 +261,7 @@ const LivePreview = ({
 };
 
 const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
+    const { t } = useTranslation();
     const [selected, setSelected] = useState<string>();
     const [lines, setLines] = useState<string[] | null>(null);
     const [isRefreshLoading, setIsRefreshLoading] = useState<boolean>(false);
@@ -330,7 +340,7 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
             }}
         >
             <Dialog
-                title="TRAD"
+                title={t($ => $.page.salut.logs.logsList.title)}
                 open={dialogOpen}
                 closeCallback={() => setDialogOpen(false)}
                 buttonCallback={() => setDialogOpen(false)}
@@ -375,7 +385,7 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
                                 textTransform: 'none',
                             }}
                         >
-                            {selected ?? 'Seleccionar un fitxer'}
+                            {selected ?? t($ => $.page.salut.logs.noSelected)}
                         </Typography>
                     </Button>
                     {selected && (
@@ -438,7 +448,7 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
                         {'block'}
                     </Icon>
                     <Typography variant="h5" color="text.secondary">
-                        No hi ha previsualització
+                        {t($ => $.page.salut.logs.noPreview)}
                     </Typography>
                 </Box>
             )}
