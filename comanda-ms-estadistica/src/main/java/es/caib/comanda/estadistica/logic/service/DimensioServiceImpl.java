@@ -58,7 +58,7 @@ public class DimensioServiceImpl  extends BaseReadonlyResourceService<Dimensio, 
             Subquery<Long> subquery = query.subquery(Long.class);
             Root<DimensioEntity> subRoot = subquery.from(DimensioEntity.class);
             subquery.select(cb.min(subRoot.get("entornAppId")));
-            subquery.where(cb.equal(subRoot.get("nom"), root.get("nom")));
+            subquery.where(cb.equal(subRoot.get("nom"), root.get("nom")), cb.equal(subRoot.get("codi"), root.get("codi")));
             return cb.equal(root.get("entornAppId"), subquery);
         };
     }

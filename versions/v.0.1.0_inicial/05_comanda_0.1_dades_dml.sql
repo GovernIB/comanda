@@ -17,3 +17,10 @@ INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO,
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Tasques', 'Borrat', 'NUMERIC', 'es.caib.comanda.tasca.borrat.dies', 'Número de dies que hem de mantenir les tasques finalitzades en el sistema', NULL, 'Un valor menor que 0 indica que no es borren les tasques finalitzades', NULL, '10', 1, NULL, NULL);
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Tasques', 'Borrat', 'NUMERIC', 'es.caib.comanda.tasca.pendent.borrat.dies', 'Número de dies que hem de mantenir les tasques NO finalitzades en el sistema', NULL, 'El valor 0 indica que no es borren les tasques no finalitzades', NULL, '90', 1, NULL, NULL);
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Avisos', 'Borrat', 'NUMERIC', 'es.caib.comanda.avis.borrat.dies', 'Número de dies que hem de mantenir els avisos en el sistema', NULL, 'El valor 0 indica que no es borren els avisos', NULL, '10', 1, NULL, NULL);
+
+-- Logs estat aplicacio
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO, DESCRIPCIO_KEY, VALOR, EDITABLE, GRUP_KEY, SUBGRUP_KEY) VALUES ('Salut', 'Logs', 'BOOLEAN', 'es.caib.comanda.salut.log.report', 'Generació de report d''estat en el logs', NULL, 'Activar generació de report periòdic d''estat del sistema en el logs de l''aplicació', NULL, 'true', 1, NULL, NULL);
+
+-- Autenticació
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, VALOR, EDITABLE) VALUES ('Estadístiques', 'autenticacio', 'TEXT', 'es.caib.comanda.stats.auth.usuari', 'Usuari', '', 0);
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, VALOR, EDITABLE) VALUES ('Estadístiques', 'autenticacio', 'PASSWORD', 'es.caib.comanda.stats.auth.password', 'Contrasenya', '', 0);

@@ -56,7 +56,7 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
 			Subquery<Long> subquery = query.subquery(Long.class);
 			Root<IndicadorEntity> subRoot = subquery.from(IndicadorEntity.class);
 			subquery.select(cb.min(subRoot.get("entornAppId")));
-			subquery.where(cb.equal(subRoot.get("nom"), root.get("nom")));
+            subquery.where(cb.equal(subRoot.get("nom"), root.get("nom")), cb.equal(subRoot.get("codi"), root.get("codi")));
 			return cb.equal(root.get("entornAppId"), subquery);
 		};
 	}
