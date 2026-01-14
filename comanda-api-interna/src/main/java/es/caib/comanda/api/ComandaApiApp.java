@@ -27,6 +27,8 @@ import java.util.jar.Manifest;
                 "es.caib.comanda.salut",
                 "es.caib.comanda.estadistica",
                 "es.caib.comanda.monitor",
+		        "es.caib.comanda.tasques",
+		        "es.caib.comanda.avisos",
                 "es.caib.comanda.api",
         },
         excludeFilters = @ComponentScan.Filter(
@@ -39,7 +41,11 @@ import java.util.jar.Manifest;
                         "es\\.caib\\.comanda\\.estadistica\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*",
                         "es\\.caib\\.comanda\\.monitor\\.back\\.config\\..*",
-                        "es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*"
+                        "es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*",
+                        "es\\.caib\\.comanda\\.tasques\\.back\\.config\\..*",
+		                "es\\.caib\\.comanda\\.tasques\\.persist\\.config\\..*",
+		                "es\\.caib\\.comanda\\.avisos\\.back\\.config\\..*",
+		                "es\\.caib\\.comanda\\.avisos\\.persist\\.config\\..*",
                 })
 )
 public class ComandaApiApp extends SpringBootServletInitializer {
