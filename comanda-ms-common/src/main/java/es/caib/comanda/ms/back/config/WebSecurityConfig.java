@@ -39,7 +39,8 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 
 	@Value("${" + BaseConfig.PROP_SECURITY_MAPPABLE_ROLES + ":" +
 			BaseConfig.ROLE_ADMIN + "," +
-			BaseConfig.ROLE_CONSULTA + "}")
+			BaseConfig.ROLE_CONSULTA + "," +
+			BaseConfig.ROLE_WEBSERVICE + "}")
 	private String mappableRoles;
 	@Value("${" + BaseConfig.PROP_SECURITY_NAME_ATTRIBUTE_KEY + ":preferred_username}")
 	private String nameAttributeKey;

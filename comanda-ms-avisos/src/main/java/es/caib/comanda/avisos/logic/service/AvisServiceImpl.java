@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
+import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
 import static es.caib.comanda.base.config.Cues.CUA_AVISOS;
 import static es.caib.comanda.base.config.Cues.CUA_TASQUES;
 
@@ -105,6 +106,13 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     protected Specification<AvisEntity> additionalSpecification(String[] namedQueries) {
         String userName = authenticationHelper.getCurrentUserName();
         String[] roles = authenticationHelper.getCurrentUserRoles();
+
+        // Els usuaris amb rol admin poden visualitzar tots els avisos.
+        // Per a aquest motiu, l'usuari de httpauth.username ha de tenir el rol ROLE_ADMIN,
+        // ja que tots els avisos han de ser accessibles mitjançant API interna.
+        if (Arrays.asList(roles).contains(ROLE_ADMIN))
+            return null;
+
         return teGrupSiNoNull(roles).and(
                 teResponsable(userName).
                         or(tePermisUsuari(userName)).

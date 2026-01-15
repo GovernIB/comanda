@@ -23,6 +23,7 @@ public class BaseConfig {
 
 	public static final String ROLE_ADMIN = "COM_ADMIN";
 	public static final String ROLE_CONSULTA = "COM_CONSULTA";
+	public static final String ROLE_WEBSERVICE = "COM_WS";
 
 	public static final String API_PATH = "/api";
 	public static final String PING_PATH = "/ping";
