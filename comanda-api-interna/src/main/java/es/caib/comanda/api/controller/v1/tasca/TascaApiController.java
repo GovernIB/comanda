@@ -32,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -97,7 +98,7 @@ public class TascaApiController extends BaseController {
         if (tasca.getAppCodi() == null || tasca.getEntornCodi() == null)
             return ResponseEntity.badRequest().body("Cal informar appCodi i entornCodi al cos de la petició");
         
-        Boolean existTasca = apiClientHelper.existTasca(tasca.getIdentificador(), tasca.getAppCodi(), tasca.getEntornCodi());
+        Boolean existTasca = existTasca(tasca.getIdentificador(), tasca.getAppCodi(), tasca.getEntornCodi());
         if (!existTasca) {
             return ResponseEntity.notFound().build();
         }
@@ -168,7 +169,7 @@ public class TascaApiController extends BaseController {
             identificadors.add(t.getIdentificador());
         }
 
-        List<es.caib.comanda.client.model.Tasca> tasquesExistents = apiClientHelper.getTasques(identificadors, appCodi, entornCodi);
+        List<es.caib.comanda.client.model.Tasca> tasquesExistents = getTasquesByCodi(identificadors, appCodi, entornCodi);
         if (tasquesExistents == null || tasquesExistents.isEmpty()) {
             return ResponseEntity.status(404).body("No s'ha trobat cap tasca a modificar");
         }
@@ -212,7 +213,7 @@ public class TascaApiController extends BaseController {
             @Parameter(name = "appCodi", description = "Codi de l'aplicació", required = true) @RequestParam String appCodi,
             @Parameter(name = "entornCodi", description = "Codi de l'entorn", required = true) @RequestParam String entornCodi) {
 
-        es.caib.comanda.client.model.Tasca tasca = apiClientHelper.getTasca(identificador, appCodi, entornCodi)
+        es.caib.comanda.client.model.Tasca tasca = getTascaByCodi(identificador, appCodi, entornCodi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No s'ha trobat cap tasca amb l'identificador: " + identificador));
         return ResponseEntity.ok(apiMapper.convert(tasca));
     }
@@ -286,5 +287,21 @@ public class TascaApiController extends BaseController {
     @Override
     protected Link getIndexLink() {
         return null;
+    }
+
+    private Optional<es.caib.comanda.client.model.Tasca> getTascaByCodi(String identificador, String appCodi, String entornCodi) {
+        Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
+        Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
+        return apiClientHelper.getTasca(identificador, appId, entornId);
+    }
+
+    private Boolean existTasca(String identificador, String appCodi, String entornCodi) {
+        return getTascaByCodi(identificador, appCodi, entornCodi).isPresent();
+    }
+
+    public List<es.caib.comanda.client.model.Tasca> getTasquesByCodi(Set<String> identificadors, String appCodi, String entornCodi) {
+        Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
+        Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
+        return apiClientHelper.getTasques(identificadors, appId, entornId);
     }
 }

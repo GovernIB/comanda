@@ -32,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -99,7 +100,7 @@ public class AvisApiController extends BaseController {
         if (avis.getAppCodi() == null || avis.getEntornCodi() == null)
             return ResponseEntity.badRequest().body("Cal informar appCodi i entornCodi al cos de la petició");
 
-        Boolean existAvis = apiClientHelper.existAvis(avis.getIdentificador(), avis.getAppCodi(), avis.getEntornCodi());
+        Boolean existAvis = existAvis(avis.getIdentificador(), avis.getAppCodi(), avis.getEntornCodi());
         if (!existAvis) return ResponseEntity.notFound().build();
         jmsTemplate.convertAndSend(CUA_AVISOS, avis);
         return ResponseEntity.ok("Missatge de modificació enviat a " + CUA_AVISOS);
@@ -169,7 +170,7 @@ public class AvisApiController extends BaseController {
             identificadors.add(a.getIdentificador());
         }
 
-        List<es.caib.comanda.client.model.Avis> avisosExistents = apiClientHelper.getAvisos(identificadors, appCodi, entornCodi);
+        List<es.caib.comanda.client.model.Avis> avisosExistents = getAvisosByCodi(identificadors, appCodi, entornCodi);
         if (avisosExistents == null || avisosExistents.isEmpty()) {
             return ResponseEntity.status(404).body("No s'ha trobat cap avís a modificar");
         }
@@ -212,7 +213,7 @@ public class AvisApiController extends BaseController {
             @Parameter(name = "appCodi", description = "Codi de l'aplicació", required = true) @RequestParam String appCodi,
             @Parameter(name = "entornCodi", description = "Codi de l'entorn", required = true) @RequestParam String entornCodi) {
 
-        es.caib.comanda.client.model.Avis avis = apiClientHelper.getAvis(identificador, appCodi, entornCodi)
+        es.caib.comanda.client.model.Avis avis = getAvisByCodi(identificador, appCodi, entornCodi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No s'ha trobat cap avís amb l'identificador: " + identificador));
         return ResponseEntity.ok(apiMapper.convert(avis));
     }
@@ -288,4 +289,19 @@ public class AvisApiController extends BaseController {
         return null;
     }
 
+    public Optional<es.caib.comanda.client.model.Avis> getAvisByCodi(String identificador, String appCodi, String entornCodi) {
+        Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
+        Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
+        return apiClientHelper.getAvis(identificador, appId, entornId);
+    }
+
+    private Boolean existAvis(String identificador, String appCodi, String entornCodi) {
+        return getAvisByCodi(identificador, appCodi, entornCodi).isPresent();
+    }
+
+    private List<es.caib.comanda.client.model.Avis> getAvisosByCodi(Set<String> identificadors, String appCodi, String entornCodi) {
+        Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
+        Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
+        return apiClientHelper.getAvisos(identificadors, appId, entornId);
+    }
 }
