@@ -51,7 +51,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     public void receiveMessage(@Payload es.caib.comanda.model.v1.tasca.Tasca tascaBroker,
                                Message message) throws JMSException {
         message.acknowledge();
-        log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker);
+        log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker.getIdentificador());
         Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
                 tascaBroker.getEntornCodi(),
                 tascaBroker.getAppCodi());

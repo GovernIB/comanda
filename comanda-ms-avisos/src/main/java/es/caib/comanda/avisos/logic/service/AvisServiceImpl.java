@@ -51,7 +51,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     public void receiveMessage(@Payload es.caib.comanda.model.v1.avis.Avis avisBroker,
                                Message message) throws JMSException {
         message.acknowledge();
-        log.debug("Processat avís de la cua " + CUA_TASQUES + " (avís={})", avisBroker);
+        log.debug("Processat avís de la cua " + CUA_TASQUES + " (avís={})", avisBroker.getIdentificador());
         Optional<EntornApp> entornApp = avisClientHelper.entornAppFindByEntornCodiAndAppCodi(
                 avisBroker.getEntornCodi(),
                 avisBroker.getAppCodi());
