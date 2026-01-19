@@ -7,8 +7,8 @@ import es.caib.comanda.model.v1.avis.AvisPage;
 import es.caib.comanda.ms.back.controller.BaseController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -122,9 +122,8 @@ public class AvisApiController extends BaseController {
             @ApiResponse(responseCode = "500", description = "Error intern")
     })
     public ResponseEntity<String> crearMultiplesAvisos(
-            @Parameter(name = "avisos", description = "Llista d'avisos a publicar", required = true)
             @RequestBody(description = "Llista d'avisos a publicar", required = true,
-                    content = @Content(schema = @Schema(implementation = List.class)))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Avis.class))))
             @org.springframework.web.bind.annotation.RequestBody List<Avis> avisos) {
         for (Avis avis : avisos) {
             jmsTemplate.convertAndSend(CUA_AVISOS, avis);
@@ -147,9 +146,8 @@ public class AvisApiController extends BaseController {
             @ApiResponse(responseCode = "500", description = "Error intern")
     })
     public ResponseEntity<String> modificarMultiplesAvisos(
-            @Parameter(name = "avisos", description = "Llista d'avisos a modificar", required = true)
             @RequestBody(description = "Llista d'avisos a modificar", required = true,
-                    content = @Content(schema = @Schema(implementation = List.class)))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Avis.class))))
             @org.springframework.web.bind.annotation.RequestBody List<Avis> avisos) {
         
         // Validacions
@@ -201,10 +199,7 @@ public class AvisApiController extends BaseController {
             description = "Obté les dades d'un avís a partir del seu identificador, codi d'aplicació i codi d'entorn."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Avís trobat", content = @Content(
-                    schema = @Schema(implementation = Avis.class),
-                    examples = @ExampleObject(name = "ExempleAvis",
-                            value = "{\n  \"id\": 10,\n  \"identificador\": \"AV-2025-0001\",\n  \"tipus\": \"MANTENIMENT\",\n  \"nom\": \"Interrupci\u00F3 programada\",\n  \"descripcio\": \"Aturada de manteniment el diumenge a les 8:00\",\n  \"dataInici\": \"2025-12-13T08:00:00.000+00:00\",\n  \"dataFi\": \"2025-12-13T10:00:00.000+00:00\",\n  \"redireccio\": \"https://dev.caib.es/app/avis/AV-2025-0001\",\n  \"responsable\": \"usr1234\",\n  \"grup\": \"SUPORT\"\n}"))),
+            @ApiResponse(responseCode = "200", description = "Avís trobat", content = @Content(schema = @Schema(implementation = Avis.class))),
             @ApiResponse(responseCode = "404", description = "Avís no trobat"),
             @ApiResponse(responseCode = "401", description = "No autenticat"),
             @ApiResponse(responseCode = "403", description = "Prohibit"),
@@ -227,29 +222,7 @@ public class AvisApiController extends BaseController {
             description = "Obté un llistat paginat d'avisos amb la possibilitat d'aplicar filtres de cerca."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(
-                    schema = @Schema(implementation = AvisPage.class),
-                    examples = @ExampleObject(
-                            name = "ExempleLlistatAvisos",
-                            value = "{\n" +
-                                    "  \"content\": [\n" +
-                                    "    {\n" +
-                                    "      \"id\": 10,\n" +
-                                    "      \"identificador\": \"AV-2025-0001\",\n" +
-                                    "      \"tipus\": \"MANTENIMENT\",\n" +
-                                    "      \"nom\": \"Interrupció programada\"\n" +
-                                    "    }\n" +
-                                    "  ],\n" +
-                                    "  \"page\": {\n" +
-                                    "    \"number\": 0,\n" +
-                                    "    \"size\": 20,\n" +
-                                    "    \"totalElements\": 1,\n" +
-                                    "    \"totalPages\": 1\n" +
-                                    "  }\n" +
-                                    "}"
-                    )
-                )
-            ),
+            @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(schema = @Schema(implementation = AvisPage.class))),
             @ApiResponse(responseCode = "401", description = "No autenticat"),
             @ApiResponse(responseCode = "403", description = "Prohibit"),
             @ApiResponse(responseCode = "500", description = "Error intern")
@@ -281,7 +254,7 @@ public class AvisApiController extends BaseController {
                         .totalPages(result.getMetadata().getTotalPages())
                         .build(),
                 result.getLinks().stream()
-                        .map(l -> AvisPage.Link.builder().rel(l.getRel().value()).href(l.getHref()).build())
+                        .map(l -> AvisPage.AvisPageLink.builder().rel(l.getRel().value()).href(l.getHref()).build())
                         .collect(Collectors.toUnmodifiableList()));
         return ResponseEntity.ok(avisPage);
     }

@@ -34,7 +34,7 @@ public class LogHelper {
             return new ArrayList<>();
         }
         List<FitxerInfo> fitxers = new ArrayList<>();
-        var sdf = new SimpleDateFormat("dd/MM/yyyy");
+        var sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         try (Stream<Path> paths = Files.list(Paths.get(directoriPath))) {
             paths.filter(Files::isRegularFile).forEach(f -> {
                 var file = f.toFile();

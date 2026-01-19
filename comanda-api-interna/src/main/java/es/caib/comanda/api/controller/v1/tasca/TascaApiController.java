@@ -7,8 +7,8 @@ import es.caib.comanda.model.v1.tasca.TascaPage;
 import es.caib.comanda.ms.back.controller.BaseController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -122,9 +122,8 @@ public class TascaApiController extends BaseController {
             @ApiResponse(responseCode = "500", description = "Error intern")
     })
     public ResponseEntity<String> crearMultiplesTasques(
-            @Parameter(name = "tasques", description = "Llista de tasques a publicar", required = true)
             @RequestBody(description = "Llista de tasques a publicar", required = true,
-                    content = @Content(schema = @Schema(implementation = List.class)))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Tasca.class))))
             @org.springframework.web.bind.annotation.RequestBody List<Tasca> tasques) {
         for (Tasca tasca : tasques) {
             jmsTemplate.convertAndSend(CUA_TASQUES, tasca);
@@ -146,9 +145,8 @@ public class TascaApiController extends BaseController {
             @ApiResponse(responseCode = "500", description = "Error intern")
     })
     public ResponseEntity<String> modificarMultiplesTasques(
-            @Parameter(name = "tasques", description = "Llista de tasques a modificar", required = true)
             @RequestBody(description = "Llista de tasques a modificar", required = true,
-                    content = @Content(schema = @Schema(implementation = List.class)))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Tasca.class))))
             @org.springframework.web.bind.annotation.RequestBody List<Tasca> tasques) {
 
         // Validacions
@@ -201,10 +199,7 @@ public class TascaApiController extends BaseController {
             description = "Obté les dades d'una tasca identificada pel seu identificador, codi d'aplicació i codi d'entorn."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tasca trobada", content = @Content(
-                    schema = @Schema(implementation = Tasca.class),
-                    examples = @ExampleObject(name = "ExempleTasca",
-                            value = "{\n  \"id\": 123,\n  \"identificador\": \"TSK-2025-0001\",\n  \"tipus\": \"ACCIO\",\n  \"nom\": \"Revisar expedient\",\n  \"descripcio\": \"Validar dades de l\u2019expedient\",\n  \"estat\": \"PENDENT\",\n  \"estatDescripcio\": \"Pendent de revisi\u00F3\",\n  \"prioritat\": \"ALTA\",\n  \"dataInici\": \"2025-12-12T08:00:00\",\n  \"dataFi\": null,\n  \"dataCaducitat\": \"2025-12-31T23:59:59\",\n  \"url\": \"https://dev.caib.es/app/tasques/TSK-2025-0001\",\n  \"responsable\": \"usr1234\",\n  \"grup\": \"SUPORT\"\n}"))) ,
+            @ApiResponse(responseCode = "200", description = "Tasca trobada", content = @Content(schema = @Schema(implementation = Tasca.class))),
             @ApiResponse(responseCode = "404", description = "Tasca no trobada"),
             @ApiResponse(responseCode = "401", description = "No autenticat"),
             @ApiResponse(responseCode = "403", description = "Prohibit"),
@@ -227,29 +222,7 @@ public class TascaApiController extends BaseController {
             description = "Obté un llistat paginat de tasques amb possibilitat d'aplicar filtres ràpids, filtres avançats, consultes predefinides i perspectives."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(
-                    schema = @Schema(implementation = TascaPage.class),
-                    examples = @ExampleObject(
-                            name = "ExempleLlistatTasques",
-                            value = "{\n" +
-                                    "  \"content\": [\n" +
-                                    "    {\n" +
-                                    "      \"id\": 10,\n" +
-                                    "      \"identificador\": \"AV-2025-0001\",\n" +
-                                    "      \"tipus\": \"MANTENIMENT\",\n" +
-                                    "      \"nom\": \"Interrupció programada\"\n" +
-                                    "    }\n" +
-                                    "  ],\n" +
-                                    "  \"page\": {\n" +
-                                    "    \"number\": 0,\n" +
-                                    "    \"size\": 20,\n" +
-                                    "    \"totalElements\": 1,\n" +
-                                    "    \"totalPages\": 1\n" +
-                                    "  }\n" +
-                                    "}"
-                    )
-                )
-            ),
+            @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(schema = @Schema(implementation = TascaPage.class))),
             @ApiResponse(responseCode = "401", description = "No autenticat"),
             @ApiResponse(responseCode = "403", description = "Prohibit"),
             @ApiResponse(responseCode = "500", description = "Error intern")
@@ -281,7 +254,7 @@ public class TascaApiController extends BaseController {
                         .totalPages(result.getMetadata().getTotalPages())
                         .build(),
                 result.getLinks().stream()
-                        .map(l -> TascaPage.Link.builder().rel(l.getRel().value()).href(l.getHref()).build())
+                        .map(l -> TascaPage.TascaPageLink.builder().rel(l.getRel().value()).href(l.getHref()).build())
                         .collect(Collectors.toUnmodifiableList()));
         return ResponseEntity.ok(tascaPage);
     }
