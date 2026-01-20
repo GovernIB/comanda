@@ -13,6 +13,7 @@ import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -56,7 +57,13 @@ public class CacheServiceImpl extends BaseMutableResourceService<ComandaCache, S
     }
 
     private ComandaCache getComandaCache(String id) {
-        String descripcio = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.cache." + id, (Object[]) null);
+        String descripcio;
+        String i18nKey = "es.caib.comanda.estadistica.cache." + id;
+        try {
+            descripcio = I18nUtil.getInstance().getI18nMessage(i18nKey, (Object[]) null);
+        } catch (NoSuchMessageException ex) {
+            descripcio = i18nKey;
+        }
         var cache = cacheHelper.getCache(id);
         if (cache == null) {
             return ComandaCache.builder()
