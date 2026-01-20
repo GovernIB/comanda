@@ -670,6 +670,9 @@ const translationCa = {
             title: "Mapa del lloc web",
             subtitle: "Accés directe a totes les seccions principals de l’aplicació.",
         },
+        accessibilitat: {
+            title: "Accessibilitat",
+        },
         notFound: "No trobat",
     },
     generic: {

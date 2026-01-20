@@ -23,7 +23,7 @@ import Tasca from "./pages/Tasca.tsx";
 import Avis from "./pages/Avis.tsx";
 import Parametres from './pages/Parametres.tsx';
 import Sitemap from './pages/Sitemap';
-import Accessibilitat from './pages/Accessibilitat';
+import Accessibilitat from './pages/accessibilitat/Accessibilitat.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';

@@ -668,6 +668,9 @@ const translationEs = {
             title: "Mapa del sitio web",
             subtitle: "Acceso directo a todas las secciones principales de la aplicación.",
         },
+        accessibilitat: {
+            title: "Accessibilidad",
+        },
         notFound: "No encontrado",
     },
     generic: {

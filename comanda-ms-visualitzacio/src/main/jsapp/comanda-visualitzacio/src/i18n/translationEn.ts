@@ -666,6 +666,9 @@ const translationEn = {
             title: "Sitemap",
             subtitle: "Direct access to the main sections of the application.",
         },
+        accessibilitat: {
+            title: "Accessibility",
+        },
         notFound: "Not found",
     },
     generic: {
