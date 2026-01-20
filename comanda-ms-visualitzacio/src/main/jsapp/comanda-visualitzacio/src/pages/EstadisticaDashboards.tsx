@@ -15,6 +15,7 @@ import {
 import {iniciaDescargaJSON} from "../util/commonsActions.ts";
 import FormActionDialog from '../components/FormActionDialog.tsx';
 import { findOptions } from '../util/requestUtils.ts';
+import PageTitle from '../components/PageTitle.tsx';
 
 const EstadisticaDashboardForm: React.FC = () => {
     const { data } = useFormContext();
@@ -130,6 +131,7 @@ const EstadisticaDashboards: React.FC = () => {
     const {handleShow: showCloneDashboard, content: contentCloneDashboard} = useCloneDashboardAction(refresh);
     return (
         <GridPage>
+            <PageTitle title={t('page.dashboards.title')} />
             <MuiDataGrid
                 title={t('page.dashboards.title')}
                 resourceName="dashboard"

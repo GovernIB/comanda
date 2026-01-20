@@ -41,6 +41,7 @@ import {ChipColor} from "../util/colorUtil.ts";
 import {SalutField, SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 import { Alert, Tooltip } from '@mui/material';
+import PageTitle from '../components/PageTitle.tsx';
 
 export const ErrorBoundaryFallback = () => {
     const { t } = useTranslation();
@@ -601,6 +602,7 @@ const SalutAppInfo: React.FC = () => {
 
     if (dataLoaded && salutCurrentApp?.peticioError) return (
         <BasePage expandHeight toolbar={toolbar}>
+            <PageTitle title={t('page.salut.appInfoTitle')} />
             <Grid container spacing={2} sx={{ mb: 2 }}>
                 <Grid size={{ sm: 12, lg: 3 }}>
                     <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />

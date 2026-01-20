@@ -15,6 +15,7 @@ import {
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Button, Icon } from '@mui/material';
+import PageTitle from '../components/PageTitle.tsx';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
@@ -101,7 +102,7 @@ const MonitorDetails: React.FC<any> = (props) => {
         { label: t('page.monitors.detail.codiUsuari'), value: data?.codiUsuari },
         { label: t('page.monitors.detail.errorDescripcio'), value: data?.errorDescripcio },
         { label: t('page.monitors.detail.excepcioMessage'), value: data?.excepcioMessage },
-        { 
+        {
             contentValue: (
                 <StacktraceBlock
                     title={t('page.monitors.detail.excepcioStacktrace')}
@@ -177,6 +178,7 @@ const Monitors: React.FC = () => {
         setSelectedModule(newValue);
     };
     return <GridPage>
+        <PageTitle title={t('page.monitors.title')} />
         <MuiGrid
             title={t('page.monitors.title')}
             toolbarAdditionalRow={

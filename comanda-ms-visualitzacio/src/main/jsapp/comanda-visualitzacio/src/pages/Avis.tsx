@@ -19,6 +19,7 @@ import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
 import {GridSortModel, useGridApiRef} from '@mui/x-data-grid-pro';
+import PageTitle from '../components/PageTitle.tsx';
 
 const AvisFilter = (props: any) => {
     const { onSpringFilterChange } = props;
@@ -217,6 +218,7 @@ const Avis = () => {
     }];
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
     return <GridPage>
+        <PageTitle title={t('menu.avis')} />
         <MuiDataGrid
             title={t('menu.avis')}
             resourceName="avis"

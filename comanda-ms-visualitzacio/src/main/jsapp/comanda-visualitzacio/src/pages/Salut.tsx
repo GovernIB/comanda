@@ -37,6 +37,7 @@ import {SalutGenericTooltip} from "../components/SalutChipTooltip.tsx";
 import {useTreeData, useTreeDataEntornAppRenderCell} from "../hooks/treeData.tsx";
 import {ItemStateChip} from "../components/SalutItemStateChip.tsx";
 import { ErrorBoundary } from 'react-error-boundary';
+import PageTitle from '../components/PageTitle';
 
 const useAppData = () => {
     const { isReady: salutApiIsReady, artifactReport: salutApiReport } =
@@ -494,6 +495,7 @@ const Salut: React.FC = () => {
 
     return (
         <BasePage toolbar={toolbar}>
+            <PageTitle title={t('page.salut.title')} />
             {salutLastItems == null || estats == null || reportParams == null || grupsDates == null ? (
                 <Box
                     sx={{

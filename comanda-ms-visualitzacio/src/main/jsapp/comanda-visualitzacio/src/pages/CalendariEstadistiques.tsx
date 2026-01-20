@@ -44,6 +44,7 @@ import Grid from "@mui/material/Grid";
 import Checkbox from "@mui/material/Checkbox";
 import FormGroup from "@mui/material/FormGroup";
 import ListItemText from "@mui/material/ListItemText";
+import PageTitle from '../components/PageTitle.tsx';
 
 interface ErrorInfo {
     date: string;
@@ -159,7 +160,7 @@ const CalendariEstadistiques: React.FC = () => {
     const [datesDisponiblesError, setDatesDisponiblesError] = useState<boolean>(true);
     const [currentViewMonth, setCurrentViewMonth] = useState(dayjs().month());
     const [currentViewYear, setCurrentViewYear] = useState(dayjs().year());
-    
+
     // State for the day data modal
     const [dadesDiaModalOpen, setDadesDiaModalOpen] = useState(false);
     const [currentDadesDia, setCurrentDadesDia] = useState<DadesDia[]>([]);
@@ -194,7 +195,7 @@ const CalendariEstadistiques: React.FC = () => {
         try {
             // Add the date to the loading dates array
             setLoadingDates(prev => [...prev, additionalData.dataInici]);
-            
+
             const data = await apiAction(null, { code: 'obtenir_per_data', data: additionalData });
             if (data.success)
                 temporalMessageShow(null, t('calendari.success_obtenir_dades'), 'success');
@@ -214,7 +215,7 @@ const CalendariEstadistiques: React.FC = () => {
                 setEmptyDates(prev => [...prev, additionalData.dataInici]);
             }
             console.log('Dades buides:', emptyDates);
-            
+
             // Remove the date from loading dates array
             setLoadingDates(prev => prev.filter(date => date !== additionalData.dataInici));
             return data.success;
@@ -231,7 +232,7 @@ const CalendariEstadistiques: React.FC = () => {
         try {
             // Set global loading to true to show blocking overlay
             setGlobalLoading(true);
-            
+
             const data = await apiAction(null, { code: 'obtenir_per_interval', data: additionalData });
             if (data.success) {
                 showMessage(null, t('calendari.success_obtenir_dades'), 'success');
@@ -240,7 +241,7 @@ const CalendariEstadistiques: React.FC = () => {
             } else {
                 showMessage(null, t('calendari.error_obtenir_dades') + ": " + data.message, 'error');
             }
-            
+
             // Set global loading to false when done
             setGlobalLoading(false);
             return data.success;
@@ -287,14 +288,14 @@ const CalendariEstadistiques: React.FC = () => {
                 null,
                 {code: 'dades_dia', data: additionalData}
             )) as DadesDia[];
-            
+
             console.log('Consulta de dades correcta:', data);
-            
+
             // Store the fetched data and open the modal
             setCurrentDadesDia(data);
             setCurrentDataDia(dataFormatada);
             setDadesDiaModalOpen(true);
-            
+
             return true;
         } catch (error: any) {
             console.error('Error en obtenir dades per dia:', error);
@@ -379,11 +380,11 @@ const CalendariEstadistiques: React.FC = () => {
     const getFirstAndLastDayOfMonth = useCallback(() => {
         // Use currentViewMonth and currentViewYear directly
         console.log('Using currentViewMonth and currentViewYear for date calculation');
-        
+
         // Calculate first and last day of month
         const firstDay = dayjs(new Date(currentViewYear, currentViewMonth, 1)).format('YYYY-MM-DD');
         const lastDay = dayjs(new Date(currentViewYear, currentViewMonth + 1, 0)).format('YYYY-MM-DD');
-        
+
         console.log('First day:', firstDay, 'Last day:', lastDay);
         return {
             firstDay,
@@ -414,12 +415,12 @@ const CalendariEstadistiques: React.FC = () => {
             console.log('No mostrar event per a', date);
             return null; // Return null instead of an empty event to completely hide it
         }
-        
+
         console.log('Mostrar event per a', date);
         console.log('Es disposa de dades:', hasDades);
         console.log('Hi ha error:', hasError);
         console.log('Està carregant:', isLoading);
-        
+
         // Si la data està carregant, mostrem un indicador de càrrega
         if (isLoading) {
             return [
@@ -549,21 +550,21 @@ const CalendariEstadistiques: React.FC = () => {
         if (entornAppId === '') {
             return;
         }
-        
+
         const data = info.event.startStr;
-        
+
         // Si l'event té display 'background', no fem res (només pels events sense dades)
         // Això permet que només l'event de tipus block respongui als clics
         if (info.event.display === 'background' && !info.event.extendedProps.esDisponible && !info.event.extendedProps.hasError) {
             return;
         }
-        
+
         // Si la cel·la ja està carregant, no fem res
         if (info.event.extendedProps.isLoading) {
             console.log('La cel·la ja està carregant, no fem res');
             return;
         }
-        
+
         // Si ja hi ha una càrrega global en curs, no fem res
         if (globalLoading) {
             console.log('Hi ha una càrrega global en curs, no fem res');
@@ -608,6 +609,7 @@ const CalendariEstadistiques: React.FC = () => {
 
     return (
         <GridPage disableMargins>
+            <PageTitle title={t('menu.calendari')} />
             {/* Global loading overlay */}
             {globalLoading && (
                 <Box className="global-loading-overlay">
@@ -746,7 +748,7 @@ const CalendariEstadistiques: React.FC = () => {
                         console.log('Current view month:', currentViewMonth, 'Current view year:', currentViewYear);
                         console.log('Start date:', startDate);
                         console.log(dateInfo);
-                        
+
                         // // Refresh the dates with data if an entornApp is selected
                         // if (entornAppId !== '') {
                         //     obtenirDatesDisponibles(entornAppId);
@@ -771,7 +773,7 @@ const CalendariEstadistiques: React.FC = () => {
                                     alert(t('calendari.seleccionar_entorn_app_primer'));
                                     return;
                                 }
-                                
+
                                 // Get the dates using currentViewMonth and currentViewYear
                                 const dates = getFirstAndLastDayOfMonth();
                                 carregarIntervalDades(dates.firstDay, dates.lastDay);

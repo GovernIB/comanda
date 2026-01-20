@@ -16,6 +16,7 @@ import {
     useFormApiRef,
     useResourceApiService
 } from 'reactlib';
+import PageTitle from '../components/PageTitle.tsx';
 
 type DimensionsFilterProps = { onSpringFilterChange: (springFilter?: string) => void };
 const DimensionsFilter = (props: DimensionsFilterProps) => {
@@ -118,6 +119,7 @@ const Dimensions: React.FC = () => {
 
     return (
         <GridPage>
+            <PageTitle title={t('page.dimensions.title')} />
             <MuiGrid
                 title={t('page.dimensions.title')}
                 resourceName="dimensio"

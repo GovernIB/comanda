@@ -8,6 +8,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import EstadisticaSimpleWidgetForm  from "../components/estadistiques/EstadisticaSimpleWidgetForm";
 import EstadisticaGraficWidgetForm  from "../components/estadistiques/EstadisticaGraficWidgetForm";
 import EstadisticaTaulaWidgetForm  from "../components/estadistiques/EstadisticaTaulaWidgetForm";
+import PageTitle from '../components/PageTitle.tsx';
 
 const columns = [
     {
@@ -78,6 +79,7 @@ const EstadisticaWidget: React.FC = () => {
         setTab(newValue);
     };
     return <GridPage>
+        <PageTitle title={t('page.widget.title')} />
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
             <Tabs value={tab} onChange={handleChange}>
                 <Tab label={t('page.widget.simple.tab.title')} />

@@ -6,6 +6,7 @@ import {
     MuiGrid,
     FormField,
 } from 'reactlib';
+import PageTitle from '../components/PageTitle.tsx';
 
 const Entorns: React.FC = () => {
     const { t } = useTranslation();
@@ -20,6 +21,7 @@ const Entorns: React.FC = () => {
         },
     ];
     return <GridPage>
+        <PageTitle title={t('page.entorns.title')} />
         <MuiGrid
             title={t('page.entorns.title')}
             resourceName="entorn"

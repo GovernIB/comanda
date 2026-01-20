@@ -25,6 +25,7 @@ import {
 } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
+import PageTitle from '../components/PageTitle.tsx';
 
 // Types for queue and message data
 interface QueueInfo {
@@ -368,8 +369,11 @@ const QueueMessages: React.FC = () => {
         },
     ];
 
+    const pageTitle = t('page.queue.title', { name: queueName });
+
     return (
         <GridPage>
+            <PageTitle title={pageTitle} />
             <Box sx={{ p: 2 }}>
                 {/* Breadcrumbs navigation */}
                 <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
@@ -380,7 +384,7 @@ const QueueMessages: React.FC = () => {
                 </Breadcrumbs>
 
                 <Typography variant="h4" component="h1" gutterBottom>
-                    {t('page.queue.title', { name: queueName })}
+                    {pageTitle}
                 </Typography>
 
                 {/* Queue details */}

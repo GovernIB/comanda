@@ -54,14 +54,18 @@ export const useTreeData = (
                         size="small"
                         onClick={() => {
                             gridApiRef.current?.expandAllRows();
-                        }}>
+                        }}
+                        title={t('treeData.expandAll')}
+                    >
                         <Icon fontSize="small">unfold_more</Icon>
                     </IconButton>
                     <IconButton
                         size="small"
                         onClick={() => {
                             gridApiRef.current?.collapseAllRows();
-                        }}>
+                        }}
+                        title={t('treeData.collapseAll')}
+                    >
                         <Icon fontSize="small">unfold_less</Icon>
                     </IconButton>
                 </Box>

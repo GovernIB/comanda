@@ -22,6 +22,8 @@ import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
 import Tasca from "./pages/Tasca.tsx";
 import Avis from "./pages/Avis.tsx";
 import Parametres from './pages/Parametres.tsx';
+import Sitemap from './pages/Sitemap';
+import Accessibilitat from './pages/Accessibilitat';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -84,6 +86,8 @@ const AppRoutes: React.FC = () => {
             <Route path="parametre">
                 <Route index element={<Parametres />} />
             </Route>
+            <Route path="sitemap" element={<Sitemap />} />
+            <Route path="accessibilitat" element={<Accessibilitat />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );

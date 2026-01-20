@@ -24,7 +24,8 @@ const DataNoRows: React.FC<DataNoRowsProps> = (props) => {
                     <Icon fontSize="large" color="disabled">
                         pending
                     </Icon>
-                    <Typography variant="h5" color="text.secondary">
+                    {/* Se usa component="div" per a evitar error per ARIA [role] incorrecte */}
+                    <Typography component="div" variant="h5" color="text.secondary">
                         {t('datacommon.findDisabled')}
                     </Typography>
                 </>
@@ -33,7 +34,8 @@ const DataNoRows: React.FC<DataNoRowsProps> = (props) => {
                     <Icon fontSize="large" color="disabled">
                         block
                     </Icon>
-                    <Typography variant="h5" color="text.secondary">
+                    {/* Se usa component="div" per a evitar error per ARIA [role] incorrecte */}
+                    <Typography component="div" variant="h5" color="text.secondary">
                         {noRowsText ?? t('datacommon.noRows')}
                     </Typography>
                 </>

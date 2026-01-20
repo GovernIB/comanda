@@ -12,6 +12,7 @@ import { ContentDetail } from '../components/ContentDetail';
 import { Tabs, Tab, Chip, Box, Button, Icon, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
+import PageTitle from '../components/PageTitle.tsx';
 
 // Types for broker data
 interface BrokerInfo {
@@ -214,6 +215,7 @@ const Broker: React.FC = () => {
 
     return (
         <GridPage>
+            <PageTitle title={t('page.broker.title')} />
             <Box sx={{ p: 2, pb: 6 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     {t('page.broker.title')}

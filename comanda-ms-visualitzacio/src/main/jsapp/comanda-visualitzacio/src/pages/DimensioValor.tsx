@@ -17,6 +17,7 @@ import {
     useResourceApiService,
     useBaseAppContext, useFormContext,
 } from 'reactlib';
+import PageTitle from '../components/PageTitle.tsx';
 
 const DimensioValorForm: React.FC = () => {
     const { data } = useFormContext();
@@ -116,10 +117,13 @@ const DimensioValor: React.FC = () => {
 
     const filterElement = <DimensioValorFilter onSpringFilterChange={setFilter} />;
 
+    const gridTitle = `Valors dimensió ${dimensionName ?? ''}`;
+
     return (
         <GridPage>
+            <PageTitle title={gridTitle} />
             <MuiGrid
-                title={`Valors dimensió ${dimensionName ?? ''}`}
+                title={gridTitle}
                 resourceName="dimensioValor"
                 columns={columns}
                 toolbarType="upper"

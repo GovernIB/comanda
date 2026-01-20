@@ -101,16 +101,22 @@ const RefreshTimeoutSelect: React.FC<any> = (props: { disabled?: boolean; onChan
     React.useEffect(() => {
         callOnChange(duration);
     }, []);
-    return <FormControl>
+    return <FormControl
+        title={t('page.salut.refreshperiod.title')}
+    >
         <Select
-            labelId="range-select-label"
-            id="range-select"
             value={duration}
             size="small"
             disabled={disabled}
             onChange={handleChange}
             startAdornment={<InputAdornment position="start"><Icon>update</Icon></InputAdornment>}
-            sx={{ mr: 1 }}>
+            sx={{ mr: 1 }}
+            slotProps={{
+                input: {
+                    'aria-label': t('page.salut.refreshperiod.title')
+                }
+            }}
+        >
             <MenuItem value={"PT1M"}>{t('page.salut.refreshperiod.PT1M')}</MenuItem>
             <MenuItem value={"PT5M"}>{t('page.salut.refreshperiod.PT5M')}</MenuItem>
             <MenuItem value={"PT10M"}>{t('page.salut.refreshperiod.PT10M')}</MenuItem>
@@ -150,16 +156,22 @@ const AppDataRangeSelect: React.FC<any> = (props: { disabled?: boolean; onChange
     React.useEffect(() => {
         callOnChange(duration);
     }, []);
-    return <FormControl>
+    return <FormControl
+        title={t('page.salut.timerange.title')}
+    >
         <Select
-            labelId="range-select-label"
-            id="range-select"
             value={duration}
             size="small"
             disabled={disabled}
             onChange={handleChange}
             startAdornment={<InputAdornment position="start"><Icon>date_range</Icon></InputAdornment>}
-            sx={{ mr: 1 }}>
+            sx={{ mr: 1 }}
+            slotProps={{
+                input: {
+                    'aria-label': t('page.salut.timerange.title')
+                }
+            }}
+        >
             <MenuItem value={"PT15M"}>{t('page.salut.timerange.PT15M')}</MenuItem>
             <MenuItem value={"PT1H"}>{t('page.salut.timerange.PT1H')}</MenuItem>
             <MenuItem value={"P1D"}>{t('page.salut.timerange.P1D')}</MenuItem>
@@ -439,7 +451,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             element: (
                 <>
                     {!hideFilter && (
-                        <IconButton onClick={() => handleOpen()}>
+                        <IconButton
+                            onClick={() => handleOpen()}
+                            title={t('page.salut.filtrar')}
+                        >
                             {springFilter ? (
                                 <FilterAltIcon fontSize="small" />
                             ) : (
@@ -476,12 +491,19 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     //         {subtitle}
     //     </Typography>
     // });
-    goBackActive && toolbarElementsWithPositions.unshift({
-        position: 0,
-        element: <IconButton onClick={() => goBack('/')} sx={{ mr: 1 }}>
-            <Icon>arrow_back</Icon>
-        </IconButton>
-    });
+    goBackActive &&
+        toolbarElementsWithPositions.unshift({
+            position: 0,
+            element: (
+                <IconButton
+                    onClick={() => goBack('/')}
+                    sx={{ mr: 1 }}
+                    title={t('page.salut.goBack')}
+                >
+                    <Icon>arrow_back</Icon>
+                </IconButton>
+            ),
+        });
     return <><Toolbar
         title={<>
             {title}{state}

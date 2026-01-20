@@ -74,11 +74,15 @@ const translationEs = {
         parametre: "Parámetros",
         dimensio: "Dimensiones",
         indicador: "Indicadores",
+        accessibilitat: "Accesibilidad",
+        sitemap: "Mapa del sitio web",
     },
     page: {
         salut: {
-            title: "Salut",
+            title: "Salud",
+            appInfoTitle: "Salud de la aplicación",
             refrescar: "Refrescar",
+            goBack: "Ir atrás",
             filtrar: "Filtrar por aplicación/entorno",
             senseFiltres: "Sin filtros",
             nd: "N/D",
@@ -104,6 +108,7 @@ const translationEs = {
                 detalls: "Detalles",
             },
             refreshperiod: {
+                title: "Periodicidad del refresco",
                 PT1M: "1 minuto",
                 PT5M: "5 minutos",
                 PT10M: "10 minutos",
@@ -111,6 +116,7 @@ const translationEs = {
                 PT1H: "1 hora",
             },
             timerange: {
+                title: "Intervalo de tiempo de los datos",
                 PT15M: "Últimos 15 minutos",
                 PT1H: "Última hora",
                 P1D: "Último dia",
@@ -658,6 +664,10 @@ const translationEs = {
                 },
             },
         },
+        sitemap: {
+            title: "Mapa del sitio web",
+            subtitle: "Acceso directo a todas las secciones principales de la aplicación.",
+        },
         notFound: "No encontrado",
     },
     generic: {
@@ -682,6 +692,7 @@ const translationEs = {
                 edit: 'Editar',
                 download: 'Descargar',
                 clear: 'Borrar',
+                avatarAlt: 'Imagen subida por el usuario',
             },
         },
     },
@@ -723,7 +734,9 @@ const translationEs = {
         indicadors: "Indicadores",
     },
     treeData: {
-        treeView: "Vista en árbol"
+        treeView: "Vista en árbol",
+        expandAll: "Expandir todas las filas",
+        collapseAll: "Contraer todas las filas",
     },
 };
 

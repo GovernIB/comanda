@@ -72,11 +72,15 @@ const translationEn = {
         dashboard: "Dashboards",
         calendari: "Calendar",
         parametre: "Parameters",
+        accessibilitat: "Accessibility",
+        sitemap: "Sitemap",
     },
     page: {
         salut: {
             title: "Health",
+            appInfoTitle: "App health",
             refrescar: "Refresh",
+            goBack: "Go back",
             filtrar: "Filter by application/environment",
             senseFiltres: "No filters",
             nd: "N/A",
@@ -102,6 +106,7 @@ const translationEn = {
                 detalls: "Details",
             },
             refreshperiod: {
+                title: "Refresh period",
                 PT1M: "1 minute",
                 PT5M: "5 minutes",
                 PT10M: "10 minutes",
@@ -109,6 +114,7 @@ const translationEn = {
                 PT1H: "1 hour",
             },
             timerange: {
+                title: "Data time interval",
                 PT15M: "Last 15 minutes",
                 PT1H: "Last hour",
                 P1D: "Last day",
@@ -656,6 +662,10 @@ const translationEn = {
                 },
             },
         },
+        sitemap: {
+            title: "Sitemap",
+            subtitle: "Direct access to the main sections of the application.",
+        },
         notFound: "Not found",
     },
     generic: {
@@ -680,6 +690,7 @@ const translationEn = {
                 edit: 'Edit',
                 download: 'Download',
                 clear: 'Clear',
+                avatarAlt: 'User uploaded image',
             },
         },
     },
@@ -721,7 +732,9 @@ const translationEn = {
         indicadors: "Indicators",
     },
     treeData: {
-        treeView: "Tree view"
+        treeView: "Tree view",
+        expandAll: "Expand all rows",
+        collapseAll: "Collapse all rows",
     },
 };
 

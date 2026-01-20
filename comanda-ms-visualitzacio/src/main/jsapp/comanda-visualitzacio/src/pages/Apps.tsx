@@ -31,6 +31,7 @@ import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/Mu
 import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 import {Cancel, CheckCircle} from '@mui/icons-material';
 import { FormFieldDataActionType } from '../../lib/components/form/FormContext';
+import PageTitle from '../components/PageTitle.tsx';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -228,15 +229,18 @@ export const AppForm: React.FC = () => {
         },
     ];
 
+    const formTitle = id ? t('page.apps.update') : t('page.apps.create');
+
     return (
         <MuiForm
             key={id} // TODO No debería ser necesario, parece un bug de la librería
             id={id}
-            title={id ? t('page.apps.update') : t('page.apps.create')}
+            title={formTitle}
             resourceName="app"
             goBackLink="/app"
             createLink="form/{{id}}"
         >
+            <PageTitle title={formTitle} />
             <MuiFormTabs tabs={formTabs} tabIndexesWithGrids={[1]}>
                 <MuiFormTabContent index={0} showOnCreate>
                     <FormPage>
@@ -429,6 +433,7 @@ const Apps: React.FC = () => {
     ];
     return (
         <GridPage>
+            <PageTitle title={t('page.apps.title')} />
             <MuiDataGrid
                 apiRef={gridApiRef}
                 title={t('page.apps.title')}

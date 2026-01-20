@@ -40,6 +40,9 @@ const componentsCa = {
         refresh: {
             label: 'Refrescar',
         },
+        quickfilter: {
+            label: 'Filtre ràpid',
+        },
         toolbar: {
             error: "S'ha produit un error",
         },

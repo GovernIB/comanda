@@ -17,6 +17,7 @@ import {
     ContainerAuthProvider,
     ResourceApiProvider
 } from 'reactlib';
+import { HelmetProvider } from '@dr.pogodin/react-helmet';
 
 dayjs.extend(duration);
 
@@ -59,15 +60,17 @@ const AuthProvider = isAuthUrlPresent ? KeycloakAuthProvider : ContainerAuthProv
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
-            <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
-                <ThemeProvider theme={theme}>
-                    <CssBaseline />
-                    <BrowserRouter basename={import.meta.env.BASE_URL}>
-                        <App />
-                    </BrowserRouter>
-                </ThemeProvider>
-            </ResourceApiProvider>
-        </AuthProvider>
+        <HelmetProvider>
+            <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
+                <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
+                    <ThemeProvider theme={theme}>
+                        <CssBaseline />
+                        <BrowserRouter basename={import.meta.env.BASE_URL}>
+                            <App />
+                        </BrowserRouter>
+                    </ThemeProvider>
+                </ResourceApiProvider>
+            </AuthProvider>
+        </HelmetProvider>
     </React.StrictMode>
 );

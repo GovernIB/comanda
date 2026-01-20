@@ -62,6 +62,7 @@ import {ShrinkableDrawer} from "../components/SideMenu.tsx";
 import SimpleWidgetVisualization from "../components/estadistiques/SimpleWidgetVisualization.tsx";
 import GraficWidgetVisualization from "../components/estadistiques/GraficWidgetVisualization.tsx";
 import TaulaWidgetVisualization from "../components/estadistiques/TaulaWidgetVisualization.tsx";
+import PageTitle from '../components/PageTitle.tsx';
 
 const EntornAppFilterContent = (props: any) => {
     const { initialData } = props;
@@ -567,6 +568,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
     return (
         <>
+            <PageTitle title={t('page.dashboards.title')} />
             {titolFormDialogComponent}
             {contentDialogComponent}
             {loading ? (

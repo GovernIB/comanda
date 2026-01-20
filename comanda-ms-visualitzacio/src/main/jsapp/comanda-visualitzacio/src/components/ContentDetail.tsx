@@ -21,7 +21,7 @@ type ContentDetailProps = {
 export const ContentDetail: React.FC<ContentDetailProps> = (props) => {
     const { title, elements } = props;
     return <Box sx={{ minHeight: '100%', p: {xs: 2, sm:4} }}>
-        {title && <Typography variant="h5" fontWeight="bold" gutterBottom>
+        {title && <Typography component="h2" variant="h5" fontWeight="bold" gutterBottom>
             {title}
         </Typography>}
         <Grid container spacing={1}>
@@ -29,7 +29,7 @@ export const ContentDetail: React.FC<ContentDetailProps> = (props) => {
                 filter(item => (item.value !== undefined && item.value !== '') || item.contentValue || (item.subElements !== undefined && item.subElements.length>0)).
                 map((item, index, filteredArray) => <React.Fragment key={index}>
                     {!!item.label && <Grid size={{xs:12, sm:4}}>
-                        <Typography variant="subtitle1" fontWeight={item.boldLabel ?? true ? "bold" : "medium"} >
+                        <Typography component="h3" variant="subtitle1" fontWeight={item.boldLabel ?? true ? "bold" : "medium"} >
                             {item.label}
                         </Typography>
                     </Grid>}
@@ -43,7 +43,7 @@ export const ContentDetail: React.FC<ContentDetailProps> = (props) => {
                     map((sub, subIndex) => (
                             <React.Fragment key={`${index}-sub-${subIndex}`}>
                                 <Grid size={{xs:12, sm:4}}>
-                                <Typography variant="subtitle1" fontWeight={sub.boldLabel ?? false ? "bold" : "medium"} fontStyle='italic' color="text.secondary" sx={{ pl: 2, pt: {xs: (sub.boldLabel ?? false ? 2 : 0)} }} >
+                                <Typography component="h4" variant="subtitle1" fontWeight={sub.boldLabel ?? false ? "bold" : "medium"} fontStyle='italic' color="text.secondary" sx={{ pl: 2, pt: {xs: (sub.boldLabel ?? false ? 2 : 0)} }} >
                                     {sub.label}
                                 </Typography>
                                 </Grid>
