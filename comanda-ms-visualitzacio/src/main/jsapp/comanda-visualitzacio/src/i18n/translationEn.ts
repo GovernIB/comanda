@@ -263,6 +263,20 @@ const translationEn: translationResourcesType = {
             estats: {
                 title: "States",
             },
+            logs: {
+                preview: "Preview",
+                download: "Download",
+                noSelected: "Select a file",
+                noPreview: "No preview available",
+                logsList: {
+                    title: "Logs",
+                    nom: "Name",
+                    dataCreacio: "Creation date",
+                    dataModificacio: "Modification date",
+                    mida: "Size",
+                    showPreview: "Previewable",
+                }
+            },
         },
         dashboards: {
             title: "Dashboards",
