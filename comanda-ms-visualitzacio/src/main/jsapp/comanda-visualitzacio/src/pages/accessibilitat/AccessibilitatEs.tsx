@@ -68,6 +68,18 @@ const AccesibilidadEs = () => (
                 ej. mediante una índice o mapa del documento con accesos directos a las diferentes
                 secciones del mismo).
             </p>
+
+            <p>
+                <span> 2. Editor de tableros de control.</span>
+            </p>
+
+            <p>
+                El editor de tableros de control no es accesible en la actualidad.
+                Se trata de un componente interactivo que utiliza elementos gráficos
+                con funcionalidad de arrastrar y soltar (<em>drag and drop</em>) y otras
+                interacciones complejas que no son completamente operables mediante
+                teclado ni compatibles con tecnologías de apoyo, como lectores de pantalla.
+            </p>
         </div>
 
         <div>

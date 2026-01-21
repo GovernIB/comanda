@@ -73,6 +73,18 @@ const AccessibilitatCa = () => (
                 (p. ex. mitjançant un índex o mapa del document amb accessos directes a les
                 diferents seccions).
             </p>
+
+            <p>
+                <span> 2. Editor de taulers de control.</span>
+            </p>
+
+            <p>
+                L’editor de taulers de control actualment no és accessible.
+                Es tracta d’un component interactiu que utilitza elements gràfics
+                amb funcionalitat d’arrossegar i deixar anar (<em>drag and drop</em>) i altres
+                interaccions complexes que no són completament operables mitjançant
+                el teclat ni compatibles amb tecnologies de suport, com ara els lectors de pantalla.
+            </p>
         </div>
 
         <div>
