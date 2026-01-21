@@ -158,10 +158,10 @@ const RefreshTimeoutSelect: React.FC<{
     };
 
     return (
-        <FormControl>
+        <FormControl
+            title={t($ => $.page.salut.refreshperiod.title)}
+        >
             <Select
-                labelId="range-select-label"
-                id="range-select"
                 value={value}
                 size="small"
                 disabled={disabled}
@@ -172,6 +172,11 @@ const RefreshTimeoutSelect: React.FC<{
                     </InputAdornment>
                 }
                 sx={{ mr: 1 }}
+                slotProps={{
+                    input: {
+                        'aria-label': t($ => $.page.salut.refreshperiod.title)
+                    }
+                }}
             >
                 <MenuItem value={'PT1M'}>{t($ => $.page.salut.refreshperiod.PT1M)}</MenuItem>
                 <MenuItem value={'PT5M'}>{t($ => $.page.salut.refreshperiod.PT5M)}</MenuItem>
@@ -214,10 +219,10 @@ const AppDataRangeSelect = (props: {
     };
 
     return (
-        <FormControl>
+        <FormControl
+            title={t($ => $.page.salut.timerange.title)}
+        >
             <Select
-                labelId="range-select-label"
-                id="range-select"
                 value={value}
                 size="small"
                 disabled={disabled}
@@ -228,6 +233,11 @@ const AppDataRangeSelect = (props: {
                     </InputAdornment>
                 }
                 sx={{ mr: 1 }}
+                slotProps={{
+                    input: {
+                        'aria-label': t($ => $.page.salut.timerange.title)
+                    }
+                }}
             >
                 <MenuItem value={'PT15M'}>{t($ => $.page.salut.timerange.PT15M)}</MenuItem>
                 <MenuItem value={'PT1H'}>{t($ => $.page.salut.timerange.PT1H)}</MenuItem>
@@ -568,7 +578,11 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         toolbarElementsWithPositions.unshift({
             position: 0,
             element: (
-                <IconButton onClick={() => goBack('/')} sx={{ mr: 1 }}>
+                <IconButton
+                    onClick={() => goBack('/')}
+                    sx={{ mr: 1 }}
+                    title={t($ => $.page.salut.goBack)}
+                >
                     <Icon>arrow_back</Icon>
                 </IconButton>
             ),
@@ -579,7 +593,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         element: (
             <>
                 {!hideFilter &&
-                    <IconButton onClick={() => handleOpen()}>
+                    <IconButton
+                        onClick={() => handleOpen()}
+                        title={t($ => $.page.salut.filtrar)}
+                    >
                         {springFilter ? (
                             <FilterAltIcon fontSize="small" />
                         ) : (

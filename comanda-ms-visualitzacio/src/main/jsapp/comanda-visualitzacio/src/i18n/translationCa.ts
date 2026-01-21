@@ -91,6 +91,8 @@ const translationCa = {
         parametre: "Paràmetres",
         dimensio: "Dimensions",
         indicador: "Indicadors",
+        accessibilitat: "Accessibilitat",
+        sitemap: "Mapa del lloc web",
         user: {
             options: {
                 profile: {
@@ -111,7 +113,9 @@ const translationCa = {
     page: {
         salut: {
             title: "Salut",
+            appInfoTitle: "Salut de l'aplicació",
             refrescar: "Refrescar",
+            goBack: "Tornar enrere",
             filtrar: "Filtrar per aplicació/entorn",
             senseFiltres: "Sense filtres",
             nd: "N/D",
@@ -145,6 +149,7 @@ const translationCa = {
                 titleNoGrouping: "Totes les aplicacions i entorns",
             },
             refreshperiod: {
+                title: "Periodicitat del refresc",
                 PT1M: "1 minut",
                 PT5M: "5 minuts",
                 PT10M: "10 minuts",
@@ -152,6 +157,7 @@ const translationCa = {
                 PT1H: "1 hora",
             },
             timerange: {
+                title: "Interval de temps de les dades",
                 PT15M: "Darrers 15 minuts",
                 PT1H: "Darrera hora",
                 P1D: "Darrer dia",
@@ -746,6 +752,13 @@ const translationCa = {
                 },
             },
         },
+        sitemap: {
+            title: "Mapa del lloc web",
+            subtitle: "Accés directe a totes les seccions principals de l’aplicació.",
+        },
+        accessibilitat: {
+            title: "Accessibilitat",
+        },
         notFound: "No trobat",
         noPermissions: "Sense permisos",
     },
@@ -775,6 +788,7 @@ const translationCa = {
                 edit: 'Editar',
                 download: 'Descarregar',
                 clear: 'Esborrar',
+                avatarAlt: "Imatge pujada per l'usuari",
             },
         },
     },
@@ -816,7 +830,9 @@ const translationCa = {
         indicadors: "Indicadors",
     },
     treeData: {
-        treeView: "Vista en arbre"
+        treeView: "Vista en arbre",
+        expandAll: "Expandir totes les files",
+        collapseAll: "Contreure totes les files",
     },
     reordering: {
         errorMessage: "Error al reordenar",

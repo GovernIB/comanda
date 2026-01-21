@@ -50,6 +50,7 @@ import SalutChip from '../../components/salut/SalutChip';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import LogsViewer from './LogsViewer';
+import PageTitle from '../../components/PageTitle.tsx';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -997,6 +998,7 @@ const SalutAppInfo: React.FC<{
 
     return (
         <>
+            <PageTitle title={t($ => $.page.salut.appInfoTitle)} />
             <Tabs
                 value={tabValue}
                 onChange={handleChange}

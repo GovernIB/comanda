@@ -57,8 +57,9 @@ export type BaseAppProps = React.PropsWithChildren & {
     defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
+// Antes se aplicaba role={undefined} por encima de itemProps, pero esto impedia configurar un Link como role="menuitem"
 const Link = React.forwardRef<HTMLAnchorElement, RouterLinkProps>((itemProps, ref) => {
-    return <RouterLink ref={ref} {...itemProps} role={undefined} />;
+    return <RouterLink ref={ref} role={undefined} {...itemProps} />;
 });
 
 const useLocationPath = () => {

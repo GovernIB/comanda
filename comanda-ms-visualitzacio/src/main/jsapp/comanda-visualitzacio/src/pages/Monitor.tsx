@@ -16,6 +16,7 @@ import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Button, Icon } from '@mui/material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
+import PageTitle from '../components/PageTitle.tsx';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
@@ -190,6 +191,7 @@ const Monitors: React.FC = () => {
     };
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.monitors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.monitors.title)}
                 toolbarAdditionalRow={

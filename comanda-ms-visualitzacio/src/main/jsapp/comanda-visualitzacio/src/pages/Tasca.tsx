@@ -21,6 +21,7 @@ import { GridSortModel, useGridApiRef } from '@mui/x-data-grid-pro';
 import dayjs from 'dayjs';
 import { SxProps } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
+import PageTitle from '../components/PageTitle.tsx';
 
 export const StyledPrioritat = (props: {
     entity: any;
@@ -301,6 +302,7 @@ const Tasca = () => {
 
     return (
         <Box sx={{ height: '100%' }}>
+            <PageTitle title={t($ => $.menu.tasca)} />
             <MuiDataGrid
                 title={t($ => $.menu.tasca)}
                 datagridApiRef={gridApiRef}

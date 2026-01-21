@@ -22,8 +22,8 @@ public class FitxerInfo implements Serializable {
     private long mida;
     @Schema(description = "Tipus MIME del fitxer", example = "application/pdf")
     private String mimeType;
-    @Schema(description = "Data de creació del fitxer", example = "2024-01-15T10:30:00")
+    @Schema(description = "Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss", example = "15/01/2024 00:00:00")
     private String dataCreacio;
-    @Schema(description = "Data de modificació del fitxer", example = "2024-01-20T14:45:00")
+    @Schema(description = "Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss", example = "15/01/2024 23:59:59")
     private String dataModificacio;
 }

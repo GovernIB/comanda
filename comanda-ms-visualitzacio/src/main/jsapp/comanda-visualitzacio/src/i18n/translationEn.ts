@@ -89,6 +89,8 @@ const translationEn: translationResourcesType = {
         dashboard: "Dashboards",
         calendari: "Calendar",
         parametre: "Parameters",
+        accessibilitat: "Accessibility",
+        sitemap: "Sitemap",
         dimensio: "Dimensions",
         indicador: "Indicators",
         user: {
@@ -111,7 +113,9 @@ const translationEn: translationResourcesType = {
     page: {
         salut: {
             title: "Health",
+            appInfoTitle: "App health",
             refrescar: "Refresh",
+            goBack: "Go back",
             filtrar: "Filter by application/environment",
             senseFiltres: "No filters",
             nd: "N/A",
@@ -145,6 +149,7 @@ const translationEn: translationResourcesType = {
                 titleNoGrouping: "All applications and environments",
             },
             refreshperiod: {
+                title: "Refresh period",
                 PT1M: "1 minute",
                 PT5M: "5 minutes",
                 PT10M: "10 minutes",
@@ -152,6 +157,7 @@ const translationEn: translationResourcesType = {
                 PT1H: "1 hour",
             },
             timerange: {
+                title: "Data time interval",
                 PT15M: "Last 15 minutes",
                 PT1H: "Last hour",
                 P1D: "Last day",
@@ -732,6 +738,13 @@ const translationEn: translationResourcesType = {
                 },
             },
         },
+        sitemap: {
+            title: "Sitemap",
+            subtitle: "Direct access to the main sections of the application.",
+        },
+        accessibilitat: {
+            title: "Accessibility",
+        },
         notFound: "Not found",
         noPermissions: "No permissions",
     },
@@ -761,6 +774,7 @@ const translationEn: translationResourcesType = {
                 edit: 'Edit',
                 download: 'Download',
                 clear: 'Clear',
+                avatarAlt: 'User uploaded image',
             },
         },
     },
@@ -802,7 +816,9 @@ const translationEn: translationResourcesType = {
         indicadors: "Indicators",
     },
     treeData: {
-        treeView: "Tree view"
+        treeView: "Tree view",
+        expandAll: "Expand all rows",
+        collapseAll: "Collapse all rows",
     },
     reordering: {
         errorMessage: "Error when reordering",

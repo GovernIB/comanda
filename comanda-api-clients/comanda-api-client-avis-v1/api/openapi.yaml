@@ -338,15 +338,15 @@ components:
     AvisPage:
       example:
         links:
-        - rel: rel
-          href: href
-        - rel: rel
-          href: href
+        - rel: self
+          href: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
+        - rel: self
+          href: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
         page:
-          number: 9
-          size: 3
-          totalPages: 4
-          totalElements: 2
+          number: 0
+          size: 20
+          totalPages: 1
+          totalElements: 1
         content:
         - responsable: usr1234
           entornCodi: DEV
@@ -453,8 +453,22 @@ components:
         links:
           description: Enllaços HATEOAS
           items:
-            $ref: "#/components/schemas/Link"
+            $ref: "#/components/schemas/AvisPageLink"
           type: array
+      type: object
+    AvisPageLink:
+      example:
+        rel: self
+        href: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
+      properties:
+        rel:
+          description: Relació de l'enllaç
+          example: self
+          type: string
+        href:
+          description: URL de l'enllaç
+          example: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
+          type: string
       type: object
     AvisTipus:
       description: Tipus d'avís publicat a COMANDA
@@ -497,16 +511,6 @@ components:
           format: int32
           type: integer
       type: object
-    Link:
-      example:
-        rel: rel
-        href: href
-      properties:
-        rel:
-          type: string
-        href:
-          type: string
-      type: object
     OffsetDateTime:
       example:
         dateTime: 2000-01-23T04:56:07.000+00:00
@@ -522,21 +526,29 @@ components:
       type: object
     PageMetadata:
       example:
-        number: 9
-        size: 3
-        totalPages: 4
-        totalElements: 2
+        number: 0
+        size: 20
+        totalPages: 1
+        totalElements: 1
       properties:
         number:
+          description: Número de pàgina
+          example: 0
           format: int64
           type: integer
         size:
+          description: Mida de pàgina
+          example: 20
           format: int64
           type: integer
         totalElements:
+          description: Total d'elements
+          example: 1
           format: int64
           type: integer
         totalPages:
+          description: Total de pàgines
+          example: 1
           format: int64
           type: integer
       type: object

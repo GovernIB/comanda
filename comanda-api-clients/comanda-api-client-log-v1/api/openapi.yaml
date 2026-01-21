@@ -98,12 +98,11 @@ components:
   schemas:
     FitxerContingut:
       example:
-        dataCreacio: 2024-01-15T10:30:00
-        dataModificacio: 2024-01-20T14:45:00
+        dataCreacio: 15/01/2024 00:00:00
+        dataModificacio: 15/01/2024 23:59:59
         mida: 1024
         mimeType: application/pdf
-        contingut: !!binary |-
-          UTI5dWRHbHVaM1YwSUdSbGJDQm1hWFI0WlhJPQ==
+        contingut: ""
         nom: document.pdf
       properties:
         nom:
@@ -120,25 +119,22 @@ components:
           example: application/pdf
           type: string
         dataCreacio:
-          description: Data de creació del fitxer
-          example: 2024-01-15T10:30:00
+          description: Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 00:00:00
           type: string
         dataModificacio:
-          description: Data de modificació del fitxer
-          example: 2024-01-20T14:45:00
+          description: Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 23:59:59
           type: string
         contingut:
-          description: Contingut del fitxer en format binari (codificat en Base64
-            en JSON)
-          example: !!binary |-
-            UTI5dWRHbHVaM1YwSUdSbGJDQm1hWFI0WlhJPQ==
+          description: Contingut del fitxer en format binari comprimit en zip
           format: binary
           type: string
       type: object
     FitxerInfo:
       example:
-        dataCreacio: 2024-01-15T10:30:00
-        dataModificacio: 2024-01-20T14:45:00
+        dataCreacio: 15/01/2024 00:00:00
+        dataModificacio: 15/01/2024 23:59:59
         mida: 1024
         mimeType: application/pdf
         nom: document.pdf
@@ -157,12 +153,12 @@ components:
           example: application/pdf
           type: string
         dataCreacio:
-          description: Data de creació del fitxer
-          example: 2024-01-15T10:30:00
+          description: Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 00:00:00
           type: string
         dataModificacio:
-          description: Data de modificació del fitxer
-          example: 2024-01-20T14:45:00
+          description: Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 23:59:59
           type: string
       type: object
 

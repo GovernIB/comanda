@@ -7,8 +7,8 @@ import es.caib.comanda.model.v1.avis.AvisPage;
 import es.caib.comanda.ms.back.controller.BaseController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,6 +21,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,7 @@ import static es.caib.comanda.base.config.Cues.CUA_AVISOS;
         description = "Contracte per a la gestió CRUD d'avisos a Comanda. " +
         "Les peticions rebudes per aquest servei es processaran asíncronament, de manera que en cap cas es rebrà una resposta amb el resultat de l'operació com a resposta de les peticions.")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole(T(es.caib.comanda.base.config.BaseConfig).ROLE_WEBSERVICE)")
 public class AvisApiController extends BaseController {
 
     private final JmsTemplate jmsTemplate;
@@ -99,7 +102,7 @@ public class AvisApiController extends BaseController {
         if (avis.getAppCodi() == null || avis.getEntornCodi() == null)
             return ResponseEntity.badRequest().body("Cal informar appCodi i entornCodi al cos de la petició");
 
-        Boolean existAvis = apiClientHelper.existAvis(avis.getIdentificador(), avis.getAppCodi(), avis.getEntornCodi());
+        Boolean existAvis = existAvis(avis.getIdentificador(), avis.getAppCodi(), avis.getEntornCodi());
         if (!existAvis) return ResponseEntity.notFound().build();
         jmsTemplate.convertAndSend(CUA_AVISOS, avis);
         return ResponseEntity.ok("Missatge de modificació enviat a " + CUA_AVISOS);
@@ -119,9 +122,8 @@ public class AvisApiController extends BaseController {
             @ApiResponse(responseCode = "500", description = "Error intern")
     })
     public ResponseEntity<String> crearMultiplesAvisos(
-            @Parameter(name = "avisos", description = "Llista d'avisos a publicar", required = true)
             @RequestBody(description = "Llista d'avisos a publicar", required = true,
-                    content = @Content(schema = @Schema(implementation = List.class)))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Avis.class))))
             @org.springframework.web.bind.annotation.RequestBody List<Avis> avisos) {
         for (Avis avis : avisos) {
             jmsTemplate.convertAndSend(CUA_AVISOS, avis);
@@ -144,9 +146,8 @@ public class AvisApiController extends BaseController {
             @ApiResponse(responseCode = "500", description = "Error intern")
     })
     public ResponseEntity<String> modificarMultiplesAvisos(
-            @Parameter(name = "avisos", description = "Llista d'avisos a modificar", required = true)
             @RequestBody(description = "Llista d'avisos a modificar", required = true,
-                    content = @Content(schema = @Schema(implementation = List.class)))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Avis.class))))
             @org.springframework.web.bind.annotation.RequestBody List<Avis> avisos) {
         
         // Validacions
@@ -169,7 +170,7 @@ public class AvisApiController extends BaseController {
             identificadors.add(a.getIdentificador());
         }
 
-        List<es.caib.comanda.client.model.Avis> avisosExistents = apiClientHelper.getAvisos(identificadors, appCodi, entornCodi);
+        List<es.caib.comanda.client.model.Avis> avisosExistents = getAvisosByCodi(identificadors, appCodi, entornCodi);
         if (avisosExistents == null || avisosExistents.isEmpty()) {
             return ResponseEntity.status(404).body("No s'ha trobat cap avís a modificar");
         }
@@ -198,10 +199,7 @@ public class AvisApiController extends BaseController {
             description = "Obté les dades d'un avís a partir del seu identificador, codi d'aplicació i codi d'entorn."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Avís trobat", content = @Content(
-                    schema = @Schema(implementation = Avis.class),
-                    examples = @ExampleObject(name = "ExempleAvis",
-                            value = "{\n  \"id\": 10,\n  \"identificador\": \"AV-2025-0001\",\n  \"tipus\": \"MANTENIMENT\",\n  \"nom\": \"Interrupci\u00F3 programada\",\n  \"descripcio\": \"Aturada de manteniment el diumenge a les 8:00\",\n  \"dataInici\": \"2025-12-13T08:00:00.000+00:00\",\n  \"dataFi\": \"2025-12-13T10:00:00.000+00:00\",\n  \"redireccio\": \"https://dev.caib.es/app/avis/AV-2025-0001\",\n  \"responsable\": \"usr1234\",\n  \"grup\": \"SUPORT\"\n}"))),
+            @ApiResponse(responseCode = "200", description = "Avís trobat", content = @Content(schema = @Schema(implementation = Avis.class))),
             @ApiResponse(responseCode = "404", description = "Avís no trobat"),
             @ApiResponse(responseCode = "401", description = "No autenticat"),
             @ApiResponse(responseCode = "403", description = "Prohibit"),
@@ -212,7 +210,7 @@ public class AvisApiController extends BaseController {
             @Parameter(name = "appCodi", description = "Codi de l'aplicació", required = true) @RequestParam String appCodi,
             @Parameter(name = "entornCodi", description = "Codi de l'entorn", required = true) @RequestParam String entornCodi) {
 
-        es.caib.comanda.client.model.Avis avis = apiClientHelper.getAvis(identificador, appCodi, entornCodi)
+        es.caib.comanda.client.model.Avis avis = getAvisByCodi(identificador, appCodi, entornCodi)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No s'ha trobat cap avís amb l'identificador: " + identificador));
         return ResponseEntity.ok(apiMapper.convert(avis));
     }
@@ -224,29 +222,7 @@ public class AvisApiController extends BaseController {
             description = "Obté un llistat paginat d'avisos amb la possibilitat d'aplicar filtres de cerca."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(
-                    schema = @Schema(implementation = AvisPage.class),
-                    examples = @ExampleObject(
-                            name = "ExempleLlistatAvisos",
-                            value = "{\n" +
-                                    "  \"content\": [\n" +
-                                    "    {\n" +
-                                    "      \"id\": 10,\n" +
-                                    "      \"identificador\": \"AV-2025-0001\",\n" +
-                                    "      \"tipus\": \"MANTENIMENT\",\n" +
-                                    "      \"nom\": \"Interrupció programada\"\n" +
-                                    "    }\n" +
-                                    "  ],\n" +
-                                    "  \"page\": {\n" +
-                                    "    \"number\": 0,\n" +
-                                    "    \"size\": 20,\n" +
-                                    "    \"totalElements\": 1,\n" +
-                                    "    \"totalPages\": 1\n" +
-                                    "  }\n" +
-                                    "}"
-                    )
-                )
-            ),
+            @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(schema = @Schema(implementation = AvisPage.class))),
             @ApiResponse(responseCode = "401", description = "No autenticat"),
             @ApiResponse(responseCode = "403", description = "Prohibit"),
             @ApiResponse(responseCode = "500", description = "Error intern")
@@ -278,7 +254,7 @@ public class AvisApiController extends BaseController {
                         .totalPages(result.getMetadata().getTotalPages())
                         .build(),
                 result.getLinks().stream()
-                        .map(l -> AvisPage.Link.builder().rel(l.getRel().value()).href(l.getHref()).build())
+                        .map(l -> AvisPage.AvisPageLink.builder().rel(l.getRel().value()).href(l.getHref()).build())
                         .collect(Collectors.toUnmodifiableList()));
         return ResponseEntity.ok(avisPage);
     }
@@ -288,4 +264,19 @@ public class AvisApiController extends BaseController {
         return null;
     }
 
+    public Optional<es.caib.comanda.client.model.Avis> getAvisByCodi(String identificador, String appCodi, String entornCodi) {
+        Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
+        Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
+        return apiClientHelper.getAvis(identificador, appId, entornId);
+    }
+
+    private Boolean existAvis(String identificador, String appCodi, String entornCodi) {
+        return getAvisByCodi(identificador, appCodi, entornCodi).isPresent();
+    }
+
+    private List<es.caib.comanda.client.model.Avis> getAvisosByCodi(Set<String> identificadors, String appCodi, String entornCodi) {
+        Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
+        Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
+        return apiClientHelper.getAvisos(identificadors, appId, entornId);
+    }
 }

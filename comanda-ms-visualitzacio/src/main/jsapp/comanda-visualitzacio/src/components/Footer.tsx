@@ -3,6 +3,9 @@ import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { toolbarBackgroundStyle } from 'reactlib';
+import { Link } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 
 type AppFootProps = {
@@ -25,6 +28,7 @@ export const Footer: React.FC<AppFootProps> = (props) => {
     } = props;
     const toolbarRef = React.useRef<HTMLDivElement | null>(null);
     const [toolbarPosX, setToolbarPosX] = React.useState<number>();
+    const { t } = useTranslation();
     const [buildTimestamp, setBuildTimestamp] = useState<string | null>(null);
     const [scmRevision, setScmRevision] = useState<string | null>(null);
     const [comandaVersion, setComandaVersion] = useState<string | null>(null);
@@ -93,7 +97,8 @@ export const Footer: React.FC<AppFootProps> = (props) => {
         sx={{
             minHeight: '36px !important',
             lineHeight: '0.5em',
-            zIndex: (theme) => theme.zIndex.drawer + 100
+            zIndex: (theme) => theme.zIndex.drawer + 100,
+            gap: 3,
         }}>
         <Typography
             variant="caption"
@@ -112,6 +117,8 @@ export const Footer: React.FC<AppFootProps> = (props) => {
                 ({buildTimestamp} | Revisió: {scmRevision})
             </span>
         </Typography>
+        <Link component={RouterLink} to="/sitemap" color="white" underline="hover">{t($ => $.menu.sitemap)}</Link>
+        <Link component={RouterLink} to="/accessibilitat" color="white" underline="hover">{t($ => $.menu.accessibilitat)}</Link>
         {logos && logos.map((logo) =>
             <Box sx={{ mr: 0, pt: 0, pr: 0, height: '36px', cursor: 'pointer', ...logoStyle }} key={logo}>
                 <img src={logo} alt="foot_logo" style={{maxHeight: '36px'}}/>

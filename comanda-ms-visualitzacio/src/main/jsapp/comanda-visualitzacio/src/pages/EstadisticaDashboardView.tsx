@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import Dialog from '../../lib/components/mui/Dialog.tsx';
 import { ESTADISTIQUES_PATH } from '../AppRoutes.tsx';
 import {useTranslation} from "react-i18next";
+import PageTitle from '../components/PageTitle.tsx';
 
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
@@ -142,6 +143,7 @@ const EstadisticaDashboardView = () => {
 
     return (
         <>
+            <PageTitle title={t($ => $.page.dashboards.title)} />
             {dashboardSelectDialog}
             {loading ? (
                 <Box

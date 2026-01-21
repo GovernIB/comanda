@@ -20,6 +20,7 @@ import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
 import { GridSortModel, useGridApiRef} from '@mui/x-data-grid-pro';
 import { SxProps } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
+import PageTitle from '../components/PageTitle.tsx';
 
 const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
@@ -216,6 +217,7 @@ const Avis = () => {
 
     return (
         <Box sx={{ height: '100%' }}>
+            <PageTitle title={t($ => $.menu.avis)} />
             <MuiDataGrid
                 title={t($ => $.menu.avis)}
                 resourceName="avis"

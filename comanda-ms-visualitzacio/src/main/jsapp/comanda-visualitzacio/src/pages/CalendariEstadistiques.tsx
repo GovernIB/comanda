@@ -33,6 +33,7 @@ import { useCalendarEvents } from '../components/calendari/UseCalendarEventsProp
 import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps } from '../components/calendari/CalendariTypes.ts';
 import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.tsx';
 import { EntornAppModel } from '../types/app.model';
+import PageTitle from '../components/PageTitle.tsx';
 
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   hasError,
@@ -418,6 +419,7 @@ const CalendariEstadistiques: React.FC = () => {
 
     return (
         <GridPage disableMargins>
+            <PageTitle title={t($ => $.menu.calendari)} />
             {/* Global loading overlay */}
             {globalLoading && (
                 <Box className="global-loading-overlay">

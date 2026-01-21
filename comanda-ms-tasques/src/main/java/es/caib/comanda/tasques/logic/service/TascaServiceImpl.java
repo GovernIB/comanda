@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.ZoneId;
 import java.util.*;
 
+import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
 import static es.caib.comanda.base.config.Cues.CUA_TASQUES;
 
 @Slf4j
@@ -50,7 +51,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     public void receiveMessage(@Payload es.caib.comanda.model.v1.tasca.Tasca tascaBroker,
                                Message message) throws JMSException {
         message.acknowledge();
-        log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker);
+        log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker.getIdentificador());
         Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
                 tascaBroker.getEntornCodi(),
                 tascaBroker.getAppCodi());
@@ -140,6 +141,13 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     protected Specification<TascaEntity> additionalSpecification(String[] namedQueries) {
         String userName = authenticationHelper.getCurrentUserName();
         String[] roles = authenticationHelper.getCurrentUserRoles();
+
+        // Els usuaris amb rol admin poden visualitzar totes les tasques.
+        // Per a aquest motiu, l'usuari de httpauth.username ha de tenir el rol ROLE_ADMIN,
+        // ja que totes les tasques han de ser accessibles mitjançant API interna.
+        if (Arrays.asList(roles).contains(ROLE_ADMIN))
+            return null;
+
         return teGrupSiNoNull(roles).and(
                 teResponsable(userName).
                         or(tePermisUsuari(userName)).

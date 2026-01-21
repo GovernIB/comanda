@@ -40,7 +40,7 @@ public class Tasca implements Serializable {
     @Schema(description = "Descripció detallada de la tasca", example = "Generar l'informe mensual de consums per unitat")
     private String descripcio;
 
-    @Schema(description = "Estat de processament de la tasca")
+    @Schema(description = "Estat de processament de la tasca", example = "PENDENT")
     private TascaEstat estat;
 
     @Schema(description = "Descripció de l'estat actual", example = "En cua")
@@ -49,7 +49,7 @@ public class Tasca implements Serializable {
     @Schema(description = "Número d'expedient relacionat (si aplica)", example = "EXP-12345/2025")
     private String numeroExpedient;
 
-    @Schema(description = "Prioritat de la tasca")
+    @Schema(description = "Prioritat de la tasca", example = "NORMAL")
     private Prioritat prioritat;
 
     @Schema(description = "Data d'inici prevista o real", example = "2025-11-20T09:30:00Z", format = "date-time")

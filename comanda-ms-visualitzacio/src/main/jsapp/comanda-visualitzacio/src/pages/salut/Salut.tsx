@@ -25,6 +25,7 @@ import { SalutField } from '../../components/salut/SalutChipTooltip';
 import { useAppInfoData } from './dataFetching';
 import { Box } from '@mui/material';
 import useDisableMargins from '../../hooks/useDisableMargins';
+import PageTitle from '../../components/PageTitle';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 type SalutInformeEstatItem = {
@@ -368,6 +369,7 @@ const Salut: FunctionComponent = () => {
             />
             {!isAppInfoRouteActive && (
                 <Box sx={{ p: 2 }}>
+                    <PageTitle title={t($ => $.page.salut.title)} />
                     <SalutLlistat
                         apps={salutData.apps}
                         entorns={salutData.entorns}

@@ -19,6 +19,7 @@ import {
 } from 'reactlib';
 import { columnesIndicador } from '../components/sharedAdvancedSearch/advancedSearchColumns';
 import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvancedSearch';
+import PageTitle from '../components/PageTitle.tsx';
 
 const IndicadorsFilter = (props: any) => {
     const { onSpringFilterChange } = props;
@@ -148,6 +149,7 @@ const Indicadors: React.FC = () => {
 
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.indicadors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.indicadors.title)}
                 resourceName="indicador"
