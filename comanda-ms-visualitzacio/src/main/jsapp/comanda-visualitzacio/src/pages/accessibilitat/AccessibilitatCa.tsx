@@ -1,4 +1,4 @@
-const AccessibilitatCa = () => (
+const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
     <div>
         <div>
             <h1>DECLARACIÓ D’ACCESSIBILITAT</h1>
@@ -14,8 +14,9 @@ const AccessibilitatCa = () => (
             </p>
 
             <p>
-                La present declaració d’accessibilitat s’aplica al lloc web del projecte
-                Comanda.
+                La present declaració d’accessibilitat s’aplica al lloc web{' '}
+                <a href={appUrl}>{appUrl}</a> i exclou les pàgines que condueixen a enllaços
+                externs.
             </p>
 
             <h2>Situació de compliment:</h2>
