@@ -44,43 +44,99 @@ Lot 2\. Serveis d’administració electrònica
 
 **[Control de versions del document	2](#control-de-versions-del-document)**
 
-[**1\. Objecte	4**](#objecte)
+[**1\. Objecte	5**](#objecte)
 
-[**2\. Requisits previs	4**](#requisits-previs)
+[**2\. Requisits previs	5**](#requisits-previs)
 
-[**3\. Salut	5**](#salut)
+[2.1. Clients	5](#clients)
 
-[3.1. Obtenció de informació de l’aplicació	5](#obtenció-de-informació-de-l’aplicació)
+[**3\. Salut	9**](#salut)
 
-[Model de dades	6](#model-de-dades)
+[3.1. Obtenció de informació de l’aplicació	9](#obtenció-de-informació-de-l’aplicació)
 
-[3.2. Obtenció de informació de salut	8](#obtenció-de-informació-de-salut)
+[Model de dades	11](#model-de-dades)
 
-[Model de dades	11](#model-de-dades-1)
+[3.2. Obtenció de informació de salut	13](#obtenció-de-informació-de-salut)
 
-[**4\. Estadístiques	16**](#estadístiques)
+[Model de dades	15](#model-de-dades-1)
 
-[4.1. Obtenció de informació estadística de l’aplicació	16](#obtenció-de-informació-estadística-de-l’aplicació)
+[Helpers	21](#helpers)
 
-[Model de dades	17](#model-de-dades-2)
+[Model de dades internes	25](#model-de-dades-internes)
 
-[4.2. Obtenció de dades estadístiques	18](#obtenció-de-dades-estadístiques)
+[Exemples d’ús	26](#exemples-d’ús)
 
-[Model de dades	20](#model-de-dades-3)
+[**4\. Estadístiques	26**](#estadístiques)
 
-[**5\. Tasques	24**](#tasques)
+[4.1. Obtenció de informació estadística de l’aplicació	27](#obtenció-de-informació-estadística-de-l’aplicació)
 
-[Model de dades	25](#model-de-dades-4)
+[Model de dades	28](#model-de-dades-2)
 
-[**6\. Avisos	26**](#avisos)
+[4.2. Obtenció de dades estadístiques	29](#obtenció-de-dades-estadístiques)
 
-[Model de dades	27](#model-de-dades-5)
+[Model de dades	31](#model-de-dades-3)
 
-[**7\. Exemples	28**](#exemples)
+[Helpers	34](#helpers-1)
 
-[Enviar una tasca	28](#enviar-una-tasca)
+[Exemples d’ús	36](#exemples-d’ús-1)
 
-[Enviar un avís	28](#enviar-un-avís)
+[**5\. Logs	38**](#logs)
+
+[Model de dades	40](#model-de-dades-4)
+
+[Helpers	40](#helpers-2)
+
+[Exemples d’ús	43](#exemples-d’ús-2)
+
+[**6\. Servers	44**](#servers)
+
+[6.1. Salut	44](#salut-1)
+
+[6.2. Estadistica	45](#estadistica)
+
+[6.3. Log	47](#log)
+
+[**7\. Tasques	49**](#tasques)
+
+[Model de dades	55](#model-de-dades-5)
+
+[**8\. Avisos	57**](#avisos)
+
+[Model de dades	61](#model-de-dades-6)
+
+[**9\. Exemples	63**](#exemples)
+
+[Enviar una tasca	63](#enviar-una-tasca)
+
+[Enviar un avís	63](#enviar-un-avís)
+
+[**Annex 1 \- Spring-filter	65**](#annex-1---spring-filter)
+
+[Camp filter – Sintaxi bàsica	65](#camp-filter-–-sintaxi-bàsica)
+
+[Format general	65](#format-general)
+
+[Operadors disponibles	65](#operadors-disponibles)
+
+[Comparació	65](#comparació)
+
+[Text	65](#text)
+
+[Operadors lògics	66](#operadors-lògics)
+
+[Agrupació amb parèntesis	66](#agrupació-amb-parèntesis)
+
+[Valors admesos	66](#valors-admesos)
+
+[Tipus bàsics	66](#tipus-bàsics)
+
+[Accés a camps anidats	67](#accés-a-camps-anidats)
+
+[Operador in	67](#operador-in)
+
+[Exemples complets	67](#exemples-complets)
+
+[Notes importants	67](#notes-importants)  
 
 # 
 
@@ -92,7 +148,7 @@ En aquest manual es detalla com integrar una aplicació amb Comanda per generar 
 
 Comanda ofereix tot una sèrie de clients per a que les aplicacions puguin interactuar amb Comanda, així com serveis autogenerats d’exemple, que es poden utilitzar per a implementar la API que les aplicacions han d’exposar per a que hi accedeixi comanda.
 
-1. ## **Clients**
+1. ## **Clients** {#clients}
 
 S’han desenvolupat una sèrie de clients, que utilitzen RestEasy per poder enviar dades de tasques, avisos i permisos a Comanda.
 
@@ -116,8 +172,7 @@ Per simplificar, s’ha creat un mòdul (**comanda-lib**) que ja carrega tots el
 |     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-lib</artifactId>         <version>0.1.0.1</version>     </dependency>` |
 | :---- |
 
-Aquestes llibreries inclouen dependències a les llibreries de RestEasy versió 4.7.6.Final. En cas que el seu projecte ja inclogui les dependències, encara que sigui amb una versió inferior (3.x), es poden excloure les dependències, per evitar conflictes.
-
+Aquestes llibreries inclouen dependències a les llibreries de RestEasy versió 4.7.6.Final. En cas que el seu projecte ja inclogui les dependències, encara que sigui amb una versió inferior (3.x), es poden excloure les dependències, per evitar conflictes.  
 Aquesta llibreria (comanda-lib) té una dependència cap a comanda-api-models, que inclou els models de dades que Comanda espera rebre per a les integracions, com:
 
 * Salut:   
@@ -442,7 +497,7 @@ Els detalls que s’espera que s’enviin, tot i que no és obligatori son:
 | EDL | Espai lliure de disc | Mita total lliure del disc on es s’executa l’aplicació |
 | SO | Sistema operatiu | Informació del sistema operatiu.*Ex. Linux 3.10.0-957.10.1.el7.x86\_64 (amd64)* |
 
-## **Helpers**
+## **Helpers** {#helpers}
 
 La llibreria de comanda, al mòdul comanda-api-utils, ofereix unes classes d’ajuda per a la obtenció de informació de salut: 
 
@@ -556,7 +611,7 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Resposta** | String |
 | **Ús principal** | Mostrar informació d’entorn en diagnòstics. |
 
-### **Model de dades internes**
+### **Model de dades internes** {#model-de-dades-internes}
 
 | MemoryUsage |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -607,7 +662,7 @@ Aquest model disposa de mètodes per retornar les dades en formats llegibles.
 | gcCount | Long | 0..1 | Nombre total de col·leccions de Garbage Collector realitzades per tots els GC de la JVM |
 | gcTime | Long | 0..1 | Temps total (en mil·lisegons) dedicat pel Garbage Collector |
 
-### **Exemples d’ús**
+### **Exemples d’ús** {#exemples-d’ús}
 
 Calcular estats
 
@@ -788,7 +843,7 @@ Per tal de poder recuperar dades estadístiques des del calendari de Comanda, se
 
 8. Per tant, és altament recomanable implementar els dos mètodes.
 
-   ## **Helpers**
+   ## **Helpers** {#helpers-1}
 
 La llibreria de comanda, al mòdul comanda-api-utils, ofereix una classe d’ajuda per a la obtenció de estadísiques: 
 
@@ -831,7 +886,7 @@ La classe EstadisticaHelper proporciona funcionalitats de suport per a la conver
 | **Resposta** | RegistreEstadistic |
 | **Ús principal** | Generar registres estadístics quan les dades ja estan en format mapa |
 
-### **Exemples d’ús**
+### **Exemples d’ús** {#exemples-d’ús-1}
 
 Exemples convertint entitats a RegistreEstadistic:
 
@@ -848,7 +903,7 @@ Exemple amb dimentions i fets com a colecció
 | List\<Dimensio\> dims \= new ArrayList\<\>(Arrays.*asList*(        GenericDimensio.*builder*().codi("x").valor("X").build(),        GenericDimensio.*builder*().codi("y").valor("Y").build() )); List\<Fet\> fets \= new ArrayList\<\>(Arrays.*asList*(        GenericFet.*builder*().codi("a").valor(7.0).build(),        GenericFet.*builder*().codi("b").valor(2.4).build() )); RegistreEstadistic re1 \= EstadisticaHelper.*toRegistreEstadistic*(dims, fets); |
 | :---- |
 
-5. # **Logs**
+5. # **Logs** {#logs}
 
 Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda haurà d’implementar 3 endpoints de tipus GET:
 
@@ -867,17 +922,6 @@ Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda 
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/v1/logs |
 | **Ex. de resposta** | \[     {         "nom": "es.caib.notib.log.2025-10-22.gz",         "mida": 282296,         "mimeType": "application/gzip",         "dataCreacio": "22/10/2025 00:00:00",         "dataModificacio": "22/10/2025 23:59:57"     },     {         "nom": "server.log.2025-11-23.gz",         "mida": 407139,         "mimeType": "application/gzip",         "dataCreacio": "23/11/2025 00:00:00",         "dataModificacio": "23/11/2025 23:55:01"     },     {         "nom": "server.log",         "mida": 29278009,         "mimeType": "text/plain",         "dataCreacio": "24/11/2025 00:00:00",         "dataModificacio": "24/11/2025 14:26:43"     } \] |
 
-### **Model de dades**
-
-| FitxerInfo |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| nom | cadena | 1 | Nom del fitxer |
-| mida | long | 1 | Mida del fitxer en bytes |
-| mimeType | cadena | 1 | Tipus MIME del fitxer |
-| dataCreacio | cadena | 0..1 | Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss |
-| dataModificacio | cadena | 0..1 | Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss |
-
 | Obtenir contingut complet d'un fitxer de log |  |
 | ----- | :---- |
 | **Adreça API** | \[PATH\]/logs/{nomFitxer} Ex. https://dev.caib.es/notibapi/interna/logs/{nomFitxer} |
@@ -889,7 +933,28 @@ Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda 
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/logs/server.log |
 | **Ex. de resposta** | {     "nom": "server.log",     "mida": 29401469,     "mimeType": "text/x-log",     "dataCreacio": "15/01/2026",     "dataModificacio": "15/01/2026",     "contingut": "MjAyNi0wMS0xNSAwMDowMDowMCwwMTEgRVJST1IgW29… } |
 
-### **Model de dades**
+| Obtenir les darreres línies d'un fitxer de log |  |
+| ----- | :---- |
+| **Adreça API** | \[PATH\]/logs/{nomFitxer}/linies/{nLinies} Ex. https://dev.caib.es/notibapi/interna/logs/{nomFitxer}/linies/{nLinies} |
+| **Descripció** | Aquest servei retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies |
+| **Mètode** | GET |
+| **Autenticació** | Autenticació BASIC. |
+| **Paràmetres** | **nomFitxer**: Nom del fitxer del que es volen recuperar les darreres línies**nLinies**: Número de línies a recuperar |
+| **Resposta** | List\<String\> |
+| **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/logs/server.log/linies/50 |
+
+### 
+
+### **Model de dades** {#model-de-dades-4}
+
+| FitxerInfo |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| nom | cadena | 1 | Nom del fitxer |
+| mida | long | 1 | Mida del fitxer en bytes |
+| mimeType | cadena | 1 | Tipus MIME del fitxer |
+| dataCreacio | cadena | 0..1 | Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss |
+| dataModificacio | cadena | 0..1 | Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss |
 
 | FitxerContingut |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -901,17 +966,7 @@ Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda 
 | dataModificacio | cadena | 0..1 | Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss |
 | contingut | byte\[\] | 1 | Contingut del fitxer en format binari codificat en base64 |
 
-| Obtenir les darreres línies d'un fitxer de log |  |
-| ----- | :---- |
-| **Adreça API** | \[PATH\]/logs/{nomFitxer}/linies/{nLinies} Ex. https://dev.caib.es/notibapi/interna/logs/{nomFitxer}/linies/{nLinies} |
-| **Descripció** | Aquest servei retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies |
-| **Mètode** | GET |
-| **Autenticació** | Autenticació BASIC. |
-| **Paràmetres** | **nomFitxer**: Nom del fitxer del que es volen recuperar les darreres línies**nLinies**: Número de línies a recuperar |
-| **Resposta** | List\<String\> |
-| **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/logs/server.log/linies/50 |
-
-## **Helpers**
+## **Helpers** {#helpers-2}
 
 La llibreria de comanda, al mòdul comanda-api-utils, ofereix una classe d’ajuda per a la obtenció de logs: 
 
@@ -973,7 +1028,9 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Resposta** | byte\[\] |
 | **Ús principal** | Reduir la mida de fitxers de log i evitar problemes d’encoding en la descàrrega |
 
-### **Exemples d’ús**
+### 
+
+### **Exemples d’ús** {#exemples-d’ús-2}
 
 | public List\<FitxerInfo\> llistarFitxers() {    var directoriPath \= configHelper.getConfig("es.caib.notib.plugin.fitxer.logs.path");    if (Strings.*isNullOrEmpty*(directoriPath)) {        return new ArrayList\<\>();    }    return LogHelper.llistarFitxers(directoriPath, "notib"); } |
 | :---- |
@@ -984,7 +1041,7 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | public List\<String\> readLastNLines(String nomFitxer, long nLinies) {    try {        if (Strings.*isNullOrEmpty*(nomFitxer) || nLinies \== null) {            *log*.error("Parametres incorrectes, nomFitxer " \+ nomFitxer \+ " nLinies" \+ nLinies);            return new ArrayList\<\>();        }        var directoriPath \= "/app/logs";        return LogHelper.readLastNLines(directoriPath, nomFitxer, nLinies);    } catch (Exception ex) {        *log*.error("Error no controlat", ex);        return new ArrayList\<\>();    } } |
 | :---- |
 
-6. # **Servers**
+6. # **Servers** {#servers}
 
 A Comanda s’han generat automàticament serveis d’exemple per a l’implementació dels serveis de salut, estadística i logs, que es troben als mòduls:
 
@@ -995,7 +1052,7 @@ A Comanda s’han generat automàticament serveis d’exemple per a l’implemen
 Aquests serveis autogenerats utilitzen RestEasy.  
 De totes maneres, tot seguit us donem dos exemples que es poden utilitzar per definir el servei si s’utilitza spring, o  jaxrs \+ resteasy:
 
-1. ## **Salut**
+1. ## **Salut** {#salut-1}
 
 **Spring**
 
@@ -1007,7 +1064,7 @@ De totes maneres, tot seguit us donem dos exemples que es poden utilitzar per de
 | import es.caib.comanda.model.v1.salut.AppInfo; import es.caib.comanda.model.v1.salut.SalutInfo; import javax.ws.rs.GET; import javax.ws.rs.Path; import javax.ws.rs.Produces; import javax.ws.rs.core.Context; import javax.ws.rs.core.MediaType; import javax.ws.rs.core.Response; import javax.servlet.http.HttpServletRequest; import java.io.IOException; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/* @Path("/v1/salut") @Produces(MediaType.APPLICATION\_JSON) public class SalutApiResource {    @GET    @Path("/info")    public AppInfo salutInfo(@Context HttpServletRequest request)            throws IOException {        *...*    }    @GET    public SalutInfo salut(@Context HttpServletRequest request)            throws IOException {        *...*    } } |
 | :---- |
 
-2. ## **Estadistica**
+2. ## **Estadistica** {#estadistica}
 
 **Spring**
 
@@ -1019,7 +1076,7 @@ De totes maneres, tot seguit us donem dos exemples que es poden utilitzar per de
 | import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo; import es.caib.comanda.model.v1.estadistica.RegistresEstadistics; import javax.ws.rs.GET; import javax.ws.rs.Path; import javax.ws.rs.PathParam; import javax.ws.rs.Produces; import javax.ws.rs.WebApplicationException; import javax.ws.rs.core.Context; import javax.ws.rs.core.MediaType; import javax.ws.rs.core.Response; import javax.servlet.http.HttpServletRequest; import java.io.IOException; import java.util.List; */\*\* \* Contracte de l'API d'Estadístiques que COMANDA espera que implementin les APPs. \*/* @Path("/v1/estadistiques") @Produces(MediaType.APPLICATION\_JSON) public class EstadistiquesApiResource {    @GET    @Path("/info")    public EstadistiquesInfo estadistiquesInfo() throws IOException {        *...*    }    @GET    public RegistresEstadistics estadistiques(            @Context HttpServletRequest request)            throws IOException {        *...*    }    @GET    @Path("/of/{data}")    public RegistresEstadistics estadistiquesPerData(            @Context HttpServletRequest request,            @PathParam("data") String data)            throws Exception {        *...*    }    @GET    @Path("/from/{dataInici}/to/{dataFi}")    public List\<RegistresEstadistics\> estadistiquesPerRang(            @Context HttpServletRequest request,            @PathParam("dataInici") String dataInici,            @PathParam("dataFi") String dataFi)            throws Exception {        *...*    } } |
 | :---- |
 
-3. ## **Log**
+3. ## **Log** {#log}
 
 **Spring**
 
@@ -1118,7 +1175,7 @@ Per a poder donar d’alta o modificar tasques a Comanda es disposa dels següen
 | **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/v1/tasques?filter=identificador==”31489824”\&page=0\&size=20’ \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
 | **Ex. de resposta** | {   "content": \[     {         "appCodi": "NOT",         "entornCodi": "DEV",         "identificador": "31489824",         "tipus": "NOTIFICACIO",         "nom": "Nom de la notificacio",         "descripcio": "Descripcio de la notificació",         "estat": "INICIADA",         "estatDescripcio": "Enviada a Notifica",         "numeroExpedient": "1850488",         "prioritat": null,         "dataInici": "2025-08-28T16:08:28.295",         "dataFi": null,         "dataCaducitat": "2025-08-28T16:08:28.295",         "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",         "responsable": "u000000",         "grup": null,         "usuarisAmbPermis": \["u000000", "u999000"\],         "grupsAmbPermis": \["ROL\_001", "ROL\_002"\]       }   \],   "page": {     "number": 0,     "size": 20,     "totalElements": 1,     "totalPages": 1   },   "links": \[     {       "rel": "self",       "href": "http://localhost:8080/comandaapi/interna/v1/tasques?filter=identificador==”31489824”\&page=0\&size=20"     }   \] } |
 
-### **Model de dades** {#model-de-dades-4}
+### **Model de dades** {#model-de-dades-5}
 
 ### 
 
@@ -1258,7 +1315,7 @@ Per a poder donar d’alta o modificar avisos a Comanda es disposa dels següent
 | **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/v1/avisos?filter=identificador==”31489824”\&page=0\&size=20’ \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
 | **Ex. de resposta** | {   "content": \[     {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }   \],   "page": {     "number": 0,     "size": 20,     "totalElements": 1,     "totalPages": 1   },   "links": \[     {       "rel": "self",       "href": "http://localhost:8080/comandaapi/interna/v1/avisos?filter=identificador==”31489824”\&page=0\&size=20"     }   \] } |
 
-### **Model de dades** {#model-de-dades-5}
+### **Model de dades** {#model-de-dades-6}
 
 ### 
 
@@ -1338,13 +1395,13 @@ Amb aquests elements, qualsevol aplicació pot integrar-se amb Comanda per a Sal
 
 # 
 
-# **Annex 1 \- Spring-filter**
+# **Annex 1 \- Spring-filter** {#annex-1---spring-filter}
 
-## **Camp filter – Sintaxi bàsica**
+## **Camp filter – Sintaxi bàsica** {#camp-filter-–-sintaxi-bàsica}
 
 El paràmetre `filter` permet definir **condicions de filtratge dinàmiques** sobre els camps de l’entitat, utilitzant una sintaxi similar a una expressió lògica.
 
-### **Format general**
+### **Format general** {#format-general}
 
 camp operador valor
 
@@ -1354,9 +1411,9 @@ Exemples:
 `age > 18`  
 `active == true`
 
-## **Operadors disponibles**
+## **Operadors disponibles** {#operadors-disponibles}
 
-### **Comparació**
+### **Comparació** {#comparació}
 
 | Operador | Significat |
 | ----- | ----- |
@@ -1372,7 +1429,7 @@ Exemples:
 `age >= 65`  
 `status != "CANCELLED"`
 
-### **Text**
+### **Text** {#text}
 
 | Operador | Descripció |
 | ----- | ----- |
@@ -1384,7 +1441,7 @@ Exemples:
 `name ~= "mar"`  
 `email !~= "@gmail.com"`
 
-### **Operadors lògics**
+### **Operadors lògics** {#operadors-lògics}
 
 Pots combinar múltiples condicions:
 
@@ -1400,15 +1457,15 @@ Pots combinar múltiples condicions:
 `status == "NEW" or status == "PENDING"`  
 `not deleted`
 
-### **Agrupació amb parèntesis**
+### **Agrupació amb parèntesis** {#agrupació-amb-parèntesis}
 
 Per controlar la prioritat de les condicions:
 
 `(status == "NEW" or status == "PENDING") and priority == "HIGH"`
 
-## **Valors admesos**
+## **Valors admesos** {#valors-admesos}
 
-### **Tipus bàsics**
+### **Tipus bàsics** {#tipus-bàsics}
 
 * **Text** → entre cometes  
   `name == "Pere"`  
@@ -1419,20 +1476,20 @@ Per controlar la prioritat de les condicions:
 * **Dates** (ISO-8601)  
   `createdAt >= "2024-01-01"`
 
-## **Accés a camps anidats**
+## **Accés a camps anidats** {#accés-a-camps-anidats}
 
 Es poden filtrar propietats relacionades utilitzant notació amb punts:
 
 `user.name == "Maria"`  
 `address.city == "Inca"`
 
-## **Operador in**
+## **Operador in** {#operador-in}
 
 Permet comparar amb una llista de valors:
 
 `status in ("NEW", "PENDING", "IN_PROGRESS")`
 
-## **Exemples complets**
+## **Exemples complets** {#exemples-complets}
 
 | Descripció | Filter |
 | ----- | ----- |
@@ -1441,7 +1498,7 @@ Permet comparar amb una llista de valors:
 | Estat pendent o nou | `status in ("NEW","PENDING")` |
 | Usuaris d’Inca no esborrats | `address.city == "Inca" and deleted == false` |
 
-## **Notes importants**
+## **Notes importants** {#notes-importants}
 
 * Els noms dels camps han de coincidir amb els **atributs de l’entitat**.  
 * Les cadenes de text sempre van entre cometes `" "`.  
