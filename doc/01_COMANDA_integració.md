@@ -3,11 +3,13 @@
 
 **COMANDA: Manual d’integració**
 
-octubre de 2025
+gener de 2026
 
 **Serveis d’Administració Electrònica en el Govern de les Illes Balears**
 
 Lot 2\. Serveis d’administració electrònica
+
+versio 1.1
 
 # **Control de versions del document** {#control-de-versions-del-document}
 
@@ -15,7 +17,7 @@ Lot 2\. Serveis d’administració electrònica
 | :---- | :---- | :---- | :---- |
 | **Data** | **Autor** | **Versió** | **Canvis** |
 | 06/10/25 | Límit Tecnologies | 1.0 | Versió inicial |
-|  |  |  |  |
+| 16/01/25 | Limit Tecnologies | 1.1 | Reestructuració de la API: nous mètodes, concreció de urls, hempers i exemples |
 |  |  |  |  |
 |  |  |  |  |
 
