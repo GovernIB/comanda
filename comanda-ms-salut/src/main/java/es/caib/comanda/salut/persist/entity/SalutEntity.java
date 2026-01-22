@@ -84,24 +84,80 @@ public class SalutEntity extends BaseEntity<Salut> {
     @Formula("(CASE WHEN (bd_estat = 'UP') THEN 1 ELSE 0 END)")
     private Boolean bdUp;
 
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'UP')")
-	private Integer integracioUpCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'DOWN')")
-	private Integer integracioDownCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_integracio sint where sint.salut_id = id and sint.estat = 'UNKNOWN')")
+    final static String SALUT_INTEGRACIO_TABLE = BaseConfig.DB_PREFIX + "salut_integracio";
+    final static String SALUT_SUBSISTEMA_TABLE = BaseConfig.DB_PREFIX + "salut_subsistema";
+    final static String SALUT_MISSATGE_TABLE = BaseConfig.DB_PREFIX + "salut_missatge";
+
+    final static String integracioUpEstatCondition = "estat = 'UP'";
+    @Formula("(select count(*) from " + SALUT_INTEGRACIO_TABLE + " sint " +
+            "where sint.salut_id = id and sint." + integracioUpEstatCondition +
+            " and not exists (" +
+            "select 1 from " + SALUT_INTEGRACIO_TABLE + " sintInner " +
+            "where sintInner.salut_id = id and sintInner." + integracioUpEstatCondition +
+            " and sintInner.pare_id = sint.id))")
+    private Integer integracioUpCount;
+
+    final static String integracioDownEstatCondition = "estat IN ('DOWN', 'ERROR')";
+    @Formula("(select count(*) from " + SALUT_INTEGRACIO_TABLE + " sint " +
+            "where sint.salut_id = id and sint." + integracioDownEstatCondition +
+            " and not exists (" +
+            "select 1 from " + SALUT_INTEGRACIO_TABLE + " sintInner " +
+            "where sintInner.salut_id = id and sintInner." + integracioDownEstatCondition +
+            " and sintInner.pare_id = sint.id))")
+    private Integer integracioDownCount;
+
+    final static String integracioWarnEstatCondition = "estat IN ('WARN', 'DEGRADED')";
+    @Formula("(select count(*) from " + SALUT_INTEGRACIO_TABLE + " sint " +
+            "where sint.salut_id = id and sint." + integracioWarnEstatCondition +
+            " and not exists (" +
+            "select 1 from " + SALUT_INTEGRACIO_TABLE + " sintInner " +
+            "where sintInner.salut_id = id and sintInner." + integracioWarnEstatCondition +
+            " and sintInner.pare_id = sint.id))")
+    private Integer integracioWarnCount;
+
+    final static String integracioDesconegutEstatCondition = "estat = 'UNKNOWN'";
+    @Formula("(select count(*) from " + SALUT_INTEGRACIO_TABLE + " sint " +
+            "where sint.salut_id = id and sint." + integracioDesconegutEstatCondition +
+            " and not exists (" +
+            "select 1 from " + SALUT_INTEGRACIO_TABLE + " sintInner " +
+            "where sintInner.salut_id = id and sintInner." + integracioDesconegutEstatCondition +
+            " and sintInner.pare_id = sint.id))")
     private Integer integracioDesconegutCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'UP')")
-	private Integer subsistemaUpCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'DOWN')")
-	private Integer subsistemaDownCount;
-    @Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_subsistema ssub where ssub.salut_id = id and ssub.estat = 'UNKNOWN')")
+
+    final static String subsistemaUpEstatCondition = "estat = 'UP'";
+    @Formula("(select count(*) from " + SALUT_SUBSISTEMA_TABLE + " ssub " +
+            "where ssub.salut_id = id and ssub." + subsistemaUpEstatCondition + ")")
+    private Integer subsistemaUpCount;
+
+    final static String subsistemaDownEstatCondition = "estat IN ('DOWN', 'ERROR')";
+    @Formula("(select count(*) from " + SALUT_SUBSISTEMA_TABLE + " ssub " +
+            "where ssub.salut_id = id and ssub." + subsistemaDownEstatCondition + ")")
+    private Integer subsistemaDownCount;
+
+    final static String subsistemaWarnEstatCondition = "estat IN ('WARN', 'DEGRADED')";
+    @Formula("(select count(*) from " + SALUT_SUBSISTEMA_TABLE + " ssub " +
+            "where ssub.salut_id = id and ssub." + subsistemaWarnEstatCondition + ")")
+    private Integer subsistemaWarnCount;
+
+    final static String subsistemaDesconegutEstatCondition = "estat = 'UNKNOWN'";
+    @Formula("(select count(*) from " + SALUT_SUBSISTEMA_TABLE + " ssub " +
+            "where ssub.salut_id = id and ssub." + subsistemaDesconegutEstatCondition + ")")
     private Integer subsistemaDesconegutCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'ERROR')")
-	private Integer missatgeErrorCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'WARN')")
-	private Integer missatgeWarnCount;
-	@Formula("(select count(*) from " + BaseConfig.DB_PREFIX + "salut_missatge smsg where smsg.salut_id = id and smsg.nivell = 'INFO')")
-	private Integer missatgeInfoCount;
+
+    final static String missatgeErrorEstatCondition = "nivell = 'ERROR'";
+    @Formula("(select count(*) from " + SALUT_MISSATGE_TABLE + " smsg " +
+            "where smsg.salut_id = id and smsg." + missatgeErrorEstatCondition + ")")
+    private Integer missatgeErrorCount;
+
+    final static String missatgeWarnEstatCondition = "nivell = 'WARN'";
+    @Formula("(select count(*) from " + SALUT_MISSATGE_TABLE + " smsg " +
+            "where smsg.salut_id = id and smsg." + missatgeWarnEstatCondition + ")")
+    private Integer missatgeWarnCount;
+
+    final static String missatgeInfoEstatCondition = "nivell = 'INFO'";
+    @Formula("(select count(*) from " + SALUT_MISSATGE_TABLE + " smsg " +
+            "where smsg.salut_id = id and smsg." + missatgeInfoEstatCondition + ")")
+    private Integer missatgeInfoCount;
 
     @Formula("TO_CHAR(data, 'YYYY')")
     private String year;

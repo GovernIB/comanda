@@ -2,6 +2,7 @@ import React from 'react';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
 import Icon from '@mui/material/Icon';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -9,12 +10,38 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
+import { useTheme } from '@mui/material/styles';
 import { TextAvatar } from './Avatars';
 import { useBaseAppContext } from '../BaseAppContext';
 import { useAuthContext } from '../AuthContext';
 
 type AuthButtonProps = {
+    badgeIcon?: string;
     additionalComponents?: React.ReactElement | React.ReactElement[];
+};
+
+type IconBadgeProps = React.PropsWithChildren & {
+    icon?: string;
+};
+
+export type AuthButtonApi = {
+    close: () => any;
+};
+
+export type AuthButtonApiRef = React.RefObject<AuthButtonApi | undefined>;
+
+export type AuthButtonContextType = {
+    apiRef: AuthButtonApiRef;
+};
+
+export const AuthButtonContext = React.createContext<AuthButtonContextType | undefined>(undefined);
+
+export const useAuthButtonContext = () => {
+    const context = React.useContext(AuthButtonContext);
+    if (context === undefined) {
+        throw new Error('useAuthButtonContext must be used within a AuthButtonProvider');
+    }
+    return context;
 };
 
 const UserAvatar: React.FC = (props: any) => {
@@ -34,6 +61,33 @@ const UserAvatar: React.FC = (props: any) => {
     }
 };
 
+const IconBadge: React.FC<IconBadgeProps> = (props) => {
+    const { icon, children } = props;
+    const theme = useTheme();
+    return icon ? (
+        <Badge
+            overlap="circular"
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            badgeContent={
+                icon && (
+                    <Avatar
+                        sx={{
+                            width: 16,
+                            height: 16,
+                            border: `2px solid ${theme.palette.background.paper}`,
+                            bgcolor: theme.palette.primary.dark,
+                        }}>
+                        <Icon sx={{ fontSize: 10 }}>{icon}</Icon>
+                    </Avatar>
+                )
+            }>
+            {children}
+        </Badge>
+    ) : (
+        children
+    );
+};
+
 const LoginButton: React.FC = () => {
     const { signIn } = useAuthContext();
     return (
@@ -44,8 +98,9 @@ const LoginButton: React.FC = () => {
 };
 
 const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
-    const { additionalComponents } = props;
+    const { badgeIcon, additionalComponents } = props;
     const { t } = useBaseAppContext();
+    const apiRef = React.useRef<AuthButtonApi>(undefined);
     const { getTokenParsed, signOut } = useAuthContext();
     const [tokenParsed, setTokenParsed] = React.useState<any>();
     const [anchorEl, setAnchorEl] = React.useState();
@@ -60,18 +115,23 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
     const handleMenuClose = () => {
         setAnchorEl(undefined);
     };
+    apiRef.current = {
+        close: handleMenuClose,
+    };
     return (
-        <>
-            <IconButton
-                id="auth-button"
-                size="small"
-                aria-label="auth menu"
-                aria-controls={menuOpened ? id : undefined}
-                aria-haspopup="true"
-                aria-expanded={menuOpened ? 'true' : undefined}
-                onClick={handleIconButtonClick}>
-                <UserAvatar />
-            </IconButton>
+        <AuthButtonContext.Provider value={{ apiRef }}>
+            <IconBadge icon={badgeIcon}>
+                <IconButton
+                    id="auth-button"
+                    size="small"
+                    aria-label="auth menu"
+                    aria-controls={menuOpened ? id : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={menuOpened ? 'true' : undefined}
+                    onClick={handleIconButtonClick}>
+                    <UserAvatar />
+                </IconButton>
+            </IconBadge>
             <Menu
                 id={id}
                 anchorEl={anchorEl}
@@ -106,18 +166,18 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
                     <ListItemText>{t('app.auth.logout')}</ListItemText>
                 </MenuItem>
             </Menu>
-        </>
+        </AuthButtonContext.Provider>
     );
 };
 
 const AuthButton: React.FC<AuthButtonProps> = (props) => {
-    const { additionalComponents } = props;
+    const { badgeIcon, additionalComponents } = props;
     const { isReady, isAuthenticated } = useAuthContext();
     return isReady ? (
         !isAuthenticated ? (
             <LoginButton />
         ) : (
-            <LoggedInUserButton additionalComponents={additionalComponents} />
+            <LoggedInUserButton badgeIcon={badgeIcon} additionalComponents={additionalComponents} />
         )
     ) : null;
 };

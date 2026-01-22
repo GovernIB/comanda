@@ -8,8 +8,6 @@ import {
     useFormApiRef,
     useFilterApiRef,
     MuiDataGridColDef,
-    BasePage,
-    useAuthContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -22,6 +20,7 @@ import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
 import { GridSortModel, useGridApiRef } from '@mui/x-data-grid-pro';
 import dayjs from 'dayjs';
 import { SxProps } from '@mui/material';
+import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
 
 export const StyledPrioritat = (props: {
@@ -61,6 +60,7 @@ export const StyledPrioritat = (props: {
 const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
+    const { user } = useUserContext();
     const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [ownTasksOnly, setOwnTasksOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
@@ -78,16 +78,7 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
         moreFormApiRef.current?.setFieldValue('tascaPropia', ownTasksOnly);
     }, [ownTasksOnly]);
 
-    // TODO Recuperar el nombre de usuario usando el contexto de usuario que hay en la rama comanda-wip
-    const [tokenParsed, setTokenParsed] = React.useState<{
-        name: string;
-        preferred_username: string;
-    }>();
-    const { getTokenParsed } = useAuthContext();
-    React.useEffect(() => {
-        setTokenParsed(getTokenParsed());
-    }, []);
-    const currentUsername = tokenParsed?.preferred_username;
+    const currentUserCodi = user?.codi;
 
     return <>
         <MuiFilter
@@ -102,39 +93,49 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
             }}>
             <Box sx={{
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'stretch', sm: 'center' },
+                gap: { xs: 1, sm: 0 },
             }}>
                 <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
                     <Grid size={6}><FormField name={'app'} /></Grid>
                     <Grid size={6}><FormField name={'entorn'} /></Grid>
                 </Grid>
-                <Button
-                    onClick={() => setUnfinishedOnly(fo => !fo)}
-                    variant={unfinishedOnly ? 'contained' : 'outlined'}
-                    title={unfinishedOnly ? t('page.tasques.filter.unfinishedOnlyEnabled') : t('page.tasques.filter.unfinishedOnlyDisabled')}
-                    sx={{ mr: 2 }}>
-                    <Icon>pending_actions</Icon>
-                </Button>
-                <Button
-                    onClick={() => setOwnTasksOnly(value => !value)}
-                    disabled={!currentUsername}
-                    variant={ownTasksOnly ? 'contained' : 'outlined'}
-                    title={ownTasksOnly ? t('page.tasques.filter.ownTasksOnlyEnabled') : t('page.tasques.filter.ownTasksOnlyDisabled')}
-                    sx={{ mr: 2 }}>
-                    <Icon>person</Icon>
-                </Button>
-                <IconButton
-                    onClick={netejar}
-                    title={t('components.clear')}
-                    sx={{ mr: 1 }}>
-                    <Icon>filter_alt_off</Icon>
-                </IconButton>
-                <IconButton
-                    onClick={() => setMoreFields((mf) => !mf)}
-                    title={t('page.tasques.filter.more')}>
-                    <Icon>filter_list</Icon>
-                </IconButton>
+                <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        flexWrap: 'wrap',
+                        width: { xs: '100%', sm: 'auto' },
+                        mt: { xs: 1, sm: 0 },
+                }}>
+                    <Button
+                        onClick={() => setUnfinishedOnly(fo => !fo)}
+                        variant={unfinishedOnly ? 'contained' : 'outlined'}
+                        title={unfinishedOnly ? t($ => $.page.tasques.filter.unfinishedOnlyEnabled) : t($ => $.page.tasques.filter.unfinishedOnlyDisabled)}
+                        sx={{ mr: 2 }}>
+                        <Icon>pending_actions</Icon>
+                    </Button>
+                    <Button
+                        onClick={() => setOwnTasksOnly(value => !value)}
+                        disabled={!currentUserCodi}
+                        variant={ownTasksOnly ? 'contained' : 'outlined'}
+                        title={ownTasksOnly ? t($ => $.page.tasques.filter.ownTasksOnlyEnabled) : t($ => $.page.tasques.filter.ownTasksOnlyDisabled)}
+                        sx={{ mr: 2 }}>
+                        <Icon>person</Icon>
+                    </Button>
+                    <IconButton
+                        onClick={netejar}
+                        title={t($ => $.components.clear)}
+                        sx={{ mr: 1 }}>
+                        <Icon>filter_alt_off</Icon>
+                    </IconButton>
+                    <IconButton
+                        onClick={() => setMoreFields((mf) => !mf)}
+                        title={t($ => $.page.tasques.filter.more)}>
+                        <Icon>filter_list</Icon>
+                    </IconButton>
+                </Box>
             </Box>
         </MuiFilter>
         <MuiFilter
@@ -148,6 +149,7 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
                 springFilterBuilder.eq('entornId', data?.entornId?.id),
                 springFilterBuilder.like('nom', data?.nom),
                 springFilterBuilder.like('descripcio', data?.descripcio),
+                springFilterBuilder.like('numeroExpedient', data?.numeroExpedient),
                 springFilterBuilder.like('tipus', data?.tipus),
                 springFilterBuilder.eq('prioritat', `'${data?.prioritat}'`),
                 data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
@@ -157,21 +159,22 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
                 data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1)}'`),
                 data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2)}'`),
                 data?.finalitzada && springFilterBuilder.eq('dataFi', null),
-                data?.tascaPropia && currentUsername && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
+                data?.tascaPropia && currentUserCodi && springFilterBuilder.eq('responsable', `'${currentUserCodi}'`),
             )}
             onSpringFilterChange={onSpringFilterChange}
             commonFieldComponentProps={{ size: 'small' }}>
             <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="nom" /></Grid>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="descripcio" /></Grid>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="tipus" /></Grid>
-                <Grid size={{ xs: 6, sm:3}}><FormField name="prioritat" /></Grid>
-                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataInici1" /></Grid>
-                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataInici2" /></Grid>
-                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataFi1" /></Grid>
-                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataFi2" /></Grid>
-                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataCaducitat1" /></Grid>
-                <Grid size={{ xs: 6, sm:3, md: 2 }}><FormField name="dataCaducitat2" /></Grid>
+                <Grid size={{ xs: 12,  md:6, lg: 3}}><FormField name="nom" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3}}><FormField name="descripcio" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2}}><FormField name="numeroExpedient" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2}}><FormField name="tipus" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2}}><FormField name="prioritat" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataInici1" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataInici2" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataFi1" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataFi2" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataCaducitat1" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataCaducitat2" /></Grid>
             </Grid>
         </MuiFilter>
     </>;
@@ -181,6 +184,10 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
     {
         field: 'descripcio',
         flex: 2,
+    },
+    {
+        field: 'numeroExpedient',
+        flex: 1,
     },
     {
         field: 'estat',
@@ -250,7 +257,7 @@ const Tasca = () => {
     const [filter, setFilter] = React.useState<string>();
     const gridApiRef = useGridApiRef();
     const treePathFormatInvalidEntornApp = (invalidPath: string) =>
-        t('page.tasques.grid.entornAppInvalid') + ` [ID: ${invalidPath.split(' ')[1]}]`;
+        t($ => $.page.tasques.grid.entornAppInvalid) + ` [ID: ${invalidPath.split(' ')[1]}]`;
     const {
         treeView,
         treeViewSwitch,
@@ -258,7 +265,7 @@ const Tasca = () => {
     } = useTreeData(
         (row) => row?.treePath,
         gridApiRef,
-        t('page.tasques.grid.groupHeader'),
+        t($ => $.page.tasques.grid.groupHeader),
         1.5,
         false,
         false,
@@ -270,7 +277,7 @@ const Tasca = () => {
                   {
                       field: 'treePath',
                       flex: 1.2,
-                      headerName: t('page.tasques.grid.column.appEntorn'),
+                      headerName: t($ => $.page.tasques.grid.column.appEntorn),
                       valueFormatter: (value: any) =>
                           value?.[0].startsWith(INVALID_ENTORNAPP)
                               ? treePathFormatInvalidEntornApp(value[0])
@@ -284,7 +291,7 @@ const Tasca = () => {
     ];
     const actions = [{
         icon: 'open_in_new',
-        label: t('page.tasques.grid.action.obrir'),
+        label: t($ => $.page.tasques.grid.action.obrir),
         showInMenu: false,
         linkTo: (row: any) => row?.url,
         linkTarget: '_blank',
@@ -292,11 +299,12 @@ const Tasca = () => {
         hidden: (row: any) => !row?.id,
     }];
     const filterElement = <TascaFilter onSpringFilterChange={setFilter}/>;
+
     return (
-        <BasePage expandHeight={!treeView} style={{ height: '100%' }}>
-            <PageTitle title={t('menu.tasca')} />
+        <Box sx={{ height: '100%' }}>
+            <PageTitle title={t($ => $.menu.tasca)} />
             <MuiDataGrid
-                title={t('menu.tasca')}
+                title={t($ => $.menu.tasca)}
                 datagridApiRef={gridApiRef}
                 resourceName="tasca"
                 columns={columns}
@@ -312,7 +320,7 @@ const Tasca = () => {
                 rowAdditionalActions={actions}
                 {...treeDataGridProps}
             />
-        </BasePage>
+        </Box>
     );
 }
 

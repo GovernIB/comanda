@@ -6,7 +6,7 @@ import {
     DashboardReactGridLayout,
     useMapDashboardItems,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
-import { BasePage, MuiGrid, useCloseDialogButtons, useResourceApiService } from 'reactlib';
+import { BasePage, MuiDataGrid, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -51,8 +51,8 @@ function useDashboardSelect(currentDashboardId: any) {
                     width: '600px',
                 }}
             >
-                <MuiGrid
-                    title={t('page.dashboards.action.select.title')}
+                <MuiDataGrid
+                    title={t($ => $.page.dashboards.action.select.title)}
                     resourceName="dashboard"
                     columns={columns}
                     toolbarType="upper"
@@ -128,22 +128,22 @@ const EstadisticaDashboardView = () => {
                     severity="warning"
                     action={
                         <Button onClick={returnToDefaultDashboardAndClear}>
-                            {t('page.dashboards.alert.tornarTauler')}
+                            {t($ => $.page.dashboards.alert.tornarTauler)}
                         </Button>
                     }
                 >
-                    {t('page.dashboards.alert.notExists')}
+                    {t($ => $.page.dashboards.alert.notExists)}
                 </Alert>
             );
-        else return <Alert severity="error">{t('page.dashboards.alert.carregar')}.</Alert>;
+        else return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}.</Alert>;
     }
 
     if (dashboardId == null && firstDashboard === NO_DASHBOARD_FOUND)
-        return <Alert severity="warning">{t('page.dashboards.alert.notDefined')}</Alert>;
+        return <Alert severity="warning">{t($ => $.page.dashboards.alert.notDefined)}</Alert>;
 
     return (
         <>
-            <PageTitle title={t('page.dashboards.title')} />
+            <PageTitle title={t($ => $.page.dashboards.title)} />
             {dashboardSelectDialog}
             {loading ? (
                 <Box
@@ -169,7 +169,10 @@ const EstadisticaDashboardView = () => {
                             ml: 0,
                             mr: 0,
                             mt: 0,
-                            backgroundColor: (theme) => theme.palette.grey[200],
+                            backgroundColor: (theme) =>
+                                theme.palette.mode === 'dark'
+                                    ? theme.palette.grey['900']
+                                    : theme.palette.grey['200'],
                         }}
                     >
                         <Button
@@ -177,7 +180,7 @@ const EstadisticaDashboardView = () => {
                             variant="outlined"
                             size="small"
                             onClick={openDashboardSelect}
-                            endIcon={<MenuIcon />}
+                            startIcon={<MenuIcon />}
                             sx={{
                                 borderRadius: 1,
                             }}

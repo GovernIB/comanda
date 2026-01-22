@@ -149,7 +149,7 @@ export const Dialog: React.FC<DialogProps> = (props) => {
                     <Icon fontSize="small">close</Icon>
                 </IconButton>
             )}
-            <DialogContent>{children}</DialogContent>
+            <DialogContent sx={title ? { pt: 0 } : undefined}>{children}</DialogContent>
             {buttons && (
                 <DialogButtons
                     buttons={buttons}

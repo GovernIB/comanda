@@ -1,4 +1,15 @@
+export type translationResourcesType = typeof translationCa;
+
 const translationCa = {
+    common: {
+        yes: "Sí",
+        no: "No",
+        none: "Cap",
+        loading: "Carregant...",
+        delete: "Eliminar",
+        cancel: "Cancelar",
+        confirm: "Confirmar",
+    },
     enum: {
         appEstat: {
             UP: {
@@ -52,6 +63,10 @@ const translationCa = {
             UNKNOWN: {
                 tooltip: "No es disposa d'informació de l'estat del servei",
             },
+        },
+        userRole: {
+            COM_ADMIN: 'Administrador',
+            COM_CONSULTA: 'Consultor'
         }
     },
     menu: {
@@ -59,6 +74,7 @@ const translationCa = {
         estadistiques: "Estadístiques",
         tasca: "Tasques",
         avis: "Avisos",
+        alarmes: "Alarmes actives",
         monitoritzacio: "Monitorització",
         monitor: "Monitor",
         cache: "Gestió de cachés",
@@ -67,6 +83,7 @@ const translationCa = {
         app: "Aplicacions",
         entorn: "Entorns",
         versionsEntorn: "Versions per entorn",
+        alarmaConfig: "Alarmes",
         integracio: "Integracions",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
@@ -76,6 +93,22 @@ const translationCa = {
         indicador: "Indicadors",
         accessibilitat: "Accessibilitat",
         sitemap: "Mapa del lloc web",
+        user: {
+            options: {
+                profile: {
+                    title: "El meu perfil",
+                    form: {
+                        userData: "Dades de l'usuari",
+                        genericConfig: "Configuració genèrica",
+                    },
+                    tema: {
+                        clar: "Clar",
+                        obscur: "Obscur",
+                        sistema: "Sistema",
+                    },
+                },
+            },
+        },
     },
     page: {
         salut: {
@@ -94,7 +127,8 @@ const translationCa = {
                 column: {
                     group: "Aplicació / entorn",
                     estat: "Estat",
-                    infoData: "Data darrera consulta d'informació",
+                    infoData: "Darrera consulta",
+                    infoDataDescription: "Data darrera consulta d'informació",
                     codi: "Codi",
                     nom: "Nom",
                     versio: "Versió",
@@ -106,6 +140,13 @@ const translationCa = {
                     msgs: "Missatges",
                 },
                 detalls: "Detalls",
+            },
+            groupingSelect: {
+                label: "Agrupació",
+                BY_APPLICATION: "Per aplicació",
+                BY_ENVIRONMENT: "Per entorn",
+                NONE: "Sense agrupació",
+                titleNoGrouping: "Totes les aplicacions i entorns",
             },
             refreshperiod: {
                 title: "Periodicitat del refresc",
@@ -123,8 +164,17 @@ const translationCa = {
                 P7D: "Darrera setmana",
                 P1M: "Darrer mes",
             },
+            tabs: {
+                entorn: "Entorn",
+                estatActual: "Estat actual",
+                integracions: "Integracions",
+                subsistemes: "Subsistemes",
+                historic: "Històric",
+                logs: "Logs",
+            },
             info: {
                 title: "Informació",
+                versio: "Versió",
                 revisio: "Revisió",
                 jdk: {
                     versio: "Versió JDK",
@@ -132,6 +182,8 @@ const translationCa = {
                 data: "Darrera actualització",
                 bdEstat: "Base de dades",
                 appLatencia: "Latència",
+                integracions: "Integracions",
+                subsistemes: "Subsistemes",
                 missatges: "Missatges",
                 detalls: "Detalls",
                 noInfo: 'No hi ha dades disponibles per a aquest entorn',
@@ -148,9 +200,10 @@ const translationCa = {
             integracions: {
                 title: "Integracions",
                 integracioUpCount: "Actives",
+                integracioWarnCount: "Alerta",
                 integracioDownCount: "Inactives",
                 integracioDesconegutCount: "Estat desconegut",
-                noInfo: "No hi ha informació de integracions",
+                noInfo: "No hi ha informació d'integracions",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
@@ -164,6 +217,7 @@ const translationCa = {
             subsistemes: {
                 title: "Subsistemes",
                 subsistemaUpCount: "Actives",
+                subsistemaWarnCount: "Alerta",
                 subsistemaDownCount: "Inactives",
                 subsistemaDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de subsistemes",
@@ -192,22 +246,36 @@ const translationCa = {
                 missatgeInfoCount: "Informació"
             },
             contexts: {
-                title: "Contexts",
+                title: "Contexts i manuals",
                 noInfo: "No hi ha informació de contexts",
                 column: {
                     codi: "Códi",
                     nom: "Nom",
                     path: "Ruta",
-                    api: "Api",
+                    api: "API",
                     manuals: "Manuals",
                 },
             },
             detalls: {
-                title: "Detalls",
+                title: "Sistema",
                 noInfo: "No hi ha informació sobre detalls de l'aplicació",
             },
             estats: {
                 title: "Estats",
+            },
+            logs: {
+                preview: "Previsualitzar",
+                download: "Descarregar",
+                noSelected: "Seleccionar un fitxer",
+                noPreview: "No hi ha previsualització",
+                logsList: {
+                    title: "Logs",
+                    nom: "Nom",
+                    dataCreacio: "Data de creació",
+                    dataModificacio: "Data de modificació",
+                    mida: "Mida",
+                    showPreview: "Previsualitzable",
+                }
             },
         },
         dashboards: {
@@ -291,10 +359,27 @@ const translationCa = {
             },
             grid: {
                 groupHeader: "Nom",
+                column: {
+                    appEntorn: "Aplicació - Entorn",
+                },
                 action: {
                     obrir: "Obrir avís",
                 },
             }
+        },
+        alarmaConfig: {
+            title: "Configuració d'alarmes",
+            create: "Crear configuració d'alarma",
+            update: "Modificar configuració d'alarma",
+            condicio: {
+                title: "Condició",
+                subtitle: "Condició que s'ha de complir per a generar l'alarma",
+            },
+            periode: {
+                title: "Període",
+                subtitle: "Període de temps durant el qual s'ha de complir la condició per a generar l'alarma",
+                switch: "Amb període d'activació"
+            },
         },
         apps: {
             title: "Aplicacions",
@@ -344,9 +429,10 @@ const translationCa = {
             title: "Entorns",
             resourceTitle: "entorn",
             action: {
-                toolbalActiva: {
+                toolbarActiva: {
                     activar: "Activar",
                     desactivar: "Desactivar",
+                    permisos: "Permisos",
                     ok: "L'acció s'ha executat correctament",
                 }
             }
@@ -674,6 +760,7 @@ const translationCa = {
             title: "Accessibilitat",
         },
         notFound: "No trobat",
+        noPermissions: "Sense permisos",
     },
     generic: {
         tipus: "Tipus",
@@ -690,6 +777,10 @@ const translationCa = {
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
+        permisos: {
+            title: "Permisos",
+            resourceTitle: "permís"
+        }
     },
     form: {
         field: {
@@ -742,6 +833,9 @@ const translationCa = {
         treeView: "Vista en arbre",
         expandAll: "Expandir totes les files",
         collapseAll: "Contreure totes les files",
+    },
+    reordering: {
+        errorMessage: "Error al reordenar",
     },
 };
 

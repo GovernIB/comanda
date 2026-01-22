@@ -3,6 +3,7 @@ package es.caib.comanda.configuracio.logic.service;
 import es.caib.comanda.configuracio.logic.intf.model.Entorn;
 import es.caib.comanda.configuracio.logic.intf.service.EntornService;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_CACHE;
@@ -24,7 +27,13 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_CACHE;
 @Service
 public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, EntornEntity> implements EntornService {
 
+    private final EntornRepository entornRepository;
     private final CacheHelper cacheHelper;
+
+    @Override
+    protected List<EntornEntity> reorderFindLinesWithParent(Serializable parentId) {
+        return entornRepository.findAllByOrderByOrdreAsc();
+    }
 
     @Override
     protected void afterUpdateSave(EntornEntity entity, Entorn resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {

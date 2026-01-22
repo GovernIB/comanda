@@ -15,7 +15,7 @@ export type FormApi = {
     handleSubmissionErrors: (error: ResourceApiError, temporalMessageTitle?: string) => void;
 };
 
-export type FormApiRef = React.MutableRefObject<FormApi | undefined>;
+export type FormApiRef = React.RefObject<FormApi | undefined>;
 
 export enum FormFieldDataActionType {
     RESET = 'RESET',

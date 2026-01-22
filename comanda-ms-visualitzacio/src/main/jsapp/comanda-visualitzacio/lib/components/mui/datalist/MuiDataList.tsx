@@ -24,6 +24,7 @@ import {
     joinReactElementsWithPositionWithReactElementsWithPositions,
 } from '../../../util/reactNodePosition';
 import { DialogButton } from '../../BaseAppContext';
+import { useMuiBaseAppContext } from '../MuiBaseAppContext';
 import { ResourceType } from '../../ResourceApiContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
 
@@ -53,6 +54,7 @@ export type MuiDataListProps = {
     perspectives?: string[];
     formAdditionalData?: any;
     toolbarHide?: true;
+    toolbarBackButton?: true;
     toolbarHideExport?: false;
     toolbarHideCreate?: boolean;
     toolbarHideRefresh?: boolean;
@@ -162,6 +164,7 @@ const ListItemSecondaryActions: React.FC<any> = (props) => {
 };
 
 export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
+    const { defaultMuiComponentProps } = useMuiBaseAppContext();
     const {
         title,
         titleDisabled,
@@ -182,6 +185,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         perspectives,
         formAdditionalData,
         toolbarHide,
+        toolbarBackButton,
         toolbarHideExport = true,
         toolbarHideCreate,
         toolbarHideRefresh,
@@ -209,7 +213,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         popupEditFormDialogOnClose,
         popupEditFormComponentProps,
         popupEditFormI18nKeys,
-    } = props;
+    } = { ...defaultMuiComponentProps.dataList, ...props };
     const theme = useTheme();
     const {
         currentActions: apiCurrentActions,
@@ -303,6 +307,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         quickFilterComponent,
         refresh,
         exportt,
+        toolbarBackButton,
         toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,

@@ -126,7 +126,7 @@ const WidgetFooter: React.FC<{ descripcio: string; canviPercentual: string; text
     descripcio,
     canviPercentual,
     textColor,
-    preview,
+    // preview,
     loading,
     midaFontDescripcio,
     midaFontCanviPercentual,

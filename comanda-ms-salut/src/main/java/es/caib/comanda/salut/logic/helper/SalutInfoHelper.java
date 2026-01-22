@@ -97,11 +97,17 @@ public class SalutInfoHelper {
                 return; // sortir; el bloc finally publicarà l'event i mètriques
             }
 			SalutInfo salutInfo = restTemplate.getForObject(uri, SalutInfo.class);
-			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
 			idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);
+            monitorSalut.endAction();
 		} catch (RestClientException ex) {
             idSalut = processSalutError(entornApp, idSalut, currentMinuteTime, monitorSalut, ex);
+        } catch (Exception ex){
+            log.error("Error al recuperar i guardar la informació de salut de l'app {}, entorn {}: {}",
+                    entornApp.getApp().getNom(),
+                    entornApp.getEntorn().getNom(),
+                    ex.getLocalizedMessage());
+            monitorSalut.endAction(ex, "Error intern de comanda");
         } finally {
 			Duration duration = Duration.between(t0, Instant.now());
 			metricsHelper.getSalutInfoGlobalTimer(null, null).record(duration);
@@ -128,7 +134,7 @@ public class SalutInfoHelper {
         salut.setNumElements(1);
         SalutEntity saved = salutRepository.save(salut);
         if (!monitorSalut.isFinishedAction()) {
-            monitorSalut.endAction(ex);
+            monitorSalut.endAction(ex, null);
         }
         idSalut = saved.getId();
         return idSalut;
@@ -366,7 +372,7 @@ public class SalutInfoHelper {
         Object lock = ENTORN_LOCKS.computeIfAbsent(entornAppId, k -> new Object());
         synchronized (lock) {
             try {
-                log.info("Executant compactat de dades de salut. EntornAppId: {}, salutId: {}.",
+                log.debug("Executant compactat de dades de salut. EntornAppId: {}, salutId: {}.",
                         entornAppId, salutId);
                 SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);
                 if (dadesSalut == null) {
@@ -389,7 +395,7 @@ public class SalutInfoHelper {
 
     public void buidar(Long entornAppId, Long salutId) {
         try {
-            log.info("Executant buidat de dades de salut. EntornAppId: {}, salutId: {}.",
+            log.debug("Executant buidat de dades de salut. EntornAppId: {}, salutId: {}.",
                     entornAppId, salutId);
 
             SalutEntity dadesSalut = salutRepository.findById(salutId).orElse(null);

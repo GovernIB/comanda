@@ -39,15 +39,13 @@ import static org.mockito.Mockito.*;
 public class AppImportExportTest {
 
     static class TestableAppServiceImpl extends AppServiceImpl {
-        public TestableAppServiceImpl(AppInfoHelper appInfoHelper,
-                                      ConfiguracioSchedulerService schedulerService,
-                                      es.caib.comanda.ms.logic.helper.CacheHelper cacheHelper,
+        public TestableAppServiceImpl(es.caib.comanda.ms.logic.helper.CacheHelper cacheHelper,
                                       ObjectMapper objectMapper,
                                       AppExportMapper appExportMapper,
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository) {
-            super(appInfoHelper, schedulerService, cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
+            super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
         }
         // Simplify mapping to avoid needing ObjectMappingHelper in unit tests
         @Override
@@ -74,8 +72,6 @@ public class AppImportExportTest {
     void setup() {
         realObjectMapper = new ObjectMapper();
         service = new TestableAppServiceImpl(
-                appInfoHelper,
-                schedulerService,
                 cacheHelper,
                 realObjectMapper,
                 appExportMapper,
@@ -200,8 +196,6 @@ public class AppImportExportTest {
         assertEquals(100L, result.getApps().get(0).getId());
 
         // Verify side effects
-        verify(schedulerService, atLeastOnce()).programarTasca(any(EntornAppEntity.class));
-        verify(appInfoHelper, atLeastOnce()).programarTasquesSalutEstadistica(any(EntornAppEntity.class));
         verify(cacheHelper, times(1)).evictCacheItem(anyString(), eq("100"));
     }
 

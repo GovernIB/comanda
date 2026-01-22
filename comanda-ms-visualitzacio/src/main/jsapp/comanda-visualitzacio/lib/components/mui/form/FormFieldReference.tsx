@@ -60,7 +60,7 @@ type AdvancedSearchDialogProps = React.PropsWithChildren & {
     sortModel?: GridSortModel;
     namedQueries?: string[];
     perspectives?: string[];
-    apiRef: React.MutableRefObject<AdvancedSearchDialogApi | undefined>;
+    apiRef: React.RefObject<AdvancedSearchDialogApi | undefined>;
     dialogHeight?: number;
     dialogComponentProps?: any;
 };
@@ -94,16 +94,29 @@ const AdvancedSearchDialog: React.FC<AdvancedSearchDialogProps> = (props) => {
         resourceType,
         resourceTypeCode,
         fieldName,
-        filter,
-        sortModel,
-        namedQueries,
-        perspectives
-    );
-    const show = () => {
-        return gridDialogShow(title, dialogHeight, {
+        true,
+        {
             fullWidth: true,
             maxWidth: 'md',
             ...dialogComponentProps,
+        }
+    );
+    const show = () => {
+        return gridDialogShow({
+            title,
+            height: dialogHeight,
+            dataGridComponentProps: {
+                readOnly: true,
+                paginationActive: true,
+                titleDisabled: true,
+                quickFilterSetFocus: true,
+                quickFilterFullWidth: true,
+                toolbarHideRefresh: true,
+                filter,
+                sortModel,
+                namedQueries,
+                perspectives,
+            },
         });
     };
     apiRef.current = { show };

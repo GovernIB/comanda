@@ -19,8 +19,14 @@ export const findOptions = async (find: (args: ResourceApiFindArgs) => Promise<R
 /**
  * Builds a URL based on the current environment's API URL and the provided URL fragment.
  * @param urlFragment - The URL fragment to append to the API URL. Do not include leading slashes (e.g., 'users/findAll').
+ * @param utilsPath - If true, the URL will be built relative to the utils controller path ('/' instead of '/api').
  */
-export const buildHref = (urlFragment: string) => {
-    const baseUrl = getEnvApiUrl() as string;
+export const buildHref = (urlFragment: string, utilsPath?: boolean) => {
+    let baseUrl = getEnvApiUrl() as string;
+    if (utilsPath && baseUrl.endsWith('/api'))
+        baseUrl = baseUrl.slice(0, -4);
+    if (utilsPath && baseUrl.endsWith('/api/'))
+        baseUrl = baseUrl.slice(0, -5);
+
     return `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}${urlFragment}`;
 };

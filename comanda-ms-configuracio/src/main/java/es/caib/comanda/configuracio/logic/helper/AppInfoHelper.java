@@ -91,47 +91,6 @@ public class AppInfoHelper {
 		});
 	}
 
-	public void programarTasquesSalutEstadistica(EntornAppEntity entity) {
-		es.caib.comanda.client.model.EntornApp clientEntornApp = toClientEntornApp(entity);
-		try {
-			salutServiceClient.programar(clientEntornApp, httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		} catch (Exception e) {
-			log.error("Error al programar l'actualització d'informació de salut per l'entornApp {}", entity.getId(), e);
-		}
-		try {
-			estadisticaServiceClient.programar(clientEntornApp, httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		} catch (Exception e) {
-			log.error("Error al programar l'actualització d'informació estadística per l'entornApp {}", entity.getId(), e);
-		}
-	}
-
-	/**
-	 * Versió segura per ser cridada des de listeners asíncrons o fora de context de persistència.
-	 * Carrega l'entitat des de BD per evitar LazyInitializationException abans de construir el DTO del client.
-	 */
-	public void programarTasquesSalutEstadisticaById(Long entornAppId) {
-		EntornAppEntity entity = entornAppRepository.findById(entornAppId)
-				.orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, String.valueOf(entornAppId)));
-		programarTasquesSalutEstadistica(entity);
-	}
-
-	private es.caib.comanda.client.model.EntornApp toClientEntornApp(EntornAppEntity entity) {
-		return es.caib.comanda.client.model.EntornApp.builder()
-				.id(entity.getId())
-				.entorn(EntornRef.builder().id(entity.getEntorn().getId()).nom(entity.getEntorn().getNom()).build())
-				.app(AppRef.builder().id(entity.getApp().getId()).nom(entity.getApp().getNom()).build())
-				.infoUrl(entity.getInfoUrl())
-				.salutUrl(entity.getSalutUrl())
-				.estadisticaUrl(entity.getEstadisticaUrl())
-				.estadisticaUrl(entity.getEstadisticaUrl())
-				.estadisticaCron(entity.getEstadisticaCron())
-				.activa(entity.isActiva())
-                .compactable(entity.getCompactable())
-                .eliminacioMesos(entity.getEliminacioMesos())
-                .compactacioMensualMesos(entity.getCompactacioMensualMesos())
-				.build();
-	}
-
 	/**
 	 * Actualitza la informació de l'aplicació associada a un entorn concret.
 	 * <p>
@@ -163,7 +122,6 @@ public class AppInfoHelper {
                 throw new MalformedURLException("URL de salut invàlida o no absoluta");
             }
 			AppInfo appInfo = restTemplate.getForObject(entornApp.getInfoUrl(), AppInfo.class);
-			monitorApp.endAction();
 			// Guardar la informació de l'app a la base de dades
 			if (appInfo != null) {
 				entornApp.setVersio(appInfo.getVersio());
@@ -174,16 +132,22 @@ public class AppInfoHelper {
 				refreshSubsistemes(entornApp, appInfo.getSubsistemes());
 				refreshContexts(entornApp, appInfo.getContexts());
 			}
+            monitorApp.endAction();
 		} catch (RestClientException | MalformedURLException ex) {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
 				entornApp.getApp().getNom(),
 				entornApp.getEntorn().getNom(),
-				ex.getLocalizedMessage(),
-                ex);
+				ex.getLocalizedMessage());
 			if (!monitorApp.isFinishedAction()) {
-				monitorApp.endAction(ex);
+				monitorApp.endAction(ex, null);
 			}
-		}
+		} catch (Exception ex) {
+            log.error("Error al recuperar i guardar la informació de salut de l'app {}, entorn {}: {}",
+                    entornApp.getApp().getNom(),
+                    entornApp.getEntorn().getNom(),
+                    ex.getLocalizedMessage());
+            monitorApp.endAction(ex, "Error intern de Comanda");
+        }
 	}
 
     private boolean isValidUri(URI uri) {

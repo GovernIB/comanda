@@ -91,7 +91,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                         </Grid>
 
                         <Grid size={12}>
-                            <Divider sx={{ my: 1 }}>{t('page.widget.form.periode')}</Divider>
+                            <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.periode)}</Divider>
                         </Grid>
 
                         {/* Periodo base, depenent des tipus apareixeran o no els camps de abaix */}

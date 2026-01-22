@@ -1,5 +1,7 @@
 package es.caib.comanda.back.config;
 
+import es.caib.comanda.acl.back.controller.AclEntryController;
+import es.caib.comanda.alarmes.back.controller.AlarmaConfigController;
 import es.caib.comanda.avisos.back.controller.AvisController;
 import es.caib.comanda.configuracio.back.controller.AppController;
 import es.caib.comanda.estadistica.back.controller.FetController;
@@ -29,9 +31,11 @@ public class BackHalFormsConfig extends BaseHalFormsConfig {
 				FetController.class.getPackageName(),
 				MonitorController.class.getPackageName(),
 				AvisController.class.getPackageName(),
+				AlarmaConfigController.class.getPackageName(),
 				PermisController.class.getPackageName(),
 				TascaController.class.getPackageName(),
-				UsuariController.class.getPackageName()
+				UsuariController.class.getPackageName(),
+				AclEntryController.class.getPackageName()
 		};
 	}
 

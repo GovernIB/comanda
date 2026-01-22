@@ -3,10 +3,8 @@ import ReactDOM from 'react-dom/client';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { LicenseInfo } from '@mui/x-license';
-import theme from './theme';
 import "@fontsource/noto-sans/400.css";
 import "@fontsource/noto-sans/500.css";
 import "@fontsource/noto-sans/700.css";
@@ -17,6 +15,8 @@ import {
     ContainerAuthProvider,
     ResourceApiProvider
 } from 'reactlib';
+import UserProvider from './components/UserProvider';
+import MuiThemeProvider from './components/MuiThemeProvider.tsx';
 import { HelmetProvider } from '@dr.pogodin/react-helmet';
 
 dayjs.extend(duration);
@@ -63,12 +63,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <HelmetProvider>
             <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
                 <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
-                    <ThemeProvider theme={theme}>
-                        <CssBaseline />
-                        <BrowserRouter basename={import.meta.env.BASE_URL}>
-                            <App />
-                        </BrowserRouter>
-                    </ThemeProvider>
+                    <UserProvider>
+                        <MuiThemeProvider>
+                            <CssBaseline />
+                            <BrowserRouter basename={import.meta.env.BASE_URL}>
+                                <App />
+                            </BrowserRouter>
+                        </MuiThemeProvider>
+                    </UserProvider>
                 </ResourceApiProvider>
             </AuthProvider>
         </HelmetProvider>

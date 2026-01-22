@@ -18,6 +18,7 @@ type AppBarProps = {
     style?: any;
     backgroundColor?: string;
     backgroundImg?: string;
+    authBadgeIcon?: string;
 };
 
 export const AppBar: React.FC<AppBarProps> = (props) => {
@@ -32,10 +33,13 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
         style,
         backgroundColor,
         backgroundImg,
+        authBadgeIcon,
     } = props;
     const authContext = useOptionalAuthContext();
     const authButton =
-        authContext != null ? <AuthButton additionalComponents={additionalAuthComponents} /> : null;
+        authContext != null ? (
+            <AuthButton badgeIcon={authBadgeIcon} additionalComponents={additionalAuthComponents} />
+        ) : null;
     const backgroundStyle = backgroundColor
         ? toolbarBackgroundStyle(backgroundColor, backgroundImg)
         : {};
@@ -58,9 +62,10 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
                         {/*version && <Typography variant="caption">&nbsp;v{version}</Typography>*/}
                     </Typography>
                 ) : (
-                    <div style={{
-                        flexGrow: 1,
-                    }}>
+                    <div
+                        style={{
+                            flexGrow: 1,
+                        }}>
                         {title}
                     </div>
                 )}

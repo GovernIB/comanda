@@ -7,7 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     MuiFilter,
@@ -76,9 +76,9 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                         <FormField
                             name={'entornApp'}
                             type={'reference'}
-                            label={t('page.dimensions.column.entornApp')}
+                            label={t($ => $.page.dimensions.column.entornApp)}
                             required={false}
-                            optionsRequest={(q) => {
+                            optionsRequest={(q: string) => {
                                 const opts = (entornApp ?? []).map((ea: EntornAppItem) => ({
                                     id: ea?.id,
                                     description: ea.entornAppDescription,
@@ -96,7 +96,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                 </Grid>
                 <IconButton
                     onClick={netejar}
-                    title={t('components.clear')}
+                    title={t($ => $.components.clear)}
                     sx={{ mr: 1 }}>
                     <Icon>filter_alt_off</Icon>
                 </IconButton>
@@ -119,9 +119,9 @@ const Dimensions: React.FC = () => {
 
     return (
         <GridPage>
-            <PageTitle title={t('page.dimensions.title')} />
-            <MuiGrid
-                title={t('page.dimensions.title')}
+            <PageTitle title={t($ => $.page.dimensions.title)} />
+            <MuiDataGrid
+                title={t($ => $.page.dimensions.title)}
                 resourceName="dimensio"
                 columns={columns}
                 toolbarType="upper"
@@ -130,7 +130,7 @@ const Dimensions: React.FC = () => {
                 toolbarAdditionalRow={filterElement}
                 filter={filter}
                 rowAdditionalActions={[{
-                    label: t('page.dimensions.values'),
+                    label: t($ => $.page.dimensions.values),
                     icon: 'list',
                     linkTo: 'valor/{{id}}'
                 }]}

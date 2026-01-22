@@ -2,7 +2,7 @@ lazy val root = (project in file(".")).
   settings(
     organization := "es.caib.comanda",
     name := "comanda-api-client-tasca-v1",
-    version := "0.1.0",
+    version := "0.1.1",
     scalaVersion := "2.11.12",
     scalacOptions ++= Seq("-feature"),
     compile / javacOptions ++= Seq("-Xlint:deprecation"),

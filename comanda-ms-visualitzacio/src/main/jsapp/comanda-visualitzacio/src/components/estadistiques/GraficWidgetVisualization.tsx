@@ -9,22 +9,15 @@ import {
     PieChart,
     ChartsTooltip,
     ChartsLegend,
-    ChartsXAxis,
-    ChartsYAxis,
-    ChartsGrid,
-    BarPlot,
-    LinePlot,
-    PieArcPlot,
-    PieArcLabel,
     SparkLineChart,
     Gauge,
     gaugeClasses,
-    ScatterChart,
+    XAxis,
+    LineSeries,
+    YAxis,
 } from '@mui/x-charts';
-// import { Heatmap } from '@mui/x-charts-pro/Heatmap';
 import estils from "./WidgetEstils.ts";
 import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
-import {TaulaWidgetVisualizationProps} from "./TaulaWidgetVisualization.tsx";
 import Chip from "@mui/material/Chip";
 import Skeleton from '@mui/material/Skeleton';
 import Accordion from '@mui/material/Accordion';
@@ -32,6 +25,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { PieSeries } from '@mui/x-charts';
 
 interface ColumnLabel {
     id: string;
@@ -110,6 +104,23 @@ interface GraficWidgetColors {
     isWhiteBackground: boolean;
 }
 
+const useWidgetColors = (props: GraficWidgetVisualizationProps, theme: any): GraficWidgetColors => {
+    const { colorText, colorFons, colorVora } = props;
+
+    const colors = {
+        text: colorText || theme.palette.text.primary,
+        background: colorFons || theme.palette.background.paper,
+        vora: colorVora || theme.palette.divider,
+    };
+
+    return {
+        textColor: colors.text,
+        backgroundColor: colors.background,
+        voraColor: colors.vora,
+        isWhiteBackground: !colorFons || isWhiteColor(colors.background),
+    };
+};
+
 /**
  * Component for visualizing a graph widget with configurable visual attributes.
  * Can be used both for dashboard display and for preview in configuration forms.
@@ -120,10 +131,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         titol = 'Títol del gràfic',
         descripcio,
         entornCodi = 'DEV',
-        colorText,
-        colorFons,
+        // colorText,
+        // colorFons,
         mostrarVora = false,
-        colorVora,
+        // colorVora,
         ampleVora = 1,
         dades = generateSampleData(props.tipusGrafic),
         labels = generateSampleLabels(props.tipusGrafic),
@@ -155,13 +166,13 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         // Gauge chart specific
         gaugeMin = 0,
         gaugeMax = 100,
-        gaugeColors = '#d4e6f1,#3498db,#1a5276',
+        // gaugeColors = '#d4e6f1,#3498db,#1a5276',
         gaugeRangs = '50,75,100',
 
         // Heatmap chart specific
-        heatmapColors = '#d4e6f1,#3498db,#1a5276',
-        heatmapMinValue = 0,
-        heatmapMaxValue = 100,
+        // heatmapColors = '#d4e6f1,#3498db,#1a5276',
+        // heatmapMinValue = 0,
+        // heatmapMaxValue = 100,
 
         // Additional props
         loading = false,
@@ -174,28 +185,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         midaFontTitol,
         midaFontDescripcio,
     } = props;
-
-    const useWidgetColors = (props: GraficWidgetVisualizationProps, theme: any): GraficWidgetColors => {
-        const {
-            colorText,
-            colorFons,
-            colorVora,
-        } = props;
-
-        const colors = {
-            text: colorText || theme.palette.text.primary,
-            background: colorFons || theme.palette.background.paper,
-            vora: colorVora || theme.palette.divider,
-        };
-
-        return {
-            textColor: colors.text,
-            backgroundColor: colors.background,
-            voraColor: colors.vora,
-            isWhiteBackground: !colorFons || isWhiteColor(colors.background),
-        };
-    };
-
     const theme = useTheme();
     const colors: GraficWidgetColors = useWidgetColors(props, theme);
 
@@ -235,12 +224,13 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     const renderBarChart = () => {
         // Extract data keys
         const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
-        const dataKeys = dades.length > 0
-            ? Object.keys(dades[0]).filter(key => key !== discriminador)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
-            : [];
+        const dataKeys =
+            dades.length > 0
+                ? Object.keys(dades[0]).filter(key => key !== discriminador) // Exclou el discriminador, ja que es fa servir per al `xAxis`.
+                : [];
         // Construïm el `dataset` utilitzat pel gràfic. Aquí simplement copiem la matriu de dades.
         // const dataset = [...dades];
-        const dataset = dades.map((item) => ({
+        const dataset = dades.map(item => ({
             [discriminador]: item[discriminador], // La categoria (eix X o Y segons l'orientació)
             ...dataKeys.reduce((acc: Record<string, unknown>, key: string) => {
                 acc[key] = item[key] || 0;
@@ -251,40 +241,58 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         // Prepare series for MUI X-Charts
         const series = dataKeys.map((key, index) => ({
             dataKey: key,
-            label: labels?.find((label) => label.id === key)?.label || key,
+            label: labels?.find(label => label.id === key)?.label || key,
             color: paletaColors[index % paletaColors.length],
             stack: barStacked ? 'stack' : undefined,
         }));
 
-        // Prepare xAxis categories from data
-        const xAxis = barHorizontal
-            ? {scaleType: 'linear'} // Si és horitzontal, l'eix X té valors numèrics
-            : {scaleType: 'band', data: dades.map((item) => item[discriminador])}; // Si no és horitzontal, l'eix X té categories
-        const xAxisData = barHorizontal && llegendaX ? xAxis : {...xAxis, label: llegendaX};
+        const xAxis: Array<XAxis> = [];
+        if (barHorizontal) {
+            // Si és horitzontal, l'eix X té valors numèrics
+            xAxis.push({
+                scaleType: 'linear',
+                label: llegendaX ? undefined : llegendaX,
+            });
+        } else {
+            // Si no és horitzontal, l'eix X té categories
+            xAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]) });
+        }
 
-        const yAxis = barHorizontal
-            ? {scaleType: 'band', data: dades.map((item) => item[discriminador])} // Si és horitzontal, l'eix Y té categories
-            : {scaleType: 'linear'}; // Si no és horitzontal, l'eix Y té valors numèrics
-        const yAxisData = barHorizontal && llegendaX ? {...yAxis, label: llegendaX} : yAxis;
+        const yAxis: Array<YAxis> = [];
+        if (barHorizontal) {
+            // Si és horitzontal, l'eix Y té categories
+            yAxis.push({
+                scaleType: 'band',
+                data: dades.map(item => item[discriminador]),
+                label: llegendaX || undefined,
+            });
+        } else {
+            // Si no és horitzontal, l'eix Y té valors numèrics
+            yAxis.push({ scaleType: 'linear' });
+        }
 
-        const grid = barHorizontal ?
-            mostrarReticula ? { vertical: true, } : { vertical: false, }
-            : mostrarReticula ? { horizontal: true, } : { horizontal: false, }
+        const grid = barHorizontal
+            ? mostrarReticula
+                ? { vertical: true }
+                : { vertical: false }
+            : mostrarReticula
+              ? { horizontal: true }
+              : { horizontal: false };
 
         return (
-            <Box sx={{width: '100%', height: chartHeight}}>
+            <Box sx={{ width: '100%', height: chartHeight }}>
                 <BarChart
                     dataset={dataset}
                     series={series}
-                    xAxis={[xAxisData]}
-                    yAxis={[yAxisData]}
+                    xAxis={xAxis}
+                    yAxis={yAxis}
                     layout={barHorizontal ? 'horizontal' : 'vertical'}
                     grid={grid}
                     height={chartHeight}
-                    margin={{top: 10, bottom: 30, left: 40, right: 10}}
+                    margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
                 >
-                    <ChartsTooltip/>
-                    <ChartsLegend/>
+                    <ChartsTooltip />
+                    <ChartsLegend />
                 </BarChart>
             </Box>
         );
@@ -298,7 +306,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             ? Object.keys(dades[0]).filter(key => key !== discriminador)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
             : [];
         // Prepare series for MUI X-Charts
-        const series = dataKeys.map((key, index) => ({
+        const series: LineSeries[] = dataKeys.map((key, index) => ({
             dataKey: key,
             label: labels?.find((label) => label.id === key)?.label || key,
             color: paletaColors[index % paletaColors.length],
@@ -308,7 +316,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         }));
 
         // Prepare xAxis categories from data
-        const xAxisData = [{
+        const xAxisData: ReadonlyArray<XAxis<'band'>> = [{
             dataKey: discriminador,
             scaleType: 'band',
             label: llegendaX,
@@ -353,7 +361,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         // For pie chart, transform data if needed
         const pieData = dades.map((item, index) => ({
             id: index,
-            label: item.label,
+            label: item.label as string | undefined,
             value: typeof item.value === 'number' ? item.value : 0,
             color: paletaColors[index % paletaColors.length]
         }));
@@ -364,16 +372,16 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
         // Define a simple interface for the arc label params
         interface ArcLabelParams {
-            label: string;
+            label?: string;
             [key: string]: any; // Allow any other properties
         }
 
         // Custom label component for pie chart
         const getArcLabel = (params: ArcLabelParams) => {
-            return pieShowLabels ? params.label : '';
+            return pieShowLabels ? (params.label ?? '') : '';
         };
 
-        const series = [
+        const series: Readonly<PieSeries[]> = [
             {
                 data: pieData,
                 innerRadius: +radiInterior,
@@ -405,7 +413,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         );
     };
 
-    // Render a gauge chart (Line version) //TODO Modificar back para devolver multiples valores para el valor X 
+    // Render a gauge chart (Line version) //TODO Modificar back para devolver multiples valores para el valor X
     const renderScatterChart = () => {
         // //Opciones graficas
         // const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
@@ -465,7 +473,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     height={chartHeight}
                     showTooltip={lineShowPoints}
                     showHighlight={lineShowPoints}
-                    curve={lineSmooth ? 'monotone' : 'linear'}
+                    curve={lineSmooth ? 'monotoneX' : 'linear'}
                     area={area}
                     sx={{
                         '& .MuiLineElement-root': {

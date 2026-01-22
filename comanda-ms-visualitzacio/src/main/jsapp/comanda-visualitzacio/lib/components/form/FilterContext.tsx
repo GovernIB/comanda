@@ -5,7 +5,7 @@ export type FilterApi = {
     filter: (data?: any) => void;
 };
 
-export type FilterApiRef = React.MutableRefObject<FilterApi | undefined>;
+export type FilterApiRef = React.RefObject<FilterApi | undefined>;
 
 export type FilterContextType = {
     resourceName: string;

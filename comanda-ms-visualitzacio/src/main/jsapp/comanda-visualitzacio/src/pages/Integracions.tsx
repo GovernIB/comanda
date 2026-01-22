@@ -41,26 +41,28 @@ const Integracions: React.FC = () => {
             flex: 7,
         },
     ];
-    return <GridPage>
-        <PageTitle title={t('page.integracions.title')} />
-        <MuiDataGrid
-            title={t('page.integracions.title')}
-            resourceName="integracio"
-            columns={columns}
-            toolbarType="upper"
-            paginationActive
-            popupEditActive
-            toolbarHideCreate
-            rowHideDeleteButton
-            popupEditFormContent={
-                <Grid container spacing={2}>
-                    <Grid size={12}><FormField name="codi" disabled={true} /></Grid>
-                    <Grid size={12}><FormField name="nom" disabled={true} /></Grid>
-                    <Grid size={12}><LogoUpload name="logo" /></Grid>
-                </Grid>
-            }
-        />
-    </GridPage>;
+    return (
+        <GridPage>
+            <PageTitle title={t($ => $.page.integracions.title)} />
+            <MuiDataGrid
+                title={t($ => $.page.integracions.title)}
+                resourceName="integracio"
+                columns={columns}
+                toolbarType="upper"
+                paginationActive
+                popupEditActive
+                toolbarHideCreate
+                rowHideDeleteButton
+                popupEditFormContent={
+                    <Grid container spacing={2}>
+                        <Grid size={12}><FormField name="codi" disabled={true} /></Grid>
+                        <Grid size={12}><FormField name="nom" disabled={true} /></Grid>
+                        <Grid size={12}><LogoUpload name="logo" /></Grid>
+                    </Grid>
+                }
+            />
+        </GridPage>
+    );
 };
 
 export default Integracions;

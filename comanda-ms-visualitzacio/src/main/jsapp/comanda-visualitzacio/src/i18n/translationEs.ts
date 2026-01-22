@@ -1,4 +1,15 @@
-const translationEs = {
+import type { translationResourcesType } from './translationCa.ts';
+
+const translationEs: translationResourcesType = {
+    common: {
+        yes: "Sí",
+        no: "No",
+        none: "Ninguno",
+        loading: "Cargando...",
+        delete: "Eliminar",
+        cancel: "Cancelar",
+        confirm: "Confirmar",
+    },
     enum: {
         appEstat: {
             UP: {
@@ -53,12 +64,17 @@ const translationEs = {
                 tooltip: "No se dispone de información sobre el estado del servicio",
             },
         },
+        userRole: {
+            COM_ADMIN: 'Administrador',
+            COM_CONSULTA: 'Consultor'
+        }
     },
     menu: {
         salut: "Salud",
         estadistiques: "Estadísticas",
         tasca: "Tareas",
         avis: "Avisos",
+        alarmes: "Alarmas activas",
         monitoritzacio: "Monitorización",
         monitor: "Monitor",
         cache: "Gestión de cachés",
@@ -67,6 +83,7 @@ const translationEs = {
         app: "Aplicaciones",
         entorn: "Entornos",
         versionsEntorn: "Versiones por entorno",
+        alarmaConfig: "Alarmas",
         integracio: "Integraciones",
         widget: "Widgets estadísticos",
         dashboard: "Cuadros de control",
@@ -76,6 +93,22 @@ const translationEs = {
         indicador: "Indicadores",
         accessibilitat: "Accesibilidad",
         sitemap: "Mapa del sitio web",
+        user: {
+            options: {
+                profile: {
+                    title: "Mi perfil",
+                    form: {
+                        userData: "Datos del usuario",
+                        genericConfig: "Configuración genérica",
+                    },
+                    tema: {
+                        clar: "Claro",
+                        obscur: "Oscuro",
+                        sistema: "Sistema",
+                    },
+                }
+            }
+        }
     },
     page: {
         salut: {
@@ -94,7 +127,8 @@ const translationEs = {
                 column: {
                     group: "Aplicación / entorno",
                     estat: "Estado",
-                    infoData: "Fecha última consulta de información",
+                    infoData: "Última consulta",
+                    infoDataDescription: "Fecha última consulta de información",
                     codi: "Código",
                     nom: "Nombre",
                     versio: "Versión",
@@ -106,6 +140,13 @@ const translationEs = {
                     msgs: "Mensajes",
                 },
                 detalls: "Detalles",
+            },
+            groupingSelect: {
+                label: "Agrupación",
+                BY_APPLICATION: "Por aplicación",
+                BY_ENVIRONMENT: "Por entorno",
+                NONE: "Sin agrupación",
+                titleNoGrouping: "Todas las aplicaciones y entornos",
             },
             refreshperiod: {
                 title: "Periodicidad del refresco",
@@ -119,12 +160,21 @@ const translationEs = {
                 title: "Intervalo de tiempo de los datos",
                 PT15M: "Últimos 15 minutos",
                 PT1H: "Última hora",
-                P1D: "Último dia",
+                P1D: "Último día",
                 P7D: "Última semana",
                 P1M: "Último mes",
             },
+            tabs: {
+                entorn: "Entorno",
+                estatActual: "Estado actual",
+                integracions: "Integraciones",
+                subsistemes: "Subsistemas",
+                historic: "Histórico",
+                logs: "Logs",
+            },
             info: {
                 title: "Información",
+                versio: "Versión",
                 revisio: "Revisión",
                 jdk: {
                     versio: "Versión JDK",
@@ -132,6 +182,8 @@ const translationEs = {
                 data: "Última actualización",
                 bdEstat: "Base de datos",
                 appLatencia: "Latencia",
+                integracions: "Integraciones",
+                subsistemes: "Subsistemas",
                 missatges: "Mensajes",
                 detalls: "Detalles",
                 noInfo: 'No hay datos disponibles para este entorno',
@@ -148,6 +200,7 @@ const translationEs = {
             integracions: {
                 title: "Integraciones",
                 integracioUpCount: "Activas",
+                integracioWarnCount: "Alerta",
                 integracioDownCount: "Inactivas",
                 integracioDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de integraciones",
@@ -164,6 +217,7 @@ const translationEs = {
             subsistemes: {
                 title: "Subsistemas",
                 subsistemaUpCount: "Activos",
+                subsistemaWarnCount: "Alerta",
                 subsistemaDownCount: "Inactivos",
                 subsistemaDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de subsistemas",
@@ -192,22 +246,36 @@ const translationEs = {
                 missatgeInfoCount: "Información"
             },
             contexts: {
-                title: "Contextos",
+                title: "Contextos y manuales",
                 noInfo: "No hay información de contextos",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
                     path: "Ruta",
-                    api: "Api",
+                    api: "API",
                     manuals: "Manuales",
                 },
             },
             detalls: {
-                title: "Detalles",
+                title: "Sistema",
                 noInfo: "No hay información sobre detalles de la aplicación",
             },
             estats: {
                 title: "Estados",
+            },
+            logs: {
+                preview: "Previsualizar",
+                download: "Descargar",
+                noSelected: "Seleccionar un archivo",
+                noPreview: "No hay previsualización",
+                logsList: {
+                    title: "Logs",
+                    nom: "Nombre",
+                    dataCreacio: "Fecha de creación",
+                    dataModificacio: "Fecha de modificación",
+                    mida: "Tamaño",
+                    showPreview: "Previsualizable",
+                }
             },
         },
         dashboards: {
@@ -291,10 +359,27 @@ const translationEs = {
             },
             grid: {
                 groupHeader: "Nombre",
+                column: {
+                    appEntorn: "Aplicación - Entorno",
+                },
                 action: {
                     obrir: "Abrir aviso",
                 },
             }
+        },
+        alarmaConfig: {
+            title: "Configuración de alarmas",
+            create: "Crear configuración de alarma",
+            update: "Modificar configuración de alarma",
+            condicio: {
+                title: "Condición",
+                subtitle: "Condición que se debe cumplir para generar la alarma",
+            },
+            periode: {
+                title: "Periodo",
+                subtitle: "Periodo de tiempo durante el cual se debe cumplir la condición para generar la alarma",
+                switch: "Con periodo de activación"
+            },
         },
         apps: {
             title: "Aplicaciones",
@@ -312,7 +397,9 @@ const translationEs = {
                 },
             },
             tooltips: {
-                compactacioMesos: "Cuántos meses completos se mantendrán las estadísticas antes de...\n - compactarlas por semana\n - compactarlas por mes\n - borrarlas.\nSi se dejan los campos sin valor, o valor 0, no se realizará la ...",
+                compactacioSetmanes: "Cuántos meses completos se mantendrán las estadísticas antes de compactarlas por semana.\nSi los campos se dejan sin valor o con valor 0, no se realizará la compactación por semana.",
+                compactacioMesos: "Cuántos meses completos se mantendrán las estadísticas antes de compactarlas por mes.\nSi los campos se dejan sin valor o con valor 0, no se realizará la compactación por mes.",
+                borratMesos: "Cuántos meses completos se mantendrán las estadísticas antes de eliminarlas.\nSi los campos se dejan sin valor o con valor 0, no se realizará el borrado.",
             },
             progress: {
                 diaries: "estadísticas diarias",
@@ -345,6 +432,7 @@ const translationEs = {
                 toolbarActiva: {
                     activar: "Activar",
                     desactivar: "Desactivar",
+                    permisos: "Permisos",
                     ok: "La acción se ha ejecutado correctamente",
                 }
             }
@@ -672,6 +760,7 @@ const translationEs = {
             title: "Accessibilidad",
         },
         notFound: "No encontrado",
+        noPermissions: "Sin permisos",
     },
     generic: {
         tipus: "Tipo",
@@ -688,6 +777,10 @@ const translationEs = {
         copiarContingut: "Copiar contenido",
         copiarContingutTitle: "Copiar el contenido",
         copiarContingutSuccess: "Contenido copiado al portapapeles",
+        permisos: {
+            title: "Permisos",
+            resourceTitle: "permiso"
+        }
     },
     form: {
         field: {
@@ -740,6 +833,9 @@ const translationEs = {
         treeView: "Vista en árbol",
         expandAll: "Expandir todas las filas",
         collapseAll: "Contraer todas las filas",
+    },
+    reordering: {
+        errorMessage: "Error al reordenar",
     },
 };
 

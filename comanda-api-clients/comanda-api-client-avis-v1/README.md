@@ -2,7 +2,7 @@
 
 comanda-api-interna
 
-- API version: 0.1.0
+- API version: 0.1.1
 
 - Generator version: 7.17.0
 
@@ -42,7 +42,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>es.caib.comanda</groupId>
   <artifactId>comanda-api-client-avis-v1</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -58,7 +58,7 @@ Add this dependency to your project's build file:
   }
 
   dependencies {
-     implementation "es.caib.comanda:comanda-api-client-avis-v1:0.1.0"
+     implementation "es.caib.comanda:comanda-api-client-avis-v1:0.1.1"
   }
 ```
 
@@ -72,7 +72,7 @@ mvn clean package
 
 Then manually install the following JARs:
 
-- `target/comanda-api-client-avis-v1-0.1.0.jar`
+- `target/comanda-api-client-avis-v1-0.1.1.jar`
 - `target/lib/*.jar`
 
 ## Getting Started

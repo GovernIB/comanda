@@ -1,0 +1,21 @@
+databaseChangeLog:
+- changeSet:
+    id: alarmes-init-constraint-1
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}alarma
+        baseColumnNames: alarma_config_id
+        referencedTableName: ${db_prefix}alarma_config
+        referencedColumnNames: id
+        constraintName: ${db_prefix}alarma_alarmaconf_fk
+- changeSet:
+    id: alarmes-init-constraint-2
+    author: limit
+    changes:
+    - addForeignKeyConstraint:
+        baseTableName: ${db_prefix}alarma_usuari
+        baseColumnNames: alarma_id
+        referencedTableName: ${db_prefix}alarma
+        referencedColumnNames: id
+        constraintName: ${db_prefix}alarmausu_alarma_fk

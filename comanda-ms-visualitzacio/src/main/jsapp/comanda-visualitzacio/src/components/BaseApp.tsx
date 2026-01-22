@@ -1,29 +1,36 @@
 import React from 'react';
-import dayjs from 'dayjs';
 import {
-    useNavigate,
-    useLocation,
     Link as RouterLink,
     LinkProps as RouterLinkProps,
+    useLocation,
+    useNavigate
 } from 'react-router-dom';
-import i18n from '../i18n/i18n';
 import { useTranslation } from 'react-i18next';
-import Button from '@mui/material/Button';
-import { AccessTime, CalendarMonth } from '@mui/icons-material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import Box from '@mui/material/Box';
+import MuiLink from '@mui/material/Link';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import {
-    MuiBaseApp,
+    DefaultMuiComponentProps,
     MenuEntry,
+    MuiBaseApp,
     useBaseAppContext,
     useResourceApiContext,
 } from 'reactlib';
-import HeaderLanguageSelector from "./HeaderLanguageSelector";
+import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
+import Alarms from './Alarms';
+import Footer from './Footer';
+import SystemTimeDisplay from './SystemTimeDisplay';
+import { useUserContext } from './UserContext';
+import HeaderLanguageSelector from './HeaderLanguageSelector';
+import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog';
+import RoleSelector from './RoleSelector';
+import i18n from '../i18n/i18n';
+import drassana from '../assets/drassana.png';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
-import AppMenu from "./AppMenu";
-import drassana from '../assets/drassana.png';
-import Footer from "./Footer.tsx";
+import { useTheme } from '@mui/material/styles';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -42,10 +49,12 @@ export type BaseAppProps = React.PropsWithChildren & {
     version: string;
     availableLanguages?: string[];
     menuEntries?: MenuEntryWithResource[];
-    appMenuEntries?: MenuEntryWithResource[];
+    headerMenuEntries?: MenuEntryWithResource[];
+    caibMenuEntries?: MenuEntryWithResource[];
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
     appbarStyle?: any;
+    defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
 // Antes se aplicaba role={undefined} por encima de itemProps, pero esto impedia configurar un Link como role="menuitem"
@@ -77,99 +86,104 @@ const CustomLocalizationProvider = ({ children }: React.PropsWithChildren) => {
     </LocalizationProvider>;
 }
 
-// Hora del sistema
-// Component separat per al rellotge del sistema per evitar re-renders innecesaris
-const SystemTimeDisplay = React.memo(() => {
-    const [currentTime, setCurrentTime] = React.useState(dayjs());
-    React.useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(dayjs());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-    return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                marginLeft: '20px',
-                color: 'inherit',
-                fontSize: '11px'
-            }}
-        >
-            <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                <CalendarMonth sx={{ fontSize: '14px' }}/>
-                <span>{currentTime.format('DD/MM/YYYY')}</span>
-            </div>
-            <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                <AccessTime  sx={{ fontSize: '14px' }}/>
-                <span>{currentTime.format('HH:mm:ss')}</span>
-            </div>
-        </div>
-    );
-});
-
-const generateSystemTimeItems = () => {
-    return [
-        <SystemTimeDisplay key="system_time" />
-    ];
-}
-
 // Entrades independents del menú (sempre visibles si hi ha baseAppMenuEntries)
-const generateMenuItems = (appMenuEntries: MenuEntryWithResource[] | undefined) => {
+const MenuItems = ({ appMenuEntries }: { appMenuEntries: MenuEntryWithResource[] | undefined }) => {
     const { indexState: apiIndex } = useResourceApiContext();
-    const filteredAppMenuEntries = appMenuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
-    return filteredAppMenuEntries?.length
-        ? filteredAppMenuEntries.map((entry) => (
-            <Button
-                className="appMenuItem"
-                key={entry.id}
-                color="inherit"
-                component={Link}
-                to={entry.to ?? ''} // Navegació amb React Router
-                sx={{display: {xs: 'none', md: 'inline'}}}
-            >
-                {entry.title}
-            </Button>
-        ))
-        : [];
-}
+    const filteredAppMenuEntries = appMenuEntries?.filter(
+        e => e.resourceName == null || apiIndex?.links.has(e.resourceName)
+    );
+    return (
+        <Box sx={{ display: 'flex', gap: { md: 1, xl: 3 } }}>
+            {filteredAppMenuEntries?.length
+                ? filteredAppMenuEntries.map(entry => (
+                      <MuiLink
+                          className="appMenuItem"
+                          key={entry.id}
+                          component={Link}
+                          to={entry.to ?? ''} // Navegació amb React Router
+                          underline="hover"
+                          color="textPrimary"
+                          sx={{
+                              display: { xs: 'none', md: 'inline' },
+                          }}
+                      >
+                          {entry.title}
+                      </MuiLink>
+                  ))
+                : []}
+        </Box>
+    );
+};
 // Selector d'idioma (només si hi ha idiomes disponibles)
 const generateLanguageItems = (availableLanguages: string[] | undefined) => {
-    return availableLanguages?.length
+    const theme = useTheme();
+    const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
+    return availableLanguages?.length && isLgUp && false
         ? [
             <HeaderLanguageSelector
-                sx={{ml: {xs: 1, md: '42px'}}}
+                sx={{ ml: { xs: 1, md: '42px' } }}
                 key="sel_lang"
                 languages={availableLanguages}
             />,
         ]
         : [];
 }
-// Menú general
-const generateAppMenu = (menuEntries: MenuEntryWithResource[] | undefined) => {
-    const { indexState: apiIndex } = useResourceApiContext();
-    const filteredMenuEntries = menuEntries?.filter(e => e.resourceName == null || apiIndex?.links.has(e.resourceName));
-    return filteredMenuEntries?.length
-        ? [<AppMenu key="app_menu" menuEntries={filteredMenuEntries} />]
-        : [];
+
+const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
+    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
+    return React.useMemo(() => {
+        if (apiIsReady) {
+            const apiLinks = apiIndex?.links.getAll();
+            const resourceNames = apiLinks?.map((l: any) => l.rel);
+            return menuEntries?.
+                filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
+                map(e => {
+                    const { resourceName, ...otherProps } = e;
+                    return otherProps;
+                });
+        } else {
+            return [];
+        }
+    }, [apiIsReady, apiIndex]);
 }
 
+const footerHeight = 36;
 const generateFooter = () => {
     return (
         <>
-            <div style={{ height: '36px', width: '100%' }} />
+            <div style={{ height: `${footerHeight}px`, flexShrink: 0, width: '100%' }} />
             <Footer
                 title="COMANDA"
                 backgroundColor="#5F5D5D"
                 logos={[drassana]}
-                style={{ position: 'fixed', height: '36px', bottom: 0, width: '100%' }}
+                style={{ position: 'fixed', height: `${footerHeight}px`, bottom: 0, width: '100%' }}
                 // style={{display: 'flex', flexDirection: 'row', flexShrink: 0, position: 'sticky', height: '36px', bottom: 0, width: '100%'}}
             />
         </>
     );
 };
+
+const useI18nUseTranslation = (ns?: string) => {
+    // @ts-expect-error baseReact defineix el namespace com a string, però comanda només suporta actualment 'translations'
+    return useTranslation(ns);
+}
+
+const useI18n = () => {
+    const { user } = useUserContext();
+    const currentUserLanguage = user?.idioma.toLowerCase();
+    const i18nHandleLanguageChange = (language?: string) => {
+        i18n.changeLanguage(language);
+    }
+    const i18nAddResourceBundleCallback = (language: string, namespace: string, bundle: any) => {
+        i18n.addResourceBundle(language, namespace, bundle);
+    }
+    return {
+        i18nUseTranslation: useI18nUseTranslation,
+        i18nCurrentLanguage: currentUserLanguage ?? i18n.language,
+        i18nHandleLanguageChange,
+        i18nAddResourceBundleCallback,
+    }
+}
 
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {
@@ -180,20 +194,25 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         version,
         availableLanguages,
         menuEntries,
-        appMenuEntries,
+        headerMenuEntries,
         appbarBackgroundColor,
         appbarBackgroundImg,
         appbarStyle,
+        defaultMuiComponentProps,
         children
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
-    const i18nHandleLanguageChange = (language?: string) => {
-        i18n.changeLanguage(language);
-    }
-    const i18nAddResourceBundleCallback = (language: string, namespace: string, bundle: any) => {
-        i18n.addResourceBundle(language, namespace, bundle);
-    }
+    const baseAppMenuEntries = useBaseAppMenuEntries(menuEntries);
+    const { user, currentRole } = useUserContext();
+    const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
+    const { indexState } = useResourceApiContext();
+    const {
+        i18nUseTranslation,
+        i18nCurrentLanguage,
+        i18nHandleLanguageChange,
+        i18nAddResourceBundleCallback,
+    } = useI18n();
     const anyHistoryEntryExist = () => location.key !== 'default';
     const goBack = (fallback?: string) => {
         if (anyHistoryEntryExist()) {
@@ -204,6 +223,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             console.warn('[BACK] No s\'ha pogut tornar enrere, ni s\'ha especificat una ruta alternativa ni existeix una entrada prèvia a l\'historial de navegació');
         }
     }
+    const showAlarms = indexState?.links?.has('alarma');
     return <MuiBaseApp
         code={code}
         headerTitle={title}
@@ -214,16 +234,24 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAppbarBackgroundImg={appbarBackgroundImg}
         headerAppbarStyle={appbarStyle}
         headerAdditionalComponents={[
-            ...generateMenuItems(menuEntries), // Menú
-            ...generateSystemTimeItems(), // Hora del sistema
+            <MenuItems key="menuItems" appMenuEntries={headerMenuEntries} />, // Menú
+            <SystemTimeDisplay key="system_time" />, // Hora del sistema
+            ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
-            ...generateAppMenu(appMenuEntries), // Menú lateral
         ]}
+        headerAdditionalAuthComponents={[
+            <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
+                user?.id,
+            )} />,
+            <RoleSelector />
+        ]}
+        headerAuthBadgeIcon={currentRole === 'COM_ADMIN' ? 'settings' : undefined}
         footer={generateFooter()}
+        footerHeight={footerHeight}
         persistentSession
         persistentLanguage
-        i18nUseTranslation={useTranslation}
-        i18nCurrentLanguage={i18n.language}
+        i18nUseTranslation={i18nUseTranslation}
+        i18nCurrentLanguage={i18nCurrentLanguage}
         i18nHandleLanguageChange={i18nHandleLanguageChange}
         i18nAddResourceBundleCallback={i18nAddResourceBundleCallback}
         routerGoBack={goBack}
@@ -231,7 +259,11 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerUseLocationPath={useLocationPath}
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
-    >
+        menuEntries={baseAppMenuEntries}
+        defaultMuiComponentProps={defaultMuiComponentProps}
+        fixedContentExpandsToAvailableHeightEnabled
+        marginsDisabled>
+        <UserProfileFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>
             {children}
         </CustomLocalizationProvider>

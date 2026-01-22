@@ -15,7 +15,7 @@ import Icon from "@mui/material/Icon";
 import {useTranslation} from "react-i18next";
 
 // ColorPaletteSelector.jsx
-const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
+const ColorPaletteSelector = ({ initialColors, onPaletteChange }: { initialColors: string, onPaletteChange: (newPalette: string[]) => void }) => {
     const { t } = useTranslation();
     const [colors, setColors] = useState(initialColors?.split(',') || []);
     const [newColor, setNewColor] = useState('#000000'); // Valor per defecte negre per al nou color
@@ -32,19 +32,22 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
             }
             setNewColor('#000000'); // Reseteja el selector de color per al següent afegit
         } else {
-            alert(t('page.widget.editorPaleta.exist')); // O mostra un missatge més amigable
+            alert(t($ => $.page.widget.editorPaleta.exist)); // O mostra un missatge més amigable
         }
     }, [colors, newColor, onPaletteChange]);
 
     // Maneja l'eliminació d'un color de la paleta
-    const handleDeleteColor = useCallback((colorToDelete) => {
-        const updatedColors = colors.filter(color => color !== colorToDelete);
-        setColors(updatedColors);
-        // Notifica el canvi al component pare
-        if (onPaletteChange) {
-            onPaletteChange(updatedColors);
-        }
-    }, [colors, onPaletteChange]);
+    const handleDeleteColor = useCallback(
+        (colorToDelete: string) => {
+            const updatedColors = colors.filter((color) => color !== colorToDelete);
+            setColors(updatedColors);
+            // Notifica el canvi al component pare
+            if (onPaletteChange) {
+                onPaletteChange(updatedColors);
+            }
+        },
+        [colors, onPaletteChange]
+    );
 
     const fileInputRef = React.useRef<HTMLInputElement>(undefined);
     const endAdornment = <>
@@ -62,13 +65,12 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
     // Renderitzat del component
     return (
         <Box sx={{ py: 1, px: 2, border: '1px solid #ccc', borderRadius: 2, bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle2" gutterBottom>{t('page.widget.editorPaleta.title')}</Typography>
-
+            <Typography variant="subtitle2" gutterBottom>{t($ => $.page.widget.editorPaleta.title)}</Typography>
             {/* Secció per afegir nous colors */}
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <TextField
                     type="color"
-                    label={t('page.widget.editorPaleta.color')}
+                    label={t($ => $.page.widget.editorPaleta.color)}
                     value={newColor}
                     onChange={(e) => setNewColor(e.target.value)}
                     fullWidth
@@ -84,7 +86,7 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
                     value={newColor}
                     onChange={(e) => setNewColor(e.target.value)}
                     size="small"
-                    label={t('page.widget.editorPaleta.hex')}
+                    label={t($ => $.page.widget.editorPaleta.hex)}
                     sx={{ flexGrow: 1 }}
                 />
                 <Button
@@ -93,25 +95,23 @@ const ColorPaletteSelector = ({ initialColors, onPaletteChange }) => {
                     startIcon={<AddCircleOutlineIcon />}
                     disabled={!newColor || colors.includes(newColor)} // Deshabilita si el color està buit o duplicat
                 >
-                    {t('page.widget.action.add.label')}
+                    {t($ => $.page.widget.action.add.label)}
                 </Button>
             </Stack>
-
             {/* Visualització de la paleta de colors actual */}
             <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
-                {t('page.widget.editorPaleta.palet')}
+                {t($ => $.page.widget.editorPaleta.palet)}
             </Typography>
             {colors.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                    {t('page.widget.editorPaleta.empty')}
+                    {t($ => $.page.widget.editorPaleta.empty)}
                 </Typography>
             ) : (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {colors.map((color: string, index: number) => (
+                    {colors.map((color: string) => (
                         <Chip
                             key={color} // Utilitzem el color com a key (assumint que són únics)
                             label={color.toUpperCase()}
-                            size={'xs'}
                             sx={{
                                 bgcolor: color,
                                 fontSize: '0.75rem',

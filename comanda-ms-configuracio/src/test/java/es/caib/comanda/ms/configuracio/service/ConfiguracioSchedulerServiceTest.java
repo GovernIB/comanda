@@ -9,167 +9,144 @@ import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.support.PeriodicTrigger;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ConfiguracioSchedulerServiceTest {
 
     @Mock
-    private TaskScheduler taskScheduler;
-
-    @Mock
     private EntornAppRepository entornAppRepository;
-
     @Mock
     private AppInfoHelper appInfoHelper;
-
     @Mock
     private TaskExecutor configuracioWorkerExecutor;
 
-    private ConfiguracioSchedulerService schedulerService;
-
-    private EntornAppEntity entornAppEntity;
-    private List<EntornAppEntity> activeEntornApps;
-    private ScheduledFuture<?> scheduledFuture;
+    private ConfiguracioSchedulerService service;
+    private EntornAppEntity ea1;
+    private EntornAppEntity ea2;
 
     @BeforeEach
     void setUp() {
-        // Create the scheduler service with mocked dependencies
-        schedulerService = new ConfiguracioSchedulerService(taskScheduler, entornAppRepository, appInfoHelper, configuracioWorkerExecutor);
+        service = new ConfiguracioSchedulerService(
+                entornAppRepository,
+                appInfoHelper,
+                configuracioWorkerExecutor
+        );
+        // Leader by default
+        ReflectionTestUtils.setField(service, "schedulerLeader", true);
+        ReflectionTestUtils.setField(service, "schedulerBack", true);
 
-        // Set the schedulerLeader property to true for testing
-        ReflectionTestUtils.setField(schedulerService, "schedulerLeader", true);
+        AppEntity app1 = new AppEntity();
+        app1.setId(1L);
+        app1.setNom("App1");
+        app1.setActiva(true);
 
-		// Set the schedulerBack property to true for testing
-		ReflectionTestUtils.setField(schedulerService, "schedulerBack", true);
+        AppEntity app2 = new AppEntity();
+        app2.setId(2L);
+        app2.setNom("App2");
+        app2.setActiva(true);
 
-        // Setup test data
-        AppEntity appEntity = new AppEntity();
-        appEntity.setId(1L);
-        appEntity.setNom("Test App");
-        appEntity.setActiva(true);
+        EntornEntity entorn1 = new EntornEntity();
+        entorn1.setId(1L);
+        entorn1.setNom("Entorn1");
 
-        EntornEntity entornEntity = new EntornEntity();
-        entornEntity.setId(1L);
-        entornEntity.setNom("Test Entorn");
+        EntornEntity entorn2 = new EntornEntity();
+        entorn2.setId(2L);
+        entorn2.setNom("Entorn2");
 
-        entornAppEntity = new EntornAppEntity();
-        entornAppEntity.setId(1L);
-        entornAppEntity.setApp(appEntity);
-        entornAppEntity.setEntorn(entornEntity);
-        entornAppEntity.setInfoUrl("http://test.com/info");
-        entornAppEntity.setActiva(true);
+        ea1 = new EntornAppEntity();
+        ea1.setId(10L);
+        ea1.setApp(app1);
+        ea1.setEntorn(entorn1);
+        ea1.setActiva(true);
 
-        activeEntornApps = new ArrayList<>();
-        activeEntornApps.add(entornAppEntity);
-
-        // Create a mock for ScheduledFuture
-        scheduledFuture = mock(ScheduledFuture.class);
-    }
-
-//    @Test
-//    void testInicialitzarTasques() {
-//        // Mock the repository to return active EntornApps
-//        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(activeEntornApps);
-//        // Mock the taskScheduler to return the mock ScheduledFuture
-//        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-//
-//        // Call the method to test
-//        schedulerService.inicialitzarTasques();
-//
-//        // Verify that the repository was called
-//        verify(entornAppRepository).findByActivaTrueAndAppActivaTrue();
-//
-//        // Verify that the taskScheduler was called to schedule a task
-//        verify(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-//        // Verify that programarTasca was called for each active EntornAppEntity
-//        //for (EntornAppEntity entity : activeEntornApps) {
-//        //verify(taskScheduler).schedule(argThat(runnable -> {
-//        //    runnable.run();
-//        //    return true;
-//        //}), any(PeriodicTrigger.class));
-//    }
-
-    @Test
-    void testProgramarTasca() {
-        // Mock the taskScheduler to return the mock ScheduledFuture
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
-
-        // Call the method to test
-        schedulerService.programarTasca(entornAppEntity);
-
-        // Verify that the taskScheduler was called to schedule a task
-        ArgumentCaptor<PeriodicTrigger> triggerCaptor = ArgumentCaptor.forClass(PeriodicTrigger.class);
-        verify(taskScheduler).schedule(any(Runnable.class), triggerCaptor.capture());
-
-        // Verify that the trigger has the correct period
-        PeriodicTrigger trigger = triggerCaptor.getValue();
-        assertEquals(TimeUnit.MINUTES.toMillis(10), trigger.getPeriod());
+        ea2 = new EntornAppEntity();
+        ea2.setId(20L);
+        ea2.setApp(app2);
+        ea2.setEntorn(entorn2);
+        ea2.setActiva(true);
     }
 
     @Test
-    void testProgramarTascaWithInactiveEntornApp() {
-        // Set the EntornApp to inactive
-        entornAppEntity.setActiva(false);
+    void scheduledConfiguracioTasks_doesNotRun_whenNotLeader() {
+        ReflectionTestUtils.setField(service, "schedulerLeader", false);
 
-        // Call the method to test
-        schedulerService.programarTasca(entornAppEntity);
+        service.scheduledConfiguracioTasks();
 
-        // Verify that the taskScheduler was not called
-        verify(taskScheduler, never()).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+        verifyNoInteractions(entornAppRepository);
+        verifyNoInteractions(appInfoHelper);
+        verifyNoInteractions(configuracioWorkerExecutor);
     }
 
     @Test
-    void testCancelarTascaExistent() {
-        // Setup the tasquesActives map with a scheduled task
-        @SuppressWarnings("unchecked")
-        Map<Long, ScheduledFuture<?>> tasquesActives = mock(Map.class);
-        doReturn(scheduledFuture).when(tasquesActives).get(1L);
-        ReflectionTestUtils.setField(schedulerService, "tasquesActives", tasquesActives);
+    void scheduledConfiguracioTasks_noActiveEntornApps_doesNothing() {
+        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of());
 
-        // Call the method to test
-        schedulerService.cancelarTascaExistent(1L);
+        service.scheduledConfiguracioTasks();
 
-        // Verify that the scheduled task was canceled
-        verify(scheduledFuture).cancel(false);
-        verify(tasquesActives).remove(1L);
-    }
-
-    @Test
-    void testComprovarRefrescInfo() {
-        // Mock the repository to return active EntornApps
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(activeEntornApps);
-
-        // Setup the tasquesActives map to return null for the EntornApp ID
-        @SuppressWarnings("unchecked")
-        Map<Long, ScheduledFuture<?>> tasquesActives = mock(Map.class);
-        doReturn(null).when(tasquesActives).get(1L);
-        ReflectionTestUtils.setField(schedulerService, "tasquesActives", tasquesActives);
-
-        // Call the method to test
-        schedulerService.comprovarRefrescInfo();
-
-        // Verify that the repository was called
         verify(entornAppRepository).findByActivaTrueAndAppActivaTrue();
+        verifyNoInteractions(appInfoHelper);
+        verifyNoInteractions(configuracioWorkerExecutor);
+    }
 
-        // Verify that programarTasca was called for the EntornApp
-        // This is a bit tricky because we're testing a private method indirectly
-        verify(taskScheduler).schedule(any(Runnable.class), any(PeriodicTrigger.class));
+    @Test
+    void scheduledConfiguracioTasks_executesForEachActiveEntornApp() {
+        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of(ea1, ea2));
+        // Inline runnable execution
+        doAnswer(invocation -> { Runnable r = invocation.getArgument(0); r.run(); return null; })
+                .when(configuracioWorkerExecutor).execute(any(Runnable.class));
+
+        service.scheduledConfiguracioTasks();
+
+        verify(appInfoHelper).refreshAppInfo(eq(10L));
+        verify(appInfoHelper).refreshAppInfo(eq(20L));
+        verify(appInfoHelper, times(2)).refreshAppInfo(any(Long.class));
+    }
+
+    @Test
+    void scheduledConfiguracioTasks_continuesIfOneEntornAppThrows() {
+        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of(ea1, ea2));
+        doAnswer(invocation -> { Runnable r = invocation.getArgument(0); r.run(); return null; })
+                .when(configuracioWorkerExecutor).execute(any(Runnable.class));
+
+        doThrow(new RuntimeException("boom")).when(appInfoHelper).refreshAppInfo(eq(10L));
+
+        assertDoesNotThrow(() -> service.scheduledConfiguracioTasks());
+
+        verify(appInfoHelper).refreshAppInfo(eq(10L));
+        verify(appInfoHelper).refreshAppInfo(eq(20L));
+    }
+
+    @Test
+    void scheduledConfiguracioTasks_continuesIfTaskRejectedForOne() {
+        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of(ea1, ea2));
+
+        AtomicInteger call = new AtomicInteger();
+        doAnswer(invocation -> {
+            if (call.getAndIncrement() == 0) {
+                throw new TaskRejectedException("queue full");
+            }
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            return null;
+        }).when(configuracioWorkerExecutor).execute(any(Runnable.class));
+
+        service.scheduledConfiguracioTasks();
+
+        // First rejected -> no helper call for ea1; second runs
+        verify(appInfoHelper, never()).refreshAppInfo(eq(10L));
+        verify(appInfoHelper).refreshAppInfo(eq(20L));
     }
 }

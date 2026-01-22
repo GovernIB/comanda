@@ -28,6 +28,6 @@ public class MissatgeSalut {
     @NotNull
     private SalutNivell nivell;
     @Schema(description = "Text del missatge", example = "Manteniment programat a les 22:00h")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 2048)
     private String missatge;
 }

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { GridPage, MuiGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib';
+import { GridPage, MuiDataGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib';
 import { Chip } from '@mui/material';
 import PageTitle from '../components/PageTitle.tsx';
 
@@ -83,21 +83,14 @@ const Entorns: React.FC = () => {
 
     return (
         <GridPage disableMargins>
-            <PageTitle title={t('page.versionsEntorns.title')} />
-            <MuiGrid
-                title={t('page.versionsEntorns.title')}
+            <PageTitle title={t($ => $.page.versionsEntorns.title)} />
+            <MuiDataGrid
+                title={t($ => $.page.versionsEntorns.title)}
                 resourceName="app"
                 columns={columns}
                 readOnly
                 toolbarType="upper"
                 paginationActive
-                staticSortModel={[
-                    { field: 'app', sort: 'asc' },
-                    {
-                        field: 'entorn',
-                        sort: 'asc',
-                    },
-                ]}
             />
         </GridPage>
     );

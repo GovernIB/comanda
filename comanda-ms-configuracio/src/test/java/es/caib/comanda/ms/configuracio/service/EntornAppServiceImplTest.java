@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -214,78 +215,13 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    void testAfterCreateSave() {
-        // Setup test data
-        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
-        
-        // Call the method to test
-        entornAppService.afterCreateSave(entornAppEntity, entornAppResource, answers, false);
-        
-        // Verify that the scheduler service was called
-//        verify(schedulerService).programarTasca(entornAppEntity);
-
-        // Verify that the appInfoHelper was called
-//        verify(appInfoHelper).programarTasquesSalutEstadisticaById(entornAppEntity);
-
-        verify(eventPublisher).publishEvent(any(EntornAppServiceImpl.ReprogramarEvent.class));
-    }
-
-    @Test
     void testAfterUpdateSave() {
         // Setup test data
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
         
         // Call the method to test
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
-        
-        // Verify that the scheduler service was called
-//        verify(schedulerService).programarTasca(entornAppEntity);
 
-        // Verify that the appInfoHelper was called
-//        verify(appInfoHelper).programarTasquesSalutEstadisticaById(entornAppEntity);
-
-        verify(eventPublisher).publishEvent(any(EntornAppServiceImpl.ReprogramarEvent.class));
-    }
-
-    @Test
-    void testReprogramarAction() throws ActionExecutionException {
-        // Setup test data
-        EntornAppServiceImpl.ReprogramarAction reprogramarAction = new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService);
-        EntornApp.EntornAppParamAction params = new EntornApp.EntornAppParamAction();
-        params.setEntornAppId(1L);
-        
-        // Mock repository call
-        when(entornAppRepository.findById(1L)).thenReturn(Optional.of(entornAppEntity));
-        
-        // Call the method to test
-        reprogramarAction.exec(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, entornAppEntity, params);
-        
-        // Verify that the repository was called
-        verify(entornAppRepository).findById(1L);
-        
-        // Verify that the scheduler service was called
-        verify(schedulerService).programarTasca(entornAppEntity);
-    }
-
-    @Test
-    void testReprogramarActionWithNonExistentEntornApp() {
-        // Setup test data
-        EntornAppServiceImpl.ReprogramarAction reprogramarAction = new EntornAppServiceImpl.ReprogramarAction(entornAppRepository, schedulerService);
-        EntornApp.EntornAppParamAction params = new EntornApp.EntornAppParamAction();
-        params.setEntornAppId(1L);
-        
-        // Mock repository call
-        when(entornAppRepository.findById(1L)).thenReturn(Optional.empty());
-        
-        // Call the method to test and verify that it throws an exception
-        assertThrows(ActionExecutionException.class, () -> {
-            reprogramarAction.exec(EntornApp.ENTORN_APP_ACTION_REPROGRAMAR, entornAppEntity, params);
-        });
-        
-        // Verify that the repository was called
-        verify(entornAppRepository).findById(1L);
-        
-        // Verify that the scheduler service was not called
-        verify(schedulerService, never()).programarTasca(any());
+        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
     }
 }

@@ -23,6 +23,11 @@ import { FormFieldTime } from './form/FormFieldTime';
 import { FormFieldRange } from './form/FormFieldRange';
 import { FormFieldFile } from './form/FormFieldFile';
 import { MuiDetailField } from './detail/MuiDetailField';
+import {
+    DefaultMuiComponentProps,
+    MuiBaseAppContext,
+    MuiBaseAppContextType,
+} from './MuiBaseAppContext';
 
 export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerTitle?: string | React.ReactElement;
@@ -34,12 +39,15 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerAppbarBackgroundImg?: string;
     headerAdditionalComponents?: React.ReactElement | React.ReactElement[];
     headerAdditionalAuthComponents?: React.ReactElement | React.ReactElement[];
+    headerAuthBadgeIcon?: string;
     footer?: React.ReactElement;
+    footerHeight?: number;
     menuTitle?: string;
     menuEntries?: MenuEntry[];
     menuOnTitleClose?: () => void;
     menuShrinkDisabled?: boolean;
     menuWidth?: number;
+    defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
 const baseFormFieldComponents = [
@@ -146,7 +154,8 @@ const useMenu = (
     menuTitle: string | undefined,
     menuEntries: MenuEntry[] | undefined,
     menuOnTitleClose: (() => void) | undefined,
-    menuWidth: number | undefined
+    menuWidth: number | undefined,
+    menuFooterHeight: number | undefined
 ) => {
     const { shrink, iconClicked, buttonComponent: menuButton } = useToolbarMenuIcon();
     const menuComponent =
@@ -158,8 +167,14 @@ const useMenu = (
                 drawerWidth={menuWidth}
                 shrink={shrink}
                 iconClicked={iconClicked}
+                footerHeight={menuFooterHeight}
             />
         ) : undefined;
+    if (menuComponent && menuFooterHeight == null) {
+        console.warn(
+            '[BaseApp] Footer height not defined. This may cause some menu options to not display correctly.'
+        );
+    }
     return {
         menuButton,
         menuComponent,
@@ -177,7 +192,9 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         headerAppbarBackgroundImg,
         headerAdditionalComponents,
         headerAdditionalAuthComponents,
+        headerAuthBadgeIcon,
         footer,
+        footerHeight,
         menuTitle,
         menuEntries,
         menuOnTitleClose,
@@ -185,6 +202,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         menuWidth,
         formFieldComponents,
         children,
+        defaultMuiComponentProps,
         ...otherProps
     } = props;
     const mergedFormFieldComponents = [...baseFormFieldComponents, ...(formFieldComponents ?? [])];
@@ -192,7 +210,8 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         menuTitle,
         menuEntries,
         menuOnTitleClose,
-        menuWidth
+        menuWidth,
+        footerHeight
     );
     const appbarComponent =
         headerTitle != null ? (
@@ -207,9 +226,15 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 style={headerAppbarStyle}
                 backgroundColor={headerAppbarBackgroundColor}
                 backgroundImg={headerAppbarBackgroundImg}
+                authBadgeIcon={headerAuthBadgeIcon}
             />
         ) : undefined;
     const offlineComponent = <OfflineMessage />;
+    const muiContext: MuiBaseAppContextType = {
+        defaultMuiComponentProps: {
+            ...defaultMuiComponentProps,
+        },
+    };
     return (
         <BaseApp
             formFieldComponents={mergedFormFieldComponents}
@@ -221,8 +246,10 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 menu: menuComponent,
                 offline: offlineComponent,
             }}>
-            <MuiComponentsConfigurer />
-            {children}
+            <MuiBaseAppContext.Provider value={muiContext}>
+                <MuiComponentsConfigurer />
+                {children}
+            </MuiBaseAppContext.Provider>
         </BaseApp>
     );
 };

@@ -1,6 +1,5 @@
 package es.caib.comanda.client;
 
-import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.Usuari;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.hateoas.EntityModel;
@@ -19,18 +18,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface UsuariServiceClient {
 
 	@GetMapping(value = "/{id}")
-	EntityModel<EntornApp> getOne(
+	EntityModel<Usuari> getOne(
 			@PathVariable("id") final Long id,
 			@RequestParam("perspectives") final String[] perspectives,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
-	@GetMapping(value = "/byCodi/{codi}")
-	Usuari getByCodi(
-			@PathVariable("codi") final String codi,
-			@RequestHeader("Authorization") final String authorizationHeader);
-
 	@GetMapping
-	PagedModel<EntityModel<EntornApp>> find(
+	PagedModel<EntityModel<Usuari>> find(
 			@RequestParam("quickFilter") final String quickFilter,
 			@RequestParam("filter") final String filter,
 			@RequestParam("namedQueries") final String[] namedQueries,

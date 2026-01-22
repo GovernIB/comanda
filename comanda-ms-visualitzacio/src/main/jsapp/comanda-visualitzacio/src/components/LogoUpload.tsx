@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'reactlib';
-import { FormFieldDataActionType } from '../../lib/components/form/FormContext.tsx';
 import { Box, IconButton, SxProps, Typography } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Icon from '@mui/material/Icon';
@@ -82,7 +81,7 @@ const ImageField: React.FC<ImageFieldProps> = ({
                     }}
                 >
                     {editable && (
-                        <div title={t('form.field.file.edit')}>
+                        <div title={t($ => $.form.field.file.edit)}>
                             <label
                                 htmlFor={buttonAvatarId}
                                 style={{
@@ -104,24 +103,24 @@ const ImageField: React.FC<ImageFieldProps> = ({
                         </div>
                     )}
                     {!hideDownloadButton && (
-                        <div title={t('form.field.file.download')}>
+                        <div title={t($ => $.form.field.file.download)}>
                             <IconButton
                                 onClick={onDownloadClick}
                                 sx={{ color: '#ffffff' }}
-                                aria-label={t('form.field.file.download')}
+                                aria-label={t($ => $.form.field.file.download)}
                             >
                                 <Icon>file_download</Icon>
                             </IconButton>
                         </div>
                     )}
                     {editable && (
-                        <div title={t('form.field.file.clear')}>
+                        <div title={t($ => $.form.field.file.clear)}>
                             <IconButton
                                 onClick={() => {
                                     onClear();
                                 }}
                                 sx={{ color: '#ffffff' }}
-                                aria-label={t('form.field.file.clear')}
+                                aria-label={t($ => $.form.field.file.clear)}
                             >
                                 <Icon>delete</Icon>
                             </IconButton>
@@ -130,7 +129,7 @@ const ImageField: React.FC<ImageFieldProps> = ({
                 </Box>
                 <Avatar
                     src={imageSrc ?? undefined}
-                    alt={t('form.field.file.avatarAlt')}
+                    alt={t($ => $.form.field.file.avatarAlt)}
                     variant="square"
                     {...avatarProps}
                     sx={{
@@ -155,7 +154,7 @@ type LogoUploadProps = {
 };
 
 const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
-    const { data, dataDispatchAction } = useFormContext();
+    const { data, apiRef } = useFormContext();
     const previewUrl = data[name] ? `data:image/png;base64,${data[name]}` : null;
 
     const handleFileSelect = (event?: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,10 +188,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
                 const base64 = canvas.toDataURL('image/png').split(',')[1];
 
                 // Update form data
-                dataDispatchAction({
-                    type: FormFieldDataActionType.FIELD_CHANGE,
-                    payload: { fieldName: name, value: base64 },
-                });
+                apiRef.current?.setFieldValue(name, base64);
             };
             img.src = e.target?.result as string;
         };
@@ -200,10 +196,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
     };
 
     const handleRemoveLogo = () => {
-        dataDispatchAction({
-            type: FormFieldDataActionType.FIELD_CHANGE,
-            payload: { fieldName: name, value: null },
-        });
+        apiRef.current?.setFieldValue(name, null);
     };
 
     return (

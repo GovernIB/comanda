@@ -16,7 +16,7 @@ export type DataFormDialogProps = React.PropsWithChildren & {
     dialogComponentProps?: any;
     formComponentProps?: any;
     formI18nKeys?: FormI18nKeys;
-    apiRef?: React.MutableRefObject<DataFormDialogApi | undefined>;
+    apiRef?: React.RefObject<DataFormDialogApi | undefined>;
     formSubmit?: FormDialogSubmitFn;
     onClose?: (reason?: string) => boolean;
 };

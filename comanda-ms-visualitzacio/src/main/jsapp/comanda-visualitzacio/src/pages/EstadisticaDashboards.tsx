@@ -61,14 +61,14 @@ const useCloneDashboardAction = (refresh?: () => void) => {
     }
     const onSuccess = () :void => {
         refresh?.();
-        temporalMessageShow(null, t('page.dashboards.cloneDashboard.success'), 'success');
+        temporalMessageShow(null, t($ => $.page.dashboards.cloneDashboard.success), 'success');
     }
     const formulario =
         <FormActionDialog
             resourceName={"dashboard"}
             action={"clone_dashboard"}
             apiRef={apiRef}
-            title={t('page.dashboards.cloneDashboard.title')}
+            title={t($ => $.page.dashboards.cloneDashboard.title)}
             onSuccess={onSuccess}
             initialOnChange={false}
         >
@@ -95,7 +95,7 @@ const useActions = () => {
                 temporalMessageShow(null, error.message, 'error');
             });
     }
-    const dashboardExport = (id:any) => report(id, 'dashboard_export', t('page.dashboards.action.export'), 'JSON')
+    const dashboardExport = (id:any) => report(id, 'dashboard_export', t($ => $.page.dashboards.action.export), 'JSON')
 
     return {
         dashboardExport,
@@ -131,9 +131,9 @@ const EstadisticaDashboards: React.FC = () => {
     const {handleShow: showCloneDashboard, content: contentCloneDashboard} = useCloneDashboardAction(refresh);
     return (
         <GridPage>
-            <PageTitle title={t('page.dashboards.title')} />
+            <PageTitle title={t($ => $.page.dashboards.title)} />
             <MuiDataGrid
-                title={t('page.dashboards.title')}
+                title={t($ => $.page.dashboards.title)}
                 resourceName="dashboard"
                 columns={columns}
                 apiRef={gridApiRef}
@@ -144,24 +144,24 @@ const EstadisticaDashboards: React.FC = () => {
                 popupEditFormContent={<EstadisticaDashboardForm/>}
                 rowAdditionalActions={[
                     {
-                        label: t('page.dashboards.edit'),
+                        label: t($ => $.page.dashboards.edit),
                         icon: 'edit',
                         clickShowUpdateDialog: true,
                     },
                     {
-                        label: t('page.dashboards.dashboardView'),
+                        label: t($ => $.page.dashboards.dashboardView),
                         icon: 'dashboard',
                         showInMenu: false,
                         linkTo: '{{id}}',
                     },
                     {
-                        label: t('page.dashboards.action.export'),
+                        label: t($ => $.page.dashboards.action.export),
                         icon: 'download',
                         showInMenu: true,
                         onClick: dashboardExport,
                     },
                     {
-                        label: t('page.dashboards.cloneDashboard.title'),
+                        label: t($ => $.page.dashboards.cloneDashboard.title),
                         icon: 'file_copy',
                         showInMenu: true,
                         action: "clone_dashboard",

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: comanda-api-interna
-  version: 0.1.0
+  version: 0.1.1
 servers:
 - url: ""
 tags:
@@ -94,6 +94,7 @@ components:
         codi:
           description: Codi identificador de l'aplicació
           example: APP
+          maxLength: 16
           minLength: 1
           type: string
         nom:
@@ -105,6 +106,7 @@ components:
         versio:
           description: Versió desplegada de l'aplicació
           example: 2.1.0
+          maxLength: 10
           minLength: 1
           type: string
         data:
@@ -112,10 +114,14 @@ components:
         revisio:
           description: Revisió o identificador de commit de la build
           example: a1b2c3d
+          maxLength: 64
+          minLength: 0
           type: string
         jdkVersion:
           description: Versió de JDK amb la qual s'executa l'aplicació
           example: Temurin-17.0.9
+          maxLength: 10
+          minLength: 0
           type: string
         versioJboss:
           description: Versió de JBoss/WildFly amb la qual s'executa l'aplicació
@@ -158,6 +164,7 @@ components:
         codi:
           description: Codi del context
           example: API_INT
+          maxLength: 64
           minLength: 1
           type: string
         nom:
@@ -169,6 +176,7 @@ components:
         path:
           description: Path base del context
           example: /appapi/interna
+          maxLength: 255
           minLength: 1
           type: string
         manuals:
@@ -179,6 +187,8 @@ components:
         api:
           description: "URL o especificació OpenAPI del context, si està disponible"
           example: https://dev.caib.es/app/internaapi/swagger/index.html
+          maxLength: 255
+          minLength: 0
           type: string
       required:
       - codi
@@ -272,6 +282,7 @@ components:
         codi:
           description: Codi identificador de la integració
           example: REG
+          maxLength: 32
           minLength: 1
           type: string
         nom:
@@ -379,6 +390,7 @@ components:
         codi:
           description: Codi de la integració
           example: REG
+          maxLength: 32
           minLength: 1
           type: string
         peticions:
@@ -426,6 +438,7 @@ components:
         missatge:
           description: Text del missatge
           example: Manteniment programat a les 22:00h
+          maxLength: 2048
           minLength: 1
           type: string
       required:
@@ -546,6 +559,7 @@ components:
         codi:
           description: Codi identificador de l'aplicació
           example: APP
+          maxLength: 16
           minLength: 1
           type: string
         data:
@@ -569,6 +583,8 @@ components:
         versio:
           description: Versió de l'aplicació
           example: 1.4.3
+          maxLength: 10
+          minLength: 0
           type: string
         subsistemes:
           description: Subsistemes interns amb el seu estat
@@ -631,6 +647,7 @@ components:
         codi:
           description: Codi del subsistema
           example: BD
+          maxLength: 32
           minLength: 1
           type: string
         totalOk:

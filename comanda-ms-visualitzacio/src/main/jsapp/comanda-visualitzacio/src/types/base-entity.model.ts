@@ -1,6 +1,6 @@
 export interface IBaseEntity
 {
-    id: number | null;
+    id: number;
     links: any[] | null;
 }
 
@@ -14,7 +14,7 @@ export class BaseEntity implements Required<IBaseEntity>
     // Claves estáticas para poder usarlas como keyof
     static readonly LINKS: keyof BaseEntity = "links";
 
-    id: number | null;
+    id: number;
     links: any[] | null;
 
     /**
@@ -22,7 +22,7 @@ export class BaseEntity implements Required<IBaseEntity>
      */
     constructor(baseEntity: IBaseEntity)
     {
-        this.id = baseEntity?.id;
+        this.id = baseEntity.id;
         this.links = baseEntity?.links;
         // Object.assign(this, baseEntity);
     }

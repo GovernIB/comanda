@@ -5,7 +5,7 @@
     <artifactId>comanda-api-server-estadistica-v1</artifactId>
     <packaging>war</packaging>
     <name>comanda-api-server-estadistica-v1</name>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
@@ -63,7 +63,7 @@
         <dependency>
             <groupId>es.caib.comanda</groupId>
             <artifactId>comanda-api-models</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
 
         <!-- https://search.maven.org/artifact/javax/javaee-api -->

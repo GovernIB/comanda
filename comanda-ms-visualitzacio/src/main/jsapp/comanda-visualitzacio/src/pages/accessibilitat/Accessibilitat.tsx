@@ -16,7 +16,7 @@ const Accessibilitat = () => {
         appUrl = currentLocation.substring(0, currentLocation.length - 'accessibilitat/'.length);
     return (
         <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
-            <PageTitle title={t('page.accessibilitat.title')} />
+            <PageTitle title={t($ => $.page.accessibilitat.title)} />
             {currentLanguage === 'es' ? <AccessibilitatEs appUrl={appUrl} /> : <AccessibilitatCa appUrl={appUrl} />}
         </Box>
     );

@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 /**
- * Classe principal del microservei comanda-configuracio.
+ * Classe principal del microservei comanda-avisos.
  *
  * @author Límit Tecnologies
  */

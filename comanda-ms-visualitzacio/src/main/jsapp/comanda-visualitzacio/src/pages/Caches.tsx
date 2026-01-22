@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import Grid from '@mui/material/Grid';
 import {
     GridPage,
-    MuiGrid,
-    FormField, useResourceApiService, useBaseAppContext, useConfirmDialogButtons, MuiDataGridApiRef,
+    MuiDataGrid,
+    useResourceApiService,
+    useBaseAppContext,
+    useConfirmDialogButtons,
+    useMuiDataGridApiRef,
 } from 'reactlib';
 import {ResourceApiError} from "../../lib/components/ResourceApiProvider.tsx";
 import Icon from "@mui/material/Icon";
@@ -16,18 +18,17 @@ const Caches: React.FC = () => {
     const { t } = useTranslation();
     const { isReady: apiIsReady, delete: apiDelete } =
         useResourceApiService('comandaCache');
-    const gridApiRef: MuiDataGridApiRef = React.useRef({});
+    const gridApiRef = useMuiDataGridApiRef();
     const {
         messageDialogShow,
         temporalMessageShow,
-        t: tLib,
     } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
     const onDeleteClick = (id: any) =>  {
         messageDialogShow(
-            t('page.caches.buidar.titol'),
-            t('page.caches.buidar.confirm'),
+            t($ => $.page.caches.buidar.titol),
+            t($ => $.page.caches.buidar.confirm),
             confirmDialogButtons,
             confirmDialogComponentProps).
         then((value: any) => {
@@ -35,10 +36,10 @@ const Caches: React.FC = () => {
                 apiDelete(id)
                     .then(() => {
                         gridApiRef.current?.refresh();
-                        temporalMessageShow(null, t('page.caches.buidar.success'), 'success');
+                        temporalMessageShow(null, t($ => $.page.caches.buidar.success), 'success');
                     })
                     .catch((error: ResourceApiError) => {
-                        temporalMessageShow(t('page.caches.buidar.error'), error.message, 'error');
+                        temporalMessageShow(t($ => $.page.caches.buidar.error), error.message, 'error');
                     });
             }
         }).
@@ -47,8 +48,8 @@ const Caches: React.FC = () => {
 
     const onDeleteAllClick = () =>  {
         messageDialogShow(
-            t('page.caches.buidar.totes.titol'),
-            t('page.caches.buidar.totes.confirm'),
+            t($ => $.page.caches.buidar.totes.titol),
+            t($ => $.page.caches.buidar.totes.confirm),
             confirmDialogButtons,
             confirmDialogComponentProps).
         then((value: any) => {
@@ -56,10 +57,10 @@ const Caches: React.FC = () => {
                 apiDelete('TOTES')
                     .then(() => {
                         gridApiRef.current?.refresh();
-                        temporalMessageShow(null, t('page.caches.buidar.totes.success'), 'success');
+                        temporalMessageShow(null, t($ => $.page.caches.buidar.totes.success), 'success');
                     })
                     .catch((error: ResourceApiError) => {
-                        temporalMessageShow(t('page.caches.buidar.totes.error'), error.message, 'error');
+                        temporalMessageShow(t($ => $.page.caches.buidar.totes.error), error.message, 'error');
                     });
             }
         }).
@@ -72,7 +73,7 @@ const Caches: React.FC = () => {
           element: (
               <IconButton
                   onClick={() => onDeleteAllClick()}
-                  title={t('page.caches.buidar.totes.titol')}
+                  title={t($ => $.page.caches.buidar.totes.titol)}
               >
                   <Icon>delete</Icon>
               </IconButton>
@@ -98,29 +99,31 @@ const Caches: React.FC = () => {
             flex: 1,
         },
     ];
-    return <GridPage>
-        <PageTitle title={t('page.caches.title')} />
-        <MuiGrid
-            apiRef={gridApiRef}
-            title={t('page.caches.title')}
-            resourceName="comandaCache"
-            columns={columns}
-            toolbarType="upper"
-            paginationActive
-            toolbarHideCreate
-            rowHideUpdateButton
-            rowHideDeleteButton
-            rowAdditionalActions={[
-                {
-                    label: t('page.caches.buidar.label'),
-                    icon: 'delete',
-                    onClick: onDeleteClick,
-                },
-            ]}
-            rowActionsColumnProps={{ width: 10 }}
-            toolbarElementsWithPositions={toolbarElementsWithPositions}
-        />
-    </GridPage>;
+    return (
+        <GridPage>
+            <PageTitle title={t($ => $.page.caches.title)} />
+            <MuiDataGrid
+                apiRef={gridApiRef}
+                title={t($ => $.page.caches.title)}
+                resourceName="comandaCache"
+                columns={columns}
+                toolbarType="upper"
+                paginationActive
+                toolbarHideCreate
+                rowHideUpdateButton
+                rowHideDeleteButton
+                rowAdditionalActions={[
+                    {
+                        label: t($ => $.page.caches.buidar.label),
+                        icon: 'delete',
+                        onClick: onDeleteClick,
+                    },
+                ]}
+                rowActionsColumnProps={{ width: 10 }}
+                toolbarElementsWithPositions={toolbarElementsWithPositions}
+            />
+        </GridPage>
+    );
 }
 
 export default Caches;

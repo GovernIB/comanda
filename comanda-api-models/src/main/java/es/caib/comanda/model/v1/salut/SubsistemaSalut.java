@@ -18,7 +18,7 @@ import javax.validation.constraints.Size;
 @Schema(name = "SubsistemaSalut", description = "Estat de salut i mètriques d'un subsistema intern")
 public class SubsistemaSalut extends EstatSalut {
     @Schema(description = "Codi del subsistema", example = "BD")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
 
     // Dades totals

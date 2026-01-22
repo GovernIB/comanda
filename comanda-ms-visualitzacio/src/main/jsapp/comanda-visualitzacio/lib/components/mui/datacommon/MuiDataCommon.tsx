@@ -33,7 +33,7 @@ export type DataCommonAdditionalAction = {
     rowLink?: string;
     /** Indica que aquesta acció ha d'executar una acció del recurs */
     action?: string;
-    /** Indica que aquesta acció ha de generar un informa del recurs */
+    /** Indica que aquesta acció ha de generar un informe del recurs */
     report?: string;
     /** Indica que al fer clic sobre aquesta acció s'ha d'obrir un diàleg de creació de recurs */
     clickShowCreateDialog?: boolean;

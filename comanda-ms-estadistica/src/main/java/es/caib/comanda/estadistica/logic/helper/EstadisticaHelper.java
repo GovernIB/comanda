@@ -418,7 +418,7 @@ public class EstadisticaHelper {
         // Esborrar registres anteriors
         fetRepository.deleteAllByTempsAndEntornAppId(temps, entornAppId);
 
-        System.out.println("> Crear fets: " + (registresEstadistics != null ? registresEstadistics.size() : 0) + " registres)");
+        log.debug("> Crear fets: {} registres)", registresEstadistics.size());
 
         // Preparar llista per batch insert
         List<FetEntity> fetsPerGuardar = new ArrayList<>();
@@ -427,7 +427,7 @@ public class EstadisticaHelper {
         int indexReg = 1;
 
         for (RegistreEstadistic re : registresEstadistics) {
-            System.out.println(">>> Registre estadístic: " + indexReg++ + "(" + (re.getFets() != null ? re.getFets().size() : 0) + " fets)");
+            log.debug(">>> Registre estadístic: {}({} fets)", indexReg++, re.getFets() != null ? re.getFets().size() : 0);
             if (re.getFets() == null || re.getDimensions() == null) {
                 continue;
             }

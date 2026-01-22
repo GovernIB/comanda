@@ -2,7 +2,7 @@ import * as React from 'react';
 import MuiToolbar from '@mui/material/Toolbar';
 import {
     BasePage,
-    MuiGrid,
+    MuiDataGrid,
     useBaseAppContext,
     useResourceApiService,
     MuiFilter,
@@ -11,9 +11,11 @@ import {
     useFormContext,
     useMessageDialogButtons,
     useConfirmDialogButtons,
+    useMuiDataGridApiRef,
+    MuiDataGridColDef,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
-import {useEffect, useState} from 'react';
+import { useState } from 'react';
 import {
     DashboardReactGridLayout,
     GridLayoutItem,
@@ -24,10 +26,7 @@ import {
     Alert,
     Box,
     Button,
-    Collapse,
     Dialog,
-    List,
-    ListItemButton,
     ListItemIcon,
     Paper,
     Tab,
@@ -57,14 +56,16 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
-import SideWrapper from "../components/SideWrapper.tsx";
-import {ShrinkableDrawer} from "../components/SideMenu.tsx";
-import SimpleWidgetVisualization from "../components/estadistiques/SimpleWidgetVisualization.tsx";
-import GraficWidgetVisualization from "../components/estadistiques/GraficWidgetVisualization.tsx";
-import TaulaWidgetVisualization from "../components/estadistiques/TaulaWidgetVisualization.tsx";
 import PageTitle from '../components/PageTitle.tsx';
 
-const EntornAppFilterContent = (props: any) => {
+type EntornAppFilterContentProps = {
+    initialData?: {
+        app?: any;
+        entorn?: any;
+    };
+};
+
+const EntornAppFilterContent = (props: EntornAppFilterContentProps) => {
     const { initialData } = props;
     const { data } = useFormContext();
     return (
@@ -99,7 +100,17 @@ const EntornAppFilterContent = (props: any) => {
     );
 };
 
-const EntornAppFilter = ({ onDataChange, onSpringFilterChange, initialData }) => {
+type EntornAppFilterProps = {
+    onDataChange: (data: any) => void;
+    onSpringFilterChange: (filter?: string) => void;
+    initialData?: any;
+};
+
+const EntornAppFilter = ({
+    onDataChange,
+    onSpringFilterChange,
+    initialData,
+}: EntornAppFilterProps) => {
     return (
         <MuiFilter
             resourceName="entornApp"
@@ -128,10 +139,17 @@ const addWidgetDialogGridColumns = [
     },
 ];
 
-const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
+type AddWidgetDialogGridProps = {
+    resourceName: string;
+    onAddClick: (id: any) => void;
+    filter: string | null;
+    title: string;
+};
+
+const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }: AddWidgetDialogGridProps) => {
     const { t } = useTranslation();
     return (
-        <MuiGrid
+        <MuiDataGrid
             resourceName={resourceName}
             title={title}
             columns={addWidgetDialogGridColumns}
@@ -139,10 +157,10 @@ const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }) => {
             columnHeaderHeight={30}
             paginationActive
             readOnly
-            filter={filter}
+            filter={filter ?? undefined}
             rowAdditionalActions={[
                 {
-                    label: t('page.widget.action.add.label'),
+                    label: t($ => $.page.widget.action.add.label),
                     icon: 'add',
                     onClick: onAddClick,
                 },
@@ -168,14 +186,14 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
     const [filterData, setFilterData] = useState<any>(null);
     const [filterString, setFilterString] = useState<string | null>(null);
 
-    const onAddClick = (id) => {
+    const onAddClick = (id: any) => {
         onAdd(id, filterData.entorn.id);
     };
 
     return (
         <Dialog maxWidth="lg" open={open} onClose={onClose}>
             <DialogTitle>
-                {t('page.dashboards.action.addWidget.title')}
+                {t($ => $.page.dashboards.action.addWidget.title)}
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
@@ -200,22 +218,22 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
             >
                 <EntornAppFilter
                     onDataChange={setFilterData}
-                    onSpringFilterChange={setFilterString}
+                    onSpringFilterChange={(filter) => setFilterString(filter ?? null)}
                     initialData={initialData}
                 />
                 {filterData?.app && filterData?.entorn && (
                     <>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                             <Tabs value={tab} onChange={handleChange}>
-                                <Tab label={t('page.widget.simple.tab.title')} />
-                                <Tab label={t('page.widget.grafic.tab.title')} />
-                                <Tab label={t('page.widget.taula.tab.title')} />
+                                <Tab label={t($ => $.page.widget.simple.tab.title)} />
+                                <Tab label={t($ => $.page.widget.grafic.tab.title)} />
+                                <Tab label={t($ => $.page.widget.taula.tab.title)} />
                             </Tabs>
                         </Box>
                         {tab === 0 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaSimpleWidget"
-                                title={t('page.widget.simple.title')}
+                                title={t($ => $.page.widget.simple.title)}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -223,7 +241,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
                         {tab === 1 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaGraficWidget"
-                                title={t('page.widget.grafic.title')}
+                                title={t($ => $.page.widget.grafic.title)}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -231,7 +249,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
                         {tab === 2 && (
                             <AddWidgetDialogGrid
                                 resourceName="estadisticaTaulaWidget"
-                                title={t('page.widget.taula.title')}
+                                title={t($ => $.page.widget.taula.title)}
                                 filter={filterString}
                                 onAddClick={onAddClick}
                             />
@@ -243,7 +261,13 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd,
     );
 };
 
-function WidgetsErrorAlert({ errorWidgets }) {
+type WidgetsErrorAlertProps = {
+    errorWidgets: Array<{
+        errorMsg: string;
+    }>;
+};
+
+function WidgetsErrorAlert({ errorWidgets }: WidgetsErrorAlertProps) {
     const buttons = useMessageDialogButtons();
     const [showDialog, dialog] = useContentDialog(buttons);
 
@@ -299,11 +323,20 @@ const defaultSizeAndPosition = {
     height: 3,
 };
 
-const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseColumns, onDelete, onUpdate }) => {
+type ListWidgetDialogContentProps = {
+    title: string;
+    resourceName: string;
+    form?: React.ReactElement;
+    dashboardId: string;
+    baseColumns: MuiDataGridColDef[];
+    onDelete?: () => void;
+    onUpdate?: () => void;
+};
+
+const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseColumns, onDelete, onUpdate }: ListWidgetDialogContentProps) => {
     const { isReady: apiIsReady, delete: apiDelete } = useResourceApiService(resourceName);
     const { t } = useTranslation();
-    // @ts-ignore
-    const gridApiRef: MuiDataGridApiRef = React.useRef({});
+    const gridApiRef = useMuiDataGridApiRef();
     const { messageDialogShow, temporalMessageShow, t: tLib } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
@@ -345,7 +378,7 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                 width: '900px',
             }}
         >
-            <MuiGrid
+            <MuiDataGrid
                 title={title}
                 apiRef={gridApiRef}
                 height={500}
@@ -363,13 +396,13 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
                     {
                         field: 'position',
                         flex: 1,
-                        headerName: t('page.widget.grid.position'),
+                        headerName: t($ => $.page.widget.grid.position),
                         valueGetter: (_value, row) => `${row.posX}, ${row.posY}`,
                     },
                     {
                         field: 'size',
                         flex: 1,
-                        headerName: t('page.widget.grid.size'),
+                        headerName: t($ => $.page.widget.grid.size),
                         valueGetter: (_value, row) => `${row.width}, ${row.height}`,
                     },
                 ]}
@@ -398,7 +431,6 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
 
 export const AfegirTitolFormContent = () => {
     const { data } = useFormContext();
-    const { t } = useTranslation();
 
     return (<Grid container spacing={2}>
         <Grid size={12}>
@@ -450,7 +482,8 @@ export const AfegirTitolFormContent = () => {
 
 const EstadisticaDashboardEdit: React.FC = () => {
     const { t } = useTranslation();
-    const { id: dashboardId } = useParams();
+    const { id: paramsId } = useParams();
+    const dashboardId = paramsId as string;
     const {
         isReady: apiDashboardItemIsReady,
         patch: patchDashboardItem,
@@ -479,7 +512,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
     const openCreateTitolForm = () => {
         titolFormDialogShow(null, {
-            title: t('page.dashboards.action.afegirTitle.title'),
+            title: t($ => $.page.dashboards.action.afegirTitle.title),
             formContent: <AfegirTitolFormContent />,
             additionalData: { dashboard: { id: dashboardId }, ...defaultSizeAndPosition },
             dialogComponentProps: { maxWidth: 'md', fullWidth: true },
@@ -499,12 +532,12 @@ const EstadisticaDashboardEdit: React.FC = () => {
             },
         })
             .then(async () => {
-                temporalMessageShow(null, t('page.dashboards.action.addWidget.success'), 'success');
+                temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.success), 'success');
                 forceRefreshDashboardWidgets();
                 closeAddWidgetDialog();
             })
             .catch((reason) => {
-                temporalMessageShow(null, t('page.dashboards.action.addWidget.error'), 'error');
+                temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.error), 'error');
                 console.error('Widget add error', reason);
             });
     };
@@ -519,7 +552,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             );
 
             if (newDashboardItem === undefined) {
-                console.error(t('page.dashboards.action.patchItem.warning', oldDashboardItem));
+                console.error(t($ => $.page.dashboards.action.patchItem.warning, oldDashboardItem));
             } else if (!isEqual(oldDashboardItem, newDashboardItem)) {
                 const patchArgs = {
                     data: {
@@ -539,11 +572,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
         Promise.all(promises)
             .then(() => {
-                temporalMessageShow(null, t('page.dashboards.action.patchItem.success'), 'success');
+                temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.success), 'success');
             })
             .catch((reason) => {
-                temporalMessageShow(null, t('page.dashboards.action.patchItem.error'), 'error');
-                console.error(t('page.dashboards.action.patchItem.saveError'), reason);
+                temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error');
+                console.error(t($ => $.page.dashboards.action.patchItem.saveError), reason);
             });
     };
 
@@ -556,19 +589,19 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     severity="warning"
                     action={
                         <Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>
-                            {t('page.dashboards.alert.tornarLlistat')}
+                            {t($ => $.page.dashboards.alert.tornarLlistat)}
                         </Button>
                     }
                 >
-                    {t('page.dashboards.alert.notExists')}
+                    {t($ => $.page.dashboards.alert.notExists)}
                 </Alert>
             );
-        } else return <Alert severity="error">{t('page.dashboards.alert.carregar')}</Alert>;
+        } else return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}</Alert>;
     }
 
     return (
         <>
-            <PageTitle title={t('page.dashboards.title')} />
+            <PageTitle title={t($ => $.page.dashboards.title)} />
             {titolFormDialogComponent}
             {contentDialogComponent}
             {loading ? (
@@ -597,7 +630,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 ml: 0,
                                 mr: 0,
                                 mt: 0,
-                                backgroundColor: (theme) => theme.palette.grey[200],
+                                backgroundColor: (theme) => theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900],
                             }}
                         >
                             <Box>
@@ -620,11 +653,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 {errorDashboardWidgets?.length ? (
                                     <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
                                 ) : undefined}
-                                <ButtonMenu title={t('page.dashboards.components.llistar')}>
+                                <ButtonMenu title={t($ => $.page.dashboards.components.llistar)}>
                                     {[
                                         {
                                             icon: 'widgets',
-                                            title: t('page.dashboards.action.llistarWidget.label'),
+                                            title: t($ => $.page.dashboards.action.llistarWidget.label),
                                             resourceName: 'dashboardItem',
                                             baseColumns: [
                                                 {
@@ -639,7 +672,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         },
                                         {
                                             icon: 'title',
-                                            title: t('page.dashboards.action.llistarTitle.label'),
+                                            title: t($ => $.page.dashboards.action.llistarTitle.label),
                                             resourceName: 'dashboardTitol',
                                             form: <AfegirTitolFormContent />,
                                             baseColumns: [
@@ -679,7 +712,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     ))}
                                 </ButtonMenu>
                                 <ButtonMenu
-                                    title={t('page.dashboards.components.afegir')}
+                                    title={t($ => $.page.dashboards.components.afegir)}
                                     disabled={!apiDashboardItemIsReady || !dashboard}
                                     buttonIcon={<AddIcon />}
                                 >
@@ -688,7 +721,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             <Icon fontSize="small">widgets</Icon>
                                         </ListItemIcon>
                                         <ListItemText>
-                                            {t('page.dashboards.action.addWidget.label')}
+                                            {t($ => $.page.dashboards.action.addWidget.label)}
                                         </ListItemText>
                                     </MenuItem>
                                     <MenuItem onClick={openCreateTitolForm}>
@@ -696,7 +729,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             <Icon fontSize="small">title</Icon>
                                         </ListItemIcon>
                                         <ListItemText>
-                                            {t('page.dashboards.action.afegirTitle.label')}
+                                            {t($ => $.page.dashboards.action.afegirTitle.label)}
                                         </ListItemText>
                                     </MenuItem>
                                 </ButtonMenu>
@@ -718,7 +751,6 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     )}
                 </BasePage>
             )}
-
             <AddWidgetDialog
                 open={addWidgetDialogOpen}
                 onClose={closeAddWidgetDialog}
@@ -732,125 +764,135 @@ const EstadisticaDashboardEdit: React.FC = () => {
     );
 };
 
-const DashboardSideMenu = (props:any) => {
-    const { dashboard, addAction } = props
-    const { t } = useTranslation()
+// type DashboardSideMenuProps = {
+//     dashboard: any;
+//     addAction: (widgetId: any, entornId: any) => void;
+// };
+// const DashboardSideMenu = ({dashboard, addAction}: DashboardSideMenuProps) => {
+//     const { t } = useTranslation()
+//
+//     const [open, setOpen] = React.useState<boolean>(false);
+//     const handelOpen = () => setOpen(true)
+//     const handelClose = () => setOpen(false)
+//
+//     const [filterData, setFilterData] = useState<any>(null);
+//     const [filterString, setFilterString] = useState<string>('');
+//     const [widgetsSimple, setWidgetsSimple] = useState<any[]>([]);
+//     const [widgetsGrafic, setWidgetsGrafic] = useState<any[]>([]);
+//     const [widgetsTaula , setWidgetsTaula ] = useState<any[]>([]);
+//
+//     const { isReady: isReadySimple , find: findSimple } = useResourceApiService('estadisticaSimpleWidget');
+//     const { isReady: isReadyGrafic , find: findGrafic } = useResourceApiService('estadisticaGraficWidget');
+//     const { isReady: isReadyTaula  , find: findTaula  } = useResourceApiService('estadisticaTaulaWidget');
+//
+//     const refreshSimple = () => {
+//         if(isReadySimple) {
+//             findSimple({unpaged: true, filter: filterString})
+//                 .then((data:any) => setWidgetsSimple(data?.rows ?? []))
+//         }
+//     }
+//     const refreshGrafic = () => {
+//         if(isReadyGrafic) {
+//             findGrafic({unpaged: true, filter: filterString})
+//                 .then((data:any) => setWidgetsGrafic(data?.rows ?? []))
+//         }
+//     }
+//     const refreshTaula = () => {
+//         if(isReadyTaula) {
+//             findTaula({unpaged: true, filter: filterString})
+//                 .then((data:any) => setWidgetsTaula(data?.rows ?? []))
+//         }
+//     }
+//
+//     useEffect(() => {
+//         if (filterString) {
+//             refreshSimple()
+//             refreshGrafic()
+//             refreshTaula()
+//         }
+//     }, [filterString]);
+//
+//     const width = 400
+//     return (
+//         <>
+//             <IconButton
+//                 color="inherit"
+//                 aria-label="open menu"
+//                 onClick={handelOpen}
+//                 edge="start"
+//                 sx={{ mr: 2 }}
+//             >
+//                 <Icon sx={{ fontSize: '24px'}} fontSize={'medium'}>menu</Icon>
+//             </IconButton>
+//             {open && <ShrinkableDrawer
+//                 className={"side-menu"}
+//                 variant={'permanent'}
+//                 open={true}
+//                 {...{ width: width }}
+//                 sx={{
+//                     '& .MuiDrawer-paper': { right: 0, left: 'auto', backgroundColor: '#ef955e', color: '#fff', pt: '64px' },
+//                 }}>
+//                 <SideWrapper style={{width: `calc(100% - ${width}px)`}} onOutsideClick={handelClose}>
+//                     <Box sx={{p: 1}}>
+//                         <Typography variant={'h5'} color={'white'}>{t($ => $.page.dashboards.action.addWidget.title)}</Typography>
+//
+//                         <EntornAppFilter
+//                             onDataChange={setFilterData}
+//                             onSpringFilterChange={(filter) => setFilterString(filter ?? "")}
+//                             initialData={{
+//                                 app: dashboard?.aplicacio,
+//                                 entorn: dashboard?.entorn
+//                             }}
+//                         />
+//
+//                         <List hidden={!filterData?.entorn?.id}>
+//                             <ExpandElementList label={t($ => $.page.widget.simple.tab.title)} icon={'border_clear'}>
+//                                 {widgetsSimple.map((widget:any) => <Box key={`simple-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+//                                     <SimpleWidgetVisualization {...widget}/>
+//                                 </Box>)}
+//                             </ExpandElementList>
+//                             <ExpandElementList label={t($ => $.page.widget.grafic.tab.title)} icon={'align_vertical_bottom'}>
+//                                 {widgetsGrafic.map((widget:any) => <Box key={`grafic-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+//                                     <GraficWidgetVisualization {...widget}/>
+//                                 </Box>)}
+//                             </ExpandElementList>
+//                             <ExpandElementList label={t($ => $.page.widget.taula.tab.title)} icon={'table_view'}>
+//                                 {widgetsTaula.map((widget:any) => <Box key={`taula-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
+//                                     <TaulaWidgetVisualization {...widget}/>
+//                                 </Box>)}
+//                             </ExpandElementList>
+//                         </List>
+//                     </Box>
+//                 </SideWrapper>
+//             </ShrinkableDrawer>}
+//         </>
+//     );
+// }
 
-    const [open, setOpen] = React.useState<boolean>(false);
-    const handelOpen = () => setOpen(true)
-    const handelClose = () => setOpen(false)
-
-    const [filterData, setFilterData] = useState<any>(null);
-    const [filterString, setFilterString] = useState<string>('');
-    const [widgetsSimple, setWidgetsSimple] = useState<any[]>([]);
-    const [widgetsGrafic, setWidgetsGrafic] = useState<any[]>([]);
-    const [widgetsTaula , setWidgetsTaula ] = useState<any[]>([]);
-
-    const { isReady: isReadySimple , find: findSimple } = useResourceApiService('estadisticaSimpleWidget');
-    const { isReady: isReadyGrafic , find: findGrafic } = useResourceApiService('estadisticaGraficWidget');
-    const { isReady: isReadyTaula  , find: findTaula  } = useResourceApiService('estadisticaTaulaWidget');
-
-    const refreshSimple = () => {
-        if(isReadySimple) {
-            findSimple({unpaged: true, filter: filterString})
-                .then((data:any) => setWidgetsSimple(data?.rows ?? []))
-        }
-    }
-    const refreshGrafic = () => {
-        if(isReadyGrafic) {
-            findGrafic({unpaged: true, filter: filterString})
-                .then((data:any) => setWidgetsGrafic(data?.rows ?? []))
-        }
-    }
-    const refreshTaula = () => {
-        if(isReadyTaula) {
-            findTaula({unpaged: true, filter: filterString})
-                .then((data:any) => setWidgetsTaula(data?.rows ?? []))
-        }
-    }
-
-    useEffect(() => {
-        if (filterString) {
-            refreshSimple()
-            refreshGrafic()
-            refreshTaula()
-        }
-    }, [filterString]);
-
-    const width = 400
-    return <>
-        <IconButton
-            color="inherit"
-            aria-label="open menu"
-            onClick={handelOpen}
-            edge="start"
-            sx={{ mr: 2 }}
-        >
-            <Icon sx={{ fontSize: '24px'}} fontSize={'medium'}>menu</Icon>
-        </IconButton>
-        {open && <ShrinkableDrawer
-            className={"side-menu"}
-            variant={'permanent'}
-            open={true}
-            {...{ width: width }}
-            sx={{
-                '& .MuiDrawer-paper': { right: 0, left: 'auto', backgroundColor: '#ef955e', color: '#fff', pt: '64px' },
-            }}>
-            <SideWrapper style={{width: `calc(100% - ${width}px)`}} onOutsideClick={handelClose}>
-                <Box sx={{p: 1}}>
-                    <Typography variant={'h5'} color={'white'}>{t('page.dashboards.action.addWidget.title')}</Typography>
-
-                    <EntornAppFilter
-                        onDataChange={setFilterData}
-                        onSpringFilterChange={setFilterString}
-                        initialData={{
-                            app: dashboard?.aplicacio,
-                            entorn: dashboard?.entorn
-                        }}
-                    />
-
-                    <List hidden={!filterData?.entorn?.id}>
-                        <ExpandElementList label={t('page.widget.simple.tab.title')} icon={'border_clear'}>
-                            {widgetsSimple.map((widget:any) => <Box key={`simple-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-                                <SimpleWidgetVisualization {...widget}/>
-                            </Box>)}
-                        </ExpandElementList>
-                        <ExpandElementList label={t('page.widget.grafic.tab.title')} icon={'align_vertical_bottom'}>
-                            {widgetsGrafic.map((widget:any) => <Box key={`grafic-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-                                <GraficWidgetVisualization {...widget}/>
-                            </Box>)}
-                        </ExpandElementList>
-                        <ExpandElementList label={t('page.widget.taula.tab.title')} icon={'table_view'}>
-                            {widgetsTaula.map((widget:any) => <Box key={`taula-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-                                <TaulaWidgetVisualization {...widget}/>
-                            </Box>)}
-                        </ExpandElementList>
-                    </List>
-                </Box>
-            </SideWrapper>
-        </ShrinkableDrawer>}
-    </>
-}
-
-const ExpandElementList = (props:any) => {
-    const {label, icon, children} = props;
-    const [open, setOpen] = React.useState(false);
-
-    const handleClick = () => {
-        setOpen(!open);
-    };
-    return <>
-        <ListItemButton onClick={handleClick}>
-            {icon && <Icon sx={{mr: 1}}>{icon}</Icon>}
-            <ListItemText primary={label} />
-            {open ? <Icon>expand_less</Icon> : <Icon>expand_more</Icon>}
-        </ListItemButton>
-        <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ ml: 2 }}>
-                {children}
-            </Box>
-        </Collapse>
-    </>
-}
+// type ExpandElementListProps = {
+//     label: string;
+//     icon?: string;
+//     children: React.ReactNode;
+// };
+//
+// const ExpandElementList = ({label, icon, children}: ExpandElementListProps) => {
+//     const [open, setOpen] = React.useState(false);
+//
+//     const handleClick = () => {
+//         setOpen(!open);
+//     };
+//     return <>
+//         <ListItemButton onClick={handleClick}>
+//             {icon && <Icon sx={{mr: 1}}>{icon}</Icon>}
+//             <ListItemText primary={label} />
+//             {open ? <Icon>expand_less</Icon> : <Icon>expand_more</Icon>}
+//         </ListItemButton>
+//         <Collapse in={open} timeout="auto" unmountOnExit>
+//             <Box sx={{ ml: 2 }}>
+//                 {children}
+//             </Box>
+//         </Collapse>
+//     </>
+// }
 
 export default EstadisticaDashboardEdit;

@@ -1,5 +1,6 @@
 package es.caib.comanda.ms.back.config;
 
+import es.caib.comanda.ms.back.intf.HandlerInterceptorWithPath;
 import es.caib.comanda.ms.logic.intf.model.UnpagedButSorted;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
@@ -33,7 +35,21 @@ import java.util.List;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-	@Override
+    private final List<HandlerInterceptorWithPath> handlerInterceptors;
+
+    public WebMvcConfig(List<HandlerInterceptorWithPath> handlerInterceptors) {
+        this.handlerInterceptors = handlerInterceptors;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        for (HandlerInterceptorWithPath interceptor : handlerInterceptors) {
+            registry.addInterceptor(interceptor)
+                    .addPathPatterns(interceptor.getPath());
+        }
+    }
+
+    @Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
 		CustomPageableHandlerMethodArgumentResolver resolver = new CustomPageableHandlerMethodArgumentResolver();
 		resolver.setFallbackPageable(Pageable.unpaged());

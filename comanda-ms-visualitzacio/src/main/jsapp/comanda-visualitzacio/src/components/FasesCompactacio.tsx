@@ -25,20 +25,20 @@ const FasesCompactacio: React.FC<FasesCompactacioProps> = ({ s, m, e, total = 48
 
   if (!isPos(s) && !isPos(m)) {
     // Case A: s<=0 and m<=0 -> Daily 0 -> E
-    if (E > 0) segments.push({ from: 0, to: clamp(E), color: '#ffef99', title: t('page.apps.progress.diaries') });
+    if (E > 0) segments.push({ from: 0, to: clamp(E), color: '#ffef99', title: t($ => $.page.apps.progress.diaries) });
   } else if (isPos(s) && !isPos(m)) {
     // Case B: s>0 and m<=0 -> Daily 0->s; Weekly s->E
-    if (sC > 0) segments.push({ from: 0, to: sC, color: '#ffef99', title: t('page.apps.progress.diaries') });
-    if (E > sC) segments.push({ from: sC, to: clamp(E), color: '#b6f2b6', title: t('page.apps.progress.weeklies') });
+    if (sC > 0) segments.push({ from: 0, to: sC, color: '#ffef99', title: t($ => $.page.apps.progress.diaries) });
+    if (E > sC) segments.push({ from: sC, to: clamp(E), color: '#b6f2b6', title: t($ => $.page.apps.progress.weeklies) });
   } else if (!isPos(s) && isPos(m)) {
     // Case D: Daily 0->m; Monthly m->E
-    if (mC > 0) segments.push({ from: 0, to: mC, color: '#ffef99', title: t('page.apps.progress.diaries') });
-    if (E > mC) segments.push({ from: mC, to: clamp(E), color: '#b6e0ff', title: t('page.apps.progress.monthlies') });
+    if (mC > 0) segments.push({ from: 0, to: mC, color: '#ffef99', title: t($ => $.page.apps.progress.diaries) });
+    if (E > mC) segments.push({ from: mC, to: clamp(E), color: '#b6e0ff', title: t($ => $.page.apps.progress.monthlies) });
   } else {
     // Case C: s>0 and m>0 -> Daily 0->s; Weekly s->m; Monthly m->E
-    if (sC > 0) segments.push({ from: 0, to: sC, color: '#ffef99', title: t('page.apps.progress.diaries') });
-    if (mC > sC) segments.push({ from: sC, to: mC, color: '#b6f2b6', title: t('page.apps.progress.weeklies') });
-    if (E > mC) segments.push({ from: mC, to: clamp(E), color: '#b6e0ff', title: t('page.apps.progress.monthlies') });
+    if (sC > 0) segments.push({ from: 0, to: sC, color: '#ffef99', title: t($ => $.page.apps.progress.diaries) });
+    if (mC > sC) segments.push({ from: sC, to: mC, color: '#b6f2b6', title: t($ => $.page.apps.progress.weeklies) });
+    if (E > mC) segments.push({ from: mC, to: clamp(E), color: '#b6e0ff', title: t($ => $.page.apps.progress.monthlies) });
   }
 
   const bars = segments

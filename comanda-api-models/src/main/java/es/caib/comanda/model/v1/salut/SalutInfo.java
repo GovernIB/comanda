@@ -30,7 +30,7 @@ import java.util.Set;
 @Schema(name = "SalutInfo", description = "Estat de salut funcional de l'aplicació i metadades associades")
 public class SalutInfo {
     @Schema(description = "Codi identificador de l'aplicació", example = "APP")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 16)
     private String codi;
     @Schema(description = "Instant de generació de l'estat de salut", type = "string", format = "date-time")
     @NotNull
@@ -56,6 +56,7 @@ public class SalutInfo {
     @Valid
     private List<MissatgeSalut> missatges;
     @Schema(description = "Versió de l'aplicació", example = "1.4.3")
+    @Size(max = 10)
     private String versio;
     @Schema(description = "Subsistemes interns amb el seu estat")
     @Valid

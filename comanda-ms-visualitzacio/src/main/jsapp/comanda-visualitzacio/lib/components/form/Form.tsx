@@ -68,8 +68,12 @@ export type FormProps = React.PropsWithChildren & {
     onUpdateSuccess?: (data: any) => void;
     /** Event que es llença quan es desa un registre (creat o modificat) */
     onSaveSuccess?: (data: any) => void;
+    /** Event que es llença quan es produeixen errors de validació al enviar el formulari */
+    onValidationErrorsChange?: (id: any, validationErrors?: FormFieldError[]) => void;
     /** Validador per a les dades del formulari. Es crida en cada canvi i retorna una llista d'errors (o null/undefined si tot es correcte) */
     dataValidator?: (data: any) => FormFieldError[] | undefined;
+    /** Errors de validació */
+    validationErrors?: FormFieldError[];
     /** Mapeig dels tipus de camp */
     fieldTypeMap?: Map<string, string>;
     /** Indica que és un formulari d'una sola línia (per exemple: formularis que es mostran a una fila de la graella) */
@@ -159,7 +163,9 @@ export const Form: React.FC<FormProps> = (props) => {
         onCreateSuccess,
         onUpdateSuccess,
         onSaveSuccess,
+        onValidationErrorsChange,
         dataValidator,
+        validationErrors,
         fieldTypeMap,
         inline,
         i18nKeys,
@@ -279,7 +285,7 @@ export const Form: React.FC<FormProps> = (props) => {
             const getInitialDataFromApiGetOne = resourceType == null && id != null;
             const initialData = getInitialDataFromApiGetOne
                 ? await apiGetOne(id, {
-                      data: { perspectives },
+                      data: { perspective: perspectives },
                       includeLinks: true,
                   })
                 : getInitialDataFromFields(fields);
@@ -321,6 +327,7 @@ export const Form: React.FC<FormProps> = (props) => {
                         message: e.message,
                     }));
                 setApiFieldErrors(fieldErrors);
+                onValidationErrorsChange?.(getId(), fieldErrors);
             } else {
                 temporalMessageShow(
                     temporalMessageTitle ?? '',
@@ -344,8 +351,8 @@ export const Form: React.FC<FormProps> = (props) => {
         setIsDataInitialized(true);
         idFromExternalResetRef.current = null;
     };
-    const refresh = () => {
-        if (fields && !isDataInitialized) {
+    const refresh = (force?: boolean) => {
+        if (fields && (force || !isDataInitialized)) {
             if (initialDataProp != null) {
                 reset(initialDataProp);
             } else {
@@ -401,7 +408,8 @@ export const Form: React.FC<FormProps> = (props) => {
     };
     const validateWithValidator = (data: any) => {
         const validatorFieldErrors = dataValidator?.(data);
-        validatorFieldErrors?.length && setValidatorFieldErrors(validatorFieldErrors);
+        setValidatorFieldErrors(validatorFieldErrors);
+        onValidationErrorsChange?.(getId(), fieldErrors);
     };
     const validate = () =>
         new Promise<any>((resolve, reject) => {
@@ -612,7 +620,7 @@ export const Form: React.FC<FormProps> = (props) => {
     apiRef.current = {
         getId,
         getData,
-        refresh,
+        refresh: () => refresh(true),
         reset: externalReset,
         revert,
         validate,
@@ -625,7 +633,7 @@ export const Form: React.FC<FormProps> = (props) => {
         if (apiRefProp.current) {
             apiRefProp.current.getId = getId;
             apiRefProp.current.getData = getData;
-            apiRefProp.current.refresh = refresh;
+            apiRefProp.current.refresh = () => refresh(true);
             apiRefProp.current.reset = externalReset;
             apiRefProp.current.revert = revert;
             apiRefProp.current.validate = validate;
@@ -637,7 +645,11 @@ export const Form: React.FC<FormProps> = (props) => {
             logConsole.warn('apiRef prop must be initialized with an empty object');
         }
     }
-    const fieldErrors = [...(validatorFieldErrors ?? []), ...(apiFieldErrors ?? [])];
+    const fieldErrors = [
+        ...(validationErrors ?? []),
+        ...(validatorFieldErrors ?? []),
+        ...(apiFieldErrors ?? []),
+    ];
     const context = React.useMemo(
         () => ({
             id: calculatedId(id),

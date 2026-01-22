@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>es.caib.comanda</groupId>
     <artifactId>comanda-api-utils</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 <!--    <name>COMANDA Salut Utils</name>-->
     <description>Llibreria d'utilitats compartides per Salut (sense dependències de models o REST)</description>
     <properties>

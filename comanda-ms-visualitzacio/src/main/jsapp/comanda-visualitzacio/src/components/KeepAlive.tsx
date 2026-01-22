@@ -22,7 +22,7 @@ function KeepAlive() {
                 return;
             }
 
-            requestHref(buildHref('ping'), null)
+            requestHref(buildHref('ping', true), null)
                 .then(() => console.log('[KeepAlive] OK'))
                 .catch((e) => console.error('[KeepAlive] Error', e));
         }, keepAliveInterval);

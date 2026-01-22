@@ -49,6 +49,8 @@ export type BaseAppProps = React.PropsWithChildren & {
     formFieldComponents?: FormFieldComponent[];
     detailFieldComponent?: React.FC<DetailFieldCustomProps>;
     contentComponentSlots: ContentComponentSlots;
+    fixedContentExpandsToAvailableHeightEnabled?: boolean;
+    marginsDisabled?: boolean;
 };
 
 export type BaseAppContentComponentProps = React.PropsWithChildren & {
@@ -231,14 +233,19 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
     const mainBoxHeight = contentExpandsToAvailableHeight ? '100vh' : undefined;
     const childrenOrOfflineComponent = !offline ? children : offlineComponent;
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: mainBoxHeight }}>
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: mainBoxHeight,
+            }}>
             {appbarComponent}
             <div
                 style={{
                     display: 'flex',
                     flexGrow: 1,
                 }}>
-                {menuComponent}
+                <nav>{menuComponent}</nav>
                 <main
                     style={{
                         flexGrow: 1,
@@ -248,10 +255,12 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
                     {appReady ? childrenOrOfflineComponent : null}
                 </main>
             </div>
-            {footerComponent}
+            {footerComponent && <footer>{footerComponent}</footer>}
         </div>
     );
 };
+
+const emptyFunction = () => {};
 
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {
@@ -271,12 +280,16 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         formFieldComponents,
         detailFieldComponent,
         contentComponentSlots,
+        fixedContentExpandsToAvailableHeightEnabled,
+        marginsDisabled: marginsDisabledProp,
         children,
     } = props;
     const { offline } = useResourceApiContext();
-    const [marginsDisabled, setMarginsDisabled] = React.useState<boolean>(false);
+    const [marginsDisabled, setMarginsDisabled] = React.useState<boolean>(
+        marginsDisabledProp ?? false
+    );
     const [contentExpandsToAvailableHeight, setContentExpandsToAvailableHeight] =
-        React.useState<boolean>(false);
+        React.useState<boolean>(fixedContentExpandsToAvailableHeightEnabled ?? false);
     const getLinkComponent = () => linkComponent;
     const { setMessageDialogShow, messageDialogShow } = useDialog();
     const { setTemporalMessageShow, temporalMessageShow } = useTemporalMessage();
@@ -302,9 +315,12 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const context = {
         getFormFieldComponent,
         getDetailFieldComponent,
-        setMarginsDisabled,
+        setMarginsDisabled: marginsDisabledProp == null ? setMarginsDisabled : emptyFunction,
         contentExpandsToAvailableHeight,
-        setContentExpandsToAvailableHeight,
+        setContentExpandsToAvailableHeight:
+            fixedContentExpandsToAvailableHeightEnabled == null
+                ? setContentExpandsToAvailableHeight
+                : emptyFunction,
         getLinkComponent,
         goBack: routerGoBack,
         navigate: routerNavigate,

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: comanda-api-interna
-  version: 0.1.0
+  version: 0.1.1
 servers:
 - url: ""
 tags:
@@ -153,6 +153,8 @@ components:
         descripcio:
           description: Descripció funcional de la dimensió
           example: Entitat de la que s'ha generat la informació estadística
+          maxLength: 1024
+          minLength: 0
           type: string
         valors:
           description: Llista dels possibles valors que pot tenir assignada la dimensió
@@ -261,6 +263,8 @@ components:
         descripcio:
           description: Descripció funcional de l'indicador
           example: Total de visites registrades per període
+          maxLength: 1024
+          minLength: 0
           type: string
         format:
           $ref: "#/components/schemas/Format"

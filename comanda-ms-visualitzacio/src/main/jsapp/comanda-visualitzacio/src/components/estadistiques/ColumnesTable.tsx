@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {useFormContext, FormFieldDataActionType, FormFieldError} from '../../../lib/components/form/FormContext';
+import {useFormContext, FormFieldError} from '../../../lib/components/form/FormContext';
 import {FormField} from 'reactlib';
 import {columnesIndicador} from '../sharedAdvancedSearch/advancedSearchColumns';
 import {Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography} from '@mui/material';
@@ -25,7 +25,7 @@ interface ColumnesTableProps {
 }
 
 const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat = true, hiddenAgregacioValues, value = [], onChange}) => {
-    const {data, dataDispatchAction, fields, fieldErrors = []} = useFormContext();
+    const {data, apiRef, fields, fieldErrors = []} = useFormContext();
     const {t} = useTranslation();
 
     // Initialize with at least one empty row if none provided
@@ -140,10 +140,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
 
     // Update form data
     const updateFormData = (newColumnes: ColumnaItem[]) => {
-        dataDispatchAction({
-            type: FormFieldDataActionType.FIELD_CHANGE,
-            payload: {fieldName: name, value: newColumnes}
-        });
+        apiRef.current?.setFieldValue(name, newColumnes);
 
         if (onChange) {
             onChange(newColumnes);
@@ -284,16 +281,15 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
     return (
         <Box sx={{width: '100%', mb: 2}}>
             {label && <Typography variant="subtitle1" sx={{mb: 1}}>{label}</Typography>}
-
             <TableContainer component={Paper} sx={{mb: 2}}>
                 <Table size="small">
                     <TableHead>
                         <TableRow>
                             <TableCell width="2%" sx={{px: 0}}></TableCell>
-                            <TableCell width="33%">{t('page.widget.taula.columna.indicador')}</TableCell>
-                            <TableCell width="33%">{t('page.widget.taula.columna.titolIndicador')}</TableCell>
-                            <TableCell width="15%">{t('page.widget.taula.columna.tipusIndicador')}</TableCell>
-                            { mostrarUnitat && (<TableCell width="15%">{t('page.widget.taula.columna.periodeIndicador')}</TableCell>) }
+                            <TableCell width="33%">{t($ => $.page.widget.taula.columna.indicador)}</TableCell>
+                            <TableCell width="33%">{t($ => $.page.widget.taula.columna.titolIndicador)}</TableCell>
+                            <TableCell width="15%">{t($ => $.page.widget.taula.columna.tipusIndicador)}</TableCell>
+                            { mostrarUnitat && (<TableCell width="15%">{t($ => $.page.widget.taula.columna.periodeIndicador)}</TableCell>) }
                             <TableCell width="2%" align="center">
                                 {/*{t('page.widget.taula.columna.accions')}*/}
                             </TableCell>
@@ -333,8 +329,8 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                     <IconButton
                                         className="drag-handle"
                                         size="small"
-                                        title={t('page.widget.taula.columna.arrossega')}
-                                        aria-label={t('page.widget.taula.columna.arrossega')}
+                                        title={t($ => $.page.widget.taula.columna.arrossega)}
+                                        aria-label={t($ => $.page.widget.taula.columna.arrossega)}
                                         sx={{
                                             px: 0,
                                             cursor: 'grab',
@@ -350,7 +346,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                 <TableCell sx={{pl: 0, pr: 1}}>
                                     <FormField
                                         name={`${name}.${index}.indicador`}
-                                        label={t('page.widget.taula.columna.indicador')}
+                                        label={t($ => $.page.widget.taula.columna.indicador)}
                                         namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]}
                                         advancedSearchColumns={columnesIndicador}
                                         value={columna.indicador}
@@ -365,7 +361,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                 <TableCell sx={{pl: 0, pr: 1}}>
                                     <FormField
                                         name={`${name}.${index}.titol`}
-                                        label={t('page.widget.taula.columna.titolIndicador')}
+                                        label={t($ => $.page.widget.taula.columna.titolIndicador)}
                                         value={columna.titol}
                                         onChange={(value) => handleFieldChange(index, 'titol', value)}
                                         field={fields?.find((field) => field.name === "titol")}
@@ -378,7 +374,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                 <TableCell sx={{pl: 0, pr: 1}}>
                                     <FormField
                                         name={`${name}.${index}.agregacio`}
-                                        label={t('generic.tipus')}
+                                        label={t($ => $.generic.tipus)}
                                         value={columna.agregacio}
                                         hiddenEnumValues={hiddenAgregacioValues}
                                         onChange={(value) => handleFieldChange(index, 'agregacio', value)}
@@ -393,7 +389,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                     <TableCell sx={{pl: 0, pr: 1}}>
                                         <FormField
                                             name={`${name}.${index}.unitatAgregacio`}
-                                            label={t('generic.periode')}
+                                            label={t($ => $.generic.periode)}
                                             value={columna.unitatAgregacio}
                                             onChange={(value) => handleFieldChange(index, 'unitatAgregacio', value)}
                                             field={fields?.find((field) => field.name === "unitatAgregacio")}
@@ -421,14 +417,13 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                     </TableBody>
                 </Table>
             </TableContainer>
-
             <Button
                 variant="outlined"
                 startIcon={<AddIcon/>}
                 onClick={handleAddRow}
                 size="small"
             >
-                {t('page.widget.action.addColumn.label')}
+                {t($ => $.page.widget.action.addColumn.label)}
             </Button>
         </Box>
     );

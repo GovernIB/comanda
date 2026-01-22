@@ -28,7 +28,7 @@ import java.util.Set;
 @Schema(name = "AppInfo", description = "Informació bàsica de l'aplicació consultada per COMANDA")
 public class AppInfo {
     @Schema(description = "Codi identificador de l'aplicació", example = "APP")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 16)
     private String codi;
 
     @Schema(description = "Nom complet de l'aplicació", example = "APLICACIO")
@@ -36,7 +36,7 @@ public class AppInfo {
     private String nom;
 
     @Schema(description = "Versió desplegada de l'aplicació", example = "2.1.0")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 10)
     private String versio;
 
     @Schema(description = "Data de compilació o de la informació reportada", type = "string", format = "date-time")
@@ -45,9 +45,11 @@ public class AppInfo {
     private OffsetDateTime data;
 
     @Schema(description = "Revisió o identificador de commit de la build", example = "a1b2c3d")
+    @Size(max = 64)
     private String revisio;
 
     @Schema(description = "Versió de JDK amb la qual s'executa l'aplicació", example = "Temurin-17.0.9")
+    @Size(max = 10)
     private String jdkVersion;
 
     @Schema(description = "Versió de JBoss/WildFly amb la qual s'executa l'aplicació", example = "JBoss EAP 7.2")

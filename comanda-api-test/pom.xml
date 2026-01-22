@@ -5,11 +5,11 @@
     <parent>
         <groupId>es.caib.comanda</groupId>
         <artifactId>comanda</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>comanda-api-test</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <name>comanda-api-test</name>
     <description>Tests d'integració externs per provar les crides de comanda-lib contra un servidor indicat per paràmetres</description>
 
@@ -24,8 +24,7 @@
         <dependency>
             <groupId>es.caib.comanda</groupId>
             <artifactId>comanda-lib</artifactId>
-<!--            <version>${project.version}</version>-->
-            <version>0.1.0.1</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Clients generats per fer crides a un segon servidor (salut, estadistica i log) -->

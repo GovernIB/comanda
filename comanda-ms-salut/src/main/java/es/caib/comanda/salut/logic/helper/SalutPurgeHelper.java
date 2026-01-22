@@ -17,6 +17,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+/**
+ * Component responsable de l'eliminació en transaccions aïllades (REQUIRES_NEW)
+ * per evitar contaminar transaccions més àmplies i garantir que els
+ * {@code @Modifying} s'executen dins d'una transacció activa.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -95,6 +100,4 @@ public class SalutPurgeHelper {
         }
         return false;
     }
-
-    // Nota: el mètode transaccional viu a SalutPurgeTxHelper per assegurar que Spring aplica el proxy
 }

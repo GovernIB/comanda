@@ -41,6 +41,8 @@ public class BaseConfig {
 	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
 	public static final String PROP_SCHEDULER_BACK = PROPERTY_PREFIX + "scheduler.back";
+	public static final String PROP_SCHEDULER_ALARMES_CRON = PROPERTY_PREFIX + "scheduler.alarmes.cron";
+	public static final String PROP_SCHEDULER_ALARMES_MAILS_AGRUPATS_CRON = PROPERTY_PREFIX + "scheduler.alarmes.mails.agrupats.cron";
 	public static final String PROP_SCHEDULER_POOL_SIZE = PROPERTY_PREFIX + "scheduler.pool.size";
 	public static final String PROP_WORKER_POOL_SIZE = PROPERTY_PREFIX + "worker.pool.size";
 	public static final String PROP_WORKER_QUEUE_SIZE = PROPERTY_PREFIX + "worker.queue.size";
@@ -50,7 +52,12 @@ public class BaseConfig {
 	public static final String PROP_HTTPAUTH_USERNAME = PROPERTY_PREFIX + "httpauth.username";
 	public static final String PROP_HTTPAUTH_PASSWORD = PROPERTY_PREFIX + "httpauth.password";
 	public static final String PROP_SECURITY_MAPPABLE_ROLES = PROPERTY_PREFIX + "security.mappableRoles";
+	public static final String PROP_SECURITY_ROLE_HTTP_HEADER = PROPERTY_PREFIX + "security.selected.role.http.header";
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
+	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
+	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
+	public static final String PROP_ALARMA_MAIL_ADMIN = PROPERTY_PREFIX + "alarma.mail.admin";
+	public static final String PROP_ALARMA_MAIL_ADMIN_AGRUPAR = PROPERTY_PREFIX + "alarma.mail.admin.agrupar";
 
 	public static final String PROP_BROKER_PORT = PROPERTY_PREFIX + "broker.port";
 	public static final String PROP_BROKER_USERNAME = PROPERTY_PREFIX + "broker.username";

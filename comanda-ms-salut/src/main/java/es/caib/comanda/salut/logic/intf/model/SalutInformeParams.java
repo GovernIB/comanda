@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class SalutInformeParams implements Serializable {
 	@NotNull
-	private LocalDateTime dataFi; // TODO Canviar nom a dataReferencia al fer merge de la branca WIP
+	private LocalDateTime dataReferencia;
 	@NotNull
 	private Long entornAppId;
 	@NotNull

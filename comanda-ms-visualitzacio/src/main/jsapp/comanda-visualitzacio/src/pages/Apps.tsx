@@ -5,6 +5,7 @@ import Grid from '@mui/material/Grid';
 import {
     FormField,
     FormPage,
+    FormTabsValue,
     GridPage,
     MuiActionReportButton,
     MuiDataGrid,
@@ -17,20 +18,18 @@ import {
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
-import UploadIcon from '@mui/icons-material/Upload';
+import { FormControl, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
 import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
+import { useAclPermissionManager } from '../components/AclPermissionManager';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
-// TODO Debería añadirse un export de este tipo
-import { FormTabsValue } from '../../lib/components/mui/form/MuiFormTabs.tsx';
 import {Cancel, CheckCircle} from '@mui/icons-material';
-import { FormFieldDataActionType } from '../../lib/components/form/FormContext';
+import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
 
 const useActions = (refresh?: () => void) => {
@@ -61,16 +60,18 @@ const useActions = (refresh?: () => void) => {
                 temporalMessageShow(null, error.message, 'error');
             });
     }
-    const appExport = (id:any) => report(id, 'app_export', t('page.apps.action.export'), 'JSON')
+    const appExport = (id:any) => report(id, 'app_export', t($ => $.page.apps.action.export), 'JSON')
 
     const toogleActiva = (id:any) => {
         apiAction(id, { code: "toogle_activa" })
             .then(() => {
                 refresh?.();
-                temporalMessageShow(null, t('page.appsEntorns.action.toolbalActiva.ok'), 'success');
+                temporalMessageShow(null, t($ => $.page.appsEntorns.action.toolbarActiva.ok), 'success');
             })
             .catch((error) => {
-                error?.message && temporalMessageShow(null, error?.message, 'error');
+                if (error?.message) {
+                    temporalMessageShow(null, error?.message, 'error');
+                }
             });
     }
 
@@ -109,10 +110,10 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="estadisticaCron" />
             </Grid>
             <Grid size={4}>
-                <FormField name="estadisticaAuth" type="checkbox" label={t('page.apps.fields.estadistica.auth')} />
+                <FormField name="estadisticaAuth" type="checkbox" label={t($ => $.page.apps.fields.estadistica.auth)} />
             </Grid>
             <Grid size={12}>
-                <FormField name="compactable" type="checkbox" label={t('page.apps.fields.compactable')} />
+                <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />
             </Grid>
             {data?.compactable === true && (
                 <>
@@ -120,10 +121,10 @@ const AppEntornForm: React.FC = () => {
                     {/*    <FormField name="compactacioSetmanalMesos" type="number" required={false} label={t('page.apps.fields.compactacioSetmanalMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioSetmanes') }} />*/}
                     {/*</Grid>*/}
                     <Grid size={{xs:12, md:6}}>
-                        <FormField name="compactacioMensualMesos" type="number" required={false} label={t('page.apps.fields.compactacioMensualMesos')} componentProps={{ title: t('page.apps.tooltips.compactacioMesos') }} />
+                        <FormField name="compactacioMensualMesos" type="number" required={false} label={t($ => $.page.apps.fields.compactacioMensualMesos)} componentProps={{ title: t($ => $.page.apps.tooltips.compactacioMesos) }} />
                     </Grid>
                     <Grid size={{xs:12, md:6}}>
-                        <FormField name="eliminacioMesos" type="number" required={false} label={t('page.apps.fields.eliminacioMesos')} componentProps={{ title: t('page.apps.tooltips.borratMesos') }} />
+                        <FormField name="eliminacioMesos" type="number" required={false} label={t($ => $.page.apps.fields.eliminacioMesos)} componentProps={{ title: t($ => $.page.apps.tooltips.borratMesos) }} />
                     </Grid>
                     <Grid size={12}>
                         {(() => {
@@ -172,17 +173,25 @@ const AppsEntorns: React.FC = () => {
         apiRef?.current?.refresh?.()
     }
     const { toogleActiva } = useActions(refresh)
-
+    const {
+        show: permissionShow,
+        component: permissionComponent
+    } = useAclPermissionManager('ENTORN_APP');
     const actions = [
         {
-            label: t('page.appsEntorns.action.toolbalActiva.activar'),
+            label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
+            icon: "lock",
+            onClick: (id: any, row: any) => permissionShow(id, row.entorn.description)
+        },
+        {
+            label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
             icon: "check_circle",
             showInMenu: true,
             onClick: toogleActiva,
             hidden: (row:any) => row?.activa,
         },
         {
-            label: t('page.appsEntorns.action.toolbalActiva.desactivar'),
+            label: t($ => $.page.appsEntorns.action.toolbarActiva.desactivar),
             icon: "cancel",
             showInMenu: true,
             onClick: toogleActiva,
@@ -190,24 +199,25 @@ const AppsEntorns: React.FC = () => {
         },
     ]
     return (
-        <GridPage>
+        <>
             <MuiDataGrid
                 apiRef={apiRef}
-                title={t('page.appsEntorns.title')}
+                title={t($ => $.page.appsEntorns.title)}
                 resourceName="entornApp"
                 staticFilter={`app.id : ${appId}`}
                 columns={columns}
-                toolbarType="upper"
                 paginationActive
                 popupEditActive
                 popupEditFormContent={<AppEntornForm />}
-                popupEditFormDialogResourceTitle={t('page.appsEntorns.resourceTitle')}
+                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
                 formAdditionalData={{
                     app: { id: appId },
                 }}
                 rowAdditionalActions={actions}
+                rowActionsColumnProps={{ flex: .3 }}
             />
-        </GridPage>
+            {permissionComponent}
+        </>
     );
 };
 
@@ -222,14 +232,14 @@ export const AppForm: React.FC = () => {
 
     const formTabs: FormTabsValue[] = [
         {
-            label: t('page.apps.general'),
+            label: t($ => $.page.apps.general),
         },
         {
-            label: t('page.apps.entornApp'),
+            label: t($ => $.page.apps.entornApp),
         },
     ];
 
-    const formTitle = id ? t('page.apps.update') : t('page.apps.create');
+    const formTitle = id ? t($ => $.page.apps.update) : t($ => $.page.apps.create);
 
     return (
         <MuiForm
@@ -277,6 +287,39 @@ export const AppForm: React.FC = () => {
     );
 };
 
+const columns = [
+    {
+        field: 'logo',
+        flex: 1,
+        renderCell: (params: any) => {
+            const value = params.value; // Obtenir el valor de la cel·la
+            return value ? (
+                <img
+                    src={`data:image/png;base64,${value}`}
+                    alt="logo"
+                    style={{ maxHeight: '32px' }}
+                />
+            ) : (
+                <span role="img" aria-label="block" style={{ fontSize: '24px' }}>
+                    <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
+                </span>
+            );
+        },
+    },
+    {
+        field: 'codi',
+        flex: 2,
+    },
+    {
+        field: 'nom',
+        flex: 7,
+    },
+    {
+        field: 'activa',
+        flex: 0.5,
+    },
+];
+
 const parseCodesFromJson = (jsonContent: string) => {
     let parsedJson = JSON.parse(jsonContent);
     if (!Array.isArray(parsedJson)) parsedJson = [parsedJson];
@@ -293,7 +336,7 @@ const existsAnyInParsedCodes = (parsedCodes: any[], existingCodes: Set<any>) => 
 const AppImportFormContent = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
-    const { data, dataDispatchAction, fieldErrors } = useFormContext();
+    const { data, apiRef, fieldErrors } = useFormContext();
     const jsonContentValidationError = fieldErrors?.find((err) => err.field === 'jsonContent');
     const gridContext = useOptionalDataGridContext();
     const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
@@ -309,17 +352,11 @@ const AppImportFormContent = () => {
             // Preselect default decision if conflicts
             // Doing existsAnyInJson before setting jsonContent ensures that the json is valid, as JSON.parse has already been called
             if (existsAnyInParsedCodes(parseCodesFromJson(text), existingCodes))
-                dataDispatchAction({
-                    type: FormFieldDataActionType.FIELD_CHANGE,
-                    payload: { fieldName: 'decision', field: 'decision', value: 'COMBINE' },
-                });
+                apiRef.current?.setFieldValue('decision', 'COMBINE');
 
-            dataDispatchAction({
-                type: FormFieldDataActionType.FIELD_CHANGE,
-                payload: { fieldName: 'jsonContent', field: 'jsonContent', value: text },
-            });
+            apiRef.current?.setFieldValue('jsonContent', text);
         } catch (err: any) {
-            temporalMessageShow("", t('page.apps.import.parseError') || 'Error analitzant el fitxer JSON', 'error');
+            temporalMessageShow("", t($ => $.page.apps.import.parseError), 'error');
         }
     };
 
@@ -327,7 +364,7 @@ const AppImportFormContent = () => {
         if (jsonContentValidationError?.code === 'NotNull')
             temporalMessageShow(
                 null,
-                t('page.apps.import.noFile'),
+                t($ => $.page.apps.import.noFile),
                 'error'
             );
         else if (jsonContentValidationError?.message)
@@ -343,23 +380,22 @@ const AppImportFormContent = () => {
         {parsedCodes.length > 0 && (
             <>
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    {t('page.apps.import.detectedCodes') || 'Codis detectats al fitxer:'} {parsedCodes.join(', ')}
+                    {t($ => $.page.apps.import.detectedCodes)} {parsedCodes.join(', ')}
                 </Typography>
                 {existsAny && (
                     <FormControl sx={{ mt: 2 }}>
                         <Typography variant="body2" sx={{ mb: 1 }}>
-                            {t('page.apps.import.conflict') || 'Algunes aplicacions ja existeixen. Selecciona què fer:'}
+                            {t($ => $.page.apps.import.conflict)}
                         </Typography>
                         <RadioGroup
                             value={data?.decision || ''}
-                            onChange={(e) => dataDispatchAction({
-                                type: FormFieldDataActionType.FIELD_CHANGE,
-                                payload: { fieldName: 'decision', field: 'decision', value: e.target.value },
-                            })}
+                            onChange={(e) =>{
+                                apiRef.current?.setFieldValue('decision', e.target.value);
+                            }}
                         >
-                            <FormControlLabel value="OVERWRITE" control={<Radio />} label={t('page.apps.import.overwrite') || 'Sobreescriure'} />
-                            <FormControlLabel value="COMBINE" control={<Radio />} label={t('page.apps.import.combine') || 'Combinar entorns (afegeix només els inexistents)'} />
-                            <FormControlLabel value="SKIP" control={<Radio />} label={t('page.apps.import.skip') || 'Ometre'} />
+                            <FormControlLabel value="OVERWRITE" control={<Radio />} label={t($ => $.page.apps.import.overwrite)} />
+                            <FormControlLabel value="COMBINE" control={<Radio />} label={t($ => $.page.apps.import.combine)} />
+                            <FormControlLabel value="SKIP" control={<Radio />} label={t($ => $.page.apps.import.skip)} />
                         </RadioGroup>
                     </FormControl>
                 )}
@@ -374,46 +410,18 @@ const Apps: React.FC = () => {
     const { appExport } = useActions();
     const appActions: DataCommonAdditionalAction[] = [
         {
-            label: t('page.apps.action.export'),
+            label: t($ => $.page.apps.action.export),
             icon: 'download',
             showInMenu: true,
             onClick: appExport,
         },
-    ]
-
-    const columns = [
-        {
-            field: 'logo',
-            flex: 1,
-            renderCell: (params: any) => {
-                const value = params.value; // Obtenir el valor de la cel·la
-                return value ? (
-                    <img
-                        src={`data:image/png;base64,${value}`}
-                        alt="logo"
-                        style={{ maxHeight: '32px' }}
-                    />
-                ) : (
-                    <span role="img" aria-label="block" style={{ fontSize: '24px' }}>
-                    <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
-                </span>
-                );
-            },
-        },
-        {
-            field: 'codi',
-            flex: 2,
-        },
-        {
-            field: 'nom',
-            flex: 7,
-        },
-        {
-            field: 'activa',
-            flex: 0.5,
-        },
     ];
+    const { dataGridProps, loadingElement } = useReordering("app");
     const toolbarElementsWithPositions: ReactElementWithPosition[] = [
+        {
+            position: 1,
+            element: loadingElement,
+        },
         {
             position: 2,
             element: (
@@ -421,10 +429,10 @@ const Apps: React.FC = () => {
                     action="app_import"
                     resourceName="app"
                     icon={"upload"}
-                    title={t('page.apps.action.import')}
+                    title={t($ => $.page.apps.action.import)}
                     formDialogContent={<AppImportFormContent />}
                     onSuccess={() => {
-                        temporalMessageShow(null, t('page.apps.import.success'), 'success');
+                        temporalMessageShow(null, t($ => $.page.apps.import.success), 'success');
                         gridApiRef?.current?.refresh?.();
                     }}
                 />
@@ -433,10 +441,10 @@ const Apps: React.FC = () => {
     ];
     return (
         <GridPage>
-            <PageTitle title={t('page.apps.title')} />
+            <PageTitle title={t($ => $.page.apps.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
-                title={t('page.apps.title')}
+                title={t($ => $.page.apps.title)}
                 resourceName="app"
                 columns={columns}
                 toolbarType="upper"
@@ -447,6 +455,7 @@ const Apps: React.FC = () => {
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
+                {...dataGridProps}
             />
         </GridPage>
     );

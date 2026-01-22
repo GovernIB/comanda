@@ -19,7 +19,7 @@ import javax.validation.constraints.Size;
 @Schema(name = "IntegracioSalut", description = "Estat de salut d'una integració concreta")
 public class IntegracioSalut extends EstatSalut {
     @Schema(description = "Codi de la integració", example = "REG")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
     @Schema(description = "Mètriques de peticions associades a la integració")
     @Valid

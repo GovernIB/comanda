@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
     <groupId>es.caib.comanda</groupId>
 	<artifactId>comanda-lib</artifactId>
-	<version>0.1.0.1</version>
+	<version>0.1.1</version>
 	<description>Llibreria amb els models de dades amb informació de salut i estadítica</description>
 	<properties>
 		<!-- Compile amb Java 11 per poder anotar amb Swagger OpenAPI v3 -->
@@ -17,32 +17,27 @@
 		<dependency>
 			<groupId>es.caib.comanda</groupId>
 			<artifactId>comanda-api-models</artifactId>
-<!--			<version>${project.version}</version>-->
-			<version>0.1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>es.caib.comanda</groupId>
 			<artifactId>comanda-api-utils</artifactId>
-<!--			<version>${project.version}</version>-->
-			<version>0.1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>es.caib.comanda</groupId>
 			<artifactId>comanda-api-client-tasca-v1</artifactId>
-<!--			<version>${project.version}</version>-->
-			<version>0.1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>es.caib.comanda</groupId>
 			<artifactId>comanda-api-client-avis-v1</artifactId>
-<!--			<version>${project.version}</version>-->
-			<version>0.1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>es.caib.comanda</groupId>
 			<artifactId>comanda-api-client-permis-v1</artifactId>
-<!--			<version>${project.version}</version>-->
-			<version>0.1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -118,7 +113,7 @@
 		<repository>
 			<id>github-governib-maven-repos</id>
 			<name>GitHub GovernIB Maven Repository</name>
-			<url>https://GovernIB.github.io/maven/maven/</url>
+			<url>https://governib.github.io/maven/maven/</url>
 		</repository>
 	</repositories>
 </project>

@@ -36,15 +36,15 @@ export const BasePage: React.FC<BasePageProps> = (props) => {
     }, [expandHeight]);
     const parentDivExpandHeightStyles: React.CSSProperties = expandHeight
         ? {
-            display: 'flex',
-            flexDirection: 'column',
-            height: 'calc(100% - 64px - 1px)', // Els 64px son del toolbar de l'aplicació (el pixel ni idea)
-        }
+              display: 'flex',
+              flexDirection: 'column',
+              height: 'calc(100% - 64px - 1px)', // Els 64px son del toolbar de l'aplicació (el pixel ni idea)
+          }
         : {};
     const marginsDivExpandHeightStyles: React.CSSProperties = expandHeight
         ? {
-            flexGrow: 1,
-        }
+              flexGrow: 1,
+          }
         : {};
     return (
         <div
@@ -53,7 +53,7 @@ export const BasePage: React.FC<BasePageProps> = (props) => {
                 ...style,
             }}>
             {toolbar}
-            <div style={{ margin: '16px', marginTop: '24px', ...marginsDivExpandHeightStyles }}>{children}</div>
+            <div style={{ margin: '16px', ...marginsDivExpandHeightStyles }}>{children}</div>
         </div>
     );
 };

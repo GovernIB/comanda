@@ -1,6 +1,5 @@
 package es.caib.comanda.usuaris.logic.intf.model;
 
-import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
@@ -16,17 +15,17 @@ import javax.validation.constraints.Size;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-        descriptionField = "nom",
-        accessConstraints = {
-                @ResourceAccessConstraint(
-                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-                        roles = { BaseConfig.ROLE_ADMIN },
-                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
-                )
-        }
+	descriptionField = "nom",
+	accessConstraints = {
+		@ResourceAccessConstraint(
+			type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+			grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
+		)
+	}
 )
 public class Usuari extends BaseResource<Long> {
 
+    /************************************************ DATOS DEL USUARIO ***********************************************/
     @NotNull @Size(max = 64)
     private String codi;
     @NotNull @Size(max = 255)
@@ -36,4 +35,14 @@ public class Usuari extends BaseResource<Long> {
     @Size(max = 255)
     private String email;
 
+    @Size(max = 200)
+    private String emailAlternatiu;
+    @NotNull
+    private LanguageEnum idioma;
+    private Boolean temaObscur;
+    private String[] rols;
+
+    /************************************************ CONFIGURACIÓN GENÉRICA ******************************************/
+    @NotNull
+    private NumOfElementsPerPageENum numElementsPagina;
 }

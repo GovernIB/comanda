@@ -1,0 +1,4 @@
+databaseChangeLog:
+- changeSet:
+    id: alarmes-init-trigger-1
+    author: limit

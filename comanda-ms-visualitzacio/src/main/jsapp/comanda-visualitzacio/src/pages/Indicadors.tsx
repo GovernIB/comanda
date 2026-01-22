@@ -7,7 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     MuiFilter,
@@ -17,8 +17,8 @@ import {
     useResourceApiService,
     useFormContext
 } from 'reactlib';
-import FormFieldAdvancedSearchFilters from '../components/FormFieldAdvancedSearchFilters.tsx';
 import { columnesIndicador } from '../components/sharedAdvancedSearch/advancedSearchColumns';
+import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvancedSearch';
 import PageTitle from '../components/PageTitle.tsx';
 
 const IndicadorsFilter = (props: any) => {
@@ -74,9 +74,9 @@ const IndicadorsFilter = (props: any) => {
                         <FormField
                             name={'entornApp'}
                             type={'reference'}
-                            label={t('page.indicadors.column.entornApp')}
+                            label={t($ => $.page.indicadors.column.entornApp)}
                             required={false}
-                            optionsRequest={(q) => {
+                            optionsRequest={(q: string) => {
                                 const opts = (entornApp ?? []).map((ea: any) => ({
                                     id: ea?.id,
                                     description: ea.entornAppDescription,
@@ -94,7 +94,7 @@ const IndicadorsFilter = (props: any) => {
                 </Grid>
                 <IconButton
                     onClick={netejar}
-                    title={t('components.clear')}
+                    title={t($ => $.components.clear)}
                     sx={{ mr: 1 }}>
                     <Icon>filter_alt_off</Icon>
                 </IconButton>
@@ -114,7 +114,7 @@ const Indicadors: React.FC = () => {
         { field: 'format', flex: 1 },
         { field: 'compactable', flex: 0.6 },
         { field: 'tipusCompactacio', flex: 1.2 },
-        { field: 'indicadorComptadorPerMitjana.description', headerName: t('page.indicadors.column.indicadorMitjana'), flex: 2 },
+        { field: 'indicadorComptadorPerMitjana.description', headerName: t($ => $.page.indicadors.column.indicadorMitjana), flex: 2 },
     ];
     const filterElement = <IndicadorsFilter onSpringFilterChange={setFilter}/>;
 
@@ -132,7 +132,7 @@ const Indicadors: React.FC = () => {
                     <Grid size={6}><FormField name="tipusCompactacio" /></Grid>
                     {data?.tipusCompactacio === "MITJANA" && (
                         <Grid size={12}>
-                            <FormFieldAdvancedSearchFilters
+                            <FormFieldCustomAdvancedSearch
                                 name="indicadorComptadorPerMitjana"
                                 namedQueries={["groupByNom"]}
                                 advancedSearchColumns={columnesIndicador}
@@ -149,9 +149,9 @@ const Indicadors: React.FC = () => {
 
     return (
         <GridPage>
-            <PageTitle title={t('page.indicadors.title')} />
-            <MuiGrid
-                title={t('page.indicadors.title')}
+            <PageTitle title={t($ => $.page.indicadors.title)} />
+            <MuiDataGrid
+                title={t($ => $.page.indicadors.title)}
                 resourceName="indicador"
                 columns={columns}
                 toolbarType="upper"

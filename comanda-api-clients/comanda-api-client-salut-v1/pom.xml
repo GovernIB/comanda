@@ -5,7 +5,7 @@
     <artifactId>comanda-api-client-salut-v1</artifactId>
     <packaging>jar</packaging>
     <name>comanda-api-client-salut-v1</name>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <scm>
         <connection>scm:git:git@github.com:openapitools/openapi-generator.git</connection>
         <developerConnection>scm:git:git@github.com:openapitools/openapi-generator.git</developerConnection>
@@ -199,7 +199,7 @@
         <dependency>
             <groupId>es.caib.comanda</groupId>
             <artifactId>comanda-api-models</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
 
         <!-- @Nullable annotation -->

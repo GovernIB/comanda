@@ -1,7 +1,6 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
@@ -53,8 +52,6 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
 @Service
 public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEntity> implements AppService {
 
-	private final AppInfoHelper appInfoHelper;
-	private final ConfiguracioSchedulerService schedulerService;
 	private final CacheHelper cacheHelper;
 	private final ObjectMapper objectMapper;
 	private final AppExportMapper appExportMapper;
@@ -67,7 +64,12 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 		register(App.APP_EXPORT, new AppExportReportGenerator());
 		register(App.APP_IMPORT, new AppImportActionExecutor());
 	}
-	
+
+    @Override
+    protected List<AppEntity> reorderFindLinesWithParent(Serializable parentId) {
+        return appRepository.findAllByOrderByOrdreAsc();
+    }
+
 	/**
 	 * Generador d'informes per exportar aplicacions en format JSON.
 	 */
@@ -75,7 +77,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 		@Override
 		public List<AppExport> generateData(String code, AppEntity entity, Serializable params) throws ReportGenerationException {
 			List<AppExport> result = new ArrayList<>();
-			
+
 			// Si s'ha especificat una entitat, només exportem aquesta
 			if (entity != null) {
 				AppExport app = appExportMapper.toExport(entity);
@@ -86,17 +88,17 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 				List<AppExport> apps = appExportMapper.toExport(entities);
 				result.addAll(apps);
 			}
-			
+
 			return result;
 		}
-		
+
 		@Override
 		public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
 			try {
 				// Utilitzem un ByteArrayOutputStream per capturar el contingut
 				java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
 				objectMapper.writerWithDefaultPrettyPrinter().writeValue(baos, data);
-				
+
 				// Escrivim el contingut a l'OutputStream original
 				byte[] content = baos.toByteArray();
 				out.write(content);
@@ -110,20 +112,20 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                 } catch (Exception ex) {
                     log.error("Error generant el nom del fitxer d'exportació de Apps", ex);
                 }
-				
+
 				return new DownloadableFile(exportFileName, "application/json", content);
 			} catch (IOException e) {
 				log.error("Error generating JSON file", e);
 				return null;
 			}
 		}
-		
+
 		@Override
 		public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
 			// No es necessari implementar aquest mètode
 		}
 	}
-	
+
 	/**
 	 * Classe que encapsula una llista d'aplicacions per a la importació/exportació.
 	 */
@@ -134,7 +136,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	public static class AppImportResult implements Serializable {
 		private List<App> apps;
 	}
-	
+
 	/**
 	 * ActionExecutor per a la importació d'aplicacions des d'un fitxer JSON.
 	 * Aquesta classe permet importar aplicacions i els seus entorns relacionats.
@@ -206,13 +208,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 						} else {
 							// Nova app → crear totes les relacions
 							applyOverwrite(appEntity, appExport);
-						}
-					}
-					// Reprogramar tasques per entornApps d'aquesta app
-					if (appEntity.getEntornApps() != null) {
-						for (EntornAppEntity eae : appEntity.getEntornApps()) {
-							schedulerService.programarTasca(eae);
-							appInfoHelper.programarTasquesSalutEstadistica(eae);
 						}
 					}
 					// Invalidar caché
@@ -301,7 +296,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 		public void onChange(Serializable id, AppImportForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, AppImportForm target) {
 			// No es necessari implementar aquest mètode
 		}
-		
+
 		@Override
 		public List<FieldOption> getOptions(String fieldName, Map<String, String[]> requestParameterMap) {
 			if ("decision".equals(fieldName)) {
@@ -344,34 +339,11 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	protected void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
 		super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
 		cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
-
-		// Per assegurar que s'executin les tasques programades correctament, es programen de nou.
-		if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {
-			entity.getEntornApps().forEach(entornAppEntity -> {
-                if (!entity.isActiva()) {
-//                    Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
-                    entornAppEntity.setActiva(false);
-                }
-
-				schedulerService.programarTasca(entornAppEntity);
-				appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
-			});
-		}
 	}
 
     @Override
     protected void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
         cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
-
-        if (entity.getEntornApps() != null && !entity.getEntornApps().isEmpty()) {
-            entity.getEntornApps().forEach(entornAppEntity -> {
-//                Setejam entornApp actiu a false per a no es tornin a reprogramar les tasques sobre l'entornApp esborrat
-                entornAppEntity.setActiva(false);
-
-                schedulerService.programarTasca(entornAppEntity);
-                appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
-            });
-        }
     }
 }

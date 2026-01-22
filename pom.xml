@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>es.caib.comanda</groupId>
 	<artifactId>comanda</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<packaging>pom</packaging>
 	<properties>
 		<spring-boot.version>2.7.18</spring-boot.version>
@@ -82,11 +82,13 @@
 		<module>comanda-ms-visualitzacio</module>
 		<module>comanda-ms-gateway</module>
 		<module>comanda-ms-client</module>
-        <module>comanda-ms-broker</module>
+		<module>comanda-ms-broker</module>
 		<module>comanda-ms-tasques</module>
 		<module>comanda-ms-avisos</module>
+		<module>comanda-ms-alarmes</module>
 		<module>comanda-ms-permisos</module>
 		<module>comanda-ms-usuaris</module>
+		<module>comanda-ms-acl</module>
 		<module>comanda-back</module>
 		<module>comanda-api-utils</module>
 		<module>comanda-api-interna</module>
@@ -186,4 +188,11 @@
 			<url>file://${project.build.directory}/mvn-repo</url>
 		</repository>
 	</distributionManagement>
+    <repositories>
+        <repository>
+            <id>github-governib-maven-repos</id>
+            <name>GitHub GovernIB Maven Repository</name>
+            <url>https://governib.github.io/maven/maven/</url>
+        </repository>
+    </repositories>
 </project>

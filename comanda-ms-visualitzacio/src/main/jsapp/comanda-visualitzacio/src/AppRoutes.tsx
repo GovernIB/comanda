@@ -1,16 +1,15 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Salut from './pages/Salut';
-import SalutAppInfo from './pages/SalutAppInfo';
+import Salut from './pages/salut/Salut';
 import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
-import Caches from "./pages/Caches";
-import Integracions from "./pages/Integracions";
-import Dimensions from "./pages/Dimensions";
-import DimensioValor from "./pages/DimensioValor";
-import Indicadors from "./pages/Indicadors";
+import Caches from './pages/Caches';
+import Integracions from './pages/Integracions';
+import Dimensions from './pages/Dimensions';
+import DimensioValor from './pages/DimensioValor';
+import Indicadors from './pages/Indicadors';
 import EstadisticaWidget from './pages/EstadisticaWidget';
 import EstadisticaDashboards from './pages/EstadisticaDashboards';
 import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
@@ -18,12 +17,15 @@ import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
 import Broker from './pages/Broker';
 import QueueMessages from './pages/QueueMessages';
-import CalendariEstadistiques from './pages/CalendariEstadistiques.tsx';
-import Tasca from "./pages/Tasca.tsx";
-import Avis from "./pages/Avis.tsx";
-import Parametres from './pages/Parametres.tsx';
+import CalendariEstadistiques from './pages/CalendariEstadistiques';
+import Tasca from './pages/Tasca';
+import Avis from './pages/Avis';
+import Alarmes from './pages/Alarmes';
+import AlarmaConfig, { AlarmaConfigForm } from './pages/AlarmaConfig';
+import Parametres from './pages/Parametres';
+import ProtectedRoute from './components/ProtectedRoute';
 import Sitemap from './pages/Sitemap';
-import Accessibilitat from './pages/accessibilitat/Accessibilitat.tsx';
+import Accessibilitat from './pages/accessibilitat/Accessibilitat';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -31,8 +33,8 @@ export const ESTADISTIQUES_PATH = 'estadistiques';
 const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            <Route index element={<Salut />} />
-            <Route path="/appinfo/:id" element={<Salut />} />
+            <Route index element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
+            <Route path="/appinfo/:id" element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
             <Route path={DASHBOARDS_PATH}>
                 <Route index element={<EstadisticaDashboards />} />
                 <Route path=":id" element={<EstadisticaDashboardEdit />} />
@@ -78,6 +80,16 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="avis">
                 <Route index element={<Avis />} />
+            </Route>
+            <Route path="alarma">
+                <Route index element={<AlarmaConfig />} />
+                <Route path="form">
+                    <Route index element={<AlarmaConfigForm />} />
+                    <Route path=":id" element={<AlarmaConfigForm />} />
+                </Route>
+            </Route>
+            <Route path="alarmes">
+                <Route index element={<ProtectedRoute resourceName="alarma"><Alarmes /></ProtectedRoute>} />
             </Route>
             <Route path="broker">
                 <Route index element={<Broker />} />

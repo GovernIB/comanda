@@ -14,15 +14,15 @@ import { ExportFileType } from '../ResourceApiContext';
 import { useResourceApiService } from '../ResourceApiProvider';
 import { useFormDialog, FormDialogSubmitFn, FormDialogCloseFn } from './form/FormDialog';
 
-export type ActionReportCustomButton = {
+export type ActionReportCustomButtonProps = {
     disabled?: boolean;
     onClick?: () => void;
     title?: string;
     [x: string | number | symbol]: unknown;
 };
 
-type IconCustomButtonProps = ActionReportCustomButton & React.PropsWithChildren;
-type TextCustomButtonProps = ActionReportCustomButton & React.PropsWithChildren;
+type IconCustomButtonProps = ActionReportCustomButtonProps & React.PropsWithChildren;
+type TextCustomButtonProps = ActionReportCustomButtonProps & React.PropsWithChildren;
 
 /**
  * Propietats del component ActionReportButton.
@@ -44,12 +44,14 @@ export type ActionReportButtonProps = {
     title?: string;
     /** Indica que l'execució de l'artefacte requereix confirmació de l'usuari (només per a artefactes de tipus acció) */
     confirm?: boolean;
+    /** Missatge de confirmació personalitzat */
+    confirmMessage?: string | React.ReactElement;
     /** Indica que el botó apareix deshabilitat */
     disabled?: true;
     /** Indica que el botó apareix amb una insignia amb aquest nombre al seu interior */
     selectedCount?: number;
     /** Component de botó alternatiu */
-    buttonComponent?: React.FC<ActionReportCustomButton>;
+    buttonComponent?: React.FC<ActionReportCustomButtonProps>;
     /** Dades addicionals pel formulari de l'artefacte */
     formAdditionalData?: any;
     /** Claus de traducció personalitzades pel component Form */
@@ -84,7 +86,7 @@ export type ActionReportLogicExecFn = (
 ) => void;
 
 export type ActionReportLogicResult = {
-    initialized: boolean;
+    available: boolean;
     apiLink: any;
     formDialogComponent: React.ReactElement;
     exec: ActionReportLogicExecFn;
@@ -134,8 +136,9 @@ const TextCustomButton: React.FC<TextCustomButtonProps> = (props) => {
  * @param report - Codi de l'informe.
  * @param reportFileType - Tipus d'arxiu generat per l'informe (només per als informes).
  * @param confirm - Indica si l'execució de l'acció requereix confirmació de l'usuari (només per a les accions).
+ * @param confirmMessage - Missatge de confirmació personalitzat.
  * @param formAdditionalDataArg - Dades addicionals pel formulari.
-   @param formI18nKeys - Claus de traducció personalitzades pel component Form.
+ * @param formI18nKeys - Claus de traducció personalitzades pel component Form.
  * @param formInitOnChangeRequest - Indica si el formulari ha de fer una petició onChange inicial.
  * @param formDialogContent - Contingut (camps) pel formulari del diàleg.
  * @param formDialogButtons - Botons pel component de diàleg.
@@ -153,6 +156,7 @@ export const useActionReportLogic = (
     report?: string,
     reportFileType?: ExportFileType,
     confirm?: boolean,
+    confirmMessage?: string | React.ReactElement,
     formAdditionalDataArg?: any,
     formI18nKeys?: FormI18nKeys,
     formInitOnChangeRequest?: boolean,
@@ -165,7 +169,7 @@ export const useActionReportLogic = (
     onClose?: () => void,
     dialogCloseCallback?: (reason?: string) => boolean
 ): ActionReportLogicResult => {
-    const { t, messageDialogShow, saveAs } = useBaseAppContext();
+    const { t, messageDialogShow, temporalMessageShow, saveAs } = useBaseAppContext();
     const actionDialogButtons = useActionDialogButtons();
     const reportDialogButtons = useReportDialogButtons();
     const confirmDialogButtons = useConfirmDialogButtons();
@@ -181,7 +185,11 @@ export const useActionReportLogic = (
                 const requestArgs = { id, code: action, data };
                 apiArtifactAction(id, requestArgs)
                     .then((result: any) => {
-                        onSuccess?.(result);
+                        if (onSuccess) {
+                            onSuccess(result);
+                        } else {
+                            temporalMessageShow(null, t('actionreport.action.success'), 'success');
+                        }
                         resolve(formDialogResultProcessor?.(result));
                     })
                     .catch((error) => {
@@ -204,7 +212,11 @@ export const useActionReportLogic = (
                 apiArtifactReport(id, requestArgs)
                     .then((result: any) => {
                         saveAs?.(result.blob, result.fileName);
-                        onSuccess?.(result);
+                        if (onSuccess) {
+                            onSuccess(result);
+                        } else {
+                            temporalMessageShow(null, t('actionreport.report.success'), 'success');
+                        }
                         resolve(formDialogResultProcessor?.(result));
                     })
                     .catch((error) => {
@@ -215,7 +227,6 @@ export const useActionReportLogic = (
                 console.error("Couldn't generate report without code");
             }
         });
-    const dialogDisabled = formDialogContent == null;
     const [formDialogShow, formDialogComponent, formDialogClose] = useFormDialog(
         resourceName,
         action ? 'ACTION' : report ? 'REPORT' : undefined,
@@ -224,7 +235,7 @@ export const useActionReportLogic = (
             (action ? actionDialogButtons : report ? reportDialogButtons : undefined),
         action ? execAction : generateReport,
         action ? t('actionreport.action.error') : t('actionreport.report.error'),
-        formDialogContent,
+        null,
         null,
         {
             resourceType: action ? 'action' : 'report',
@@ -239,13 +250,14 @@ export const useActionReportLogic = (
         formAdditionalData?: any,
         formDialogComponentProps?: any
     ) => {
-        if (hasForm && !dialogDisabled) {
+        if (hasForm) {
             const formDialogTitle =
                 apiLink?.title ?? (action != null ? 'Exec ' + action : 'Generate ' + report);
             formDialogShow(id, {
                 title: dialogTitle ?? formDialogTitle,
                 additionalData: formAdditionalData ?? formAdditionalDataArg,
                 initOnChangeRequest: formInitOnChangeRequest,
+                formContent: formDialogContent,
                 dialogComponentProps: formDialogComponentProps ??
                     formDialogComponentPropsArg ?? {
                         fullWidth: true,
@@ -262,9 +274,10 @@ export const useActionReportLogic = (
                 };
                 messageDialogShow(
                     t('actionreport.action.confirm.title'),
-                    t('actionreport.action.confirm.message', {
-                        action: apiLink?.title ?? action,
-                    }),
+                    confirmMessage ??
+                        t('actionreport.action.confirm.message', {
+                            action: apiLink?.title ?? action,
+                        }),
                     confirmDialogButtons,
                     confirmDialogComponentProps
                 ).then((value: any) => {
@@ -281,7 +294,6 @@ export const useActionReportLogic = (
     };
     const [artifact, setArtifact] = React.useState<any>();
     const [apiLink, setApiLink] = React.useState<any>();
-    const initialized = artifact != null;
     const hasForm = artifact != null && artifact.formClassActive;
     React.useEffect(() => {
         if (action == null && report == null) {
@@ -316,7 +328,7 @@ export const useActionReportLogic = (
         }
     }, [apiIsReady]);
     return {
-        initialized,
+        available: artifact != null,
         apiLink,
         formDialogComponent,
         exec,
@@ -340,6 +352,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         icon,
         title,
         confirm,
+        confirmMessage,
         disabled,
         selectedCount,
         buttonComponent: buttonComponentProp,
@@ -357,7 +370,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         iconComponentProps,
     } = props;
     const {
-        initialized,
+        available,
         apiLink,
         formDialogComponent,
         exec: handleButtonClick,
@@ -367,6 +380,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         report,
         reportFileType,
         confirm,
+        confirmMessage,
         formAdditionalData,
         formI18nKeys,
         formInitOnChangeRequest,
@@ -395,7 +409,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
             {icon != null && <Icon {...iconComponentProps}>{icon}</Icon>}
         </ButtonComponent>
     );
-    return initialized ? (
+    return available ? (
         <>
             {selectedCount ? (
                 <ButtonWithBadge selectedCount={selectedCount}>{button}</ButtonWithBadge>

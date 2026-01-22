@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda</artifactId>
-		<version>0.1.0</version>
+		<version>0.1.1</version>
 	</parent>
 	<artifactId>comanda-ear</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<packaging>ear</packaging>
 	<properties>
 		<docker.base.image>${project.parent.artifactId}</docker.base.image>
@@ -91,6 +91,12 @@
 			<artifactId>comanda-ms-broker</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+        <dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>comanda-ms-acl</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>

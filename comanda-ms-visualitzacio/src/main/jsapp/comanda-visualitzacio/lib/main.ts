@@ -15,6 +15,7 @@ export {
 } from './components/AppButtons';
 
 export { MuiBaseApp } from './components/mui/MuiBaseApp';
+export { MuiBaseAppContext, useMuiBaseAppContext } from './components/mui/MuiBaseAppContext';
 export { BasePage } from './components/BasePage';
 export { GridPage } from './components/GridPage';
 export { FormPage } from './components/FormPage';
@@ -22,13 +23,10 @@ export { DetailPage } from './components/DetailPage';
 
 export {
     MuiDataGrid,
-    /**
-     * @deprecated use MuiDataGrid instead
-     */
-    MuiDataGrid as MuiGrid,
     useMuiDataGridApiRef,
     useMuiDataGridApiContext,
 } from './components/mui/datagrid/MuiDataGrid';
+export { DataGridDialog as MuiDataGridDialog } from './components/mui/datacommon/DataGridDialog';
 export { MuiDataList } from './components/mui/datalist/MuiDataList';
 export { MuiForm } from './components/mui/form/MuiForm';
 export { DataFormDialog as MuiFormDialog } from './components/mui/datacommon/DataFormDialog';
@@ -58,6 +56,8 @@ export { useDetailContext } from './components/detail/DetailContext';
 
 export { Toolbar } from './components/mui/Toolbar';
 export { TextAvatar, IconAvatar } from './components/mui/Avatars';
+export { CopyToClipboard } from './components/mui/CopyToClipboard';
+export { useAuthButtonContext } from './components/mui/AuthButton';
 
 export { envVar } from './util/envVars';
 export { numberFormat, numberFormatCurrency } from './util/numberFormat';
@@ -78,8 +78,13 @@ export type { DialogButton } from './components/BaseAppContext';
 export type { MenuEntry } from './components/mui/Menu';
 export type { MuiDataGridProps, MuiDataGridColDef } from './components/mui/datagrid/MuiDataGrid';
 export type { MuiDataGridApi, MuiDataGridApiRef } from './components/mui/datagrid/DataGridContext';
+export type { DataGridDialogApi as MuiDataGridDialogApi } from './components/mui/datacommon/DataGridDialog';
 export type { MuiFormProps } from './components/mui/form/MuiForm';
+export type { FormTabsValue } from './components/mui/form/MuiFormTabs';
+export type { ActionReportCustomButtonProps as MuiActionReportCustomButtonProps } from './components/mui/ActionReportButton';
 export type { FormApi, FormApiRef } from './components/form/FormContext';
+export type { FilterApi, FilterApiRef } from './components/form/FilterContext';
 export type { FormFieldProps, FormFieldCustomProps } from './components/form/FormField';
 export type { DataFormDialogApi as MuiFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { FormSidebarApi as MuiFormSidebarApi } from './components/mui/form/MuiFormSidebar';
+export type { DefaultMuiComponentProps } from './components/mui/MuiBaseAppContext';

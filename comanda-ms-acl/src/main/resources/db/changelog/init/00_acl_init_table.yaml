@@ -1,0 +1,137 @@
+databaseChangeLog:
+- changeSet:
+    id: acl_init_table-1
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_object_identity_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: object_id_class
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: object_id_identity
+            type: VARCHAR(255 ${varcharUnit})
+        - column:
+            name: parent_object
+            type: BIGINT
+        - column:
+            name: owner_sid
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: entries_inheriting
+            type: BOOLEAN
+        tableName: ${db_prefix}acl_object_identity
+- changeSet:
+    id: acl_init_table-2
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_sid_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: principal
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: sid
+            type: VARCHAR(100 ${varcharUnit})
+        tableName: ${db_prefix}acl_sid
+- changeSet:
+    id: acl_init_table-3
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_entry_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: acl_object_identity
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: ace_order
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: sid
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: mask
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: granting
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: audit_success
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: audit_failure
+            type: BOOLEAN
+        tableName: ${db_prefix}acl_entry
+- changeSet:
+    id: acl_init_table-4
+    author: limit
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ${db_prefix}acl_class_pk
+            autoIncrement: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: class
+            type: VARCHAR(100 ${varcharUnit})
+        - column:
+            constraints:
+                nullable: false
+            name: class_id_type
+            type: VARCHAR(255 ${varcharUnit})
+        tableName: ${db_prefix}acl_class

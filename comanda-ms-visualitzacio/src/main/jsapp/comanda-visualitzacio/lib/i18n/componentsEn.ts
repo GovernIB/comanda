@@ -15,6 +15,9 @@ const componentsEn = {
         },
     },
     datacommon: {
+        back: {
+            label: 'Go back',
+        },
         details: {
             label: 'Details',
         },
@@ -45,7 +48,6 @@ const componentsEn = {
         toolbar: {
             error: 'An error has occurred',
         },
-        findDisabled: 'Without searching',
         noRows: 'No data',
         error: 'Error',
     },
@@ -56,6 +58,7 @@ const componentsEn = {
         },
         pageInfo: '{{from}} to {{to}} of {{count}}',
         sizeAuto: 'Automatic',
+        requestPending: 'Searching...',
     },
     form: {
         goBack: {
@@ -118,11 +121,18 @@ const componentsEn = {
                 title: 'Confirmation',
                 message: 'Are you sure you want to execute the action {{action}}?',
             },
+            success: 'Action successfully executed',
             error: 'Error executing action',
         },
         report: {
+            success: 'Report successfully generated',
             error: 'Error generating report',
         },
+    },
+    copyToClipboard: {
+        copy: 'Copy',
+        default: 'Content copied to clipboard',
+        error: 'Error copying content to clipboard',
     },
     buttons: {
         answerRequired: {

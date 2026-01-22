@@ -4,9 +4,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 
@@ -19,22 +17,22 @@ import org.springframework.core.task.TaskExecutor;
 @EnableScheduling
 public class SalutSchedulerConfig {
 
-    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
-    private Integer schedulerPoolSize;
+//    @Value("${" + BaseConfig.PROP_SCHEDULER_POOL_SIZE + ":64}")
+//    private Integer schedulerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":5}")
     private Integer workerPoolSize;
     @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":1000}")
     private Integer workerQueueSize;
 
-	@Bean(name = "salutTaskScheduler")
-	public TaskScheduler salutTaskScheduler() {
-		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-		// El scheduler només orquestra i envia feina al worker; no ha de ser el coll d'ampolla
-		scheduler.setPoolSize(schedulerPoolSize);
-		scheduler.setThreadNamePrefix("salut-tasques-");
-        scheduler.initialize();
-		return scheduler;
-	}
+//	@Bean(name = "salutTaskScheduler")
+//	public TaskScheduler salutTaskScheduler() {
+//		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+//		// El scheduler només orquestra i envia feina al worker; no ha de ser el coll d'ampolla
+//		scheduler.setPoolSize(schedulerPoolSize);
+//		scheduler.setThreadNamePrefix("salut-tasques-");
+//        scheduler.initialize();
+//		return scheduler;
+//	}
 
 	@Bean(name = "salutWorkerExecutor")
 	public TaskExecutor salutWorkerExecutor() {

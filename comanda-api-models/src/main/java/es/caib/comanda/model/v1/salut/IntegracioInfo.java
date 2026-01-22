@@ -18,7 +18,7 @@ import javax.validation.constraints.Size;
 @Schema(name = "IntegracioInfo", description = "Informació d'una integració exposada per l'aplicació")
 public class IntegracioInfo {
     @Schema(description = "Codi identificador de la integració", example = "REG")
-    @NotNull @Size(min = 1)
+    @NotNull @Size(min = 1, max = 32)
     private String codi;
     @Schema(description = "Nom descriptiu de la integració", example = "Registre")
     @NotNull @Size(min = 1, max = 255)

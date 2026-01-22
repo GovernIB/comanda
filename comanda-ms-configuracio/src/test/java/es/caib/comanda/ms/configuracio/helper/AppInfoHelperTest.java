@@ -293,42 +293,6 @@ public class AppInfoHelperTest {
         verify(appIntegracioRepository, never()).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository, never()).findByEntornApp(entornAppEntity);
     }
-
-    @Test
-    void testProgramarTasquesSalutEstadistica() {
-        // Mock keycloakHelper
-        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
-
-        // Call the method to test
-        appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
-
-        // Verify that the clients were called
-        verify(salutServiceClient).programar(any(EntornApp.class), anyString());
-        verify(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
-
-        // Verify that the keycloakHelper was called
-        verify(httpAuthorizationHeaderHelper, times(2)).getAuthorizationHeader();
-    }
-
-    @Test
-    void testProgramarTasquesSalutEstadisticaWithException() {
-        // Mock clients to throw exceptions
-        doThrow(new RuntimeException("Salut error")).when(salutServiceClient).programar(any(EntornApp.class), anyString());
-        doThrow(new RuntimeException("Estadistica error")).when(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
-        // Mock keycloakHelper
-        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
-
-        // Call the method to test
-        appInfoHelper.programarTasquesSalutEstadistica(entornAppEntity);
-
-        // Verify that the clients were called despite the exceptions
-        verify(salutServiceClient).programar(any(EntornApp.class), anyString());
-        verify(estadisticaServiceClient).programar(any(EntornApp.class), anyString());
-
-        // Verify that the keycloakHelper was called
-        verify(httpAuthorizationHeaderHelper, times(2)).getAuthorizationHeader();
-    }
-
 //    private void mockRestTemplate() {
 //        // Use ReflectionTestUtils to set the restTemplate field
 //        ReflectionTestUtils.setField(appInfoHelper, "restTemplate", restTemplate);

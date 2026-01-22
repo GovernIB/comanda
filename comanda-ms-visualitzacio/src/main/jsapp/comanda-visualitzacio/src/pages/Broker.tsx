@@ -4,12 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
     GridPage,
-    MuiGrid,
-    useMuiContentDialog,
-    useCloseDialogButtons,
 } from 'reactlib';
 import { ContentDetail } from '../components/ContentDetail';
-import { Tabs, Tab, Chip, Box, Button, Icon, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
+import { Chip, Box, Button, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
 import PageTitle from '../components/PageTitle.tsx';
@@ -80,44 +77,44 @@ const BrokerDetails: React.FC<{ data: BrokerInfo }> = ({ data }) => {
 
     const elementsDetail = [
         {
-            label: t('page.broker.detail.version'),
+            label: t($ => $.page.broker.detail.version),
             value: data?.version
         },
         {
-            label: t('page.broker.detail.name'),
+            label: t($ => $.page.broker.detail.name),
             value: data?.name
         },
         {
-            label: t('page.broker.detail.status'),
+            label: t($ => $.page.broker.detail.status),
             contentValue: <StatusBadge value={data?.status} />
         },
         {
-            label: t('page.broker.detail.uptime'),
+            label: t($ => $.page.broker.detail.uptime),
             value: data?.uptime
         },
         {
-            label: t('page.broker.detail.memoryUsage'),
+            label: t($ => $.page.broker.detail.memoryUsage),
             value: formatBytes(data?.memoryUsage)
         },
         {
-            label: t('page.broker.detail.diskUsage'),
+            label: t($ => $.page.broker.detail.diskUsage),
             value: formatBytes(data?.diskUsage)
         },
         {
-            label: t('page.broker.detail.totalConnections'),
+            label: t($ => $.page.broker.detail.totalConnections),
             value: data?.totalConnections
         },
         {
-            label: t('page.broker.detail.totalQueues'),
+            label: t($ => $.page.broker.detail.totalQueues),
             value: data?.totalQueues
         },
         {
-            label: t('page.broker.detail.totalMessages'),
+            label: t($ => $.page.broker.detail.totalMessages),
             value: data?.totalMessages
         }
     ];
 
-    return <ContentDetail title={t('page.broker.detail.title')} elements={elementsDetail} />;
+    return <ContentDetail title={t($ => $.page.broker.detail.title)} elements={elementsDetail} />;
 };
 
 // Queue list component
@@ -132,31 +129,31 @@ const QueueList: React.FC<{ queues: QueueInfo[] }> = ({ queues }) => {
     return (
         <Grid container spacing={2}>
             {queues.map((queue) => (
-                <Grid item xs={12} sm={6} md={4} key={queue.name}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={queue.name}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" component="div">
                                 {queue.name}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {t('page.broker.queue.address')}: {queue.address}
+                                {t($ => $.page.broker.queue.address)}: {queue.address}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {t('page.broker.queue.routingType')}: {queue.routingType}
+                                {t($ => $.page.broker.queue.routingType)}: {queue.routingType}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {t('page.broker.queue.durable')}: {queue.durable ? t('common.yes') : t('common.no')}
+                                {t($ => $.page.broker.queue.durable)}: {queue.durable ? t($ => $.common.yes) : t($ => $.common.no)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {t('page.broker.queue.messageCount')}: {queue.messageCount}
+                                {t($ => $.page.broker.queue.messageCount)}: {queue.messageCount}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {t('page.broker.queue.consumerCount')}: {queue.consumerCount}
+                                {t($ => $.page.broker.queue.consumerCount)}: {queue.consumerCount}
                             </Typography>
                         </CardContent>
                         <CardActions>
                             <Button size="small" onClick={() => handleViewMessages(queue.name)}>
-                                {t('page.broker.queue.viewMessages')}
+                                {t($ => $.page.broker.queue.viewMessages)}
                             </Button>
                         </CardActions>
                     </Card>
@@ -189,7 +186,7 @@ const Broker: React.FC = () => {
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching broker data:', err);
-                setError(t('page.broker.error.fetchFailed'));
+                setError(t($ => $.page.broker.error.fetchFailed));
                 setLoading(false);
             }
         };
@@ -200,7 +197,7 @@ const Broker: React.FC = () => {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <Typography>{t('common.loading')}</Typography>
+                <Typography>{t($ => $.common.loading)}</Typography>
             </Box>
         );
     }
@@ -215,10 +212,10 @@ const Broker: React.FC = () => {
 
     return (
         <GridPage>
-            <PageTitle title={t('page.broker.title')} />
+            <PageTitle title={t($ => $.page.broker.title)} />
             <Box sx={{ p: 2, pb: 6 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    {t('page.broker.title')}
+                    {t($ => $.page.broker.title)}
                 </Typography>
 
                 {brokerInfo && (
@@ -228,7 +225,7 @@ const Broker: React.FC = () => {
                 )}
 
                 <Typography variant="h5" component="h2" gutterBottom>
-                    {t('page.broker.queues.title')}
+                    {t($ => $.page.broker.queues.title)}
                 </Typography>
 
                 <QueueList queues={queues} />

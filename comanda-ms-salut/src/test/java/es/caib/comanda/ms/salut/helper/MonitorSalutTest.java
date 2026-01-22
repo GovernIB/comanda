@@ -104,7 +104,7 @@ public class MonitorSalutTest {
         Exception testException = new RuntimeException("Test exception");
 
         // Act
-        monitorSalut.endAction(testException);
+        monitorSalut.endAction(testException, null);
 
         // Assert
         verify(salutClientHelper).monitorCreate(monitorCaptor.capture());

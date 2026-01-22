@@ -25,6 +25,7 @@ public class IndicadorDesc {
     @NotNull @Size(min = 1, max = 64)
     private String nom;
     @Schema(description = "Descripció funcional de l'indicador", example = "Total de visites registrades per període")
+    @Size(max = 1024)
     private String descripcio;
     @Schema(description = "Format de representació del valor de l'indicador", example = "LONG")
     @Valid

@@ -2,7 +2,7 @@ import React, { KeyboardEvent } from 'react';
 import { useSessionComponentPersistentState } from '../../util/useComponentPersistentState';
 import Form from './Form';
 import { FilterApi, FilterApiRef, FilterContext, useFilterContext } from './FilterContext';
-import { FormApiRef, FormApi } from './FormContext';
+import { FormApiRef, FormApi, FormFieldError } from './FormContext';
 
 /**
  * Propietats del component Filter.
@@ -38,6 +38,8 @@ export type FilterProps = React.PropsWithChildren & {
     onDataChange?: (data: any) => void;
     /** Event que es llença quan hi ha canvis en el filtre Spring Filter que genera aquest component */
     onSpringFilterChange?: (springFilter: string | undefined) => void;
+    /** Errors de validació */
+    validationErrors?: FormFieldError[];
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
     debug?: true;
 };
@@ -81,6 +83,7 @@ export const Filter: React.FC<FilterProps> = (props) => {
         filterOnFieldEnterKeyPressed,
         onDataChange,
         onSpringFilterChange,
+        validationErrors,
         apiRef: apiRefProp,
         formApiRef: formApiRefProp,
         children,
@@ -173,6 +176,7 @@ export const Filter: React.FC<FilterProps> = (props) => {
                         additionalData={additionalData}
                         onDataChange={handleDataChange}
                         fieldTypeMap={fieldTypeMap}
+                        validationErrors={validationErrors}
                         apiRef={formApiRef}
                         {...otherFormProps}>
                         {children}

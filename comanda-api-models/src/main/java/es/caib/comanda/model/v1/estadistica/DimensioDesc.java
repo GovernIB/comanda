@@ -25,6 +25,7 @@ public class DimensioDesc {
     @NotNull @Size(min = 1, max = 64)
     private String nom;
     @Schema(description = "Descripció funcional de la dimensió", example = "Entitat de la que s'ha generat la informació estadística")
+    @Size(max = 1024)
     private String descripcio;
     @Schema(description = "Llista dels possibles valors que pot tenir assignada la dimensió", example = "[CAIB, TEST]")
     private List<String> valors;

@@ -9,11 +9,12 @@ import {
 } from '../../util/reactNodePosition';
 
 export type ToolbarProps = React.PropsWithChildren & {
-    title?: string;
+    title?: React.ReactNode;
     subtitle?: string;
     lovMode?: boolean;
     upperToolbar?: boolean;
     error?: boolean;
+    noFlexGrow?: true;
     sx?: any;
     elementsWithPositions?: ReactElementWithPosition[];
 };
@@ -25,6 +26,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         elementsWithPositions,
         upperToolbar,
         error,
+        noFlexGrow,
         sx: sxProp,
         children,
     } = props;
@@ -47,10 +49,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     ) : (
         <Typography variant="h6">{title}</Typography>
     );
+    const flexGrow = !noFlexGrow ? <div style={{ flexGrow: 1 }} /> : <></>;
+    const upperToolbarBgColor =
+        theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900];
     const toolbarElements: React.ReactElement[] =
-        title != null
-            ? [titleElement, <div style={{ flexGrow: 1 }} />]
-            : [<div style={{ flexGrow: 1 }} />];
+        title != null ? [titleElement, flexGrow] : [flexGrow];
     return (
         <>
             <MuiToolbar
@@ -65,7 +68,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                     backgroundColor: error
                         ? red[100]
                         : upperToolbar
-                          ? theme.palette.grey[200]
+                          ? upperToolbarBgColor
                           : undefined,
                     ...sxProp,
                 }}>

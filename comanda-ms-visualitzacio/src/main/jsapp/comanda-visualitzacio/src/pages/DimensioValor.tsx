@@ -7,7 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
     GridPage,
-    MuiGrid,
+    MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     FormField,
@@ -15,23 +15,23 @@ import {
     useFilterApiRef,
     useFormApiRef,
     useResourceApiService,
-    useBaseAppContext, useFormContext,
+    useBaseAppContext,
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 
-const DimensioValorForm: React.FC = () => {
-    const { data } = useFormContext();
-    console.log('DimensioValorForm data.agrupable:', data?.agrupable);
-    return (
-        <Grid container spacing={2}>
-            <Grid size={12}><FormField name="valor" readOnly disabled /></Grid>
-            <Grid size={12}><FormField name="agrupable" /></Grid>
-            {data?.agrupable === true && (
-                <Grid size={12}><FormField name="valorAgrupacio" /></Grid>
-            )}
-        </Grid>
-    );
-};
+// const DimensioValorForm: React.FC = () => {
+//     const { data } = useFormContext();
+//     console.log('DimensioValorForm data.agrupable:', data?.agrupable);
+//     return (
+//         <Grid container spacing={2}>
+//             <Grid size={12}><FormField name="valor" readOnly disabled /></Grid>
+//             <Grid size={12}><FormField name="agrupable" /></Grid>
+//             {data?.agrupable === true && (
+//                 <Grid size={12}><FormField name="valorAgrupacio" /></Grid>
+//             )}
+//         </Grid>
+//     );
+// };
 
 const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void } > = ({ onSpringFilterChange }) => {
     const { t } = useTranslation();
@@ -65,7 +65,7 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
                     {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'agrupable'} type={'checkbox'} /></Grid>*/}
                     {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'valorAgrupacio'} /></Grid>*/}
                 </Grid>
-                <IconButton onClick={netejar} title={t('components.clear')} sx={{ mr: 1 }}>
+                <IconButton onClick={netejar} title={t($ => $.components.clear)} sx={{ mr: 1 }}>
                     <Icon>filter_alt_off</Icon>
                 </IconButton>
             </Box>
@@ -103,7 +103,6 @@ const DimensioValor: React.FC = () => {
                 position: 0,
                 element: (
                     <IconButton
-                        title={t('form.goBack.title')}
                         onClick={() => goBack('/dimensio')}
                         disabled={backButtonDisabled}
                         sx={{ mr: 1 }}
@@ -122,7 +121,7 @@ const DimensioValor: React.FC = () => {
     return (
         <GridPage>
             <PageTitle title={gridTitle} />
-            <MuiGrid
+            <MuiDataGrid
                 title={gridTitle}
                 resourceName="dimensioValor"
                 columns={columns}

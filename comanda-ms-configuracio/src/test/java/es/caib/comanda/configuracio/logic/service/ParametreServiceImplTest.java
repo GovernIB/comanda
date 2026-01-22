@@ -30,8 +30,6 @@ class ParametreServiceImplTest {
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock
     private ApplicationEventPublisher eventPublisher;
-    @Mock
-    private EstadisticaServiceClient estadisticaServiceClient;
 
     // S'utilitza la classe real amb mocks injectats (el mètode protegit és accessible dins el mateix paquet)
     @InjectMocks
@@ -56,7 +54,6 @@ class ParametreServiceImplTest {
         service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
 
         verify(monitorServiceClient).programarBorrat("AuthHdr");
-        verify(estadisticaServiceClient, never()).programarTot("AuthHdr");
     }
 
     @Test
@@ -65,7 +62,6 @@ class ParametreServiceImplTest {
         service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
 
         verify(monitorServiceClient).programarBorrat("AuthHdr");
-        verify(estadisticaServiceClient, never()).programarTot("AuthHdr");
     }
 
     @Test
@@ -73,7 +69,6 @@ class ParametreServiceImplTest {
         ParametreEntity e = entity(10L, BaseConfig.PROP_STATS_COMPACTAR_ACTIU);
         service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
 
-        verify(estadisticaServiceClient).programarTot("AuthHdr");
         verify(monitorServiceClient, never()).programarBorrat("AuthHdr");
     }
 
@@ -82,7 +77,6 @@ class ParametreServiceImplTest {
         ParametreEntity e = entity(11L, BaseConfig.PROP_STATS_COMPACTAR_CRON);
         service.onSalutInfoUpdated(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e));
 
-        verify(estadisticaServiceClient).programarTot("AuthHdr");
         verify(monitorServiceClient, never()).programarBorrat("AuthHdr");
     }
 

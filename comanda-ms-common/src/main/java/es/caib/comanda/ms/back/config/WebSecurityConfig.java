@@ -1,17 +1,18 @@
 package es.caib.comanda.ms.back.config;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.ms.logic.intf.util.HttpRequestUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
+import org.keycloak.representations.IDToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.SimpleAttributes2GrantedAuthoritiesMapper;
-import org.springframework.security.core.authority.mapping.SimpleMappableAttributesRetriever;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails;
 import org.springframework.security.web.authentication.preauth.j2ee.J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource;
@@ -21,7 +22,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
+import java.util.Optional;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,16 +43,30 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 			BaseConfig.ROLE_CONSULTA + "," +
 			BaseConfig.ROLE_WEBSERVICE + "}")
 	private String mappableRoles;
+	@Value("${" + BaseConfig.PROP_SECURITY_ROLE_HTTP_HEADER + ":X-App-Role}")
+	private String selectedRoleHttpHeader;
 	@Value("${" + BaseConfig.PROP_SECURITY_NAME_ATTRIBUTE_KEY + ":preferred_username}")
 	private String nameAttributeKey;
-
-	public WebSecurityConfig(JwtAuthConverter jwtAuthConverter) {
-		super(jwtAuthConverter);
-	}
 
 	@Override
 	protected void customHttpSecurityConfiguration(HttpSecurity http) throws Exception {
 		super.customHttpSecurityConfiguration(http);
+		http.authorizeHttpRequests().
+				requestMatchers(
+						new RequestMatcher[] {
+								new AntPathRequestMatcher("/"),
+                                new AntPathRequestMatcher("/api-docs/docs"),
+                                new AntPathRequestMatcher("/api-docs"),
+                                new AntPathRequestMatcher("/api-docs/**"),
+								new AntPathRequestMatcher("/apidocs"),
+								new AntPathRequestMatcher("/apidocs/*"),
+								new AntPathRequestMatcher("/swagger-ui/*"),
+								new AntPathRequestMatcher(BaseConfig.API_SALUT_V1 + "/**/*")
+						}
+				).permitAll().
+				requestMatchers(
+						new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
+				).authenticated();
 		LogoutHandler logoutHandler = (request, response, authentication) -> {
 			try {
 				log.info("Logout called");
@@ -78,24 +93,31 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 				permitAll(true));
 	}
 
-	protected RequestMatcher[] publicRequestMatchers() {
-		return new RequestMatcher[] {
-				new AntPathRequestMatcher(BaseConfig.API_SALUT_V1 + "/**/*")
-		};
-	}
-
-	protected RequestMatcher[] privateRequestMatchers() {
-		return new RequestMatcher[] {
-			new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
-		};
-	}
-
 	@Override
 	protected boolean isWebContainerAuthActive() {
 		return isJboss();
 	}
-	protected boolean isBearerTokenAuthActive() {
+	@Override
+	protected boolean isOauth2ResourceServerActive() {
 		return !isJboss();
+	}
+
+	@Override
+	protected Set<String> getAllowedRoles() {
+		Optional<HttpServletRequest> optionalRequest = HttpRequestUtil.getCurrentHttpRequest();
+		Set<String> allowedRoles = Set.of(mappableRoles.split(","));
+		if (optionalRequest.isPresent()) {
+			// Si la petició HTTP conté la capçalera amb el rol seleccionat retorna únicament aquest rol en la llista
+			// de rols permesos.
+			HttpServletRequest request = optionalRequest.get();
+			String selectedRole = request.getHeader(selectedRoleHttpHeader);
+			if (selectedRole != null) {
+				HashSet<String> editableAllowedRoles = new HashSet<>(allowedRoles);
+				editableAllowedRoles.removeIf(s -> !s.equals(selectedRole));
+				return editableAllowedRoles;
+			}
+		}
+		return allowedRoles;
 	}
 
 	@Value("${jboss.home.dir:#{null}}")
@@ -110,33 +132,47 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 			@Override
 			public PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails buildDetails(HttpServletRequest context) {
 				Collection<String> j2eeUserRoles = getUserRoles(context);
-				logger.debug("Roles from ServletRequest for " + context.getUserPrincipal().getName() + ": " + j2eeUserRoles);
+				log.debug("Roles from ServletRequest for {}: {}",
+						context.getUserPrincipal().getName(),
+						j2eeUserRoles);
 				PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails result;
 				if (context.getUserPrincipal() instanceof KeycloakPrincipal) {
 					KeycloakPrincipal<?> keycloakPrincipal = ((KeycloakPrincipal<?>)context.getUserPrincipal());
 					Set<String> roles = new HashSet<>(j2eeUserRoles);
 					AccessToken.Access realmAccess = keycloakPrincipal.getKeycloakSecurityContext().getToken().getRealmAccess();
 					if (realmAccess != null && realmAccess.getRoles() != null) {
-						logger.debug("Keycloak token realm roles: " + realmAccess.getRoles());
+						log.debug("Keycloak token realm roles: {}", realmAccess.getRoles());
 						realmAccess.getRoles().stream().map(r -> ROLE_PREFIX + r).forEach(roles::add);
 					}
-					logger.debug("Creating WebAuthenticationDetails for " + keycloakPrincipal.getName() + " with roles " + roles);
+					IDToken idToken = keycloakPrincipal.getKeycloakSecurityContext().getIdToken();
+					Collection<? extends GrantedAuthority> grantedAuthorities = j2eeUserRoles2GrantedAuthoritiesMapper.
+							getGrantedAuthorities(roles);
+					filterAllowedGrantedAuthorities(grantedAuthorities);
 					result = new PreauthWebAuthenticationDetails(
 							context,
-							j2eeUserRoles2GrantedAuthoritiesMapper.getGrantedAuthorities(roles),
-							keycloakPrincipal.getKeycloakSecurityContext().getIdTokenString());
+							grantedAuthorities,
+							keycloakPrincipal.getKeycloakSecurityContext().getIdTokenString(),
+							nameAttributeKey.equals("preferred_username") ?
+									idToken.getPreferredUsername() :
+									(String)idToken.getOtherClaims().get(nameAttributeKey),
+							idToken.getName(),
+							idToken.getEmail(),
+							(String)idToken.getOtherClaims().get("nif"),
+							roles.toArray(new String[0]));
 				} else {
-					logger.debug("Creating WebAuthenticationDetails for " + context.getUserPrincipal().getName() + " with roles " + j2eeUserRoles);
+					Collection<? extends GrantedAuthority> grantedAuthorities = j2eeUserRoles2GrantedAuthoritiesMapper.
+							getGrantedAuthorities(j2eeUserRoles);
+					filterAllowedGrantedAuthorities(grantedAuthorities);
 					result = new PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails(
 							context,
-							j2eeUserRoles2GrantedAuthoritiesMapper.getGrantedAuthorities(j2eeUserRoles));
+							grantedAuthorities);
 				}
+				log.debug("Created WebAuthenticationDetails for {} with roles {}",
+						context.getUserPrincipal().getName(),
+						result.getGrantedAuthorities());
 				return result;
 			}
 		};
-		SimpleMappableAttributesRetriever mappableAttributesRetriever = new SimpleMappableAttributesRetriever();
-		mappableAttributesRetriever.setMappableAttributes(new HashSet<>(Arrays.asList(mappableRoles.split(","))));
-		authenticationDetailsSource.setMappableRolesRetriever(mappableAttributesRetriever);
 		SimpleAttributes2GrantedAuthoritiesMapper attributes2GrantedAuthoritiesMapper = new SimpleAttributes2GrantedAuthoritiesMapper();
 		attributes2GrantedAuthoritiesMapper.setAttributePrefix(ROLE_PREFIX);
 		authenticationDetailsSource.setUserRoles2GrantedAuthoritiesMapper(attributes2GrantedAuthoritiesMapper);
@@ -146,12 +182,27 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 	@Getter
 	public static class PreauthWebAuthenticationDetails extends PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails {
 		private final String jwtToken;
+		private final String preferredUsername;
+		private final String name;
+		private final String email;
+		private final String nif;
+		private final String[] originalRoles;
 		public PreauthWebAuthenticationDetails(
 				HttpServletRequest request,
 				Collection<? extends GrantedAuthority> authorities,
-				String jwtToken) {
+				String jwtToken,
+				String preferredUsername,
+				String name,
+				String email,
+				String nif,
+				String[] originalRoles) {
 			super(request, authorities);
 			this.jwtToken = jwtToken;
+			this.preferredUsername = preferredUsername;
+			this.name = name;
+			this.email = email;
+			this.nif = nif;
+			this.originalRoles = originalRoles;
 		}
 	}
 
