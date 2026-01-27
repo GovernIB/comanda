@@ -30,7 +30,7 @@
         "dayjs": "^1.11.18",
         "ketting": "7.5.2",
         "keycloak-js": "^25.0.2",
-        "lodash": "4.17.21",
+        "lodash": "4.17.23",
         "oidc-client-ts": "^3.2.1",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
