@@ -18,6 +18,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.*;
@@ -105,6 +106,25 @@ public class EstadisticaClientHelper {
                 collect(Collectors.toList());
     }
 
+    /** Recupera tots els ID d'un EntornApp donada la id d'una App **/
+    public List<Long> getEntornAppsIdByAppId(Long appId) {
+        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                null,
+                appId != null ? "app.id:" + appId : "",
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        if (entornApps == null) {
+            return List.of();
+        }
+        return entornApps.getContent().stream().
+                map(EntityModel::getContent).
+                filter(Objects::nonNull).
+                map(EntornApp::getId).
+                collect(Collectors.toList());
+    }
 
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

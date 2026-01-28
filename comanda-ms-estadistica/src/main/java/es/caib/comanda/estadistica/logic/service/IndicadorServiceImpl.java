@@ -2,20 +2,22 @@ package es.caib.comanda.estadistica.logic.service;
 
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
 import es.caib.comanda.estadistica.logic.intf.service.IndicadorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -34,29 +36,42 @@ import java.util.stream.Collectors;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, Long, IndicadorEntity> implements IndicadorService {
     private final SpringFilterHelper springFilterHelper;
-
-    public IndicadorServiceImpl(SpringFilterHelper springFilterHelper) {
-        this.springFilterHelper = springFilterHelper;
-    }
+    private final EstadisticaClientHelper estadisticaClientHelper;
 
 	@Override
 	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {
-		if (Objects.equals(Indicador.NAMED_FILTER_GROUP_BY_NOM, name)) {
-			return uniqueNomByMinEntornAppId();
+		if (name != null && name.startsWith(Indicador.NAMED_FILTER_GROUP_BY_NOM)) {
+            List<Long> idsEntornApp = null;
+            String[] parts = name.split(":", 2);
+            if (parts.length == 2 && !parts[1].isBlank()) {
+                idsEntornApp = estadisticaClientHelper.getEntornAppsIdByAppId(Long.valueOf(parts[1]));
+            }
+			return uniqueNomByMinEntornAppId(idsEntornApp);
 		}
 		return null;
 	}
 
 	/** Filtro para solo mostrar un resultado por nombre en la aplicación. Aprovechando el UK de entornAppId y nom. **/
-	private static Specification<IndicadorEntity> uniqueNomByMinEntornAppId() {
+	private static Specification<IndicadorEntity> uniqueNomByMinEntornAppId(List<Long> idsEntornApp) {
+        if (idsEntornApp != null && idsEntornApp.isEmpty()) { //Si no hay resultados en la lista no devolveremos Indicadores
+            return (root, query, cb) -> cb.disjunction();
+        }
 		return (root, query, cb) -> {
 			Subquery<Long> subquery = query.subquery(Long.class);
 			Root<IndicadorEntity> subRoot = subquery.from(IndicadorEntity.class);
 			subquery.select(cb.min(subRoot.get("entornAppId")));
-            subquery.where(cb.equal(subRoot.get("nom"), root.get("nom")), cb.equal(subRoot.get("codi"), root.get("codi")));
+
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(subRoot.get("nom"), root.get("nom")));
+            predicates.add(cb.equal(subRoot.get("codi"), root.get("codi")));
+            if (idsEntornApp != null) {
+                predicates.add(subRoot.get("entornAppId").in(idsEntornApp));
+            }
+            subquery.where(predicates.toArray(new Predicate[0]));
 			return cb.equal(root.get("entornAppId"), subquery);
 		};
 	}
