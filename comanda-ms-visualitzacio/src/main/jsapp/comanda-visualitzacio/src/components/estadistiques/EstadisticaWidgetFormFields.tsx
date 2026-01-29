@@ -75,7 +75,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                                     </Box>
                                 }
                                 advancedSearchFilterBuilder={data =>
-                                    data.dimensio ? `dimensio.id : ${data.dimensio.id}` : undefined
+                                    data.dimensio ? `dimensio.nom : '${data.dimensio.description}'` : undefined
                                 }
                                 advancedSearchDataGridProps={{
                                     rowHeight: 30,

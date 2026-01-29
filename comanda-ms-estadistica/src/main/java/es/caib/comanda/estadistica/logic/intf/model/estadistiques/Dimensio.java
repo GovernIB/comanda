@@ -4,6 +4,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -107,6 +108,7 @@ public class Dimensio extends BaseResource<Long> {
     @AllArgsConstructor
     @FieldNameConstants
     public static class FilterByDimensio implements Serializable {
+        @ResourceField(descriptionField = Dimensio.Fields.nom) // El description field es força a usar el nom, ja que al frontal s'aprofita per a generar els filtres del DataGrid
         protected ResourceReference<Dimensio, Long> dimensio;
     }
 }
