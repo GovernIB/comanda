@@ -70,7 +70,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                                                 size: 'small',
                                             }}
                                             name="dimensio"
-                                            namedQueries={[`filterByApp:${data.aplicacio.id}`]}
+                                            namedQueries={[`filterByAppGroupByNom:${data.aplicacio.id}`]}
                                         />
                                     </Box>
                                 }
@@ -84,8 +84,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                                 multiple
                                 advancedSearchColumns={columnesDimensioValor}
                                 namedQueries={[
-                                    `filterByApp:${data.aplicacio.id}`,
-                                    'groupByValor',
+                                    `filterByAppGroupByValor:${data.aplicacio.id}`,
                                 ]}
                             />
                         </Grid>

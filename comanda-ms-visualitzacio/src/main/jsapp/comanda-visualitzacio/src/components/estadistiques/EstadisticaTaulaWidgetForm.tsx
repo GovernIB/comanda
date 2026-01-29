@@ -91,13 +91,14 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
             initializedRef.current = true;
         }
     }, [data, dataDispatchAction]);
+    const dimensioNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
     return (
         <Grid container spacing={2}>
             <Grid size={{xs: 12, sm: 8}}>
                 <EstadisticaWidgetFormFields>
                     <Grid size={12}><Divider sx={{ my: 1 }} >{t('page.widget.form.taula')}</Divider></Grid>
-                    <Grid size={6}><FormField name="dimensioAgrupacio" namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]} advancedSearchColumns={columnesDimensio} /></Grid>
+                    <Grid size={6}><FormField name="dimensioAgrupacio" namedQueries={dimensioNamedQueries} advancedSearchColumns={columnesDimensio} /></Grid>
                     <Grid size={6}><FormField name="titolAgrupament" /></Grid>
                     <Grid size={12}>
                         <ColumnesTable name="columnes"
