@@ -281,6 +281,8 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
         setDragOverIndex(null);
     };
 
+    const indicadorNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
+
     return (
         <Box sx={{width: '100%', mb: 2}}>
             {label && <Typography variant="subtitle1" sx={{mb: 1}}>{label}</Typography>}
@@ -351,7 +353,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                     <FormField
                                         name={`${name}.${index}.indicador`}
                                         label={t('page.widget.taula.columna.indicador')}
-                                        namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]}
+                                        namedQueries={indicadorNamedQueries}
                                         advancedSearchColumns={columnesIndicador}
                                         value={columna.indicador}
                                         onChange={(value) => handleFieldChange(index, 'indicador', value)}

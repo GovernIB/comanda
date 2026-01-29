@@ -40,6 +40,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
 
     const isMostrarVora: boolean = data?.mostrarVora;
     const isIcona: boolean = !!data?.icona;
+    const indicadorNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
 
     // useEffect(() => {
@@ -90,7 +91,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                              FormFieldReference de /lib */}
                         <FormFieldAdvancedSearchFilters
                             name="indicador"
-                            namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]}
+                            namedQueries={indicadorNamedQueries}
                             advancedSearchColumns={columnesIndicador}
                             advancedSearchDataGridProps={{ rowHeight: 30, }}
                             advancedSearchDialogHeight={500}
