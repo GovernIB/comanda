@@ -107,9 +107,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
             initializedRef.current = true;
         }
     }, [data]);
-    const indicadorNamedQueries = React.useMemo(() => {
-        return data?.aplicacio?.id ? [`groupByNom:${data?.aplicacio?.id}`] : ['groupByNom']; 
-    }, [data?.aplicacio?.id]);
+    const indicadorNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
     return (
         <Grid container spacing={2}>

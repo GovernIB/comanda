@@ -278,9 +278,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
         setDragOverIndex(null);
     };
 
-    const indicadorNamedQueries = React.useMemo(() => {
-        return data?.aplicacio?.id ? [`groupByNom:${data?.aplicacio?.id}`] : ['groupByNom']; 
-    }, [data?.aplicacio?.id]);
+    const indicadorNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
     return (
         <Box sx={{width: '100%', mb: 2}}>

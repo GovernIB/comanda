@@ -44,7 +44,7 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
 
 	@Override
 	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {
-		if (name != null && name.startsWith(Indicador.NAMED_FILTER_GROUP_BY_NOM)) {
+		if (name != null && name.startsWith(Indicador.NAMED_FILTER_BY_APP_GROUP_BY_NOM)) {
             List<Long> idsEntornApp = null;
             String[] parts = name.split(":", 2);
             if (parts.length == 2 && !parts[1].isBlank()) {
@@ -55,9 +55,11 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
 		return null;
 	}
 
-	/** Filtro para solo mostrar un resultado por nombre en la aplicación. Aprovechando el UK de entornAppId y nom. **/
+	/** Filtro para solo mostrar un resultado por nombre en la aplicación. Aprovechando el UK de entornAppId y nom.
+     * Se requiere aplicar un filtro de entornApps, ya que si no se devolvería un resultado erróneo.
+     **/
 	private static Specification<IndicadorEntity> uniqueNomByMinEntornAppId(List<Long> idsEntornApp) {
-        if (idsEntornApp != null && idsEntornApp.isEmpty()) { //Si no hay resultados en la lista no devolveremos Indicadores
+        if (idsEntornApp == null || idsEntornApp.isEmpty()) {
             return (root, query, cb) -> cb.disjunction();
         }
 		return (root, query, cb) -> {
@@ -68,9 +70,7 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(subRoot.get("nom"), root.get("nom")));
             predicates.add(cb.equal(subRoot.get("codi"), root.get("codi")));
-            if (idsEntornApp != null) {
-                predicates.add(subRoot.get("entornAppId").in(idsEntornApp));
-            }
+            predicates.add(subRoot.get("entornAppId").in(idsEntornApp));
             subquery.where(predicates.toArray(new Predicate[0]));
 			return cb.equal(root.get("entornAppId"), subquery);
 		};
