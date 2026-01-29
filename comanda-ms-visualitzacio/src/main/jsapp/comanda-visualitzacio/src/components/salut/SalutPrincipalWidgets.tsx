@@ -590,9 +590,9 @@ export const SalutWidgetContent: React.FC<{
                             width: '100%',
                         }}
                     >
-                        <IconButton onClick={() => setExpanded(!expanded)}>
+                        <Button sx={{width: '100%', color: 'grey'}} onClick={() => setExpanded(!expanded)}>
                             {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                        </IconButton>
+                        </Button>
                     </Grid>
                 )}
                 {/* Botón de expansión duplicado para ocupar la altura del botón original con position: absolute */}
