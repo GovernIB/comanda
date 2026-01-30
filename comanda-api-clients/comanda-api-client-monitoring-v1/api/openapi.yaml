@@ -1,0 +1,1231 @@
+openapi: 3.0.3
+info:
+  title: comanda-api-interna
+  version: 0.1.0
+servers:
+- url: ""
+tags:
+- description: Contracte d'API d'estadístiques que COMANDA pot consultar a les APPs
+  name: COMANDA → APP / Estadistiques
+- description: Contracte d'API de salut i metadades de l'aplicació que COMANDA pot
+    consultar
+  name: COMANDA → APP / Logs
+- description: Contracte d'API de salut i metadades de l'aplicació que COMANDA pot
+    consultar
+  name: COMANDA → APP / Salut
+paths:
+  /v1/estadistiques:
+    get:
+      description: Retorna registres d'estadístiques més recents disponibles (estadístiques
+        d'ahir).
+      operationId: estadistiques
+      parameters:
+      - description: Data concreta en format dd-MM-yyyy
+        explode: true
+        in: query
+        name: data
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Data d'inici del rang en format dd-MM-yyyy
+        explode: true
+        in: query
+        name: dataInici
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Data de fi del rang en format dd-MM-yyyy
+        explode: true
+        in: query
+        name: dataFi
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/estadistiques_200_response"
+          description: successful operation
+      summary: Obtenir darreres estadístiques diàries disponibles
+      tags:
+      - COMANDA → APP / Estadistiques
+      x-operation-name: estadistiques
+      x-accepts:
+      - application/json
+  /v1/estadistiques/from/{dataInici}/to/{dataFi}:
+    get:
+      description: "Retorna llista d'estadístiques de tots els dies entre la dataInici\
+        \ i la dataFi (en format dd-MM-yyyy), ambdues incloses. La resposta contindrà\
+        \ un objecte de tipus RegistresEstadistics per a cada dia inclòs en l'intè\
+        rval."
+      operationId: estadistiquesPerRang
+      parameters:
+      - description: Data d'inici en format dd-MM-yyyy
+        explode: false
+        in: path
+        name: dataInici
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Data de fi en format dd-MM-yyyy
+        explode: false
+        in: path
+        name: dataFi
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/RegistresEstadistics"
+                type: array
+          description: successful operation
+      summary: Obtenir les estadístiques d'un interval donat
+      tags:
+      - COMANDA → APP / Estadistiques
+      x-operation-name: estadistiquesPerRang
+      x-accepts:
+      - application/json
+  /v1/estadistiques/info:
+    get:
+      description: Retorna el codi de l'app i el catàleg de dimensions i indicadors
+        disponibles.
+      operationId: estadistiquesInfo
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadistiquesInfo"
+          description: successful operation
+      summary: Obtenir informació de 'estructura de les estadístiques
+      tags:
+      - COMANDA → APP / Estadistiques
+      x-operation-name: estadistiquesInfo
+      x-accepts:
+      - application/json
+  /v1/estadistiques/of/{data}:
+    get:
+      description: Retorna les estadístiques corresponents a la data indicada amb
+        format dd-MM-yyyy.
+      operationId: estadistiquesPerData
+      parameters:
+      - description: Data en format dd-MM-yyyy
+        explode: false
+        in: path
+        name: data
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistresEstadistics"
+          description: successful operation
+      summary: Obtenir estadístiques d'una data concreta
+      tags:
+      - COMANDA → APP / Estadistiques
+      x-operation-name: estadistiquesPerData
+      x-accepts:
+      - application/json
+  /v1/logs:
+    get:
+      description: Retorna una llista amb tots els fitxers que es troben dins la carpeta
+        de logs del servidor de l'aplicació
+      operationId: llistarFitxers
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/FitxerInfo"
+                type: array
+          description: successful operation
+      summary: Obtenir el llistat de fitxers de log disponibles
+      tags:
+      - COMANDA → APP / Logs
+      x-operation-name: getFitxers
+      x-accepts:
+      - application/json
+  /v1/logs/{nomFitxer}:
+    get:
+      description: "Retorna el contingut i detalls del fitxer de log que es troba\
+        \ dins la carpeta de logs del servidor, i que té el nom indicat"
+      operationId: getFitxerByNom
+      parameters:
+      - description: Nom del firxer
+        explode: false
+        in: path
+        name: nomFitxer
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FitxerContingut"
+          description: successful operation
+      summary: Obtenir contingut complet d'un fitxer de log
+      tags:
+      - COMANDA → APP / Logs
+      x-operation-name: getFitxerByNom
+      x-accepts:
+      - application/json
+  /v1/logs/{nomFitxer}/linies/{nLinies}:
+    get:
+      description: Retorna les darreres linies del fitxer de log indicat per nom.
+        Concretament es retorna el número de línies indicat al paràmetre nLinies.
+      operationId: llegitUltimesLinies
+      parameters:
+      - description: Nom del firxer
+        explode: false
+        in: path
+        name: nomFitxer
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Número de línies a recuperar del firxer
+        explode: false
+        in: path
+        name: nLinies
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: successful operation
+      summary: Obtenir les darreres línies d'un fitxer de log
+      tags:
+      - COMANDA → APP / Logs
+      x-operation-name: getFitxerLinies
+      x-accepts:
+      - application/json
+  /v1/salut:
+    get:
+      description: "Retorna l'estat de salut funcional i integracions, amb metadades\
+        \ de versió."
+      operationId: salut
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalutInfo"
+          description: successful operation
+      summary: Obtenir informació de l'estat de salut de l'aplicació
+      tags:
+      - COMANDA → APP / Salut
+      x-operation-name: salut
+      x-accepts:
+      - application/json
+  /v1/salut/info:
+    get:
+      description: "Retorna dades bàsiques de l'aplicació (codi, nom, versió, data\
+        \ de build, etc.) i contextos exposats."
+      operationId: salutInfo
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppInfo"
+          description: successful operation
+      summary: Obtenir informació de l'aplicació
+      tags:
+      - COMANDA → APP / Salut
+      x-operation-name: salutInfo
+      x-accepts:
+      - application/json
+components:
+  schemas:
+    AppInfo:
+      description: Informació bàsica de l'aplicació consultada per COMANDA
+      example:
+        revisio: a1b2c3d
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        versio: 2.1.0
+        jdkVersion: Temurin-17.0.9
+        subsistemes:
+        - nom: Alta de elements via REST
+          codi: ALTA_REST
+        - nom: Alta de elements via REST
+          codi: ALTA_REST
+        contexts:
+        - path: /appapi/interna
+          api: https://dev.caib.es/app/internaapi/swagger/index.html
+          nom: Api interna
+          codi: API_INT
+          manuals:
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+        - path: /appapi/interna
+          api: https://dev.caib.es/app/internaapi/swagger/index.html
+          nom: Api interna
+          codi: API_INT
+          manuals:
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+          - path: https://www.caib.es/docs/guia-usuari.pdf
+            nom: Guia d'usuari
+        versioJboss: JBoss EAP 7.2
+        integracions:
+        - nom: Registre
+          codi: REG
+        - nom: Registre
+          codi: REG
+        nom: APLICACIO
+        codi: APP
+      properties:
+        codi:
+          description: Codi identificador de l'aplicació
+          example: APP
+          minLength: 1
+          type: string
+        nom:
+          description: Nom complet de l'aplicació
+          example: APLICACIO
+          maxLength: 100
+          minLength: 1
+          type: string
+        versio:
+          description: Versió desplegada de l'aplicació
+          example: 2.1.0
+          minLength: 1
+          type: string
+        data:
+          $ref: "#/components/schemas/OffsetDateTime"
+        revisio:
+          description: Revisió o identificador de commit de la build
+          example: a1b2c3d
+          type: string
+        jdkVersion:
+          description: Versió de JDK amb la qual s'executa l'aplicació
+          example: Temurin-17.0.9
+          type: string
+        versioJboss:
+          description: Versió de JBoss/WildFly amb la qual s'executa l'aplicació
+          example: JBoss EAP 7.2
+          type: string
+        integracions:
+          description: Llista d'integracions exposades per l'aplicació
+          items:
+            $ref: "#/components/schemas/IntegracioInfo"
+          type: array
+        subsistemes:
+          description: Llista de subsistemes interns amb el seu estat
+          items:
+            $ref: "#/components/schemas/SubsistemaInfo"
+          type: array
+        contexts:
+          description: Contextos o endpoints base exposats per l'aplicació
+          items:
+            $ref: "#/components/schemas/ContextInfo"
+          type: array
+      required:
+      - codi
+      - data
+      - nom
+      - versio
+      type: object
+    ContextInfo:
+      description: Context o 'namespace' funcional exposat per l'aplicació
+      example:
+        path: /appapi/interna
+        api: https://dev.caib.es/app/internaapi/swagger/index.html
+        nom: Api interna
+        codi: API_INT
+        manuals:
+        - path: https://www.caib.es/docs/guia-usuari.pdf
+          nom: Guia d'usuari
+        - path: https://www.caib.es/docs/guia-usuari.pdf
+          nom: Guia d'usuari
+      properties:
+        codi:
+          description: Codi del context
+          example: API_INT
+          minLength: 1
+          type: string
+        nom:
+          description: Nom descriptiu del context
+          example: Api interna
+          maxLength: 255
+          minLength: 1
+          type: string
+        path:
+          description: Path base del context
+          example: /appapi/interna
+          minLength: 1
+          type: string
+        manuals:
+          description: Llista de manuals associats al context
+          items:
+            $ref: "#/components/schemas/Manual"
+          type: array
+        api:
+          description: "URL o especificació OpenAPI del context, si està disponible"
+          example: https://dev.caib.es/app/internaapi/swagger/index.html
+          type: string
+      required:
+      - codi
+      - nom
+      - path
+      type: object
+    DiaSetmanaEnum:
+      enum:
+      - DL
+      - DM
+      - DC
+      - DJ
+      - DV
+      - DS
+      - DG
+      type: string
+    Dimensio:
+      properties:
+        codi:
+          type: string
+        valor:
+          type: string
+      type: object
+    DimensioDesc:
+      description: Descripció d'una dimensió disponible (les dimenstions són els camps
+        pels quals es pot filtrar la informació estadística
+      example:
+        descripcio: Entitat de la que s'ha generat la informació estadística
+        valors: "[CAIB, TEST]"
+        nom: Entitat
+        codi: ENT
+      properties:
+        codi:
+          description: Codi de la dimensió
+          example: ENT
+          maxLength: 32
+          minLength: 1
+          type: string
+        nom:
+          description: Nom de la dimensió
+          example: Entitat
+          maxLength: 64
+          minLength: 1
+          type: string
+        descripcio:
+          description: Descripció funcional de la dimensió
+          example: Entitat de la que s'ha generat la informació estadística
+          type: string
+        valors:
+          description: Llista dels possibles valors que pot tenir assignada la dimensió
+          example: "[CAIB, TEST]"
+          items:
+            type: string
+          type: array
+      required:
+      - codi
+      - nom
+      type: object
+    EstadistiquesInfo:
+      description: Catàleg de dimensions i indicadors d'estadística disponibles per
+        a una APP
+      example:
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        indicadors:
+        - descripcio: Total de visites registrades per període
+          format: LONG
+          nom: Nombre de visites
+          codi: NUM_VIS
+        - descripcio: Total de visites registrades per període
+          format: LONG
+          nom: Nombre de visites
+          codi: NUM_VIS
+        versio: 2.1.0
+        codi: APP
+        dimensions:
+        - descripcio: Entitat de la que s'ha generat la informació estadística
+          valors: "[CAIB, TEST]"
+          nom: Entitat
+          codi: ENT
+        - descripcio: Entitat de la que s'ha generat la informació estadística
+          valors: "[CAIB, TEST]"
+          nom: Entitat
+          codi: ENT
+      properties:
+        codi:
+          description: Codi identificador de l'aplicació
+          example: APP
+          minLength: 1
+          type: string
+        versio:
+          description: Versió de l'aplicació
+          example: 2.1.0
+          type: string
+        data:
+          $ref: "#/components/schemas/OffsetDateTime"
+        dimensions:
+          description: Dimensions estadístiques disponibles
+          items:
+            $ref: "#/components/schemas/DimensioDesc"
+          type: array
+        indicadors:
+          description: Indicadors estadístics disponibles
+          items:
+            $ref: "#/components/schemas/IndicadorDesc"
+          type: array
+      required:
+      - codi
+      - dimensions
+      - indicadors
+      type: object
+    EstatSalut:
+      example:
+        latencia: 0
+        estat: UP
+      properties:
+        estat:
+          $ref: "#/components/schemas/EstatSalutEnum"
+        latencia:
+          format: int32
+          type: integer
+      type: object
+    EstatSalutEnum:
+      description: Enumerat d'estats possibles de salut d'un component
+      enum:
+      - UP
+      - WARN
+      - DEGRADED
+      - DOWN
+      - MAINTENANCE
+      - UNKNOWN
+      - ERROR
+      type: string
+    Fet:
+      properties:
+        codi:
+          type: string
+        valor:
+          format: double
+          type: number
+      type: object
+    FitxerContingut:
+      example:
+        dataCreacio: 15/01/2024 00:00:00
+        dataModificacio: 15/01/2024 23:59:59
+        mida: 1024
+        mimeType: application/pdf
+        contingut: ""
+        nom: document.pdf
+      properties:
+        nom:
+          description: Nom del fitxer
+          example: document.pdf
+          type: string
+        mida:
+          description: Mida del fitxer en bytes
+          example: 1024
+          format: int64
+          type: integer
+        mimeType:
+          description: Tipus MIME del fitxer
+          example: application/pdf
+          type: string
+        dataCreacio:
+          description: Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 00:00:00
+          type: string
+        dataModificacio:
+          description: Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 23:59:59
+          type: string
+        contingut:
+          description: Contingut del fitxer en format binari comprimit en zip
+          format: binary
+          type: string
+      type: object
+    FitxerInfo:
+      example:
+        dataCreacio: 15/01/2024 00:00:00
+        dataModificacio: 15/01/2024 23:59:59
+        mida: 1024
+        mimeType: application/pdf
+        nom: document.pdf
+      properties:
+        nom:
+          description: Nom del fitxer
+          example: document.pdf
+          type: string
+        mida:
+          description: Mida del fitxer en bytes
+          example: 1024
+          format: int64
+          type: integer
+        mimeType:
+          description: Tipus MIME del fitxer
+          example: application/pdf
+          type: string
+        dataCreacio:
+          description: Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 00:00:00
+          type: string
+        dataModificacio:
+          description: Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss
+          example: 15/01/2024 23:59:59
+          type: string
+      type: object
+    Format:
+      enum:
+      - LONG
+      - DECIMAL
+      - PERCENTAGE
+      - CURRENCY
+      - DATE
+      - DATETIME
+      - BOOLEAN
+      type: string
+    IndicadorDesc:
+      description: Descripció d'un indicador/mesura disponible
+      example:
+        descripcio: Total de visites registrades per període
+        format: LONG
+        nom: Nombre de visites
+        codi: NUM_VIS
+      properties:
+        codi:
+          description: Codi de l'indicador
+          example: NUM_VIS
+          maxLength: 32
+          minLength: 1
+          type: string
+        nom:
+          description: Nom de l'indicador
+          example: Nombre de visites
+          maxLength: 64
+          minLength: 1
+          type: string
+        descripcio:
+          description: Descripció funcional de l'indicador
+          example: Total de visites registrades per període
+          type: string
+        format:
+          $ref: "#/components/schemas/Format"
+      required:
+      - codi
+      - nom
+      type: object
+    InformacioSistema:
+      description: Informació resum de l'estat del sistema on s'executa l'aplicació
+      example:
+        espaiDiscTotal: 500 GB
+        memoriaDisponible: 8 GB
+        cpuSistema: 45.2%
+        espaiDiscLliure: 250 GB
+        memoriaTotal: 16 GB
+        sistemaOperatiu: Linux 5.4.0
+        processadors: 8
+        dataArrencada: 15/01/2024 10:30
+        carregaSistema: "2.45"
+        tempsFuncionant: "5 dies, 03:25:14"
+      properties:
+        processadors:
+          description: Nombre de processadors disponibles
+          example: 8
+          format: int32
+          type: integer
+        carregaSistema:
+          description: Càrrega actual del sistema
+          example: "2.45"
+          type: string
+        cpuSistema:
+          description: Percentatge d'ús de CPU del sistema
+          example: 45.2%
+          type: string
+        memoriaTotal:
+          description: Memòria total del sistema
+          example: 16 GB
+          type: string
+        memoriaDisponible:
+          description: Memòria disponible del sistema
+          example: 8 GB
+          type: string
+        espaiDiscTotal:
+          description: Espai total del disc
+          example: 500 GB
+          type: string
+        espaiDiscLliure:
+          description: Espai lliure del disc
+          example: 250 GB
+          type: string
+        sistemaOperatiu:
+          description: Sistema operatiu
+          example: Linux 5.4.0
+          type: string
+        dataArrencada:
+          description: Data d'arrencada del sistema
+          example: 15/01/2024 10:30
+          type: string
+        tempsFuncionant:
+          description: Temps de funcionament del sistema
+          example: "5 dies, 03:25:14"
+          type: string
+      type: object
+    IntegracioInfo:
+      description: Informació d'una integració exposada per l'aplicació
+      example:
+        nom: Registre
+        codi: REG
+      properties:
+        codi:
+          description: Codi identificador de la integració
+          example: REG
+          minLength: 1
+          type: string
+        nom:
+          description: Nom descriptiu de la integració
+          example: Registre
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - codi
+      - nom
+      type: object
+    IntegracioPeticions:
+      description: "Mètriques de peticions d'una integració: totals i darrer perí\
+        ode"
+      example:
+        totalError: 5
+        totalTempsMig: 5
+        endpoint: https://path/to/integracio
+        peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+          :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
+          :0,\"endpoint\":\"https://path/to/entorn1\"},\"ENT2\":{\"totalOk\":0,\"\
+          totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
+          :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"}}"
+        tempsMigUltimPeriode: 9
+        totalOk: 1
+        peticionsOkUltimPeriode: 2
+        peticionsErrorUltimPeriode: 7
+      properties:
+        totalOk:
+          description: Nombre total de peticions amb resultat correcte
+          format: int64
+          type: integer
+        totalError:
+          description: Nombre total de peticions amb error
+          format: int64
+          type: integer
+        totalTempsMig:
+          description: Temps mig total de resposta (ms)
+          format: int32
+          type: integer
+        peticionsOkUltimPeriode:
+          description: Peticions OK en el darrer període
+          format: int64
+          type: integer
+        peticionsErrorUltimPeriode:
+          description: Peticions en error en el darrer període
+          format: int64
+          type: integer
+        tempsMigUltimPeriode:
+          description: Temps mig de resposta en el darrer període (ms)
+          format: int32
+          type: integer
+        endpoint:
+          description: Endpoint concret associat a aquestes mètriques
+          example: https://path/to/integracio
+          maxLength: 255
+          minLength: 0
+          type: string
+        peticionsPerEntorn:
+          additionalProperties:
+            $ref: "#/components/schemas/IntegracioPeticions"
+          description: Mètriques per entorn (clau = codi d'entorn)
+          example: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"\
+            peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
+            :0,\"endpoint\":\"https://path/to/entorn1\"},\"ENT2\":{\"totalOk\":0,\"\
+            totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
+            :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"\
+            }}"
+          type: object
+      required:
+      - peticionsErrorUltimPeriode
+      - peticionsOkUltimPeriode
+      - tempsMigUltimPeriode
+      - totalError
+      - totalOk
+      - totalTempsMig
+      type: object
+    IntegracioSalut:
+      description: Estat de salut d'una integració concreta
+      example:
+        latencia: 6
+        estat: null
+        codi: REG
+        peticions:
+          totalError: 5
+          totalTempsMig: 5
+          endpoint: https://path/to/integracio
+          peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+            :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\"\
+            :0,\"endpoint\":\"https://path/to/entorn1\"},\"ENT2\":{\"totalOk\":0,\"\
+            totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\"\
+            :0,\"tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn2\"\
+            }}"
+          tempsMigUltimPeriode: 9
+          totalOk: 1
+          peticionsOkUltimPeriode: 2
+          peticionsErrorUltimPeriode: 7
+      properties:
+        estat:
+          $ref: "#/components/schemas/EstatSalutEnum"
+        latencia:
+          format: int32
+          type: integer
+        codi:
+          description: Codi de la integració
+          example: REG
+          minLength: 1
+          type: string
+        peticions:
+          $ref: "#/components/schemas/IntegracioPeticions"
+      required:
+      - codi
+      type: object
+    Manual:
+      description: Referència a un manual o documentació funcional
+      example:
+        path: https://www.caib.es/docs/guia-usuari.pdf
+        nom: Guia d'usuari
+      properties:
+        nom:
+          description: Nom del manual
+          example: Guia d'usuari
+          maxLength: 128
+          minLength: 1
+          type: string
+        path:
+          description: Ruta o URL del manual
+          example: https://www.caib.es/docs/guia-usuari.pdf
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - nom
+      - path
+      type: object
+    MissatgeSalut:
+      description: Missatge informatiu/alerta de salut amb nivell de gravetat
+      example:
+        missatge: Manteniment programat a les 22:00h
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        nivell: ERROR
+      properties:
+        data:
+          $ref: "#/components/schemas/OffsetDateTime"
+        nivell:
+          $ref: "#/components/schemas/SalutNivell"
+        missatge:
+          description: Text del missatge
+          example: Manteniment programat a les 22:00h
+          minLength: 1
+          type: string
+      required:
+      - data
+      - missatge
+      - nivell
+      type: object
+    OffsetDateTime:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        offset:
+          totalSeconds: 0
+          id: id
+      properties:
+        dateTime:
+          format: date-time
+          type: string
+        offset:
+          $ref: "#/components/schemas/ZoneOffset"
+      type: object
+    RegistreEstadistic:
+      description: Registre d'estadística amb dimensions i fets associats
+      example:
+        fets: "[{\"codi\":\"EXP_CREATS\",\"valor\":10},{\"codi\":\"EXP_TANCATS\",\"\
+          valor\":2}]"
+        dimensions: "[{\"codi\":\"ENTITAT\",\"valor\":\"CAIB\"},{\"codi\":\"ORGAN\"\
+          ,\"valor\":\"A03002345\"},{\"codi\":\"USUARI\",\"valor\":\"u012345\"}]"
+      properties:
+        dimensions:
+          description: "Dimensions que qualifiquen el registre (p. ex. àrea, tipus,\
+            \ canal)"
+          example: "[{\"codi\":\"ENTITAT\",\"valor\":\"CAIB\"},{\"codi\":\"ORGAN\"\
+            ,\"valor\":\"A03002345\"},{\"codi\":\"USUARI\",\"valor\":\"u012345\"}]"
+          items:
+            $ref: "#/components/schemas/Dimensio"
+          type: array
+        fets:
+          description: Fets o mesures quantitatives associades al registre
+          example: "[{\"codi\":\"EXP_CREATS\",\"valor\":10},{\"codi\":\"EXP_TANCATS\"\
+            ,\"valor\":2}]"
+          items:
+            $ref: "#/components/schemas/Fet"
+          type: array
+      type: object
+    RegistresEstadistics:
+      description: Registres estadístics d'un instant de temps amb les seves mesures
+      example:
+        fets:
+        - fets: "[{\"codi\":\"EXP_CREATS\",\"valor\":10},{\"codi\":\"EXP_TANCATS\"\
+            ,\"valor\":2}]"
+          dimensions: "[{\"codi\":\"ENTITAT\",\"valor\":\"CAIB\"},{\"codi\":\"ORGAN\"\
+            ,\"valor\":\"A03002345\"},{\"codi\":\"USUARI\",\"valor\":\"u012345\"}]"
+        - fets: "[{\"codi\":\"EXP_CREATS\",\"valor\":10},{\"codi\":\"EXP_TANCATS\"\
+            ,\"valor\":2}]"
+          dimensions: "[{\"codi\":\"ENTITAT\",\"valor\":\"CAIB\"},{\"codi\":\"ORGAN\"\
+            ,\"valor\":\"A03002345\"},{\"codi\":\"USUARI\",\"valor\":\"u012345\"}]"
+        temps:
+          anualitat: 2025
+          setmana: 47
+          data:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          diaSetmana: DL
+          mes: 11
+          trimestre: 4
+          dia: 25
+      properties:
+        temps:
+          $ref: "#/components/schemas/Temps"
+        fets:
+          description: Llista de registres o fets estadístics recollits en l'instant
+            indicat
+          items:
+            $ref: "#/components/schemas/RegistreEstadistic"
+          type: array
+      required:
+      - temps
+      type: object
+    SalutInfo:
+      description: Estat de salut funcional de l'aplicació i metadades associades
+      example:
+        estatGlobal:
+          latencia: 0
+          estat: UP
+        missatges:
+        - missatge: Manteniment programat a les 22:00h
+          data:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          nivell: ERROR
+        - missatge: Manteniment programat a les 22:00h
+          data:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          nivell: ERROR
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        estatBaseDeDades:
+          latencia: 0
+          estat: UP
+        versio: 1.4.3
+        subsistemes:
+        - totalError: 4
+          totalTempsMig: 7
+          latencia: 3
+          tempsMigUltimPeriode: 1
+          estat: null
+          totalOk: 2
+          peticionsOkUltimPeriode: 1
+          codi: BD
+          peticionsErrorUltimPeriode: 1
+        - totalError: 4
+          totalTempsMig: 7
+          latencia: 3
+          tempsMigUltimPeriode: 1
+          estat: null
+          totalOk: 2
+          peticionsOkUltimPeriode: 1
+          codi: BD
+          peticionsErrorUltimPeriode: 1
+        informacioSistema:
+          espaiDiscTotal: 500 GB
+          memoriaDisponible: 8 GB
+          cpuSistema: 45.2%
+          espaiDiscLliure: 250 GB
+          memoriaTotal: 16 GB
+          sistemaOperatiu: Linux 5.4.0
+          processadors: 8
+          dataArrencada: 15/01/2024 10:30
+          carregaSistema: "2.45"
+          tempsFuncionant: "5 dies, 03:25:14"
+        integracions:
+        - latencia: 6
+          estat: null
+          codi: REG
+          peticions:
+            totalError: 5
+            totalTempsMig: 5
+            endpoint: https://path/to/integracio
+            peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+              :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"\
+              tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn1\"},\"\
+              ENT2\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\"\
+              :0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\":0,\"endpoint\"\
+              :\"https://path/to/entorn2\"}}"
+            tempsMigUltimPeriode: 9
+            totalOk: 1
+            peticionsOkUltimPeriode: 2
+            peticionsErrorUltimPeriode: 7
+        - latencia: 6
+          estat: null
+          codi: REG
+          peticions:
+            totalError: 5
+            totalTempsMig: 5
+            endpoint: https://path/to/integracio
+            peticionsPerEntorn: "{\"ENT1\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\"\
+              :0,\"peticionsOkUltimPeriode\":0,\"peticionsErrorUltimPeriode\":0,\"\
+              tempsMigUltimPeriode\":0,\"endpoint\":\"https://path/to/entorn1\"},\"\
+              ENT2\":{\"totalOk\":0,\"totalError\":0,\"totalTempsMig\":0,\"peticionsOkUltimPeriode\"\
+              :0,\"peticionsErrorUltimPeriode\":0,\"tempsMigUltimPeriode\":0,\"endpoint\"\
+              :\"https://path/to/entorn2\"}}"
+            tempsMigUltimPeriode: 9
+            totalOk: 1
+            peticionsOkUltimPeriode: 2
+            peticionsErrorUltimPeriode: 7
+        codi: APP
+      properties:
+        codi:
+          description: Codi identificador de l'aplicació
+          example: APP
+          minLength: 1
+          type: string
+        data:
+          $ref: "#/components/schemas/OffsetDateTime"
+        estatGlobal:
+          $ref: "#/components/schemas/EstatSalut"
+        estatBaseDeDades:
+          $ref: "#/components/schemas/EstatSalut"
+        integracions:
+          description: Integracions amb el seu estat
+          items:
+            $ref: "#/components/schemas/IntegracioSalut"
+          type: array
+        informacioSistema:
+          $ref: "#/components/schemas/InformacioSistema"
+        missatges:
+          description: Missatges informatius o d'alerta
+          items:
+            $ref: "#/components/schemas/MissatgeSalut"
+          type: array
+        versio:
+          description: Versió de l'aplicació
+          example: 1.4.3
+          type: string
+        subsistemes:
+          description: Subsistemes interns amb el seu estat
+          items:
+            $ref: "#/components/schemas/SubsistemaSalut"
+          type: array
+      required:
+      - codi
+      - data
+      - estatBaseDeDades
+      - estatGlobal
+      type: object
+    SalutNivell:
+      description: Nivell de gravetat d'un missatge de salut
+      enum:
+      - ERROR
+      - WARN
+      - INFO
+      type: string
+    SubsistemaInfo:
+      description: Informació d'un subsistema intern de l'aplicació
+      example:
+        nom: Alta de elements via REST
+        codi: ALTA_REST
+      properties:
+        codi:
+          description: Codi del subsistema
+          example: ALTA_REST
+          maxLength: 64
+          minLength: 1
+          type: string
+        nom:
+          description: Nom del subsistema
+          example: Alta de elements via REST
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - codi
+      - nom
+      type: object
+    SubsistemaSalut:
+      description: Estat de salut i mètriques d'un subsistema intern
+      example:
+        totalError: 4
+        totalTempsMig: 7
+        latencia: 3
+        tempsMigUltimPeriode: 1
+        estat: null
+        totalOk: 2
+        peticionsOkUltimPeriode: 1
+        codi: BD
+        peticionsErrorUltimPeriode: 1
+      properties:
+        estat:
+          $ref: "#/components/schemas/EstatSalutEnum"
+        latencia:
+          format: int32
+          type: integer
+        codi:
+          description: Codi del subsistema
+          example: BD
+          minLength: 1
+          type: string
+        totalOk:
+          description: Total de peticions amb resultat correcte
+          format: int64
+          type: integer
+        totalError:
+          description: Total de peticions amb error
+          format: int64
+          type: integer
+        totalTempsMig:
+          description: Temps mig total de resposta (ms)
+          format: int32
+          type: integer
+        peticionsOkUltimPeriode:
+          description: Peticions OK en el darrer període
+          format: int64
+          type: integer
+        peticionsErrorUltimPeriode:
+          description: Peticions en error en el darrer període
+          format: int64
+          type: integer
+        tempsMigUltimPeriode:
+          description: Temps mig de resposta en el darrer període (ms)
+          format: int32
+          type: integer
+      required:
+      - codi
+      - peticionsErrorUltimPeriode
+      - peticionsOkUltimPeriode
+      - tempsMigUltimPeriode
+      - totalError
+      - totalOk
+      - totalTempsMig
+      type: object
+    Temps:
+      description: Desglossament temporal associat als registres d'estadística
+      example:
+        anualitat: 2025
+        setmana: 47
+        data:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        diaSetmana: DL
+        mes: 11
+        trimestre: 4
+        dia: 25
+      properties:
+        data:
+          $ref: "#/components/schemas/OffsetDateTime"
+        anualitat:
+          description: Any corresponent a la data
+          example: 2025
+          format: int32
+          type: integer
+        trimestre:
+          description: Trimestre (1-4) derivat de la data
+          example: 4
+          format: int32
+          type: integer
+        mes:
+          description: Mes (1-12) derivat de la data
+          example: 11
+          format: int32
+          type: integer
+        setmana:
+          description: Setmana de l'any derivada de la data
+          example: 47
+          format: int32
+          type: integer
+        diaSetmana:
+          $ref: "#/components/schemas/DiaSetmanaEnum"
+        dia:
+          description: Dia del mes
+          example: 25
+          format: int32
+          type: integer
+      required:
+      - data
+      type: object
+    ZoneOffset:
+      example:
+        totalSeconds: 0
+        id: id
+      properties:
+        totalSeconds:
+          format: int32
+          type: integer
+        id:
+          type: string
+      type: object
+    estadistiques_200_response:
+      anyOf:
+      - $ref: "#/components/schemas/RegistresEstadistics"
+      - items:
+          $ref: "#/components/schemas/RegistresEstadistics"
+        type: array
+

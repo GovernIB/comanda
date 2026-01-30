@@ -7,6 +7,11 @@
 	<version>0.1.0</version>
 	<packaging>pom</packaging>
 	<properties>
+		<!-- Versió de l'aplicació COMANDA -->
+		<comanda.version>0.1.0</comanda.version>
+		<!-- Versió de les APIs (versionat independent) -->
+		<comanda.api.version>1.0.0</comanda.api.version>
+
 		<spring-boot.version>2.7.18</spring-boot.version>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>
 		<spring.filter.version>2.1.6</spring.filter.version>
@@ -73,7 +78,6 @@
 		<module>comanda-bom</module>
 		<module>comanda-bom-ms</module>
 		<module>comanda-api-models</module>
-		<module>comanda-lib</module>
 		<module>comanda-ms-common</module>
 		<module>comanda-ms-configuracio</module>
 		<module>comanda-ms-salut</module>
@@ -90,12 +94,12 @@
 		<module>comanda-back</module>
 		<module>comanda-api-utils</module>
 		<module>comanda-api-interna</module>
-		<module>comanda-api-clients/comanda-api-client-salut-v1</module>
-		<module>comanda-api-clients/comanda-api-client-estadistica-v1</module>
-		<module>comanda-api-clients/comanda-api-client-log-v1</module>
-		<module>comanda-api-clients/comanda-api-client-tasca-v1</module>
-		<module>comanda-api-clients/comanda-api-client-avis-v1</module>
-		<module>comanda-api-clients/comanda-api-client-permis-v1</module>
+		<!-- APIs Clients -->
+		<module>comanda-api-clients/comanda-api-client-monitoring-v1</module>
+		<module>comanda-api-clients/comanda-api-client-management-v1</module>
+		<!-- APIs Servers -->
+		<module>comanda-api-servers/comanda-api-server-monitoring-v1</module>
+
 		<module>comanda-ear</module>
 		<module>comanda-base</module>
 	</modules>

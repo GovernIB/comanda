@@ -24,14 +24,4 @@ public class IntegracioInfo {
     @NotNull @Size(min = 1, max = 255)
     private String nom;
 
-    // Custom builder
-    public static class IntegracioInfoBuilder {
-
-        public IntegracioInfoBuilder integracioApp(IntegracioApp app) {
-            this.codi = app.name();
-            this.nom = app.getNom();
-            return this;
-        }
-
-    }
 }

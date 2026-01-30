@@ -1,10 +1,9 @@
 package es.caib.comanda.ms.estadistica.helper;
 
-import es.caib.comanda.model.v1.estadistica.Dimensio;
-import es.caib.comanda.model.v1.estadistica.Fet;
-import es.caib.comanda.model.v1.estadistica.GenericDimensio;
-import es.caib.comanda.model.v1.estadistica.GenericFet;
-import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
+
+import es.caib.comanda.model.server.v1.monitoring.Dimensio;
+import es.caib.comanda.model.server.v1.monitoring.Fet;
+import es.caib.comanda.model.server.v1.monitoring.RegistreEstadistic;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,19 +44,16 @@ public final class EstadisticaHelper {
 
         List<Dimensio> dimensions = dimMap.entrySet().stream()
                 .filter(e -> e.getKey() != null && !e.getKey().isEmpty())
-                .map(e -> GenericDimensio.builder().codi(e.getKey()).valor(e.getValue()).build())
+                .map(e -> new Dimensio().codi(e.getKey()).valor(e.getValue()))
                 .collect(Collectors.toList());
 
         List<Fet> fets = fetsMap.entrySet().stream()
                 .filter(e -> e.getKey() != null && !e.getKey().isEmpty())
                 .filter(e -> e.getValue() != null)
-                .map(e -> GenericFet.builder().codi(e.getKey()).valor(e.getValue().doubleValue()).build())
+                .map(e -> new Fet().codi(e.getKey()).valor(e.getValue().doubleValue()))
                 .collect(Collectors.toList());
 
-        return RegistreEstadistic.builder()
-                .dimensions(dimensions)
-                .fets(fets)
-                .build();
+        return new RegistreEstadistic().dimensions(dimensions).fets(fets);
     }
 
     /**
@@ -85,10 +81,8 @@ public final class EstadisticaHelper {
         // Neteja elements nuls
         dims.removeIf(Objects::isNull);
         fs.removeIf(Objects::isNull);
-        return RegistreEstadistic.builder()
-                .dimensions(dims)
-                .fets(fs)
-                .build();
+
+        return new RegistreEstadistic().dimensions(dims).fets(fs);
     }
 
     /**

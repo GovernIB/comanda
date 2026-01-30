@@ -57,9 +57,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EstadisticaHelper {
 
-    @Value("${" + BaseConfig.PROP_STATS_AUTH_USER + "}")
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_USER + ":}")
     private String statsAuthUser;
-    @Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + "}")
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + ":}")
     private String statsAuthPassword;
 
     @Lazy

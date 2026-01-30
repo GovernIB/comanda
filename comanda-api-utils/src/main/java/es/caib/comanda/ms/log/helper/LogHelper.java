@@ -1,7 +1,7 @@
 package es.caib.comanda.ms.log.helper;
 
-import es.caib.comanda.model.v1.log.FitxerContingut;
-import es.caib.comanda.model.v1.log.FitxerInfo;
+import es.caib.comanda.model.server.v1.monitoring.FitxerContingut;
+import es.caib.comanda.model.server.v1.monitoring.FitxerInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 
@@ -47,11 +47,11 @@ public class LogHelper {
                     var dataCreacio = sdf.format(new Date(attr.creationTime().toMillis()));
                     var dataModificacio = sdf.format(new Date(attr.lastModifiedTime().toMillis()));
                     var mida = file.length();
-                    var fitxer = FitxerInfo.builder().nom(nom)
+                    var fitxer = new FitxerInfo().nom(nom)
                             .mida(mida)
                             .mimeType(getMimeTypeByExtension(nom))
                             .dataCreacio(dataCreacio)
-                            .dataModificacio(dataModificacio).build();
+                            .dataModificacio(dataModificacio);
                     fitxers.add(fitxer);
                 } catch (Exception ex) {
                     log.error("Errror obtenint la info del fitxer " + f.getFileName(), ex);
@@ -67,11 +67,11 @@ public class LogHelper {
 
         try {
             if (directoriPath == null || directoriPath.isEmpty()) {
-                return FitxerContingut.builder().build();
+                return new FitxerContingut();
             }
             var filePath = Paths.get(directoriPath, nom);
             if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-                return FitxerContingut.builder().build();
+                return new FitxerContingut();
             }
             var file = filePath.toFile();
             var attr = Files.readAttributes(filePath, BasicFileAttributes.class);
@@ -86,15 +86,16 @@ public class LogHelper {
                 mime = "application/zip";
                 fileName += ".zip";
             }
-            return FitxerContingut.builder().contingut(contingut)
+            return new FitxerContingut()
+                    .contingut(contingut)
                     .mimeType(mime)
                     .nom(fileName)
                     .dataCreacio(dataCreacio)
                     .dataModificacio(dataModificacio)
-                    .mida(contingut.length).build();
+                    .mida((long) contingut.length);
         } catch (IOException ex) {
             log.error("Error reading file content for " + nom, ex);
-            return FitxerContingut.builder().build();
+            return new FitxerContingut();
         }
     }
 
