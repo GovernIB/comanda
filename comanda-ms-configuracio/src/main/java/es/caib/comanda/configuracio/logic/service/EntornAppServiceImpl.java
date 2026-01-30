@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
@@ -28,6 +29,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -58,6 +60,11 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CA
 @RequiredArgsConstructor
 @Service
 public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, Long, EntornAppEntity> implements EntornAppService {
+
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_USER + ":}")
+    private String statsAuthUser;
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + ":}")
+    private String statsAuthPassword;
 
     private final AppIntegracioRepository appIntegracioRepository;
     private final SubsistemaRepository subsistemaRepository;
@@ -222,14 +229,14 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
     }
 
-    private static HttpHeaders getLogsAuthHeaders() {
+    private HttpHeaders getLogsAuthHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth("USER", "PASSWORD"); // TODO
+        headers.setBasicAuth(statsAuthUser, statsAuthPassword);
         return headers;
     }
 
     @RequiredArgsConstructor
-    private static class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
+    private class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
         private final RestTemplate restTemplate;
 
         @Override
@@ -249,13 +256,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public static class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
+    public class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
         private final RestTemplate restTemplate;
         private final EntornAppRepository entornAppRepository;
 
         @Getter
         @AllArgsConstructor
-        public static class DescarregarLogParams implements Serializable {
+        public class DescarregarLogParams implements Serializable {
             private Long entornAppId;
             private String nomFitxer;
         }
@@ -285,7 +292,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public static class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
+    public class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
         private final RestTemplate restTemplate;
 
         @Override
