@@ -31,6 +31,7 @@ import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/Mu
 import {Cancel, CheckCircle} from '@mui/icons-material';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
+import {useEffect} from "react";
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -224,11 +225,20 @@ const AppsEntorns: React.FC = () => {
 export const AppForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
+    const { isReady: apiIsReady, getOne: apiGetOne } = useResourceApiService('app');
+    const [app, setApp] = React.useState<any>()
     const { setMarginsDisabled } = useBaseAppContext();
     React.useEffect(() => {
         setMarginsDisabled(true);
         return () => setMarginsDisabled(false);
     }, []);
+
+    useEffect(() => {
+        if (apiIsReady && id) {
+            apiGetOne(id)
+                .then((response) => setApp(response))
+        }
+    }, [id, apiIsReady]);
 
     const formTabs: FormTabsValue[] = [
         {
@@ -239,7 +249,7 @@ export const AppForm: React.FC = () => {
         },
     ];
 
-    const formTitle = id ? t($ => $.page.apps.update) : t($ => $.page.apps.create);
+    const formTitle = id ? (t($ => $.page.apps.update)+` '${app?.nom}'`) : t($ => $.page.apps.create);
 
     return (
         <MuiForm
