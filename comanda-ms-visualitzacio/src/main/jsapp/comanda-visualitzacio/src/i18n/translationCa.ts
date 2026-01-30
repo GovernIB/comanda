@@ -260,6 +260,11 @@ const translationCa = {
                 title: "Sistema",
                 noInfo: "No hi ha informació sobre detalls de l'aplicació",
             },
+            memoria: {
+                title: "Memoria del sistema",
+                espaiMeoria: "Espai en memoria emprat: <strong>{{emprat}}</strong> de <strong>{{total}}</strong>",
+                espaiDisc: "Espai en disc emprat: <strong>{{emprat}}</strong> de <strong>{{total}}</strong>",
+            },
             estats: {
                 title: "Estats",
             },
