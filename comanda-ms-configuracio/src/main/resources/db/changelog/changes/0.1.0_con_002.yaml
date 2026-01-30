@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-11-01
+      author: limit
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: jdk_version
+                  type: VARCHAR(10)
+              - column:
+                  name: revisio
+                  type: VARCHAR(64)
+            tableName: com_entorn_app

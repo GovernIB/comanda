@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: salut-change-2473-1
+      author: Limit
+      changes:
+        - modifyDataType:
+            tableName: ${db_prefix}salut_integracio
+            columnName: codi
+            newDataType: varchar(32 ${varcharUnit})
+        - modifyDataType:
+            tableName: ${db_prefix}salut_subsistema
+            columnName: codi
+            newDataType: varchar(64 ${varcharUnit})

@@ -1,0 +1,122 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-params-02
+      author: limit
+      changes:
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Scheduler"
+              - column:
+                  name: SUBGRUP
+                  value: "Pool"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.scheduler.pool.size"
+              - column:
+                  name: NOM
+                  value: "Mida del pool de fils del planificador de tasques en segon pla"
+              - column:
+                  name: NOM_KEY
+                  value: null
+              - column:
+                  name: DESCRIPCIO
+                  value: "Defineix el nombre de fils disponibles al planificador de tasques en segon pla. Aquest component no executa la càrrega pesada, sinó que s’encarrega d’orquestrar i programar quan s’han de llançar les tasques cap al pool de executadors. Un valor massa baix pot provocar retards en la planificació si hi ha molts esdeveniments a la vegada, mentre que un valor massa alt pot consumir recursos innecessaris"
+              - column:
+                  name: DESCRIPCIO_KEY
+                  value: null
+              - column:
+                  name: VALOR
+                  value: "100"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+              - column:
+                  name: GRUP_KEY
+                  value: null
+              - column:
+                  name: SUBGRUP_KEY
+                  value: null
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Scheduler"
+              - column:
+                  name: SUBGRUP
+                  value: "Pool"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.worker.pool.size"
+              - column:
+                  name: NOM
+                  value: "Nombre de fils del pool de executors de tasques en segon pla"
+              - column:
+                  name: NOM_KEY
+                  value: null
+              - column:
+                  name: DESCRIPCIO
+                  value: "Indica quants fils poden executar tasques en paral·lel dins el pool d'executors. Cada fil pot processar una tasca alhora, de manera que aquest paràmetre determina la capacitat de processament simultani de l’aplicació. Si el valor és massa baix, les tasques quedaran en cua esperant torn; si és massa alt, es poden crear massa fils i saturar els recursos del servidor. Cal ajustar-lo segons la potència de la màquina i la càrrega de treball prevista, per aconseguir un equilibri entre rendiment i ús eficient dels recursos"
+              - column:
+                  name: DESCRIPCIO_KEY
+                  value: null
+              - column:
+                  name: VALOR
+                  value: "4"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+              - column:
+                  name: GRUP_KEY
+                  value: null
+              - column:
+                  name: SUBGRUP_KEY
+                  value: null
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Scheduler"
+              - column:
+                  name: SUBGRUP
+                  value: "Pool"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.worker.queue.size"
+              - column:
+                  name: NOM
+                  value: "Capacitat de la cua de tasques pendents"
+              - column:
+                  name: NOM_KEY
+                  value: null
+              - column:
+                  name: DESCRIPCIO
+                  value: "Estableix quantes tasques poden quedar en cua quan tots els fils del pool de executors estan ocupats. Aquesta cua actua com a coixí entre la càrrega d’entrada i la capacitat real de processament. Si la cua és massa petita i arriben moltes peticions, es poden rebutjar tasques amb errors de saturació. Si és massa gran, es poden acumular moltes tasques pendents i augmentar la latència de processament. El valor òptim depèn del volum de feina i del temps mitjà d’execució de cada tasca, i s’ha d’ajustar per evitar tant la pèrdua de peticions com l’acumulació excessiva"
+              - column:
+                  name: DESCRIPCIO_KEY
+                  value: null
+              - column:
+                  name: VALOR
+                  value: "200"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+              - column:
+                  name: GRUP_KEY
+                  value: null
+              - column:
+                  name: SUBGRUP_KEY
+                  value: null

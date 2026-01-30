@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: avis-upd-table-1
+      author: limit
+      changes:
+        - addColumn:
+            tableName: com_avis
+            columns:
+              - column:
+                  name: url
+                  type: varchar(255)
+              - column:
+                  name: responsable
+                  type: varchar(128)
+              - column:
+                  name: grup
+                  type: varchar(128)
+
+        - createTable:
+            tableName: com_avis_usuari
+            columns:
+              - column:
+                  name: avis_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: usuari
+                  type: varchar(255)
+
+        - addForeignKeyConstraint:
+            baseTableName: com_avis_usuari
+            baseColumnNames: avis_id
+            constraintName: com_avisusr_avis_fk
+            referencedTableName: com_avis
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            tableName: com_avis_grup
+            columns:
+              - column:
+                  name: avis_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: grup
+                  type: varchar(255)
+
+        - addForeignKeyConstraint:
+            baseTableName: com_avis_grup
+            baseColumnNames: avis_id
+            constraintName: com_avisgrp_avis_fk
+            referencedTableName: com_avis
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: avis-upd-table-2
+      author: limit
+      changes:
+        - createIndex:
+            indexName: com_avis_lastmod_date_i
+            tableName: com_avis
+            columns:
+              - column:
+                  name: lastmod_date

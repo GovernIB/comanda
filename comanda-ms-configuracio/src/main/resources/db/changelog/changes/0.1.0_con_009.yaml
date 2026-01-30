@@ -1,0 +1,125 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-params-03
+      author: limit
+      changes:
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Tasques"
+              - column:
+                  name: SUBGRUP
+                  value: "Borrat"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.tasca.borrat.dies"
+              - column:
+                  name: NOM
+                  value: "Número de dies que hem de mantenir les tasques finalitzades en el sistema"
+              - column:
+                  name: NOM_KEY
+                  value: null
+              - column:
+                  name: DESCRIPCIO
+                  value: "Un valor menor que 0 indica que no es borren les tasques finalitzades"
+              - column:
+                  name: DESCRIPCIO_KEY
+                  value: null
+              - column:
+                  name: VALOR
+                  value: "10"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+              - column:
+                  name: GRUP_KEY
+                  value: null
+              - column:
+                  name: SUBGRUP_KEY
+                  value: null
+
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Tasques"
+              - column:
+                  name: SUBGRUP
+                  value: "Borrat"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.tasca.pendent.borrat.dies"
+              - column:
+                  name: NOM
+                  value: "Número de dies que hem de mantenir les tasques NO finalitzades en el sistema"
+              - column:
+                  name: NOM_KEY
+                  value: null
+              - column:
+                  name: DESCRIPCIO
+                  value: "El valor 0 indica que no es borren les tasques no finalitzades"
+              - column:
+                  name: DESCRIPCIO_KEY
+                  value: null
+              - column:
+                  name: VALOR
+                  value: "90"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+              - column:
+                  name: GRUP_KEY
+                  value: null
+              - column:
+                  name: SUBGRUP_KEY
+                  value: null
+
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Avisos"
+              - column:
+                  name: SUBGRUP
+                  value: "Borrat"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.avis.borrat.dies"
+              - column:
+                  name: NOM
+                  value: "Número de dies que hem de mantenir els avisos en el sistema"
+              - column:
+                  name: NOM_KEY
+                  value: null
+              - column:
+                  name: DESCRIPCIO
+                  value: "El valor 0 indica que no es borren els avisos"
+              - column:
+                  name: DESCRIPCIO_KEY
+                  value: null
+              - column:
+                  name: VALOR
+                  value: "10"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+              - column:
+                  name: GRUP_KEY
+                  value: null
+              - column:
+                  name: SUBGRUP_KEY
+                  value: null
+

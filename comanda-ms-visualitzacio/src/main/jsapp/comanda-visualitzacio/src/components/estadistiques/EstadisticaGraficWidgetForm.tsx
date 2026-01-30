@@ -107,6 +107,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
             initializedRef.current = true;
         }
     }, [data]);
+    const indicadorNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
     return (
         <Grid container spacing={2}>
@@ -123,7 +124,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                                     <Grid size={4}>
                                         <FormFieldCustomAdvancedSearch
                                             name="indicador"
-                                            namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]}
+                                            namedQueries={indicadorNamedQueries}
                                             advancedSearchColumns={columnesIndicador}
                                             advancedSearchDataGridProps={{ rowHeight: 30, }}
                                             advancedSearchDialogHeight={500}

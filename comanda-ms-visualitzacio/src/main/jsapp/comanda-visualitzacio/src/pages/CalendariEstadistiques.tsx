@@ -541,10 +541,10 @@ const CalendariEstadistiques: React.FC = () => {
                     }}
                     datesSet={(dateInfo) => {
                         // When month changes, update the current view month and year
-                        const startDate = dayjs(dateInfo.start);
-                        setCurrentViewMonth(startDate.date() == 1 ? startDate.month() : startDate.month() + 1);
-                        setCurrentViewYear(startDate.month() == 11 && startDate.date() > 1 ? startDate.year() + 1 : startDate.year());
-                        console.log('Current view month:', currentViewMonth, 'Current view year:', currentViewYear);
+                        const startDate = dayjs(dateInfo.view.currentStart);
+                        setCurrentViewMonth(startDate.month());
+                        setCurrentViewYear(startDate.year());
+                        console.log('Current view month:', startDate.month(), 'Current view year:', startDate.year());
                         console.log('Start date:', startDate);
                         console.log(dateInfo);
                     }}

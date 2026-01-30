@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-33-01
+      author: limit
+      changes:
+        - createTable:
+            tableName: ${db_prefix}parametre
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}parametre_pk
+              - column:
+                  name: grup
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subgrup
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tipus
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: codi
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nom
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nom_key
+                  type: VARCHAR(128)
+              - column:
+                  name: descripcio
+                  type: VARCHAR(1024)
+              - column:
+                  name: descripcio_key
+                  type: VARCHAR(128)
+              - column:
+                  name: valor
+                  type: VARCHAR(255)
+              - column:
+                  name: editable
+                  type: BOOLEAN
+              - column:
+                  name: grup_key
+                  type: VARCHAR(128)
+              - column:
+                  name: subgrup_key
+                  type: VARCHAR(128)
+  - changeSet:
+      id: con-change-33-02
+      author: limit
+      changes:
+        - addUniqueConstraint:
+            tableName: ${db_prefix}parametre
+            columnNames: codi
+            constraintName: ${db_prefix}parametre_codi_uk

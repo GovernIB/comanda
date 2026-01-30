@@ -134,7 +134,7 @@ const Indicadors: React.FC = () => {
                         <Grid size={12}>
                             <FormFieldCustomAdvancedSearch
                                 name="indicadorComptadorPerMitjana"
-                                namedQueries={["groupByNom"]}
+                                // namedQueries={[`filterByAppGroupByNom:${data?.aplicacio?.id}`]} TODO S'ha de filtrar per tots els indicadors de la mateixa app?
                                 advancedSearchColumns={columnesIndicador}
                                 advancedSearchDataGridProps={{ rowHeight: 30 }}
                                 advancedSearchDialogHeight={500}

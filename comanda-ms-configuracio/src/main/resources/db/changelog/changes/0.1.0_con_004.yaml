@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-30-01
+      author: limit
+      changes:
+        - dropColumn:
+            tableName: ${db_prefix}entorn_app
+            columnName: info_interval
+        - dropColumn:
+            tableName: ${db_prefix}entorn_app
+            columnName: salut_interval

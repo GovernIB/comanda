@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-32-01
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}entorn_app
+            columns:
+              - column:
+                  name: compactable
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: compactacio_setmanal
+                  type: INT
+              - column:
+                  name: compactacio_mensual
+                  type: INT
+              - column:
+                  name: eliminacio
+                  type: INT
+  - changeSet:
+      id: con-change-32-02
+      author: limit
+      changes:
+        - modifyDataType:
+            tableName: ${db_prefix}app_subsistema
+            columnName: codi
+            newDataType: varchar(32 ${varcharUnit})
+  - changeSet:
+      id: con-change-32-03
+      author: limit
+      changes:
+        - modifyDataType:
+            tableName: ${db_prefix}integracio
+            columnName: codi
+            newDataType: varchar(32 ${varcharUnit})
