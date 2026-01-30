@@ -350,6 +350,7 @@ const Integracions: React.FC<{
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsTotals)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigTotal)}
