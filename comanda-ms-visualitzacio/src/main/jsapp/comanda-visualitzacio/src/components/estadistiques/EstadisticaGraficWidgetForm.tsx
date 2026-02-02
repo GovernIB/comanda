@@ -107,7 +107,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
             initializedRef.current = true;
         }
     }, [data]);
-    const indicadorNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
+    const indicadorDimensioNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
     return (
         <Grid container spacing={2}>
@@ -124,7 +124,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                                     <Grid size={4}>
                                         <FormFieldCustomAdvancedSearch
                                             name="indicador"
-                                            namedQueries={indicadorNamedQueries}
+                                            namedQueries={indicadorDimensioNamedQueries}
                                             advancedSearchColumns={columnesIndicador}
                                             advancedSearchDataGridProps={{ rowHeight: 30, }}
                                             advancedSearchDialogHeight={500}
@@ -137,7 +137,7 @@ const EstadisticaGraficWidgetForm: React.FC = () => {
                             )}
                             { isUnIndicadorAmbDescomposicio && (
                                 <>
-                                    <Grid size={6}><FormField name="descomposicioDimensio" namedQueries={["groupByNom", `filterByApp:${data?.aplicacio?.id}`]} /></Grid>
+                                    <Grid size={6}><FormField name="descomposicioDimensio" namedQueries={indicadorDimensioNamedQueries} /></Grid>
                                     <Grid size={6}><FormField name="agruparPerDimensioDescomposicio" type={"checkbox"} onChange={handleAgruparPerDimensioChange} /></Grid>
                                 </>
                             )}

@@ -21,10 +21,10 @@ import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo;
 import es.caib.comanda.model.v1.estadistica.IndicadorDesc;
 import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
 import es.caib.comanda.model.v1.estadistica.RegistresEstadistics;
-import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -57,6 +57,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EstadisticaHelper {
 
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_USER + "}")
+    private String statsAuthUser;
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + "}")
+    private String statsAuthPassword;
+
     @Lazy
     private final EstadisticaHelper self = this;
 
@@ -67,7 +72,6 @@ public class EstadisticaHelper {
     private final FetRepository fetRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
-    private final ParametresHelper parametresHelper;
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
@@ -210,13 +214,11 @@ public class EstadisticaHelper {
         if (!entornApp.isEstadisticaAuth()) {
             return null;
         }
-        String user = parametresHelper.getParametreText(BaseConfig.PROP_STATS_AUTH_USER);
-        String password = parametresHelper.getParametreText(BaseConfig.PROP_STATS_AUTH_PASSWORD);
-        if (user == null || password == null) {
+        if (statsAuthUser == null || statsAuthPassword == null) {
             return null;
         }
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.set("Authorization", basicAuthHeader(user, password));
+        headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
         return new org.springframework.http.HttpEntity<>(headers);
     }
 
