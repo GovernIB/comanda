@@ -17,9 +17,15 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
-import { GridSortModel, useGridApiRef } from '@mui/x-data-grid-pro';
+import {
+    gridRowTreeSelector,
+    GridSortModel,
+    GridTreeDataGroupingCell,
+    useGridApiContext,
+    useGridApiRef, useGridSelector
+} from '@mui/x-data-grid-pro';
 import dayjs from 'dayjs';
-import { SxProps } from '@mui/material';
+import {Chip, SxProps } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
 
@@ -252,6 +258,19 @@ const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
 const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
 
+function countLeaves(nodeId:any, tree:any) {
+    const node = tree[nodeId];
+    if (!node) return 0;
+
+    if (node?.children == null || node?.children?.length === 0) {
+        return 1; // tarea
+    }
+
+    return node.children.reduce(
+        (sum:number, childId:any) => sum + countLeaves(childId, tree),
+        0
+    );
+}
 const Tasca = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string>();
@@ -269,7 +288,21 @@ const Tasca = () => {
         1.5,
         false,
         false,
-        { valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value?.startsWith?.(INVALID_ENTORNAPP) ? treePathFormatInvalidEntornApp(value) : value });
+        {
+            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value?.startsWith?.(INVALID_ENTORNAPP) ? treePathFormatInvalidEntornApp(value) : value,
+            renderCell: (params: any) => {
+                const apiRef = useGridApiContext();
+                const rowTree = useGridSelector(apiRef, gridRowTreeSelector);
+
+                const count = countLeaves(params.id, rowTree)
+                return (
+                        <GridTreeDataGroupingCell {...params} formattedValue={<>
+                            {params.formattedValue}
+                            {!params?.row?.id && <Chip label={count} sx={{ml: 1}}/>}
+                        </>} hideDescendantCount />
+                );
+            },
+        });
     const columns = [
         ...(!treeView
             ? [
