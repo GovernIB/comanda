@@ -205,7 +205,7 @@ const EstatsBarCard: React.FC<{
     );
 };
 
-const PeticionsOkError: React.FC<{ ok?: any; error?: any }> = props => {
+const PeticionsOkError: React.FC<{ ok?: string|number; error?: string|number }> = props => {
     const { ok, error } = props;
     const theme = useTheme();
     return (
@@ -358,6 +358,7 @@ const Integracions: React.FC<{
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsPeriode)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigPeriode)}
@@ -411,12 +412,14 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsTotals)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigTotal)}
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsPeriode)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigPeriode)}
