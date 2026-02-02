@@ -864,6 +864,7 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
             <Grid size={{ sm: 12, lg: 6 }}>
                 <DetallInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
+            {/* Sense el breakpoint xs: 12 el contenidor no pareix ocupar el tamany que toca quan es fa la pantalla petita */}
             <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
                 <MeoriaInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
