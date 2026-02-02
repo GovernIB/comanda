@@ -205,7 +205,7 @@ const EstatsBarCard: React.FC<{
     );
 };
 
-const PeticionsOkError: React.FC<{ ok?: number; error?: number }> = props => {
+const PeticionsOkError: React.FC<{ ok?: any; error?: any }> = props => {
     const { ok, error } = props;
     const theme = useTheme();
     return (
@@ -696,7 +696,7 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
 //     );
 // };
 
-function convertirAMegas(valor) {
+function convertirAMegas(valor:string|undefined) {
     if (!valor) return 0;
 
     const texto = valor.replace(',', '.').toUpperCase();

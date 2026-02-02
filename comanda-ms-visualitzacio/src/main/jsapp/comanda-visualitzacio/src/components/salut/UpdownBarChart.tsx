@@ -72,7 +72,7 @@ const UpdownBarChart: React.FC<{
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
 
-    const series = [
+    const series:any = [
         {
             data: seriesUp,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP + TITLE),
