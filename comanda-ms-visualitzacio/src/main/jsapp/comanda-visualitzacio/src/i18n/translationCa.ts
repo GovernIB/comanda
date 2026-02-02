@@ -262,8 +262,8 @@ const translationCa = {
             },
             memoria: {
                 title: "Memoria del sistema",
-                espaiMeoria: "Espai en memoria emprat: <strong>{{emprat}}</strong> de <strong>{{total}}</strong>",
-                espaiDisc: "Espai en disc emprat: <strong>{{emprat}}</strong> de <strong>{{total}}</strong>",
+                espaiMeoria: "Espai en memòria disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
+                espaiDisc: "Espai en disc disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
             },
             estats: {
                 title: "Estats",

@@ -738,7 +738,7 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
                     <Trans
                         i18nKey={$ => $.page.salut.memoria.espaiMeoria}
                         values={{
-                            emprat: memoriaDisponible,
+                            disp: memoriaDisponible,
                             total: memoriaTotal,
                         }}
                         components={{
@@ -756,7 +756,7 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
                     <Trans
                         i18nKey={$ => $.page.salut.memoria.espaiDisc}
                         values={{
-                            emprat: discDisponible,
+                            disp: discDisponible,
                             total: discTotal,
                         }}
                         components={{

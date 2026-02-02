@@ -261,9 +261,9 @@ const translationEn: translationResourcesType = {
                 noInfo: "There is no information about application details",
             },
             memoria: {
-                title: "Memoria del sistema",
-                espaiMeoria: "Espacio de memoria utilizado: <strong>{{emprat}}</strong> de <strong>{{total}}</strong>",
-                espaiDisc: "Espacio en disco utilizado: <strong>{{emprat}}</strong> de <strong>{{total}}</strong>",
+                title: "System Memory",
+                espaiMeoria: "Available memory: <strong>{{disp}}</strong> of <strong>{{total}}</strong>",
+                espaiDisc: "Available disk space: <strong>{{disp}}</strong> of <strong>{{total}}</strong>",
             },
             estats: {
                 title: "States",
