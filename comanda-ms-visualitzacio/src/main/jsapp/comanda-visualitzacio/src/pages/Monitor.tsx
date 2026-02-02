@@ -22,6 +22,8 @@ const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
     { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' },
     { value: 'CONFIGURACIO', labelKey: 'page.monitors.modulEnum.configuracio' },
+    { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
+    { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
 ];
 
 type TabMonitorProps = {

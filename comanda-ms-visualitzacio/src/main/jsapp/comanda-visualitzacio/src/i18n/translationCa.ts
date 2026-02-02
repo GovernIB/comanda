@@ -503,6 +503,8 @@ const translationCa = {
                 salut: "Salut",
                 estadistica: "Estadística",
                 configuracio: "Configuració",
+                tasca: "Tasca",
+                avis: "Avís",
             },
         },
         widget: {

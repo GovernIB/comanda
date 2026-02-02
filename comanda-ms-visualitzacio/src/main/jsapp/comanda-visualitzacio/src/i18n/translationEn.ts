@@ -503,6 +503,8 @@ const translationEn: translationResourcesType = {
                 salut: "Health",
                 estadistica: "Statistics",
                 configuracio: "Configuration",
+                tasca: "Task",
+                avis: "Notice",
             },
         },
         widget: {
