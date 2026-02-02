@@ -864,7 +864,7 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
             <Grid size={{ sm: 12, lg: 6 }}>
                 <DetallInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
-            <Grid size={{ sm: 12, lg: 6 }}>
+            <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
                 <MeoriaInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
