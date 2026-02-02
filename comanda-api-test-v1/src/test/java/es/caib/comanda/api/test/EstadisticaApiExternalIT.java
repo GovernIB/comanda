@@ -4,18 +4,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import es.caib.comanda.api.v1.salut.ComandaAppSalutApi;
-import es.caib.comanda.model.v1.salut.AppInfo;
-import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.api.v1.monitoring.ComandaAppEstadistiquesApi;
+import es.caib.comanda.model.v1.monitoring.EstadistiquesInfo;
+import es.caib.comanda.model.v1.monitoring.RegistresEstadistics;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SalutApiExternalIT {
+public class EstadisticaApiExternalIT {
 
-    private static ComandaAppSalutApi api;
+    private static ComandaAppEstadistiquesApi api;
     private static ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false)
@@ -27,24 +27,26 @@ public class SalutApiExternalIT {
         System.setProperty("javax.net.ssl.trustStore", "/home/siona/Feina/Server/webapps/config/keystores/truststore.jks");
         System.setProperty("javax.net.ssl.trustStorePassword", "******");
         System.setProperty(ClientProps2.PROP_BASE, "https://dev.caib.es/notibapi/interna");
+        System.setProperty(ClientProps2.PROP_USER, "$com_not");
+        System.setProperty(ClientProps2.PROP_PWD, "******");
 
         String base = ClientProps2.get(ClientProps2.PROP_BASE).orElse(null);
         Assumptions.assumeTrue(base != null && !base.isBlank(),
                 () -> "SKIPPED: define -D" + ClientProps2.PROP_BASE + "=<baseUrl> to run these tests");
-        api = ApiClientFactory.salutApi();
+        api = ApiClientFactory.estadisticaApi();
     }
 
     @Test
-    void salut_ok() throws Exception {
-        SalutInfo salut = api.salut();
-        System.out.println(objectMapper.writeValueAsString(salut));
-        assertThat(salut).isNotNull();
+    void estadistiques_ok() throws Exception {
+        RegistresEstadistics res = api.estadistiques();
+        System.out.println(objectMapper.writeValueAsString(res));
+        assertThat(res).isNotNull();
     }
 
     @Test
-    void salutInfo_ok() throws Exception {
-        AppInfo info = api.salutInfo();
-        System.out.println(objectMapper.writeValueAsString(info));
-        assertThat(info).isNotNull();
+    void estadistiques_info() throws Exception {
+        EstadistiquesInfo res = api.estadistiquesInfo();
+        System.out.println(objectMapper.writeValueAsString(res));
+        assertThat(res).isNotNull();
     }
 }

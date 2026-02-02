@@ -2,19 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>es.caib.comanda</groupId>
-        <artifactId>comanda</artifactId>
-        <version>0.1.0</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
-    <artifactId>comanda-api-test</artifactId>
+    <groupId>es.caib.comanda</groupId>
+    <artifactId>comanda-api-test-v1</artifactId>
     <version>0.1.0</version>
-    <name>comanda-api-test</name>
+    <name>comanda-api-test-v1</name>
     <description>Tests d'integració externs per provar les crides de comanda-lib contra un servidor indicat per paràmetres</description>
 
     <properties>
-        <comanda.api.version>0.1.0.1</comanda.api.version>
+        <comanda.api.version>1.0.0</comanda.api.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,30 +17,17 @@
     </properties>
 
     <dependencies>
+        <!-- Clients generats per fer crides a un segon servidor (tasques, avisos i permisos) -->
         <dependency>
             <groupId>es.caib.comanda</groupId>
-            <artifactId>comanda-lib</artifactId>
+            <artifactId>comanda-api-client-monitoring-v1</artifactId>
             <version>${comanda.api.version}</version>
         </dependency>
-
         <!-- Clients generats per fer crides a un segon servidor (salut, estadistica i log) -->
         <dependency>
             <groupId>es.caib.comanda</groupId>
-            <artifactId>comanda-api-client-salut-v1</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>es.caib.comanda</groupId>
-            <artifactId>comanda-api-client-estadistica-v1</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>es.caib.comanda</groupId>
-            <artifactId>comanda-api-client-log-v1</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
+            <artifactId>comanda-api-client-management-v1</artifactId>
+            <version>${comanda.api.version}</version>
         </dependency>
 
         <dependency>

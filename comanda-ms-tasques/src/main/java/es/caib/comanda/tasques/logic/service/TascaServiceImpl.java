@@ -1,5 +1,7 @@
 package es.caib.comanda.tasques.logic.service;
 
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
@@ -134,6 +136,16 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
                 collect(Collectors.toList());
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
     }*/
+
+    @Override
+    protected void afterConversion(TascaEntity entity, Tasca resource) {
+        super.afterConversion(entity, resource);
+
+        App app = tasquesClientHelper.appById(entity.getAppId());
+        Entorn entorn = tasquesClientHelper.entornById(entity.getEntornId());
+        resource.setAppCodi(app != null ? app.getCodi() : null);
+        resource.setEntornCodi(entorn != null ? entorn.getCodi() : null);
+    }
 
     @Override
     protected Specification<TascaEntity> additionalSpecification(String[] namedQueries) {

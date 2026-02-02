@@ -8,11 +8,11 @@ Representa un avís o notificació publicada a COMANDA
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**appCodi** | **String** | Codi de l&#39;aplicació que publica l&#39;avís |  [optional] |
-|**entornCodi** | **String** | Codi de l&#39;entorn de l&#39;aplicació |  [optional] |
-|**identificador** | **String** | Identificador únic de l&#39;avís |  [optional] |
-|**tipus** | **AvisTipus** |  |  [optional] |
-|**nom** | **String** | Títol de l&#39;avís |  [optional] |
+|**appCodi** | **String** | Codi de l&#39;aplicació que publica l&#39;avís |  |
+|**entornCodi** | **String** | Codi de l&#39;entorn de l&#39;aplicació |  |
+|**identificador** | **String** | Identificador únic de l&#39;avís |  |
+|**tipus** | **AvisTipus** |  |  |
+|**nom** | **String** | Títol de l&#39;avís |  |
 |**descripcio** | **String** | Descripció de l&#39;avís |  [optional] |
 |**dataInici** | [**OffsetDateTime**](OffsetDateTime.md) |  |  [optional] |
 |**dataFi** | [**OffsetDateTime**](OffsetDateTime.md) |  |  [optional] |

@@ -71,6 +71,8 @@ public class Avis extends BaseResource<Long> {
     private List<String> grupsAmbPermis;
 
     @Transient private String[] treePath;
+    @Transient private String entornCodi;
+    @Transient private String appCodi;
 
     @Getter
     @Setter

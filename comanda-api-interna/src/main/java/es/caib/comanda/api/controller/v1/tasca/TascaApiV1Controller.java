@@ -77,6 +77,14 @@ public class TascaApiV1Controller extends BaseController {
             @RequestBody(description = "Dades de la tasca a publicar", required = true,
                     content = @Content(schema = @Schema(implementation = Tasca.class)))
             @org.springframework.web.bind.annotation.RequestBody Tasca tasca) {
+
+        if (tasca.getIdentificador() == null || tasca.getAppCodi() == null || tasca.getEntornCodi() == null || tasca.getNom() == null
+                || tasca.getTipus() == null || tasca.getRedireccio() == null || tasca.getEstat() == null) {
+            return ResponseEntity.badRequest().body("Cal informar els camps identificador, appCodi, entornCodi, nom, tipus, redireccio i estat");
+        }
+        if (!existApp(tasca.getAppCodi())) return ResponseEntity.badRequest().body("No existeix l'aplicació amb el codi indicat");
+        if (!existEntorn(tasca.getEntornCodi())) return ResponseEntity.badRequest().body("No existeix l'entorn amb el codi indicat");
+
         jmsTemplate.convertAndSend(CUA_TASQUES, tasca);
         return ResponseEntity.ok("Missatge enviat a " + CUA_TASQUES);
     }
@@ -241,7 +249,7 @@ public class TascaApiV1Controller extends BaseController {
     })
     public ResponseEntity<TascaPage> obtenirLlistatTasques(
             @Parameter(name="quickFilter", description = "Filtre ràpid") @RequestParam(value = "quickFilter", required = false, defaultValue = "") String quickFilter,
-            @Parameter(name="filter", description = "Filtre avançat en format JSON o expressió del MS") @RequestParam(value = "filter", required = false, defaultValue = "{}") String filter,
+            @Parameter(name="filter", description = "Filtre avançat en format JSON o expressió del MS") @RequestParam(value = "filter", required = false, defaultValue = "") String filter,
             @Parameter(name="namedQueries", description = "Consultes predefinides") @RequestParam(value = "namedQueries", required = false) String[] namedQueries,
             @Parameter(name="perspectives", description = "Perspectives de camp") @RequestParam(value = "perspectives", required = false) String[] perspectives,
             @Parameter(name="page", description = "Número de pàgina") @RequestParam(value = "page", required = false, defaultValue = "0") String page,
@@ -290,5 +298,13 @@ public class TascaApiV1Controller extends BaseController {
         Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
         Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
         return apiClientHelper.getTasques(identificadors, appId, entornId);
+    }
+
+    private Boolean existEntorn(String entornCodi) {
+        return apiClientHelper.getEntornByCodi(entornCodi).isPresent();
+    }
+
+    private Boolean existApp(String appCodi) {
+        return apiClientHelper.getAppByCodi(appCodi).isPresent();
     }
 }

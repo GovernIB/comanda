@@ -80,6 +80,8 @@ public class Tasca extends BaseResource<Long> {
 
     @Transient private String[] treePath;
     @Transient private Long diesPerCaducar;
+    @Transient private String entornCodi;
+    @Transient private String appCodi;
 
     @Getter
     @Setter

@@ -71,6 +71,11 @@
             <artifactId>lombok-mapstruct-binding</artifactId>
             <version>0.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.13.5</version>
+        </dependency>
 
         <!-- Tests -->
         <dependency>
@@ -185,6 +190,7 @@
                             </configOptions>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
+                                <importMapping>URL=java.net.URL</importMapping>
                             </importMappings>
                             <typeMappings>
                                 <typeMapping>File=byte[]</typeMapping>
@@ -211,7 +217,7 @@
                             <generateModelTests>false</generateModelTests>
                             <generateApiTests>false</generateApiTests>
                             <generateSupportingFiles>false</generateSupportingFiles>
-                            <supportingFilesToGenerate>pom.xml</supportingFilesToGenerate>
+                            <supportingFilesToGenerate>pom.xml,JSON.java,RFC3339DateFormat.java</supportingFilesToGenerate>
                             <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
                             <configOptions>
                                 <groupId>es.caib.comanda</groupId>
@@ -219,14 +225,21 @@
                                 <artifactVersion>${comanda.api.version}</artifactVersion>
                                 <artifactDescription>Comanda - API Rest Client - Monitoring v1</artifactDescription>
                                 <dateLibrary>java8</dateLibrary>
+                                <useRuntimeException>true</useRuntimeException>
+                                <serializationLibrary>jackson</serializationLibrary>
                                 <useTags>true</useTags>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                 <java11>true</java11>
                                 <useJakartaEe>false</useJakartaEe>
                                 <usePrimitives>true</usePrimitives>
                             </configOptions>
+                            <additionalProperties>
+                                <additionalProperty>jackson=true</additionalProperty>
+                                <additionalProperty>jsr310=true</additionalProperty>
+                            </additionalProperties>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
+                                <importMapping>URL=java.net.URL</importMapping>
                             </importMappings>
                             <typeMappings>
                                 <typeMapping>File=byte[]</typeMapping>
@@ -269,6 +282,7 @@
                             </configOptions>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
+                                <importMapping>URL=java.net.URL</importMapping>
                             </importMappings>
                             <typeMappings>
                                 <typeMapping>File=byte[]</typeMapping>
@@ -279,6 +293,53 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Copiar el deserialitzador personalitzat als clients generats -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-deserializer-to-monitoring-client</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring-v1/src/main/java/es/caib/comanda/service/v1/monitoring</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/resources/openapi/templates/client</directory>
+                                    <includes>
+                                        <include>OffsetDateTimeDeserializer.java</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+<!--                    <execution>-->
+<!--                        <id>copy-deserializer-to-management-client</id>-->
+<!--                        <phase>install</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-management-v1/src/main/java/es/caib/comanda/service/v1/management</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    <directory>${project.basedir}/src/main/resources/openapi/templates/client</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>OffsetDateTimeDeserializer-management.java</include>-->
+<!--                                    </includes>-->
+<!--                                    <filtering>false</filtering>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+                </executions>
+            </plugin>
+
 
 <!--            &lt;!&ndash; Empaquetar el client generat com a JAR addicional amb classifier 'client' &ndash;&gt;-->
 <!--            <plugin>-->

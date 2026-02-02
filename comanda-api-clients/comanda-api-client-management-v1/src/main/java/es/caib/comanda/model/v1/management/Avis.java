@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import es.caib.comanda.model.v1.management.AvisTipus;
-import es.caib.comanda.model.v1.management.URL;
+import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,23 +51,23 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.17.0")
 public class Avis {
   public static final String JSON_PROPERTY_APP_CODI = "appCodi";
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
   private String appCodi;
 
   public static final String JSON_PROPERTY_ENTORN_CODI = "entornCodi";
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
   private String entornCodi;
 
   public static final String JSON_PROPERTY_IDENTIFICADOR = "identificador";
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
   private String identificador;
 
   public static final String JSON_PROPERTY_TIPUS = "tipus";
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
   private AvisTipus tipus;
 
   public static final String JSON_PROPERTY_NOM = "nom";
-  @javax.annotation.Nullable
+  @javax.annotation.Nonnull
   private String nom;
 
   public static final String JSON_PROPERTY_DESCRIPCIO = "descripcio";
@@ -105,7 +105,7 @@ public class Avis {
   public Avis() {
   }
 
-  public Avis appCodi(@javax.annotation.Nullable String appCodi) {
+  public Avis appCodi(@javax.annotation.Nonnull String appCodi) {
     
     this.appCodi = appCodi;
     return this;
@@ -115,22 +115,22 @@ public class Avis {
    * Codi de l&#39;aplicació que publica l&#39;avís
    * @return appCodi
    */
-  @javax.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_APP_CODI, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @javax.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_APP_CODI, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getAppCodi() {
     return appCodi;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_APP_CODI, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setAppCodi(@javax.annotation.Nullable String appCodi) {
+  @JsonProperty(value = JSON_PROPERTY_APP_CODI, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setAppCodi(@javax.annotation.Nonnull String appCodi) {
     this.appCodi = appCodi;
   }
 
-  public Avis entornCodi(@javax.annotation.Nullable String entornCodi) {
+  public Avis entornCodi(@javax.annotation.Nonnull String entornCodi) {
     
     this.entornCodi = entornCodi;
     return this;
@@ -140,22 +140,22 @@ public class Avis {
    * Codi de l&#39;entorn de l&#39;aplicació
    * @return entornCodi
    */
-  @javax.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_ENTORN_CODI, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @javax.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_ENTORN_CODI, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getEntornCodi() {
     return entornCodi;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_ENTORN_CODI, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setEntornCodi(@javax.annotation.Nullable String entornCodi) {
+  @JsonProperty(value = JSON_PROPERTY_ENTORN_CODI, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setEntornCodi(@javax.annotation.Nonnull String entornCodi) {
     this.entornCodi = entornCodi;
   }
 
-  public Avis identificador(@javax.annotation.Nullable String identificador) {
+  public Avis identificador(@javax.annotation.Nonnull String identificador) {
     
     this.identificador = identificador;
     return this;
@@ -165,22 +165,22 @@ public class Avis {
    * Identificador únic de l&#39;avís
    * @return identificador
    */
-  @javax.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_IDENTIFICADOR, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @javax.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_IDENTIFICADOR, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getIdentificador() {
     return identificador;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_IDENTIFICADOR, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setIdentificador(@javax.annotation.Nullable String identificador) {
+  @JsonProperty(value = JSON_PROPERTY_IDENTIFICADOR, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setIdentificador(@javax.annotation.Nonnull String identificador) {
     this.identificador = identificador;
   }
 
-  public Avis tipus(@javax.annotation.Nullable AvisTipus tipus) {
+  public Avis tipus(@javax.annotation.Nonnull AvisTipus tipus) {
     
     this.tipus = tipus;
     return this;
@@ -190,22 +190,22 @@ public class Avis {
    * Get tipus
    * @return tipus
    */
-  @javax.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_TIPUS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @javax.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_TIPUS, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public AvisTipus getTipus() {
     return tipus;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TIPUS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setTipus(@javax.annotation.Nullable AvisTipus tipus) {
+  @JsonProperty(value = JSON_PROPERTY_TIPUS, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setTipus(@javax.annotation.Nonnull AvisTipus tipus) {
     this.tipus = tipus;
   }
 
-  public Avis nom(@javax.annotation.Nullable String nom) {
+  public Avis nom(@javax.annotation.Nonnull String nom) {
     
     this.nom = nom;
     return this;
@@ -215,18 +215,18 @@ public class Avis {
    * Títol de l&#39;avís
    * @return nom
    */
-  @javax.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_NOM, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @javax.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_NOM, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getNom() {
     return nom;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_NOM, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setNom(@javax.annotation.Nullable String nom) {
+  @JsonProperty(value = JSON_PROPERTY_NOM, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setNom(@javax.annotation.Nonnull String nom) {
     this.nom = nom;
   }
 

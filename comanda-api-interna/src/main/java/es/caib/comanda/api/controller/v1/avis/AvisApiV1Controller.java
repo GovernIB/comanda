@@ -46,9 +46,9 @@ import static es.caib.comanda.ms.back.config.BaseOpenApiConfig.SECURITY_NAME;
 
 @RestController
 @RequestMapping("/avisos/v1")
-@Tag(name = "APP → COMANDA / Avisos", 
+@Tag(name = "APP → COMANDA / Avisos",
         description = "Contracte per a la gestió CRUD d'avisos a Comanda. " +
-        "Les peticions rebudes per aquest servei es processaran asíncronament, de manera que en cap cas es rebrà una resposta amb el resultat de l'operació com a resposta de les peticions.")
+                "Les peticions rebudes per aquest servei es processaran asíncronament, de manera que en cap cas es rebrà una resposta amb el resultat de l'operació com a resposta de les peticions.")
 @RequiredArgsConstructor
 @SecurityScheme(type = SecuritySchemeType.HTTP, name = SECURITY_NAME, scheme = BASIC_SECURITY_SCHEME)
 @PreAuthorize("hasRole(T(es.caib.comanda.base.config.BaseConfig).ROLE_WEBSERVICE)")
@@ -77,6 +77,13 @@ public class AvisApiV1Controller extends BaseController {
             @RequestBody(description = "Dades de l'avís a publicar", required = true,
                     content = @Content(schema = @Schema(implementation = Avis.class)))
             @org.springframework.web.bind.annotation.RequestBody Avis avis) {
+
+        if (avis.getIdentificador() == null || avis.getAppCodi() == null || avis.getEntornCodi() == null || avis.getNom() == null || avis.getTipus() == null) {
+            return ResponseEntity.badRequest().body("Cal informar els camps identificador, appCodi, entornCodi, nom i tipus");
+        }
+        if (!existApp(avis.getAppCodi())) return ResponseEntity.badRequest().body("No existeix l'aplicació amb el codi indicat");
+        if (!existEntorn(avis.getEntornCodi())) return ResponseEntity.badRequest().body("No existeix l'entorn amb el codi indicat");
+
         jmsTemplate.convertAndSend(CUA_AVISOS, avis);
         return ResponseEntity.ok("Missatge enviat a " + CUA_AVISOS);
     }
@@ -159,7 +166,7 @@ public class AvisApiV1Controller extends BaseController {
             @RequestBody(description = "Llista d'avisos a modificar", required = true,
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = Avis.class))))
             @org.springframework.web.bind.annotation.RequestBody List<Avis> avisos) {
-        
+
         // Validacions
         if (avisos == null || avisos.isEmpty()) {
             return ResponseEntity.badRequest().body("Llista buida");
@@ -186,7 +193,7 @@ public class AvisApiV1Controller extends BaseController {
         }
 
         var identificadorsExistents = avisosExistents.stream().map(a -> a.getIdentificador()).collect(Collectors.toList());
-        int enviats = 0; 
+        int enviats = 0;
         int ignorats = 0;
         for (Avis a : avisos) {
             if (identificadorsExistents.contains(a.getIdentificador())) {
@@ -240,12 +247,12 @@ public class AvisApiV1Controller extends BaseController {
             @ApiResponse(responseCode = "500", description = "Error intern")
     })
     public ResponseEntity<AvisPage> obtenirLlistatAvisos(
-            @Parameter(name="quickFilter", description = "Filtre ràpid") @RequestParam(value = "quickFilter", required = false, defaultValue = "") String quickFilter,
-            @Parameter(name="filter", description = "Filtre avançat en format JSON o expressió del MS") @RequestParam(value = "filter", required = false, defaultValue = "{}") String filter,
-            @Parameter(name="namedQueries", description = "Consultes predefinides") @RequestParam(value = "namedQueries", required = false) String[] namedQueries,
-            @Parameter(name="perspectives", description = "Perspectives de camp") @RequestParam(value = "perspectives", required = false) String[] perspectives,
-            @Parameter(name="page", description = "Número de pàgina") @RequestParam(value = "page", required = false, defaultValue = "0") String page,
-            @Parameter(name="size", description = "Mida de pàgina") @RequestParam(value = "size", required = false, defaultValue = "20") Integer size) {
+            @Parameter(name = "quickFilter", description = "Filtre ràpid") @RequestParam(value = "quickFilter", required = false, defaultValue = "") String quickFilter,
+            @Parameter(name = "filter", description = "Filtre avançat en format JSON o expressió del MS") @RequestParam(value = "filter", required = false, defaultValue = "") String filter,
+            @Parameter(name = "namedQueries", description = "Consultes predefinides") @RequestParam(value = "namedQueries", required = false) String[] namedQueries,
+            @Parameter(name = "perspectives", description = "Perspectives de camp") @RequestParam(value = "perspectives", required = false) String[] perspectives,
+            @Parameter(name = "page", description = "Número de pàgina") @RequestParam(value = "page", required = false, defaultValue = "0") String page,
+            @Parameter(name = "size", description = "Mida de pàgina") @RequestParam(value = "size", required = false, defaultValue = "20") Integer size) {
         PagedModel<EntityModel<es.caib.comanda.client.model.Avis>> result = apiClientHelper.getAvisos(
                 quickFilter,
                 filter,
@@ -290,5 +297,13 @@ public class AvisApiV1Controller extends BaseController {
         Long appId = apiClientHelper.getAppByCodi(appCodi).get().getId();
         Long entornId = apiClientHelper.getEntornByCodi(entornCodi).get().getId();
         return apiClientHelper.getAvisos(identificadors, appId, entornId);
+    }
+
+    private Boolean existEntorn(String entornCodi) {
+        return apiClientHelper.getEntornByCodi(entornCodi).isPresent();
+    }
+
+    private Boolean existApp(String appCodi) {
+        return apiClientHelper.getAppByCodi(appCodi).isPresent();
     }
 }
