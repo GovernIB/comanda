@@ -364,13 +364,13 @@ const translationCa = {
             },
             grid: {
                 groupHeader: "Nom",
-                column: {
-                    appEntorn: "Aplicació - Entorn",
+            },
+            action: {
+                obrir: "Obrir avís",
+                llegit: {
+                    label: "Marcar com a llegit",
                 },
-                action: {
-                    obrir: "Obrir avís",
-                },
-            }
+            },
         },
         alarmaConfig: {
             title: "Configuració d'alarmes",

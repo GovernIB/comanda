@@ -1,5 +1,7 @@
 package es.caib.comanda.avisos.logic.intf.model;
 
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.model.v1.avis.AvisTipus;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
@@ -37,12 +39,14 @@ import java.util.List;
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Avis.FILTER, formClass = Avis.AvisFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Avis.PERSPECTIVE_PATH),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Avis.PERSPECTIVE_ENTORN_APP),
         }
 )
 public class Avis extends BaseResource<Long> {
 
     public static final String FILTER = "FILTER";
     public static final String PERSPECTIVE_PATH = "PATH";
+    public static final String PERSPECTIVE_ENTORN_APP = "ENTORN_APP";
 
     @NotNull
     private Long entornAppId;
@@ -71,6 +75,8 @@ public class Avis extends BaseResource<Long> {
     private List<String> grupsAmbPermis;
 
     @Transient private String[] treePath;
+    @Transient private AppRef app;
+    @Transient private EntornRef entorn;
 
     @Getter
     @Setter

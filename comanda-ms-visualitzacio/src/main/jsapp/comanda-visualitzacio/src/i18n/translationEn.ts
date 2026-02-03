@@ -364,13 +364,13 @@ const translationEn: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Name",
-                column: {
-                    appEntorn: "Application - Environment",
+            },
+            action: {
+                obrir: "Open notice",
+                llegit: {
+                    label: "Mark as read",
                 },
-                action: {
-                    obrir: "Open notice",
-                },
-            }
+            },
         },
         alarmaConfig: {
             title: "Alarm configuration",

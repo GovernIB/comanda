@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
-import { useTreeData } from '../hooks/treeData';
+import {countLeaves, useTreeData} from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils';
 import {
     gridRowTreeSelector,
@@ -253,24 +253,11 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
         valueFormatter: (value) => (value ? dayjs(value).format('DD/MM/YYYY') : value),
     },
 ];
-const dataGridPerspectives = ['PATH', 'EXPIRATION'];
+const dataGridPerspectives = ['PATH', 'EXPIRATION', 'ENTORN_APP'];
 const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
 const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
 
-function countLeaves(nodeId:any, tree:any) {
-    const node = tree[nodeId];
-    if (!node) return 0;
-
-    if (node?.children == null || node?.children?.length === 0) {
-        return 1; // tarea
-    }
-
-    return node.children.reduce(
-        (sum:number, childId:any) => sum + countLeaves(childId, tree),
-        0
-    );
-}
 const Tasca = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string>();
@@ -306,16 +293,9 @@ const Tasca = () => {
     const columns = [
         ...(!treeView
             ? [
-                  { field: 'nom', flex: 1 },
-                  {
-                      field: 'treePath',
-                      flex: 1.2,
-                      headerName: t($ => $.page.tasques.grid.column.appEntorn),
-                      valueFormatter: (value: any) =>
-                          value?.[0].startsWith(INVALID_ENTORNAPP)
-                              ? treePathFormatInvalidEntornApp(value[0])
-                              : `${value?.[0]} - ${value?.[1]}`,
-                  },
+                { field: 'app', flex: 1, valueFormatter: (value: any) => value?.description, },
+                { field: 'entorn', flex: 1, valueFormatter: (value: any) => value?.description, },
+                { field: 'nom', flex: 1 },
               ]
             : []),
         ...(filter?.includes('dataFi is null')
@@ -352,6 +332,13 @@ const Tasca = () => {
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={actions}
                 {...treeDataGridProps}
+                initialState={{
+                    columns: {
+                        columnVisibilityModel: {
+                            entorn: false,
+                        },
+                    },
+                }}
             />
         </Box>
     );

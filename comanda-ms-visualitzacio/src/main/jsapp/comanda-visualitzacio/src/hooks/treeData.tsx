@@ -94,6 +94,19 @@ export const useTreeDataWithoutSwitch = (
     };
 };
 
+export function countLeaves(nodeId:any, tree:any) {
+    const node = tree[nodeId];
+    if (!node) return 0;
+
+    if (node?.children == null || node?.children?.length === 0) {
+        return 1; // hijo
+    }
+
+    return node.children.reduce(
+        (sum:number, childId:any) => sum + countLeaves(childId, tree),
+        0
+    );
+}
 export const useTreeData = (
     getTreeDataPath: (row: any) => string[],
     gridApiRef: React.RefObject<GridApiPro | null>,

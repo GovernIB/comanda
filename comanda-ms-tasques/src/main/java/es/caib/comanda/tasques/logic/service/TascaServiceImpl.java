@@ -43,6 +43,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     @PostConstruct
     public void init() {
         register(Tasca.PERSPECTIVE_PATH, new PathPerspectiveApplicator(tasquesClientHelper));
+        register(Tasca.PERSPECTIVE_ENTORN_APP, new EntornAppPerspectiveApplicator(tasquesClientHelper));
         register(Tasca.PERSPECTIVE_EXPIRATION, new ExpirationPerspectiveApplicator());
     }
 
@@ -188,6 +189,19 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
                 resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
             } else {
                 resource.setTreePath(new String[]{"INVALID_ENTORNAPP " + entity.getEntornAppId(), resource.getIdentificador()});
+            }
+        }
+    }
+
+    @AllArgsConstructor
+    public static class EntornAppPerspectiveApplicator implements PerspectiveApplicator<TascaEntity, Tasca> {
+        private TasquesClientHelper tasquesClientHelper;
+        @Override
+        public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
+            EntornApp entornApp = tasquesClientHelper.entornAppFindById(entity.getEntornAppId());
+            if (entornApp != null) {
+                resource.setApp(entornApp.getApp());
+                resource.setEntorn(entornApp.getEntorn());
             }
         }
     }

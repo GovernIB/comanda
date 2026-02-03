@@ -45,6 +45,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     @PostConstruct
     public void init() {
         register(Avis.PERSPECTIVE_PATH, new PathPerspectiveApplicator());
+        register(Avis.PERSPECTIVE_ENTORN_APP, new EntornAppPerspectiveApplicator());
     }
 
     @JmsListener(destination = CUA_AVISOS)
@@ -155,6 +156,17 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
         public void applySingle(String code, AvisEntity entity, Avis resource) throws PerspectiveApplicationException {
             EntornApp entornApp = avisClientHelper.entornAppFindById(entity.getEntornAppId());
             resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+        }
+    }
+
+    public class EntornAppPerspectiveApplicator implements PerspectiveApplicator<AvisEntity, Avis> {
+        @Override
+        public void applySingle(String code, AvisEntity entity, Avis resource) throws PerspectiveApplicationException {
+            EntornApp entornApp = avisClientHelper.entornAppFindById(entity.getEntornAppId());
+            if (entornApp != null) {
+                resource.setApp(entornApp.getApp());
+                resource.setEntorn(entornApp.getEntorn());
+            }
         }
     }
 
