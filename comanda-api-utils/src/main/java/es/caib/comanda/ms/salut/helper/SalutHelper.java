@@ -1,6 +1,5 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.model.v1.salut.AppInfo;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,17 +14,16 @@ public class SalutHelper {
 
     private static BuildInfo buildInfo;
 
-    public static AppInfo generateBasicAppInfo(String codiAplicacio, String nomAplicacio, String versio) {
-        BuildInfo buildInfo = getBuildInfo();
-        return AppInfo.builder()
-                .codi(codiAplicacio)
-                .nom(nomAplicacio)
-                .versio(versio)
-                .revisio(buildInfo.getCommitId())
-                .jdkVersion(buildInfo.getBuildJDK())
-                .data(buildInfo.getBuildDate())
-                .build();
-    }
+//    public static AppInfo generateBasicAppInfo(String codiAplicacio, String nomAplicacio, String versio) {
+//        BuildInfo buildInfo = getBuildInfo();
+//        return new AppInfo()
+//                .codi(codiAplicacio)
+//                .nom(nomAplicacio)
+//                .versio(versio)
+//                .revisio(buildInfo.getCommitId())
+//                .jdkVersion(buildInfo.getBuildJDK())
+//                .data(buildInfo.getBuildDate());
+//    }
 
 
     private static BuildInfo getBuildInfo() {

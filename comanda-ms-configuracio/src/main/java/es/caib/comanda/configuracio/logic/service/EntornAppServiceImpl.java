@@ -3,6 +3,7 @@ package es.caib.comanda.configuracio.logic.service;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
@@ -157,7 +158,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     // ACCIONS
-    public static class PingUrlAction implements ActionExecutor<EntornAppEntity, String, PingUrlResponse> {
+
+    public class PingUrlAction implements ActionExecutor<EntornAppEntity, EntornAppPingAction, PingUrlResponse> {
         private final RestTemplate restTemplate;
 
         public PingUrlAction(RestTemplate restTemplate) {
@@ -165,20 +167,20 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
 
         @Override
-        public PingUrlResponse exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
+        public PingUrlResponse exec(String code, EntornAppEntity entity, EntornAppPingAction params) throws ActionExecutionException {
             return isEndpointReachable(params);
         }
 
         @Override
-        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        public void onChange(Serializable id, EntornAppPingAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppPingAction target) {
         }
 
-        public PingUrlResponse isEndpointReachable(String url) {
+        public PingUrlResponse isEndpointReachable(EntornAppPingAction params) {
             PingUrlResponse pingUrlResponse = new PingUrlResponse();
             pingUrlResponse.setSuccess(false);
             String message = null;
             try {
-                ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.GET, null, Void.class);
+                ResponseEntity<Void> response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, buildAuthEntityIfNeeded(params.getFormData()), Void.class);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     pingUrlResponse.setSuccess(true);
                     message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
@@ -211,6 +213,23 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             }
             pingUrlResponse.setMessage(message);
             return pingUrlResponse;
+        }
+
+        private HttpEntity<Void> buildAuthEntityIfNeeded(EntornApp entornApp) {
+            if (!entornApp.isEstadisticaAuth()) {
+                return null;
+            }
+            if (statsAuthUser == null || statsAuthPassword == null) {
+                return null;
+            }
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
+            return new org.springframework.http.HttpEntity<>(headers);
+        }
+
+        private String basicAuthHeader(String user, String password) {
+            String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return "Basic " + token;
         }
     }
 

@@ -58,7 +58,7 @@ import java.util.List;
 				)
 		},
 		artifacts = {
-				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_PING_URL, formClass = String.class),
+				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_PING_URL, formClass = EntornApp.EntornAppPingAction.class),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_TOOGLE_ACTIVA, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_LLISTAR_LOGS, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_DESCARREGAR_LOG, requiresId = true, formClass = String.class),
@@ -146,6 +146,16 @@ public class EntornApp extends BaseResource<Long> {
 		return revisio != null ? revisio.substring(0, 7) : null;
 	}
 
+
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class EntornAppPingAction implements Serializable {
+		@NotNull
+		private String endpoint;
+		private EntornApp formData;
+	}
 
 	@Getter
 	@Setter

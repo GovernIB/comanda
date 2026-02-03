@@ -17,8 +17,8 @@ versio 1.1
 | :---- | :---- | :---- | :---- |
 | **Data** | **Autor** | **Versió** | **Canvis** |
 | 06/10/25 | Límit Tecnologies | 1.0 | Versió inicial |
-| 16/01/25 | Limit Tecnologies | 1.1 | Reestructuració de la API: nous mètodes, concreció de urls, hempers i exemples |
-|  |  |  |  |
+| 16/01/26 | Limit Tecnologies | 1.1 | Reestructuració de la API: nous mètodes, concreció de urls, hempers i exemples |
+| 03/02/26 | Limit Tecnologies | 1.2 | Unificació de llibreries i canvi de URLs  |
 |  |  |  |  |
 
 | Revisat per |  |  |
@@ -50,95 +50,103 @@ versio 1.1
 
 [**2\. Requisits previs	5**](#requisits-previs)
 
-[2.1. Clients	5](#clients)
+[2.1. Clients	6](#clients)
 
-[**3\. Salut	9**](#salut)
+[2.2. Servers	8](#servers)
 
-[3.1. Obtenció de informació de l’aplicació	9](#obtenció-de-informació-de-l’aplicació)
+[2.2.1. Salut	9](#salut)
 
-[Model de dades	11](#model-de-dades)
+[2.2.2. Estadistica	10](#estadistica)
 
-[3.2. Obtenció de informació de salut	13](#obtenció-de-informació-de-salut)
+[2.2.3. Log	11](#log)
 
-[Model de dades	15](#model-de-dades-1)
+[**3\. Tasques	12**](#tasques)
 
-[Helpers	21](#helpers)
+[Model de dades	17](#model-de-dades)
 
-[Model de dades internes	25](#model-de-dades-internes)
+[**4\. Avisos	19**](#avisos)
 
-[Exemples d’ús	26](#exemples-d’ús)
+[Model de dades	23](#model-de-dades-1)
 
-[**4\. Estadístiques	26**](#estadístiques)
+[**5\. Exemples	25**](#exemples)
 
-[4.1. Obtenció de informació estadística de l’aplicació	27](#obtenció-de-informació-estadística-de-l’aplicació)
+[Enviar una tasca	25](#enviar-una-tasca)
+
+[Enviar un avís	25](#enviar-un-avís)
+
+[**6\. Salut	26**](#salut-1)
+
+[6.1. Obtenció de informació de l’aplicació	26](#obtenció-de-informació-de-l’aplicació)
 
 [Model de dades	28](#model-de-dades-2)
 
-[4.2. Obtenció de dades estadístiques	29](#obtenció-de-dades-estadístiques)
+[6.2. Obtenció de informació de salut	30](#obtenció-de-informació-de-salut)
 
-[Model de dades	31](#model-de-dades-3)
+[Model de dades	32](#model-de-dades-3)
 
-[Helpers	34](#helpers-1)
+[Helpers	38](#helpers)
 
-[Exemples d’ús	36](#exemples-d’ús-1)
+[Model de dades internes	42](#model-de-dades-internes)
 
-[**5\. Logs	38**](#logs)
+[Exemples d’ús	43](#exemples-d’ús)
 
-[Model de dades	40](#model-de-dades-4)
+[**7\. Estadístiques	43**](#estadístiques)
 
-[Helpers	40](#helpers-2)
+[7.1. Obtenció de informació estadística de l’aplicació	44](#obtenció-de-informació-estadística-de-l’aplicació)
 
-[Exemples d’ús	43](#exemples-d’ús-2)
+[Model de dades	45](#model-de-dades-4)
 
-[**6\. Servers	44**](#servers)
+[7.2. Obtenció de dades estadístiques	46](#obtenció-de-dades-estadístiques)
 
-[6.1. Salut	44](#salut-1)
+[Model de dades	48](#model-de-dades-5)
 
-[6.2. Estadistica	45](#estadistica)
+[Helpers	51](#helpers-1)
 
-[6.3. Log	47](#log)
+[Exemples d’ús	53](#exemples-d’ús-1)
 
-[**7\. Tasques	49**](#tasques)
+[**8\. Logs	55**](#logs)
 
-[Model de dades	55](#model-de-dades-5)
+[Model de dades	57](#model-de-dades-6)
 
-[**8\. Avisos	57**](#avisos)
+[Helpers	57](#helpers-2)
 
-[Model de dades	61](#model-de-dades-6)
+[Exemples d’ús	60](#exemples-d’ús-2)
 
-[**9\. Exemples	63**](#exemples)
+[**Annex 1 \- Servers amb Spring	61**](#annex-1---servers-amb-spring)
 
-[Enviar una tasca	63](#enviar-una-tasca)
+[**Salut	61**](#salut-2)
 
-[Enviar un avís	63](#enviar-un-avís)
+[Estadística	61](#estadística)
 
-[**Annex 1 \- Spring-filter	65**](#annex-1---spring-filter)
+[Log	62](#log-1)
 
-[Camp filter – Sintaxi bàsica	65](#camp-filter-–-sintaxi-bàsica)
+[**Annex 2 \- Spring-filter	64**](#annex-2---spring-filter)
 
-[Format general	65](#format-general)
+[Camp filter – Sintaxi bàsica	64](#camp-filter-–-sintaxi-bàsica)
 
-[Operadors disponibles	65](#operadors-disponibles)
+[Format general	64](#format-general)
 
-[Comparació	65](#comparació)
+[Operadors disponibles	64](#operadors-disponibles)
 
-[Text	65](#text)
+[Comparació	64](#comparació)
 
-[Operadors lògics	66](#operadors-lògics)
+[Text	64](#text)
 
-[Agrupació amb parèntesis	66](#agrupació-amb-parèntesis)
+[Operadors lògics	65](#operadors-lògics)
 
-[Valors admesos	66](#valors-admesos)
+[Agrupació amb parèntesis	65](#agrupació-amb-parèntesis)
 
-[Tipus bàsics	66](#tipus-bàsics)
+[Valors admesos	65](#valors-admesos)
 
-[Accés a camps anidats	67](#accés-a-camps-anidats)
+[Tipus bàsics	65](#tipus-bàsics)
 
-[Operador in	67](#operador-in)
+[Accés a camps anidats	66](#accés-a-camps-anidats)
 
-[Exemples complets	67](#exemples-complets)
+[Operador in	66](#operador-in)
 
-[Notes importants	67](#notes-importants)  
+[Exemples complets	66](#exemples-complets)
+
+[Notes importants	66](#notes-importants)
 
 # 
 
@@ -149,106 +157,6 @@ En aquest manual es detalla com integrar una aplicació amb Comanda per generar 
 2. # **Requisits previs** {#requisits-previs}
 
 Comanda ofereix tot una sèrie de clients per a que les aplicacions puguin interactuar amb Comanda, així com serveis autogenerats d’exemple, que es poden utilitzar per a implementar la API que les aplicacions han d’exposar per a que hi accedeixi comanda.
-
-1. ## **Clients** {#clients}
-
-S’han desenvolupat una sèrie de clients, que utilitzen RestEasy per poder enviar dades de tasques, avisos i permisos a Comanda.
-
-Aquests clients es poden afegir com a dependències Maven:
-
-|     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-client-tasca-v1</artifactId>         <version>0.1.0</version>     </dependency>     <dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-client-avis-v1</artifactId>         <version>0.1.0</version>     </dependency>     <dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-client-permis-v1</artifactId>         <version>0.1.0</version>     </dependency>` |
-| :---- |
-
-Aquests clients tenen una dependència al mòdul de model de dades:
-
-|     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-models</artifactId>         <version>0.1.1</version>     </dependency>` |
-| :---- |
-
-A més, comanda disposa d’un altre mòdul ofereix una sèrie de mètodes d’ajuda per emplenar la informació de salut o estadística. Aquest mòdul és:
-
-|     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-utils</artifactId>         <version>0.1.1</version>     </dependency>` |
-| :---- |
-
-Per simplificar, s’ha creat un mòdul (**comanda-lib**) que ja carrega tots els anteriors, i a més implementa una classe de client que simplifica la crida a les diferents operacions dels clients:
-
-|     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-lib</artifactId>         <version>0.1.0.1</version>     </dependency>` |
-| :---- |
-
-Aquestes llibreries inclouen dependències a les llibreries de RestEasy versió 4.7.6.Final. En cas que el seu projecte ja inclogui les dependències, encara que sigui amb una versió inferior (3.x), es poden excloure les dependències, per evitar conflictes.  
-Aquesta llibreria (comanda-lib) té una dependència cap a comanda-api-models, que inclou els models de dades que Comanda espera rebre per a les integracions, com:
-
-* Salut:   
-  * es.caib.comanda.model.v1.salut.AppInfo  
-  * es.caib.comanda.model.v1.salut.SalutInfo  
-* Estadístiques:   
-  * es.caib.comanda.model.v1.estadistica.DimensioDesc  
-  * es.caib.comanda.model.v1.estadistica.IndicadorDesc  
-  * es.caib.comanda.model.v1.estadistica.RegistresEstadistics  
-  * es.caib.comanda.model.v1.estadistica.EstadistiquesInfo  
-* Logs:  
-  * es.caib.comanda.model.v1.log.FitxerInfo  
-  * es.caib.comanda.model.v1.log.FitxerContingut  
-* Tasques:   
-  * es.caib.comanda.model.v1.tasca.Tasca  
-  * es.caib.comanda.model.v1.tasca.TascaPage  
-* Avisos:  
-  * es.caib.comanda.model.v1.avis.Avis  
-  * es.caib.comanda.model.v1.avis.AvisPage
-
-També inclou un client **ComandaClient**, que implementa els següents mètodes:
-
-**Constructors**
-
-* ComandaClient(String basePath, String user, String password)  
-* ComandaClient(Builder b)   
-  Si es vol utilitzar el builder, en aquest s’han d’informar 2 camps:  
-  * basePath: ruta de la api interna de comanda (PATH/comandapai/interna)  
-  * authorization: es correspon a ‘user \+ ":" \+ password’ en base64
-
-**Tasques**
-
-* String **crearTasca**(Tasca tasca)  
-* Tasca **consultarTasca**(String identificador, String appCodi, String entornCodi)  
-* String **crearMultiplesTasques**(List\<Tasca\> tasques)  
-* String **modificarTasca**(String identificador, Tasca tasca)  
-* String **modificarMultiplesTasques**(List\<Tasca\> tasques)  
-* TascaPage **obtenirLlistatTasques**(String quickFilter, String filter, String page, Integer size)  
-  * quickFilter: text que Comanda utilitza per filtrar per el camp nom  
-  * filter: filtre en format spring-filter (veure Annex 1\) 
-
-
-**Avisos**
-
-* String **crearAvis**(Avis avis)  
-* Avis **consultarAvis**(String identificador, String appCodi, String entornCodi)  
-* String **crearMultiplesAvisos**(List\<Avis\> avisos)  
-* String **modificarAvis**(String identificador, Avis avis)  
-* String **modificarMultiplesAvisos**(List\<Avis\> avisos)  
-* AvisPage **obtenirLlistatAvisos**(String quickFilter, String filter, String page, Integer size)  
-  * quickFilter: text que Comanda utilitza per filtrar per el camp nom  
-  * filter: filtre en format spring-filter (veure Annex 1\)
-
-
-**Permisos**
-
-* String **crearPermis**(Permis permis)  
-* Permis **consultarPermis**(String identificador, String appCodi, String entornCodi)  
-* String **crearMultiplesPermisos**(List\<Permis\> permisos)  
-* String **eliminarPermisos**(List\<Permis\> permisos)  
-* String **modificarPermis**(String identificador, Permis permis)  
-* String **modificarMultiplesPermisos**(List\<Permis\> permisos)
-
-Per utilitzar el client en Java es pot fer amb el següent codi:
-
-| String base \= ClientProps.*get*(*PROP\_BASE*).orElse(null); String user \= ClientProps.*get*(*PROP\_USER*).orElse(null); String pwd \= ClientProps.*get*(*PROP\_PWD*).orElse(null);  ComandaClient client \=new ComandaClient(base, user, pwd); |
-| :---- |
-
-Si es vol donar d’alta una tasca o un avís utilizant el client, es pot fer com en els següents exemples:
-
-| var task \= getTask(taskId); var redireccio \= appBaseUrl \+ "/task/"\+task.getId();  var tasca \=  Tasca.*builder*()    .appCodi("APP")    .entornCodi("DEV")    .identificador(task.getId())    .tipus(task.getTipus())    .nom(task.getNom())    .descripcio(task.getDescription())    .dataInici(task.getDataInici())    .dataFi(task.getDataFi())    .dataCaducitat(task.getDataCaducitat())    .estat(TascaEstat.*PENDENT*)    .numeroExpedient(task.getExpedient().getNum())    .responsable(task.getResponsable())    .usuarisAmbPermis(getUsuarisAmbPermis(task))    .grupsAmbPermis(getRolsAmbPermis(task))    .redireccio(new URL(redireccio))    .grup(task.getGrupCodi())    .build(); *client*.crearTasca(tasca); |
-| :---- |
-|  |
-| var warn \= getAvis(avisId); Avis avis \= Avis.*builder*()        .appCodi("APP")        .entornCodi("DEV")        .identificador(warn.getId())        .tipus(AvisTipus.*INFO*)        .nom(warn.getNom())        .descripcio(warn.getMissatge())        .dataInici(warn.getDataInici())        .dataFi(warn.getDataFinal())        .build();  *client*.crearAvis(avis); |
 
 La documentació en format OpenApi de la API és accessible a:
 
@@ -278,14 +186,446 @@ Les especificacions en format JSON dels clients es poden descarregar accedint di
 * [http://](http://localhost:8080/comandaapi/interna/api-docs/docs/estadistiques-v1)[\[SERVER\_PATH\]](https://[SERVER_PATH]/comandaapi/interna/api-docs)[/comandaapi/interna/api-docs/docs/estadistiques-v1](http://localhost:8080/comandaapi/interna/api-docs/docs/estadistiques-v1)  
 * [http://](http://localhost:8080/comandaapi/interna/api-docs/docs/logs-v1)[\[SERVER\_PATH\]](https://[SERVER_PATH]/comandaapi/interna/api-docs)[/comandaapi/interna/api-docs/docs/logs-v1](http://localhost:8080/comandaapi/interna/api-docs/docs/logs-v1)
 
-3. # **Salut** {#salut}
+Les llibreries que Comanda ha generat per poder accedir als serveis de comanda, o per oferir serveis que comanda pugui cridar s’han agrupat en dos blocs:
+
+* Monitoring: inclou els serveis de:  
+  * salut  
+  * estadístiques  
+  * logs 
+
+  que les aplicacions que s’integren amb comanda haurien d’oferir.
+
+* Management: inclou els clients de:  
+  * avisos  
+  * tasques  
+  * permisos (Servei encara no implementat a Comanda)
+
+  que les aplicacions poden utilitzar per enviar informació a Comanda.
+
+  1. ## **Clients** {#clients}
+
+S’han desenvolupat una sèrie de clients, que utilitzen RestEasy per poder enviar dades de tasques, avisos i permisos a Comanda.
+
+Aquests clients es poden afegir com a dependències Maven:
+
+|     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-client-management</artifactId>         <version>1.0.0</version>     </dependency>`     |
+| :---- |
+
+Aquestes llibreria inclou dependències a les llibreries de RestEasy versió 4.7.6.Final. En cas que el seu projecte ja inclogui les dependències, encara que sigui amb una versió inferior (3.x), es poden excloure les dependències, per evitar conflictes.  
+Aquesta llibreria inclou els models de dades que Comanda espera rebre per a les integracions, com:
+
+* Tasques:   
+  * es.caib.comanda.model.Tasca  
+  * es.caib.comanda.model.TascaPage  
+* Avisos:  
+  * es.caib.comanda.model.Avis  
+  * es.caib.comanda.model.AvisPage
+
+També inclou un client **AppComandaClient**, que implementa els següents mètodes:
+
+**Constructors**
+
+* AppComandaClient(String basePath, String user, String password)  
+* AppComandaClient(Builder b)   
+  Si es vol utilitzar el builder, en aquest s’han d’informar 2 camps:  
+  * basePath: ruta de la api interna de comanda (PATH/comandapai/interna)  
+  * authorization: es correspon a ‘user \+ ":" \+ password’ en base64
+
+**Tasques**
+
+* String **crearTasca**(Tasca tasca)  
+* Tasca **consultarTasca**(String identificador, String appCodi, String entornCodi)  
+* String **crearMultiplesTasques**(List\<Tasca\> tasques)  
+* String **modificarTasca**(String identificador, Tasca tasca)  
+* String **modificarMultiplesTasques**(List\<Tasca\> tasques)  
+* TascaPage **obtenirLlistatTasques**(String quickFilter, String filter, String page, Integer size)  
+  * quickFilter: text que Comanda utilitza per filtrar per el camp nom  
+  * filter: filtre en format spring-filter (veure Annex 1\) 
+
+
+**Avisos**
+
+* String **crearAvis**(Avis avis)  
+* Avis **consultarAvis**(String identificador, String appCodi, String entornCodi)  
+* String **crearMultiplesAvisos**(List\<Avis\> avisos)  
+* String **modificarAvis**(String identificador, Avis avis)  
+* String **modificarMultiplesAvisos**(List\<Avis\> avisos)  
+* AvisPage **obtenirLlistatAvisos**(String quickFilter, String filter, String page, Integer size)  
+  * quickFilter: text que Comanda utilitza per filtrar per el camp nom  
+  * filter: filtre en format spring-filter (veure Annex 1\)
+
+
+**Permisos** (Servei encara no implementat a Comanda)
+
+* String **crearPermis**(Permis permis)  
+* Permis **consultarPermis**(String identificador, String appCodi, String entornCodi)  
+* String **crearMultiplesPermisos**(List\<Permis\> permisos)  
+* String **eliminarPermisos**(List\<Permis\> permisos)  
+* String **modificarPermis**(String identificador, Permis permis)  
+* String **modificarMultiplesPermisos**(List\<Permis\> permisos)
+
+Per utilitzar el client en Java es pot fer amb el següent codi:
+
+| String base \= ClientProps.*get*(*PROP\_BASE*).orElse(null); String user \= ClientProps.*get*(*PROP\_USER*).orElse(null); String pwd \= ClientProps.*get*(*PROP\_PWD*).orElse(null);  AppComandaClient client \=new AppComandaClient(base, user, pwd); |
+| :---- |
+
+Si es vol donar d’alta una tasca o un avís utilitzant el client, es pot fer com en els següents exemples:
+
+| var task \= getTask(taskId); var redireccio \= appBaseUrl \+ "/task/"\+task.getId();  var tasca \=  new Tasca()    .appCodi("APP")    .entornCodi("DEV")    .identificador(task.getId())    .tipus(task.getTipus())    .nom(task.getNom())    .descripcio(task.getDescription())    .dataInici(task.getDataInici())    .dataFi(task.getDataFi())    .dataCaducitat(task.getDataCaducitat())    .estat(TascaEstat.*PENDENT*)    .numeroExpedient(task.getExpedient().getNum())    .responsable(task.getResponsable())    .usuarisAmbPermis(getUsuarisAmbPermis(task))    .grupsAmbPermis(getRolsAmbPermis(task))    .redireccio(new URL(redireccio))    .grup(task.getGrupCodi()); *client*.crearTasca(tasca); |
+| :---- |
+|  |
+| var warn \= getAvis(avisId); Avis avis \= new Avis()        .appCodi("APP")        .entornCodi("DEV")        .identificador(warn.getId())        .tipus(AvisTipus.*INFO*)        .nom(warn.getNom())        .descripcio(warn.getMissatge())        .dataInici(warn.getDataInici())        .dataFi(warn.getDataFinal());  *client*.crearAvis(avis); |
+
+2. ## **Servers** {#servers}
+
+A Comanda s’han generat automàticament serveis d’exemple per a l’implementació dels serveis de salut, estadística i logs, que es troben al mòdul:
+
+* comanda-api-servers/comanda-api-server-monitoring-v1
+
+Aquests serveis autogenerats utilitzen jaxrs.  
+Si es vol implementar utilitzant Spring, es disposa d’un exemple en l’Annex 1 \- Servers amb Spring.  
+Per a utilitzar les interfícies definides pel servei cal afegir la següent dependència:  
+    
+
+|    ` <dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-server-monitoring</artifactId>         <version>1.0.0</version>     </dependency>` |
+| :---- |
+
+Aquesta llibreria inclou els models de dades que Comanda espera rebre per a les integracions, com:
+
+* Salut:   
+  * es.caib.comanda.model.AppInfo  
+  * es.caib.comanda.model.SalutInfo  
+* Estadístiques:   
+  * es.caib.comanda.model.DimensioDesc  
+  * es.caib.comanda.model.IndicadorDesc  
+  * es.caib.comanda.model.RegistresEstadistics  
+  * es.caib.comanda.model.EstadistiquesInfo  
+* Logs:  
+  * es.caib.comanda.model.FitxerInfo  
+  * es.caib.comanda.model.FitxerContingut
+
+A més, comanda disposa d’un altre mòdul ofereix una sèrie de mètodes d’ajuda per emplenar la informació de salut o estadística, o recuperar logs. Aquest mòdul és:
+
+|     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-utils</artifactId>         <version>1.0.0</version>     </dependency>` |
+| :---- |
+
+Tot seguit us donem exemples d’implementació dels serveis utilitzant  jaxrs \+ resteasy.
+
+1. ### **Salut** {#salut}
+
+| import es.caib.comanda.model.server.monitoring.AppInfo; import es.caib.comanda.model.server.monitoring.SalutInfo; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; @ApplicationScoped @Path("/") public class ComandaAppSalutApiImpl implements ComandaAppSalutApi {    @Inject    SalutService salutService;    @Override    public SalutInfo salut() {        return salutService.getSalut();    }    @Override    public AppInfo salutInfo() {        return salutService.getInfo();    }    */\*\*     \* Contracte de servei: implementa-ho a la teva webapp     \*/*    public interface SalutService {        SalutInfo getSalut();        AppInfo getInfo();    } } |
+| :---- |
+
+   2. ### **Estadistica** {#estadistica}
+
+| import es.caib.comanda.model.server.monitoring.EstadistiquesInfo; import es.caib.comanda.model.server.monitoring.RegistresEstadistics; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; import java.util.List; @ApplicationScoped @Path("/") public class ComandaAppEstadistiquesApiImpl implements ComandaAppEstadistiquesApi {    @Inject    EstadistiquesService estadistiquesService;    @Override    public RegistresEstadistics estadistiques() {        return estadistiquesService.darreres();    }    @Override    public EstadistiquesInfo estadistiquesInfo() {        return estadistiquesService.info();    }    @Override    public RegistresEstadistics estadistiquesPerData(String data) {        return estadistiquesService.perData(data);    }    @Override    public List\<RegistresEstadistics\> estadistiquesPerRang(String dataInici, String dataFi) {        return estadistiquesService.perRang(dataInici, dataFi);    }    */\*\*     \* Contracte de servei: implementa-ho a la teva webapp.     \*/*    public interface EstadistiquesService {        RegistresEstadistics darreres();        EstadistiquesInfo info();        RegistresEstadistics perData(String ddMMyyyy);        List\<RegistresEstadistics\> perRang(String inici, String fi);    } } |
+| :---- |
+
+      3. ### **Log** {#log}
+
+| import es.caib.comanda.model.server.monitoring.FitxerContingut; import es.caib.comanda.model.server.monitoring.FitxerInfo; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; import java.util.List; @ApplicationScoped @Path("/") public class ComandaAppLogsApiImpl implements ComandaAppLogsApi {    @Inject    LogsService logsService;    @Override    public FitxerContingut getFitxerByNom(String nomFitxer) {        return logsService.getFitxer(nomFitxer);    }    @Override    public List\<String\> llegitUltimesLinies(String nomFitxer, Long nLinies) {        return logsService.getUltimesLinies(nomFitxer, nLinies);    }    @Override    public List\<FitxerInfo\> llistarFitxers() {        return logsService.llistarFitxers();    }    */\*\*     \* Contracte de servei: implementa-ho a la teva webapp     \*/*    public interface LogsService {        List\<FitxerInfo\> llistarFitxers();        FitxerContingut getFitxer(String nomFitxer);        List\<String\> getUltimesLinies(String nomFitxer, Long nLinies);    } } |
+| :---- |
+
+Al utilitzar jaxrs \+ RestEasy, es pot utilitzar jakarta.ws.rs.\* enlloc de javax.ws.rs.\*
+
+3. # **Tasques** {#tasques}
+
+Les tasques representen ítems d’operativa o seguiment a Comanda associats a una entitat de la vostra aplicació. Els usuaris han de poder visualitzar les tasques a Comanda, amb l’estat en que es troben, i amb un enllaç cap a la vostra aplicació, per tal de poder tramitar la tasca, fins que aquesta disposi d’una data de fi, en que es deixa de mostrar a Comanda.
+
+Per a poder donar d’alta o modificar tasques a Comanda es disposa dels següents endpoints:
+
+* POST /comandaapi/interna/tasques/v1: crea o modifica una tasca a Comanda.  
+* PUT /comandaapi/interna/tasques/v1/{identificador}: modifica una tasca a Comanda.  
+* POST /comandaapi/interna/tasques/v1/multiple: crea o modifica múltiples tasques a Comanda.  
+* PUT /comandaapi/interna/tasques/v1/multiple: modifica múltiples tasques a Comanda.  
+* GET /comandaapi/interna/tasques/v1/{identificador}: Consulta una tasca a Comanda.  
+* GET /comandaapi/interna/tasques/v1/tasque: Consulta un llistat de tasques a Comanda.
+
+| Creació o modificació d’una tasca |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/tasques/v1   Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1 |
+| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
+| **Mètode** | POST |
+| **Autenticació** | BASIC |
+| **Resposta** | HTTP Status OK |
+| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/tasques/v1' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }' |
+
+| Modificació d’una tasca |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/tasques/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1/1234 |
+| **Descripció** | Aquest servei modifica una tasca existent a Comanda. |
+| **Mètode** | PUT |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **identificador**: identificador de la tasca a modificar |
+| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
+| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/tasques/v1/31489824 \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }' |
+
+| Creació o modificació de múltiples tasques |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/tasques/v1/multiple Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1/multiple |
+| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
+| **Mètode** | POST |
+| **Autenticació** | BASIC |
+| **Resposta** | HTTP Status OK |
+| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/tasques/v1/multiple' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }\]' |
+
+| Modificació de múltiples tasques |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/tasques/v1/multiple Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1/multiple |
+| **Descripció** | Aquest servei modifica múltiples tasques existents a Comanda. |
+| **Mètode** | PUT |
+| **Autenticació** | BASIC |
+| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba cap tasca a modificar |
+| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/tasques/v1' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }\]' |
+
+| Consulta una tasca |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/tasques/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1/1234 |
+| **Descripció** | Aquest servei consulta una tasca Comanda. |
+| **Mètode** | GET |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **identificador**: identificador de la tasca a cercar |
+| **Resposta** | Tasca si s’ha trobat la tasca HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
+| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/tasques/v1/31489824 \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
+| **Ex. de resposta** | {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] } |
+
+| Consulta de múltiples tasques |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/tasques/v1   Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1 |
+| **Descripció** | Aquest servei obté un llistat paginat de Tasca. |
+| **Mètode** | GET |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **quickFilter**: Filtre ràpid que s’aplica sobre el camp nom de les tasques**filter**: Filtre en format SpringFilter (veure annex) **namedQueries**: Consultes predefinides a aplicar. NO IMPLEMENTAT. **perspectives**: Perspectives a aplicar a la consulta: “EXPIRATION”: Emplena el camp diesPerCaducar **page**: Número de pàgina a recuperar **size**: Mida de pàgina a recuperar |
+| **Resposta** | TascaPage |
+| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/tasques/v1?filter=identificador==”31489824”\&page=0\&size=20’ \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
+| **Ex. de resposta** | {   "content": \[     {         "appCodi": "NOT",         "entornCodi": "DEV",         "identificador": "31489824",         "tipus": "NOTIFICACIO",         "nom": "Nom de la notificacio",         "descripcio": "Descripcio de la notificació",         "estat": "INICIADA",         "estatDescripcio": "Enviada a Notifica",         "numeroExpedient": "1850488",         "prioritat": null,         "dataInici": "2025-08-28T16:08:28.295",         "dataFi": null,         "dataCaducitat": "2025-08-28T16:08:28.295",         "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",         "responsable": "u000000",         "grup": null,         "usuarisAmbPermis": \["u000000", "u999000"\],         "grupsAmbPermis": \["ROL\_001", "ROL\_002"\]       }   \],   "page": {     "number": 0,     "size": 20,     "totalElements": 1,     "totalPages": 1   },   "links": \[     {       "rel": "self",       "href": "http://localhost:8080/comandaapi/interna/tasques/v1?filter=identificador==”31489824”\&page=0\&size=20"     }   \] } |
+
+### **Model de dades** {#model-de-dades}
+
+### 
+
+| Tasca |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| appCodi | cadena(16) | 1 | Codi (normalment de 3 lletres) assignat a l’aplicació. |
+| entornCodi | cadena(16) | 1 | Codi assignat a l’entorn a Comanda |
+| identificador | cadena(64) | 1 | Valor únic que identifica la tasca, i que Comanda utilitzarà per saber si ha de crear o actualitzar les dades de la tasca. Si Comanda detecta que ja existeix una tasca amb l’identificador, llavors procedeix a realitzar una actualització. En cas contrari crea una nova tasca. |
+| tipus | cadena(64) | 1 | Tipus de tasca. Valor lliure a decidir a cada aplicació que s’integra amb comanda.  |
+| nom | cadena(255) | 1 | Nom de la tasca |
+| descripcio | cadena(1024) | 0..1 | Descripció de la tasca |
+| estat | TascaEstat | 1 | Enumerat amb l’estat en què es troba la tasca |
+| estatDescripcio | cadena(1024) | 0..1 | Descripció de l’estat en què es troba la tasca |
+| numeroExpedient | cadena(128) | 0..1 | Número de l’expedient al que pertany la tasca |
+| prioritat | Prioritat | 1 | Enumerat amb la prioritat de la tasca |
+| dataInici | Date | 0..1 | Data en que s’ha iniciat la tasca |
+| dataFi | Date | 0..1 | Data en que s’ha finalitzat la tasca. A Comanda, per defecte, al tenir data de fi la tasca es deixa de mostrar. |
+| dataCaducitat | Date | 0..1 | Data de caducitat de la tasca. Data en que hauria d’estar finalitzada. |
+| redireccio | URL | 1 | URL on es pot accedir per tramitar la tasca a l’aplicació origen |
+| responsable | cadena(128) | 0..1 | Responsable o propietari de la tasca |
+| grup | cadena(128) | 0..1 | Grup (rol) al que pertany la tasca. En el cas que una tasca requereixi que els usuaris que la puguin visualitzar hagin de pertànyer, sí o sí, a un rol concret. En cas que l’usuari no tingui aquest rol, no veurà la tasca a Comanda, independentment dels permisos que tingui. |
+| usuarisAmbPermis | List\<cadena\> | 0..N | Codis dels usuaris que poden accedir a la tasca. |
+| grupsAmbPermis | List\<cadena\> | 0..N | Rols que poden accedir a la tasca |
+
+Els usuaris veuran la tasca a Comanda si el seu codi d’usuari es troba a la llista usuarisAmbPermis, o si algun dels seus rols es troba a la llista grupsAmbPermis. En el cas en que grup estigui informat, llavors, a més amés es comprovarà que l’usuari també tingui el rol informat al camp grup.
+
+| TascaEstat |  |
+| ----- | :---- |
+| Valor | Descripció |
+| PENDENT | Tasca pendent d’iniciar |
+| INICIADA | Tasca iniciada |
+| FINALITZADA | Tasca ja finalitzada |
+| CANCELADA | Tasca cancel·lada |
+| ERROR | Tasca en estat erroni |
+
+| Prioritat |  |
+| ----- | :---- |
+| Valor | Descripció |
+| NONE | Sense prioritat assignada |
+| BAIXA | Baixa prioritat |
+| NORMAL | Proritat normal |
+| ALTA | Alta prioritat |
+| MAXIMA | Màxima prioritat |
+
+| TascaPage |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| content | List\<Tasca\> | 1 | Contingut de la pàgina |
+| page | PageMetadata | 1 | Metadades de paginació |
+| links | List\<TascaPageLink\> | 0..1 | Enllaços HATEOAS |
+
+| PageMetadata |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| number | long | 1 | Número de pàgina |
+| size | long | 1 | Mida de pàgina |
+| totalElements | long | 1 | Total d'elements |
+| totalPages | long | 1 | Total de pàgines |
+
+| TascaPageLink |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| href | PageMetadata | 1 | Amb qui es relaciona l'enllaç (ex. self) |
+| rel | List\<Tasca\> | 1 | URL de l'enllaç |
+
+4. # **Avisos** {#avisos}
+
+Els avisos són comunicacions informatives mostrades a Comanda. Els usuaris han de poder visualitzar tots els avisos a Comanda.
+
+Per a poder donar d’alta o modificar avisos a Comanda es disposa dels següents endpoints:
+
+* POST /comandaapi/interna/avisos/v1: crea o modifica un avís a Comanda.  
+* PUT /comandaapi/interna/avisos/v1/{identificador}: modifica un avís a Comanda.  
+* POST /comandaapi/interna/avisos/v1/multiple: crea o modifica múltiples avisos a Comanda.  
+* PUT /comandaapi/interna/avisos/v1/multiple: modifica múltiples avisos a Comanda.  
+* GET /comandaapi/interna/avisos/v1/{identificador}: Consulta un avís a Comanda.  
+* GET /comandaapi/interna/avisos/v1: Consulta un llistat d’avisos a Comanda.
+
+| Creació o modificació d’un avís |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/avisos/v1   Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1 |
+| **Descripció** | Aquest servei  crea o modifica un avís a Comanda. |
+| **Mètode** | POST |
+| **Autenticació** | BASIC |
+| **Paràmetres** | Avis |
+| **Resposta** | HTTP Status OK |
+| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/avisos/v1' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }' |
+
+| Modificació d’un avís |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/avisos/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1/1234 |
+| **Descripció** | Aquest servei modifica una tasca existent a Comanda. |
+| **Mètode** | PUT |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **identificador**: identificador de la tasca a modificar |
+| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
+| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/avisos/v1/31489824 \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }' |
+
+| Creació o modificació de múltiples avisos |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/avisos/v1/multiple Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1/multiple |
+| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
+| **Mètode** | POST |
+| **Autenticació** | BASIC |
+| **Resposta** | HTTP Status OK |
+| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/avisos/v1/multiple' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }\]' |
+
+| Modificació de múltiples avisos |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/avisos/v1/multiple Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1/multiple |
+| **Descripció** | Aquest servei modifica múltiples tasques existents a Comanda. |
+| **Mètode** | PUT |
+| **Autenticació** | BASIC |
+| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba cap tasca a modificar |
+| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/avisos/v1 \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }\]' |
+
+| Consulta una avís |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/avisos/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1/1234 |
+| **Descripció** | Aquest servei consulta una tasca Comanda. |
+| **Mètode** | GET |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **identificador**: identificador de la tasca a cercar |
+| **Resposta** | Tasca si s’ha trobat la tasca HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
+| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/avisos/v1/31489824 \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
+| **Ex. de resposta** | {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, } |
+
+| Consulta de múltiples avisos |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/avisos/v1   Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1 |
+| **Descripció** | Aquest servei obté un llistat paginat de Tasca. |
+| **Mètode** | GET |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **quickFilter**: Filtre ràpid que s’aplica sobre el camp nom de les tasques**filter**: Filtre en format SpringFilter (veure annex) **namedQueries**: Consultes predefinides a aplicar. NO IMPLEMENTAT. **perspectives**: Perspectives a aplicar a la consulta: “EXPIRATION”: Emplena el camp diesPerCaducar **page**: Número de pàgina a recuperar **size**: Mida de pàgina a recuperar |
+| **Resposta** | TascaPage |
+| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/avisos/v1?filter=identificador==”31489824”\&page=0\&size=20’ \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
+| **Ex. de resposta** | {   "content": \[     {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }   \],   "page": {     "number": 0,     "size": 20,     "totalElements": 1,     "totalPages": 1   },   "links": \[     {       "rel": "self",       "href": "http://localhost:8080/comandaapi/interna/avisos/v1?filter=identificador==”31489824”\&page=0\&size=20"     }   \] } |
+
+### **Model de dades** {#model-de-dades-1}
+
+### 
+
+| Avis |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| appCodi | cadena(16) | 1 | Codi (normalment de 3 lletres) assignat a l’aplicació. |
+| entornCodi | cadena(16) | 1 | Codi assignat a l’entorn a Comanda |
+| identificador | cadena(64) | 1 | Valor únic que identifica un avís, i que Comanda utilitzarà per saber si ha de crear o actualitzar les dades de l’avís. Si Comanda detecta que ja existeix un avís amb l’identificador, llavors procedeix a realitzar una actualització. En cas contrari crea un nou avís. |
+| tipus | AvisTipus | 1 | Enumerat amb el tipus d’avís  |
+| nom | cadena(255) | 1 | Nom de l’avís |
+| descripcio | cadena(1024) | 0..1 | Descripció de l’avís |
+| dataInici | Date | 0..1 | Data en que s’ha iniciat l’avís |
+| dataFi | Date | 0..1 | Data en que s’ha finalitzat l’avís. A Comanda, per defecte, al tenir data de fi l’avís es deixa de mostrar. |
+| redireccio | URL | 0..1 | URL on es pot accedir per consultar l’avís a l’aplicació origen |
+| responsable | cadena(128) | 0..1 | Responsable o creador de l’avís |
+| grup | cadena(128) | 0..1 | Grup (rol) al que pertany l’avís. En el cas que un avís requereixi que els usuaris que el puguin visualitzar hagin de pertànyer, sí o sí, a un rol concret. En cas que l’usuari no tingui aquest rol, no veurà l’avís a Comanda, independentment dels permisos que tingui. |
+| usuarisAmbPermis | List\<cadena\> | 0..N | Codis dels usuaris que poden accedir a l’avís. |
+| grupsAmbPermis | List\<cadena\> | 0..N | Rols que poden accedir a l’avís |
+
+En el cas d’avisos globals, accessibles per tothom, es deixaran els camps grup, usuarisAmbPermis i grupsAmbPermis buits.  
+El camp redirecció bomés s’emplenarà en el cas en que l’aplicació d’origen disposi d’una pàgina per visualitzar l’avís, i que aquest tingui més informació de l’enviada a comanda. En cas contrari es deixarà buit.
+
+| AvisTipus |  |
+| ----- | :---- |
+| Valor | Descripció |
+| NOTICIA | Avís que informa d’alguna notícia de l’aplicació, d’alguna novetat |
+| INFO | Avís amb informació general de l’aplicació |
+| ALERTA | Avís amb alguna advertència de l’aplicació |
+| ERROR | Avís amb informació sobre algún error general de l’aplicació |
+| CRITIC | Avís amb informació sobre algún error crític de l’aplicació |
+
+| AvisPage |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| content | List\<Tasca\> | 1 | Contingut de la pàgina |
+| page | PageMetadata | 1 | Metadades de paginació |
+| links | List\<TascaPageLink\> | 0..1 | Enllaços HATEOAS |
+
+| PageMetadata |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| number | long | 1 | Número de pàgina |
+| size | long | 1 | Mida de pàgina |
+| totalElements | long | 1 | Total d'elements |
+| totalPages | long | 1 | Total de pàgines |
+
+| AvisPageLink |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| href | PageMetadata | 1 | Amb qui es relaciona l'enllaç (ex. self) |
+| rel | List\<Tasca\> | 1 | URL de l'enllaç |
+
+5. # **Exemples** {#exemples}
+
+Tot seguit es mostren uns exemples senzills d’enviament de tasques i avisos:
+
+## **Enviar una tasca** {#enviar-una-tasca}
+
+| `Tasca tasca = new Tasca()   .appCodi("APP")   .entornCodi("PRO")   .identificador("notif-987")   .tipus("NOTIFICA")   .nom("Notificació pendent")   .descripcio("Usuari ha d’accedir i signar")   .estat(TascaEstat.PENDENT)   .prioritat(Prioritat.ALTA)   .dataInici(LocalDateTime.now())   .redireccio(new URL("https://app.exemple.org/notificacio/987"))   .usuarisAmbPermis(List.of("USR1"))   .grupsAmbPermis(List.of("ROL_OPERADOR")); AppComandaClient client = new AppComandaClient(url, username, password); var resposta = client.crearTasca(tasca);` |
+| :---- |
+
+Si no s’utilitza el client, es pot realitzar una petició REST a: 
+
+* POST {COMANDA\_API\_URL}/tasques/v1 body: tasca
+
+  ## **Enviar un avís** {#enviar-un-avís}
+
+| `Avis avis = new Avis()   .appCodi("APP")   .identificador("12345")   .tipus(AvisTipus.INFO)   .nom("Manteniment")   .descripcio("Talls diumenge 8:00-10:00")   .dataInici(LocalDateTime.now())   .dataFi(LocalDateTime.now().plusHours(2));AppComandaClient client = new AppComandaClient(url, username, password); var resposta = client.crearAvis(avis);` |
+| :---- |
+
+Si no s’utilitza el client, es pot realitzar una petició REST a:
+
+* POST {COMANDA\_URL}/api/cues/avisos body: avis
+
+Amb aquests elements, qualsevol aplicació pot integrar-se amb Comanda per a Salut, Estadístiques, Tasques i Avisos adaptant els serveis propis per a obtenir les dades i mapant-les als models de comanda-lib.
+
+6. # **Salut** {#salut-1}
 
 Cada aplicació que es vulgui integrar amb el mòdul de Salut de comanda haurà d’implementar 2 endpoints de tipus GET:
 
 * GET /salut/info: retorna informació d’aplicació (AppInfo) per a la pantalla de Salut de Comanda.  
 * GET /salut: retorna informació de salut de l’aplicació (SalutInfo).
 
-  1. ## **Obtenció de informació de l’aplicació** {#obtenció-de-informació-de-l’aplicació}
+  1. ### **Obtenció de informació de l’aplicació** {#obtenció-de-informació-de-l’aplicació}
 
 | Obtenció de informació de l’aplicació |  |
 | ----- | :---- |
@@ -300,7 +640,7 @@ Cada aplicació que es vulgui integrar amb el mòdul de Salut de comanda haurà 
 
 1. 
 
-### **Model de dades** {#model-de-dades}
+### **Model de dades** {#model-de-dades-2}
 
 | AppInfo |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -357,7 +697,7 @@ En cas de utilitzar els contexts de backoffice, api interna i api externa es rec
 | nom | cadena(128) | 1 | Nom del manual |
 | path | cadena(255) | 1 | URL on es pot accedir al manual |
 
-2. ## **Obtenció de informació de salut** {#obtenció-de-informació-de-salut}
+2. ### **Obtenció de informació de salut** {#obtenció-de-informació-de-salut}
 
 | Obtenció de informació de salut |  |
 | ----- | :---- |
@@ -374,7 +714,7 @@ En cas de utilitzar els contexts de backoffice, api interna i api externa es rec
 
 3. 
 
-### **Model de dades** {#model-de-dades-1}
+### **Model de dades** {#model-de-dades-3}
 
 | SalutInfo |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -504,7 +844,8 @@ Els detalls que s’espera que s’enviin, tot i que no és obligatori son:
 La llibreria de comanda, al mòdul comanda-api-utils, ofereix unes classes d’ajuda per a la obtenció de informació de salut: 
 
 * es.caib.comanda.ms.salut.helper.EstatHelper  
-* es.caib.comanda.ms.salut.helper.MonitorHelper
+* es.caib.comanda.ms.salut.helper.MonitorHelper  
+* es.caib.comanda.ms.salut.helper.IntegracioApp
 
 La classe **EstatHelper** proporciona funcionalitats de suport per al càlcul de l’estat de les integracions i subsistemes. 
 
@@ -613,6 +954,21 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Resposta** | String |
 | **Ús principal** | Mostrar informació d’entorn en diagnòstics. |
 
+La classe **IntegracioApp** és un enumerat amb el codi i nom de múltiples aplicacions amb les que potser es fa alguna integració.  
+Aquest enumerat serveix per disposar dels codis i noms d’aplicacions, de manera que, a ser possible, totes les aplicacions enviïn els mateixos codis i noms en la informació de les integracions.
+
+Si es tracta d’una aplicació registrada a la Caib, els codis haurien de ser els codis de 3 caràcters assignats a la aplicació per la Caib.
+
+Els mètodes per obtenir el codi i nom de l’aplicació són els següents:
+
+* getCodi(): retorna el codi de l’aplicació.  
+* getNom(): retorna el nom de l’aplicació.
+
+Exemple d’ús:
+
+| String codiNotib \= IntegracioApp.NOT.getCodi(); String nomNotib \= IntegracioApp.NOT.*getNom*(); IntegracioInfo intNotib \= new IntegracioInfo().codi(codiNotib).nom(nomNotib); |
+| :---- |
+
 ### **Model de dades internes** {#model-de-dades-internes}
 
 | MemoryUsage |  |  |  |
@@ -676,7 +1032,7 @@ Obtenir informació del sistema per Comanda
 | SalutInfo salutInfo \= SalutInfo.*builder*()        .codi("APP")        .versio(versio)        .data(OffsetDateTime.*now*())        .estatGlobal(estatSalut)        .estatBaseDeDades(salutDatabase)        .integracions(integracions)        .subsistemes(subsistemes)        .missatges(missatges)        .informacioSistema(MonitorHelper.*getInfoSistema*())        .build(); |
 | :---- |
 
-4. # **Estadístiques** {#estadístiques}
+7. # **Estadístiques** {#estadístiques}
 
 Cada aplicació que es vulgui integrar amb el mòdul de Estadístiques de comanda haurà d’implementar 4 endpoints de tipus GET. 
 
@@ -685,7 +1041,7 @@ Cada aplicació que es vulgui integrar amb el mòdul de Estadístiques de comand
 * GET /estadistiques/of/{dia}: retorna informació estadística d’un dia concret.  
 * GET /estadistiques/from/{diaInici}/to/{diaFi}: retorna la informació estadística de múltiples dies, entre la data inici i la data fi.
 
-  1. ## **Obtenció de informació estadística de l’aplicació** {#obtenció-de-informació-estadística-de-l’aplicació}
+  1. ### **Obtenció de informació estadística de l’aplicació** {#obtenció-de-informació-estadística-de-l’aplicació}
 
 | Obtenció de informació de l’aplicació |  |
 | ----- | :---- |
@@ -700,7 +1056,7 @@ Cada aplicació que es vulgui integrar amb el mòdul de Estadístiques de comand
 
 4. 
 
-### **Model de dades** {#model-de-dades-2}
+### **Model de dades** {#model-de-dades-4}
 
 | AppInfo |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -727,7 +1083,7 @@ Cada aplicació que es vulgui integrar amb el mòdul de Estadístiques de comand
 | descripcio | cadena(1024) | 0..1 | Descripció de l’indicador. Serà el text d’ajuda o explicatiu de quin és el significat de la dimensió, que es mostrarà a Comanda |
 | format | Format | 0..1 | Format en que s’enviarà el valor de l’indicador. Sempre que sigui possible es recomanable que els valors dels indicadors siguin numèrics. |
 
-2. ## **Obtenció de dades estadístiques** {#obtenció-de-dades-estadístiques}
+2. ### **Obtenció de dades estadístiques** {#obtenció-de-dades-estadístiques}
 
 Per a la obtenció de dades estadístiques s’implementaran 3 mètodes. El mètode principal que recupera la darrera informació estadística generada (dia anterior), i 2 mètodes addicionals, amb la forma URL\_OBTENCIO\_ESTADISTICA**/of/{dia}** i URL\_OBTENCIO\_ESTADISTICA**/from/{dia}/to{dia}**
 
@@ -746,7 +1102,7 @@ Per a la obtenció de dades estadístiques s’implementaran 3 mètodes. El mèt
 
 6. 
 
-### **Model de dades** {#model-de-dades-3}
+### **Model de dades** {#model-de-dades-5}
 
 ### 
 
@@ -905,7 +1261,7 @@ Exemple amb dimentions i fets com a colecció
 | List\<Dimensio\> dims \= new ArrayList\<\>(Arrays.*asList*(        GenericDimensio.*builder*().codi("x").valor("X").build(),        GenericDimensio.*builder*().codi("y").valor("Y").build() )); List\<Fet\> fets \= new ArrayList\<\>(Arrays.*asList*(        GenericFet.*builder*().codi("a").valor(7.0).build(),        GenericFet.*builder*().codi("b").valor(2.4).build() )); RegistreEstadistic re1 \= EstadisticaHelper.*toRegistreEstadistic*(dims, fets); |
 | :---- |
 
-5. # **Logs** {#logs}
+8. # **Logs** {#logs}
 
 Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda haurà d’implementar 3 endpoints de tipus GET:
 
@@ -947,7 +1303,7 @@ Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda 
 
 ### 
 
-### **Model de dades** {#model-de-dades-4}
+### **Model de dades** {#model-de-dades-6}
 
 | FitxerInfo |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -1043,361 +1399,28 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | public List\<String\> readLastNLines(String nomFitxer, long nLinies) {    try {        if (Strings.*isNullOrEmpty*(nomFitxer) || nLinies \== null) {            *log*.error("Parametres incorrectes, nomFitxer " \+ nomFitxer \+ " nLinies" \+ nLinies);            return new ArrayList\<\>();        }        var directoriPath \= "/app/logs";        return LogHelper.readLastNLines(directoriPath, nomFitxer, nLinies);    } catch (Exception ex) {        *log*.error("Error no controlat", ex);        return new ArrayList\<\>();    } } |
 | :---- |
 
-6. # **Servers** {#servers}
-
-A Comanda s’han generat automàticament serveis d’exemple per a l’implementació dels serveis de salut, estadística i logs, que es troben als mòduls:
-
-* comanda-api-servers/comanda-api-server-salut-v1  
-* comanda-api-servers/comanda-api-server-estadistica-v1  
-* comanda-api-servers/comanda-api-server-log-v1
-
-Aquests serveis autogenerats utilitzen RestEasy.  
-De totes maneres, tot seguit us donem dos exemples que es poden utilitzar per definir el servei si s’utilitza spring, o  jaxrs \+ resteasy:
-
-1. ## **Salut** {#salut-1}
-
-**Spring**
-
-| import es.caib.comanda.model.v1.salut.AppInfo; import es.caib.comanda.model.v1.salut.SalutInfo; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import javax.servlet.http.HttpServletRequest; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/* @RestController @RequestMapping("/v1/salut") public class SalutApiController {    @GetMapping("/info")    public AppInfo salutInfo(HttpServletRequest request)  throws java.io.IOException {       ...    }    @GetMapping    public SalutInfo salut(HttpServletRequest request)  throws java.io.IOException {       ...    } } |
-| :---- |
-
-**Jaxrs \+ RestEasy**
-
-| import es.caib.comanda.model.v1.salut.AppInfo; import es.caib.comanda.model.v1.salut.SalutInfo; import javax.ws.rs.GET; import javax.ws.rs.Path; import javax.ws.rs.Produces; import javax.ws.rs.core.Context; import javax.ws.rs.core.MediaType; import javax.ws.rs.core.Response; import javax.servlet.http.HttpServletRequest; import java.io.IOException; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/* @Path("/v1/salut") @Produces(MediaType.APPLICATION\_JSON) public class SalutApiResource {    @GET    @Path("/info")    public AppInfo salutInfo(@Context HttpServletRequest request)            throws IOException {        *...*    }    @GET    public SalutInfo salut(@Context HttpServletRequest request)            throws IOException {        *...*    } } |
-| :---- |
-
-2. ## **Estadistica** {#estadistica}
-
-**Spring**
-
-| import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo; import es.caib.comanda.model.v1.estadistica.RegistresEstadistics; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import javax.servlet.http.HttpServletRequest; import java.io.IOException; import java.util.List; */\*\* \* Contracte de l'API d'Estadístiques que COMANDA espera que implementin les APPs. \*/* @RestController @RequestMapping("/v1/estadistiques") public class EstadistiquesApiController {    @GetMapping("/info")    public EstadistiquesInfo estadistiquesInfo() throws IOException {       ...    }    @GetMapping    public RegistresEstadistics estadistiques(HttpServletRequest request)  throws IOException {       ...    }    @GetMapping("/of/{data}")    public RegistresEstadistics estadistiquesPerData(            HttpServletRequest request,            @PathVariable String data) throws Exception {       ...    }    @GetMapping("/from/{dataInici}/to/{dataFi}")    public List\<RegistresEstadistics\> estadistiquesPerRang(            HttpServletRequest request,            @PathVariable("dataInici") String dataInici,            @PathVariable("dataFi") String dataFi) throws Exception {       ...    } } |
-| :---- |
-
-**Jaxrs \+ RestEasy**
-
-| import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo; import es.caib.comanda.model.v1.estadistica.RegistresEstadistics; import javax.ws.rs.GET; import javax.ws.rs.Path; import javax.ws.rs.PathParam; import javax.ws.rs.Produces; import javax.ws.rs.WebApplicationException; import javax.ws.rs.core.Context; import javax.ws.rs.core.MediaType; import javax.ws.rs.core.Response; import javax.servlet.http.HttpServletRequest; import java.io.IOException; import java.util.List; */\*\* \* Contracte de l'API d'Estadístiques que COMANDA espera que implementin les APPs. \*/* @Path("/v1/estadistiques") @Produces(MediaType.APPLICATION\_JSON) public class EstadistiquesApiResource {    @GET    @Path("/info")    public EstadistiquesInfo estadistiquesInfo() throws IOException {        *...*    }    @GET    public RegistresEstadistics estadistiques(            @Context HttpServletRequest request)            throws IOException {        *...*    }    @GET    @Path("/of/{data}")    public RegistresEstadistics estadistiquesPerData(            @Context HttpServletRequest request,            @PathParam("data") String data)            throws Exception {        *...*    }    @GET    @Path("/from/{dataInici}/to/{dataFi}")    public List\<RegistresEstadistics\> estadistiquesPerRang(            @Context HttpServletRequest request,            @PathParam("dataInici") String dataInici,            @PathParam("dataFi") String dataFi)            throws Exception {        *...*    } } |
-| :---- |
-
-3. ## **Log** {#log}
-
-**Spring**
-
-| import es.caib.comanda.model.v1.log.FitxerContingut; import es.caib.comanda.model.v1.log.FitxerInfo; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import java.util.List; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/*  @RestController @RequestMapping("/v1/logs") public class LogApiController {    @GetMapping()    public List\<FitxerInfo\> getFitxers() {       ...    }    @GetMapping("/{nomFitxer}")    public FitxerContingut getFitxerByNom(            @PathVariable("nomFitxer") String nomFitxer) {       ...    }    @GetMapping("/{nomFitxer}/linies/{nLinies}")    public List\<String\> getFitxerLinies(            @PathVariable("nomFitxer") String nomFitxer,            @PathVariable("nLinies") Long nLinies) {       ...    } } |
-| :---- |
-
-**Jaxrs \+ RestEasy**
-
-| import es.caib.comanda.model.v1.log.FitxerContingut; import es.caib.comanda.model.v1.log.FitxerInfo; import javax.ws.rs.GET; import javax.ws.rs.Path; import javax.ws.rs.PathParam; import javax.ws.rs.Produces; import javax.ws.rs.core.MediaType; import javax.ws.rs.core.Response; import java.util.List; */\*\* \* Contracte de l'API de Logs que COMANDA espera que implementin les APPs. \*/* @Path("/v1/logs") @Produces(MediaType.APPLICATION\_JSON) public class LogApiResource {    @GET    public List\<FitxerInfo\> getFitxers() {        *...*    }    @GET    @Path("/{nomFitxer}")    public FitxerContingut getFitxerByNom(            @PathParam("nomFitxer") String nomFitxer) {        *...*    }    @GET    @Path("/{nomFitxer}/linies/{nLinies}")    public List\<String\> getFitxerLinies(            @PathParam("nomFitxer") String nomFitxer,            @PathParam("nLinies") Long nLinies) {        *...*    } } |
-| :---- |
-
-Al utilitzar jaxrs \+ RestEasy:
-
-* Es pot utilitzar jakarta.ws.rs.\* enlloc de [javax.ws.rs](http://javax.ws.rs).\*  
-* Per fer els mètodes amb un estil més REST, es pot fer que retornin Response.  
-  Ex:  
-    
-  @GET  
-  @Path("/info")  
-  public **Response** salutInfo(@Context HttpServletRequest request)  
-          throws IOException {  
-    
-      AppInfo info \= ...;  
-      return Response.ok(info).build();  
-  }
-
-7. # **Tasques** {#tasques}
-
-Les tasques representen ítems d’operativa o seguiment a Comanda associats a una entitat de la vostra aplicació. Els usuaris han de poder visualitzar les tasques a Comanda, amb l’estat en que es troben, i amb un enllaç cap a la vostra aplicació, per tal de poder tramitar la tasca, fins que aquesta disposi d’una data de fi, en que es deixa de mostrar a Comanda.
-
-Per a poder donar d’alta o modificar tasques a Comanda es disposa dels següents endpoints:
-
-* POST /comandaapi/interna/v1/tasques: crea o modifica una tasca a Comanda.  
-* PUT /comandaapi/interna/v1/tasques/{identificador}: modifica una tasca a Comanda.  
-* POST /comandaapi/interna/v1/tasques/multiple: crea o modifica múltiples tasques a Comanda.  
-* PUT /comandaapi/interna/v1/tasques/multiple: modifica múltiples tasques a Comanda.  
-* GET /comandaapi/interna/v1/tasques/{identificador}: Consulta una tasca a Comanda.  
-* GET /comandaapi/interna/v1/tasques: Consulta un llistat de tasques a Comanda.
-
-| Creació o modificació d’una tasca |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/tasques   Ex. https:/dev.caib.es/comandaapi/interna/v1/tasques |
-| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
-| **Mètode** | POST |
-| **Autenticació** | BASIC |
-| **Resposta** | HTTP Status OK |
-| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/v1/tasques' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }' |
-
-| Modificació d’una tasca |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/tasques/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/v1/tasques/1234 |
-| **Descripció** | Aquest servei modifica una tasca existent a Comanda. |
-| **Mètode** | PUT |
-| **Autenticació** | BASIC |
-| **Paràmetres** | **identificador**: identificador de la tasca a modificar |
-| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
-| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/v1/tasques/31489824 \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }' |
-
-| Creació o modificació de múltiples tasques |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/tasques/multiple Ex. https:/dev.caib.es/comandaapi/interna/v1/tasques/multiple |
-| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
-| **Mètode** | POST |
-| **Autenticació** | BASIC |
-| **Resposta** | HTTP Status OK |
-| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/v1/tasques/multiple' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }\]' |
-
-| Modificació de múltiples tasques |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/tasques/multiple Ex. https:/dev.caib.es/comandaapi/interna/v1/tasques/multiple |
-| **Descripció** | Aquest servei modifica múltiples tasques existents a Comanda. |
-| **Mètode** | PUT |
-| **Autenticació** | BASIC |
-| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba cap tasca a modificar |
-| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/v1/tasques' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }\]' |
-
-| Consulta una tasca |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/tasques/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/v1/tasques/1234 |
-| **Descripció** | Aquest servei consulta una tasca Comanda. |
-| **Mètode** | GET |
-| **Autenticació** | BASIC |
-| **Paràmetres** | **identificador**: identificador de la tasca a cercar |
-| **Resposta** | Tasca si s’ha trobat la tasca HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
-| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/v1/tasques/31489824 \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
-| **Ex. de resposta** | {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] } |
-
-| Consulta de múltiples tasques |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/tasques   Ex. https:/dev.caib.es/comandaapi/interna/v1/tasques |
-| **Descripció** | Aquest servei obté un llistat paginat de Tasca. |
-| **Mètode** | GET |
-| **Autenticació** | BASIC |
-| **Paràmetres** | **quickFilter**: Filtre ràpid que s’aplica sobre el camp nom de les tasques**filter**: Filtre en format SpringFilter (veure annex) **namedQueries**: Consultes predefinides a aplicar. NO IMPLEMENTAT. **perspectives**: Perspectives a aplicar a la consulta: “EXPIRATION”: Emplena el camp diesPerCaducar **page**: Número de pàgina a recuperar **size**: Mida de pàgina a recuperar |
-| **Resposta** | TascaPage |
-| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/v1/tasques?filter=identificador==”31489824”\&page=0\&size=20’ \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
-| **Ex. de resposta** | {   "content": \[     {         "appCodi": "NOT",         "entornCodi": "DEV",         "identificador": "31489824",         "tipus": "NOTIFICACIO",         "nom": "Nom de la notificacio",         "descripcio": "Descripcio de la notificació",         "estat": "INICIADA",         "estatDescripcio": "Enviada a Notifica",         "numeroExpedient": "1850488",         "prioritat": null,         "dataInici": "2025-08-28T16:08:28.295",         "dataFi": null,         "dataCaducitat": "2025-08-28T16:08:28.295",         "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",         "responsable": "u000000",         "grup": null,         "usuarisAmbPermis": \["u000000", "u999000"\],         "grupsAmbPermis": \["ROL\_001", "ROL\_002"\]       }   \],   "page": {     "number": 0,     "size": 20,     "totalElements": 1,     "totalPages": 1   },   "links": \[     {       "rel": "self",       "href": "http://localhost:8080/comandaapi/interna/v1/tasques?filter=identificador==”31489824”\&page=0\&size=20"     }   \] } |
-
-### **Model de dades** {#model-de-dades-5}
-
-### 
-
-| Tasca |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| appCodi | cadena(16) | 1 | Codi (normalment de 3 lletres) assignat a l’aplicació. |
-| entornCodi | cadena(16) | 1 | Codi assignat a l’entorn a Comanda |
-| identificador | cadena(64) | 1 | Valor únic que identifica la tasca, i que Comanda utilitzarà per saber si ha de crear o actualitzar les dades de la tasca. Si Comanda detecta que ja existeix una tasca amb l’identificador, llavors procedeix a realitzar una actualització. En cas contrari crea una nova tasca. |
-| tipus | cadena(64) | 1 | Tipus de tasca. Valor lliure a decidir a cada aplicació que s’integra amb comanda.  |
-| nom | cadena(255) | 1 | Nom de la tasca |
-| descripcio | cadena(1024) | 0..1 | Descripció de la tasca |
-| estat | TascaEstat | 1 | Enumerat amb l’estat en què es troba la tasca |
-| estatDescripcio | cadena(1024) | 0..1 | Descripció de l’estat en què es troba la tasca |
-| numeroExpedient | cadena(128) | 0..1 | Número de l’expedient al que pertany la tasca |
-| prioritat | Prioritat | 1 | Enumerat amb la prioritat de la tasca |
-| dataInici | Date | 0..1 | Data en que s’ha iniciat la tasca |
-| dataFi | Date | 0..1 | Data en que s’ha finalitzat la tasca. A Comanda, per defecte, al tenir data de fi la tasca es deixa de mostrar. |
-| dataCaducitat | Date | 0..1 | Data de caducitat de la tasca. Data en que hauria d’estar finalitzada. |
-| redireccio | URL | 1 | URL on es pot accedir per tramitar la tasca a l’aplicació origen |
-| responsable | cadena(128) | 0..1 | Responsable o propietari de la tasca |
-| grup | cadena(128) | 0..1 | Grup (rol) al que pertany la tasca. En el cas que una tasca requereixi que els usuaris que la puguin visualitzar hagin de pertànyer, sí o sí, a un rol concret. En cas que l’usuari no tingui aquest rol, no veurà la tasca a Comanda, independentment dels permisos que tingui. |
-| usuarisAmbPermis | List\<cadena\> | 0..N | Codis dels usuaris que poden accedir a la tasca. |
-| grupsAmbPermis | List\<cadena\> | 0..N | Rols que poden accedir a la tasca |
-
-Els usuaris veuran la tasca a Comanda si el seu codi d’usuari es troba a la llista usuarisAmbPermis, o si algun dels seus rols es troba a la llista grupsAmbPermis. En el cas en que grup estigui informat, llavors, a més amés es comprovarà que l’usuari també tingui el rol informat al camp grup.
-
-| TascaEstat |  |
-| ----- | :---- |
-| Valor | Descripció |
-| PENDENT | Tasca pendent d’iniciar |
-| INICIADA | Tasca iniciada |
-| FINALITZADA | Tasca ja finalitzada |
-| CANCELADA | Tasca cancel·lada |
-| ERROR | Tasca en estat erroni |
-
-| Prioritat |  |
-| ----- | :---- |
-| Valor | Descripció |
-| NONE | Sense prioritat assignada |
-| BAIXA | Baixa prioritat |
-| NORMAL | Proritat normal |
-| ALTA | Alta prioritat |
-| MAXIMA | Màxima prioritat |
-
-| TascaPage |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| content | List\<Tasca\> | 1 | Contingut de la pàgina |
-| page | PageMetadata | 1 | Metadades de paginació |
-| links | List\<TascaPageLink\> | 0..1 | Enllaços HATEOAS |
-
-| PageMetadata |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| number | long | 1 | Número de pàgina |
-| size | long | 1 | Mida de pàgina |
-| totalElements | long | 1 | Total d'elements |
-| totalPages | long | 1 | Total de pàgines |
-
-| TascaPageLink |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| href | PageMetadata | 1 | Amb qui es relaciona l'enllaç (ex. self) |
-| rel | List\<Tasca\> | 1 | URL de l'enllaç |
-
-8. # **Avisos** {#avisos}
-
-Els avisos són comunicacions informatives mostrades a Comanda. Els usuaris han de poder visualitzar tots els avisos a Comanda.
-
-Per a poder donar d’alta o modificar avisos a Comanda es disposa dels següents endpoints:
-
-* POST /comandaapi/interna/v1/avisos: crea o modifica un avís a Comanda.  
-* PUT /comandaapi/interna/v1/avisos/{identificador}: modifica un avís a Comanda.  
-* POST /comandaapi/interna/v1/avisos/multiple: crea o modifica múltiples avisos a Comanda.  
-* PUT /comandaapi/interna/v1/avisos/multiple: modifica múltiples avisos a Comanda.  
-* GET /comandaapi/interna/v1/avisos/{identificador}: Consulta un avís a Comanda.  
-* GET /comandaapi/interna/v1/avisos: Consulta un llistat d’avisos a Comanda.
-
-| Creació o modificació d’un avís |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/avisos   Ex. https:/dev.caib.es/comandaapi/interna/v1/avisos |
-| **Descripció** | Aquest servei  crea o modifica un avís a Comanda. |
-| **Mètode** | POST |
-| **Autenticació** | BASIC |
-| **Paràmetres** | Avis |
-| **Resposta** | HTTP Status OK |
-| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/v1/avisos' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }' |
-
-| Modificació d’un avís |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/avisos/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/v1/avisos/1234 |
-| **Descripció** | Aquest servei modifica una tasca existent a Comanda. |
-| **Mètode** | PUT |
-| **Autenticació** | BASIC |
-| **Paràmetres** | **identificador**: identificador de la tasca a modificar |
-| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
-| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/v1/avisos/31489824 \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }' |
-
-| Creació o modificació de múltiples avisos |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/avisos/multiple Ex. https:/dev.caib.es/comandaapi/interna/v1/avisos/multiple |
-| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
-| **Mètode** | POST |
-| **Autenticació** | BASIC |
-| **Resposta** | HTTP Status OK |
-| **Ex. de petició** | curl \--location 'dev.caib.es/comandaapi/interna/v1/avisos/multiple' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }\]' |
-
-| Modificació de múltiples avisos |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/avisos/multiple Ex. https:/dev.caib.es/comandaapi/interna/v1/avisos/multiple |
-| **Descripció** | Aquest servei modifica múltiples tasques existents a Comanda. |
-| **Mètode** | PUT |
-| **Autenticació** | BASIC |
-| **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba cap tasca a modificar |
-| **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/v1/avisos \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }\]' |
-
-| Consulta una avís |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/avisos/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/v1/avisos/1234 |
-| **Descripció** | Aquest servei consulta una tasca Comanda. |
-| **Mètode** | GET |
-| **Autenticació** | BASIC |
-| **Paràmetres** | **identificador**: identificador de la tasca a cercar |
-| **Resposta** | Tasca si s’ha trobat la tasca HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
-| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/v1/avisos/31489824 \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
-| **Ex. de resposta** | {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, } |
-
-| Consulta de múltiples avisos |  |
-| ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/v1/avisos   Ex. https:/dev.caib.es/comandaapi/interna/v1/avisos |
-| **Descripció** | Aquest servei obté un llistat paginat de Tasca. |
-| **Mètode** | GET |
-| **Autenticació** | BASIC |
-| **Paràmetres** | **quickFilter**: Filtre ràpid que s’aplica sobre el camp nom de les tasques**filter**: Filtre en format SpringFilter (veure annex) **namedQueries**: Consultes predefinides a aplicar. NO IMPLEMENTAT. **perspectives**: Perspectives a aplicar a la consulta: “EXPIRATION”: Emplena el camp diesPerCaducar **page**: Número de pàgina a recuperar **size**: Mida de pàgina a recuperar |
-| **Resposta** | TascaPage |
-| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/v1/avisos?filter=identificador==”31489824”\&page=0\&size=20’ \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
-| **Ex. de resposta** | {   "content": \[     {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }   \],   "page": {     "number": 0,     "size": 20,     "totalElements": 1,     "totalPages": 1   },   "links": \[     {       "rel": "self",       "href": "http://localhost:8080/comandaapi/interna/v1/avisos?filter=identificador==”31489824”\&page=0\&size=20"     }   \] } |
-
-### **Model de dades** {#model-de-dades-6}
-
-### 
-
-| Avis |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| appCodi | cadena(16) | 1 | Codi (normalment de 3 lletres) assignat a l’aplicació. |
-| entornCodi | cadena(16) | 1 | Codi assignat a l’entorn a Comanda |
-| identificador | cadena(64) | 1 | Valor únic que identifica un avís, i que Comanda utilitzarà per saber si ha de crear o actualitzar les dades de l’avís. Si Comanda detecta que ja existeix un avís amb l’identificador, llavors procedeix a realitzar una actualització. En cas contrari crea un nou avís. |
-| tipus | AvisTipus | 1 | Enumerat amb el tipus d’avís  |
-| nom | cadena(255) | 1 | Nom de l’avís |
-| descripcio | cadena(1024) | 0..1 | Descripció de l’avís |
-| dataInici | Date | 0..1 | Data en que s’ha iniciat l’avís |
-| dataFi | Date | 0..1 | Data en que s’ha finalitzat l’avís. A Comanda, per defecte, al tenir data de fi l’avís es deixa de mostrar. |
-| redireccio | URL | 0..1 | URL on es pot accedir per consultar l’avís a l’aplicació origen |
-| responsable | cadena(128) | 0..1 | Responsable o creador de l’avís |
-| grup | cadena(128) | 0..1 | Grup (rol) al que pertany l’avís. En el cas que un avís requereixi que els usuaris que el puguin visualitzar hagin de pertànyer, sí o sí, a un rol concret. En cas que l’usuari no tingui aquest rol, no veurà l’avís a Comanda, independentment dels permisos que tingui. |
-| usuarisAmbPermis | List\<cadena\> | 0..N | Codis dels usuaris que poden accedir a l’avís. |
-| grupsAmbPermis | List\<cadena\> | 0..N | Rols que poden accedir a l’avís |
-
-En el cas d’avisos globals, accessibles per tothom, es deixaran els camps grup, usuarisAmbPermis i grupsAmbPermis buits.  
-El camp redirecció bomés s’emplenarà en el cas en que l’aplicació d’origen disposi d’una pàgina per visualitzar l’avís, i que aquest tingui més informació de l’enviada a comanda. En cas contrari es deixarà buit.
-
-| AvisTipus |  |
-| ----- | :---- |
-| Valor | Descripció |
-| NOTICIA | Avís que informa d’alguna notícia de l’aplicació, d’alguna novetat |
-| INFO | Avís amb informació general de l’aplicació |
-| ALERTA | Avís amb alguna advertència de l’aplicació |
-| ERROR | Avís amb informació sobre algún error general de l’aplicació |
-| CRITIC | Avís amb informació sobre algún error crític de l’aplicació |
-
-| AvisPage |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| content | List\<Tasca\> | 1 | Contingut de la pàgina |
-| page | PageMetadata | 1 | Metadades de paginació |
-| links | List\<TascaPageLink\> | 0..1 | Enllaços HATEOAS |
-
-| PageMetadata |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| number | long | 1 | Número de pàgina |
-| size | long | 1 | Mida de pàgina |
-| totalElements | long | 1 | Total d'elements |
-| totalPages | long | 1 | Total de pàgines |
-
-| AvisPageLink |  |  |  |
-| ----- | :---- | :---- | :---- |
-| Camp | Tipus | Car | Descripció |
-| href | PageMetadata | 1 | Amb qui es relaciona l'enllaç (ex. self) |
-| rel | List\<Tasca\> | 1 | URL de l'enllaç |
-
-9. # **Exemples** {#exemples}
-
-Tot seguit es mostren uns exemples senzills d’enviament de tasques i avisos:
-
-## **Enviar una tasca** {#enviar-una-tasca}
-
-| `Tasca tasca = Tasca.builder()   .appCodi("APP")   .entornCodi("PRO")   .identificador("notif-987")   .tipus("NOTIFICA")   .nom("Notificació pendent")   .descripcio("Usuari ha d’accedir i signar")   .estat(TascaEstat.PENDENT)   .prioritat(Prioritat.ALTA)   .dataInici(LocalDateTime.now())   .redireccio(new URL("https://app.exemple.org/notificacio/987"))   .usuarisAmbPermis(List.of("USR1"))   .grupsAmbPermis(List.of("ROL_OPERADOR"))   .build(); ComandaClient comandaClient = new ComandaClient(url, username, password); var resposta = comandaClient.crearTasca(tasca);` |
-| :---- |
-
-Si no s’utilitza el client, es pot realitzar una petició REST a: 
-
-* POST {COMANDA\_API\_URL}/v1/tasques body: tasca
-
-  ## **Enviar un avís** {#enviar-un-avís}
-
-| `Avis avis = Avis.builder()   .appCodi("APP")   .identificador("12345")   .tipus(AvisTipus.INFO)   .nom("Manteniment")   .descripcio("Talls diumenge 8:00-10:00")   .dataInici(LocalDateTime.now())   .dataFi(LocalDateTime.now().plusHours(2))   .build();ComandaClient comandaClient = new ComandaClient(url, username, password); var resposta = comandaClient.crearAvis(avis);` |
-| :---- |
-
-Si no s’utilitza el client, es pot realitzar una petició REST a:
-
-* POST {COMANDA\_URL}/api/cues/avisos body: avis
-
-Amb aquests elements, qualsevol aplicació pot integrar-se amb Comanda per a Salut, Estadístiques, Tasques i Avisos adaptant els serveis propis per a obtenir les dades i mapant-les als models de comanda-lib.
-
 # 
 
-# **Annex 1 \- Spring-filter** {#annex-1---spring-filter}
+# **Annex 1 \- Servers amb Spring** {#annex-1---servers-amb-spring}
+
+Tot seguit es mostra com implementar els mètodes de server utilitzant Spring Web. 
+
+## **Salut** {#salut-2}
+
+| import es.caib.comanda.model.salut.AppInfo; import es.caib.comanda.model.salut.SalutInfo; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import javax.servlet.http.HttpServletRequest; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/* @RestController @RequestMapping("/v1/salut") public class SalutApiController {    @GetMapping("/info")    public AppInfo salutInfo(HttpServletRequest request)  throws java.io.IOException {       ...    }    @GetMapping    public SalutInfo salut(HttpServletRequest request)  throws java.io.IOException {       ...    } } |
+| :---- |
+
+## **Estadística** {#estadística}
+
+| import es.caib.comanda.model.estadistica.EstadistiquesInfo; import es.caib.comanda.model.estadistica.RegistresEstadistics; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import javax.servlet.http.HttpServletRequest; import java.io.IOException; import java.util.List; */\*\* \* Contracte de l'API d'Estadístiques que COMANDA espera que implementin les APPs. \*/* @RestController @RequestMapping("/v1/estadistiques") public class EstadistiquesApiController {    @GetMapping("/info")    public EstadistiquesInfo estadistiquesInfo() throws IOException {       ...    }    @GetMapping    public RegistresEstadistics estadistiques(HttpServletRequest request)  throws IOException {       ...    }    @GetMapping("/of/{data}")    public RegistresEstadistics estadistiquesPerData(            HttpServletRequest request,            @PathVariable String data) throws Exception {       ...    }    @GetMapping("/from/{dataInici}/to/{dataFi}")    public List\<RegistresEstadistics\> estadistiquesPerRang(            HttpServletRequest request,            @PathVariable("dataInici") String dataInici,            @PathVariable("dataFi") String dataFi) throws Exception {       ...    } } |
+| :---- |
+
+## **Log** {#log-1}
+
+| import es.caib.comanda.model.log.FitxerContingut; import es.caib.comanda.model.log.FitxerInfo; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import java.util.List; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/*  @RestController @RequestMapping("/v1/logs") public class LogApiController {    @GetMapping()    public List\<FitxerInfo\> getFitxers() {       ...    }    @GetMapping("/{nomFitxer}")    public FitxerContingut getFitxerByNom(            @PathVariable("nomFitxer") String nomFitxer) {       ...    }    @GetMapping("/{nomFitxer}/linies/{nLinies}")    public List\<String\> getFitxerLinies(            @PathVariable("nomFitxer") String nomFitxer,            @PathVariable("nLinies") Long nLinies) {       ...    } } |
+| :---- |
+
+# **Annex 2 \- Spring-filter** {#annex-2---spring-filter}
 
 ## **Camp filter – Sintaxi bàsica** {#camp-filter-–-sintaxi-bàsica}
 

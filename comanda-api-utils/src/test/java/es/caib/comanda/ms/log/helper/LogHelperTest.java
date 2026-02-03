@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.log.helper;
 
-import es.caib.comanda.model.v1.log.FitxerContingut;
+import es.caib.comanda.model.server.monitoring.FitxerContingut;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

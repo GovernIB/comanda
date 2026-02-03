@@ -1,15 +1,21 @@
 package es.caib.comanda.api.config;
 
 import es.caib.comanda.ms.back.config.BaseOpenApiConfig;
+import io.swagger.v3.core.converter.AnnotatedType;
+import io.swagger.v3.core.converter.ModelConverter;
+import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Iterator;
 import java.util.List;
 
 @Configuration
@@ -30,6 +36,28 @@ public class OpenApiConfig extends BaseOpenApiConfig {
         return AuthType.BASIC;
     }
 
+    static {
+        ModelConverters.getInstance().addConverter(new ModelConverter() {
+            @Override
+            public Schema resolve(AnnotatedType type, io.swagger.v3.core.converter.ModelConverterContext context, Iterator<ModelConverter> chain) {
+                java.lang.reflect.Type javaType = type.getType();
+
+                // Comprovem si la classe és byte[]
+                if (javaType instanceof Class<?> && ((Class<?>) javaType) == byte[].class) {
+                    // Retornem un StringSchema amb format byte.
+                    // Swagger agafarà la descripció de l'anotació @Schema del camp automàticament.
+                    return new StringSchema().format("byte");
+                }
+
+                // Continuar amb la cadena de convertidors si no és un byte[]
+                if (chain.hasNext()) {
+                    return chain.next().resolve(type, context, chain);
+                }
+                return null;
+            }
+        });
+    }
+
     // Limitar la documentació OpenAPI als controladors dels paquets indicats i agrupar-la sota un títol clar
     @Bean
     public GroupedOpenApi apiTasquesGroup() {
@@ -37,7 +65,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                 .group("tasques-v1")
                 .displayName("Tasques v1 | APP → COMANDA")
                 .packagesToScan("es.caib.comanda.api.controller.v1")
-                .pathsToMatch("/v1/tasques/**")
+                .pathsToMatch("/tasques/v1/**")
                 .addOpenApiCustomiser(openApi -> {
                     if (openApi.getInfo() != null) {
                         openApi.getInfo()
@@ -53,7 +81,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                 .group("avisos-v1")
                 .displayName("Avisos v1 | APP → COMANDA")
                 .packagesToScan("es.caib.comanda.api.controller.v1")
-                .pathsToMatch("/v1/avisos/**")
+                .pathsToMatch("/avisos/v1/**")
                 .addOpenApiCustomiser(openApi -> {
                     if (openApi.getInfo() != null) {
                         openApi.getInfo()
@@ -69,7 +97,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                 .group("permisos-v1")
                 .displayName("Permisos v1 | APP → COMANDA")
                 .packagesToScan("es.caib.comanda.api.controller.v1")
-                .pathsToMatch("/v1/permisos/**")
+                .pathsToMatch("/permisos/v1/**")
                 .addOpenApiCustomiser(openApi -> {
                     if (openApi.getInfo() != null) {
                         openApi.getInfo()
@@ -86,7 +114,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                 .group("salut-v1")
                 .displayName("Salut v1 | COMANDA → APP")
                 .packagesToScan("es.caib.comanda.api.client.controller.v1")
-                .pathsToMatch("/v1/salut/**")
+                .pathsToMatch("/salut/v1/**")
                 .addOpenApiCustomiser(openApi -> {
                     if (openApi.getInfo() != null) {
                         openApi.getInfo()
@@ -106,9 +134,9 @@ public class OpenApiConfig extends BaseOpenApiConfig {
     public GroupedOpenApi apiEstadistiquesGroup() {
         return GroupedOpenApi.builder()
                 .group("estadistiques-v1")
-                .displayName("Estadístiques v1 | COMANDA → APP")
+                .displayName("Estadistiques v1 | COMANDA → APP")
                 .packagesToScan("es.caib.comanda.api.client.controller.v1")
-                .pathsToMatch("/v1/estadistiques/**")
+                .pathsToMatch("/estadistiques/v1/**")
                 .addOpenApiCustomiser(openApi -> {
                     if (openApi.getInfo() != null) {
                         openApi.getInfo()
@@ -128,7 +156,7 @@ public class OpenApiConfig extends BaseOpenApiConfig {
                 .group("logs-v1")
                 .displayName("Logs v1 | COMANDA → APP")
                 .packagesToScan("es.caib.comanda.api.client.controller.v1")
-                .pathsToMatch("/v1/logs/**")
+                .pathsToMatch("/logs/v1/**")
                 .addOpenApiCustomiser(openApi -> {
                     if (openApi.getInfo() != null) {
                         openApi.getInfo()

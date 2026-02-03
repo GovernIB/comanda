@@ -14,7 +14,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class FitxerContingut extends FitxerInfo {
 
-    @Schema(description = "Contingut del fitxer en format binari comprimit en zip")
+    @Schema(description = "Contingut del fitxer en format binari comprimit en zip",
+            format = "byte",
+            implementation = String.class)
     private byte[] contingut;
 
     @Schema(description = "Tipus MIME del fitxer", example = "application/pdf")

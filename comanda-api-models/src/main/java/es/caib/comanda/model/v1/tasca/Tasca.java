@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -22,24 +23,30 @@ import java.util.List;
 @Schema(name = "Tasca", description = "Representa una tasca publicada a COMANDA perquè sigui processada asíncronament")
 public class Tasca implements Serializable {
 
+    @NotNull
     @Schema(description = "Codi de l'aplicació que publica la tasca", example = "PORTAFIB")
     private String appCodi;
 
+    @NotNull
     @Schema(description = "Codi de l'entorn de l'aplicació", example = "DEV")
     private String entornCodi;
 
+    @NotNull
     @Schema(description = "Identificador únic de la tasca en l'àmbit de l'APP", example = "TAS-2025-0001")
     private String identificador;
 
+    @NotNull
     @Schema(description = "Tipus funcional de la tasca", example = "GENERAR_INFORME")
     private String tipus;
 
+    @NotNull
     @Schema(description = "Nom curt de la tasca", example = "Generar informe mensual")
     private String nom;
 
     @Schema(description = "Descripció detallada de la tasca", example = "Generar l'informe mensual de consums per unitat")
     private String descripcio;
 
+    @NotNull
     @Schema(description = "Estat de processament de la tasca", example = "PENDENT")
     private TascaEstat estat;
 
@@ -64,6 +71,7 @@ public class Tasca implements Serializable {
     @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
     private OffsetDateTime dataCaducitat;
 
+    @NotNull
     @Schema(description = "URL de redirecció per accedir a la tasca", example = "https://dev.caib.es/app/tasques/TAS-2025-0001", format = "uri")
     private URL redireccio;
 
