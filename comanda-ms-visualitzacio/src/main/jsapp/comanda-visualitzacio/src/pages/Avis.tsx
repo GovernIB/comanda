@@ -308,7 +308,7 @@ const Avis = () => {
                 datagridApiRef={gridApiRef}
                 sortModel={dataGridSortModel}
                 findDisabled={filter == null}
-                // filter={filter}
+                filter={filter}
                 readOnly
                 toolbarType="upper"
                 toolbarHideQuickFilter
