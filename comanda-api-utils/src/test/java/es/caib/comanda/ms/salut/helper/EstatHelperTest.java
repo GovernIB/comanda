@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.model.server.v1.monitoring.EstatSalutEnum;
+import es.caib.comanda.model.server.monitoring.EstatSalutEnum;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

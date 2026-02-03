@@ -1,7 +1,7 @@
 package es.caib.comanda.api.test;
 
 
-import es.caib.comanda.service.v1.management.AppComandaClient;
+import es.caib.comanda.service.management.AppComandaClient;
 
 import static es.caib.comanda.api.test.ClientProps.*;
 

@@ -95,10 +95,10 @@
 		<module>comanda-api-utils</module>
 		<module>comanda-api-interna</module>
 		<!-- APIs Clients -->
-		<module>comanda-api-clients/comanda-api-client-monitoring-v1</module>
-		<module>comanda-api-clients/comanda-api-client-management-v1</module>
+		<module>comanda-api-clients/comanda-api-client-monitoring</module>
+		<module>comanda-api-clients/comanda-api-client-management</module>
 		<!-- APIs Servers -->
-		<module>comanda-api-servers/comanda-api-server-monitoring-v1</module>
+		<module>comanda-api-servers/comanda-api-server-monitoring</module>
 
 		<module>comanda-ear</module>
 		<module>comanda-base</module>

@@ -1,11 +1,11 @@
 package es.caib.comanda.api.test;
 
-import es.caib.comanda.model.v1.management.Avis;
-import es.caib.comanda.model.v1.management.Objecte;
-import es.caib.comanda.model.v1.management.Permis;
-import es.caib.comanda.model.v1.management.Tasca;
-import es.caib.comanda.model.v1.management.Usuari;
-import es.caib.comanda.service.v1.management.AppComandaClient;
+import es.caib.comanda.model.management.Avis;
+import es.caib.comanda.model.management.Objecte;
+import es.caib.comanda.model.management.Permis;
+import es.caib.comanda.model.management.Tasca;
+import es.caib.comanda.model.management.Usuari;
+import es.caib.comanda.service.management.AppComandaClient;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

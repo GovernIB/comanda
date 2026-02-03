@@ -20,13 +20,13 @@
         <!-- Clients generats per fer crides a un segon servidor (tasques, avisos i permisos) -->
         <dependency>
             <groupId>es.caib.comanda</groupId>
-            <artifactId>comanda-api-client-monitoring-v1</artifactId>
+            <artifactId>comanda-api-client-monitoring</artifactId>
             <version>${comanda.api.version}</version>
         </dependency>
         <!-- Clients generats per fer crides a un segon servidor (salut, estadistica i log) -->
         <dependency>
             <groupId>es.caib.comanda</groupId>
-            <artifactId>comanda-api-client-management-v1</artifactId>
+            <artifactId>comanda-api-client-management</artifactId>
             <version>${comanda.api.version}</version>
         </dependency>
 

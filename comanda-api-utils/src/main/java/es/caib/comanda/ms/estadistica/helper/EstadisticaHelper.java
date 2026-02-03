@@ -1,9 +1,9 @@
 package es.caib.comanda.ms.estadistica.helper;
 
 
-import es.caib.comanda.model.server.v1.monitoring.Dimensio;
-import es.caib.comanda.model.server.v1.monitoring.Fet;
-import es.caib.comanda.model.server.v1.monitoring.RegistreEstadistic;
+import es.caib.comanda.model.server.monitoring.Dimensio;
+import es.caib.comanda.model.server.monitoring.Fet;
+import es.caib.comanda.model.server.monitoring.RegistreEstadistic;
 
 import java.util.ArrayList;
 import java.util.Collection;

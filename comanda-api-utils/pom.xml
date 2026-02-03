@@ -16,7 +16,7 @@
         <!-- APIs Servidor amb models generats -->
         <dependency>
             <groupId>es.caib.comanda</groupId>
-            <artifactId>comanda-api-server-monitoring-v1</artifactId>
+            <artifactId>comanda-api-server-monitoring</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

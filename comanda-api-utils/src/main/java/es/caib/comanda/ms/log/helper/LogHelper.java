@@ -1,7 +1,7 @@
 package es.caib.comanda.ms.log.helper;
 
-import es.caib.comanda.model.server.v1.monitoring.FitxerContingut;
-import es.caib.comanda.model.server.v1.monitoring.FitxerInfo;
+import es.caib.comanda.model.server.monitoring.FitxerContingut;
+import es.caib.comanda.model.server.monitoring.FitxerInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 

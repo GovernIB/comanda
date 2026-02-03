@@ -37,8 +37,5 @@ build/
 **/node_modules/
 /derby.log
 /application.properties
-/src/main/resources/openapi/openapi-comanda-avis-v1.yml
-/src/main/resources/openapi/openapi-comanda-permis-v1.yml
-/src/main/resources/openapi/openapi-comanda-tasca-v1.yml
-/src/main/resources/openapi/openapi-comanda-monitoring-v1.yml
-/src/main/resources/openapi/openapi-comanda-management-v1.yml
+/src/main/resources/openapi/openapi-comanda-management.yml
+/src/main/resources/openapi/openapi-comanda-monitoring.yml

@@ -1,11 +1,12 @@
 package es.caib.comanda.api.test;
 
-import es.caib.comanda.api.v1.monitoring.ComandaAppEstadistiquesApi;
-import es.caib.comanda.api.v1.monitoring.ComandaAppLogsApi;
-import es.caib.comanda.api.v1.monitoring.ComandaAppSalutApi;
-import es.caib.comanda.api.v1.management.AppComandaTasquesApi;
-import es.caib.comanda.api.v1.management.AppComandaAvisosApi;
-import es.caib.comanda.api.v1.management.AppComandaPermisosApi;
+import es.caib.comanda.api.monitoring.ComandaAppEstadistiquesApi;
+import es.caib.comanda.api.monitoring.ComandaAppLogsApi;
+import es.caib.comanda.api.monitoring.ComandaAppSalutApi;
+import es.caib.comanda.api.management.AppComandaTasquesApi;
+import es.caib.comanda.api.management.AppComandaAvisosApi;
+import es.caib.comanda.api.management.AppComandaPermisosApi;
+import es.caib.comanda.service.management.ApiClient;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -30,7 +31,7 @@ public final class ApiClientFactory {
     public static ComandaAppSalutApi salutApi() {
         String base = ClientProps2.get(ClientProps2.PROP_BASE).orElse(null);
         if (base == null) return null;
-        es.caib.comanda.service.v1.monitoring.ApiClient c = new es.caib.comanda.service.v1.monitoring.ApiClient();
+        es.caib.comanda.service.monitoring.ApiClient c = new es.caib.comanda.service.monitoring.ApiClient();
         c.setBasePath(base);
         String auth = resolveAuthHeader();
         if (auth != null) c.addDefaultHeader("Authorization", auth);
@@ -40,7 +41,7 @@ public final class ApiClientFactory {
     public static ComandaAppEstadistiquesApi estadisticaApi() {
         String base = ClientProps2.get(ClientProps2.PROP_BASE).orElse(null);
         if (base == null) return null;
-        es.caib.comanda.service.v1.monitoring.ApiClient c = new es.caib.comanda.service.v1.monitoring.ApiClient();
+        es.caib.comanda.service.monitoring.ApiClient c = new es.caib.comanda.service.monitoring.ApiClient();
         c.setBasePath(base);
         String auth = resolveAuthHeader();
         if (auth != null) c.addDefaultHeader("Authorization", auth);
@@ -50,7 +51,7 @@ public final class ApiClientFactory {
     public static ComandaAppLogsApi logApi() {
         String base = ClientProps2.get(ClientProps2.PROP_BASE).orElse(null);
         if (base == null) return null;
-        es.caib.comanda.service.v1.monitoring.ApiClient c = new es.caib.comanda.service.v1.monitoring.ApiClient();
+        es.caib.comanda.service.monitoring.ApiClient c = new es.caib.comanda.service.monitoring.ApiClient();
         c.setBasePath(base);
         String auth = resolveAuthHeader();
         if (auth != null) c.addDefaultHeader("Authorization", auth);
@@ -60,7 +61,7 @@ public final class ApiClientFactory {
     public static AppComandaTasquesApi tasquesApi() {
         String base = ClientProps2.get(ClientProps2.PROP_BASE).orElse(null);
         if (base == null) return null;
-        es.caib.comanda.service.v1.management.ApiClient c = new es.caib.comanda.service.v1.management.ApiClient();
+        ApiClient c = new ApiClient();
         c.setBasePath(base);
         String auth = resolveAuthHeader();
         if (auth != null) c.addDefaultHeader("Authorization", auth);
@@ -70,7 +71,7 @@ public final class ApiClientFactory {
     public static AppComandaAvisosApi avisosApi() {
         String base = ClientProps2.get(ClientProps2.PROP_BASE).orElse(null);
         if (base == null) return null;
-        es.caib.comanda.service.v1.management.ApiClient c = new es.caib.comanda.service.v1.management.ApiClient();
+        ApiClient c = new ApiClient();
         c.setBasePath(base);
         String auth = resolveAuthHeader();
         if (auth != null) c.addDefaultHeader("Authorization", auth);
@@ -80,7 +81,7 @@ public final class ApiClientFactory {
     public static AppComandaPermisosApi permisosApi() {
         String base = ClientProps2.get(ClientProps2.PROP_BASE).orElse(null);
         if (base == null) return null;
-        es.caib.comanda.service.v1.management.ApiClient c = new es.caib.comanda.service.v1.management.ApiClient();
+        ApiClient c = new ApiClient();
         c.setBasePath(base);
         String auth = resolveAuthHeader();
         if (auth != null) c.addDefaultHeader("Authorization", auth);

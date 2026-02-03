@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.model.server.v1.monitoring.InformacioSistema;
+import es.caib.comanda.model.server.monitoring.InformacioSistema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

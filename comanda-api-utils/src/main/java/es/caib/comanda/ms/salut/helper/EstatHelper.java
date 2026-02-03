@@ -1,7 +1,7 @@
 package es.caib.comanda.ms.salut.helper;
 
 
-import es.caib.comanda.model.server.v1.monitoring.EstatSalutEnum;
+import es.caib.comanda.model.server.monitoring.EstatSalutEnum;
 
 public class EstatHelper {
 
