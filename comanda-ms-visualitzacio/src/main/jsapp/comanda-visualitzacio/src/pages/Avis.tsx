@@ -33,7 +33,6 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
     const { user } = useUserContext();
-    const [unfinishedOnly, setUnfinishedOnly] = React.useState<boolean>(true);
     const [ownAvisOnly, setOwnAvisOnly] = React.useState<boolean>(true);
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
@@ -41,11 +40,8 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
     const moreFormApiRef = useFormApiRef();
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear({ finalitzada: unfinishedOnly });
+        moreFilterApiRef?.current?.clear();
     }
-    React.useEffect(() => {
-        moreFormApiRef.current?.setFieldValue('finalitzada', unfinishedOnly);
-    }, [unfinishedOnly]);
     React.useEffect(() => {
         moreFormApiRef.current?.setFieldValue('avisPropi', ownAvisOnly);
     }, [ownAvisOnly]);
@@ -75,13 +71,6 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                         <Grid size={6}><FormField name="entorn" /></Grid>
                     </Grid>
                     <Button
-                        onClick={() => setUnfinishedOnly(fo => !fo)}
-                        variant={unfinishedOnly ? 'contained' : 'outlined'}
-                        title={unfinishedOnly ? t( $ => $.page.avisos.filter.unfinishedOnlyEnabled) : t($ => $.page.avisos.filter.unfinishedOnlyDisabled)}
-                        sx={{ mr: 2 }}>
-                        <Icon>pending_actions</Icon>
-                    </Button>
-                    <Button
                         onClick={() => setOwnAvisOnly(value => !value)}
                         disabled={!ownAvisOnlyFilterAvailable}
                         variant={ownAvisOnly ? 'contained' : 'outlined'}
@@ -107,7 +96,7 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                 formApiRef={moreFormApiRef}
                 resourceName="avis"
                 code="FILTER"
-                initialData={{ finalitzada: unfinishedOnly, avisPropi: ownAvisOnly  }}
+                initialData={{ avisPropi: ownAvisOnly  }}
                 springFilterBuilder={data => springFilterBuilder.and(
                     springFilterBuilder.eq('appId', data?.appId?.id),
                     springFilterBuilder.eq('entornId', data?.entornId?.id),
@@ -116,9 +105,6 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                     springFilterBuilder.eq('tipus', data?.tipus),
                     data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
                     data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
-                    // data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
-                    // data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
-                    data?.finalitzada && springFilterBuilder.eq('dataFi', null),
                     data?.avisPropi && ownAvisOnlyFilterAvailable && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
                 )}
                 onSpringFilterChange={onSpringFilterChange}
@@ -129,8 +115,6 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                     <Grid size={{ xs: 6, sm:4}}><FormField name="tipus" /></Grid>
                     <Grid size={{ xs: 6 }}><FormField name="dataInici1" /></Grid>
                     <Grid size={{ xs: 6 }}><FormField name="dataInici2" /></Grid>
-                    {/*<Grid size={{ xs: 6, sm:3}}><FormField name="dataFi1" /></Grid>*/}
-                    {/*<Grid size={{ xs: 6, sm:3}}><FormField name="dataFi2" /></Grid>*/}
                 </Grid>
             </MuiFilter>
         </>
@@ -224,11 +208,11 @@ const Avis = () => {
                                     />
                                 )}
                                 {params.formattedValue}
-                                {!params?.row?.id && <Chip label={count} sx={{ml: 1}}/>}
+                                {!params?.row?.id && <Chip label={count} size="small" sx={{ml: 1}}/>}
                             </Box>
                             : <>
                                 {params.formattedValue}
-                                {!params?.row?.id && <Chip label={count} sx={{ml: 1}}/>}
+                                {!params?.row?.id && <Chip label={count} size="small" sx={{ml: 1}}/>}
                             </>
                         }
                     </>} hideDescendantCount />
@@ -271,9 +255,6 @@ const Avis = () => {
               ]
             : []),
         ...dataGridCommonColumns,
-        // ...(filter?.includes('dataFi is null')
-        //     ? dataGridCommonColumns.slice(0, -1)
-        //     : dataGridCommonColumns),
         {
             field: 'dataInici',
             headerName: t($ => $.page.message.grid.timestamp),
