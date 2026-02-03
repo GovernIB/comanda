@@ -90,7 +90,7 @@ public class DimensioDesc   {
   
   @ApiModelProperty(example = "Entitat de la que s'ha generat la informació estadística", value = "Descripció funcional de la dimensió")
   @JsonProperty("descripcio")
-  public String getDescripcio() {
+   @Size(min=0,max=1024)public String getDescripcio() {
     return descripcio;
   }
 

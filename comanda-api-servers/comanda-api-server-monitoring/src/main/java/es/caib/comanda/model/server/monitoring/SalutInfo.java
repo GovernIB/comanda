@@ -65,7 +65,7 @@ public class SalutInfo   {
   
   @ApiModelProperty(example = "APP", required = true, value = "Codi identificador de l'aplicació")
   @JsonProperty(required = true, value = "codi")
-  @NotNull  @Size(min=1)public String getCodi() {
+  @NotNull  @Size(min=1,max=16)public String getCodi() {
     return codi;
   }
 
@@ -233,7 +233,7 @@ public class SalutInfo   {
   
   @ApiModelProperty(example = "1.4.3", value = "Versió de l'aplicació")
   @JsonProperty("versio")
-  public String getVersio() {
+   @Size(min=0,max=10)public String getVersio() {
     return versio;
   }
 

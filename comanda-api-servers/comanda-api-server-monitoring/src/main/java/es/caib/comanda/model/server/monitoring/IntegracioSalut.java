@@ -85,7 +85,7 @@ public class IntegracioSalut   {
   
   @ApiModelProperty(example = "REG", required = true, value = "Codi de la integració")
   @JsonProperty(required = true, value = "codi")
-  @NotNull  @Size(min=1)public String getCodi() {
+  @NotNull  @Size(min=1,max=32)public String getCodi() {
     return codi;
   }
 

@@ -64,7 +64,7 @@ public class AppInfo   {
   
   @ApiModelProperty(example = "APP", required = true, value = "Codi identificador de l'aplicació")
   @JsonProperty(required = true, value = "codi")
-  @NotNull  @Size(min=1)public String getCodi() {
+  @NotNull  @Size(min=1,max=16)public String getCodi() {
     return codi;
   }
 
@@ -104,7 +104,7 @@ public class AppInfo   {
   
   @ApiModelProperty(example = "2.1.0", required = true, value = "Versió desplegada de l'aplicació")
   @JsonProperty(required = true, value = "versio")
-  @NotNull  @Size(min=1)public String getVersio() {
+  @NotNull  @Size(min=1,max=10)public String getVersio() {
     return versio;
   }
 
@@ -143,7 +143,7 @@ public class AppInfo   {
   
   @ApiModelProperty(example = "a1b2c3d", value = "Revisió o identificador de commit de la build")
   @JsonProperty("revisio")
-  public String getRevisio() {
+   @Size(min=0,max=64)public String getRevisio() {
     return revisio;
   }
 
@@ -163,7 +163,7 @@ public class AppInfo   {
   
   @ApiModelProperty(example = "Temurin-17.0.9", value = "Versió de JDK amb la qual s'executa l'aplicació")
   @JsonProperty("jdkVersion")
-  public String getJdkVersion() {
+   @Size(min=0,max=10)public String getJdkVersion() {
     return jdkVersion;
   }
 

@@ -88,7 +88,7 @@ public class MissatgeSalut   {
   
   @ApiModelProperty(example = "Manteniment programat a les 22:00h", required = true, value = "Text del missatge")
   @JsonProperty(required = true, value = "missatge")
-  @NotNull  @Size(min=1)public String getMissatge() {
+  @NotNull  @Size(min=1,max=2048)public String getMissatge() {
     return missatge;
   }
 

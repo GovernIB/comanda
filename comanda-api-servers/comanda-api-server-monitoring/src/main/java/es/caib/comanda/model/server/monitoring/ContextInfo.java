@@ -54,7 +54,7 @@ public class ContextInfo   {
   
   @ApiModelProperty(example = "API_INT", required = true, value = "Codi del context")
   @JsonProperty(required = true, value = "codi")
-  @NotNull  @Size(min=1)public String getCodi() {
+  @NotNull  @Size(min=1,max=64)public String getCodi() {
     return codi;
   }
 
@@ -94,7 +94,7 @@ public class ContextInfo   {
   
   @ApiModelProperty(example = "/appapi/interna", required = true, value = "Path base del context")
   @JsonProperty(required = true, value = "path")
-  @NotNull  @Size(min=1)public String getPath() {
+  @NotNull  @Size(min=1,max=255)public String getPath() {
     return path;
   }
 
@@ -150,7 +150,7 @@ public class ContextInfo   {
   
   @ApiModelProperty(example = "https://dev.caib.es/app/internaapi/swagger/index.html", value = "URL o especificació OpenAPI del context, si està disponible")
   @JsonProperty("api")
-  public String getApi() {
+   @Size(min=0,max=255)public String getApi() {
     return api;
   }
 

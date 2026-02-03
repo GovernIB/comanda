@@ -101,7 +101,7 @@ public class SubsistemaSalut   {
   
   @ApiModelProperty(example = "BD", required = true, value = "Codi del subsistema")
   @JsonProperty(required = true, value = "codi")
-  @NotNull  @Size(min=1)public String getCodi() {
+  @NotNull  @Size(min=1,max=32)public String getCodi() {
     return codi;
   }
 

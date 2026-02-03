@@ -88,7 +88,7 @@ public class IndicadorDesc   {
   
   @ApiModelProperty(example = "Total de visites registrades per període", value = "Descripció funcional de l'indicador")
   @JsonProperty("descripcio")
-  public String getDescripcio() {
+   @Size(min=0,max=1024)public String getDescripcio() {
     return descripcio;
   }
 
