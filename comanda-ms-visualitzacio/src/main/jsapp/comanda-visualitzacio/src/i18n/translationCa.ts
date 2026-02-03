@@ -43,19 +43,19 @@ const translationCa = {
         },
         integracioEstat: {
             UP: {
-                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les últimes peticions"
+                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les darreres peticions"
             },
             WARN: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les últimes peticions"
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les darreres peticions"
             },
             DEGRADED: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les últimes peticions",
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les darreres peticions",
             },
             ERROR: {
-                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les últimes peticions"
+                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les darreres peticions"
             },
             DOWN: {
-                tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les últimes peticions",
+                tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les darreres peticions",
             },
             MAINTENANCE: {
                 tooltip: "Sense informació del servei degut a tasques de <bold>manteniment</bold>",
