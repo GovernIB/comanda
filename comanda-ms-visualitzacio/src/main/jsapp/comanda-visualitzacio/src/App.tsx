@@ -145,6 +145,13 @@ export const App: React.FC = () => {
                 resourceName: 'dashboard',
             },
             {
+                id: 'templateEstils',
+                title: t($ => $.menu.templateEstils),
+                to: '/templateEstils',
+                icon: 'palette',
+                resourceName: 'templateEstils',
+            },
+            {
                 id: 'calendari',
                 title: t($ => $.menu.calendari),
                 to: '/calendari',

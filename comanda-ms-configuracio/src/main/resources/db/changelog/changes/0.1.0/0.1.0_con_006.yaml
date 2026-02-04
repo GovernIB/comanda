@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-34-01
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}entorn
+            columns:
+              - column:
+                  name: ordre
+                  type: BIGINT
+                  remarks: Camp que indica l'ordre dels entorns a l'aplicació

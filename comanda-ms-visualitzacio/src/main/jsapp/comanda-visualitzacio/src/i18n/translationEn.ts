@@ -87,6 +87,7 @@ const translationEn: translationResourcesType = {
         integracio: "Integrations",
         widget: "Statistic widgets",
         dashboard: "Dashboards",
+        templateEstils: "Style templates",
         calendari: "Calendar",
         parametre: "Parameters",
         dimensio: "Dimensions",

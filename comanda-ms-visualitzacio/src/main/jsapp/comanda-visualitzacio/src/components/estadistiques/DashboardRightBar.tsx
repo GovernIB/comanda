@@ -122,21 +122,39 @@ const DashboardRightBar: React.FC<DashboardRightBarProps> = ({
                             </Grid>
                             
                             {selectedItem.estilsCustom && (
-                                <Grid item xs={12}>
-                                     <Typography variant="subtitle2" sx={{ mt: 1 }}>Atributs Visuals Custom</Typography>
-                                     <FormField name="atributsVisuals.colorFons" label="Color Fons" type="color" />
-                                     <FormField name="atributsVisuals.colorText" label="Color Text" type="color" />
-                                     <FormField name="atributsVisuals.colorVora" label="Color Vora" type="color" />
-                                     <FormField name="atributsVisuals.ampleVora" label="Ample Vora" type="number" />
-                                     <FormField name="atributsVisuals.mostrarVora" label="Mostrar Vora" type="checkbox" />
+                                <Grid container spacing={2}>
+                                     <Grid item xs={12}>
+                                          <Typography variant="subtitle2" sx={{ mt: 1 }}>Atributs Visuals Custom</Typography>
+                                     </Grid>
+                                     <Grid item xs={6}>
+                                          <FormField name="atributsVisuals.colorFons" label="Color Fons" type="color" />
+                                     </Grid>
+                                     <Grid item xs={6}>
+                                          <FormField name="atributsVisuals.colorText" label="Color Text" type="color" />
+                                     </Grid>
+                                     <Grid item xs={6}>
+                                          <FormField name="atributsVisuals.colorVora" label="Color Vora" type="color" />
+                                     </Grid>
+                                     <Grid item xs={6}>
+                                          <FormField name="atributsVisuals.ampleVora" label="Ample Vora" type="number" />
+                                     </Grid>
+                                     <Grid item xs={12}>
+                                          <FormField name="atributsVisuals.mostrarVora" label="Mostrar Vora" type="checkbox" />
+                                     </Grid>
                                      
                                      {selectedItemType === 'WIDGET' && (
                                          <>
-                                             <Typography variant="subtitle2" sx={{ mt: 2 }}>Estils Destacats</Typography>
-                                             <FormField name="templateHighlight" label="Utilitzar colors destacats de la plantilla" type="checkbox" />
-                                             <Divider sx={{ my: 2 }} />
-                                             <FormField name="atributsVisuals.midaFontTitol" label="Mida Font Títol" type="number" />
-                                             <FormField name="atributsVisuals.midaFontDescripcio" label="Mida Font Descripció" type="number" />
+                                             <Grid item xs={12}>
+                                                 <Typography variant="subtitle2" sx={{ mt: 2 }}>Estils Destacats</Typography>
+                                                 <FormField name="templateHighlight" label="Utilitzar colors destacats de la plantilla" type="checkbox" />
+                                                 <Divider sx={{ my: 2 }} />
+                                             </Grid>
+                                             <Grid item xs={6}>
+                                                 <FormField name="atributsVisuals.midaFontTitol" label="Mida Font Títol" type="number" />
+                                             </Grid>
+                                             <Grid item xs={6}>
+                                                 <FormField name="atributsVisuals.midaFontDescripcio" label="Mida Font Descripció" type="number" />
+                                             </Grid>
                                          </>
                                      )}
                                 </Grid>

@@ -87,6 +87,7 @@ const translationCa = {
         integracio: "Integracions",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
+        templateEstils: "Plantilles d'estils",
         calendari: "Calendari",
         parametre: "Paràmetres",
         dimensio: "Dimensions",

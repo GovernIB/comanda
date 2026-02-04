@@ -28,8 +28,9 @@ public class RestTemplateConfig {
         RestTemplate restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))   // timeout de connexió
 //                .setReadTimeout(Duration.ofSeconds(10))     // timeout de lectura
+                .additionalMessageConverters(getConverter())
                 .build();
-        restTemplate.getMessageConverters().add(0, getConverter());
+//        restTemplate.getMessageConverters().add(0, getConverter());
         return restTemplate;
     }
 

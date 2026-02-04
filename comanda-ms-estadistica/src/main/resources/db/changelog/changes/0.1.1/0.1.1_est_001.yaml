@@ -105,6 +105,6 @@ databaseChangeLog:
         - column: { name: colors_fosc, value: "#00548d,#0076c0,#409ad3,#80bde6,#c0def2" }
         - column: { name: destacats_clar, value: "#ff6600,#ff9933" }
         - column: { name: destacats_fosc, value: "#ff6600,#ff9933" }
-        - column: { name: versio, value: 0 }
-        - column: { name: creat_per, value: "system" }
-        - column: { name: data_creacio, valueComputed: "CURRENT_TIMESTAMP" }
+        - column: { name: v, value: 0 }
+        - column: { name: created_by, value: "system" }
+        - column: { name: created_date, valueComputed: "CURRENT_TIMESTAMP" }
