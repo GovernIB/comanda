@@ -129,24 +129,6 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
         : [];
 }
 
-const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
-    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
-    return React.useMemo(() => {
-        if (apiIsReady) {
-            const apiLinks = apiIndex?.links.getAll();
-            const resourceNames = apiLinks?.map((l: any) => l.rel);
-            return menuEntries?.
-                filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
-                map(e => {
-                    const { resourceName, ...otherProps } = e;
-                    return otherProps;
-                });
-        } else {
-            return [];
-        }
-    }, [apiIsReady, apiIndex]);
-}
-
 const footerHeight = 36;
 const generateFooter = () => {
     return (
@@ -203,7 +185,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
-    const baseAppMenuEntries = useBaseAppMenuEntries(menuEntries);
+    const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
     const { indexState } = useResourceApiContext();
