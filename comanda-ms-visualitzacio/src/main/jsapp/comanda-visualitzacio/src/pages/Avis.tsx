@@ -54,7 +54,7 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
             <MuiFilter
                 apiRef={appEntornFilterApiRef}
                 resourceName="entornApp"
-                code="salut_entornApp_filter"
+                code="optional_entornApp_filter"
                 commonFieldComponentProps={{ size: 'small' }}
                 springFilterBuilder={data => {
                     moreFormApiRef.current?.setFieldValue('appId', data.app);

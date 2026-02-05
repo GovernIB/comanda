@@ -5,6 +5,7 @@ import { BaseEntity } from '../../types/base-entity.model';
 import dayjs from 'dayjs';
 import SalutToolbar, {
     agrupacioFromMinutes,
+    getIdList,
     GroupingEnum,
     salutEntornAppFilterBuilder,
     SalutFilterDataType,
@@ -220,10 +221,10 @@ const useSalutData = ({
                         springFilterBuilder.eq('app.activa', true),
                         springFilterBuilder.inn('id', entornAppIdsWithSalut!),
                         filterData?.app != null
-                            ? springFilterBuilder.eq('app.id', filterData.app.id)
+                            ? springFilterBuilder.inn('app.id', getIdList(filterData.app))
                             : null,
                         filterData?.entorn != null
-                            ? springFilterBuilder.eq('entorn.id', filterData.entorn.id)
+                            ? springFilterBuilder.inn('entorn.id', getIdList(filterData.entorn))
                             : null
                     ),
                 }),
@@ -232,7 +233,7 @@ const useSalutData = ({
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
                         filterData?.app != null
-                            ? springFilterBuilder.eq('id', filterData.app.id)
+                            ? springFilterBuilder.inn('id', getIdList(filterData.app))
                             : null
                     ),
                 }),
@@ -240,7 +241,7 @@ const useSalutData = ({
                     unpaged: true,
                     filter: springFilterBuilder.and(
                         filterData?.entorn != null
-                            ? springFilterBuilder.eq('id', filterData.entorn.id)
+                            ? springFilterBuilder.inn('id', getIdList(filterData.entorn))
                             : null
                     ),
                 }),

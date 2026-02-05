@@ -65,6 +65,7 @@ import java.util.List;
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_DESCARREGAR_LOG, requiresId = true, formClass = String.class),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_PREVISUALITZAR_LOG, requiresId = true, formClass = EntornApp.PrevisualitzarLogParams.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.OPTIONAL_ENTORN_APP_FILTER, formClass = EntornApp.OptionalEntornAppFilter.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class)
 		}
 )
@@ -74,6 +75,7 @@ public class EntornApp extends BaseResource<Long> {
 
 	public final static String ENTORN_APP_ACTION_PING_URL = "pingUrl";
 	public final static String ENTORN_APP_FILTER = "entornApp_filter";
+    public final static String OPTIONAL_ENTORN_APP_FILTER = "optional_entornApp_filter";
 	public final static String SALUT_ENTORN_APP_FILTER = "salut_entornApp_filter";
 	public final static String ENTORN_APP_TOOGLE_ACTIVA = "toogle_activa";
 	public final static String REPORT_LLISTAR_LOGS = "llistar_logs";
@@ -154,9 +156,22 @@ public class EntornApp extends BaseResource<Long> {
 	@AllArgsConstructor
 	@FieldNameConstants
 	public static class SalutEntornAppFilter implements Serializable {
-	}
+		protected List<ResourceReference<App, Long>> app;
+		protected List<ResourceReference<Entorn, Long>> entorn;
+		protected ResourceReference<EntornApp, Long> entornApp;
         protected EstatSalutEnum[] estatsSalut;
 	}
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class OptionalEntornAppFilter implements Serializable {
+        protected ResourceReference<App, Long> app;
+        protected ResourceReference<Entorn, Long> entorn;
+        protected ResourceReference<EntornApp, Long> entornApp;
+    }
 
 	@Getter
 	@Setter
