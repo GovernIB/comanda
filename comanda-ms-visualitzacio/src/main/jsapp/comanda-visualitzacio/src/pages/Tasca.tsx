@@ -283,7 +283,7 @@ const Tasca = () => {
         (row) => row?.treePath,
         gridApiRef,
         t($ => $.page.tasques.grid.groupHeader),
-        1.5,
+        1.8,
         false,
         false,
         {

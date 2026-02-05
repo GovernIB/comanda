@@ -258,7 +258,7 @@ const Avis = () => {
         {
             field: 'dataInici',
             headerName: t($ => $.page.message.grid.timestamp),
-            flex: 0.75,
+            width: 150,
         }
     ], [t, treeView, apps]);
     const actions = useMemo(() => [{
