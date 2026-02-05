@@ -47,17 +47,17 @@ databaseChangeLog:
         - addForeignKeyConstraint:
             baseTableName: ${db_prefix}avis_llegit
             baseColumnNames: avis_id
-            constraintName: com_avis_llegit_avis_fk
+            constraintName: ${db_prefix}avis_llegit_avis_fk
             referencedTableName: com_avis
             referencedColumnNames: id
             onDelete: CASCADE
         - addUniqueConstraint:
             tableName: ${db_prefix}avis_llegit
             columnNames: usuari, avis_id
-            constraintName: com_avis_llegit_avis_usuari_uk
+            constraintName: ${db_prefix}avis_llegit_avis_usuari_uk
         - createIndex:
             tableName: ${db_prefix}avis_llegit
-            indexName: com_avis_llegit_avis_idx
+            indexName: ${db_prefix}avis_llegit_avis_idx
             columns:
               - column:
                   name: avis_id
