@@ -24,6 +24,7 @@ import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { useId } from 'react';
+import { SalutEstatEnum } from '../../types/salut.model';
 
 export type SalutToolbarProps = {
     title: string;
@@ -300,6 +301,9 @@ const SalutEntornAppFilterForm: React.FC = () => {
                        )}
             />
         </Grid>
+        <Grid size={12}>
+            <FormField name="estatsSalut" componentProps={{ size: 'small', }} multiple/>
+        </Grid>
     </Grid>
 }
 
@@ -351,6 +355,7 @@ export type SalutFilterDataType = {
         id: string;
         description: string;
     };
+    estatsSalut?: SalutEstatEnum[];
 };
 
 const useSalutEntornAppFilter = ({

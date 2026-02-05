@@ -2,6 +2,7 @@ package es.caib.comanda.configuracio.logic.intf.model;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.validation.EntornAppExists;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
@@ -153,9 +154,8 @@ public class EntornApp extends BaseResource<Long> {
 	@AllArgsConstructor
 	@FieldNameConstants
 	public static class SalutEntornAppFilter implements Serializable {
-		protected ResourceReference<App, Long> app;
-		protected ResourceReference<Entorn, Long> entorn;
-		protected ResourceReference<EntornApp, Long> entornApp;
+	}
+        protected EstatSalutEnum[] estatsSalut;
 	}
 
 	@Getter

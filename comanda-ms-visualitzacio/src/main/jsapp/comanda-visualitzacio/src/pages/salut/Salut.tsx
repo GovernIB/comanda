@@ -171,6 +171,42 @@ const useSalutData = ({
         try {
             const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
             const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
+            const hasEstatFilter = filterData?.estatsSalut && filterData.estatsSalut.length > 0;
+
+            const salutLastItemsResponse = await salutApiReport(null, {
+                code: 'salut_last',
+                data: additionalFilter ?? '',
+            });
+
+            const salutLastItems = (salutLastItemsResponse as SalutModel[])
+                .filter(item => {
+                    if (!filterData?.estatsSalut || filterData.estatsSalut.length === 0) {
+                        return true; //Sols filtrar si hi ha filtre d'estat
+                    }
+                    //Incluirem sols el que tengun l'estat a filtrar
+                    return filterData.estatsSalut.includes(item?.appEstat); 
+                })
+                .map(item => new SalutModel(item));
+
+            const entornAppIdsWithSalut = hasEstatFilter ? 
+                salutLastItems.map(item => item.entornAppId).filter((id, index, self) => self.indexOf(id) === index) :
+                null;
+
+            if (hasEstatFilter && entornAppIdsWithSalut!.length === 0) {//Si no hi ha salut, no retornarem res
+                setSalutData({
+                    lastRefresh: new Date(),
+                    apps: [],
+                    entorns: [],
+                    groups: [],
+                    grupsDates: [],
+                    agrupacio,
+                    error: undefined,
+                    initialized: true,
+                    loading: false,
+                });
+                return;
+            }
+
             const [
                 activeEntornAppsResponse,
                 activeAppsResponse,
@@ -182,6 +218,7 @@ const useSalutData = ({
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
                         springFilterBuilder.eq('app.activa', true),
+                        springFilterBuilder.inn('id', entornAppIdsWithSalut!),
                         filterData?.app != null
                             ? springFilterBuilder.eq('app.id', filterData.app.id)
                             : null,
@@ -221,32 +258,29 @@ const useSalutData = ({
                 agrupacio,
                 entornAppIdList: activeEntornAppsResponse.rows.map(({ id }) => id),
             };
+            const estatsResponse = await salutApiReport(null, { 
+                code: 'estats', 
+                data: reportData 
+            });
 
-            const [estatsResponse, salutLastItemsResponse] = await Promise.all([
-                salutApiReport(null, { code: 'estats', data: reportData }),
-                salutApiReport(null, {
-                    code: 'salut_last',
-                    data: additionalFilter ?? '', // El backend lanza un 500 si se envía un body vacío
-                }),
-            ]);
+            const filteredEntornApps = activeEntornAppsResponse.rows;
+            const filteredApps = activeAppsResponse?.rows as AppModel[];
+            const filteredEntorns = entornsResponse?.rows;
 
-            const salutLastItems = (salutLastItemsResponse as SalutModel[]).map(
-                item => new SalutModel(item)
-            );
             // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars
             const { [BaseEntity.LINKS]: _links, ...estats } = (estatsResponse as any[])[0];
 
             setSalutData({
                 lastRefresh: new Date(),
-                apps: activeAppsResponse?.rows as AppModel[],
-                entorns: entornsResponse?.rows,
+                apps: filteredApps,
+                entorns: filteredEntorns,
                 groups: splitSalutDataIntoGroups({
                     estats,
                     salutLastItems,
                     groupBy,
-                    apps: activeAppsResponse?.rows as AppModel[],
-                    entorns: entornsResponse?.rows,
-                    entornApps: activeEntornAppsResponse.rows,
+                    apps: filteredApps,
+                    entorns: filteredEntorns,
+                    entornApps: filteredEntornApps,
                 }),
                 grupsDates: (grupsDatesResponse as { data: string }[]).map(item => item.data),
                 agrupacio,
@@ -272,6 +306,7 @@ const useSalutData = ({
         entornFind,
         filterData?.app,
         filterData?.entorn,
+        filterData?.estatsSalut,
         groupBy,
         ready,
         salutApiReport,
