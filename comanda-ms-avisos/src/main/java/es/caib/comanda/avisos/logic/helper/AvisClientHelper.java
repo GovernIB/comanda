@@ -18,8 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.*;
 
 @Slf4j
 @Component
@@ -35,7 +34,7 @@ public class AvisClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "entornAppCache", key = "#entornAppId")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId.toString()")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
@@ -90,7 +89,7 @@ public class AvisClientHelper {
     // Client App
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = APP_CACHE, key = "#appId")
+    @Cacheable(value = APP_CACHE, key = "#appId.toString()")
     public App appById(Long appId) {
         EntityModel<App> app = appServiceClient.getOne(
                 appId,
@@ -105,7 +104,7 @@ public class AvisClientHelper {
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_CACHE, key = "#entornId")
+    @Cacheable(value = ENTORN_CACHE, key = "#entornId.toString()")
     public Entorn entornById(Long entornId) {
         EntityModel<Entorn> entorn = entornServiceClient.getOne(
                 entornId,
