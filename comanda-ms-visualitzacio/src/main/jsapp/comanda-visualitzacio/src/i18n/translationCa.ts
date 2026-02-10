@@ -367,8 +367,13 @@ const translationCa = {
             },
             action: {
                 obrir: "Obrir avís",
+                nollegit: {
+                    label: "Marcar com a no llegit",
+                    ok: "L'avis s'ha marcar com a no llegit",
+                },
                 llegit: {
                     label: "Marcar com a llegit",
+                    ok: "L'avis s'ha marcar com a llegit",
                 },
             },
         },

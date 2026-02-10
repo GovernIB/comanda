@@ -2,11 +2,17 @@ package es.caib.comanda.avisos.logic.service;
 
 import es.caib.comanda.avisos.logic.helper.AvisClientHelper;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
+import es.caib.comanda.avisos.logic.intf.model.Avis.AvisMarcarLlegitsAction;
+import es.caib.comanda.avisos.logic.intf.model.AvisLlegit;
 import es.caib.comanda.avisos.logic.intf.service.AvisService;
 import es.caib.comanda.avisos.persist.entity.AvisEntity;
+import es.caib.comanda.avisos.persist.entity.AvisLlegitEntity;
+import es.caib.comanda.avisos.persist.repository.AvisLlegitRepository;
 import es.caib.comanda.avisos.persist.repository.AvisRepository;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -23,11 +29,11 @@ import javax.jms.Message;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
 import static es.caib.comanda.base.config.Cues.CUA_AVISOS;
@@ -41,11 +47,15 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
 
     private final AuthenticationHelper authenticationHelper;
     private final AvisClientHelper avisClientHelper;
+    private final AvisRepository avisRepository;
+    private final AvisLlegitRepository avisLlegitRepository;
 
     @PostConstruct
     public void init() {
+        register(Avis.ACTION_MARCAR_AVIS_LLEGIT, new MarcarAvisLlegit());
         register(Avis.PERSPECTIVE_PATH, new PathPerspectiveApplicator());
         register(Avis.PERSPECTIVE_ENTORN_APP, new EntornAppPerspectiveApplicator());
+        register(Avis.PERSPECTIVE_LLEGIT, new LlegitPerspectiveApplicator());
     }
 
     @JmsListener(destination = CUA_AVISOS)
@@ -101,6 +111,15 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
         return dateToConvert != null ? dateToConvert.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime() : null;
+    }
+
+    @Override
+    protected String namedFilterToSpringFilter(String name) {
+        if (Avis.NAMED_FILTER_AVIS_NO_LLEGIT.equals(name)){
+            String userName = authenticationHelper.getCurrentUserName();
+            return "not(exists(" + AvisEntity.Fields.avisLlegits + "." + AvisLlegitEntity.Fields.usuari + ":'" + userName + "'))";
+        }
+        return null;
     }
 
     @Override
@@ -170,4 +189,39 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
         }
     }
 
+    public class LlegitPerspectiveApplicator implements PerspectiveApplicator<AvisEntity, Avis> {
+        @Override
+        public void applySingle(String code, AvisEntity entity, Avis resource) throws PerspectiveApplicationException {
+            String userName = authenticationHelper.getCurrentUserName();
+            boolean existAvisLlegit = avisLlegitRepository.existsByUsuariAndAvis(userName, entity);
+            resource.setLlegit(existAvisLlegit);
+        }
+    }
+
+    @RequiredArgsConstructor
+    private class MarcarAvisLlegit implements ActionExecutor<AvisEntity, AvisMarcarLlegitsAction, Avis> {
+        @Override
+        public void onChange(Serializable id, AvisMarcarLlegitsAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, AvisMarcarLlegitsAction target) {}
+
+        @Override
+        public Avis exec(String code, AvisEntity entity, AvisMarcarLlegitsAction params) throws ActionExecutionException {
+            if (params.getIds() == null || params.getIds().isEmpty()) {return null;}
+            List<Long> avisIds = params.getIds();
+            String userName = authenticationHelper.getCurrentUserName();
+            if (params.isLlegit()) {
+                List<AvisEntity> avisos = avisRepository.findAvisosNoLlegitsByUsuariAndIds(userName, avisIds);
+                if (avisos.isEmpty()) { return null; }
+                List<AvisLlegitEntity> entitiesToSave = avisos.stream()
+                        .map(avisEntity -> {//Crearem una entitat per cada avis a marcar com a llegit
+                            AvisLlegit avisLlegitResource = new AvisLlegit();
+                            avisLlegitResource.setUsuari(userName);
+                            return AvisLlegitEntity.builder().avis(avisLlegitResource).avisEntity(avisEntity).build();
+                        }).collect(Collectors.toList());
+                avisLlegitRepository.saveAll(entitiesToSave);
+            } else { //Totes les entitats trobades seran eliminades
+                avisLlegitRepository.deleteByUsuariAndAvisIdIn(userName, avisIds);
+            }
+            return null;
+        }
+    }
 }

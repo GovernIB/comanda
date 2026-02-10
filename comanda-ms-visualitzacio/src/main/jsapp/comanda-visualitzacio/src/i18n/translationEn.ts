@@ -367,8 +367,13 @@ const translationEn: translationResourcesType = {
             },
             action: {
                 obrir: "Open notice",
+                nollegit: {
+                    label: "Mark as unread",
+                    ok: "The notice has been marked as unread",
+                },
                 llegit: {
                     label: "Mark as read",
+                    ok: "The notice has been marked as read",
                 },
             },
         },

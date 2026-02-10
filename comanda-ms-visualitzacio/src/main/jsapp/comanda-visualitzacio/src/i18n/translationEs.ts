@@ -367,8 +367,13 @@ const translationEs: translationResourcesType = {
             },
             action: {
                 obrir: "Abrir aviso",
+                nollegit: {
+                    label: "Marcar como no leído",
+                    ok: "El aviso se ha marcado como no leído",
+                },
                 llegit: {
                     label: "Marcar como leído",
+                    ok: "El aviso se ha marcado como leído",
                 },
             },
         },

@@ -8,17 +8,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +25,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 public class AvisEntity extends BaseAuditableEntity<Avis> {
 
     @Column(name = "entorn_app_id", nullable = false)
@@ -78,6 +71,8 @@ public class AvisEntity extends BaseAuditableEntity<Avis> {
     @Column(name = "grup")
     private List<String> grupsAmbPermis;
 
+    @OneToMany(mappedBy= "avis", cascade = CascadeType.ALL)
+    private List<AvisLlegitEntity> avisLlegits;
 
     @Builder
     public AvisEntity(Avis avis) {

@@ -7,11 +7,10 @@ import {
     springFilterBuilder,
     useFormApiRef,
     useFilterApiRef,
-    MuiDataGridColDef, useResourceApiService,
+    MuiDataGridColDef, useResourceApiService, useBaseAppContext, useMuiDataGridApiRef,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
@@ -27,10 +26,51 @@ import {
 import {Chip, SxProps} from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
-import {useEffect, useMemo} from "react";
+import {useEffect, useMemo, useRef} from "react";
 
-const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
-    const { onSpringFilterChange } = props;
+const useActions = (refresh?: () => void) => {
+    const { t } = useTranslation();
+    const {isReady: apiIsReady, artifactAction: apiAction} = useResourceApiService('avis')
+    const { temporalMessageShow } = useBaseAppContext();
+
+    const marcarLlegit = (id:any) => {
+        marcarLlegit([id])
+    }
+    const marcarLlegitMassive = (ids:any[]) => {
+        apiAction(undefined, {code: 'MARCAR_AVIS_LLEGIT', data: {ids, llegit: true}})
+            .then(() => {
+                refresh?.();
+                temporalMessageShow(null, t($ => $.page.avisos.action.llegit.ok), 'success');
+            })
+            .catch((error) => {
+                if (error?.message) {
+                    temporalMessageShow(null, error?.message, 'error');
+                }
+            });
+    }
+
+    const marcarNoLlegit = (id:any) => {
+        marcarNoLlegitMassive(id)
+    }
+
+    const marcarNoLlegitMassive = (ids:any[]) => {
+        apiAction(undefined, {code: 'MARCAR_AVIS_LLEGIT', data: {ids, llegit: false}})
+            .then(() => {
+                refresh?.();
+                temporalMessageShow(null, t($ => $.page.avisos.action.nollegit.ok), 'success');
+            })
+            .catch((error) => {
+                if (error?.message) {
+                    temporalMessageShow(null, error?.message, 'error');
+                }
+            });
+    }
+
+    return {apiIsReady, marcarLlegit, marcarLlegitMassive, marcarNoLlegit, marcarNoLlegitMassive}
+}
+
+const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void, setNoLlegit?: (value:boolean) => void }) => {
+    const { onSpringFilterChange, setNoLlegit } = props;
     const { t } = useTranslation();
     const { user } = useUserContext();
     const [ownAvisOnly, setOwnAvisOnly] = React.useState<boolean>(true);
@@ -96,34 +136,43 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                 formApiRef={moreFormApiRef}
                 resourceName="avis"
                 code="FILTER"
-                initialData={{ avisPropi: ownAvisOnly  }}
-                springFilterBuilder={data => springFilterBuilder.and(
-                    springFilterBuilder.eq('appId', data?.appId?.id),
-                    springFilterBuilder.eq('entornId', data?.entornId?.id),
-                    springFilterBuilder.like('nom', data?.nom),
-                    springFilterBuilder.like('descripcio', data?.descripcio),
-                    springFilterBuilder.eq('tipus', data?.tipus),
-                    data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
-                    data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
-                    data?.avisPropi && ownAvisOnlyFilterAvailable && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
-                )}
+                initialData={{ avisPropi: ownAvisOnly, noLlegit: true }}
+                springFilterBuilder={(data:any) => {
+                    setNoLlegit?.(data?.noLlegit)
+                    return springFilterBuilder.and(
+                        springFilterBuilder.eq('appId', data?.appId?.id),
+                        springFilterBuilder.eq('entornId', data?.entornId?.id),
+                        springFilterBuilder.like('nom', data?.nom),
+                        springFilterBuilder.like('descripcio', data?.descripcio),
+                        springFilterBuilder.eq('tipus', data?.tipus),
+                        data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
+                        data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
+                        data?.avisPropi && ownAvisOnlyFilterAvailable && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
+                    )
+                }}
                 onSpringFilterChange={onSpringFilterChange}
                 commonFieldComponentProps={{ size: 'small' }}>
                 <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
                     <Grid size={{ xs: 12, sm:4}}><FormField name="nom" /></Grid>
                     <Grid size={{ xs: 6, sm:4}}><FormField name="descripcio" /></Grid>
                     <Grid size={{ xs: 6, sm:4}}><FormField name="tipus" /></Grid>
-                    <Grid size={{ xs: 6 }}><FormField name="dataInici1" /></Grid>
-                    <Grid size={{ xs: 6 }}><FormField name="dataInici2" /></Grid>
+                    <Grid size={{ xs: 5 }}><FormField name="dataInici1" /></Grid>
+                    <Grid size={{ xs: 5 }}><FormField name="dataInici2" /></Grid>
+                    <Grid size={{ xs: 2 }}><FormField name="noLlegit" type={'checkbox'}/></Grid>
                 </Grid>
             </MuiFilter>
         </>
     );
 }
 
+const StyledLlegit = ({llegit, children}:any) => {
+    return llegit ?<i>{children}</i> :<strong>{children}</strong>
+}
+
 const dataGridCommonColumns: MuiDataGridColDef[] = [{
     field: 'descripcio',
     flex: 1,
+    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
 }, {
     field: 'tipus',
     flex: 0.5,
@@ -146,21 +195,22 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [{
                 style = { backgroundColor: '#6b0707', color: 'white' }
                 break;
         }
-        return <Typography variant={'inherit'} sx={{ p: 1, borderRadius: '4px', ...style }}>
-            {param?.formattedValue}
-        </Typography>;
+        return param?.formattedValue && <Chip label={param?.formattedValue} size={"small"} sx={style} />
     }
 }, {
     field: 'responsable',
     flex: 1,
+    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
 }];
-const dataGridPerspectives = ['PATH', 'ENTORN_APP'];
+const dataGridPerspectives = ['PATH', 'ENTORN_APP', 'LLEGIT'];
 const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
 const Avis = () => {
     const { t } = useTranslation();
+    const [noLlegit, setNoLlegit] = React.useState<boolean>();
     const [filter, setFilter] = React.useState<string>();
     const [apps, setApps] = React.useState<any[]>();
+    const apiRef = useMuiDataGridApiRef();
     const gridApiRef = useGridApiRef();
 
     const { isReady: apiIsReady, find: apiFind } = useResourceApiService('app');
@@ -192,7 +242,7 @@ const Avis = () => {
                 const app = apps?.find((a) => a?.nom == params?.value)
                 return (
                     <GridTreeDataGroupingCell {...params} formattedValue={<>
-                        {isAutogeneratedRow(params?.row) && app!=null
+                        {isAutogeneratedRow(params?.row) && (app!=null
                             ? <Box
                                 sx={{
                                     display: 'flex',
@@ -213,8 +263,10 @@ const Avis = () => {
                             : <>
                                 {params.formattedValue}
                                 {!params?.row?.id && <Chip label={count} size="small" sx={{ml: 1}}/>}
-                            </>
+                            </>)
                         }
+                        {!isAutogeneratedRow(params?.row) &&
+                            <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit> }
                     </>} hideDescendantCount />
                 );
             },
@@ -249,9 +301,15 @@ const Avis = () => {
                         );
                     },
                 },
-                { field: 'app', flex: 0.5, valueFormatter: (value: any) => value?.description, },
-                { field: 'entorn', flex: 1, valueFormatter: (value: any) => value?.description, },
-                { field: 'nom', flex: 1 },
+                { field: 'app', flex: 0.5, valueFormatter: (value: any) => value?.description,
+                    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+                },
+                { field: 'entorn', flex: 1, valueFormatter: (value: any) => value?.description,
+                    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+                },
+                { field: 'nom', flex: 1,
+                    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+                },
               ]
             : []),
         ...dataGridCommonColumns,
@@ -261,27 +319,76 @@ const Avis = () => {
             width: 150,
         }
     ], [t, treeView, apps]);
-    const actions = useMemo(() => [{
-        icon: 'open_in_new',
-        label: t($ => $.page.avisos.action.obrir),
-        showInMenu: false,
-        linkTo: (row: any) => row?.url,
-        linkTarget: '_blank',
-        disabled: (row: any) => !row?.url,
-        hidden: (row: any) => !row?.url,
-    }, {
-        icon: 'mail',
-        label: t($ => $.page.avisos.action.llegit.label),
-        showInMenu: false,
-        // hidden: isAutogeneratedRow,
-        hidden: true,
-    }], [t]);
-    const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
+
+    const refresh = () => {
+        apiRef?.current?.refresh?.();
+    }
+    const {apiIsReady: actionIsReady, marcarLlegit, marcarLlegitMassive, marcarNoLlegit, marcarNoLlegitMassive} = useActions(refresh)
+
+    const actions = useMemo(() => [
+        {
+            icon: 'open_in_new',
+            label: t($ => $.page.avisos.action.obrir),
+            showInMenu: false,
+            linkTo: (row: any) => row?.url,
+            linkTarget: '_blank',
+            onClick: (id:any, row:any) => {
+                if (!row?.llegit) {
+                    marcarLlegit(id)
+                }
+            },
+            disabled: (row: any) => !row?.url,
+            hidden: (row: any) => !row?.url,
+        }, {
+            icon: 'drafts',
+            label: t($ => $.page.avisos.action.llegit.label),
+            showInMenu: true,
+            onClick: marcarLlegit,
+            hidden: (row:any) => isAutogeneratedRow(row) || row?.llegit,
+        }, {
+            icon: 'mail',
+            label: t($ => $.page.avisos.action.nollegit.label),
+            showInMenu: true,
+            onClick: marcarNoLlegit,
+            hidden: (row:any) => isAutogeneratedRow(row) || !row?.llegit,
+        }
+    ], [t, actionIsReady]);
+    const filterElement = <AvisFilter onSpringFilterChange={setFilter} setNoLlegit={setNoLlegit}/>;
+
+    const selectedRows = useRef<string[]>([])
+    const toolbarAdditionalActions:any[] = [
+        { position: 1, element: treeViewSwitch },
+        {
+            position: 2,
+            element: (
+                <Button
+                    title={t($ => $.page.avisos.action.llegit.label)}
+                    onClick={() => marcarLlegitMassive(selectedRows?.current)}
+                    endIcon={<Icon>drafts</Icon>}
+                >
+                    {t($ => $.page.avisos.action.llegit.label)}
+                </Button>
+            ),
+        },
+        {
+            position: 2,
+            element: (
+                <Button
+                    title={t($ => $.page.avisos.action.nollegit.label)}
+                    onClick={() => marcarNoLlegitMassive(selectedRows?.current)}
+                    endIcon={<Icon>mail</Icon>}
+                >
+                    {t($ => $.page.avisos.action.nollegit.label)}
+                </Button>
+            ),
+        },
+    ];
 
     return (
         <Box sx={{ height: '100%' }}>
             <PageTitle title={t($ => $.menu.avis)} />
             <MuiDataGrid
+                apiRef={apiRef}
                 title={t($ => $.menu.avis)}
                 resourceName="avis"
                 columns={columns}
@@ -290,10 +397,11 @@ const Avis = () => {
                 sortModel={dataGridSortModel}
                 findDisabled={filter == null}
                 filter={filter}
+                namedQueries={noLlegit?['avis_no_llegit']:[]}
                 readOnly
                 toolbarType="upper"
                 toolbarHideQuickFilter
-                toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
+                toolbarElementsWithPositions={toolbarAdditionalActions}
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={actions}
                 {...treeDataGridProps}
@@ -304,6 +412,11 @@ const Avis = () => {
                         },
                     },
                 }}
+                selectionActive
+                onRowSelectionModelChange={(rowSelectionModel: any) => {
+                    selectedRows.current = Array.from(rowSelectionModel?.ids) ?? []
+                }}
+                // isRowSelectable={(params:any) => params?.row?.id}
             />
         </Box>
     );
