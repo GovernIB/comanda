@@ -305,9 +305,9 @@ const translationEn = {
                 compactacioSetmanalMesos: "Weekly compaction (months)",
                 compactacioMensualMesos: "Monthly compaction (months)",
                 eliminacioMesos: "Deletion (months)",
-                estadistica: {
-                    auth: "Authenticated service",
-                },
+                auth: "Authenticated service",
+                salutAuthLegend: "Authenticate health requests",
+                estadisticaAuthLegend: "Authenticate statistics requests",
             },
             tooltips: {
                 compactacioMesos: "How many full months the statistics will be kept before...\n - compacting them by week\n - compacting them by month\n - deleting them.\nIf the fields are left empty, or with value 0, the ... will not be performed",

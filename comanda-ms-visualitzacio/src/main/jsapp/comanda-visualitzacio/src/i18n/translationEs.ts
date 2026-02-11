@@ -307,9 +307,9 @@ const translationEs = {
                 compactacioSetmanalMesos: "Compactación semanal (meses)",
                 compactacioMensualMesos: "Compactación mensual (meses)",
                 eliminacioMesos: "Borrado (meses)",
-                estadistica: {
-                    auth: "Servicio autenticado",
-                },
+                auth: "Servicio autenticado",
+                salutAuthLegend: "Autenticar las consultas de salud",
+                estadisticaAuthLegend: "Autenticar las consultas de estadísticas",
             },
             tooltips: {
                 compactacioMesos: "Cuántos meses completos se mantendrán las estadísticas antes de...\n - compactarlas por semana\n - compactarlas por mes\n - borrarlas.\nSi se dejan los campos sin valor, o valor 0, no se realizará la ...",

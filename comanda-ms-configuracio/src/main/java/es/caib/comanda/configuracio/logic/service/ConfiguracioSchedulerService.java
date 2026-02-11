@@ -37,7 +37,7 @@ public class ConfiguracioSchedulerService {
     @Value("${" + BaseConfig.PROP_SCHEDULER_BACK + ":#{false}}")
     private Boolean schedulerBack;
 
-    private static final Integer PERIODE_CONSULTA_CONF = 10;
+    private static final Integer PERIODE_CONSULTA_CONF = 15;
 
     private final Map<Long, ScheduledFuture<?>> tasquesActives = new ConcurrentHashMap<>();
 

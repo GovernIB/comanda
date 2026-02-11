@@ -120,7 +120,7 @@ public class ConfiguracioSchedulerServiceTest {
 
         // Verify that the trigger has the correct period
         PeriodicTrigger trigger = triggerCaptor.getValue();
-        assertEquals(TimeUnit.MINUTES.toMillis(10), trigger.getPeriod());
+        assertEquals(TimeUnit.MINUTES.toMillis(15), trigger.getPeriod());
     }
 
     @Test
