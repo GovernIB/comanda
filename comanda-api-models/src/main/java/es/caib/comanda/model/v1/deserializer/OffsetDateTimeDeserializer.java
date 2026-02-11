@@ -35,6 +35,9 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
             .parseDefaulting(java.time.temporal.ChronoField.SECOND_OF_MINUTE, 0)
             .toFormatter();
 
+    private static final DateTimeFormatter DD_MM_YYYY_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DD_MM_YYYY_HH_MM_SS_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
     @Override
     public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         JsonToken token = p.currentToken();
@@ -131,9 +134,23 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
                 return OffsetDateTime.parse(value, ISO_DATE_OPTIONAL_TIME);
             } catch (Exception ex) {
                 // Fallback for date-only without offset
-                return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
-                        .atStartOfDay(ZoneId.systemDefault())
-                        .toOffsetDateTime();
+                try {
+                    return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toOffsetDateTime();
+                } catch (Exception ex2) {
+                    // Try dd/MM/yyyy HH:mm:ss format
+                    try {
+                        return LocalDateTime.parse(value, DD_MM_YYYY_HH_MM_SS_FORMAT)
+                                .atZone(ZoneId.systemDefault())
+                                .toOffsetDateTime();
+                    } catch (Exception ex3) {
+                        // Try dd/MM/yyyy format
+                        return LocalDate.parse(value, DD_MM_YYYY_FORMAT)
+                                .atStartOfDay(ZoneId.systemDefault())
+                                .toOffsetDateTime();
+                    }
+                }
             }
         }
     }

@@ -259,7 +259,7 @@
                             <generateModelTests>false</generateModelTests>
                             <generateApiTests>false</generateApiTests>
                             <generateSupportingFiles>false</generateSupportingFiles>
-                            <supportingFilesToGenerate>pom.xml</supportingFilesToGenerate>
+                            <supportingFilesToGenerate>pom.xml,JSON.java,RFC3339DateFormat.java</supportingFilesToGenerate>
                             <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
                             <configOptions>
                                 <groupId>es.caib.comanda</groupId>
@@ -290,49 +290,41 @@
                 </executions>
             </plugin>
 
-            <!-- Copiar el deserialitzador personalitzat als clients generats -->
+            <!-- Copiar el deserialitzador personalitzat als clients generats i ajustar el package -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.0</version>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>copy-deserializer-to-monitoring-client</id>
+                        <id>copy-and-fix-deserializer</id>
                         <phase>install</phase>
                         <goals>
-                            <goal>copy-resources</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring/src/main/java/es/caib/comanda/service/monitoring</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/src/main/resources/openapi/templates/client</directory>
-                                    <includes>
-                                        <include>OffsetDateTimeDeserializer.java</include>
-                                    </includes>
-                                </resource>
-                            </resources>
+                            <target>
+                                <!-- Client Monitoring -->
+                                <copy file="${project.basedir}/src/main/resources/openapi/templates/client/OffsetDateTimeDeserializer.java"
+                                      tofile="${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring/src/main/java/es/caib/comanda/service/monitoring/OffsetDateTimeDeserializer.java"
+                                      overwrite="true">
+                                    <filterchain>
+                                        <replaceregex pattern="package es.caib.comanda.service.monitoring;"
+                                                      replace="package es.caib.comanda.service.monitoring;" />
+                                    </filterchain>
+                                </copy>
+                                <!-- Client Management -->
+                                <copy file="${project.basedir}/src/main/resources/openapi/templates/client/OffsetDateTimeDeserializer.java"
+                                      tofile="${project.basedir}/../comanda-api-clients/comanda-api-client-management/src/main/java/es/caib/comanda/service/management/OffsetDateTimeDeserializer.java"
+                                      overwrite="true">
+                                    <filterchain>
+                                        <replaceregex pattern="package es.caib.comanda.service.monitoring;"
+                                                      replace="package es.caib.comanda.service.management;" />
+                                    </filterchain>
+                                </copy>
+                            </target>
                         </configuration>
                     </execution>
-<!--                    <execution>-->
-<!--                        <id>copy-deserializer-to-management-client</id>-->
-<!--                        <phase>install</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>copy-resources</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-management/src/main/java/es/caib/comanda/service/v1/management</outputDirectory>-->
-<!--                            <resources>-->
-<!--                                <resource>-->
-<!--                                    <directory>${project.basedir}/src/main/resources/openapi/templates/client</directory>-->
-<!--                                    <includes>-->
-<!--                                        <include>OffsetDateTimeDeserializer-management.java</include>-->
-<!--                                    </includes>-->
-<!--                                    <filtering>false</filtering>-->
-<!--                                </resource>-->
-<!--                            </resources>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                 </executions>
             </plugin>
 
