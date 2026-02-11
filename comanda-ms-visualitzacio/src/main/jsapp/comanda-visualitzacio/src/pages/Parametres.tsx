@@ -223,7 +223,6 @@ const ParametresGrid: React.FC<{
         resourceName="parametre"
         columns={columns}
         toolbarType="upper"
-        paginationActive
         toolbarHideCreate
         rowHideDeleteButton
         rowHideUpdateButton
