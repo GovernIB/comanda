@@ -40,10 +40,12 @@ public class LogApiV1Controller {
 
     @Operation(operationId = "llistarFitxers",
             summary = "Obtenir el llistat de fitxers de log disponibles",
-            description = "Retorna una llista amb tots els fitxers que es troben dins la carpeta de logs del servidor de l'aplicació")
+            description = "Retorna una llista amb tots els fitxers que es troben dins la carpeta de logs del servidor de l'aplicació",
+            tags = {"COMANDA → APP / Logs"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Llista de fitxers obtinguda correctament",
                     content = @Content(schema = @Schema(implementation = FitxerInfo.class))),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
             @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
     })
     @GetMapping()
@@ -55,11 +57,13 @@ public class LogApiV1Controller {
 
     @Operation(operationId = "getFitxerByNom",
             summary = "Obtenir contingut complet d'un fitxer de log",
-            description = "Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat")
+            description = "Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat",
+            tags = {"COMANDA → APP / Logs"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Contingut del fitxer obtingut correctament",
                     content = @Content(schema = @Schema(implementation = FitxerContingut.class))),
             @ApiResponse(responseCode = "404", description = "Fitxer no trobat"),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
             @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
     })
     @GetMapping("/{nomFitxer}")
@@ -70,9 +74,29 @@ public class LogApiV1Controller {
                 "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
     }
 
+    @Operation(operationId = "descarregarFitxerDirecte",
+            summary = "Descarregar fitxer de log complet",
+            description = "Descarrega el fitxer de log complet que es troba dins la carpeta de logs del servidor, i que té el nom indicat",
+            tags = {"COMANDA → APP / Logs"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Contingut del fitxer obtingut correctament",
+                    content = @Content(schema = @Schema(implementation = FitxerContingut.class))),
+            @ApiResponse(responseCode = "404", description = "Fitxer no trobat"),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
+            @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
+    })
+    @GetMapping("/{nomFitxer}/directe")
+    @SecurityRequirement(name = SECURITY_NAME)
+    public void descarregarFitxerDirecte(@Parameter(name = "nomFitxer", description = "Nom del firxer", required = true) @PathVariable("nomFitxer") String nomFitxer) {
+//        return logService.getFitxerByNom(nom);
+        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
+                "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
+    }
+
     @Operation(operationId = "llegitUltimesLinies",
             summary = "Obtenir les darreres línies d'un fitxer de log",
-            description = "Retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies.")
+            description = "Retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies.",
+            tags = {"COMANDA → APP / Logs"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Línies del fitxer obtingudes correctament",
                     content = @Content(schema = @Schema(implementation = String.class, type = "array", example = "[\n" +
@@ -83,6 +107,7 @@ public class LogApiV1Controller {
                             "  \"2024-01-15 10:23:49.345 INFO  [http-nio-8080-exec-5] c.e.c.a.c.HealthController - Health check completed successfully\"\n" +
                             "]"))),
             @ApiResponse(responseCode = "404", description = "Fitxer no trobat"),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
             @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
     })
     @GetMapping("/{nomFitxer}/linies/{nLinies}")

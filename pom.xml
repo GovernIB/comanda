@@ -181,7 +181,53 @@
 				</configuration>
 				<version>4.9.10</version>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.6.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>es.caib.maven</groupId>
+						<artifactId>caib-artifacts-enforcer-rules</artifactId>
+						<version>1.0.1-SNAPSHOT</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>enforce-strict-rules</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>[3.6.1,)</version>
+								</requireMavenVersion>
+								<requireJavaVersion>
+									<version>11</version>
+								</requireJavaVersion>
+								<banDuplicatePomDependencyVersions />
+								<dependencyConvergence />
+								<enforcePluginVersionConsistencyRule
+										implementation="es.caib.maven.artifacts.enforcer.rules.EnforcePluginVersionConsistencyRule" />
+								<enforceDependencyVersionConsistencyRule
+										implementation="es.caib.maven.artifacts.enforcer.rules.EnforceDependencyVersionConsistencyRule" />
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>3.6.1</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<distributionManagement>
 		<repository>
@@ -190,4 +236,26 @@
 			<url>file://${project.build.directory}/mvn-repo</url>
 		</repository>
 	</distributionManagement>
+	<repositories>
+		<repository>
+			<id>github-governib-maven-repos</id>
+			<name>GitHub GovernIB Maven Repository</name>
+			<url>https://GovernIB.github.io/maven/maven/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>github-governib-maven-repos</id>
+			<name>GitHub GovernIB Maven Repository</name>
+			<url>https://GovernIB.github.io/maven/maven/</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
 </project>

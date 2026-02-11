@@ -36,6 +36,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -188,7 +189,7 @@ public class EstadisticaHelper {
                 // Guardar les dades estadístiques
                 registresEstadistics.forEach(r -> {
                     crearEstadistiques(r, entornApp.getId());
-                    result.put(r.getTemps().getData().format(formatter), getRegistreEstadisticMessage(r));
+                    result.put(r.getTemps().format(formatter), getRegistreEstadisticMessage(r));
                 });
             } else {
                 RegistresEstadistics registresEstadistics;
@@ -204,7 +205,7 @@ public class EstadisticaHelper {
                 monitorEstadistica.endDadesAction();
                 // Guardar les dades estadístiques
                 crearEstadistiques(registresEstadistics, entornApp.getId());
-                result.put(registresEstadistics.getTemps().getData().format(formatter), getRegistreEstadisticMessage(registresEstadistics));
+                result.put(registresEstadistics.getTemps().format(formatter), getRegistreEstadisticMessage(registresEstadistics));
             }
         }
         return result;
@@ -383,11 +384,11 @@ public class EstadisticaHelper {
      */
     private static final ConcurrentHashMap<LocalDate, Object> TIME_LOCKS = new ConcurrentHashMap<>();
 
-    private TempsEntity crearTemps(es.caib.comanda.model.v1.estadistica.Temps temps) {
+    private TempsEntity crearTemps(OffsetDateTime temps) {
         if (temps == null)
             return null;
 
-        LocalDate data = LocalDate.from(temps.getData().toInstant().atZone(ZoneId.systemDefault()));
+        LocalDate data = LocalDate.from(temps.toInstant().atZone(ZoneId.systemDefault()));
         Object lock = TIME_LOCKS.computeIfAbsent(data, k -> new Object());
 
         synchronized (lock) {

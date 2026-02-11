@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.log.helper;
 
 import es.caib.comanda.model.server.monitoring.FitxerContingut;
+import es.caib.comanda.ms.exception.ComandaApiException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -13,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class LogHelperTest {
 
@@ -44,16 +46,16 @@ class LogHelperTest {
             assertThat(fi.getDataModificacio()).isNotNull();
             assertThat(fi.getMimeType()).isNotNull();
             assertThat(fi.getMimeType()).isEqualTo(fi.getNom().endsWith("log") ? "text/plain" : "application/gzip");
-            assertThat(fi.getDataCreacio()).hasSize(19); // dd/MM/yyyy HH:mm:ss
+            assertThat(fi.getDataCreacio()).isNotNull(); // dd/MM/yyyy HH:mm:ss
             assertThat(fi.getMida()).isNotNull().isGreaterThanOrEqualTo(0L);
         });
     }
 
     @Test
     void getFitxerByNom_returnsEmptyWhenPathInvalid() {
-        FitxerContingut fc = LogHelper.getFitxerByNom(null, "any.txt");
-        assertThat(fc.getContingut()).isNull();
-        assertThat(fc.getMimeType()).isNull();
+        assertThatThrownBy(() ->
+                LogHelper.getFitxerByNom(null, "any.txt")
+        ).isInstanceOf(ComandaApiException.class);
     }
 
     @Test
@@ -68,28 +70,48 @@ class LogHelperTest {
         FitxerContingut fc = LogHelper.getFitxerByNom(tempDir.toString(), name);
 
         // then: current implementation only zips when mime is text/plain; tika typically returns text/x-log
-        assertThat(fc.getNom()).isEqualTo(name);
+        assertThat(fc.getNom()).isEqualTo("server.zip");
         assertThat(fc.getMimeType()).isNotNull();
-        assertThat(fc.getMimeType()).startsWith("text/");
-        assertThat(new String(fc.getContingut(), StandardCharsets.UTF_8)).isEqualTo(content);
+        assertThat(fc.getMimeType()).isEqualTo("application/zip");
+        assertThat(fc.getMida()).isNotNull().isGreaterThanOrEqualTo(0L);
     }
 
     @Test
     void getFitxerByNom_binaryFilesAreReturnedAsIsWithDetectedMime() throws Exception {
-        // given - create a small binary file (not text/plain)
+        // given - create a small binary file (not compressed)
         String name = "data.bin";
         Path f = tempDir.resolve(name);
         byte[] bytes = new byte[]{0x00, (byte)0xFF, 0x10, 0x20, 0x30};
         Files.write(f, bytes);
 
         // when
+        LogHelper.setAppNom("data");
+        FitxerContingut fc = LogHelper.getFitxerByNom(tempDir.toString(), name);
+
+        // then
+        assertThat(fc.getNom()).isEqualTo("data.zip");
+        assertThat(fc.getMimeType()).isNotNull();
+        assertThat(fc.getMimeType()).isNotEqualTo("text/plain");
+        assertThat(fc.getMimeType()).isEqualTo("application/zip");
+//        assertThat(fc.getContingut()).containsExactly(bytes);
+    }
+
+    @Test
+    void getFitxerByNom_xippedFilesAreReturnedAsIsWithDetectedMime() throws Exception {
+        // given - create a small binary file (not compressed)
+        String name = "data.zip";
+        Path f = tempDir.resolve(name);
+        byte[] bytes = new byte[]{0x00, (byte)0xFF, 0x10, 0x20, 0x30};
+        Files.write(f, bytes);
+
+        // when
+        LogHelper.setAppNom("data");
         FitxerContingut fc = LogHelper.getFitxerByNom(tempDir.toString(), name);
 
         // then
         assertThat(fc.getNom()).isEqualTo(name);
         assertThat(fc.getMimeType()).isNotNull();
-        assertThat(fc.getMimeType()).isNotEqualTo("text/plain");
-        assertThat(fc.getMimeType()).isNotEqualTo("application/zip");
+        assertThat(fc.getMimeType()).isEqualTo("application/zip");
         assertThat(fc.getContingut()).containsExactly(bytes);
     }
 
@@ -107,6 +129,7 @@ class LogHelperTest {
         // then - we get all lines back in order
         assertThat(result).containsExactlyElementsOf(lines);
     }
+
 
     @Test
     void isTextPlain_and_compressFile_basicChecks() throws Exception {

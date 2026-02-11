@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -42,7 +43,9 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -74,6 +77,8 @@ public class SalutInfoHelper {
 
 	// Locks per assegurar compactació "synchronized" per entornAppId
 	private static final ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new ConcurrentHashMap<>();
+    // Mapa amb la data de la darrera petició de salut
+    private static final ConcurrentHashMap<Long, OffsetDateTime> LAST_SALUT_REQUEST_TIME = new ConcurrentHashMap<>();
 
 	@Transactional
 	public void getSalutInfo(EntornApp entornApp) {
@@ -96,7 +101,23 @@ public class SalutInfoHelper {
                 idSalut = processSalutError(entornApp, idSalut, currentMinuteTime, monitorSalut, new MalformedURLException("URL de salut invàlida o no absoluta"));
                 return; // sortir; el bloc finally publicarà l'event i mètriques
             }
-			SalutInfo salutInfo = restTemplate.getForObject(uri, SalutInfo.class);
+
+            // Enviarem com a paràmetres la darrera data en que s'ha realitzar una consulta de salut
+            // I una data pel total que inclogui els 31 dies que pot mostrar l'apartat de salut
+            OffsetDateTime dataPeriode = LAST_SALUT_REQUEST_TIME.get(entornApp.getId());
+            if (dataPeriode == null) {
+                dataPeriode = OffsetDateTime.now().minus(1, ChronoUnit.MINUTES);
+            }
+            OffsetDateTime dataTotal = OffsetDateTime.now().minus(31, ChronoUnit.DAYS);
+            URI newUri = UriComponentsBuilder
+                    .fromUri(uri)
+                    .queryParam("dataPeriode", dataPeriode)
+                    .queryParam("dataTotal", dataTotal)
+                    .build()
+                    .encode()
+                    .toUri();
+			SalutInfo salutInfo = restTemplate.getForObject(newUri, SalutInfo.class);
+            LAST_SALUT_REQUEST_TIME.put(entornApp.getId(), OffsetDateTime.now());
 			monitorSalut.endAction();
 			// Guardar les dades de salut a la base de dades
 			idSalut = crearSalut(salutInfo, entornApp.getId(), currentMinuteTime);

@@ -63,7 +63,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearTasca",
             summary = "Creació s'una tasca",
-            description = "Afegeix un missatge d'alta de tasca a una cua de events per a que es crei aquesta de forma asíncrona a Comanda."
+            description = "Afegeix un missatge d'alta de tasca a una cua de events per a que es crei aquesta de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -94,7 +95,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarTasca",
             summary = "Modificació una tasca",
-            description = "Es comprova si la tasca existeix, i en cas afirmatiu, s'afegeix un missatge de modificació de tasca a una cua de events per a que es modifiqui aquesta de forma asíncrona a Comanda."
+            description = "Es comprova si la tasca existeix, i en cas afirmatiu, s'afegeix un missatge de modificació de tasca a una cua de events per a que es modifiqui aquesta de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -129,7 +131,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearMultiplesTasques",
             summary = "Creació de múltiples tasques",
-            description = "Afegeix múltiples missatges d'alta de tasques a una cua de events per a que es creïn aquestes de forma asíncrona a Comanda."
+            description = "Afegeix múltiples missatges d'alta de tasques a una cua de events per a que es creïn aquestes de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -153,7 +156,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarMultiplesTasques",
             summary = "Modificació de múltiples tasques",
-            description = "Es comprova si les tasques existeixen, i en cas afirmatiu, s'afegeixen múltiples missatges de modificació de tasques a una cua de events per a que es modifiquin aquestes de forma asíncrona a Comanda. Les tasques no existents s'ignoren."
+            description = "Es comprova si les tasques existeixen, i en cas afirmatiu, s'afegeixen múltiples missatges de modificació de tasques a una cua de events per a que es modifiquin aquestes de forma asíncrona a Comanda. Les tasques no existents s'ignoren.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -215,7 +219,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "consultarTasca",
             summary = "Consulta d'una tasca",
-            description = "Obté les dades d'una tasca identificada pel seu identificador, codi d'aplicació i codi d'entorn."
+            description = "Obté les dades d'una tasca identificada pel seu identificador, codi d'aplicació i codi d'entorn.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tasca trobada", content = @Content(schema = @Schema(implementation = Tasca.class))),
@@ -239,7 +244,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "obtenirLlistatTasques",
             summary = "Consulta de tasques",
-            description = "Obté un llistat paginat de tasques amb possibilitat d'aplicar filtres ràpids, filtres avançats, consultes predefinides i perspectives."
+            description = "Obté un llistat paginat de tasques amb possibilitat d'aplicar filtres ràpids, filtres avançats, consultes predefinides i perspectives.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(schema = @Schema(implementation = TascaPage.class))),

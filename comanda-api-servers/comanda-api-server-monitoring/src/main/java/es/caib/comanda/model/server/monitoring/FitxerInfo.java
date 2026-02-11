@@ -2,6 +2,7 @@ package es.caib.comanda.model.server.monitoring;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.time.OffsetDateTime;
 import javax.validation.constraints.*;
 import javax.validation.Valid;
 
@@ -20,8 +21,8 @@ public class FitxerInfo   {
   private String nom;
   private Long mida;
   private String mimeType;
-  private String dataCreacio;
-  private String dataModificacio;
+  private OffsetDateTime dataCreacio;
+  private OffsetDateTime dataModificacio;
 
   public FitxerInfo() {
   }
@@ -87,42 +88,40 @@ public class FitxerInfo   {
   }
 
   /**
-   * Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss
    **/
-  public FitxerInfo dataCreacio(String dataCreacio) {
+  public FitxerInfo dataCreacio(OffsetDateTime dataCreacio) {
     this.dataCreacio = dataCreacio;
     return this;
   }
 
   
-  @ApiModelProperty(example = "15/01/2024 00:00:00", value = "Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss")
+  @ApiModelProperty(value = "")
   @JsonProperty("dataCreacio")
-  public String getDataCreacio() {
+  @Valid public OffsetDateTime getDataCreacio() {
     return dataCreacio;
   }
 
   @JsonProperty("dataCreacio")
-  public void setDataCreacio(String dataCreacio) {
+  public void setDataCreacio(OffsetDateTime dataCreacio) {
     this.dataCreacio = dataCreacio;
   }
 
   /**
-   * Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss
    **/
-  public FitxerInfo dataModificacio(String dataModificacio) {
+  public FitxerInfo dataModificacio(OffsetDateTime dataModificacio) {
     this.dataModificacio = dataModificacio;
     return this;
   }
 
   
-  @ApiModelProperty(example = "15/01/2024 23:59:59", value = "Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss")
+  @ApiModelProperty(value = "")
   @JsonProperty("dataModificacio")
-  public String getDataModificacio() {
+  @Valid public OffsetDateTime getDataModificacio() {
     return dataModificacio;
   }
 
   @JsonProperty("dataModificacio")
-  public void setDataModificacio(String dataModificacio) {
+  public void setDataModificacio(OffsetDateTime dataModificacio) {
     this.dataModificacio = dataModificacio;
   }
 

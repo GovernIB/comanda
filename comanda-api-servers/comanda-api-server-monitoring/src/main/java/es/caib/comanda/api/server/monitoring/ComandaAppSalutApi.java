@@ -2,17 +2,16 @@ package es.caib.comanda.api.server.monitoring;
 
 import es.caib.comanda.model.server.monitoring.AppInfo;
 import es.caib.comanda.model.server.monitoring.SalutInfo;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
-
-import io.swagger.annotations.*;
-
-import java.io.InputStream;
-import java.util.Map;
-import java.util.List;
-import javax.validation.constraints.*;
-import javax.validation.Valid;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
 * Represents a collection of functions to interact with the API endpoints.
@@ -24,6 +23,8 @@ public interface ComandaAppSalutApi {
     /**
      * Retorna l'estat de salut funcional i integracions, amb metadades de versió.
      *
+     * @param dataPeriode Data mínima de la que es demana informació per període
+     * @param dataTotal Data mínima de la que demana informació per totals
      * @return successful operation
      */
     @GET
@@ -32,7 +33,7 @@ public interface ComandaAppSalutApi {
     @ApiOperation(value = "Obtenir informació de l'estat de salut de l'aplicació", notes = "Retorna l'estat de salut funcional i integracions, amb metadades de versió.", tags={ "COMANDA → APP / Salut" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "successful operation", response = SalutInfo.class) })
-    SalutInfo salut();
+    SalutInfo salut(@QueryParam("dataPeriode")  @ApiParam("Data mínima de la que es demana informació per període")  java.time.OffsetDateTime dataPeriode,@QueryParam("dataTotal")  @ApiParam("Data mínima de la que demana informació per totals")  java.time.OffsetDateTime dataTotal);
 
 
     /**

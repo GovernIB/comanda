@@ -175,6 +175,9 @@
                                 <skipDefaultInterface>true</skipDefaultInterface>
                                 <sourceFolder>src/main/java</sourceFolder>
                             </configOptions>
+                            <schemaMappings>
+                                <schemaMapping>OffsetDateTime=java.time.OffsetDateTime</schemaMapping>
+                            </schemaMappings>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
                                 <importMapping>URL=java.net.URL</importMapping>
@@ -224,6 +227,9 @@
                                 <additionalProperty>jackson=true</additionalProperty>
                                 <additionalProperty>jsr310=true</additionalProperty>
                             </additionalProperties>
+                            <schemaMappings>
+                                <schemaMapping>OffsetDateTime=java.time.OffsetDateTime</schemaMapping>
+                            </schemaMappings>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
                                 <importMapping>URL=java.net.URL</importMapping>
@@ -267,6 +273,9 @@
                                 <useJakartaEe>false</useJakartaEe>
                                 <usePrimitives>true</usePrimitives>
                             </configOptions>
+                            <schemaMappings>
+                                <schemaMapping>OffsetDateTime=java.time.OffsetDateTime</schemaMapping>
+                            </schemaMappings>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
                                 <importMapping>URL=java.net.URL</importMapping>
@@ -294,7 +303,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring/src/main/java/es/caib/comanda/service/v1/monitoring</outputDirectory>
+                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring/src/main/java/es/caib/comanda/service/monitoring</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/src/main/resources/openapi/templates/client</directory>

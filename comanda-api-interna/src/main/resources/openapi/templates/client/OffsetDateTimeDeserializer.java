@@ -1,4 +1,4 @@
-package es.caib.comanda.service.v1.monitoring;
+package es.caib.comanda.service.monitoring;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;

@@ -63,7 +63,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearAvis",
             summary = "Creació d'un avís",
-            description = "Afegeix un missatge d'alta d'avís a una cua de events per a que es crei aquest de forma asíncrona a Comanda."
+            description = "Afegeix un missatge d'alta d'avís a una cua de events per a que es crei aquest de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -93,7 +94,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarAvis",
             summary = "Modificació d'un avís existent",
-            description = "Es comprova si l'avís existeix, i en cas afirmatiu, s'afegeix un missatge de modificació d'avís a una cua de events per a que es modifiqui aquest de forma asíncrona a Comanda."
+            description = "Es comprova si l'avís existeix, i en cas afirmatiu, s'afegeix un missatge de modificació d'avís a una cua de events per a que es modifiqui aquest de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -128,7 +130,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearMultiplesAvisos",
             summary = "Creació de múltiples avisos",
-            description = "Afegeix múltiples missatges d'alta d'avisos a una cua de events per a que es creïn aquests de forma asíncrona a Comanda."
+            description = "Afegeix múltiples missatges d'alta d'avisos a una cua de events per a que es creïn aquests de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -152,7 +155,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarMultiplesAvisos",
             summary = "Modificació de múltiples avisos",
-            description = "Es comprova si els avisos existeixen, i en cas afirmatiu, s'afegeixen missatges de modificació d'avisos a una cua de events per a que es modifiquin aquests de forma asíncrona a Comanda."
+            description = "Es comprova si els avisos existeixen, i en cas afirmatiu, s'afegeixen missatges de modificació d'avisos a una cua de events per a que es modifiquin aquests de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -214,7 +218,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "consultarAvis",
             summary = "Consulta d'un avís",
-            description = "Obté les dades d'un avís a partir del seu identificador, codi d'aplicació i codi d'entorn."
+            description = "Obté les dades d'un avís a partir del seu identificador, codi d'aplicació i codi d'entorn.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Avís trobat", content = @Content(schema = @Schema(implementation = Avis.class))),
@@ -238,7 +243,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "obtenirLlistatAvisos",
             summary = "Llistat d'avisos",
-            description = "Obté un llistat paginat d'avisos amb la possibilitat d'aplicar filtres de cerca."
+            description = "Obté un llistat paginat d'avisos amb la possibilitat d'aplicar filtres de cerca.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(schema = @Schema(implementation = AvisPage.class))),

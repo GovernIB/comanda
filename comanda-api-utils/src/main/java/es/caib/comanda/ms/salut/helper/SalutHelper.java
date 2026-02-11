@@ -14,19 +14,7 @@ public class SalutHelper {
 
     private static BuildInfo buildInfo;
 
-//    public static AppInfo generateBasicAppInfo(String codiAplicacio, String nomAplicacio, String versio) {
-//        BuildInfo buildInfo = getBuildInfo();
-//        return new AppInfo()
-//                .codi(codiAplicacio)
-//                .nom(nomAplicacio)
-//                .versio(versio)
-//                .revisio(buildInfo.getCommitId())
-//                .jdkVersion(buildInfo.getBuildJDK())
-//                .data(buildInfo.getBuildDate());
-//    }
-
-
-    private static BuildInfo getBuildInfo() {
+    public static BuildInfo getBuildInfo() {
 
         if (buildInfo == null) {
             buildInfo = generateBuildInfo();

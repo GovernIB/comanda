@@ -22,6 +22,20 @@ import javax.validation.Valid;
 public interface ComandaAppLogsApi {
 
     /**
+     * Descarrega el fitxer de log complet que es troba dins la carpeta de logs del servidor, i que té el nom indicat
+     *
+     * @param nomFitxer Nom del firxer
+     * @return successful operation
+     */
+    @GET
+    @Path("/logs/v1/{nomFitxer}/directe")
+    @ApiOperation(value = "Descarregar fitxer de log complet", notes = "Descarrega el fitxer de log complet que es troba dins la carpeta de logs del servidor, i que té el nom indicat", tags={ "COMANDA → APP / Logs" })
+    @ApiResponses(value = { 
+        @ApiResponse(code = 200, message = "successful operation", response = Void.class) })
+    void descarregarFitxerDirecte(@PathParam("nomFitxer") @ApiParam("Nom del firxer") String nomFitxer);
+
+
+    /**
      * Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat
      *
      * @param nomFitxer Nom del firxer
