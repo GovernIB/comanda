@@ -123,6 +123,11 @@ public class EntornApp extends BaseResource<Long> {
     @Builder.Default
     private boolean estadisticaAuth = false;
 
+	// Si les peticions de salut requereixen autenticació bàsica
+    @InputType("checkbox")
+    @Builder.Default
+	private boolean salutAuth = false;
+
     @Builder.Default
     private Boolean compactable = false;
     private Integer compactacioSetmanalMesos;

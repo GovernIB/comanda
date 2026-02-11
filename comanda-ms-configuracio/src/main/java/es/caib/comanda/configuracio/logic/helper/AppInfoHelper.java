@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.logic.helper;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
@@ -27,7 +28,10 @@ import es.caib.comanda.model.v1.salut.Manual;
 import es.caib.comanda.model.v1.salut.SubsistemaInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -54,6 +58,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Component
 public class AppInfoHelper {
+	@Value("${" + BaseConfig.PROP_STATS_AUTH_USER + ":}")
+	private String statsAuthUser;
+	@Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + ":}")
+	private String statsAuthPassword;
 
 	private final EntornAppRepository entornAppRepository;
 	private final AppIntegracioRepository appIntegracioRepository;
@@ -77,18 +85,6 @@ public class AppInfoHelper {
 		EntornAppEntity entornApp = entornAppRepository.findById(entornAppId)
 				.orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, entornAppId.toString()));
 		fetchAndStoreAppInfo(entornApp);
-	}
-
-	@Transactional
-	public void refreshAppInfo() {
-		List<EntornAppEntity> entornAppEntities = entornAppRepository.findByActivaTrueAndAppActivaTrue();
-		entornAppEntities.forEach(entornApp -> {
-			try {
-				fetchAndStoreAppInfo(entornApp);
-			} catch (Exception ex) {
-				log.warn("No s'ha pogut actualitzar info per entorn {}: {}", entornApp.getId(), ex.getMessage());
-			}
-		});
 	}
 
 	public void programarTasquesSalutEstadistica(EntornAppEntity entity) {
@@ -132,6 +128,23 @@ public class AppInfoHelper {
 				.build();
 	}
 
+	private HttpEntity<Void> buildAuthEntityIfNeeded(EntornAppEntity entornApp) {
+		if (!entornApp.isSalutAuth()) {
+			return null;
+		}
+		if (statsAuthUser == null || statsAuthPassword == null) {
+			return null;
+		}
+		org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+		headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
+		return new org.springframework.http.HttpEntity<>(headers);
+	}
+
+	private String basicAuthHeader(String user, String password) {
+		String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		return "Basic " + token;
+	}
+
 	/**
 	 * Actualitza la informació de l'aplicació associada a un entorn concret.
 	 * <p>
@@ -162,7 +175,13 @@ public class AppInfoHelper {
             if (!isValidUri(uri)) {
                 throw new MalformedURLException("URL de salut invàlida o no absoluta");
             }
-			AppInfo appInfo = restTemplate.getForObject(entornApp.getInfoUrl(), AppInfo.class);
+			HttpEntity<Void> httpEntity = buildAuthEntityIfNeeded(entornApp);
+			AppInfo appInfo = restTemplate.exchange(
+					entornApp.getInfoUrl(),
+					HttpMethod.GET,
+					httpEntity,
+					AppInfo.class
+			).getBody();
 			monitorApp.endAction();
 			// Guardar la informació de l'app a la base de dades
 			if (appInfo != null) {
