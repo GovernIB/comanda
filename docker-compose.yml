@@ -49,6 +49,8 @@ services:
       - es.caib.comanda.httpauth.password=${HTTPAUTH_PASSWORD}
       - es.caib.comanda.front.api.url=${APP_URL:-http://localhost:8080}/comandaback/api
       - es.caib.comanda.scheduler.leader=${SCHEDULER_LEADER:-false}
+      - es.caib.comanda.stats.auth.usuari=${STATS_AUTH_USUARI:-}
+      - es.caib.comanda.stats.auth.password=${STATS_AUTH_PASSWORD:-}
       - DEBUG=${DEBUG:-}
       - DEBUG_PORT=${DEBUG_HOST:-0.0.0.0:}${DEBUG_PORT:-8787}
       - JAVA_TOOL_OPTIONS="-XX:-UseContainerSupport"
