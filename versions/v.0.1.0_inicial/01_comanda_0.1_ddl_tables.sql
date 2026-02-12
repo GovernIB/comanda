@@ -32,6 +32,7 @@ CREATE TABLE com_entorn_app (
     info_url VARCHAR2(200 CHAR) NOT NULL,
     info_data TIMESTAMP,
     salut_url VARCHAR2(200 CHAR) NOT NULL,
+    salut_auth NUMBER(1) DEFAULT 0 NOT NULL,
     estadistica_info_url VARCHAR2(200 CHAR),
     estadistica_url VARCHAR2(200 CHAR),
     estadistica_cron VARCHAR2(40 CHAR),

@@ -6,10 +6,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -147,5 +150,93 @@ class LogHelperTest {
             assertThat(e.getName()).isEqualTo("file.txt.zip");
             assertThat(zis.readAllBytes()).containsExactly(data);
         }
+    }
+
+    @Test
+    void getFileStreamByNom_zipsNonCompressedFiles() throws Exception {
+        // given
+        String name = "app.log";
+        Path f = tempDir.resolve(name);
+        byte[] content = "Log content".getBytes(StandardCharsets.UTF_8);
+        Files.write(f, content);
+
+        // when
+        LogFileStream lfs = LogHelper.getFileStreamByNom(tempDir.toString(), name);
+
+        // then
+        assertThat(lfs.getFileName()).isEqualTo("app.zip");
+        assertThat(lfs.getContentType()).isEqualTo("application/zip");
+
+        // Verify content is a zip containing the original file
+        try (InputStream is = lfs.getInputStream();
+             ZipInputStream zis = new ZipInputStream(is)) {
+            ZipEntry entry = zis.getNextEntry();
+            assertThat(entry).isNotNull();
+            assertThat(entry.getName()).isEqualTo(name);
+            assertThat(zis.readAllBytes()).containsExactly(content);
+        }
+    }
+
+    @Test
+    void getFileStreamByNom_returnsCompressedFilesAsIs() throws Exception {
+        // given
+        String name = "app.log.gz";
+        Path f = tempDir.resolve(name);
+        byte[] content = "Already compressed".getBytes(StandardCharsets.UTF_8);
+        Files.write(f, content);
+
+        // when
+        LogFileStream lfs = LogHelper.getFileStreamByNom(tempDir.toString(), name);
+
+        // then
+        assertThat(lfs.getFileName()).isEqualTo(name);
+        assertThat(lfs.getContentType()).isEqualTo("application/gzip");
+
+        try (InputStream is = lfs.getInputStream()) {
+            assertThat(is.readAllBytes()).containsExactly(content);
+        }
+    }
+
+    @Test
+    void getFileStreamByNom_deletesTempFileAfterClose() throws Exception {
+        // given
+        String name = "todelete.log";
+        Path f = tempDir.resolve(name);
+        Files.write(f, "Delete me".getBytes(StandardCharsets.UTF_8));
+
+        // when
+        LogFileStream lfs = LogHelper.getFileStreamByNom(tempDir.toString(), name);
+        
+        // Find the temp file created (it should be in the system temp dir, but we can't easily know the path 
+        // without reflecting or changing LogHelper, however we can check that it's NOT the original file)
+        
+        // Let's use a trick: get all files in temp dir before and after
+        Set<Path> beforeClose = Files.list(Path.of(System.getProperty("java.io.tmpdir")))
+                .filter(p -> p.getFileName().toString().startsWith("log-") && p.getFileName().toString().endsWith(".zip"))
+                .collect(Collectors.toSet());
+        
+        assertThat(beforeClose).isNotEmpty(); // At least one temp file should have been created
+
+        // when
+        lfs.getInputStream().close();
+
+        // then
+        Set<Path> afterClose = Files.list(Path.of(System.getProperty("java.io.tmpdir")))
+                .filter(p -> p.getFileName().toString().startsWith("log-") && p.getFileName().toString().endsWith(".zip"))
+                .collect(Collectors.toSet());
+        
+        // The specific temp file created for this test should have been deleted
+        // Since other tests might be running, we just check if the number of temp files decreased or if none match our specific one
+        // This is a bit flaky if concurrent tests run, but in this environment it should be fine.
+        
+        // Better: We can check if any of the files in beforeClose is missing in afterClose
+        boolean deleted = false;
+        for (Path p : beforeClose) {
+            if (!afterClose.contains(p)) {
+                deleted = true;
+                break;
+            }
+        }
+        assertThat(deleted).isTrue();
     }
 }
