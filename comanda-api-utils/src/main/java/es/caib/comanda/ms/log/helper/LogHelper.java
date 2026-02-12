@@ -92,12 +92,35 @@ public class LogHelper {
         }
 
         try {
+            var mime = getMimeTypeByExtension(nom);
+            if (mime == null || !isCompressedFile(mime)) {
+                // Si no està comprimit, el comprimim a un fitxer temporal
+                String zipNom = changeExtensionToZip(nom);
+                Path tempFile = Files.createTempFile("log-", "-" + zipNom);
+
+                try (var out = Files.newOutputStream(tempFile);
+                     var zos = new ZipOutputStream(out)) {
+                    var zipEntry = new ZipEntry(nom);
+                    zos.putNextEntry(zipEntry);
+                    Files.copy(filePath, zos);
+                    zos.closeEntry();
+                }
+
+                return new LogFileStream(
+                        Files.newInputStream(tempFile),
+                        zipNom,
+                        Files.size(tempFile),
+                        "application/zip",
+                        tempFile
+                );
+            }
+
             InputStream in = Files.newInputStream(filePath);
             return new LogFileStream(
                     in,
                     nom,
                     Files.size(filePath),
-                    getMimeTypeByExtension(nom)
+                    mime
             );
 
         } catch (IOException e) {

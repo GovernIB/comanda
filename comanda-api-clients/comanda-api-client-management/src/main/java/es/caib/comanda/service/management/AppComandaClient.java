@@ -63,6 +63,10 @@ public class AppComandaClient extends ApiClient {
         return avisosApi.modificarMultiplesAvisos(avisos);
     }
 
+    public String eliminarAvis(String identificador, String appCodi, String entornCodi) throws Exception {
+        return avisosApi.eliminarAvis(identificador, appCodi, entornCodi);
+    }
+
     public AvisPage obtenirLlistatAvisos(String quickFilter, String filter, String page, Integer size) throws Exception {
         return avisosApi.obtenirLlistatAvisos(quickFilter, filter, null, null, page, size);
     }
@@ -109,6 +113,10 @@ public class AppComandaClient extends ApiClient {
 
     public String modificarMultiplesTasques(List<Tasca> tasques) throws Exception {
         return tasquesApi.modificarMultiplesTasques(tasques);
+    }
+
+    public String eliminarTasca(String identificador, String appCodi, String entornCodi) throws Exception {
+        return tasquesApi.eliminarTasca(identificador, appCodi, entornCodi);
     }
 
     public TascaPage obtenirLlistatTasques(String quickFilter, String filter, String page, Integer size) throws Exception {
