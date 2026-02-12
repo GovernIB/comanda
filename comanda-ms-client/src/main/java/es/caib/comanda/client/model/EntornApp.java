@@ -38,6 +38,7 @@ public class EntornApp implements Serializable {
     private String estadisticaCron;
 
     private boolean estadisticaAuth;
+    private boolean salutAuth;
 
     @Builder.Default
     private Boolean compactable = false;

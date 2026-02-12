@@ -45,6 +45,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.PostConstruct;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -180,7 +181,14 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             pingUrlResponse.setSuccess(false);
             String message = null;
             try {
-                ResponseEntity<Void> response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, buildAuthEntityIfNeeded(params.getFormData()), Void.class);
+                // Comprova si el params.getEndpoint() enviat pel client coincideix amb alguna de les URLs d'estadístiques
+                List<String> estadisticaURLs = Arrays.asList(params.getFormData().getEstadisticaUrl(), params.getFormData().getEstadisticaInfoUrl());
+                boolean isEstadisticaRequest = estadisticaURLs.contains(params.getEndpoint());
+                // Comprova si el params.getEndpoint() correspon a la URL de salut. Les peticions de salut que es fan cada minut
+                // no es poden autenticar per motius de rendiment amb el servei d'autenticació.
+                boolean isExcludedSalutRequest = params.getEndpoint().equals(params.getFormData().getSalutUrl());
+
+                ResponseEntity<Void> response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, buildAuthEntityIfNeeded(params.getFormData(), !isEstadisticaRequest, isExcludedSalutRequest), Void.class);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     pingUrlResponse.setSuccess(true);
                     message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
@@ -215,8 +223,14 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             return pingUrlResponse;
         }
 
-        private HttpEntity<Void> buildAuthEntityIfNeeded(EntornApp entornApp) {
-            if (!entornApp.isEstadisticaAuth()) {
+        private HttpEntity<Void> buildAuthEntityIfNeeded(EntornApp entornApp, boolean isSalutRequest, boolean ignoreAuth) {
+            if (ignoreAuth) {
+                return null;
+            }
+            if (isSalutRequest && !entornApp.isSalutAuth()) {
+                return null;
+            }
+            if (!isSalutRequest && !entornApp.isEstadisticaAuth()) {
                 return null;
             }
             if (statsAuthUser == null || statsAuthPassword == null) {

@@ -91,6 +91,10 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	@Column(name = "estadistica_auth", nullable = false)
 	private boolean estadisticaAuth = false;
 
+	// Si les peticions de salut requereixen autenticació bàsica
+	@Column(name = "salut_auth", nullable = false)
+	private boolean salutAuth = false;
+
     // Dades de compactació
     @Column(name = "compactable", nullable = false)
     private Boolean compactable = false;

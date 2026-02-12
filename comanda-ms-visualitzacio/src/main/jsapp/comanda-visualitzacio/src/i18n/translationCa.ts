@@ -392,9 +392,9 @@ const translationCa = {
                 compactacioSetmanalMesos: "Compactació setmanal (mesos)",
                 compactacioMensualMesos: "Compactacio mensual (mesos)",
                 eliminacioMesos: "Esborrat (mesos)",
-                estadistica: {
-                    auth: "Servei autenticat",
-                },
+                auth: "Servei autenticat",
+                salutAuthLegend: "Autenticació a les consultes de salut",
+                estadisticaAuthLegend: "Autenticació a les consultes d'estadístiques",
             },
             tooltips: {
                 compactacioSetmanes: "Quans mesos complerts es mantindran les estadístiques abans de compactar-les per setmana.\nSi es deixen els camps sense valor, o amb valor 0, no es realitzarà compactació per setmana.",

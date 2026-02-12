@@ -58,7 +58,7 @@ public class ConfiguracioSchedulerService {
         return schedulerLeader && schedulerBack;
     }
 
-    @Scheduled(cron = "30 0/10 * * * *")
+    @Scheduled(cron = "30 0/15 * * * *")
     public void scheduledConfiguracioTasks() {
         if (!isLeader()) {
             log.debug("Refresc de configuració ignorada: aquesta instància no és leader per als schedulers");

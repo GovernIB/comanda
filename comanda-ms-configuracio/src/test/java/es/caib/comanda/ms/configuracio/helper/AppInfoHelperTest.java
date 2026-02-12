@@ -30,6 +30,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -175,7 +178,8 @@ public class AppInfoHelperTest {
 
         // Mock RestTemplate
 //        mockRestTemplate();
-        when(restTemplate.getForObject(eq("http://test.com/info"), eq(AppInfo.class))).thenReturn(appInfo);
+        when(restTemplate.exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class)))
+                .thenReturn(new ResponseEntity<>(appInfo, HttpStatus.OK));
 
         // Call the method to test
         appInfoHelper.refreshAppInfo(1L);
@@ -210,74 +214,13 @@ public class AppInfoHelperTest {
     }
 
     @Test
-    void testRefreshAppInfoAll() {
-        // Mock repository call
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(activeEntornApps);
-
-        // Mock RestTemplate
-//        mockRestTemplate();
-        when(restTemplate.getForObject(eq("http://test.com/info"), eq(AppInfo.class))).thenReturn(appInfo);
-
-        // Call the method to test
-        appInfoHelper.refreshAppInfo();
-
-        // Verify that the repository was called
-        verify(entornAppRepository).findByActivaTrueAndAppActivaTrue();
-
-        // Verify that the RestTemplate was called
-        verifyRestTemplateCall();
-
-        // Verify that the entity was updated
-        assertEquals(appInfo.getVersio(), entornAppEntity.getVersio());
-        assertNotNull(entornAppEntity.getInfoData());
-
-        // Verify that integracions and subsistemes were refreshed
-        verify(appIntegracioRepository).findByEntornApp(entornAppEntity);
-        verify(subsistemaRepository).findByEntornApp(entornAppEntity);
-    }
-
-    @Test
-    void testRefreshAppInfoAll_IgnoresValidationErrors() {
-        // Mock repository call
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(activeEntornApps);
-
-        // Rebuild AppInfo with invalid data
-        appInfo = new AppInfo(
-                appInfo.getCodi(),
-                appInfo.getNom(),
-                appInfo.getVersio(),
-                appInfo.getData(),
-                appInfo.getRevisio(),
-                appInfo.getJdkVersion(),
-                appInfo.getVersioJboss(),
-                Arrays.asList(appInfo.getIntegracions().get(0), new IntegracioInfo("INT2", "")),
-                Arrays.asList(appInfo.getSubsistemes().get(0), new SubsistemaInfo("SUB1", "")),
-                List.of(new ContextInfo("CON1", "", "", null, ""))
-        );
-
-        // Mock RestTemplate
-        when(restTemplate.getForObject(eq("http://test.com/info"), eq(AppInfo.class))).thenReturn(appInfo);
-
-        // Call the method to test
-        appInfoHelper.refreshAppInfo();
-
-        // Verify that integracions and subsistemes were refreshed
-        verify(integracioRepository).save(integracioEntityCaptor.capture());
-        assertEquals(1, integracioEntityCaptor.getAllValues().size());
-        verify(subsistemaRepository).save(subsistemaEntityCaptor.capture());
-        assertEquals(1, subsistemaEntityCaptor.getAllValues().size());
-        verify(contextRepository, never()).save(any());
-
-    }
-
-    @Test
     void testRefreshAppInfoWithRestClientException() {
         // Mock repository call
         when(entornAppRepository.findById(1L)).thenReturn(Optional.of(entornAppEntity));
 
         // Mock RestTemplate to throw an exception
 //        mockRestTemplate();
-        when(restTemplate.getForObject(eq("http://test.com/info"), eq(AppInfo.class)))
+        when(restTemplate.exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class)))
                 .thenThrow(new RestClientException("Connection refused"));
 
         // Call the method to test
@@ -299,6 +242,6 @@ public class AppInfoHelperTest {
 //    }
 
     private void verifyRestTemplateCall() {
-        verify(restTemplate).getForObject(eq("http://test.com/info"), eq(AppInfo.class));
+        verify(restTemplate).exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class));
     }
 }

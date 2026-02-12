@@ -392,9 +392,9 @@ const translationEs: translationResourcesType = {
                 compactacioSetmanalMesos: "Compactación semanal (meses)",
                 compactacioMensualMesos: "Compactación mensual (meses)",
                 eliminacioMesos: "Borrado (meses)",
-                estadistica: {
-                    auth: "Servicio autenticado",
-                },
+                auth: "Servicio autenticado",
+                salutAuthLegend: "Autenticar las consultas de salud",
+                estadisticaAuthLegend: "Autenticar las consultas de estadísticas",
             },
             tooltips: {
                 compactacioSetmanes: "Cuántos meses completos se mantendrán las estadísticas antes de compactarlas por semana.\nSi los campos se dejan sin valor o con valor 0, no se realizará la compactación por semana.",
