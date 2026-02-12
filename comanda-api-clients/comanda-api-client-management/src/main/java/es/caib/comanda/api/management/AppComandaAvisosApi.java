@@ -170,6 +170,64 @@ public class AppComandaAvisosApi {
     return apiClient.invokeAPI(localVarPath, "POST", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
       }
   /**
+   * Eliminació d&#39;un avís existent
+   * Es comprova si l&#39;avís existeix, i en cas afirmatiu, s&#39;afegeix un missatge d&#39;eliminació d&#39;avís a una cua de events per a que s&#39;elimini aquest de forma asíncrona a Comanda.
+   * @param identificador Identificador de l&#39;avís (required)
+   * @param appCodi Codi de l&#39;aplicació (required)
+   * @param entornCodi Codi de l&#39;entorn (required)
+   * @return a {@code String}
+   * @throws ApiException if fails to make API call
+   */
+  public String eliminarAvis(@javax.annotation.Nonnull String identificador, @javax.annotation.Nonnull String appCodi, @javax.annotation.Nonnull String entornCodi) throws ApiException {
+    Object localVarPostBody = null;
+    
+    // verify the required parameter 'identificador' is set
+    if (identificador == null) {
+      throw new ApiException(400, "Missing the required parameter 'identificador' when calling eliminarAvis");
+    }
+    
+    // verify the required parameter 'appCodi' is set
+    if (appCodi == null) {
+      throw new ApiException(400, "Missing the required parameter 'appCodi' when calling eliminarAvis");
+    }
+    
+    // verify the required parameter 'entornCodi' is set
+    if (entornCodi == null) {
+      throw new ApiException(400, "Missing the required parameter 'entornCodi' when calling eliminarAvis");
+    }
+    
+    // create path and map variables
+    String localVarPath = "/avisos/v1/{identificador}".replaceAll("\\{format\\}","json")
+      .replaceAll("\\{" + "identificador" + "\\}", apiClient.escapeString(identificador.toString()));
+
+    // query params
+    List<Pair> localVarQueryParams = new ArrayList<Pair>();
+    Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+    Map<String, String> localVarCookieParams = new HashMap<String, String>();
+    Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+    localVarQueryParams.addAll(apiClient.parameterToPairs("", "appCodi", appCodi));
+    localVarQueryParams.addAll(apiClient.parameterToPairs("", "entornCodi", entornCodi));
+
+    
+    
+    
+    final String[] localVarAccepts = {
+      "text/plain"
+    };
+    final String localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+
+    final String[] localVarContentTypes = {
+      
+    };
+    final String localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+    String[] localVarAuthNames = new String[] {  };
+
+    GenericType<String> localVarReturnType = new GenericType<String>() {};
+    return apiClient.invokeAPI(localVarPath, "DELETE", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+      }
+  /**
    * Modificació d&#39;un avís existent
    * Es comprova si l&#39;avís existeix, i en cas afirmatiu, s&#39;afegeix un missatge de modificació d&#39;avís a una cua de events per a que es modifiqui aquest de forma asíncrona a Comanda.
    * @param identificador Identificador de l&#39;avís (required)

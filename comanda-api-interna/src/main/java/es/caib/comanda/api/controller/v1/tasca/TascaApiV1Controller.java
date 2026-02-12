@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -212,6 +213,46 @@ public class TascaApiV1Controller extends BaseController {
             return ResponseEntity.status(404).body("No s'ha trobat cap tasca a modificar");
         }
         return ResponseEntity.ok(enviats + " tasques modificades enviades; " + ignorats + " ignorades per no existir");
+    }
+
+    @DeleteMapping("/{identificador}")
+    @SecurityRequirement(name = SECURITY_NAME)
+    @Operation(
+            operationId = "eliminarTasca",
+            summary = "Eliminació una tasca existent",
+            description = "Es comprova si la tasca existeix, i en cas afirmatiu, s'afegeix un missatge d'eliminació de tasca a una cua de events per a que s'elimini aquesta de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Tasca no trobada"),
+            @ApiResponse(responseCode = "400", description = "Petició incorrecta"),
+            @ApiResponse(responseCode = "401", description = "No autenticat"),
+            @ApiResponse(responseCode = "403", description = "Prohibit"),
+            @ApiResponse(responseCode = "500", description = "Error intern")
+    })
+    public ResponseEntity<String> eliminarTasca(
+            @Parameter(name = "identificador", description = "Identificador de la tasca", required = true) @PathVariable String identificador,
+            @Parameter(name = "appCodi", description = "Codi de l'aplicació", required = true) @RequestParam String appCodi,
+            @Parameter(name = "entornCodi", description = "Codi de l'entorn", required = true) @RequestParam String entornCodi) {
+
+        if (!existApp(appCodi)) return ResponseEntity.badRequest().body("No existeix l'aplicació amb el codi indicat");
+        if (!existEntorn(entornCodi)) return ResponseEntity.badRequest().body("No existeix l'entorn amb el codi indicat");
+
+        Optional<es.caib.comanda.client.model.Tasca> tascaExistent = getTascaByCodi(identificador, appCodi, entornCodi);
+        if (tascaExistent.isEmpty()) {
+            return ResponseEntity.status(404).body("No s'ha trobat la tasca amb identificador " + identificador + " per a l'aplicació " + appCodi + " i entorn " + entornCodi);
+        }
+
+        Tasca tascaEliminar = Tasca.builder()
+                .identificador(identificador)
+                .appCodi(appCodi)
+                .entornCodi(entornCodi)
+                .esborrar(true)
+                .build();
+
+        jmsTemplate.convertAndSend(CUA_TASQUES, tascaEliminar);
+        return ResponseEntity.ok("Missatge d'eliminació enviat a " + CUA_TASQUES);
     }
 
     @GetMapping("/{identificador}")

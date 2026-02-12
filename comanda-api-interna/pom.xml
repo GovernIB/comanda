@@ -144,25 +144,47 @@
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>replacer</artifactId>
                 <version>1.5.3</version>
+
                 <executions>
+
+                    <!-- 1) Afegeix x-return-response al monitoring -->
                     <execution>
+                        <id>patch-monitoring-yaml</id>
                         <phase>prepare-package</phase>
-                        <goals>
-                            <goal>replace</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-monitoring.yml</file>
-                    <replacements>
-                        <replacement>
-                            <token>x-operation-name: descarregarFitxerDirecte</token>
-                            <value>x-operation-name: descarregarFitxerDirecte
+                        <goals><goal>replace</goal></goals>
+                        <configuration>
+                            <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-monitoring.yml</file>
+                            <replacements>
+                                <replacement>
+                                    <token>x-operation-name: descarregarFitxerDirecte</token>
+                                    <value>x-operation-name: descarregarFitxerDirecte
       x-return-response: true</value>
-                        </replacement>
-                    </replacements>
-                </configuration>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                    <!-- 2) Elimina el camp 'esborrar' del management -->
+                    <execution>
+                        <id>remove-esborrar-from-management-yaml</id>
+                        <phase>prepare-package</phase>
+                        <goals><goal>replace</goal></goals>
+                        <configuration>
+                            <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-management.yml</file>
+                            <regex>true</regex>
+                            <replacements>
+                                <replacement>
+                                    <!-- elimina exactament dues línies: "        esborrar:" i "          type: boolean" -->
+                                    <token>\n[ ]{8}esborrar:\n[ ]{10}type:\s*boolean</token>
+                                    <value></value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                </executions>
             </plugin>
+
 
             <!-- Generar els clients Java a partir dels yaml openapi generats -->
             <plugin>
