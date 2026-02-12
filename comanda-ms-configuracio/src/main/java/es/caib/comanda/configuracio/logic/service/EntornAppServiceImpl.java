@@ -41,6 +41,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -215,7 +216,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             String message = null;
             try {
                 // Comprova si el params.getEndpoint() enviat pel client coincideix amb alguna de les URLs d'estadístiques
-                List<String> estadisticaURLs = List.of(new String[]{params.getFormData().getEstadisticaUrl(), params.getFormData().getEstadisticaInfoUrl()});
+                List<String> estadisticaURLs = Arrays.asList(params.getFormData().getEstadisticaUrl(), params.getFormData().getEstadisticaInfoUrl());
                 boolean isEstadisticaRequest = estadisticaURLs.contains(params.getEndpoint());
                 // Comprova si el params.getEndpoint() correspon a la URL de salut. Les peticions de salut que es fan cada minut
                 // no es poden autenticar per motius de rendiment amb el servei d'autenticació.
