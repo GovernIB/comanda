@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,6 +79,29 @@ public class LogHelper {
         } catch (Exception ex) {
             log.error("Error reading file content for " + nom, ex);
             throw new ComandaApiException("Error llegint el contingut del fitxer " + nom + ". Error: " + ex.getMessage(), ex);
+        }
+    }
+
+    public static LogFileStream getFileStreamByNom(String directoriPath, String nom) {
+
+        var logDirPath = resolveLogDirectoryPath(directoriPath);
+
+        var filePath = logDirPath.resolve(nom);
+        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+            throw new ComandaApiException("El fitxer de log no existeix: " + nom);
+        }
+
+        try {
+            InputStream in = Files.newInputStream(filePath);
+            return new LogFileStream(
+                    in,
+                    nom,
+                    Files.size(filePath),
+                    getMimeTypeByExtension(nom)
+            );
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error llegint fitxer", e);
         }
     }
 

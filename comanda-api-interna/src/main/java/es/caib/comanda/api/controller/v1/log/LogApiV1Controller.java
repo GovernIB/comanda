@@ -80,38 +80,6 @@ public class LogApiV1Controller {
                 "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
     }
 
-//    public LogFileStream getLogFile(String nomFitxer) {
-//
-//        if (nomFitxer == null || nomFitxer.contains("..") || nomFitxer.contains("/") || nomFitxer.contains("\\")) {
-//            throw new RuntimeException("Nom de fitxer invàlid");
-//        }
-//
-//        Path filePath = logsDir.resolve(nomFitxer).normalize();
-//
-//        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-//            return null;
-//        }
-//
-//        try {
-//            InputStream in = Files.newInputStream(filePath);
-//
-//            String contentType = Files.probeContentType(filePath);
-//            if (contentType == null) {
-//                contentType = MediaType.APPLICATION_OCTET_STREAM;
-//            }
-//
-//            return new LogFileStream(
-//                    in,
-//                    filePath.getFileName().toString(),
-//                    Files.size(filePath),
-//                    contentType
-//            );
-//
-//        } catch (IOException e) {
-//            throw new RuntimeException("Error llegint fitxer", e);
-//        }
-//    }
-
     @GetMapping(
             value = "/{nomFitxer}/directe",
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
@@ -175,6 +143,30 @@ public class LogApiV1Controller {
         throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
                 "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
     }
+
+//    public class LogFileStream {
+//
+//        private final InputStream inputStream;
+//        private final String fileName;
+//        private final long size;
+//        private final String contentType;
+//
+//        public LogFileStream(InputStream inputStream,
+//                             String fileName,
+//                             long size,
+//                             String contentType) {
+//            this.inputStream = inputStream;
+//            this.fileName = fileName;
+//            this.size = size;
+//            this.contentType = contentType;
+//        }
+//
+//        public InputStream getInputStream() { return inputStream; }
+//        public String getFileName() { return fileName; }
+//        public long getSize() { return size; }
+//        public String getContentType() { return contentType; }
+//    }
+
 
     @Operation(
             operationId = "llegitUltimesLinies",
