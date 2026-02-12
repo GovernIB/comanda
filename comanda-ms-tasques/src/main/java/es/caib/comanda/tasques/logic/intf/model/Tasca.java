@@ -88,6 +88,8 @@ public class Tasca extends BaseResource<Long> {
     @Transient private AppRef app;
     @Transient private EntornRef entorn;
     @Transient private Long diesPerCaducar;
+    @Transient private String entornCodi;
+    @Transient private String appCodi;
 
     @Getter
     @Setter

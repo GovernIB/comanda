@@ -37,7 +37,7 @@ public class EstadisticaClientHelper {
     // Client App
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = APP_CACHE, key = "#appId")
+    @Cacheable(value = APP_CACHE, key = "#appId.toString()")
     public App appFindById(Long appId) {
         EntityModel<App> app = appServiceClient.getOne(
                 appId,
@@ -53,7 +53,7 @@ public class EstadisticaClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId.toString()")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
@@ -129,7 +129,7 @@ public class EstadisticaClientHelper {
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_CACHE, key = "#entornId")
+    @Cacheable(value = ENTORN_CACHE, key = "#entornId.toString()")
     public Entorn entornById(Long entornId) {
         EntityModel<Entorn> entorn = entornServiceClient.getOne(
                 entornId,

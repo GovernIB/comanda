@@ -1,7 +1,11 @@
 package es.caib.comanda.tasques.logic.helper;
 
+import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
+import es.caib.comanda.client.EntornServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
@@ -15,6 +19,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.*;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -23,11 +29,13 @@ public class TasquesClientHelper {
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final MonitorServiceClient monitorServiceClient;
     private final EntornAppServiceClient entornAppServiceClient;
+    private final EntornServiceClient entornServiceClient;
+    private final AppServiceClient appServiceClient;
 
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "entornAppCache", key = "#entornAppId")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId.toString()")
     public EntornApp entornAppFindById(Long entornAppId) {
         try {
             EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
@@ -109,4 +117,33 @@ public class TasquesClientHelper {
         }
     }
 
+    // Client App
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Cacheable(value = APP_CACHE, key = "#appId.toString()")
+    public App appById(Long appId) {
+        EntityModel<App> app = appServiceClient.getOne(
+                appId,
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        if (app != null) {
+            return app.getContent();
+        }
+        return null;
+    }
+
+    // Client Entorn
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Cacheable(value = ENTORN_CACHE, key = "#entornId.toString()")
+    public Entorn entornById(Long entornId) {
+        EntityModel<Entorn> entorn = entornServiceClient.getOne(
+                entornId,
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        if (entorn != null) {
+            return entorn.getContent();
+        }
+        return null;
+    }
 }

@@ -9,6 +9,8 @@ import es.caib.comanda.avisos.persist.entity.AvisEntity;
 import es.caib.comanda.avisos.persist.entity.AvisLlegitEntity;
 import es.caib.comanda.avisos.persist.repository.AvisLlegitRepository;
 import es.caib.comanda.avisos.persist.repository.AvisRepository;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -28,7 +30,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -111,6 +112,16 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
         return dateToConvert != null ? dateToConvert.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime() : null;
+    }
+
+    @Override
+    protected void afterConversion(AvisEntity entity, Avis resource) {
+        super.afterConversion(entity, resource);
+
+        App app = avisClientHelper.appById(entity.getAppId());
+        Entorn entorn = avisClientHelper.entornById(entity.getEntornId());
+        resource.setAppCodi(app != null ? app.getCodi() : null);
+        resource.setEntornCodi(entorn != null ? entorn.getCodi() : null);
     }
 
     @Override

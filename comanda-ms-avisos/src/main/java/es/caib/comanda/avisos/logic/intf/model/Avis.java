@@ -86,6 +86,8 @@ public class Avis extends BaseResource<Long> {
 
     @Transient private boolean llegit;
     @Transient private String[] treePath;
+    @Transient private String entornCodi;
+    @Transient private String appCodi;
     @Transient private AppRef app;
     @Transient private EntornRef entorn;
 

@@ -28,6 +28,10 @@ public abstract class BaseOpenApiConfig {
 		BASIC
 	}
 
+	public static final String SECURITY_NAME = "basicAuth";
+	public static final String BASIC_SECURITY_SCHEME = "basic";
+	public static final String BEARER_SECURITY_SCHEME = "bearer";
+
 	@Bean
 	public OpenAPI customOpenAPI() {
 		String version = "Unknown";
@@ -45,10 +49,10 @@ public abstract class BaseOpenApiConfig {
 				case BASIC:
 					return openapi
 							.components(new Components().addSecuritySchemes(
-									"basicAuth",
+									SECURITY_NAME,
 									new SecurityScheme()
 											.type(SecurityScheme.Type.HTTP)
-											.scheme("basic")
+											.scheme(BASIC_SECURITY_SCHEME)
 											.in(SecurityScheme.In.HEADER)
 											.name("Authorization")))
 						.addSecurityItem(new SecurityRequirement().addList("basicAuth", Collections.emptyList()));
@@ -59,7 +63,7 @@ public abstract class BaseOpenApiConfig {
 									"Bearer token",
 									new SecurityScheme()
 											.type(SecurityScheme.Type.HTTP)
-											.scheme("bearer")
+											.scheme(BEARER_SECURITY_SCHEME)
 											.bearerFormat("JWT")
 											.in(SecurityScheme.In.HEADER)
 											.name("Authorization")))
