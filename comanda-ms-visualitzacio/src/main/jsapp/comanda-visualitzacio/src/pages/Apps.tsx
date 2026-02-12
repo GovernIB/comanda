@@ -105,9 +105,9 @@ const AppEntornForm: React.FC = () => {
             </Grid>
             <Grid size={12} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
-                    <FormLabel component="legend">{t('page.apps.fields.salutAuthLegend')}</FormLabel>
+                    <FormLabel component="legend">{t($ => $.page.apps.fields.salutAuthLegend)}</FormLabel>
                     <FormGroup aria-label="position" row>
-                        <FormField name="salutAuth" type="checkbox" label={t('page.apps.fields.auth')} />
+                        <FormField name="salutAuth" type="checkbox" label={t($ => $.page.apps.fields.auth)} />
                     </FormGroup>
                 </FormControl>
             </Grid>
