@@ -1,5 +1,6 @@
 package es.caib.comanda.api.server.monitoring;
 
+import java.io.File;
 import es.caib.comanda.model.server.monitoring.FitxerContingut;
 import es.caib.comanda.model.server.monitoring.FitxerInfo;
 
@@ -17,6 +18,7 @@ import javax.validation.Valid;
 /**
 * Represents a collection of functions to interact with the API endpoints.
 */
+@Path("/logs/v1")
 @Api(description = "the ComandaAppLogs API")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", comments = "Generator version: 7.17.0")
 public interface ComandaAppLogsApi {
@@ -28,12 +30,12 @@ public interface ComandaAppLogsApi {
      * @return successful operation
      */
     @GET
-    @Path("/logs/v1/{nomFitxer}/directe")
+    @Path("/{nomFitxer}/directe")
+    @Produces({ "application/octet-stream" })
     @ApiOperation(value = "Descarregar fitxer de log complet", notes = "Descarrega el fitxer de log complet que es troba dins la carpeta de logs del servidor, i que té el nom indicat", tags={ "COMANDA → APP / Logs" })
     @ApiResponses(value = { 
-        @ApiResponse(code = 200, message = "successful operation", response = Void.class) })
-    void descarregarFitxerDirecte(@PathParam("nomFitxer") @ApiParam("Nom del firxer") String nomFitxer);
-
+        @ApiResponse(code = 200, message = "successful operation", response = File.class) })
+    Response descarregarFitxerDirecte(@PathParam("nomFitxer") @ApiParam("Nom del firxer") String nomFitxer);
 
     /**
      * Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat
@@ -42,13 +44,12 @@ public interface ComandaAppLogsApi {
      * @return successful operation
      */
     @GET
-    @Path("/logs/v1/{nomFitxer}")
+    @Path("/{nomFitxer}")
     @Produces({ "application/json" })
     @ApiOperation(value = "Obtenir contingut complet d'un fitxer de log", notes = "Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat", tags={ "COMANDA → APP / Logs" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "successful operation", response = FitxerContingut.class) })
     FitxerContingut getFitxerByNom(@PathParam("nomFitxer") @ApiParam("Nom del firxer") String nomFitxer);
-
 
     /**
      * Retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies.
@@ -58,13 +59,12 @@ public interface ComandaAppLogsApi {
      * @return successful operation
      */
     @GET
-    @Path("/logs/v1/{nomFitxer}/linies/{nLinies}")
+    @Path("/{nomFitxer}/linies/{nLinies}")
     @Produces({ "application/json" })
     @ApiOperation(value = "Obtenir les darreres línies d'un fitxer de log", notes = "Retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies.", tags={ "COMANDA → APP / Logs" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "successful operation", response = String.class, responseContainer = "List") })
     List<String> llegitUltimesLinies(@PathParam("nomFitxer") @ApiParam("Nom del firxer") String nomFitxer,@PathParam("nLinies") @ApiParam("Número de línies a recuperar del firxer") Long nLinies);
-
 
     /**
      * Retorna una llista amb tots els fitxers que es troben dins la carpeta de logs del servidor de l'aplicació
@@ -72,11 +72,9 @@ public interface ComandaAppLogsApi {
      * @return successful operation
      */
     @GET
-    @Path("/logs/v1")
     @Produces({ "application/json" })
     @ApiOperation(value = "Obtenir el llistat de fitxers de log disponibles", notes = "Retorna una llista amb tots els fitxers que es troben dins la carpeta de logs del servidor de l'aplicació", tags={ "COMANDA → APP / Logs" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "successful operation", response = FitxerInfo.class, responseContainer = "List") })
     List<FitxerInfo> llistarFitxers();
-
 }

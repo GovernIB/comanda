@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import java.io.File;
 import java.time.OffsetDateTime;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -230,12 +229,12 @@ public class FitxerContingut {
         Objects.equals(this.mimeType, fitxerContingut.mimeType) &&
         Objects.equals(this.dataCreacio, fitxerContingut.dataCreacio) &&
         Objects.equals(this.dataModificacio, fitxerContingut.dataModificacio) &&
-        Objects.equals(this.contingut, fitxerContingut.contingut);
+        Arrays.equals(this.contingut, fitxerContingut.contingut);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(nom, mida, mimeType, dataCreacio, dataModificacio, contingut);
+    return Objects.hash(nom, mida, mimeType, dataCreacio, dataModificacio, Arrays.hashCode(contingut));
   }
 
   @Override

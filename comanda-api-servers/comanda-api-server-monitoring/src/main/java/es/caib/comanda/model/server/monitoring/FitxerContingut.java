@@ -2,8 +2,8 @@ package es.caib.comanda.model.server.monitoring;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.File;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import javax.validation.constraints.*;
 import javax.validation.Valid;
 
@@ -162,12 +162,12 @@ public class FitxerContingut   {
         Objects.equals(this.mimeType, fitxerContingut.mimeType) &&
         Objects.equals(this.dataCreacio, fitxerContingut.dataCreacio) &&
         Objects.equals(this.dataModificacio, fitxerContingut.dataModificacio) &&
-        Objects.equals(this.contingut, fitxerContingut.contingut);
+        Arrays.equals(this.contingut, fitxerContingut.contingut);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(nom, mida, mimeType, dataCreacio, dataModificacio, contingut);
+    return Objects.hash(nom, mida, mimeType, dataCreacio, dataModificacio, Arrays.hashCode(contingut));
   }
 
   @Override

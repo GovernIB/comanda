@@ -13,7 +13,7 @@ All URIs are relative to *http://localhost*
 
 ## descarregarFitxerDirecte
 
-> descarregarFitxerDirecte(nomFitxer)
+> java.io.File descarregarFitxerDirecte(nomFitxer)
 
 Descarregar fitxer de log complet
 
@@ -37,7 +37,8 @@ public class Example {
         ComandaAppLogsApi apiInstance = new ComandaAppLogsApi(defaultClient);
         String nomFitxer = "nomFitxer_example"; // String | Nom del firxer
         try {
-            apiInstance.descarregarFitxerDirecte(nomFitxer);
+            java.io.File result = apiInstance.descarregarFitxerDirecte(nomFitxer);
+            System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ComandaAppLogsApi#descarregarFitxerDirecte");
             System.err.println("Status code: " + e.getCode());
@@ -58,7 +59,7 @@ public class Example {
 
 ### Return type
 
-null (empty response body)
+[**java.io.File**](File.md)
 
 ### Authorization
 
@@ -67,7 +68,7 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: Not defined
-- **Accept**: Not defined
+- **Accept**: application/octet-stream
 
 
 ### HTTP response details

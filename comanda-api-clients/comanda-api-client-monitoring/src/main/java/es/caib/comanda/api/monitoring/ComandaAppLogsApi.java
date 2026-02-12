@@ -7,6 +7,7 @@ import es.caib.comanda.service.monitoring.Pair;
 
 import javax.ws.rs.core.GenericType;
 
+import java.io.File;
 import es.caib.comanda.model.monitoring.FitxerContingut;
 import es.caib.comanda.model.monitoring.FitxerInfo;
 
@@ -39,9 +40,10 @@ public class ComandaAppLogsApi {
    * Descarregar fitxer de log complet
    * Descarrega el fitxer de log complet que es troba dins la carpeta de logs del servidor, i que té el nom indicat
    * @param nomFitxer Nom del firxer (required)
+   * @return a {@code java.io.File}
    * @throws ApiException if fails to make API call
    */
-  public void descarregarFitxerDirecte(@javax.annotation.Nonnull String nomFitxer) throws ApiException {
+  public java.io.File descarregarFitxerDirecte(@javax.annotation.Nonnull String nomFitxer) throws ApiException {
     Object localVarPostBody = null;
     
     // verify the required parameter 'nomFitxer' is set
@@ -64,7 +66,7 @@ public class ComandaAppLogsApi {
     
     
     final String[] localVarAccepts = {
-      
+      "application/octet-stream"
     };
     final String localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
 
@@ -75,9 +77,9 @@ public class ComandaAppLogsApi {
 
     String[] localVarAuthNames = new String[] {  };
 
-
-    apiClient.invokeAPI(localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, null);
-  }
+    GenericType<java.io.File> localVarReturnType = new GenericType<java.io.File>() {};
+    return apiClient.invokeAPI(localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+      }
   /**
    * Obtenir contingut complet d&#39;un fitxer de log
    * Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat

@@ -113,7 +113,11 @@
                         <tagAnnotations>
                             <annotation>RestController</annotation>
                         </tagAnnotations>
+                        <openapiModels>src/main/resources/openapi/openapi-models-custom.yml</openapiModels>
+                        <modelsAssociations>src/main/resources/openapi/models-associations-custom.yml</modelsAssociations>
                     </apiConfiguration>
+
+
 
                     <apis>
                         <api>
@@ -133,6 +137,30 @@
                             <filename>openapi-comanda-monitoring.yml</filename>
                         </api>
                     </apis>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-monitoring.yml</file>
+                    <replacements>
+                        <replacement>
+                            <token>x-operation-name: descarregarFitxerDirecte</token>
+                            <value>x-operation-name: descarregarFitxerDirecte
+      x-return-response: true</value>
+                        </replacement>
+                    </replacements>
                 </configuration>
             </plugin>
 
@@ -233,9 +261,11 @@
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
                                 <importMapping>URL=java.net.URL</importMapping>
+                                <importMapping>File=java.io.File</importMapping>
                             </importMappings>
                             <typeMappings>
-                                <typeMapping>File=byte[]</typeMapping>
+<!--                                <typeMapping>File=byte[]</typeMapping>-->
+                                <typeMapping>File=java.io.File</typeMapping>
                                 <typeMapping>OffsetDateTime=OffsetDateTime</typeMapping>
                             </typeMappings>
                             <!--                            <addCompileSourceRoot>false</addCompileSourceRoot>-->
