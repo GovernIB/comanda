@@ -45,6 +45,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
@@ -109,12 +111,15 @@ public class SalutInfoHelper {
                 dataPeriode = OffsetDateTime.now().minus(1, ChronoUnit.MINUTES);
             }
             OffsetDateTime dataTotal = OffsetDateTime.now().minus(31, ChronoUnit.DAYS);
+
+            String dp = dataPeriode == null ? null : dataPeriode.withOffsetSameInstant(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            String dt = dataTotal == null ? null : dataTotal.withOffsetSameInstant(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
             URI newUri = UriComponentsBuilder
                     .fromUri(uri)
-                    .queryParam("dataPeriode", dataPeriode)
-                    .queryParam("dataTotal", dataTotal)
-                    .build()
-                    .encode()
+                    .queryParam("dataPeriode", dp)
+                    .queryParam("dataTotal", dt)
+                    .build(true)   // IMPORTANT: no tornis a re-encodar el que ja has encodat
                     .toUri();
 			SalutInfo salutInfo = restTemplate.getForObject(newUri, SalutInfo.class);
             LAST_SALUT_REQUEST_TIME.put(entornApp.getId(), OffsetDateTime.now());
@@ -133,6 +138,12 @@ public class SalutInfoHelper {
 			eventPublisher.publishEvent(new SalutInfoUpdatedEvent(entornApp.getId(), idSalut));
 		}
 	}
+
+    private static String toQueryParam(OffsetDateTime odt) {
+        if (odt == null) return null;
+        // Format ISO i forçar + => %2B per evitar que el servidor el converteixi a espai
+        return odt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME).replace("+", "%2B");
+    }
 
     private Long processSalutError(EntornApp entornApp, Long idSalut, LocalDateTime currentMinuteTime, MonitorSalut monitorSalut, Exception ex) {
         log.warn("No s'han pogut obtenir dades de salut de l'app {}, entorn {}: {}",

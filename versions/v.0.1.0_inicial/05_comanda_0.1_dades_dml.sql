@@ -24,3 +24,6 @@ INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, NOM_KEY, DESCRIPCIO,
 -- Autenticació
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, VALOR, EDITABLE) VALUES ('Estadístiques', 'autenticacio', 'TEXT', 'es.caib.comanda.stats.auth.usuari', 'Usuari', '', 0);
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, VALOR, EDITABLE) VALUES ('Estadístiques', 'autenticacio', 'PASSWORD', 'es.caib.comanda.stats.auth.password', 'Contrasenya', '', 0);
+
+-- Logs
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, VALOR, EDITABLE) VALUES ('API Interna', 'Logs', 'TEXT', 'es.caib.comanda.log.dir', 'Directori on es guarden els logs', '', 1);

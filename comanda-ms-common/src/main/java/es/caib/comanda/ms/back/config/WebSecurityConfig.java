@@ -80,7 +80,8 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 
 	protected RequestMatcher[] publicRequestMatchers() {
 		return new RequestMatcher[] {
-				new AntPathRequestMatcher(BaseConfig.API_SALUT_V1 + "/**/*")
+				new AntPathRequestMatcher("/v1/salut/**/*"),
+				new AntPathRequestMatcher(BaseConfig.API_SALUT_V1)
 		};
 	}
 

@@ -1,7 +1,14 @@
 package es.caib.comanda.api.controller.v1.salut;
 
 import es.caib.comanda.model.v1.salut.AppInfo;
+import es.caib.comanda.model.v1.salut.ContextInfo;
+import es.caib.comanda.model.v1.salut.EstatSalut;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.InformacioSistema;
+import es.caib.comanda.model.v1.salut.Manual;
 import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.ms.salut.helper.MonitorHelper;
+import es.caib.comanda.ms.salut.helper.SalutHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -13,16 +20,17 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.List;
 
 import static es.caib.comanda.ms.back.config.BaseOpenApiConfig.BASIC_SECURITY_SCHEME;
 import static es.caib.comanda.ms.back.config.BaseOpenApiConfig.SECURITY_NAME;
@@ -51,8 +59,48 @@ public class SalutApiV1Controller {
             @ApiResponse(responseCode = "500", description = "Error intern del servidor")
     })
     public AppInfo salutInfo(HttpServletRequest request) throws java.io.IOException {
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-                "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
+        SalutHelper.BuildInfo buildInfo = SalutHelper.getBuildInfo();
+
+        return AppInfo.builder()
+                .codi("COM")
+                .nom("Comanda")
+                .data(buildInfo.getBuildDate())
+                .versio(buildInfo.getVersion())
+                .revisio(buildInfo.getCommitId())
+                .jdkVersion(buildInfo.getBuildJDK())
+                .versioJboss(MonitorHelper.getApplicationServerInfo())
+                .contexts(getContexts(getBaseUrl(request)))
+                .integracions(Collections.emptyList())
+                .subsistemes(Collections.emptyList())
+                .build();
+
+        // TODO: Afegir subsistemes (Salut, Estadistiques, Monitor, Avisos, Tasques i Alarmes)
+    }
+
+    private List<ContextInfo> getContexts(String baseUrl) {
+        return List.of(
+                ContextInfo.builder()
+                        .codi("BACK")
+                        .nom("Backoffice")
+                        .path(baseUrl + "/comandaback")
+                        .manuals(Collections.emptyList())
+                        .build(),
+                ContextInfo.builder()
+                        .codi("INT")
+                        .nom("API interna")
+                        .path(baseUrl + "/comandaapi/interna")
+                        .manuals(List.of(Manual.builder().nom("Manual d'integració").path("https://github.com/GovernIB/comanda/raw/comanda-0.1/doc/pdf/01_COMANDA_integració.pdf").build()))
+                        .api(baseUrl + "/comandaapi/interna/swagger-ui/index.html")
+                        .build()
+        );
+    }
+
+    private String getBaseUrl(HttpServletRequest request) {
+        return ServletUriComponentsBuilder
+                .fromRequestUri(request)
+                .replacePath(null) // elimina el context path "/comandaapi/..."
+                .build()
+                .toUriString();
     }
 
     @GetMapping
@@ -69,8 +117,42 @@ public class SalutApiV1Controller {
             HttpServletRequest request,
             @DateTimeFormat(iso = DATE_TIME) @Parameter(name = "dataPeriode", description = "Data mínima de la que es demana informació per període", required = false) @RequestParam(required = false) OffsetDateTime dataPeriode,
             @DateTimeFormat(iso = DATE_TIME) @Parameter(name = "dataTotal", description = "Data mínima de la que demana informació per totals", required = false) @RequestParam(required = false) OffsetDateTime dataTotal) throws java.io.IOException {
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-                "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
+
+        InformacioSistema info = null;
+        try {
+            es.caib.comanda.model.server.monitoring.InformacioSistema infoServer = MonitorHelper.getInfoSistema();
+            if (infoServer != null) {
+                info = InformacioSistema.builder()
+                        .processadors(infoServer.getProcessadors())
+                        .carregaSistema(infoServer.getCarregaSistema())
+                        .cpuSistema(infoServer.getCpuSistema())
+                        .memoriaTotal(infoServer.getMemoriaTotal())
+                        .memoriaDisponible(infoServer.getMemoriaDisponible())
+                        .espaiDiscTotal(infoServer.getEspaiDiscTotal())
+                        .espaiDiscLliure(infoServer.getEspaiDiscLliure())
+                        .sistemaOperatiu(infoServer.getSistemaOperatiu())
+                        .dataArrencada(infoServer.getDataArrencada())
+                        .tempsFuncionant(infoServer.getTempsFuncionant())
+                        .build();
+            }
+        } catch (Exception e) {
+            // Ignorar errors en obtenir info sistema
+        }
+        SalutHelper.BuildInfo buildInfo = SalutHelper.getBuildInfo();
+
+        return SalutInfo.builder()
+                .codi("COM")
+                .data(buildInfo.getBuildDate())
+                .versio(buildInfo.getVersion())
+                .estatGlobal(EstatSalut.builder().estat(EstatSalutEnum.UP).build())
+                .estatBaseDeDades(EstatSalut.builder().estat(EstatSalutEnum.UP).build())
+                .informacioSistema(info)
+                .integracions(Collections.emptyList())
+                .missatges(Collections.emptyList())
+                .subsistemes(Collections.emptyList())
+                .build();
+
+        // TODO: Afegir informació de subsistemes, i alarmes (com a missatges)
     }
 
 }

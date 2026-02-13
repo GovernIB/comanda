@@ -35,7 +35,7 @@ public class LogHelper {
     private static final Long minNLinies = 20L;
 
     @Setter
-    private static String appNom = null;
+    private static String appNom = "";
 
     public static List<FitxerInfo> llistarFitxers(String directoriPath, String appNom) {
 
@@ -222,7 +222,7 @@ public class LogHelper {
         try {
             var file = f.toFile();
             var nom = file.getName();
-            if (!(nom.toLowerCase().startsWith("server.log") || nom.toLowerCase().contains(appNom.toLowerCase()))) {
+            if (!(nom.toLowerCase().contains(".log") || nom.toLowerCase().contains(appNom.toLowerCase()))) {
                 return null;
             }
             var attr = Files.readAttributes(f, BasicFileAttributes.class);

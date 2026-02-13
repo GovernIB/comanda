@@ -20,7 +20,7 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>comanda-api-utils</artifactId>
-			<version>${project.version}</version>
+			<version>${comanda.api.version}</version>
 		</dependency>
 	</dependencies>
 </project>

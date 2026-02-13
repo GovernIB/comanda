@@ -48,6 +48,16 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-api-utils</artifactId>
+            <version>${comanda.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>es.caib.comanda</groupId>
+            <artifactId>comanda-api-server-monitoring</artifactId>
+            <version>${comanda.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>comanda-ms-avisos</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -381,7 +391,7 @@
             </plugin>
 
 
-<!--            &lt;!&ndash; Empaquetar el client generat com a JAR addicional amb classifier 'client' &ndash;&gt;-->
+            <!--            &lt;!&ndash; Empaquetar el client generat com a JAR addicional amb classifier 'client' &ndash;&gt;-->
 <!--            <plugin>-->
 <!--                <groupId>org.apache.maven.plugins</groupId>-->
 <!--                <artifactId>maven-jar-plugin</artifactId>-->
