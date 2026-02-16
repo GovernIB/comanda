@@ -29,7 +29,7 @@ public class SalutClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId.toString()")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
