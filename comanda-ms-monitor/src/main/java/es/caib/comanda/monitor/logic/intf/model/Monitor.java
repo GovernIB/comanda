@@ -76,7 +76,6 @@ public class Monitor extends BaseResource<Long> {
 
     public static final String FILTER_MONITOR = "FILTER";
 
-    @NotNull
     private Long entornAppId;
     @NotNull
     private ModulEnum modul;

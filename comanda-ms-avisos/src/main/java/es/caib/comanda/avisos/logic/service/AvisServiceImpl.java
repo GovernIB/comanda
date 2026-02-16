@@ -1,6 +1,7 @@
 package es.caib.comanda.avisos.logic.service;
 
 import es.caib.comanda.avisos.logic.helper.AvisClientHelper;
+import es.caib.comanda.avisos.logic.helper.MonitorAvisos;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.avisos.logic.intf.model.Avis.AvisMarcarLlegitsAction;
 import es.caib.comanda.avisos.logic.intf.model.AvisLlegit;
@@ -38,7 +39,6 @@ import java.util.stream.Collectors;
 
 import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
 import static es.caib.comanda.base.config.Cues.CUA_AVISOS;
-import static es.caib.comanda.base.config.Cues.CUA_TASQUES;
 
 
 @Slf4j
@@ -62,49 +62,59 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     @JmsListener(destination = CUA_AVISOS)
     public void receiveMessage(@Payload es.caib.comanda.model.v1.avis.Avis avisBroker,
                                Message message) throws JMSException {
-        message.acknowledge();
-        log.debug("Processat avís de la cua " + CUA_TASQUES + " (avís={})", avisBroker.getIdentificador());
-        Optional<EntornApp> entornApp = avisClientHelper.entornAppFindByEntornCodiAndAppCodi(
-                avisBroker.getEntornCodi(),
-                avisBroker.getAppCodi());
-        if (entornApp.isEmpty()) {
-            throw new ResourceNotFoundException(
-                    EntornApp.class,
-                    "(entornCodi=" + avisBroker.getEntornCodi() + ", appCodi=" + avisBroker.getAppCodi() + ")");
-        }
-        Optional<AvisEntity> avisExistent = ((AvisRepository)entityRepository).findByEntornAppIdAndIdentificador(
-                entornApp.get().getId(),
-                avisBroker.getIdentificador());
-        if (avisExistent.isEmpty()) {
-            Avis avis = new Avis();
-            avis.setEntornAppId(entornApp.get().getId());
-            avis.setEntornId(entornApp.get().getEntorn().getId());
-            avis.setAppId(entornApp.get().getApp().getId());
-            avis.setIdentificador(avisBroker.getIdentificador());
-            avis.setTipus(avisBroker.getTipus());
-            avis.setNom(avisBroker.getNom());
-            avis.setDescripcio(avisBroker.getDescripcio());
-            avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
-            avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
-            avis.setUrl(avisBroker.getRedireccio());
-            avis.setResponsable(avisBroker.getResponsable());
-            avis.setGrup(avisBroker.getGrup());
-            avis.setUsuarisAmbPermis(avisBroker.getUsuarisAmbPermis());
-            avis.setGrupsAmbPermis(avisBroker.getGrupsAmbPermis());
-            entityRepository.save(AvisEntity.builder().avis(avis).build());
-        } else {
-            AvisEntity avis = avisExistent.get();
-            avis.setTipus(avisBroker.getTipus());
-            avis.setNom(avisBroker.getNom());
-            avis.setDescripcio(avisBroker.getDescripcio());
-            avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
-            avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
-            avis.setUrl(avisBroker.getRedireccio());
-            avis.setResponsable(avisBroker.getResponsable());
-            avis.setGrup(avisBroker.getGrup());
-            avis.setUsuarisAmbPermis(avisBroker.getUsuarisAmbPermis());
-            avis.setGrupsAmbPermis(avisBroker.getGrupsAmbPermis());
-            entityRepository.save(avis);
+        MonitorAvisos monitorAvisos = new MonitorAvisos(null, "", avisClientHelper);
+        monitorAvisos.startAction();
+        try {
+            message.acknowledge();
+            log.debug("Processat avís de la cua " + CUA_AVISOS + " (avís={})", avisBroker.getIdentificador());
+            Optional<EntornApp> entornApp = avisClientHelper.entornAppFindByEntornCodiAndAppCodi(
+                    avisBroker.getEntornCodi(),
+                    avisBroker.getAppCodi());
+            if (entornApp.isEmpty()) {
+                throw new ResourceNotFoundException(
+                        EntornApp.class,
+                        "(entornCodi=" + avisBroker.getEntornCodi() + ", appCodi=" + avisBroker.getAppCodi() + ")");
+            }
+            monitorAvisos.getMonitor().setEntornAppId(entornApp.get().getId());
+            Optional<AvisEntity> avisExistent = ((AvisRepository)entityRepository).findByEntornAppIdAndIdentificador(
+                    entornApp.get().getId(),
+                    avisBroker.getIdentificador());
+            if (avisExistent.isEmpty()) {
+                monitorAvisos.setCreateActionMessatge();
+                Avis avis = new Avis();
+                avis.setEntornAppId(entornApp.get().getId());
+                avis.setEntornId(entornApp.get().getEntorn().getId());
+                avis.setAppId(entornApp.get().getApp().getId());
+                avis.setIdentificador(avisBroker.getIdentificador());
+                avis.setTipus(avisBroker.getTipus());
+                avis.setNom(avisBroker.getNom());
+                avis.setDescripcio(avisBroker.getDescripcio());
+                avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
+                avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
+                avis.setUrl(avisBroker.getRedireccio());
+                avis.setResponsable(avisBroker.getResponsable());
+                avis.setGrup(avisBroker.getGrup());
+                avis.setUsuarisAmbPermis(avisBroker.getUsuarisAmbPermis());
+                avis.setGrupsAmbPermis(avisBroker.getGrupsAmbPermis());
+                entityRepository.save(AvisEntity.builder().avis(avis).build());
+            } else {
+                monitorAvisos.setUpdateActionMessatge();
+                AvisEntity avis = avisExistent.get();
+                avis.setTipus(avisBroker.getTipus());
+                avis.setNom(avisBroker.getNom());
+                avis.setDescripcio(avisBroker.getDescripcio());
+                avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
+                avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
+                avis.setUrl(avisBroker.getRedireccio());
+                avis.setResponsable(avisBroker.getResponsable());
+                avis.setGrup(avisBroker.getGrup());
+                avis.setUsuarisAmbPermis(avisBroker.getUsuarisAmbPermis());
+                avis.setGrupsAmbPermis(avisBroker.getGrupsAmbPermis());
+                entityRepository.save(avis);
+            }
+            monitorAvisos.endAction();
+        } catch (Throwable t) {
+            monitorAvisos.endAction(t, t.getMessage());
         }
     }
 

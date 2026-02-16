@@ -191,6 +191,12 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
+    const columnsMonitor = React.useMemo(() => {
+        if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
+            return columns.filter(col => col.field !== 'url');
+        }
+        return columns;
+    }, [selectedModule]);
     return (
         <GridPage>
             <PageTitle title={t($ => $.page.monitors.title)} />
@@ -201,7 +207,7 @@ const Monitors: React.FC = () => {
                     <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
                 }
                 resourceName="monitor"
-                columns={columns}
+                columns={columnsMonitor}
                 toolbarType="upper"
                 paginationActive
                 readOnly

@@ -7,6 +7,7 @@ import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import es.caib.comanda.tasques.logic.helper.MonitorTasques;
 import es.caib.comanda.tasques.logic.helper.TasquesClientHelper;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import es.caib.comanda.tasques.logic.intf.service.TascaService;
@@ -53,58 +54,68 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     @Transactional
     public void receiveMessage(@Payload es.caib.comanda.model.v1.tasca.Tasca tascaBroker,
                                Message message) throws JMSException {
-        message.acknowledge();
-        log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker.getIdentificador());
-        Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
-                tascaBroker.getEntornCodi(),
-                tascaBroker.getAppCodi());
-        if (entornApp.isEmpty()) {
-            throw new ResourceNotFoundException(
-                    EntornApp.class,
-                    "(entornCodi=" + tascaBroker.getEntornCodi() + ", appCodi=" + tascaBroker.getAppCodi() + ")");
-        }
-        Optional<TascaEntity> tascaExistent = ((TascaRepository)entityRepository).findByEntornAppIdAndIdentificador(
-                entornApp.get().getId(),
-                tascaBroker.getIdentificador());
-        Tasca tasca = new Tasca();
-        tasca.setEntornAppId(entornApp.get().getId());
-        tasca.setEntornId(entornApp.get().getEntorn().getId());
-        tasca.setAppId(entornApp.get().getApp().getId());
-        tasca.setIdentificador(tascaBroker.getIdentificador());
-        tasca.setTipus(tascaBroker.getTipus());
-        tasca.setNom(tascaBroker.getNom());
-        tasca.setDescripcio(tascaBroker.getDescripcio());
-        tasca.setEstat(tascaBroker.getEstat());
-        tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
-        tasca.setNumeroExpedient(tascaBroker.getNumeroExpedient());
-        tasca.setPrioritat(tascaBroker.getPrioritat());
-        tasca.setDataInici(tascaBroker.getDataInici() != null ? tascaBroker.getDataInici().toLocalDateTime() : null);
-        tasca.setDataFi(tascaBroker.getDataFi() != null ? tascaBroker.getDataFi().toLocalDateTime() : null);
-        tasca.setDataCaducitat(tascaBroker.getDataCaducitat() != null ? tascaBroker.getDataCaducitat().toLocalDateTime() : null);
-        tasca.setUrl(tascaBroker.getRedireccio());
-        tasca.setResponsable(tascaBroker.getResponsable());
-        tasca.setGrup(tascaBroker.getGrup());
-        tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
-        tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
-        if (tascaExistent.isEmpty()) {
-            TascaEntity entity = TascaEntity.builder().tasca(tasca).build();
-            entityRepository.save(entity);
-        } else {
-            tascaExistent.get().setTipus(tasca.getTipus());
-            tascaExistent.get().setNom(tasca.getNom());
-            tascaExistent.get().setDescripcio(tasca.getDescripcio());
-            tascaExistent.get().setEstat(tasca.getEstat());
-            tascaExistent.get().setEstatDescripcio(tasca.getEstatDescripcio());
-            tascaExistent.get().setNumeroExpedient(tasca.getNumeroExpedient());
-            tascaExistent.get().setPrioritat(tasca.getPrioritat());
-            tascaExistent.get().setDataInici(tasca.getDataInici());
-            tascaExistent.get().setDataFi(tasca.getDataFi());
-            tascaExistent.get().setDataCaducitat(tasca.getDataCaducitat());
-            tascaExistent.get().setUrl(tasca.getUrl());
-            tascaExistent.get().setResponsable(tasca.getResponsable());
-            tascaExistent.get().setGrup(tasca.getGrup());
-            tascaExistent.get().setUsuarisAmbPermis(tasca.getUsuarisAmbPermis());
-            tascaExistent.get().setGrupsAmbPermis(tasca.getGrupsAmbPermis());
+        MonitorTasques monitorTasques = new MonitorTasques(null, "", tasquesClientHelper);
+        monitorTasques.startAction();
+        try {
+            message.acknowledge();
+            log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker.getIdentificador());
+            Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
+                    tascaBroker.getEntornCodi(),
+                    tascaBroker.getAppCodi());
+            if (entornApp.isEmpty()) {
+                throw new ResourceNotFoundException(
+                        EntornApp.class,
+                        "(entornCodi=" + tascaBroker.getEntornCodi() + ", appCodi=" + tascaBroker.getAppCodi() + ")");
+            }
+            monitorTasques.getMonitor().setEntornAppId(entornApp.get().getId());
+            Optional<TascaEntity> tascaExistent = ((TascaRepository)entityRepository).findByEntornAppIdAndIdentificador(
+                    entornApp.get().getId(),
+                    tascaBroker.getIdentificador());
+            Tasca tasca = new Tasca();
+            tasca.setEntornAppId(entornApp.get().getId());
+            tasca.setEntornId(entornApp.get().getEntorn().getId());
+            tasca.setAppId(entornApp.get().getApp().getId());
+            tasca.setIdentificador(tascaBroker.getIdentificador());
+            tasca.setTipus(tascaBroker.getTipus());
+            tasca.setNom(tascaBroker.getNom());
+            tasca.setDescripcio(tascaBroker.getDescripcio());
+            tasca.setEstat(tascaBroker.getEstat());
+            tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
+            tasca.setNumeroExpedient(tascaBroker.getNumeroExpedient());
+            tasca.setPrioritat(tascaBroker.getPrioritat());
+            tasca.setDataInici(tascaBroker.getDataInici() != null ? tascaBroker.getDataInici().toLocalDateTime() : null);
+            tasca.setDataFi(tascaBroker.getDataFi() != null ? tascaBroker.getDataFi().toLocalDateTime() : null);
+            tasca.setDataCaducitat(tascaBroker.getDataCaducitat() != null ? tascaBroker.getDataCaducitat().toLocalDateTime() : null);
+            tasca.setUrl(tascaBroker.getRedireccio());
+            tasca.setResponsable(tascaBroker.getResponsable());
+            tasca.setGrup(tascaBroker.getGrup());
+            tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
+            tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
+            if (tascaExistent.isEmpty()) {
+                monitorTasques.setCreateActionMessatge();
+                TascaEntity entity = TascaEntity.builder().tasca(tasca).build();
+                entityRepository.save(entity);
+            } else {
+                monitorTasques.setUpdateActionMessatge();
+                tascaExistent.get().setTipus(tasca.getTipus());
+                tascaExistent.get().setNom(tasca.getNom());
+                tascaExistent.get().setDescripcio(tasca.getDescripcio());
+                tascaExistent.get().setEstat(tasca.getEstat());
+                tascaExistent.get().setEstatDescripcio(tasca.getEstatDescripcio());
+                tascaExistent.get().setNumeroExpedient(tasca.getNumeroExpedient());
+                tascaExistent.get().setPrioritat(tasca.getPrioritat());
+                tascaExistent.get().setDataInici(tasca.getDataInici());
+                tascaExistent.get().setDataFi(tasca.getDataFi());
+                tascaExistent.get().setDataCaducitat(tasca.getDataCaducitat());
+                tascaExistent.get().setUrl(tasca.getUrl());
+                tascaExistent.get().setResponsable(tasca.getResponsable());
+                tascaExistent.get().setGrup(tasca.getGrup());
+                tascaExistent.get().setUsuarisAmbPermis(tasca.getUsuarisAmbPermis());
+                tascaExistent.get().setGrupsAmbPermis(tasca.getGrupsAmbPermis());
+            }
+            monitorTasques.endAction();
+        } catch (Throwable t) {
+            monitorTasques.endAction(t, t.getMessage());
         }
     }
 
