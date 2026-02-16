@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.SimpleAttributes2GrantedAuthoritiesMapper;
+import org.springframework.security.core.authority.mapping.SimpleMappableAttributesRetriever;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails;
 import org.springframework.security.web.authentication.preauth.j2ee.J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource;
@@ -22,10 +23,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Configuració de Spring Security.
@@ -176,6 +174,9 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 		SimpleAttributes2GrantedAuthoritiesMapper attributes2GrantedAuthoritiesMapper = new SimpleAttributes2GrantedAuthoritiesMapper();
 		attributes2GrantedAuthoritiesMapper.setAttributePrefix(ROLE_PREFIX);
 		authenticationDetailsSource.setUserRoles2GrantedAuthoritiesMapper(attributes2GrantedAuthoritiesMapper);
+		SimpleMappableAttributesRetriever mappableRolesRetriever = new SimpleMappableAttributesRetriever();
+		mappableRolesRetriever.setMappableAttributes(getAllowedRoles());
+		authenticationDetailsSource.setMappableRolesRetriever(mappableRolesRetriever);
 		return authenticationDetailsSource;
 	}
 
