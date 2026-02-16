@@ -19,7 +19,7 @@ public class AclClientHelper {
 //    // Client EntornApp
 //    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//    @Cacheable(value = "entornAppCache", key = "#entornAppId")
+//    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId.toString()")
 //    public EntornApp entornAppFindById(Long entornAppId) {
 //        EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
 //                entornAppId,

@@ -1,7 +1,9 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
@@ -28,6 +30,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -42,6 +45,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.PostConstruct;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +62,11 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CA
 @RequiredArgsConstructor
 @Service
 public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, Long, EntornAppEntity> implements EntornAppService {
+
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_USER + ":}")
+    private String statsAuthUser;
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + ":}")
+    private String statsAuthPassword;
 
     private final AppIntegracioRepository appIntegracioRepository;
     private final SubsistemaRepository subsistemaRepository;
@@ -150,7 +159,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     // ACCIONS
-    public static class PingUrlAction implements ActionExecutor<EntornAppEntity, String, PingUrlResponse> {
+
+    public class PingUrlAction implements ActionExecutor<EntornAppEntity, EntornAppPingAction, PingUrlResponse> {
         private final RestTemplate restTemplate;
 
         public PingUrlAction(RestTemplate restTemplate) {
@@ -158,20 +168,27 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
 
         @Override
-        public PingUrlResponse exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
+        public PingUrlResponse exec(String code, EntornAppEntity entity, EntornAppPingAction params) throws ActionExecutionException {
             return isEndpointReachable(params);
         }
 
         @Override
-        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        public void onChange(Serializable id, EntornAppPingAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppPingAction target) {
         }
 
-        public PingUrlResponse isEndpointReachable(String url) {
+        public PingUrlResponse isEndpointReachable(EntornAppPingAction params) {
             PingUrlResponse pingUrlResponse = new PingUrlResponse();
             pingUrlResponse.setSuccess(false);
             String message = null;
             try {
-                ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.GET, null, Void.class);
+                // Comprova si el params.getEndpoint() enviat pel client coincideix amb alguna de les URLs d'estadístiques
+                List<String> estadisticaURLs = Arrays.asList(params.getFormData().getEstadisticaUrl(), params.getFormData().getEstadisticaInfoUrl());
+                boolean isEstadisticaRequest = estadisticaURLs.contains(params.getEndpoint());
+                // Comprova si el params.getEndpoint() correspon a la URL de salut. Les peticions de salut que es fan cada minut
+                // no es poden autenticar per motius de rendiment amb el servei d'autenticació.
+                boolean isExcludedSalutRequest = params.getEndpoint().equals(params.getFormData().getSalutUrl());
+
+                ResponseEntity<Void> response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, buildAuthEntityIfNeeded(params.getFormData(), !isEstadisticaRequest, isExcludedSalutRequest), Void.class);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     pingUrlResponse.setSuccess(true);
                     message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
@@ -205,6 +222,29 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             pingUrlResponse.setMessage(message);
             return pingUrlResponse;
         }
+
+        private HttpEntity<Void> buildAuthEntityIfNeeded(EntornApp entornApp, boolean isSalutRequest, boolean ignoreAuth) {
+            if (ignoreAuth) {
+                return null;
+            }
+            if (isSalutRequest && !entornApp.isSalutAuth()) {
+                return null;
+            }
+            if (!isSalutRequest && !entornApp.isEstadisticaAuth()) {
+                return null;
+            }
+            if (statsAuthUser == null || statsAuthPassword == null) {
+                return null;
+            }
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
+            return new org.springframework.http.HttpEntity<>(headers);
+        }
+
+        private String basicAuthHeader(String user, String password) {
+            String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return "Basic " + token;
+        }
     }
 
     @RequiredArgsConstructor
@@ -222,14 +262,14 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
     }
 
-    private static HttpHeaders getLogsAuthHeaders() {
+    private HttpHeaders getLogsAuthHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth("USER", "PASSWORD"); // TODO
+        headers.setBasicAuth(statsAuthUser, statsAuthPassword);
         return headers;
     }
 
     @RequiredArgsConstructor
-    private static class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
+    private class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
         private final RestTemplate restTemplate;
 
         @Override
@@ -249,13 +289,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public static class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
+    public class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
         private final RestTemplate restTemplate;
         private final EntornAppRepository entornAppRepository;
 
         @Getter
         @AllArgsConstructor
-        public static class DescarregarLogParams implements Serializable {
+        public class DescarregarLogParams implements Serializable {
             private Long entornAppId;
             private String nomFitxer;
         }
@@ -285,7 +325,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public static class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
+    public class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
         private final RestTemplate restTemplate;
 
         @Override

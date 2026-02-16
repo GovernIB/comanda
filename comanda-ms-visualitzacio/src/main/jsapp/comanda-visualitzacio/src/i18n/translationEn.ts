@@ -89,6 +89,8 @@ const translationEn: translationResourcesType = {
         dashboard: "Dashboards",
         calendari: "Calendar",
         parametre: "Parameters",
+        accessibilitat: "Accessibility",
+        sitemap: "Sitemap",
         dimensio: "Dimensions",
         indicador: "Indicators",
         user: {
@@ -111,7 +113,9 @@ const translationEn: translationResourcesType = {
     page: {
         salut: {
             title: "Health",
+            appInfoTitle: "App health",
             refrescar: "Refresh",
+            goBack: "Go back",
             filtrar: "Filter by application/environment",
             senseFiltres: "No filters",
             nd: "N/A",
@@ -145,6 +149,7 @@ const translationEn: translationResourcesType = {
                 titleNoGrouping: "All applications and environments",
             },
             refreshperiod: {
+                title: "Refresh period",
                 PT1M: "1 minute",
                 PT5M: "5 minutes",
                 PT10M: "10 minutes",
@@ -152,6 +157,7 @@ const translationEn: translationResourcesType = {
                 PT1H: "1 hour",
             },
             timerange: {
+                title: "Data time interval",
                 PT15M: "Last 15 minutes",
                 PT1H: "Last hour",
                 P1D: "Last day",
@@ -254,8 +260,27 @@ const translationEn: translationResourcesType = {
                 title: "System",
                 noInfo: "There is no information about application details",
             },
+            memoria: {
+                title: "System Memory",
+                espaiMeoria: "Available memory: <strong>{{disp}}</strong> of <strong>{{total}}</strong>",
+                espaiDisc: "Available disk space: <strong>{{disp}}</strong> of <strong>{{total}}</strong>",
+            },
             estats: {
                 title: "States",
+            },
+            logs: {
+                preview: "Preview",
+                download: "Download",
+                noSelected: "Select a file",
+                noPreview: "No preview available",
+                logsList: {
+                    title: "Logs",
+                    nom: "Name",
+                    dataCreacio: "Creation date",
+                    dataModificacio: "Modification date",
+                    mida: "Size",
+                    showPreview: "Previewable",
+                }
             },
         },
         dashboards: {
@@ -339,13 +364,18 @@ const translationEn: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Name",
-                column: {
-                    appEntorn: "Application - Environment",
+            },
+            action: {
+                obrir: "Open notice",
+                nollegit: {
+                    label: "Mark as unread",
+                    ok: "The notice has been marked as unread",
                 },
-                action: {
-                    obrir: "Open notice",
+                llegit: {
+                    label: "Mark as read",
+                    ok: "The notice has been marked as read",
                 },
-            }
+            },
         },
         alarmaConfig: {
             title: "Alarm configuration",
@@ -372,9 +402,9 @@ const translationEn: translationResourcesType = {
                 compactacioSetmanalMesos: "Weekly compaction (months)",
                 compactacioMensualMesos: "Monthly compaction (months)",
                 eliminacioMesos: "Deletion (months)",
-                estadistica: {
-                    auth: "Authenticated service",
-                },
+                auth: "Authenticated service",
+                salutAuthLegend: "Authenticate health requests",
+                estadisticaAuthLegend: "Authenticate statistics requests",
             },
             tooltips: {
                 compactacioSetmanes: "How many full months the statistics will be kept before compacting them by week.\nIf the fields are left empty, or with value 0, no weekly compaction will be performed.",
@@ -478,6 +508,8 @@ const translationEn: translationResourcesType = {
                 salut: "Health",
                 estadistica: "Statistics",
                 configuracio: "Configuration",
+                tasca: "Task",
+                avis: "Notice",
             },
         },
         widget: {
@@ -732,6 +764,13 @@ const translationEn: translationResourcesType = {
                 },
             },
         },
+        sitemap: {
+            title: "Sitemap",
+            subtitle: "Direct access to the main sections of the application.",
+        },
+        accessibilitat: {
+            title: "Accessibility",
+        },
         notFound: "Not found",
         noPermissions: "No permissions",
     },
@@ -761,6 +800,7 @@ const translationEn: translationResourcesType = {
                 edit: 'Edit',
                 download: 'Download',
                 clear: 'Clear',
+                avatarAlt: 'User uploaded image',
             },
         },
     },
@@ -802,7 +842,9 @@ const translationEn: translationResourcesType = {
         indicadors: "Indicators",
     },
     treeData: {
-        treeView: "Tree view"
+        treeView: "Tree view",
+        expandAll: "Expand all rows",
+        collapseAll: "Collapse all rows",
     },
     reordering: {
         errorMessage: "Error when reordering",

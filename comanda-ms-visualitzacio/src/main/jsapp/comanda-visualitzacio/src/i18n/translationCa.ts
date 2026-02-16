@@ -43,19 +43,19 @@ const translationCa = {
         },
         integracioEstat: {
             UP: {
-                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les últimes peticions"
+                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les darreres peticions"
             },
             WARN: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les últimes peticions"
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les darreres peticions"
             },
             DEGRADED: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les últimes peticions",
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les darreres peticions",
             },
             ERROR: {
-                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les últimes peticions"
+                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les darreres peticions"
             },
             DOWN: {
-                tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les últimes peticions",
+                tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les darreres peticions",
             },
             MAINTENANCE: {
                 tooltip: "Sense informació del servei degut a tasques de <bold>manteniment</bold>",
@@ -91,6 +91,8 @@ const translationCa = {
         parametre: "Paràmetres",
         dimensio: "Dimensions",
         indicador: "Indicadors",
+        accessibilitat: "Accessibilitat",
+        sitemap: "Mapa del lloc web",
         user: {
             options: {
                 profile: {
@@ -111,7 +113,9 @@ const translationCa = {
     page: {
         salut: {
             title: "Salut",
+            appInfoTitle: "Salut de l'aplicació",
             refrescar: "Refrescar",
+            goBack: "Tornar enrere",
             filtrar: "Filtrar per aplicació/entorn",
             senseFiltres: "Sense filtres",
             nd: "N/D",
@@ -145,6 +149,7 @@ const translationCa = {
                 titleNoGrouping: "Totes les aplicacions i entorns",
             },
             refreshperiod: {
+                title: "Periodicitat del refresc",
                 PT1M: "1 minut",
                 PT5M: "5 minuts",
                 PT10M: "10 minuts",
@@ -152,6 +157,7 @@ const translationCa = {
                 PT1H: "1 hora",
             },
             timerange: {
+                title: "Interval de temps de les dades",
                 PT15M: "Darrers 15 minuts",
                 PT1H: "Darrera hora",
                 P1D: "Darrer dia",
@@ -254,6 +260,11 @@ const translationCa = {
                 title: "Sistema",
                 noInfo: "No hi ha informació sobre detalls de l'aplicació",
             },
+            memoria: {
+                title: "Memoria del sistema",
+                espaiMeoria: "Espai en memòria disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
+                espaiDisc: "Espai en disc disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
+            },
             estats: {
                 title: "Estats",
             },
@@ -353,13 +364,18 @@ const translationCa = {
             },
             grid: {
                 groupHeader: "Nom",
-                column: {
-                    appEntorn: "Aplicació - Entorn",
+            },
+            action: {
+                obrir: "Obrir avís",
+                nollegit: {
+                    label: "Marcar com a no llegit",
+                    ok: "L'avis s'ha marcar com a no llegit",
                 },
-                action: {
-                    obrir: "Obrir avís",
+                llegit: {
+                    label: "Marcar com a llegit",
+                    ok: "L'avis s'ha marcar com a llegit",
                 },
-            }
+            },
         },
         alarmaConfig: {
             title: "Configuració d'alarmes",
@@ -386,9 +402,9 @@ const translationCa = {
                 compactacioSetmanalMesos: "Compactació setmanal (mesos)",
                 compactacioMensualMesos: "Compactacio mensual (mesos)",
                 eliminacioMesos: "Esborrat (mesos)",
-                estadistica: {
-                    auth: "Servei autenticat",
-                },
+                auth: "Servei autenticat",
+                salutAuthLegend: "Autenticació a les consultes de salut",
+                estadisticaAuthLegend: "Autenticació a les consultes d'estadístiques",
             },
             tooltips: {
                 compactacioSetmanes: "Quans mesos complerts es mantindran les estadístiques abans de compactar-les per setmana.\nSi es deixen els camps sense valor, o amb valor 0, no es realitzarà compactació per setmana.",
@@ -492,6 +508,8 @@ const translationCa = {
                 salut: "Salut",
                 estadistica: "Estadística",
                 configuracio: "Configuració",
+                tasca: "Tasca",
+                avis: "Avís",
             },
         },
         widget: {
@@ -746,6 +764,13 @@ const translationCa = {
                 },
             },
         },
+        sitemap: {
+            title: "Mapa del lloc web",
+            subtitle: "Accés directe a totes les seccions principals de l’aplicació.",
+        },
+        accessibilitat: {
+            title: "Accessibilitat",
+        },
         notFound: "No trobat",
         noPermissions: "Sense permisos",
     },
@@ -775,6 +800,7 @@ const translationCa = {
                 edit: 'Editar',
                 download: 'Descarregar',
                 clear: 'Esborrar',
+                avatarAlt: "Imatge pujada per l'usuari",
             },
         },
     },
@@ -816,7 +842,9 @@ const translationCa = {
         indicadors: "Indicadors",
     },
     treeData: {
-        treeView: "Vista en arbre"
+        treeView: "Vista en arbre",
+        expandAll: "Expandir totes les files",
+        collapseAll: "Contreure totes les files",
     },
     reordering: {
         errorMessage: "Error al reordenar",

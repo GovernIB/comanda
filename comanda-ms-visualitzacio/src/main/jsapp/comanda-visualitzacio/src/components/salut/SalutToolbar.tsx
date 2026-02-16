@@ -24,6 +24,7 @@ import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { useId } from 'react';
+import { SalutEstatEnum, useSalutEstatTranslation } from '../../types/salut.model';
 
 export type SalutToolbarProps = {
     title: string;
@@ -79,6 +80,10 @@ const getInitialGrouping = () => {
         return GroupingEnum.APPLICATION;
     }
     return storedValue;
+};
+
+export const getIdList = (a: any[] = []) => {
+    return a?.map((uo: any) => uo.id) ?? [];
 };
 
 
@@ -158,10 +163,10 @@ const RefreshTimeoutSelect: React.FC<{
     };
 
     return (
-        <FormControl>
+        <FormControl
+            title={t($ => $.page.salut.refreshperiod.title)}
+        >
             <Select
-                labelId="range-select-label"
-                id="range-select"
                 value={value}
                 size="small"
                 disabled={disabled}
@@ -172,6 +177,11 @@ const RefreshTimeoutSelect: React.FC<{
                     </InputAdornment>
                 }
                 sx={{ mr: 1 }}
+                slotProps={{
+                    input: {
+                        'aria-label': t($ => $.page.salut.refreshperiod.title)
+                    }
+                }}
             >
                 <MenuItem value={'PT1M'}>{t($ => $.page.salut.refreshperiod.PT1M)}</MenuItem>
                 <MenuItem value={'PT5M'}>{t($ => $.page.salut.refreshperiod.PT5M)}</MenuItem>
@@ -214,10 +224,10 @@ const AppDataRangeSelect = (props: {
     };
 
     return (
-        <FormControl>
+        <FormControl
+            title={t($ => $.page.salut.timerange.title)}
+        >
             <Select
-                labelId="range-select-label"
-                id="range-select"
                 value={value}
                 size="small"
                 disabled={disabled}
@@ -228,6 +238,11 @@ const AppDataRangeSelect = (props: {
                     </InputAdornment>
                 }
                 sx={{ mr: 1 }}
+                slotProps={{
+                    input: {
+                        'aria-label': t($ => $.page.salut.timerange.title)
+                    }
+                }}
             >
                 <MenuItem value={'PT15M'}>{t($ => $.page.salut.timerange.PT15M)}</MenuItem>
                 <MenuItem value={'PT1H'}>{t($ => $.page.salut.timerange.PT1H)}</MenuItem>
@@ -272,23 +287,40 @@ const SalutEntornAppFilterForm: React.FC = () => {
     const { data } = useFormContext();
 
     return <Grid container spacing={1}>
-        <Grid size={6}>
-            <FormField name="app" componentProps={{ size: 'small', }}
+        <Grid size={12}>
+            <FormField name="app" componentProps={{ size: 'small', }} multiple optionsUnpaged
+                        advancedSearchColumns={[{
+                            field: 'codi',
+                            flex: 0.5,
+                        }, {
+                            field: 'nom',
+                            flex: 2,
+                        }]}
                        filter={
                         springFilterBuilder.and(
                             springFilterBuilder.eq('activa', true),
                             springFilterBuilder.exists(
-                                springFilterBuilder.and(springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id))
+                                springFilterBuilder.and(springFilterBuilder.inn('entornApps.entorn.id', getIdList(data?.entorn)))
                             )
                         )}
             />
         </Grid>
-        <Grid size={6}>
-            <FormField name="entorn" componentProps={{ size: 'small', }}
+        <Grid size={12}>
+            <FormField name="entorn" componentProps={{ size: 'small', }} multiple optionsUnpaged
+                        advancedSearchColumns={[{
+                            field: 'codi',
+                            flex: 0.5,
+                        }, {
+                            field: 'nom',
+                            flex: 2,
+                        }]}
                        filter={springFilterBuilder.exists(
-                           springFilterBuilder.and(springFilterBuilder.eq('entornAppEntities.app.id', data?.app?.id))
+                           springFilterBuilder.and(springFilterBuilder.inn('entornAppEntities.app.id', getIdList(data?.app)))
                        )}
             />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="estatsSalut" componentProps={{ size: 'small', }} multiple/>
         </Grid>
     </Grid>
 }
@@ -296,8 +328,8 @@ const SalutEntornAppFilterForm: React.FC = () => {
 export const salutEntornAppFilterBuilder = (data: SalutFilterDataType) => {
     if (data == null) return '';
     return springFilterBuilder.and(
-        springFilterBuilder.eq('app.id', data.app?.id),
-        springFilterBuilder.eq('entorn.id', data.entorn?.id),
+        springFilterBuilder.inn('app.id', getIdList(data?.app)),
+        springFilterBuilder.inn('entorn.id', getIdList(data?.entorn)),
     )
 }
 
@@ -333,14 +365,15 @@ const getInitialFilterData = () => {
 };
 
 export type SalutFilterDataType = {
-    app?: {
+    app?: [{
         id: string;
         description: string;
-    };
-    entorn?: {
+    }];
+    entorn?: [{
         id: string;
         description: string;
-    };
+    }];
+    estatsSalut?: SalutEstatEnum[];
 };
 
 const useSalutEntornAppFilter = ({
@@ -477,15 +510,17 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const { handleOpen, dialog } = useSalutEntornAppFilter({ filterData, setFilterData });
     const springFilter = salutEntornAppFilterBuilder(filterData);
 
+    const { tTitle } = useSalutEstatTranslation();
     const computedSubtitle = React.useMemo(() => {
         if (subtitle != null) return subtitle;
-
-        const appName = filterData?.app?.description;
-        const envName = filterData?.entorn?.description;
-        if (!appName && !envName) return t($ => $.page.salut.senseFiltres);
-        if (appName && !envName) return appName as string;
-        if (!appName && envName) return envName as string;
-        return `${appName} - ${envName}`;
+        const apps = filterData?.app?.map(a => a.description).join(", ");
+        const entorns = filterData?.entorn?.map(e => e.description).join(", ");
+        const estats = filterData?.estatsSalut?.map(estat => tTitle(estat)).join(", ");
+        const parts = [apps, entorns, estats].filter(Boolean);
+        if (parts.length === 0) {
+            return t($ => $.page.salut.senseFiltres);
+        }
+        return parts.join(" - ");
     }, [filterData, subtitle, t]);
 
     const toolbarElementsWithPositions = [
@@ -568,7 +603,11 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         toolbarElementsWithPositions.unshift({
             position: 0,
             element: (
-                <IconButton onClick={() => goBack('/')} sx={{ mr: 1 }}>
+                <IconButton
+                    onClick={() => goBack('/')}
+                    sx={{ mr: 1 }}
+                    title={t($ => $.page.salut.goBack)}
+                >
                     <Icon>arrow_back</Icon>
                 </IconButton>
             ),
@@ -579,7 +618,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         element: (
             <>
                 {!hideFilter &&
-                    <IconButton onClick={() => handleOpen()}>
+                    <IconButton
+                        onClick={() => handleOpen()}
+                        title={t($ => $.page.salut.filtrar)}
+                    >
                         {springFilter ? (
                             <FilterAltIcon fontSize="small" />
                         ) : (

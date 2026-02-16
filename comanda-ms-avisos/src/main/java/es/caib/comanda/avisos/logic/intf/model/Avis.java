@@ -1,5 +1,7 @@
 package es.caib.comanda.avisos.logic.intf.model;
 
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.model.v1.avis.AvisTipus;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
@@ -35,14 +37,26 @@ import java.util.List;
                 )
         },
         artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Avis.ACTION_MARCAR_AVIS_LLEGIT, formClass = Avis.AvisMarcarLlegitsAction.class,
+                        accessConstraints = {
+                                @ResourceAccessConstraint(
+                                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                        roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA }
+                                )}),
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Avis.FILTER, formClass = Avis.AvisFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Avis.PERSPECTIVE_PATH),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Avis.PERSPECTIVE_ENTORN_APP),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Avis.PERSPECTIVE_LLEGIT),
         }
 )
 public class Avis extends BaseResource<Long> {
 
+    public static final String ACTION_MARCAR_AVIS_LLEGIT = "MARCAR_AVIS_LLEGIT";
     public static final String FILTER = "FILTER";
     public static final String PERSPECTIVE_PATH = "PATH";
+    public static final String PERSPECTIVE_ENTORN_APP = "ENTORN_APP";
+    public static final String PERSPECTIVE_LLEGIT = "LLEGIT";
+    public static final String NAMED_FILTER_AVIS_NO_LLEGIT = "avis_no_llegit";
 
     @NotNull
     private Long entornAppId;
@@ -70,7 +84,12 @@ public class Avis extends BaseResource<Long> {
     private List<String> usuarisAmbPermis;
     private List<String> grupsAmbPermis;
 
+    @Transient private boolean llegit;
     @Transient private String[] treePath;
+    @Transient private String entornCodi;
+    @Transient private String appCodi;
+    @Transient private AppRef app;
+    @Transient private EntornRef entorn;
 
     @Getter
     @Setter
@@ -85,5 +104,16 @@ public class Avis extends BaseResource<Long> {
         private LocalDateTime dataInici2;
         private LocalDateTime dataFi1;
         private LocalDateTime dataFi2;
+        private boolean noLlegit;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class AvisMarcarLlegitsAction implements Serializable {
+        private List<Long> ids;
+        private boolean llegit = true;
     }
 }

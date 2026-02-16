@@ -72,48 +72,57 @@ const UpdownBarChart: React.FC<{
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
 
+    const valueFormatter = (value: number | null) => value != null ? `${Math.round(value * 100) / 100}%` : value;
+
     const series = [
         {
             data: seriesUp,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.UP),
+            valueFormatter,
         },
         {
             data: seriesWarn,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.WARN),
+            valueFormatter,
         },
         {
             data: seriesDegraded,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
+            valueFormatter,
         },
         {
             data: seriesError,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.ERROR),
+            valueFormatter,
         },
         {
             data: seriesDown,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.DOWN),
+            valueFormatter,
         },
         {
             data: seriesMaintenance,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.MAINTENANCE),
+            valueFormatter,
         },
         {
             data: seriesUnknown,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
+            valueFormatter,
         },
     ];
 

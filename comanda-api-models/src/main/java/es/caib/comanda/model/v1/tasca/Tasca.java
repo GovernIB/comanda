@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -22,25 +23,31 @@ import java.util.List;
 @Schema(name = "Tasca", description = "Representa una tasca publicada a COMANDA perquè sigui processada asíncronament")
 public class Tasca implements Serializable {
 
+    @NotNull
     @Schema(description = "Codi de l'aplicació que publica la tasca", example = "PORTAFIB")
     private String appCodi;
 
+    @NotNull
     @Schema(description = "Codi de l'entorn de l'aplicació", example = "DEV")
     private String entornCodi;
 
+    @NotNull
     @Schema(description = "Identificador únic de la tasca en l'àmbit de l'APP", example = "TAS-2025-0001")
     private String identificador;
 
+    @NotNull
     @Schema(description = "Tipus funcional de la tasca", example = "GENERAR_INFORME")
     private String tipus;
 
+    @NotNull
     @Schema(description = "Nom curt de la tasca", example = "Generar informe mensual")
     private String nom;
 
     @Schema(description = "Descripció detallada de la tasca", example = "Generar l'informe mensual de consums per unitat")
     private String descripcio;
 
-    @Schema(description = "Estat de processament de la tasca")
+    @NotNull
+    @Schema(description = "Estat de processament de la tasca", example = "PENDENT")
     private TascaEstat estat;
 
     @Schema(description = "Descripció de l'estat actual", example = "En cua")
@@ -49,7 +56,7 @@ public class Tasca implements Serializable {
     @Schema(description = "Número d'expedient relacionat (si aplica)", example = "EXP-12345/2025")
     private String numeroExpedient;
 
-    @Schema(description = "Prioritat de la tasca")
+    @Schema(description = "Prioritat de la tasca", example = "NORMAL")
     private Prioritat prioritat;
 
     @Schema(description = "Data d'inici prevista o real", example = "2025-11-20T09:30:00Z", format = "date-time")
@@ -64,6 +71,7 @@ public class Tasca implements Serializable {
     @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
     private OffsetDateTime dataCaducitat;
 
+    @NotNull
     @Schema(description = "URL de redirecció per accedir a la tasca", example = "https://dev.caib.es/app/tasques/TAS-2025-0001", format = "uri")
     private URL redireccio;
 

@@ -1,10 +1,13 @@
 package es.caib.comanda.tasques.logic.service;
 
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import es.caib.comanda.tasques.logic.helper.MonitorTasques;
 import es.caib.comanda.tasques.logic.helper.TasquesClientHelper;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import es.caib.comanda.tasques.logic.intf.service.TascaService;
@@ -29,6 +32,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.ZoneId;
 import java.util.*;
 
+import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
 import static es.caib.comanda.base.config.Cues.CUA_TASQUES;
 
 @Slf4j
@@ -42,6 +46,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     @PostConstruct
     public void init() {
         register(Tasca.PERSPECTIVE_PATH, new PathPerspectiveApplicator(tasquesClientHelper));
+        register(Tasca.PERSPECTIVE_ENTORN_APP, new EntornAppPerspectiveApplicator(tasquesClientHelper));
         register(Tasca.PERSPECTIVE_EXPIRATION, new ExpirationPerspectiveApplicator());
     }
 
@@ -49,58 +54,68 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     @Transactional
     public void receiveMessage(@Payload es.caib.comanda.model.v1.tasca.Tasca tascaBroker,
                                Message message) throws JMSException {
-        message.acknowledge();
-        log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker);
-        Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
-                tascaBroker.getEntornCodi(),
-                tascaBroker.getAppCodi());
-        if (entornApp.isEmpty()) {
-            throw new ResourceNotFoundException(
-                    EntornApp.class,
-                    "(entornCodi=" + tascaBroker.getEntornCodi() + ", appCodi=" + tascaBroker.getAppCodi() + ")");
-        }
-        Optional<TascaEntity> tascaExistent = ((TascaRepository)entityRepository).findByEntornAppIdAndIdentificador(
-                entornApp.get().getId(),
-                tascaBroker.getIdentificador());
-        Tasca tasca = new Tasca();
-        tasca.setEntornAppId(entornApp.get().getId());
-        tasca.setEntornId(entornApp.get().getEntorn().getId());
-        tasca.setAppId(entornApp.get().getApp().getId());
-        tasca.setIdentificador(tascaBroker.getIdentificador());
-        tasca.setTipus(tascaBroker.getTipus());
-        tasca.setNom(tascaBroker.getNom());
-        tasca.setDescripcio(tascaBroker.getDescripcio());
-        tasca.setEstat(tascaBroker.getEstat());
-        tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
-        tasca.setNumeroExpedient(tascaBroker.getNumeroExpedient());
-        tasca.setPrioritat(tascaBroker.getPrioritat());
-        tasca.setDataInici(tascaBroker.getDataInici() != null ? tascaBroker.getDataInici().toLocalDateTime() : null);
-        tasca.setDataFi(tascaBroker.getDataFi() != null ? tascaBroker.getDataFi().toLocalDateTime() : null);
-        tasca.setDataCaducitat(tascaBroker.getDataCaducitat() != null ? tascaBroker.getDataCaducitat().toLocalDateTime() : null);
-        tasca.setUrl(tascaBroker.getRedireccio());
-        tasca.setResponsable(tascaBroker.getResponsable());
-        tasca.setGrup(tascaBroker.getGrup());
-        tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
-        tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
-        if (tascaExistent.isEmpty()) {
-            TascaEntity entity = TascaEntity.builder().tasca(tasca).build();
-            entityRepository.save(entity);
-        } else {
-            tascaExistent.get().setTipus(tasca.getTipus());
-            tascaExistent.get().setNom(tasca.getNom());
-            tascaExistent.get().setDescripcio(tasca.getDescripcio());
-            tascaExistent.get().setEstat(tasca.getEstat());
-            tascaExistent.get().setEstatDescripcio(tasca.getEstatDescripcio());
-            tascaExistent.get().setNumeroExpedient(tasca.getNumeroExpedient());
-            tascaExistent.get().setPrioritat(tasca.getPrioritat());
-            tascaExistent.get().setDataInici(tasca.getDataInici());
-            tascaExistent.get().setDataFi(tasca.getDataFi());
-            tascaExistent.get().setDataCaducitat(tasca.getDataCaducitat());
-            tascaExistent.get().setUrl(tasca.getUrl());
-            tascaExistent.get().setResponsable(tasca.getResponsable());
-            tascaExistent.get().setGrup(tasca.getGrup());
-            tascaExistent.get().setUsuarisAmbPermis(tasca.getUsuarisAmbPermis());
-            tascaExistent.get().setGrupsAmbPermis(tasca.getGrupsAmbPermis());
+        MonitorTasques monitorTasques = new MonitorTasques(null, "", tasquesClientHelper);
+        monitorTasques.startAction();
+        try {
+            message.acknowledge();
+            log.debug("Processat tasca de la cua " + CUA_TASQUES + " (tasca={})", tascaBroker.getIdentificador());
+            Optional<EntornApp> entornApp = tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi(
+                    tascaBroker.getEntornCodi(),
+                    tascaBroker.getAppCodi());
+            if (entornApp.isEmpty()) {
+                throw new ResourceNotFoundException(
+                        EntornApp.class,
+                        "(entornCodi=" + tascaBroker.getEntornCodi() + ", appCodi=" + tascaBroker.getAppCodi() + ")");
+            }
+            monitorTasques.getMonitor().setEntornAppId(entornApp.get().getId());
+            Optional<TascaEntity> tascaExistent = ((TascaRepository)entityRepository).findByEntornAppIdAndIdentificador(
+                    entornApp.get().getId(),
+                    tascaBroker.getIdentificador());
+            Tasca tasca = new Tasca();
+            tasca.setEntornAppId(entornApp.get().getId());
+            tasca.setEntornId(entornApp.get().getEntorn().getId());
+            tasca.setAppId(entornApp.get().getApp().getId());
+            tasca.setIdentificador(tascaBroker.getIdentificador());
+            tasca.setTipus(tascaBroker.getTipus());
+            tasca.setNom(tascaBroker.getNom());
+            tasca.setDescripcio(tascaBroker.getDescripcio());
+            tasca.setEstat(tascaBroker.getEstat());
+            tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
+            tasca.setNumeroExpedient(tascaBroker.getNumeroExpedient());
+            tasca.setPrioritat(tascaBroker.getPrioritat());
+            tasca.setDataInici(tascaBroker.getDataInici() != null ? tascaBroker.getDataInici().toLocalDateTime() : null);
+            tasca.setDataFi(tascaBroker.getDataFi() != null ? tascaBroker.getDataFi().toLocalDateTime() : null);
+            tasca.setDataCaducitat(tascaBroker.getDataCaducitat() != null ? tascaBroker.getDataCaducitat().toLocalDateTime() : null);
+            tasca.setUrl(tascaBroker.getRedireccio());
+            tasca.setResponsable(tascaBroker.getResponsable());
+            tasca.setGrup(tascaBroker.getGrup());
+            tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
+            tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
+            if (tascaExistent.isEmpty()) {
+                monitorTasques.setCreateActionMessatge();
+                TascaEntity entity = TascaEntity.builder().tasca(tasca).build();
+                entityRepository.save(entity);
+            } else {
+                monitorTasques.setUpdateActionMessatge();
+                tascaExistent.get().setTipus(tasca.getTipus());
+                tascaExistent.get().setNom(tasca.getNom());
+                tascaExistent.get().setDescripcio(tasca.getDescripcio());
+                tascaExistent.get().setEstat(tasca.getEstat());
+                tascaExistent.get().setEstatDescripcio(tasca.getEstatDescripcio());
+                tascaExistent.get().setNumeroExpedient(tasca.getNumeroExpedient());
+                tascaExistent.get().setPrioritat(tasca.getPrioritat());
+                tascaExistent.get().setDataInici(tasca.getDataInici());
+                tascaExistent.get().setDataFi(tasca.getDataFi());
+                tascaExistent.get().setDataCaducitat(tasca.getDataCaducitat());
+                tascaExistent.get().setUrl(tasca.getUrl());
+                tascaExistent.get().setResponsable(tasca.getResponsable());
+                tascaExistent.get().setGrup(tasca.getGrup());
+                tascaExistent.get().setUsuarisAmbPermis(tasca.getUsuarisAmbPermis());
+                tascaExistent.get().setGrupsAmbPermis(tasca.getGrupsAmbPermis());
+            }
+            monitorTasques.endAction();
+        } catch (Throwable t) {
+            monitorTasques.endAction(t, t.getMessage());
         }
     }
 
@@ -137,9 +152,26 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     }*/
 
     @Override
+    protected void afterConversion(TascaEntity entity, Tasca resource) {
+        super.afterConversion(entity, resource);
+
+        App app = tasquesClientHelper.appById(entity.getAppId());
+        Entorn entorn = tasquesClientHelper.entornById(entity.getEntornId());
+        resource.setAppCodi(app != null ? app.getCodi() : null);
+        resource.setEntornCodi(entorn != null ? entorn.getCodi() : null);
+    }
+
+    @Override
     protected Specification<TascaEntity> additionalSpecification(String[] namedQueries) {
         String userName = authenticationHelper.getCurrentUserName();
         String[] roles = authenticationHelper.getCurrentUserRoles();
+
+        // Els usuaris amb rol admin poden visualitzar totes les tasques.
+        // Per a aquest motiu, l'usuari de httpauth.username ha de tenir el rol ROLE_ADMIN,
+        // ja que totes les tasques han de ser accessibles mitjançant API interna.
+        if (Arrays.asList(roles).contains(ROLE_ADMIN))
+            return null;
+
         return teGrupSiNoNull(roles).and(
                 teResponsable(userName).
                         or(tePermisUsuari(userName)).
@@ -180,6 +212,19 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
                 resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
             } else {
                 resource.setTreePath(new String[]{"INVALID_ENTORNAPP " + entity.getEntornAppId(), resource.getIdentificador()});
+            }
+        }
+    }
+
+    @AllArgsConstructor
+    public static class EntornAppPerspectiveApplicator implements PerspectiveApplicator<TascaEntity, Tasca> {
+        private TasquesClientHelper tasquesClientHelper;
+        @Override
+        public void applySingle(String code, TascaEntity entity, Tasca resource) throws PerspectiveApplicationException {
+            EntornApp entornApp = tasquesClientHelper.entornAppFindById(entity.getEntornAppId());
+            if (entornApp != null) {
+                resource.setApp(entornApp.getApp());
+                resource.setEntorn(entornApp.getEntorn());
             }
         }
     }

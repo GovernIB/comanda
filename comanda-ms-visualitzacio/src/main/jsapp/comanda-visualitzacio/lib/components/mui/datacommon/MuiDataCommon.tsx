@@ -89,7 +89,12 @@ export const useApiDataCommon = (
         quickFilterSetFocus,
         quickFilterProps
     );
+    // Ref usada per a evitar que dues peticions refresh concurrents arribin desordenades
+    const lastRefreshTimestamp = React.useRef<number | null>(null);
     const refresh = () => {
+        // Guarda a lastRefreshTimestamp el timestamp d'aquesta execució, ja que és la darrera
+        const refreshTimestamp = Date.now();
+        lastRefreshTimestamp.current = refreshTimestamp;
         if (apiIsReady && !findDisabled) {
             const processedFindArgs = {
                 ...(findArgs ?? {}),
@@ -101,6 +106,9 @@ export const useApiDataCommon = (
             if (resourceFieldName == null) {
                 apiFind(processedFindArgs)
                     .then((response) => {
+                        // Si el valor guardar a lastRefreshTimestamp no és el mateix que el timestamp d'aquesta execució,
+                        // no s'ha de processar la resposta, ja que hi ha una nova petició refresh en curs.
+                        if (lastRefreshTimestamp.current !== refreshTimestamp) return;
                         setRows(response.rows);
                         setPageInfo(response.page);
                     })
@@ -112,6 +120,9 @@ export const useApiDataCommon = (
                     ...processedFindArgs,
                 })
                     .then((response) => {
+                        // Si el valor guardar a lastRefreshTimestamp no és el mateix que el timestamp d'aquesta execució,
+                        // no s'ha de processar la resposta, ja que hi ha una nova petició refresh en curs.
+                        if (lastRefreshTimestamp.current !== refreshTimestamp) return;
                         setRows(response.rows);
                         setPageInfo(response.page);
                     })
@@ -126,6 +137,9 @@ export const useApiDataCommon = (
                 };
                 apiArtifactFieldOptionsFind(args)
                     .then((response) => {
+                        // Si el valor guardar a lastRefreshTimestamp no és el mateix que el timestamp d'aquesta execució,
+                        // no s'ha de processar la resposta, ja que hi ha una nova petició refresh en curs.
+                        if (lastRefreshTimestamp.current !== refreshTimestamp) return;
                         setRows(response.rows);
                         setPageInfo(response.page);
                     })

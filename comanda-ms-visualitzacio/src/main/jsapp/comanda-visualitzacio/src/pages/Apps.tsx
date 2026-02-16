@@ -18,7 +18,7 @@ import {
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
-import { FormControl, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
+import { FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
 import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
@@ -30,6 +30,7 @@ import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
 import {Cancel, CheckCircle} from '@mui/icons-material';
 import useReordering from '../hooks/reordering.tsx';
+import PageTitle from '../components/PageTitle.tsx';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -90,26 +91,42 @@ const AppEntornForm: React.FC = () => {
 
     return (
         <Grid container spacing={2}>
-            <Grid size={12}>
+            <Grid size={9}>
                 <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter}/>
             </Grid>
-            <Grid size={12}>
-                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} onClick={pingUrl}/>}}}} />
+            <Grid size={3}>
+                <FormField name="activa" />
             </Grid>
             <Grid size={12}>
-                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} onClick={pingUrl}/>}}}} />
+                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={pingUrl}/>}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} onClick={pingUrl}/>}}}} />
+                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={pingUrl}/>}}}} />
+            </Grid>
+            <Grid size={12} sx={{ p: 1, pt: 0 }}>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">{t($ => $.page.apps.fields.salutAuthLegend)}</FormLabel>
+                    <FormGroup aria-label="position" row>
+                        <FormField name="salutAuth" type="checkbox" label={t($ => $.page.apps.fields.auth)} />
+                    </FormGroup>
+                </FormControl>
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} onClick={pingUrl}/>}}}} />
+                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={pingUrl}/>}}}} />
             </Grid>
-            <Grid size={8}>
+            <Grid size={12}>
+                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={pingUrl}/>}}}} />
+            </Grid>
+            <Grid size={6} sx={{ p: 1, pt: 0 }}>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">{t($ => $.page.apps.fields.estadisticaAuthLegend)}</FormLabel>
+                    <FormGroup aria-label="position" row>
+                        <FormField name="estadisticaAuth" type="checkbox" label={t($ => $.page.apps.fields.auth)} />
+                    </FormGroup>
+                </FormControl>
+            </Grid>
+            <Grid size={6}>
                 <FormField name="estadisticaCron" />
-            </Grid>
-            <Grid size={4}>
-                <FormField name="estadisticaAuth" type="checkbox" label={t($ => $.page.apps.fields.estadistica.auth)} />
             </Grid>
             <Grid size={12}>
                 <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />
@@ -135,9 +152,6 @@ const AppEntornForm: React.FC = () => {
                     </Grid>
                 </>
             )}
-            <Grid size={12}>
-                <FormField name="activa" />
-            </Grid>
         </Grid>
     );
 };
@@ -223,12 +237,12 @@ const AppsEntorns: React.FC = () => {
 export const AppForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
+    const [appNom, setAppNom] = React.useState<string>()
     const { setMarginsDisabled } = useBaseAppContext();
     React.useEffect(() => {
         setMarginsDisabled(true);
         return () => setMarginsDisabled(false);
     }, []);
-
     const formTabs: FormTabsValue[] = [
         {
             label: t($ => $.page.apps.general),
@@ -238,15 +252,19 @@ export const AppForm: React.FC = () => {
         },
     ];
 
+    const formTitle = id ? (t($ => $.page.apps.update)+` (${appNom})`) : t($ => $.page.apps.create);
+
     return (
         <MuiForm
             key={id} // TODO No debería ser necesario, parece un bug de la librería
             id={id}
-            title={id ? t($ => $.page.apps.update) : t($ => $.page.apps.create)}
+            title={formTitle}
             resourceName="app"
             goBackLink="/app"
             createLink="form/{{id}}"
+            onDataChange={(data) => setAppNom(data?.nom)}
         >
+            <PageTitle title={formTitle} />
             <MuiFormTabs tabs={formTabs} tabIndexesWithGrids={[1]}>
                 <MuiFormTabContent index={0} showOnCreate>
                     <FormPage>
@@ -437,6 +455,7 @@ const Apps: React.FC = () => {
     ];
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.apps.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
                 title={t($ => $.page.apps.title)}

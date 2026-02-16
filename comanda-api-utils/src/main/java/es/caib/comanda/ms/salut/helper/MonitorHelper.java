@@ -1,12 +1,15 @@
 package es.caib.comanda.ms.salut.helper;
 
-import es.caib.comanda.model.v1.salut.DetallSalut;
-import es.caib.comanda.model.v1.salut.InformacioSistema;
+import es.caib.comanda.model.server.monitoring.InformacioSistema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
 import java.io.File;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -18,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 public class MonitorHelper {
 
     private static Runtime rt;
@@ -172,7 +176,6 @@ public class MonitorHelper {
 
 
     public static InformacioSistema getInfoSistema() {
-        List<DetallSalut> detallSaluts = new ArrayList<>();
 
         // CPU usage
         MonitorHelper.CpuUsage cpuUsage = MonitorHelper.getCpuUsage();
@@ -196,7 +199,7 @@ public class MonitorHelper {
         String startTime = systemInfo.getFormatedStartTime();
         String upTime = systemInfo.getFormatedUpTime();
 
-        return InformacioSistema.builder()
+        return new InformacioSistema()
                 .processadors(cpuCores)
                 .carregaSistema(loadAverage)
                 .cpuSistema(systemCpuLoad)
@@ -206,8 +209,7 @@ public class MonitorHelper {
                 .espaiDiscLliure(freeSpace)
                 .sistemaOperatiu(os)
                 .dataArrencada(startTime)
-                .tempsFuncionant(upTime)
-                .build();
+                .tempsFuncionant(upTime);
     }
 
     public static String getApplicationServerInfo() {
@@ -216,7 +218,9 @@ public class MonitorHelper {
             if (serverInfo != null) return serverInfo;
 
             if (System.getProperty("jboss.home.dir") != null) {
-                String version = System.getProperty("jboss.server.version", "");
+                String version = getJBossVersion();
+                if (version != null)
+                    version = System.getProperty("jboss.server.version", "");
                 boolean isEap = System.getProperty("jboss.modules.system.pkgs", "").contains("com.redhat")
                         || System.getProperty("jboss.product.name", "").contains("EAP");
                 String serverType = isEap ? "JBoss EAP" : "JBoss/WildFly";
@@ -248,6 +252,80 @@ public class MonitorHelper {
         }
         return null;
     }
+
+    public static String jbossVersionCache = null;
+
+    public static String getJBossVersion() {
+
+        if (jbossVersionCache == null) {
+            String jbossVersion = null;
+
+            try {
+                // MBean modern (WildFly / EAP 6+)
+                ObjectName newRoot = new ObjectName("jboss.as:management-root=server");
+
+                // MBean antic (JBoss EAP 5 / AS 5-6)
+                ObjectName legacyRoot = new ObjectName("jboss.system:type=Server");
+
+                for (MBeanServer server : MBeanServerFactory.findMBeanServer(null)) {
+
+                    if (server == null) {
+                        continue;
+                    }
+
+                    // --- WildFly / EAP 6+ ---
+                    try {
+                        if (server.isRegistered(newRoot)) {
+                            String productName = safeGet(server, newRoot, "product-name");
+                            String productVersion = safeGet(server, newRoot, "product-version");
+
+                            if (productVersion != null) {
+                                jbossVersion = (productName != null ? productName + " " : "") + productVersion;
+                                break;
+                            }
+                        }
+                    } catch (Exception ignore) {
+                        // Continua buscant
+                    }
+
+                    // --- JBoss EAP 5 / AS 5-6 ---
+                    try {
+                        if (server.isRegistered(legacyRoot)) {
+                            String version = safeGet(server, legacyRoot, "Version");
+                            if (version != null) {
+                                jbossVersion = "JBoss " + version;
+                                break;
+                            }
+                        }
+                    } catch (Exception ignore) {
+                        // Continua buscant
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("JBOSS VERSION: error no controlat " + e.getMessage(), e);
+            }
+
+            if (jbossVersion != null) {
+                jbossVersionCache = jbossVersion;
+            }
+        }
+
+        return jbossVersionCache;
+    }
+
+    /**
+     * Helper per evitar NullPointer i ClassCast.
+     */
+    private static String safeGet(MBeanServer server, ObjectName name, String attribute) {
+        try {
+            Object value = server.getAttribute(name, attribute);
+            return value != null ? value.toString() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 
     @Builder
     @Getter

@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.log.helper;
 
-import es.caib.comanda.model.v1.log.FitxerContingut;
+import es.caib.comanda.model.server.monitoring.FitxerContingut;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -44,7 +44,7 @@ class LogHelperTest {
             assertThat(fi.getDataModificacio()).isNotNull();
             assertThat(fi.getMimeType()).isNotNull();
             assertThat(fi.getMimeType()).isEqualTo(fi.getNom().endsWith("log") ? "text/plain" : "application/gzip");
-            assertThat(fi.getDataCreacio()).hasSize(10); // dd/MM/yyyy
+            assertThat(fi.getDataCreacio()).hasSize(19); // dd/MM/yyyy HH:mm:ss
             assertThat(fi.getMida()).isNotNull().isGreaterThanOrEqualTo(0L);
         });
     }

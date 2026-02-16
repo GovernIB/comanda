@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { IconButton, Icon, CircularProgress } from '@mui/material';
 
 interface UrlPingAdornmentProps {
-  url?: string;
-  onClick: (url?: string) => Promise<boolean>;
+    url?: string;
+    formData: any;
+    onClick: ({ endpoint, formData }: { endpoint: string, formData: any }) => Promise<boolean>;
 }
 
 type PingStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -19,7 +20,7 @@ const StatusIcon = ({ status }: { status: PingStatus }) => {
     }
 };
 
-const UrlPingAdornment: React.FC<UrlPingAdornmentProps> = ({ url, onClick }) => {
+const UrlPingAdornment: React.FC<UrlPingAdornmentProps> = ({ url, formData, onClick }) => {
   const [status, setStatus] = useState<PingStatus>('idle');
   useEffect(() => {//Si cambian el valor en el URL vaciaremos el Status
     setStatus('idle');
@@ -30,7 +31,7 @@ const UrlPingAdornment: React.FC<UrlPingAdornmentProps> = ({ url, onClick }) => 
     setStatus('loading');
 
     try {
-      const success = await onClick(url);
+      const success = await onClick({ endpoint: url, formData });
       setStatus(success ? 'success' : 'error');
     } catch (error) {
       setStatus('error');

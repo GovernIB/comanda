@@ -8,6 +8,7 @@ import {
 } from 'reactlib';
 import BlockIcon from '@mui/icons-material/Block';
 import LogoUpload from "../components/LogoUpload.tsx";
+import PageTitle from '../components/PageTitle.tsx';
 
 const Integracions: React.FC = () => {
     const { t } = useTranslation();
@@ -42,6 +43,7 @@ const Integracions: React.FC = () => {
     ];
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.integracions.title)} />
             <MuiDataGrid
                 title={t($ => $.page.integracions.title)}
                 resourceName="integracio"

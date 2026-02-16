@@ -17,10 +17,11 @@ import {
 } from 'reactlib';
 import UserProvider from './components/UserProvider';
 import MuiThemeProvider from './components/MuiThemeProvider.tsx';
+import { HelmetProvider } from '@dr.pogodin/react-helmet';
 
 dayjs.extend(duration);
 
-LicenseInfo.setLicenseKey('d7a3848ee04d821438959d61037634beTz0xMDY1ODQsRT0xNzY5Mjk5MTk5MDAwLFM9cHJvLExNPXN1YnNjcmlwdGlvbixQVj1pbml0aWFsLEtWPTI=');
+LicenseInfo.setLicenseKey('e0bde345c6cb2453171a44e15a0c58f5Tz0xMjQ4NTIsRT0xODAxMDk0Mzk5MDAwLFM9cHJvLExNPXN1YnNjcmlwdGlvbixQVj1pbml0aWFsLEtWPTI=');
 
 export const envVars = {
     VITE_API_URL: import.meta.env.VITE_API_URL,
@@ -59,17 +60,19 @@ const AuthProvider = isAuthUrlPresent ? KeycloakAuthProvider : ContainerAuthProv
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
-            <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
-                <UserProvider>
-                    <MuiThemeProvider>
-                        <CssBaseline />
-                        <BrowserRouter basename={import.meta.env.BASE_URL}>
-                            <App />
-                        </BrowserRouter>
-                    </MuiThemeProvider>
-                </UserProvider>
-            </ResourceApiProvider>
-        </AuthProvider>
+        <HelmetProvider>
+            <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
+                <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
+                    <UserProvider>
+                        <MuiThemeProvider>
+                            <CssBaseline />
+                            <BrowserRouter basename={import.meta.env.BASE_URL}>
+                                <App />
+                            </BrowserRouter>
+                        </MuiThemeProvider>
+                    </UserProvider>
+                </ResourceApiProvider>
+            </AuthProvider>
+        </HelmetProvider>
     </React.StrictMode>
 );

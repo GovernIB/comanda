@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -22,18 +23,23 @@ import java.util.List;
 @Schema(name = "Avis", description = "Representa un avís o notificació publicada a COMANDA")
 public class Avis implements Serializable {
 
+    @NotNull
     @Schema(description = "Codi de l'aplicació que publica l'avís", example = "PFI")
     private String appCodi;
 
+    @NotNull
     @Schema(description = "Codi de l'entorn de l'aplicació", example = "DEV")
     private String entornCodi;
 
+    @NotNull
     @Schema(description = "Identificador únic de l'avís", example = "AV-2025-0001")
     private String identificador;
 
+    @NotNull
     @Schema(description = "Tipus d'avís")
     private AvisTipus tipus;
 
+    @NotNull
     @Schema(description = "Títol de l'avís", example = "Interrupció programada")
     private String nom;
 

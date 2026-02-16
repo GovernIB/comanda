@@ -63,8 +63,9 @@ export const EntornAppSelector : React.FC<any> = (props) => {
     }, [apiIsReady, id]);
     return (!id || entornApp != null) && <MuiFilter
         resourceName="entornApp"
-        code="salut_entornApp_filter"
+        code="optional_entornApp_filter"
         commonFieldComponentProps={{ size: 'small' }}
+        componentProps={{ sx: { mt: 0 } }}
         validationErrors={validationErrors}
         initialData={{ entornApp: entornApp }}
         springFilterBuilder={() => ''}
@@ -72,7 +73,6 @@ export const EntornAppSelector : React.FC<any> = (props) => {
         formApiRef={formApiRef}>
             <FormField
             name="entornApp"
-            advancedSearchResourceName="entornApp"
             advancedSearchColumns={[{
                 field: 'entornAppDescription',
                 flex: 1,

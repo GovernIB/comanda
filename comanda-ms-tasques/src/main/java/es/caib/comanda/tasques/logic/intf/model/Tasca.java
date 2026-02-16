@@ -1,6 +1,8 @@
 package es.caib.comanda.tasques.logic.intf.model;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
@@ -39,6 +41,7 @@ import java.util.List;
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Tasca.FILTER, formClass = Tasca.TascaFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Tasca.PERSPECTIVE_PATH),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Tasca.PERSPECTIVE_EXPIRATION),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Tasca.PERSPECTIVE_ENTORN_APP),
         }
 )
 public class Tasca extends BaseResource<Long> {
@@ -46,6 +49,7 @@ public class Tasca extends BaseResource<Long> {
     public static final String FILTER = "FILTER";
     public static final String PERSPECTIVE_PATH = "PATH";
     public static final String PERSPECTIVE_EXPIRATION = "EXPIRATION";
+    public static final String PERSPECTIVE_ENTORN_APP = "ENTORN_APP";
 
     @NotNull
     private Long entornAppId;
@@ -81,7 +85,11 @@ public class Tasca extends BaseResource<Long> {
     private List<String> grupsAmbPermis;
 
     @Transient private String[] treePath;
+    @Transient private AppRef app;
+    @Transient private EntornRef entorn;
     @Transient private Long diesPerCaducar;
+    @Transient private String entornCodi;
+    @Transient private String appCodi;
 
     @Getter
     @Setter

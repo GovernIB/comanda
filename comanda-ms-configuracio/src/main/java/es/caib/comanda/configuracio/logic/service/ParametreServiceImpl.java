@@ -80,9 +80,7 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
                 resource.setValorBoolean(Objects.isNull(resource.getValor()) ? null : resource.getValor().equalsIgnoreCase("true"));
                 break;
             case PASSWORD:
-                if (!Objects.equals(httpAuthorizationHeaderHelper.getAuthUsername(), authenticationHelper.getCurrentUserName())) {
-                    resource.setValor(PASSWORD_LABEL);
-                }
+                resource.setValor(PASSWORD_LABEL);
                 break;
         }
 

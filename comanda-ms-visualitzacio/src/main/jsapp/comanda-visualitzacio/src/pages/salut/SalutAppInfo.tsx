@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Table from '@mui/material/Table';
@@ -41,7 +42,7 @@ import {
 } from '../../types/salut.model.tsx';
 import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
-import { Alert, Tooltip } from '@mui/material';
+import { Alert, LinearProgress, Tooltip } from '@mui/material';
 import { SalutData } from './Salut.tsx';
 import { AppDataState, SalutInformeLatenciaItem } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
@@ -50,6 +51,7 @@ import SalutChip from '../../components/salut/SalutChip';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import LogsViewer from './LogsViewer';
+import PageTitle from '../../components/PageTitle.tsx';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -203,7 +205,7 @@ const EstatsBarCard: React.FC<{
     );
 };
 
-const PeticionsOkError: React.FC<{ ok?: number; error?: number }> = props => {
+const PeticionsOkError: React.FC<{ ok?: string|number; error?: string|number }> = props => {
     const { ok, error } = props;
     const theme = useTheme();
     return (
@@ -349,12 +351,14 @@ const Integracions: React.FC<{
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsTotals)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigTotal)}
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsPeriode)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigPeriode)}
@@ -408,12 +412,14 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsTotals)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigTotal)}
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsPeriode)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigPeriode)}
@@ -693,6 +699,75 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
 //     );
 // };
 
+function convertirAMegas(valor:string|undefined) {
+    if (!valor) return 0;
+
+    const texto = valor.replace(',', '.').toUpperCase();
+
+    if (texto.includes('GB')) {
+        return parseFloat(texto) * 1024;
+    }
+
+    if (texto.includes('MB')) {
+        return parseFloat(texto);
+    }
+
+    return 0;
+}
+
+const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+    const { t } = useTranslation();
+
+    const memoriaTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MET')?.valor
+    const memoriaDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MED')?.valor
+    const memoriaEmprada = 100 - convertirAMegas(memoriaDisponible) * 100 / convertirAMegas(memoriaTotal);
+
+    const discTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDT')?.valor
+    const discDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDL')?.valor
+    const discEmprada = 100 - convertirAMegas(discDisponible) * 100 / convertirAMegas(discTotal);
+
+    return <Card variant="outlined">
+        <CardHeader title={t($ => $.page.salut.memoria.title)} />
+        <CardContent>
+            <Grid container sx={{disabled: "flex", alignItems: 'center', justifyContent: 'center'}}>
+                <Grid size={1} textAlign={'center'}><Icon>desktop_windows</Icon></Grid>
+                <Grid size={9}>
+                    <LinearProgress variant="determinate" color={'success'} value={memoriaEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
+                </Grid>
+                <Grid size={10} sx={{ textAlign: 'end'}} >
+                    <Trans
+                        i18nKey={$ => $.page.salut.memoria.espaiMeoria}
+                        values={{
+                            disp: memoriaDisponible,
+                            total: memoriaTotal,
+                        }}
+                        components={{
+                            strong: <Box component="span" fontWeight="bold" />
+                        }}
+                    />
+                </Grid>
+            </Grid>
+            <Grid container sx={{disabled: "flex", alignItems: 'center', justifyContent: 'center'}}>
+                <Grid size={1} textAlign={'center'}><Icon>folder</Icon></Grid>
+                <Grid size={9}>
+                    <LinearProgress variant="determinate" color={'success'} value={discEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
+                </Grid>
+                <Grid size={10} sx={{ textAlign: 'end'}} >
+                    <Trans
+                        i18nKey={$ => $.page.salut.memoria.espaiDisc}
+                        values={{
+                            disp: discDisponible,
+                            total: discTotal,
+                        }}
+                        components={{
+                            strong: <strong />
+                        }}
+                    />
+                </Grid>
+            </Grid>
+        </CardContent>
+    </Card>
+}
 const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
     const detalls = salutCurrentApp.detalls;
@@ -709,7 +784,9 @@ const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
     );
 
     const tableSections = [
-        ...(detalls ?? []).map(detall => ({
+        ...(detalls ?? [])
+            .filter(detall => !['MET','MED','EDT','EDL'].includes(detall.codi))
+            .map(detall => ({
             id: detall.id,
             headerName: detall.nom,
             cellContent: detall.valor,
@@ -784,8 +861,12 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
     }
     return (
         <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid size={{ sm: 12, lg: 12 }}>
+            <Grid size={{ sm: 12, lg: 6 }}>
                 <DetallInfo salutCurrentApp={salutCurrentApp} />
+            </Grid>
+            {/* Sense el breakpoint xs: 12 el contenidor no pareix ocupar el tamany que toca quan es fa la pantalla petita */}
+            <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
+                <MeoriaInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
                 <Subsistemes salutCurrentApp={salutCurrentApp} />
@@ -997,6 +1078,7 @@ const SalutAppInfo: React.FC<{
 
     return (
         <>
+            <PageTitle title={t($ => $.page.salut.appInfoTitle)} />
             <Tabs
                 value={tabValue}
                 onChange={handleChange}

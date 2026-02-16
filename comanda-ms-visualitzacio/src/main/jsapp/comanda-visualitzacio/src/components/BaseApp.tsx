@@ -57,8 +57,9 @@ export type BaseAppProps = React.PropsWithChildren & {
     defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
+// Antes se aplicaba role={undefined} por encima de itemProps, pero esto impedia configurar un Link como role="menuitem"
 const Link = React.forwardRef<HTMLAnchorElement, RouterLinkProps>((itemProps, ref) => {
-    return <RouterLink ref={ref} {...itemProps} role={undefined} />;
+    return <RouterLink ref={ref} role={undefined} {...itemProps} />;
 });
 
 const useLocationPath = () => {
@@ -128,24 +129,6 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
         : [];
 }
 
-const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
-    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
-    return React.useMemo(() => {
-        if (apiIsReady) {
-            const apiLinks = apiIndex?.links.getAll();
-            const resourceNames = apiLinks?.map((l: any) => l.rel);
-            return menuEntries?.
-                filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
-                map(e => {
-                    const { resourceName, ...otherProps } = e;
-                    return otherProps;
-                });
-        } else {
-            return [];
-        }
-    }, [apiIsReady, apiIndex]);
-}
-
 const footerHeight = 36;
 const generateFooter = () => {
     return (
@@ -202,7 +185,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
-    const baseAppMenuEntries = useBaseAppMenuEntries(menuEntries);
+    const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
     const { indexState } = useResourceApiContext();

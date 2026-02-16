@@ -104,7 +104,11 @@ const ImageField: React.FC<ImageFieldProps> = ({
                     )}
                     {!hideDownloadButton && (
                         <div title={t($ => $.form.field.file.download)}>
-                            <IconButton onClick={onDownloadClick} sx={{ color: '#ffffff' }}>
+                            <IconButton
+                                onClick={onDownloadClick}
+                                sx={{ color: '#ffffff' }}
+                                aria-label={t($ => $.form.field.file.download)}
+                            >
                                 <Icon>file_download</Icon>
                             </IconButton>
                         </div>
@@ -116,6 +120,7 @@ const ImageField: React.FC<ImageFieldProps> = ({
                                     onClear();
                                 }}
                                 sx={{ color: '#ffffff' }}
+                                aria-label={t($ => $.form.field.file.clear)}
                             >
                                 <Icon>delete</Icon>
                             </IconButton>
@@ -124,6 +129,7 @@ const ImageField: React.FC<ImageFieldProps> = ({
                 </Box>
                 <Avatar
                     src={imageSrc ?? undefined}
+                    alt={t($ => $.form.field.file.avatarAlt)}
                     variant="square"
                     {...avatarProps}
                     sx={{

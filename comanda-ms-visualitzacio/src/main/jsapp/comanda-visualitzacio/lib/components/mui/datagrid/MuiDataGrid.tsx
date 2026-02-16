@@ -853,7 +853,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                 columns={processedColumns}
                 onRowClick={onRowClick}
                 onRowOrderChange={onRowOrderChange}
-                initialState={persistentState && initialState ? initialState : undefined}
+                initialState={persistentState && initialState ? initialState : otherProps?.initialState}
                 apiRef={datagridApiRef}
                 {...filteringProps}
                 {...sortingProps}

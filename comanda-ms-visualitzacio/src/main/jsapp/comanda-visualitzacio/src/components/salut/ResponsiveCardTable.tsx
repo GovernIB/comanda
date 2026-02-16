@@ -61,7 +61,7 @@ const ResponsiveCardTable: React.FC<{
                         <TableBody>
                             <TableRow>
                                 {tableSections.map(d => (
-                                    <TableCell key={d.id}>{d.cellContent}</TableCell>
+                                    <TableCell key={d.id} sx={{ wordBreak: 'break-word' }}>{d.cellContent}</TableCell>
                                 ))}
                             </TableRow>
                         </TableBody>

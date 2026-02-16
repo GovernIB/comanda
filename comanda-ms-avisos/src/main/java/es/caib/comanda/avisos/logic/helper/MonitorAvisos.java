@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
 public class MonitorAvisos {
 
     private static final String AVIS_DADES_ACCIO = "Obtenir dades d'un avís";
+    private static final String AVIS_DADES_CREATE_ACCIO = "Creació d'un avís";
+    private static final String AVIS_DADES_UPDATE_ACCIO = "Actualitzar dades d'un avís";
     private static final String AVIS_DADES_ERROR = "S'ha produït un error obtenint les dades de l'avís'";
 
     private AvisClientHelper avisClientHelper;
@@ -43,8 +45,8 @@ public class MonitorAvisos {
     private Monitor createMonitor(Long entornAppId, String url, String operacio, String codiUsuari) {
         return Monitor.builder()
                 .entornAppId(entornAppId)
-                .modul(ModulEnum.SALUT)
-                .tipus(AccioTipusEnum.SORTIDA)
+                .modul(ModulEnum.AVIS)
+                .tipus(AccioTipusEnum.ENTRADA)
                 .url(url)
                 .operacio(operacio)
                 .codiUsuari(codiUsuari)
@@ -73,6 +75,12 @@ public class MonitorAvisos {
         avisClientHelper.monitorCreate(monitor);
     }
 
+    public void setCreateActionMessatge() {
+        monitor.setOperacio(AVIS_DADES_CREATE_ACCIO);
+    }
+    public void setUpdateActionMessatge() {
+        monitor.setOperacio(AVIS_DADES_UPDATE_ACCIO);
+    }
 
     /**
      * Obté el codi de l'usuari autenticat o retorna "SCHEDULER" si no hi ha cap usuari autenticat o és anònim

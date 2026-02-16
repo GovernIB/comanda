@@ -91,6 +91,8 @@ const translationEs: translationResourcesType = {
         parametre: "Parámetros",
         dimensio: "Dimensiones",
         indicador: "Indicadores",
+        accessibilitat: "Accesibilidad",
+        sitemap: "Mapa del sitio web",
         user: {
             options: {
                 profile: {
@@ -110,8 +112,10 @@ const translationEs: translationResourcesType = {
     },
     page: {
         salut: {
-            title: "Salut",
+            title: "Salud",
+            appInfoTitle: "Salud de la aplicación",
             refrescar: "Refrescar",
+            goBack: "Ir atrás",
             filtrar: "Filtrar por aplicación/entorno",
             senseFiltres: "Sin filtros",
             nd: "N/D",
@@ -145,6 +149,7 @@ const translationEs: translationResourcesType = {
                 titleNoGrouping: "Todas las aplicaciones y entornos",
             },
             refreshperiod: {
+                title: "Periodicidad del refresco",
                 PT1M: "1 minuto",
                 PT5M: "5 minutos",
                 PT10M: "10 minutos",
@@ -152,6 +157,7 @@ const translationEs: translationResourcesType = {
                 PT1H: "1 hora",
             },
             timerange: {
+                title: "Intervalo de tiempo de los datos",
                 PT15M: "Últimos 15 minutos",
                 PT1H: "Última hora",
                 P1D: "Último día",
@@ -254,8 +260,27 @@ const translationEs: translationResourcesType = {
                 title: "Sistema",
                 noInfo: "No hay información sobre detalles de la aplicación",
             },
+            memoria: {
+                title: "Memoria del sistema",
+                espaiMeoria: "Espacio en memoria disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
+                espaiDisc: "Espacio en disco disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
+            },
             estats: {
                 title: "Estados",
+            },
+            logs: {
+                preview: "Previsualizar",
+                download: "Descargar",
+                noSelected: "Seleccionar un archivo",
+                noPreview: "No hay previsualización",
+                logsList: {
+                    title: "Logs",
+                    nom: "Nombre",
+                    dataCreacio: "Fecha de creación",
+                    dataModificacio: "Fecha de modificación",
+                    mida: "Tamaño",
+                    showPreview: "Previsualizable",
+                }
             },
         },
         dashboards: {
@@ -339,13 +364,18 @@ const translationEs: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Nombre",
-                column: {
-                    appEntorn: "Aplicación - Entorno",
+            },
+            action: {
+                obrir: "Abrir aviso",
+                nollegit: {
+                    label: "Marcar como no leído",
+                    ok: "El aviso se ha marcado como no leído",
                 },
-                action: {
-                    obrir: "Abrir aviso",
+                llegit: {
+                    label: "Marcar como leído",
+                    ok: "El aviso se ha marcado como leído",
                 },
-            }
+            },
         },
         alarmaConfig: {
             title: "Configuración de alarmas",
@@ -372,9 +402,9 @@ const translationEs: translationResourcesType = {
                 compactacioSetmanalMesos: "Compactación semanal (meses)",
                 compactacioMensualMesos: "Compactación mensual (meses)",
                 eliminacioMesos: "Borrado (meses)",
-                estadistica: {
-                    auth: "Servicio autenticado",
-                },
+                auth: "Servicio autenticado",
+                salutAuthLegend: "Autenticar las consultas de salud",
+                estadisticaAuthLegend: "Autenticar las consultas de estadísticas",
             },
             tooltips: {
                 compactacioSetmanes: "Cuántos meses completos se mantendrán las estadísticas antes de compactarlas por semana.\nSi los campos se dejan sin valor o con valor 0, no se realizará la compactación por semana.",
@@ -478,6 +508,8 @@ const translationEs: translationResourcesType = {
                 salut: "Salud",
                 estadistica: "Estadística",
                 configuracio: "Configuración",
+                tasca: "Tarea",
+                avis: "Aviso",
             },
         },
         widget: {
@@ -732,6 +764,13 @@ const translationEs: translationResourcesType = {
                 },
             },
         },
+        sitemap: {
+            title: "Mapa del sitio web",
+            subtitle: "Acceso directo a todas las secciones principales de la aplicación.",
+        },
+        accessibilitat: {
+            title: "Accessibilidad",
+        },
         notFound: "No encontrado",
         noPermissions: "Sin permisos",
     },
@@ -761,6 +800,7 @@ const translationEs: translationResourcesType = {
                 edit: 'Editar',
                 download: 'Descargar',
                 clear: 'Borrar',
+                avatarAlt: 'Imagen subida por el usuario',
             },
         },
     },
@@ -802,7 +842,9 @@ const translationEs: translationResourcesType = {
         indicadors: "Indicadores",
     },
     treeData: {
-        treeView: "Vista en árbol"
+        treeView: "Vista en árbol",
+        expandAll: "Expandir todas las filas",
+        collapseAll: "Contraer todas las filas",
     },
     reordering: {
         errorMessage: "Error al reordenar",

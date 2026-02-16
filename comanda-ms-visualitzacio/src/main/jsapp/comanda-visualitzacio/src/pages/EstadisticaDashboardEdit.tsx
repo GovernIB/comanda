@@ -56,6 +56,7 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
+import PageTitle from '../components/PageTitle.tsx';
 
 type EntornAppFilterContentProps = {
     initialData?: {
@@ -600,6 +601,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
     return (
         <>
+            <PageTitle title={t($ => $.page.dashboards.title)} />
             {titolFormDialogComponent}
             {contentDialogComponent}
             {loading ? (

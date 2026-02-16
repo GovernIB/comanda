@@ -18,12 +18,14 @@ public class Monitor {
     private static int ERROR_DESC_MAX_LENGTH = 900;
     private static int ERROR_STACK_MAX_LENGTH = 3800;
 
+    @Setter
     private Long entornAppId;
     private ModulEnum modul;
     private AccioTipusEnum tipus;
     @Setter
     private LocalDateTime data;
     private String url;
+    @Setter
     private String operacio;
     @Setter
     private Long tempsResposta;

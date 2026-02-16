@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class UsuarisClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = "entornAppCache", key = "#entornAppId")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId.toString()")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,

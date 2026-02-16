@@ -16,11 +16,14 @@ import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Button, Icon } from '@mui/material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
+import PageTitle from '../components/PageTitle.tsx';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
     { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' },
     { value: 'CONFIGURACIO', labelKey: 'page.monitors.modulEnum.configuracio' },
+    { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
+    { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
 ];
 
 type TabMonitorProps = {
@@ -188,8 +191,15 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
+    const columnsMonitor = React.useMemo(() => {
+        if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
+            return columns.filter(col => col.field !== 'url');
+        }
+        return columns;
+    }, [selectedModule]);
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.monitors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.monitors.title)}
                 toolbarAdditionalRow={
@@ -197,7 +207,7 @@ const Monitors: React.FC = () => {
                     <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
                 }
                 resourceName="monitor"
-                columns={columns}
+                columns={columnsMonitor}
                 toolbarType="upper"
                 paginationActive
                 readOnly

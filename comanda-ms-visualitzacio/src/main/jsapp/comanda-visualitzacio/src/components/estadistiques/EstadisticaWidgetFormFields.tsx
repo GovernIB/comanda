@@ -70,12 +70,12 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                                                 size: 'small',
                                             }}
                                             name="dimensio"
-                                            namedQueries={[`filterByApp:${data.aplicacio.id}`]}
+                                            namedQueries={[`filterByAppGroupByNom:${data.aplicacio.id}`]}
                                         />
                                     </Box>
                                 }
                                 advancedSearchFilterBuilder={data =>
-                                    data.dimensio ? `dimensio.id : ${data.dimensio.id}` : undefined
+                                    data.dimensio ? `dimensio.nom : '${data.dimensio.description}'` : undefined
                                 }
                                 advancedSearchDataGridProps={{
                                     rowHeight: 30,
@@ -84,8 +84,7 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                                 multiple
                                 advancedSearchColumns={columnesDimensioValor}
                                 namedQueries={[
-                                    `filterByApp:${data.aplicacio.id}`,
-                                    'groupByValor',
+                                    `filterByAppGroupByValor:${data.aplicacio.id}`,
                                 ]}
                             />
                         </Grid>

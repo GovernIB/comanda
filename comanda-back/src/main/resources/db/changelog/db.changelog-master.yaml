@@ -13,6 +13,10 @@ databaseChangeLog:
 - includeAll:
     path: db/changelog/init
     errorIfMissingOrEmpty: false
+# Si es fa un includeAll de db/changelog/changes, dona error en desplegar sobre JBoss
 - includeAll:
-    path: db/changelog/changes
+    path: db/changelog/changes/0.1.0
+    errorIfMissingOrEmpty: false
+- includeAll:
+    path: db/changelog/changes/0.1.1
     errorIfMissingOrEmpty: false

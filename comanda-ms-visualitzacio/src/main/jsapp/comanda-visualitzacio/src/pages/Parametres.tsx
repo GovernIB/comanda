@@ -18,6 +18,7 @@ import { Icon, IconButton, Tooltip } from '@mui/material';
 import { ContentDetail } from '../components/ContentDetail';
 import { Cancel, CheckCircle, RemoveCircle } from '@mui/icons-material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
+import PageTitle from '../components/PageTitle.tsx';
 
 type OnRowExpansionChangeFunction = (id: string | number, expanded: boolean) => void;
 
@@ -132,18 +133,21 @@ const ParametresDetails: React.FC<any> = (props) => {
 }
 
 const ExpandCollapseButtons: React.FC<{
-  onExpandAll: () => void;
-  onCollapseAll: () => void;
-}> = ({ onExpandAll, onCollapseAll }) => (
-  <>
-    <IconButton onClick={onExpandAll}>
-      <Icon>unfold_more</Icon>
-    </IconButton>
-    <IconButton onClick={onCollapseAll}>
-      <Icon>unfold_less</Icon>
-    </IconButton>
-  </>
-);
+    onExpandAll: () => void;
+    onCollapseAll: () => void;
+}> = ({ onExpandAll, onCollapseAll }) => {
+    const { t } = useTranslation();
+    return (
+        <>
+            <IconButton onClick={onExpandAll} title={t($ => $.treeData.expandAll)}>
+                <Icon>unfold_more</Icon>
+            </IconButton>
+            <IconButton onClick={onCollapseAll} title={t($ => $.treeData.collapseAll)}>
+                <Icon>unfold_less</Icon>
+            </IconButton>
+        </>
+    );
+};
 
 const ParametresGrid: React.FC<{
   onRowExpansionChange: OnRowExpansionChangeFunction;
@@ -219,7 +223,6 @@ const ParametresGrid: React.FC<{
         resourceName="parametre"
         columns={columns}
         toolbarType="upper"
-        paginationActive
         toolbarHideCreate
         rowHideDeleteButton
         rowHideUpdateButton
@@ -258,6 +261,7 @@ const ParametresGrid: React.FC<{
 };
 
 const Parametres: React.FC = () => {
+  const { t } = useTranslation();
   const [expansionState, setExpansionState] = React.useState<DefaultRowExpansionState>({});
   const onRowExpansionChange: OnRowExpansionChangeFunction = (id, expanded) => {
     if (id === "__reset__") {
@@ -272,6 +276,7 @@ const Parametres: React.FC = () => {
 
   return (
     <GridPage disableMargins>
+      <PageTitle title={t($ => $.page.parametres.title)} />
       <ParametresGrid
         onRowExpansionChange={onRowExpansionChange}
         defaultRowExpansion={expansionState}

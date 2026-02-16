@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BaseApp } from './components/BaseApp';
+import {BaseApp, MenuEntryWithResource} from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
 import logoDark from './assets/goib_logo.png';
 import ComandaLogo from './assets/COM_DRA_COL.svg?react';
@@ -9,15 +9,47 @@ import { useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import {useResourceApiContext} from "reactlib";
 
 const APPBAR_HEIGHT = '64px';
 
-export const App: React.FC = () => {
-    const { user } = useUserContext();
+const filterEntriesByResources = (menuEntries: MenuEntryWithResource[], resourceNames?:string[]): MenuEntryWithResource[] => {
+    if (!resourceNames) return menuEntries;
+    return menuEntries
+        ?.filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName))
+        ?.map(e => {
+            if (e?.children && e?.children?.length > 0) {
+                return {
+                    ...e,
+                    children: filterEntriesByResources(e?.children, resourceNames)
+                }
+            }
+            return e
+        })
+        ?.filter(e => e?.children == null || e?.children?.length > 0 )
+}
+
+const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
+    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
+    return React.useMemo(() => {
+        if (apiIsReady) {
+            if (!menuEntries) return [];
+            const apiLinks = apiIndex?.links.getAll();
+            const resourceNames = apiLinks?.map((l: any) => l.rel);
+
+            return filterEntriesByResources(menuEntries, resourceNames)
+                .map(e => {
+                    const { resourceName, ...otherProps } = e;
+                    return otherProps;
+                });
+        } else {
+            return [];
+        }
+    }, [apiIsReady, apiIndex]);
+}
+
+export const useAppEntries = () => {
     const { t } = useTranslation();
-    const theme = useTheme();
-    const darkThemeActive = theme.palette.mode === "dark";
-    const appbarBackgroundColor = darkThemeActive ? undefined : '#fff';
     const menuSalut = {
         id: 'salut',
         title: t($ => $.menu.salut),
@@ -50,7 +82,6 @@ export const App: React.FC = () => {
         id: 'monitoritzacio',
         title: t($ => $.menu.monitoritzacio),
         icon: 'settings',
-        resourceName: 'monitor',
         children: [
             {
                 id: 'monitor',
@@ -79,7 +110,6 @@ export const App: React.FC = () => {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
         icon: 'settings',
-        resourceName: 'parametre',
         children: [
             {
                 id: 'app',
@@ -174,6 +204,20 @@ export const App: React.FC = () => {
         menuMonitoritzacio,
         menuConfiguracio,
     ];
+
+    return {
+        headerMenuEntries: useBaseAppMenuEntries(headerMenuEntries),
+        caibMenuEntries: useBaseAppMenuEntries(caibMenuEntries),
+    }
+}
+
+export const App: React.FC = () => {
+    const { user } = useUserContext();
+    const theme = useTheme();
+    const darkThemeActive = theme.palette.mode === "dark";
+    const appbarBackgroundColor = darkThemeActive ? undefined : '#fff';
+
+    const {caibMenuEntries, headerMenuEntries} = useAppEntries();
     return (
         <BaseApp
             code="com"

@@ -24,6 +24,8 @@ import Alarmes from './pages/Alarmes';
 import AlarmaConfig, { AlarmaConfigForm } from './pages/AlarmaConfig';
 import Parametres from './pages/Parametres';
 import ProtectedRoute from './components/ProtectedRoute';
+import Sitemap from './pages/Sitemap';
+import Accessibilitat from './pages/accessibilitat/Accessibilitat';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -96,6 +98,8 @@ const AppRoutes: React.FC = () => {
             <Route path="parametre">
                 <Route index element={<Parametres />} />
             </Route>
+            <Route path="sitemap" element={<Sitemap />} />
+            <Route path="accessibilitat" element={<Accessibilitat />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );

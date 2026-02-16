@@ -23,6 +23,7 @@ export const useTreeDataWithoutSwitch = (
     enabled: boolean = true,
     groupingColDefAdditionalProps?: any
 ) => {
+    const { t } = useTranslation();
     const isGroupExpandedByDefault = React.useCallback(() => {
         return expandedByDefault ?? false;
     }, [expandedByDefault]);
@@ -52,6 +53,7 @@ export const useTreeDataWithoutSwitch = (
                             onClick={() => {
                                 gridApiRef.current?.expandAllRows();
                             }}
+                            title={t($ => $.treeData.expandAll)}
                         >
                             <Icon fontSize="small">unfold_more</Icon>
                         </IconButton>
@@ -60,6 +62,7 @@ export const useTreeDataWithoutSwitch = (
                             onClick={() => {
                                 gridApiRef.current?.collapseAllRows();
                             }}
+                            title={t($ => $.treeData.collapseAll)}
                         >
                             <Icon fontSize="small">unfold_less</Icon>
                         </IconButton>
@@ -91,6 +94,19 @@ export const useTreeDataWithoutSwitch = (
     };
 };
 
+export function countLeaves(nodeId:any, tree:any) {
+    const node = tree[nodeId];
+    if (!node) return 0;
+
+    if (node?.children == null || node?.children?.length === 0) {
+        return 1; // hijo
+    }
+
+    return node.children.reduce(
+        (sum:number, childId:any) => sum + countLeaves(childId, tree),
+        0
+    );
+}
 export const useTreeData = (
     getTreeDataPath: (row: any) => string[],
     gridApiRef: React.RefObject<GridApiPro | null>,

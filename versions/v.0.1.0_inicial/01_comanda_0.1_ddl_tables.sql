@@ -35,7 +35,7 @@ CREATE TABLE com_entorn_app (
     estadistica_info_url VARCHAR2(200 CHAR),
     estadistica_url VARCHAR2(200 CHAR),
     estadistica_cron VARCHAR2(40 CHAR),
-    estadistica_auth NUMBER(1) DEFAULT 0 NOT NULL
+    estadistica_auth NUMBER(1) DEFAULT 0 NOT NULL,
     versio VARCHAR2(10 CHAR),
     jdk_version VARCHAR2(10 CHAR),
     revisio VARCHAR2(64 CHAR),

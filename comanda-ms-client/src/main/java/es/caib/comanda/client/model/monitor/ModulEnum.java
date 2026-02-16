@@ -11,5 +11,7 @@ package es.caib.comanda.client.model.monitor;
 public enum ModulEnum {
     SALUT,
     ESTADISTICA,
-    CONFIGURACIO
+    CONFIGURACIO,
+    TASCA,
+    AVIS
 }

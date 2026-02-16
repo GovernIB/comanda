@@ -33,6 +33,7 @@ import { useCalendarEvents } from '../components/calendari/UseCalendarEventsProp
 import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps } from '../components/calendari/CalendariTypes.ts';
 import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.tsx';
 import { EntornAppModel } from '../types/app.model';
+import PageTitle from '../components/PageTitle.tsx';
 
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   hasError,
@@ -418,6 +419,7 @@ const CalendariEstadistiques: React.FC = () => {
 
     return (
         <GridPage disableMargins>
+            <PageTitle title={t($ => $.menu.calendari)} />
             {/* Global loading overlay */}
             {globalLoading && (
                 <Box className="global-loading-overlay">
@@ -539,10 +541,10 @@ const CalendariEstadistiques: React.FC = () => {
                     }}
                     datesSet={(dateInfo) => {
                         // When month changes, update the current view month and year
-                        const startDate = dayjs(dateInfo.start);
-                        setCurrentViewMonth(startDate.date() == 1 ? startDate.month() : startDate.month() + 1);
-                        setCurrentViewYear(startDate.month() == 11 && startDate.date() > 1 ? startDate.year() + 1 : startDate.year());
-                        console.log('Current view month:', currentViewMonth, 'Current view year:', currentViewYear);
+                        const startDate = dayjs(dateInfo.view.currentStart);
+                        setCurrentViewMonth(startDate.month());
+                        setCurrentViewYear(startDate.year());
+                        console.log('Current view month:', startDate.month(), 'Current view year:', startDate.year());
                         console.log('Start date:', startDate);
                         console.log(dateInfo);
                     }}
