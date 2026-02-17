@@ -37,18 +37,13 @@ public final class PoliticaSalutPerDefecte {
             return EstatSalutEnum.UNKNOWN;
         }
 
-        // Amb suficient mostra al període, usam període
-        if (totalPeriode >= minimMostresPerPercentatge) {
-            return EstatHelper.calculaEstat(est.getExecucionsOkPeriode(), est.getExecucionsErrorPeriode());
-        }
-
-        // Si no hi ha suficient mostra, usam la finestra del subsistema
-        if (teFallback && (okFallback + koFallback) > 0) {
+        // Si hi ha poca mostra, usam fallback del component (si n'hi ha)
+        if (totalPeriode < minimMostresPerPercentatge && teFallback && (okFallback + koFallback) > 0) {
             return EstatHelper.calculaEstat(okFallback, koFallback);
         }
 
-        // Fallback no disponible: usam el període encara que sigui petit
-        return EstatHelper.calculaEstat(est.getExecucionsOkPeriode(), est.getExecucionsErrorPeriode());
+        // En cas contrari, usam el període (encara que sigui petit i no hi hagi fallback)
+        return EstatHelper.calculaEstat(est.getOkPeriode(), est.getErrorPeriode());
     }
 }
 

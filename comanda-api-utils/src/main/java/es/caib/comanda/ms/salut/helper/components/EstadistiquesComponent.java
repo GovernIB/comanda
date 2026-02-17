@@ -6,48 +6,43 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Estadístiques d'un subsistema.
- * - període: des de la darrera consulta (reset-on-read)
- * - total: acumulat des de l'arrencada
+ * Estadístiques d'un component (subsistema / integració / connector).
+ * Període = des de la darrera consulta (reset-on-read).
+ * Total = acumulatiu des de l'arrencada.
  */
 @Getter
 public final class EstadistiquesComponent {
 
-    private final String codi;
+    private final String componentId;
+    private final String endpoint;
 
-    // Període (darrer interval consultat)
-    private final long execucionsOkPeriode;
-    private final long execucionsErrorPeriode;
+    // Període
+    private final long okPeriode;
+    private final long errorPeriode;
     private final double tempsMigMsPeriode;
 
-    // Totals (des de l'arrencada)
-    private final long execucionsOkTotal;
-    private final long execucionsErrorTotal;
+    // Totals
+    private final long okTotal;
+    private final long errorTotal;
     private final double tempsMigMsTotal;
 
-    // Marca temporal de quan s'ha generat l'snapshot (informatiu)
     private final Instant instantSnapshot;
 
-    public EstadistiquesComponent(
-            String codi,
-            long execucionsOkPeriode,
-            long execucionsErrorPeriode,
-            double tempsMigMsPeriode,
-            long execucionsOkTotal,
-            long execucionsErrorTotal,
-            double tempsMigMsTotal,
-            Instant instantSnapshot
-    ) {
-        this.codi = Objects.requireNonNull(codi);
-        this.execucionsOkPeriode = execucionsOkPeriode;
-        this.execucionsErrorPeriode = execucionsErrorPeriode;
+    public EstadistiquesComponent(String componentId,
+                                  String endpoint,
+                                  long okPeriode, long errorPeriode, double tempsMigMsPeriode,
+                                  long okTotal, long errorTotal, double tempsMigMsTotal,
+                                  Instant instantSnapshot) {
+        this.componentId = Objects.requireNonNull(componentId);
+        this.endpoint = endpoint;
+        this.okPeriode = okPeriode;
+        this.errorPeriode = errorPeriode;
         this.tempsMigMsPeriode = tempsMigMsPeriode;
-        this.execucionsOkTotal = execucionsOkTotal;
-        this.execucionsErrorTotal = execucionsErrorTotal;
+        this.okTotal = okTotal;
+        this.errorTotal = errorTotal;
         this.tempsMigMsTotal = tempsMigMsTotal;
         this.instantSnapshot = Objects.requireNonNull(instantSnapshot);
     }
 
-    public long getTotalPeriode() { return execucionsOkPeriode + execucionsErrorPeriode; }
-    public long getTotalTotal() { return execucionsOkTotal + execucionsErrorTotal; }
+    public long getTotalPeriode() { return okPeriode + errorPeriode; }
 }

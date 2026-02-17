@@ -7,6 +7,7 @@ import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.model.v1.salut.InformacioSistema;
 import es.caib.comanda.model.v1.salut.Manual;
 import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.model.v1.salut.SubsistemaInfo;
 import es.caib.comanda.ms.salut.helper.MonitorHelper;
 import es.caib.comanda.ms.salut.helper.SalutHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,6 +48,9 @@ import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME
 @SecurityScheme(type = SecuritySchemeType.HTTP, name = SECURITY_NAME, scheme = BASIC_SECURITY_SCHEME)
 public class SalutApiV1Controller {
 
+//    @PersistenceContext
+//    private EntityManager em;
+
     @GetMapping("/info")
     @PreAuthorize("hasRole(T(es.caib.comanda.base.config.BaseConfig).ROLE_WEBSERVICE)")
     @SecurityRequirement(name = SECURITY_NAME)
@@ -61,6 +65,17 @@ public class SalutApiV1Controller {
     public AppInfo salutInfo(HttpServletRequest request) throws java.io.IOException {
         SalutHelper.BuildInfo buildInfo = SalutHelper.getBuildInfo();
 
+        List<SubsistemaInfo> subsistemes = List.of(
+                SubsistemaInfo.builder().codi("CON").nom("Configuració").build(),
+                SubsistemaInfo.builder().codi("SAL").nom("Salut").build(),
+                SubsistemaInfo.builder().codi("EST").nom("Estadístiques").build(),
+                SubsistemaInfo.builder().codi("MON").nom("Monitor").build(),
+                SubsistemaInfo.builder().codi("AVI").nom("Avisos").build(),
+                SubsistemaInfo.builder().codi("TAS").nom("Tasques").build(),
+                SubsistemaInfo.builder().codi("ALA").nom("Alarmes").build(),
+                SubsistemaInfo.builder().codi("ACL").nom("Acl").build()
+        );
+        
         return AppInfo.builder()
                 .codi("COM")
                 .nom("Comanda")
@@ -71,10 +86,9 @@ public class SalutApiV1Controller {
                 .versioJboss(MonitorHelper.getApplicationServerInfo())
                 .contexts(getContexts(getBaseUrl(request)))
                 .integracions(Collections.emptyList())
-                .subsistemes(Collections.emptyList())
+                .subsistemes(subsistemes)
                 .build();
 
-        // TODO: Afegir subsistemes (Salut, Estadistiques, Monitor, Avisos, Tasques i Alarmes)
     }
 
     private List<ContextInfo> getContexts(String baseUrl) {
@@ -118,11 +132,12 @@ public class SalutApiV1Controller {
             @DateTimeFormat(iso = DATE_TIME) @Parameter(name = "dataPeriode", description = "Data mínima de la que es demana informació per període", required = false) @RequestParam(required = false) OffsetDateTime dataPeriode,
             @DateTimeFormat(iso = DATE_TIME) @Parameter(name = "dataTotal", description = "Data mínima de la que demana informació per totals", required = false) @RequestParam(required = false) OffsetDateTime dataTotal) throws java.io.IOException {
 
-        InformacioSistema info = null;
+        long startTime = System.currentTimeMillis();
+        InformacioSistema infoSistema = null;
         try {
             es.caib.comanda.model.server.monitoring.InformacioSistema infoServer = MonitorHelper.getInfoSistema();
             if (infoServer != null) {
-                info = InformacioSistema.builder()
+                infoSistema = InformacioSistema.builder()
                         .processadors(infoServer.getProcessadors())
                         .carregaSistema(infoServer.getCarregaSistema())
                         .cpuSistema(infoServer.getCpuSistema())
@@ -139,14 +154,16 @@ public class SalutApiV1Controller {
             // Ignorar errors en obtenir info sistema
         }
         SalutHelper.BuildInfo buildInfo = SalutHelper.getBuildInfo();
+//        Integer latenciaDb = measureDbLatencyMs();
+        Integer latencia = (int) (System.currentTimeMillis() - startTime);
 
         return SalutInfo.builder()
                 .codi("COM")
                 .data(buildInfo.getBuildDate())
                 .versio(buildInfo.getVersion())
-                .estatGlobal(EstatSalut.builder().estat(EstatSalutEnum.UP).build())
-                .estatBaseDeDades(EstatSalut.builder().estat(EstatSalutEnum.UP).build())
-                .informacioSistema(info)
+                .estatGlobal(EstatSalut.builder().estat(EstatSalutEnum.UP).latencia(latencia).build())
+                .estatBaseDeDades(EstatSalut.builder().estat(EstatSalutEnum.UP)/*.latencia(latenciaDb)*/.build())
+                .informacioSistema(infoSistema)
                 .integracions(Collections.emptyList())
                 .missatges(Collections.emptyList())
                 .subsistemes(Collections.emptyList())
@@ -154,5 +171,30 @@ public class SalutApiV1Controller {
 
         // TODO: Afegir informació de subsistemes, i alarmes (com a missatges)
     }
+
+//    public Integer measureDbLatencyMs() {
+//
+//        try {
+//            Session session = em.unwrap(Session.class);
+//
+//            final String[] sql = new String[1];
+//
+//            // 1) Detectar producte de BBDD amb JDBC
+//            session.doWork(conn -> {
+//                String product = conn.getMetaData().getDatabaseProductName().toLowerCase();
+//                sql[0] = product.contains("oracle") ? "SELECT 1 FROM DUAL" : "SELECT 1";
+//            });
+//
+//            // 2) Mesurar query
+//            long start = System.currentTimeMillis();
+//            em.createNativeQuery(sql[0])
+//                    .setHint("org.hibernate.timeout", 2) // segons
+//                    .getSingleResult();
+//
+//            return (int) (System.currentTimeMillis() - start);
+//        } catch (Exception e) {
+//            return null;
+//        }
+//    }
 
 }

@@ -86,9 +86,9 @@ versio 1.3
 
 [Helpers	39](#helpers)
 
-[Model de dades internes	44](#model-de-dades-internes)
+[Model de dades internes	44](#heading=h.uyu5fqwormsc)
 
-[Exemples d’ús	45](#exemples-d’ús)
+[Exemples d’ús	45](#heading=h.iuthxhohjluc)
 
 [**7\. Estadístiques	46**](#estadístiques)
 
@@ -102,7 +102,7 @@ versio 1.3
 
 [Helpers	54](#helpers-1)
 
-[Exemples d’ús	55](#exemples-d’ús-1)
+[Exemples d’ús	55](#exemples-d’ús)
 
 [**8\. Logs	57**](#logs)
 
@@ -110,7 +110,7 @@ versio 1.3
 
 [Helpers	60](#helpers-2)
 
-[Exemples d’ús	63](#exemples-d’ús-2)
+[Exemples d’ús	63](#exemples-d’ús-1)
 
 [**Annex 1 \- Servers amb Spring	65**](#annex-1---servers-amb-spring)
 
@@ -873,7 +873,10 @@ La llibreria de comanda, al mòdul comanda-api-utils, ofereix unes classes d’a
 * es.caib.comanda.ms.salut.helper.EstatHelper  
 * es.caib.comanda.ms.salut.helper.MonitorHelper  
 * es.caib.comanda.ms.salut.helper.SalutHelper  
+* es.caib.comanda.ms.salut.helper.SalutComponentsHelper  
 * es.caib.comanda.ms.salut.helper.IntegracioApp
+
+  ### **EstatHelper**
 
 La classe **EstatHelper** proporciona funcionalitats de suport per al càlcul de l’estat de les integracions i subsistemes. 
 
@@ -905,6 +908,15 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Paràmetres** | **estat1**: Primer estat a comparar **estat2**: Segon estat a comparar |
 | **Resposta** | EstatSalutEnum |
 | **Ús principal** | Agrupar estats de diversos serveis i obtenir una visió agregada del seu comportament |
+
+### **Exemples d’ús**
+
+Calcular estats
+
+| EstatSalutEnum estat \= EstatHelper.calculaEstat(peticionsOk, peticionsError); EstatSalutEnum estat \= EstatHelper.*calculaEstat*(errorRatePct); |
+| :---- |
+
+### **MonitorHelper**
 
 La classe **MonitorHelper** proporciona un conjunt complet de funcionalitats per obtenir informació de salut i rendiment del sistema, incloent memòria, CPU, disc, JVM i servidor d’aplicacions. S’utilitza per construir la resposta del servei /salut i per generar objectes InformacioSistema.
 
@@ -982,34 +994,7 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Resposta** | String |
 | **Ús principal** | Mostrar informació d’entorn en diagnòstics. |
 
-La classe **SalutHelper** proporciona un funcionalitats de suport per obtenir informació de la compilació de l’aplicació. 
-
-A continuació es detallen els mètodes estàtics d’ajuda:
-
-| getBuildInfo |  |
-| ----- | :---- |
-| **Mètode** | BuildInfo **getBuildInfo**() |
-| **Descripció** | Genera informació de la data de compilació i del número de revisió de git |
-| **Comportament** | Recupera la informació de la data de compilació i del git del fitxer git.properties \*\* Aquest mètode només funcionarà si s’afegeix el git-commit-id-maven-plugin al pom pare:**\<build\>   \<plugins\>     \<plugin\>        \<groupId\>io.github.git-commit-id\</groupId\>          \<artifactId\>git-commit-id-maven-plugin\</artifactId\>        \<version\>7.0.0\</version\>        \<executions\>          \<execution\>            \<id\>get-the-git-infos\</id\>            \<goals\>              \<goal\>revision\</goal\>            \</goals\>          \</execution\>        \</executions\>        \<configuration\>          \<generateGitPropertiesFile\>true\</generateGitPropertiesFile\>          \<gitPropertiesPath\>${project.build.outputDirectory}\</gitPropertiesPath\>          \<\!-- Opcional: només incloure propietats que necessites \--\>          \<includeOnlyProperties\>            \<includeOnlyProperty\>git.commit.id\</includeOnlyProperty\>            \<includeOnlyProperty\>git.build.time\</includeOnlyProperty\>            \<includeOnlyProperty\>git.build.version\</includeOnlyProperty\>         \</includeOnlyProperties\>        \</configuration\>      \</plugin\>    \</plugins\>  \</build\>** |
-| **Resposta** | BuildInfo |
-| **Ús principal** | Mostrar informació de la revisió desplegada. |
-
-La classe **IntegracioApp** és un enumerat amb el codi i nom de múltiples aplicacions amb les que potser es fa alguna integració.  
-Aquest enumerat serveix per disposar dels codis i noms d’aplicacions, de manera que, a ser possible, totes les aplicacions enviïn els mateixos codis i noms en la informació de les integracions.
-
-Si es tracta d’una aplicació registrada a la Caib, els codis haurien de ser els codis de 3 caràcters assignats a la aplicació per la Caib.
-
-Els mètodes per obtenir el codi i nom de l’aplicació són els següents:
-
-* getCodi(): retorna el codi de l’aplicació.  
-* getNom(): retorna el nom de l’aplicació.
-
-Exemple d’ús:
-
-| String codiNotib \= IntegracioApp.NOT.getCodi(); String nomNotib \= IntegracioApp.NOT.*getNom*(); IntegracioInfo intNotib \= new IntegracioInfo().codi(codiNotib).nom(nomNotib); |
-| :---- |
-
-### **Model de dades internes** {#model-de-dades-internes}
+#### **Model de dades internes**
 
 | MemoryUsage |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -1060,16 +1045,226 @@ Aquest model disposa de mètodes per retornar les dades en formats llegibles.
 | gcCount | Long | 0..1 | Nombre total de col·leccions de Garbage Collector realitzades per tots els GC de la JVM |
 | gcTime | Long | 0..1 | Temps total (en mil·lisegons) dedicat pel Garbage Collector |
 
-### **Exemples d’ús** {#exemples-d’ús}
-
-Calcular estats
-
-| EstatSalutEnum estat \= EstatHelper.calculaEstat(peticionsOk, peticionsError); EstatSalutEnum estat \= EstatHelper.*calculaEstat*(errorRatePct); |
-| :---- |
+#### **Exemples d’ús**
 
 Obtenir informació del sistema per Comanda
 
-| SalutInfo salutInfo \= SalutInfo.*builder*()        .codi("APP")        .versio(versio)        .data(OffsetDateTime.*now*())        .estatGlobal(estatSalut)        .estatBaseDeDades(salutDatabase)        .integracions(integracions)        .subsistemes(subsistemes)        .missatges(missatges)        .informacioSistema(MonitorHelper.*getInfoSistema*())        .build(); |
+| SalutInfo salutInfo \= SalutInfo.builder()        .codi("APP")        .versio(versio)        .data(OffsetDateTime.now())        .estatGlobal(estatSalut)        .estatBaseDeDades(salutDatabase)        .integracions(integracions)        .subsistemes(subsistemes)        .missatges(missatges)        .informacioSistema(MonitorHelper.getInfoSistema())        .build(); AppInfo appInfo \= AppInfo.builder()         .codi("APP")         .nom("Aplicacio")         .data(buildInfo.getBuildDate())         .versio(buildInfo.getVersion())         .revisio(buildInfo.getCommitId())         .jdkVersion(buildInfo.getBuildJDK())         .versioJboss(MonitorHelper.getApplicationServerInfo())         .contexts(getContexts(getBaseUrl(request)))         .integracions(Collections.emptyList())         .subsistemes(Collections.emptyList())         .build(); |
+| :---- |
+
+### **SalutHelper**
+
+La classe **SalutHelper** proporciona un funcionalitats de suport per obtenir informació de la compilació de l’aplicació. 
+
+A continuació es detallen els mètodes estàtics d’ajuda:
+
+| getBuildInfo |  |
+| ----- | :---- |
+| **Mètode** | BuildInfo **getBuildInfo**() |
+| **Descripció** | Genera informació de la data de compilació i del número de revisió de git |
+| **Comportament** | Recupera la informació de la data de compilació i del git del fitxer git.properties \*\* Aquest mètode només funcionarà si s’afegeix el git-commit-id-maven-plugin al pom pare:**\<build\>   \<plugins\>     \<plugin\>        \<groupId\>io.github.git-commit-id\</groupId\>          \<artifactId\>git-commit-id-maven-plugin\</artifactId\>        \<version\>7.0.0\</version\>        \<executions\>          \<execution\>            \<id\>get-the-git-infos\</id\>            \<goals\>              \<goal\>revision\</goal\>            \</goals\>          \</execution\>        \</executions\>        \<configuration\>          \<generateGitPropertiesFile\>true\</generateGitPropertiesFile\>          \<gitPropertiesPath\>${project.build.outputDirectory}\</gitPropertiesPath\>          \<\!-- Opcional: només incloure propietats que necessites \--\>          \<includeOnlyProperties\>            \<includeOnlyProperty\>git.commit.id\</includeOnlyProperty\>            \<includeOnlyProperty\>git.build.time\</includeOnlyProperty\>            \<includeOnlyProperty\>git.build.version\</includeOnlyProperty\>         \</includeOnlyProperties\>        \</configuration\>      \</plugin\>    \</plugins\>  \</build\>** |
+| **Resposta** | BuildInfo |
+| **Ús principal** | Mostrar informació de la revisió desplegada. |
+
+#### **Exemples d’ús**
+
+| SalutHelper.BuildInfo buildInfo \= SalutHelper.getBuildInfo(); return AppInfo.builder()         .codi("APP")         .nom("Aplicacio")         .data(buildInfo.getBuildDate())         .versio(buildInfo.getVersion())         .revisio(buildInfo.getCommitId())         .jdkVersion(buildInfo.getBuildJDK())         .versioJboss(MonitorHelper.getApplicationServerInfo())         .contexts(getContexts(getBaseUrl(request)))         .integracions(Collections.emptyList())         .subsistemes(Collections.emptyList())         .build(); |
+| :---- |
+
+### **SalutComponentsHelper**
+
+La classe **SalutComponentsHelper** permet **monitoritzar l’estat de salut** de components d’una aplicació (subsistemes interns, integracions externes, connectors, etc.) registrant:
+
+* **Execucions correctes** (OK) amb **latència** (ms)  
+* **Execucions amb error** (KO)  
+* Estadístiques **per període** (des de la darrera consulta) i **totals** (des de l’arrencada)  
+* Càlcul d’**estat de salut** per component segons estats calculats per EstatHelper (UP/WARN/DEGRADED/ERROR/DOWN)  
+* Càlcul d’**estat global** amb tractament diferenciat de components **crítics** i **no crítics**  
+* **Fallback per component** (finestra de darreres N peticions) quan hi ha poca mostra en el període  
+* **Darrer estat**: si en un període no hi ha peticions, es retorna l’últim estat calculat
+
+#### **Funcionalitats bàsiques**
+
+Bàsicament es pot utilitzar per mantenir informació de les peticions realitzades a cada component, i generar la informació per emplenar la informació de integracions i subsistemes que s’envien a Comanda.
+
+Característiques principals:
+
+* Registre d’èxits i errors per component, amb latència en ms en els èxits.  
+* Finestra de fallback per component per evitar canvis bruscos d’estat sense activitat recent.  
+* Possibilitat d’inicialitzar components amb o sense endpoint associat.  
+* Càlcul d’estat per component segons una política configurable i càlcul d’estat global tenint en compte si un component és crític.  
+* Conversió directa a IntegracioSalut i SubsistemaSalut del model servidor (es.caib.comanda.model.server.monitoring).Funciona tant amb components definits de forma estàtica com **dinàmica**, ja que la clau és un String componentId.
+
+#### **Dependències i mòduls**
+
+La llibreria es distribueix en dues classes per gestionar la informació de les peticions, una que guarda la informació en memòria, i una altre que la guarda utilitzant micrometer (exporta mètriques a Micrometer mitjançant tags: component=\<componentId\>).
+
+La dependència és opcional per evitar errors en projectes que no disposin de Micrometer.
+
+Sense dependències de Micrometer no es pot utilitzar la classe *MonitorComponentsMicrometer*, ja que es produirà un error en runtime.
+
+Ús recomanat: 
+
+Si el projecte no té Micrometer:
+
+| `// Monitor en memòria (fallback de 20 peticions per component) MonitorComponentsMemoria monitor = new MonitorComponentsMemoria(20);` |
+| :---- |
+
+Si el projecte sí té Micrometer
+
+| `// Core per estadístiques i fallback MonitorComponentsMemoria core = new MonitorComponentsMemoria(20); // Decorador micrometer: prefix de mètrica "integracio" MonitorComponentsMicrometer monitor = new MonitorComponentsMicrometer(registry, "integracio", core);` |
+| :---- |
+
+#### **Arquitectura de la solució**
+
+* Registre d’operacions. En el codi de l’aplicació s’han de realitzar crides als següents mètodes per contabilitzar les peticions que es realitzen correctament i les que donen error:  
+  * registraExit(componentId, duracioMs) quan una operació finalitza correctament.  
+  * registraError(componentId) quan una operació falla  
+* Estadístiques  
+  * Període: acumulació des de l’última consulta. Al obtenir l’informe el període es reseteja.  
+  * Totals: acumulació des de l’arrencada (no es reseteja).  
+* Càlcul d’estat del component (política)  
+  * Si el període té poca mostra, s’usa un fallback per component basat en una finestra circular de les darreres N peticions (sempre s’utilitzaran un mínim de N peticions per calcular l’estat).  
+  * Si el període té 0 peticions, es retorna el darrer estat calculat, o UNKNOWN si encara no s’ha realitzat cap petició.  
+    La política usa els llindars de EstatHelper:  
+    * DOWN: 100% errors  
+    * ERROR: \> 50% errors  
+    * DEGRADED: \> 20% errors  
+    * UP: \<= 10% errors  
+    * WARN: la resta  
+* Estat global. L’estat global es calcula combinant els estats individuals:  
+  * Si hi ha ERROR o DOWN en components crítics → ERROR global  
+  * Si hi ha DEGRADED en crítics → DEGRADED global  
+  * Qualsevol DEGRADED/ERROR/DOWN en no crítics es tracta com WARN  
+  * Si només hi ha UP → UP global  
+  * Si no hi ha informació → UNKNOWN
+
+#### **Classes disponibles**
+
+* es.caib.comanda.ms.salut.helper.components.MonitorComponentsMemoria  
+  Aquesta classe és l’encarregada de:  
+  * Registrar les operacions i estadístiques (període i total)  
+  * Mantenir el fallback per component (finestra de darreres N peticions)  
+* es.caib.comanda.ms.salut.helper.components.MonitorComponentsMicrometer  
+  Es tracta d’un decorador de MonitorComponentsMemoria, que utilitza la primera per mantenir informació de les peticions per període, i que utilitza micrometer per mantenir la informació dels totals. Exporta:  
+  * prefix.ok com a Timer amb tag component=\<id\>  
+  * prefix.errors com a Counter amb tag component=\<id\>  
+* es.caib.comanda.ms.salut.helper.components.PoliticaSalutPerDefecte. Realitza el càlcul d’estat per component amb els llindars d’EstatHelper  
+* es.caib.comanda.ms.salut.helper.components.CalculSalutGlobal: Realitza el càlcul de l’estat global a partir d’estats individuals i “crítics/no crítics”  
+* es.caib.comanda.ms.salut.helper.components.SalutComponentsHelper. Classe principal, encarregada de;  
+  * Generar l’informe complet (estadístiques \+ estats \+ global)  
+  * Gestionar darrerEstat (període=0 → retorna darrer estat)  
+  * Convertir informació de les peticions a List\<IntegracioInfo\> o List\<SubsistemaSalut\> per emplenar la informació de SalutInfo.
+
+#### **API bàsica**
+
+Constructors més habituals:
+
+* new SalutComponentsHelper(monitor, esCriticFunc)  
+* new SalutComponentsHelper(monitor, esCriticFunc, Collection\<String\>componentsInicials)  
+* new SalutComponentsHelper(monitor, esCriticFunc, Map\<String,String\> componentsInicialsAmbEndpoint) on la clau és l’ID del component i el valor el seu endpoint.
+
+
+Registre d’activitat:
+
+* registraExit(String componentId, long duracioMs)  
+* registraError(String componentId)
+
+
+Obtenció d’informe: 
+
+* InformeSalutComponents obtenInforme()
+
+  L’informe exposa: getEstadistiques(), getEstats() i getEstatGlobal().
+
+  Disposa de conversions: toIntegracionsSalut() i toSubsistemesSalut().
+
+
+A continuació es detallen els princiopals mètodes d’ajuda:
+
+| SalutComponentsHelper.registraExit() |  |
+| ----- | :---- |
+| **Mètode** | void **registraExit**(String componentId, long duracioMs) |
+| **Descripció** | Registra una execució correcta amb latència |
+| **Comportament** | Incrementa OK del període i total Acumula latència  Afegeix true al fallback del component |
+| **Paràmetres** | **componentId**: Identificador del component que ha realitzat l’operació**duracioMs**: Duració en milisegons de la operació realitzada |
+| **Resposta** | void |
+| **Ús principal** | Instrumentar operacions OK (crides a integracions, processos interns) |
+
+| SalutComponentsHelper.registraError() |  |
+| ----- | :---- |
+| **Mètode** | void **registraError**(String componentId) |
+| **Descripció** | Registra una execució amb error |
+| **Comportament** | Incrementa KO del període i total Afegeix false al fallback del component |
+| **Paràmetres** | **componentId**: Identificador del component que ha realitzat l’operació |
+| **Resposta** | void |
+| **Ús principal** | Instrumentar operacions amb error en integracions o subsistemes |
+
+| SalutComponentsHelper.obtenInforme() |  |
+| ----- | :---- |
+| **Mètode** | InformeSalutComponents **obtenInforme**() |
+| **Descripció** | Genera informe complet de l’estat i peticions dels components |
+| **Comportament** | Obté snapshot Calcula l’estat per component (període=0 → darrer estat) Calcula l’estat global |
+| **Resposta** | InformeSalutComponents |
+| **Ús principal** | Obtenció de l’estat de salut complet amb: estadístiques per component (període i totals) estat per component estat global |
+
+| InformeSalutComponents.toIntegracionsSalut() |  |
+| ----- | :---- |
+| **Mètode** | List\<IntegracioSalut\> **toIntegracionsSalut**() |
+| **Descripció** | Converteix l’informe de salut en una llista de IntegracioSalut |
+| **Resposta** | List\<IntegracioSalut\> |
+| **Ús principal** | Emplenar el camp integracions de SalutInfo |
+
+| InformeSalutComponents.toSubsistemesSalut() |  |
+| ----- | :---- |
+| **Mètode** | List\<SubsistemaSalut\> **toSubsistemesSalut**() |
+| **Descripció** | Converteix l’informe de salut en una llista de SubsistemaSalut |
+| **Resposta** | List\<SubsistemaSalut\> |
+| **Ús principal** | Emplenar el camp subsistemes de SalutInfo |
+
+#### **Model de dades internes:**
+
+| InformeSalutComponents |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| instantConsulta | Instant | 1 | Instant en que es realitza la consulta per obtenir l’informe |
+| estadistiques | Map\<String, EstadistiquesComponent\> | 1 | Informació de les peticions realitzades per component |
+| estats | Map\<String, EstatSalutEnum\> | 1 | Estat en que es troba cada component |
+| estatGlobal | EstatSalutEnum | 1 | Estat global del conjunt de components |
+
+| EstadistiquesComponent |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| componentId | String | 1 | Memòria total |
+| endpoint | String | 0..1 | Url on realitza les peticions el component (en cas de integracions) |
+| okPeriode | Long | 1 | Peticions realitzades correctament des de la darrera consulta |
+| errorPeriode | Long | 1 | Peticions realitzades amb error des de la darrera consulta |
+| tempsMigMsPeriode | Double | 1 | Duració mitjana de les peticions realitzades correctament des de la darrera consulta |
+| okTotal | Long | 1 | Peticions realitzades correctament des de l’arrencada del sistema |
+| errorTotal | Long | 1 | Peticions realitzades amb error des de l’arrencada del sistema |
+| tempsMigMsTotal | Double | 1 | Duració mitjana de les peticions realitzades correctament des de l’arrencada del sistema |
+| instantSnapshot | Instant | 0..1 | Moment de generació de l’snapshot del període i total |
+
+#### **Exemples d’ús**
+
+| // Monitor en memòria (fallback de 20 peticions per component) // Política amb minim de 20 mostres per confiar en el període // 1\. Inicialitzar l’element que guarda informació de les peticions// En aquest exemple son els components de tipus integració.  // Es faria el mateix per els components de tipus subsistema. // Monitor en memòria (fallback de 20 peticions per component) MonitorComponentsMemoria monitor \= new MonitorComponentsMemoria(20); // Determinar quins components són crítics Function\<String, Boolean\> esCritic \= componentId \-\>                 componentId.equals("SIR") || componentId.equals("REGISTRE"); // Servei que genera l'informe complet SalutComponentsHelper integr \= new SalutComponentsHelper(monitor, esCritic); // 2\. En cada component anar registrant el resultat de les operacions integr.registraExit("SIR", 120); integr.registraError("SIR"); integr.registraExit("GDO", 80); // 3\. Al rebre una petició per generar la informació de Salut, generar informe InformeSalutComponents informeIntegracions \= integr.obtenInforme(); SalutInfo salutInfo \= SalutInfo.builder()        .codi("APP")        .versio(versio)        .data(OffsetDateTime.now())        .estatGlobal(informeSubsistemes.getEstatGlobal())        .estatBaseDeDades(salutDatabase)        .integracions(informeIntegracions.toIntegracionsSalut())        .subsistemes(informeSubsistemes.toSubsistemesSalut())        .missatges(missatges)        .informacioSistema(MonitorHelper.getInfoSistema())        .build();  |
+| :---- |
+
+### **IntegracioApp**
+
+La classe **IntegracioApp** és un enumerat amb el codi i nom de múltiples aplicacions amb les que potser es fa alguna integració.  
+Aquest enumerat serveix per disposar dels codis i noms d’aplicacions, de manera que, a ser possible, totes les aplicacions enviïn els mateixos codis i noms en la informació de les integracions.
+
+Si es tracta d’una aplicació registrada a la Caib, els codis haurien de ser els codis de 3 caràcters assignats a la aplicació per la Caib.
+
+Els mètodes per obtenir el codi i nom de l’aplicació són els següents:
+
+* getCodi(): retorna el codi de l’aplicació.  
+* getNom(): retorna el nom de l’aplicació.
+
+Exemple d’ús:
+
+| `String codiNotib = IntegracioApp.NOT.getCodi(); String nomNotib = IntegracioApp.NOT.getNom(); IntegracioInfo intNotib = new IntegracioInfo().codi(codiNotib).nom(nomNotib);` |
 | :---- |
 
 7. # **Estadístiques** {#estadístiques}
@@ -1284,7 +1479,7 @@ La classe EstadisticaHelper proporciona funcionalitats de suport per a la conver
 | **Resposta** | RegistreEstadistic |
 | **Ús principal** | Generar registres estadístics quan les dades ja estan en format mapa |
 
-### **Exemples d’ús** {#exemples-d’ús-1}
+### **Exemples d’ús** {#exemples-d’ús}
 
 Exemples convertint entitats a RegistreEstadistic:
 
@@ -1445,7 +1640,7 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Resposta** | byte\[\] |
 | **Ús principal** | Reduir la mida de fitxers de log i evitar problemes d’encoding en la descàrrega |
 
-### **Exemples d’ús** {#exemples-d’ús-2}
+### **Exemples d’ús** {#exemples-d’ús-1}
 
 | public List\<FitxerInfo\> llistarFitxers() {    var directoriPath \= configHelper.getConfig("es.caib.notib.plugin.fitxer.logs.path");    if (Strings.*isNullOrEmpty*(directoriPath)) {        return new ArrayList\<\>();    }    return LogHelper.llistarFitxers(directoriPath, "notib"); } |
 | :---- |

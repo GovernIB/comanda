@@ -38,5 +38,4 @@ final class FinestraBooleanaCircular {
     synchronized boolean esBuida() { return mida == 0; }
     synchronized long getOk() { return ok; }
     synchronized long getKo() { return ko; }
-    synchronized int getCapacitat() { return buffer.length; }
 }

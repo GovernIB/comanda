@@ -2,31 +2,30 @@ package es.caib.comanda.ms.salut.helper.components;
 
 import es.caib.comanda.model.server.monitoring.EstatSalutEnum;
 
-import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Utilitats per calcular estat global.
+ * Càlcul d'estat global amb regla de crítics/no crítics (com el vostre codi).
  */
 public final class CalculSalutGlobal {
 
     private CalculSalutGlobal() {}
 
-    public static <K extends Enum<K>> EstatSalutEnum calculaEstatGlobal(
-            Map<K, EstatSalutEnum> estatsPerSubsistema,
-            Function<K, Boolean> esCriticFunc
+    public static EstatSalutEnum calculaEstatGlobal(
+            Map<String, EstatSalutEnum> estatsPerComponent,
+            Function<String, Boolean> esCriticFunc
     ) {
-        Objects.requireNonNull(estatsPerSubsistema);
+        Objects.requireNonNull(estatsPerComponent);
         Objects.requireNonNull(esCriticFunc);
 
         boolean hiHaDown = false, hiHaError = false, hiHaDegraded = false, hiHaWarn = false, hiHaUp = false;
 
-        for (Map.Entry<K, EstatSalutEnum> e : estatsPerSubsistema.entrySet()) {
-            K subsistema = e.getKey();
+        for (Map.Entry<String, EstatSalutEnum> e : estatsPerComponent.entrySet()) {
+            String id = e.getKey();
             EstatSalutEnum estat = e.getValue() == null ? EstatSalutEnum.UNKNOWN : e.getValue();
-            boolean esCritic = Boolean.TRUE.equals(esCriticFunc.apply(subsistema));
+            boolean esCritic = Boolean.TRUE.equals(esCriticFunc.apply(id));
 
             switch (estat) {
                 case UP:
@@ -48,24 +47,15 @@ public final class CalculSalutGlobal {
                     else hiHaWarn = true;
                     break;
                 default:
-                    // UNKNOWN: no modifica
+                    // UNKNOWN: ignoram
             }
         }
 
-        // Igual que al teu codi: ERROR o DOWN crític => ERROR global (DOWN global el tenies comentat)
+        // Com al vostre codi: DOWN/ERROR crític => ERROR global
         if (hiHaError || hiHaDown) return EstatSalutEnum.ERROR;
         if (hiHaDegraded) return EstatSalutEnum.DEGRADED;
         if (hiHaWarn) return EstatSalutEnum.WARN;
         if (hiHaUp) return EstatSalutEnum.UP;
         return EstatSalutEnum.UNKNOWN;
-    }
-
-    /**
-     * Helper per inicialitzar un EnumMap amb UNKNOWN (opcional).
-     */
-    public static <K extends Enum<K>> Map<K, EstatSalutEnum> mapaEstatsUnknown(Class<K> tipusEnum) {
-        Map<K, EstatSalutEnum> m = new EnumMap<>(tipusEnum);
-        for (K k : tipusEnum.getEnumConstants()) m.put(k, EstatSalutEnum.UNKNOWN);
-        return m;
     }
 }

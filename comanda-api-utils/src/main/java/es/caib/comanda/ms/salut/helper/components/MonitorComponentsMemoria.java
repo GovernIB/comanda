@@ -1,131 +1,153 @@
 package es.caib.comanda.ms.salut.helper.components;
 
+import lombok.Getter;
+
 import java.time.Clock;
 import java.time.Instant;
-import java.util.EnumMap;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * Monitor genèric en memòria (sense micrometer).
- * - Període = des de darrera consulta (reset-on-read)
- * - Total = des d'arrencada (acumulatiu)
- * - Fallback per subsistema amb finestra circular de N peticions
+ * Monitor en memòria per components dinàmics (String componentId).
+ *
+ * - registraExit(componentId, duracioMs)
+ * - registraError(componentId)
+ * - obtenSnapshot(): retorna estadístiques per component i reseteja el període (reset-on-read)
+ * - obtenFallback(componentId): ok/ko de la finestra del component
  */
-public final class MonitorComponentsMemoria<K extends Enum<K>> {
+public final class MonitorComponentsMemoria {
 
-    private final Class<K> tipusEnum;
     private final Clock rellotge;
-    private final Map<K, Entrada> entrades;
-
+    @Getter
     private final int midaFinestraFallback;
 
-    public MonitorComponentsMemoria(Class<K> tipusEnum, int midaFinestraFallback) {
-        this(tipusEnum, midaFinestraFallback, Clock.systemUTC());
+    // Entrades per component (creació lazy)
+    private final ConcurrentHashMap<String, Entrada> entrades = new ConcurrentHashMap<>();
+
+    public MonitorComponentsMemoria(int midaFinestraFallback) {
+        this(midaFinestraFallback, Clock.systemUTC());
     }
 
-    public MonitorComponentsMemoria(Class<K> tipusEnum, int midaFinestraFallback, Clock rellotge) {
-        this.tipusEnum = Objects.requireNonNull(tipusEnum);
-        this.rellotge = Objects.requireNonNull(rellotge);
-
+    public MonitorComponentsMemoria(int midaFinestraFallback, Clock rellotge) {
         if (midaFinestraFallback <= 0) throw new IllegalArgumentException("midaFinestraFallback ha de ser > 0");
         this.midaFinestraFallback = midaFinestraFallback;
-
-        this.entrades = new ConcurrentHashMap<>();
-        for (K k : tipusEnum.getEnumConstants()) {
-            entrades.put(k, new Entrada(midaFinestraFallback));
-        }
+        this.rellotge = Objects.requireNonNull(rellotge);
     }
 
-    /**
-     * Registra una operació OK amb duració (ms).
-     */
-    public void registraExit(K subsistema, long duracioMs) {
+    public void registraExit(String componentId, long duracioMs) {
+        if (componentId == null || componentId.isBlank()) return;
         if (duracioMs < 0) duracioMs = 0;
-        Entrada e = entrades.get(subsistema);
-        if (e == null) return;
 
-        // totals
+        Entrada e = entrades.get(componentId);
+        if (e == null) {
+            e = entrades.computeIfAbsent(componentId, id -> new Entrada(midaFinestraFallback));
+        }
+
+        // Totals
         e.okTotal.increment();
         e.sumaLatenciaMsTotal.add(duracioMs);
 
-        // període
+        // Període
         e.okPeriode.increment();
         e.sumaLatenciaMsPeriode.add(duracioMs);
 
-        // finestra fallback
+        // Fallback per component
         e.finestra.afegeix(true);
     }
 
-    /**
-     * Registra una operació KO.
-     */
-    public void registraError(K subsistema) {
-        Entrada e = entrades.get(subsistema);
-        if (e == null) return;
+    public void registraError(String componentId) {
+        if (componentId == null || componentId.isBlank()) return;
 
-        // totals
+        Entrada e = entrades.get(componentId);
+        if (e == null) {
+            e = entrades.computeIfAbsent(componentId, id -> new Entrada(midaFinestraFallback));
+        }
+
+        // Totals
         e.errorTotal.increment();
 
-        // període
+        // Període
         e.errorPeriode.increment();
 
-        // finestra fallback
+        // Fallback per component
         e.finestra.afegeix(false);
     }
 
     /**
-     * Retorna estadístiques per subsistema:
-     * - període: fins ara (des de darrera consulta) i reseteja el període
-     * - total: acumulatiu
+     * Inicialitza un component si no existeix.
+     * Útil per pre-registrar components que s'han de monitoritzar.
      */
-    public Map<K, EstadistiquesComponent> obtenSnapshot() {
+    public void inicialitzaComponent(String componentId) {
+        inicialitzaComponent(componentId, null);
+    }
+
+    /**
+     * Inicialitza un component si no existeix, opcionalment indicant un endpoint.
+     */
+    public void inicialitzaComponent(String componentId, String endpoint) {
+        if (componentId == null || componentId.isBlank()) return;
+        entrades.compute(componentId, (id, existent) -> {
+            if (existent == null) {
+                Entrada n = new Entrada(midaFinestraFallback);
+                n.endpoint = endpoint;
+                return n;
+            }
+            if (endpoint != null) {
+                existent.endpoint = endpoint;
+            }
+            return existent;
+        });
+    }
+
+    /**
+     * Snapshot del període i totals.
+     * IMPORTANT: reseteja el període de tots els components després de retornar.
+     */
+    public Map<String, EstadistiquesComponent> obtenSnapshot() {
         Instant ara = Instant.now(rellotge);
 
-        Map<K, EstadistiquesComponent> out = new EnumMap<>(tipusEnum);
+        // Copiam a un HashMap per no exposar la concurrència interna
+        Map<String, EstadistiquesComponent> out = new HashMap<>();
 
-        for (K k : tipusEnum.getEnumConstants()) {
-            Entrada e = entrades.get(k);
-            out.put(k, e.creaSnapshot(k.name(), ara));
+        for (Map.Entry<String, Entrada> ent : entrades.entrySet()) {
+            out.put(ent.getKey(), ent.getValue().creaSnapshot(ent.getKey(), ara));
         }
 
-        // Reset del període (IMPORTANT: no resetejam la finestra)
+        // Reset del període (sense tocar la finestra)
         for (Entrada e : entrades.values()) {
             e.resetejaPeriode();
         }
 
-        return out;
+        return Collections.unmodifiableMap(out);
     }
 
-    /**
-     * Permet obtenir el fallback d'un subsistema (ok/ko de la finestra).
-     */
-    public DadesFallback obtenFallback(K subsistema) {
-        Entrada e = entrades.get(subsistema);
-        if (e == null) return new DadesFallback(0,0,false);
+    public DadesFallback obtenFallback(String componentId) {
+        Entrada e = entrades.get(componentId);
+        if (e == null) return new DadesFallback(0, 0, false, null);
         boolean te = !e.finestra.esBuida();
-        return new DadesFallback(e.finestra.getOk(), e.finestra.getKo(), te);
+        return new DadesFallback(e.finestra.getOk(), e.finestra.getKo(), te, e.endpoint);
     }
-
-    public int getMidaFinestraFallback() { return midaFinestraFallback; }
-
-    // --- Tipus interns ---
 
     public static final class DadesFallback {
         public final long ok;
         public final long ko;
         public final boolean te;
+        public final String endpoint;
 
-        public DadesFallback(long ok, long ko, boolean te) {
+        public DadesFallback(long ok, long ko, boolean te, String endpoint) {
             this.ok = ok;
             this.ko = ko;
             this.te = te;
+            this.endpoint = endpoint;
         }
     }
 
     private static final class Entrada {
+        String endpoint;
         // Totals
         final LongAdder okTotal = new LongAdder();
         final LongAdder errorTotal = new LongAdder();
@@ -136,14 +158,14 @@ public final class MonitorComponentsMemoria<K extends Enum<K>> {
         final LongAdder errorPeriode = new LongAdder();
         final LongAdder sumaLatenciaMsPeriode = new LongAdder();
 
-        // Fallback per subsistema
+        // Fallback per component
         final FinestraBooleanaCircular finestra;
 
-        Entrada(int midaFinestra) {
-            this.finestra = new FinestraBooleanaCircular(midaFinestra);
+        Entrada(int midaFinestraFallback) {
+            this.finestra = new FinestraBooleanaCircular(midaFinestraFallback);
         }
 
-        EstadistiquesComponent creaSnapshot(String codi, Instant ara) {
+        EstadistiquesComponent creaSnapshot(String componentId, Instant ara) {
             long okP = okPeriode.sum();
             long koP = errorPeriode.sum();
             double migP = okP > 0 ? (sumaLatenciaMsPeriode.sum() * 1.0) / okP : 0.0;
@@ -153,7 +175,8 @@ public final class MonitorComponentsMemoria<K extends Enum<K>> {
             double migT = okT > 0 ? (sumaLatenciaMsTotal.sum() * 1.0) / okT : 0.0;
 
             return new EstadistiquesComponent(
-                    codi,
+                    componentId,
+                    endpoint,
                     okP, koP, migP,
                     okT, koT, migT,
                     ara
