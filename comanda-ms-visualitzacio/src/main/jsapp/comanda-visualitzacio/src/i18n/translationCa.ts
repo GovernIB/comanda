@@ -381,6 +381,17 @@ const translationCa = {
                 switch: "Amb període d'activació"
             },
         },
+        alarma: {
+            action: {
+                clear: {
+                    label: "Esborrar",
+                },
+            },
+            filter: {
+                showOnlyActiveEnabled: "Mostrant només alarmes actives (clic per incloure eliminades)",
+                showOnlyActiveDisabled: "Mostrant alarmes actives i eliminades (clic per mostrar només actives)",
+            },
+        },
         apps: {
             title: "Aplicacions",
             create: "Crear aplicació",

@@ -1,3 +1,5 @@
+import { Button, Icon } from '@mui/material';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     GridPage,
@@ -15,13 +17,11 @@ const dataGridColumns = [{
 }, {
     field: 'estat',
     flex: 0.5,
-}, {
-    field: 'estat',
-    flex: 0.5,
 }];
 
 const Alarmes = () => {
     const { t } = useTranslation();
+    const [showOnlyActive, setShowOnlyActive] = React.useState<boolean>(true);
     const gridApiRef = useMuiDataGridApiRef();
     const {
         available: actionInitialized,
@@ -50,11 +50,27 @@ const Alarmes = () => {
             onSuccess={() => gridApiRef.current.refresh()}
             buttonComponentProps={{ variant: 'contained', sx: { ml: 1 } }} />
     }];*/
+    const toolbarElementsWithPositions = [{
+        position: 2,
+        element: <Button
+            onClick={() => setShowOnlyActive(prev => !prev)}
+            variant={showOnlyActive ? 'contained' : 'outlined'}
+            title={showOnlyActive ?
+                    t($ => $.page.alarma.filter.showOnlyActiveEnabled) :
+                    t($ => $.page.alarma.filter.showOnlyActiveDisabled)
+            }
+            sx={{ mr: 2 }}
+        >
+            <Icon>{'check_circle'}</Icon>
+        </Button>,
+    }];
     const rowAdditionalActions = [{
+        label: t($ => $.page.alarma.action.clear.label),
         action: 'ALARMA_ESBORRAR',
         icon: 'check',
         showInMenu: false,
-        onClick: exec
+        onClick: exec,
+        hidden: (row:any) => !row?.id || row?.dataEsborrat,
     }];
     return (
         <GridPage>
@@ -63,11 +79,12 @@ const Alarmes = () => {
                     title={t($ => $.menu.alarmes)}
                     resourceName="alarma"
                     columns={dataGridColumns}
+                    paginationActive
                     readOnly
                     apiRef={gridApiRef}
                     toolbarType="upper"
-                    //toolbarElementsWithPositions={toolbarElementsWithPositions}
-                    filter="estat:'ACTIVA'"
+                    toolbarElementsWithPositions={toolbarElementsWithPositions}
+                    filter={showOnlyActive ? "estat:'ACTIVA'" : "estat in('ACTIVA', 'ESBORRADA')"}
                     sortModel={[{ field: 'dataActivacio', sort: 'desc' }]}
                     rowAdditionalActions={rowAdditionalActions} />
                 {formDialogComponent}

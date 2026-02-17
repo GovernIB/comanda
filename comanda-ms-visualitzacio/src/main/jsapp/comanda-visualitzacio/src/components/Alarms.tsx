@@ -8,13 +8,13 @@ import { useResourceApiService } from 'reactlib';
 const SEGONS_REFRESC = 30;
 
 export const Alarms = () => {
-    const { isReady: apiIsReady, find: apiFind } = useResourceApiService('alarma');
+    const { isReady: apiIsReady, artifactReport: report } = useResourceApiService('alarma');
     const [count, setCount] = React.useState<number>();
+    const fetchAlarms = async () => {
+        const response = await report(undefined, {code: "ALARMA_FIND_ACTIVES"});
+        setCount(response?.length ?? 0);
+    };
     React.useEffect(() => {
-        const fetchAlarms = async () => {
-            const response = await apiFind({ filter: "estat:'ACTIVA'", unpaged: true });
-            setCount(response.rows?.length ?? 0);
-        };
         if (apiIsReady) {
             fetchAlarms();
             const interval = setInterval(() => {

@@ -381,6 +381,17 @@ const translationEs: translationResourcesType = {
                 switch: "Con periodo de activación"
             },
         },
+        alarma: {
+            action: {
+                clear: {
+                    label: "Borrar",
+                },
+            },
+            filter: {
+                showOnlyActiveEnabled: "Mostrando solo alarmas activas (clic para incluir eliminadas)",
+                showOnlyActiveDisabled: "Mostrando alarmas activas y eliminadas (clic para mostrar solo activas)",
+            },
+        },
         apps: {
             title: "Aplicaciones",
             create: "Crear aplicación",
