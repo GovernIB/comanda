@@ -57,12 +57,18 @@ public abstract class BaseWebSecurityConfig {
 			http.addFilterBefore(
 					webContainerProcessingFilter(),
 					BasicAuthenticationFilter.class);
-			http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+			// Això és per a que funcioni correctament l'autenticació amb el provider de JBoss i les aplicacions React
+			http.sessionManagement().
+					sessionCreationPolicy(SessionCreationPolicy.STATELESS).
+					sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy());
 		}
 		if (isOauth2ResourceServerActive()) {
 			log.info("OAUTH2 resource server active");
 			http.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwtAuthConverter());
-			http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+			// Això és per a que funcioni correctament l'autenticació amb el provider de JBoss i les aplicacions React
+			http.sessionManagement().
+					sessionCreationPolicy(SessionCreationPolicy.STATELESS).
+					sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy());
 		}
 		var auth = http.authorizeHttpRequests().requestMatchers(internalPublicRequestMatchers()).permitAll();
 		customHttpSecurityConfiguration(http);
@@ -90,12 +96,6 @@ public abstract class BaseWebSecurityConfig {
 		http.cors();
 		http.csrf().disable();
 		http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
-		if (isWebContainerAuthActive()) {
-			// Això és per a que funcioni correctament l'autenticació amb el provider de JBoss i les aplicacions React
-			http.sessionManagement().
-					sessionCreationPolicy(SessionCreationPolicy.STATELESS).
-					sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy());
-		}
 	}
 
 	/**
