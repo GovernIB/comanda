@@ -40,7 +40,8 @@ public class EstadistiquesApiV1Controller {
     @SecurityRequirement(name = SECURITY_NAME)
     @Operation(operationId = "estadistiquesInfo",
             summary = "Obtenir informació de 'estructura de les estadístiques",
-            description = "Retorna el codi de l'app i el catàleg de dimensions i indicadors disponibles.")
+            description = "Retorna el codi de l'app i el catàleg de dimensions i indicadors disponibles.",
+            tags = {"COMANDA → APP / Estadistiques"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operació correcta",
                     content = @Content(schema = @Schema(implementation = EstadistiquesInfo.class))),
@@ -57,7 +58,8 @@ public class EstadistiquesApiV1Controller {
     @SecurityRequirement(name = SECURITY_NAME)
     @Operation(operationId = "estadistiques",
             summary = "Obtenir darreres estadístiques diàries disponibles",
-            description = "Retorna registres d'estadístiques més recents disponibles (estadístiques d'ahir).")
+            description = "Retorna registres d'estadístiques més recents disponibles (estadístiques d'ahir).",
+            tags = {"COMANDA → APP / Estadistiques"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operació correcta",
                     content = @Content(schema = @Schema(implementation = RegistresEstadistics.class))),
@@ -74,7 +76,8 @@ public class EstadistiquesApiV1Controller {
     @SecurityRequirement(name = SECURITY_NAME)
     @Operation(operationId = "estadistiquesPerData",
             summary = "Obtenir estadístiques d'una data concreta",
-            description = "Retorna les estadístiques corresponents a la data indicada amb format dd-MM-yyyy.")
+            description = "Retorna les estadístiques corresponents a la data indicada amb format dd-MM-yyyy.",
+            tags = {"COMANDA → APP / Estadistiques"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operació correcta",
                     content = @Content(schema = @Schema(implementation = RegistresEstadistics.class))),
@@ -95,7 +98,8 @@ public class EstadistiquesApiV1Controller {
     @Operation(operationId = "estadistiquesPerRang",
             summary = "Obtenir les estadístiques d'un interval donat",
             description = "Retorna llista d'estadístiques de tots els dies entre la dataInici i la dataFi (en format dd-MM-yyyy), ambdues incloses. " +
-                    "La resposta contindrà un objecte de tipus RegistresEstadistics per a cada dia inclòs en l'intèrval.")
+                    "La resposta contindrà un objecte de tipus RegistresEstadistics per a cada dia inclòs en l'intèrval.",
+            tags = {"COMANDA → APP / Estadistiques"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operació correcta",
                     content = @Content(schema = @Schema(implementation = RegistresEstadistics.class))),

@@ -53,6 +53,16 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-api-utils</artifactId>
+            <version>${comanda.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>es.caib.comanda</groupId>
+            <artifactId>comanda-api-server-monitoring</artifactId>
+            <version>${comanda.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>comanda-ms-avisos</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -123,7 +133,11 @@
                         <tagAnnotations>
                             <annotation>RestController</annotation>
                         </tagAnnotations>
+                        <openapiModels>src/main/resources/openapi/openapi-models-custom.yml</openapiModels>
+                        <modelsAssociations>src/main/resources/openapi/models-associations-custom.yml</modelsAssociations>
                     </apiConfiguration>
+
+
 
                     <apis>
                         <api>
@@ -145,6 +159,52 @@
                     </apis>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+
+                <executions>
+
+                    <!-- 1) Afegeix x-return-response al monitoring -->
+                    <execution>
+                        <id>patch-monitoring-yaml</id>
+                        <phase>prepare-package</phase>
+                        <goals><goal>replace</goal></goals>
+                        <configuration>
+                            <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-monitoring.yml</file>
+                            <replacements>
+                                <replacement>
+                                    <token>x-operation-name: descarregarFitxerDirecte</token>
+                                    <value>x-operation-name: descarregarFitxerDirecte
+      x-return-response: true</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                    <!-- 2) Elimina el camp 'esborrar' del management -->
+                    <execution>
+                        <id>remove-esborrar-from-management-yaml</id>
+                        <phase>prepare-package</phase>
+                        <goals><goal>replace</goal></goals>
+                        <configuration>
+                            <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-management.yml</file>
+                            <regex>true</regex>
+                            <replacements>
+                                <replacement>
+                                    <!-- elimina exactament dues línies: "        esborrar:" i "          type: boolean" -->
+                                    <token>\n[ ]{8}esborrar:\n[ ]{10}type:\s*boolean</token>
+                                    <value></value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+
 
             <!-- Generar els clients Java a partir dels yaml openapi generats -->
             <plugin>
@@ -185,6 +245,9 @@
                                 <skipDefaultInterface>true</skipDefaultInterface>
                                 <sourceFolder>src/main/java</sourceFolder>
                             </configOptions>
+                            <schemaMappings>
+                                <schemaMapping>OffsetDateTime=java.time.OffsetDateTime</schemaMapping>
+                            </schemaMappings>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
                                 <importMapping>URL=java.net.URL</importMapping>
@@ -234,12 +297,17 @@
                                 <additionalProperty>jackson=true</additionalProperty>
                                 <additionalProperty>jsr310=true</additionalProperty>
                             </additionalProperties>
+                            <schemaMappings>
+                                <schemaMapping>OffsetDateTime=java.time.OffsetDateTime</schemaMapping>
+                            </schemaMappings>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
                                 <importMapping>URL=java.net.URL</importMapping>
+                                <importMapping>File=java.io.File</importMapping>
                             </importMappings>
                             <typeMappings>
-                                <typeMapping>File=byte[]</typeMapping>
+<!--                                <typeMapping>File=byte[]</typeMapping>-->
+                                <typeMapping>File=java.io.File</typeMapping>
                                 <typeMapping>OffsetDateTime=OffsetDateTime</typeMapping>
                             </typeMappings>
                             <!--                            <addCompileSourceRoot>false</addCompileSourceRoot>-->
@@ -263,7 +331,7 @@
                             <generateModelTests>false</generateModelTests>
                             <generateApiTests>false</generateApiTests>
                             <generateSupportingFiles>false</generateSupportingFiles>
-                            <supportingFilesToGenerate>pom.xml</supportingFilesToGenerate>
+                            <supportingFilesToGenerate>pom.xml,JSON.java,RFC3339DateFormat.java</supportingFilesToGenerate>
                             <templateDirectory>src/main/resources/openapi/templates/client</templateDirectory>
                             <configOptions>
                                 <groupId>es.caib.comanda</groupId>
@@ -277,6 +345,9 @@
                                 <useJakartaEe>false</useJakartaEe>
                                 <usePrimitives>true</usePrimitives>
                             </configOptions>
+                            <schemaMappings>
+                                <schemaMapping>OffsetDateTime=java.time.OffsetDateTime</schemaMapping>
+                            </schemaMappings>
                             <importMappings>
                                 <importMapping>OffsetDateTime=java.time.OffsetDateTime</importMapping>
                                 <importMapping>URL=java.net.URL</importMapping>
@@ -291,54 +362,46 @@
                 </executions>
             </plugin>
 
-            <!-- Copiar el deserialitzador personalitzat als clients generats -->
+            <!-- Copiar el deserialitzador personalitzat als clients generats i ajustar el package -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.0</version>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>copy-deserializer-to-monitoring-client</id>
+                        <id>copy-and-fix-deserializer</id>
                         <phase>install</phase>
                         <goals>
-                            <goal>copy-resources</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring/src/main/java/es/caib/comanda/service/v1/monitoring</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/src/main/resources/openapi/templates/client</directory>
-                                    <includes>
-                                        <include>OffsetDateTimeDeserializer.java</include>
-                                    </includes>
-                                </resource>
-                            </resources>
+                            <target>
+                                <!-- Client Monitoring -->
+                                <copy file="${project.basedir}/src/main/resources/openapi/templates/client/OffsetDateTimeDeserializer.java"
+                                      tofile="${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring/src/main/java/es/caib/comanda/service/monitoring/OffsetDateTimeDeserializer.java"
+                                      overwrite="true">
+                                    <filterchain>
+                                        <replaceregex pattern="package es.caib.comanda.service.monitoring;"
+                                                      replace="package es.caib.comanda.service.monitoring;" />
+                                    </filterchain>
+                                </copy>
+                                <!-- Client Management -->
+                                <copy file="${project.basedir}/src/main/resources/openapi/templates/client/OffsetDateTimeDeserializer.java"
+                                      tofile="${project.basedir}/../comanda-api-clients/comanda-api-client-management/src/main/java/es/caib/comanda/service/management/OffsetDateTimeDeserializer.java"
+                                      overwrite="true">
+                                    <filterchain>
+                                        <replaceregex pattern="package es.caib.comanda.service.monitoring;"
+                                                      replace="package es.caib.comanda.service.management;" />
+                                    </filterchain>
+                                </copy>
+                            </target>
                         </configuration>
                     </execution>
-<!--                    <execution>-->
-<!--                        <id>copy-deserializer-to-management-client</id>-->
-<!--                        <phase>install</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>copy-resources</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <outputDirectory>${project.basedir}/../comanda-api-clients/comanda-api-client-management/src/main/java/es/caib/comanda/service/v1/management</outputDirectory>-->
-<!--                            <resources>-->
-<!--                                <resource>-->
-<!--                                    <directory>${project.basedir}/src/main/resources/openapi/templates/client</directory>-->
-<!--                                    <includes>-->
-<!--                                        <include>OffsetDateTimeDeserializer-management.java</include>-->
-<!--                                    </includes>-->
-<!--                                    <filtering>false</filtering>-->
-<!--                                </resource>-->
-<!--                            </resources>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                 </executions>
             </plugin>
 
 
-<!--            &lt;!&ndash; Empaquetar el client generat com a JAR addicional amb classifier 'client' &ndash;&gt;-->
+            <!--            &lt;!&ndash; Empaquetar el client generat com a JAR addicional amb classifier 'client' &ndash;&gt;-->
 <!--            <plugin>-->
 <!--                <groupId>org.apache.maven.plugins</groupId>-->
 <!--                <artifactId>maven-jar-plugin</artifactId>-->

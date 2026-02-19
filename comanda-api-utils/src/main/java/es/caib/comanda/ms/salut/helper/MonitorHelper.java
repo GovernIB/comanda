@@ -220,7 +220,8 @@ public class MonitorHelper {
             if (System.getProperty("jboss.home.dir") != null) {
                 String version = getJBossVersion();
                 if (version != null)
-                    version = System.getProperty("jboss.server.version", "");
+                    return version;
+                version = System.getProperty("jboss.server.version", "");
                 boolean isEap = System.getProperty("jboss.modules.system.pkgs", "").contains("com.redhat")
                         || System.getProperty("jboss.product.name", "").contains("EAP");
                 String serverType = isEap ? "JBoss EAP" : "JBoss/WildFly";

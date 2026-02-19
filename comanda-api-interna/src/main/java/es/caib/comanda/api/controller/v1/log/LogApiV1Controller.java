@@ -1,7 +1,11 @@
 package es.caib.comanda.api.controller.v1.log;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.model.v1.log.FitxerContingut;
 import es.caib.comanda.model.v1.log.FitxerInfo;
+import es.caib.comanda.ms.log.helper.LogFileStream;
+import es.caib.comanda.ms.log.helper.LogHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -12,15 +16,23 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.InputStream;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.back.config.BaseOpenApiConfig.BASIC_SECURITY_SCHEME;
 import static es.caib.comanda.ms.back.config.BaseOpenApiConfig.SECURITY_NAME;
@@ -31,6 +43,7 @@ import static es.caib.comanda.ms.back.config.BaseOpenApiConfig.SECURITY_NAME;
  * Aquesta classe defineix les rutes i els models retornats per generar el contracte OpenAPI.
  * La implementació real ha de ser aportada per cada APP.
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/logs/v1")
 @Tag(name = "COMANDA → APP / Logs", description = "Contracte d'API de salut i metadades de l'aplicació que COMANDA pot consultar")
@@ -38,41 +51,145 @@ import static es.caib.comanda.ms.back.config.BaseOpenApiConfig.SECURITY_NAME;
 @PreAuthorize("hasRole(T(es.caib.comanda.base.config.BaseConfig).ROLE_WEBSERVICE)")
 public class LogApiV1Controller {
 
-    @Operation(operationId = "llistarFitxers",
+    private final ParametresHelper parametresHelper;
+
+    private static String logDir;
+    private String getLogDir() {
+        if (logDir == null) {
+            logDir = parametresHelper.getParametreText(BaseConfig.PROP_LOG_DIR);
+        }
+        return logDir;
+    }
+
+    @Operation(
+            operationId = "llistarFitxers",
             summary = "Obtenir el llistat de fitxers de log disponibles",
-            description = "Retorna una llista amb tots els fitxers que es troben dins la carpeta de logs del servidor de l'aplicació")
+            description = "Retorna una llista amb tots els fitxers que es troben dins la carpeta de logs del servidor de l'aplicació",
+            tags = {"COMANDA → APP / Logs"}
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Llista de fitxers obtinguda correctament",
                     content = @Content(schema = @Schema(implementation = FitxerInfo.class))),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
             @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
     })
     @GetMapping()
     @SecurityRequirement(name = SECURITY_NAME)
     public List<FitxerInfo> getFitxers() {
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-                "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
+        List<es.caib.comanda.model.server.monitoring.FitxerInfo> logs = LogHelper.llistarFitxers(getLogDir(), "COMANDA");
+        return logs.stream().map(this::mapToV1).collect(Collectors.toList());
     }
 
-    @Operation(operationId = "getFitxerByNom",
+    private FitxerInfo mapToV1(es.caib.comanda.model.server.monitoring.FitxerInfo info) {
+        if (info == null) return null;
+        return FitxerInfo.builder()
+                .nom(info.getNom())
+                .mida(info.getMida())
+                .mimeType(info.getMimeType())
+                .dataCreacio(info.getDataCreacio())
+                .dataModificacio(info.getDataModificacio())
+                .build();
+    }
+
+    @Operation(
+            operationId = "getFitxerByNom",
             summary = "Obtenir contingut complet d'un fitxer de log",
-            description = "Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat")
+            description = "Retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat",
+            tags = {"COMANDA → APP / Logs"}
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Contingut del fitxer obtingut correctament",
                     content = @Content(schema = @Schema(implementation = FitxerContingut.class))),
             @ApiResponse(responseCode = "404", description = "Fitxer no trobat"),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
             @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
     })
     @GetMapping("/{nomFitxer}")
     @SecurityRequirement(name = SECURITY_NAME)
     public FitxerContingut getFitxerByNom(@Parameter(name = "nomFitxer", description = "Nom del firxer", required = true) @PathVariable("nomFitxer") String nomFitxer) {
-//        return logService.getFitxerByNom(nom);
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-                "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
+        es.caib.comanda.model.server.monitoring.FitxerContingut fitxer = LogHelper.getFitxerByNom(getLogDir(), nomFitxer);
+        if (fitxer == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Fitxer no trobat");
+        }
+        return FitxerContingut.builder()
+                .nom(fitxer.getNom())
+                .mida(fitxer.getMida())
+                .mimeType(fitxer.getMimeType())
+                .dataCreacio(fitxer.getDataCreacio())
+                .dataModificacio(fitxer.getDataModificacio())
+                .contingut(fitxer.getContingut())
+                .build();
     }
 
-    @Operation(operationId = "llegitUltimesLinies",
+    @GetMapping(
+            value = "/{nomFitxer}/directe",
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
+    )
+    @SecurityRequirement(name = SECURITY_NAME)
+    @Operation(
+            operationId = "descarregarFitxerDirecte",
+            summary = "Descarregar fitxer de log complet",
+            description = "Descarrega el fitxer de log complet que es troba dins la carpeta de logs del servidor, i que té el nom indicat",
+            tags = {"COMANDA → APP / Logs"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Fitxer descarregat correctament",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                            schema = @Schema(type = "string", format = "binary")
+                    )
+            ),
+
+            @ApiResponse(responseCode = "404", description = "Fitxer no trobat"),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
+            @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
+    })
+    public ResponseEntity<StreamingResponseBody> descarregarFitxerDirecte(@Parameter(name = "nomFitxer", description = "Nom del firxer", required = true) @PathVariable("nomFitxer") String nomFitxer) {
+        LogFileStream file = LogHelper.getFileStreamByNom(getLogDir(), nomFitxer);
+
+        if (file == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Fitxer no trobat");
+        }
+
+        StreamingResponseBody body = outputStream -> {
+            try (InputStream in = file.getInputStream()) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, read);
+                }
+                outputStream.flush();
+            }
+        };
+
+        MediaType mediaType;
+        try {
+            mediaType = (file.getContentType() != null && !file.getContentType().isBlank())
+                    ? MediaType.parseMediaType(file.getContentType())
+                    : MediaType.APPLICATION_OCTET_STREAM;
+        } catch (Exception e) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .contentLength(file.getSize())
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename(file.getFileName())
+                                .build()
+                                .toString())
+                .body(body);
+    }
+
+
+    @Operation(
+            operationId = "llegitUltimesLinies",
             summary = "Obtenir les darreres línies d'un fitxer de log",
-            description = "Retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies.")
+            description = "Retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies.",
+            tags = {"COMANDA → APP / Logs"}
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Línies del fitxer obtingudes correctament",
                     content = @Content(schema = @Schema(implementation = String.class, type = "array", example = "[\n" +
@@ -83,6 +200,7 @@ public class LogApiV1Controller {
                             "  \"2024-01-15 10:23:49.345 INFO  [http-nio-8080-exec-5] c.e.c.a.c.HealthController - Health check completed successfully\"\n" +
                             "]"))),
             @ApiResponse(responseCode = "404", description = "Fitxer no trobat"),
+            @ApiResponse(responseCode = "500", description = "Error intern del servidor"),
             @ApiResponse(responseCode = "501", description = "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.")
     })
     @GetMapping("/{nomFitxer}/linies/{nLinies}")
@@ -90,9 +208,11 @@ public class LogApiV1Controller {
     public List<String> getFitxerLinies(
             @Parameter(name = "nomFitxer", description = "Nom del firxer", required = true) @PathVariable("nomFitxer") String nomFitxer,
             @Parameter(name = "nLinies", description = "Número de línies a recuperar del firxer", required = true) @PathVariable("nLinies") Long nLinies) {
-//        return logService.readLastNLines(nomFitxer, nLinies);
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-                "No implementat a COMANDA. Aquest endpoint l'ha d'exposar l'APP.");
+        List<String> linies = LogHelper.readLastNLines(getLogDir(), nomFitxer, nLinies);
+        if (linies == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Fitxer no trobat");
+        }
+        return linies;
     }
 
 }

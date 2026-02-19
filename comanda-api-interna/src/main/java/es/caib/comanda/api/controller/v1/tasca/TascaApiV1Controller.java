@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,7 +64,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearTasca",
             summary = "Creació s'una tasca",
-            description = "Afegeix un missatge d'alta de tasca a una cua de events per a que es crei aquesta de forma asíncrona a Comanda."
+            description = "Afegeix un missatge d'alta de tasca a una cua de events per a que es crei aquesta de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -94,7 +96,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarTasca",
             summary = "Modificació una tasca",
-            description = "Es comprova si la tasca existeix, i en cas afirmatiu, s'afegeix un missatge de modificació de tasca a una cua de events per a que es modifiqui aquesta de forma asíncrona a Comanda."
+            description = "Es comprova si la tasca existeix, i en cas afirmatiu, s'afegeix un missatge de modificació de tasca a una cua de events per a que es modifiqui aquesta de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -129,7 +132,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearMultiplesTasques",
             summary = "Creació de múltiples tasques",
-            description = "Afegeix múltiples missatges d'alta de tasques a una cua de events per a que es creïn aquestes de forma asíncrona a Comanda."
+            description = "Afegeix múltiples missatges d'alta de tasques a una cua de events per a que es creïn aquestes de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -153,7 +157,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarMultiplesTasques",
             summary = "Modificació de múltiples tasques",
-            description = "Es comprova si les tasques existeixen, i en cas afirmatiu, s'afegeixen múltiples missatges de modificació de tasques a una cua de events per a que es modifiquin aquestes de forma asíncrona a Comanda. Les tasques no existents s'ignoren."
+            description = "Es comprova si les tasques existeixen, i en cas afirmatiu, s'afegeixen múltiples missatges de modificació de tasques a una cua de events per a que es modifiquin aquestes de forma asíncrona a Comanda. Les tasques no existents s'ignoren.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -210,12 +215,53 @@ public class TascaApiV1Controller extends BaseController {
         return ResponseEntity.ok(enviats + " tasques modificades enviades; " + ignorats + " ignorades per no existir");
     }
 
+    @DeleteMapping("/{identificador}")
+    @SecurityRequirement(name = SECURITY_NAME)
+    @Operation(
+            operationId = "eliminarTasca",
+            summary = "Eliminació una tasca existent",
+            description = "Es comprova si la tasca existeix, i en cas afirmatiu, s'afegeix un missatge d'eliminació de tasca a una cua de events per a que s'elimini aquesta de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Tasques"}
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Tasca no trobada"),
+            @ApiResponse(responseCode = "400", description = "Petició incorrecta"),
+            @ApiResponse(responseCode = "401", description = "No autenticat"),
+            @ApiResponse(responseCode = "403", description = "Prohibit"),
+            @ApiResponse(responseCode = "500", description = "Error intern")
+    })
+    public ResponseEntity<String> eliminarTasca(
+            @Parameter(name = "identificador", description = "Identificador de la tasca", required = true) @PathVariable String identificador,
+            @Parameter(name = "appCodi", description = "Codi de l'aplicació", required = true) @RequestParam String appCodi,
+            @Parameter(name = "entornCodi", description = "Codi de l'entorn", required = true) @RequestParam String entornCodi) {
+
+        if (!existApp(appCodi)) return ResponseEntity.badRequest().body("No existeix l'aplicació amb el codi indicat");
+        if (!existEntorn(entornCodi)) return ResponseEntity.badRequest().body("No existeix l'entorn amb el codi indicat");
+
+        Optional<es.caib.comanda.client.model.Tasca> tascaExistent = getTascaByCodi(identificador, appCodi, entornCodi);
+        if (tascaExistent.isEmpty()) {
+            return ResponseEntity.status(404).body("No s'ha trobat la tasca amb identificador " + identificador + " per a l'aplicació " + appCodi + " i entorn " + entornCodi);
+        }
+
+        Tasca tascaEliminar = Tasca.builder()
+                .identificador(identificador)
+                .appCodi(appCodi)
+                .entornCodi(entornCodi)
+                .esborrar(true)
+                .build();
+
+        jmsTemplate.convertAndSend(CUA_TASQUES, tascaEliminar);
+        return ResponseEntity.ok("Missatge d'eliminació enviat a " + CUA_TASQUES);
+    }
+
     @GetMapping("/{identificador}")
     @SecurityRequirement(name = SECURITY_NAME)
     @Operation(
             operationId = "consultarTasca",
             summary = "Consulta d'una tasca",
-            description = "Obté les dades d'una tasca identificada pel seu identificador, codi d'aplicació i codi d'entorn."
+            description = "Obté les dades d'una tasca identificada pel seu identificador, codi d'aplicació i codi d'entorn.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tasca trobada", content = @Content(schema = @Schema(implementation = Tasca.class))),
@@ -239,7 +285,8 @@ public class TascaApiV1Controller extends BaseController {
     @Operation(
             operationId = "obtenirLlistatTasques",
             summary = "Consulta de tasques",
-            description = "Obté un llistat paginat de tasques amb possibilitat d'aplicar filtres ràpids, filtres avançats, consultes predefinides i perspectives."
+            description = "Obté un llistat paginat de tasques amb possibilitat d'aplicar filtres ràpids, filtres avançats, consultes predefinides i perspectives.",
+            tags = {"APP → COMANDA / Tasques"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(schema = @Schema(implementation = TascaPage.class))),

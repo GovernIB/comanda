@@ -65,6 +65,17 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
         Optional<TascaEntity> tascaExistent = ((TascaRepository)entityRepository).findByEntornAppIdAndIdentificador(
                 entornApp.get().getId(),
                 tascaBroker.getIdentificador());
+
+        if (Boolean.TRUE.equals(tascaBroker.getEsborrar())) {
+            if (tascaExistent.isPresent()) {
+                entityRepository.delete(tascaExistent.get());
+                log.debug("Esborrada tasca {} de l'entornApp {}", tascaBroker.getIdentificador(), entornApp.get().getId());
+            } else {
+                log.warn("S'ha intentat esborrar una tasca que no existeix: {} de l'entornApp {}", tascaBroker.getIdentificador(), entornApp.get().getId());
+            }
+            return;
+        }
+
         Tasca tasca = new Tasca();
         tasca.setEntornAppId(entornApp.get().getId());
         tasca.setEntornId(entornApp.get().getEntorn().getId());

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.time.OffsetDateTime;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -50,11 +51,11 @@ public class FitxerInfo {
 
   public static final String JSON_PROPERTY_DATA_CREACIO = "dataCreacio";
   @javax.annotation.Nullable
-  private String dataCreacio;
+  private OffsetDateTime dataCreacio;
 
   public static final String JSON_PROPERTY_DATA_MODIFICACIO = "dataModificacio";
   @javax.annotation.Nullable
-  private String dataModificacio;
+  private OffsetDateTime dataModificacio;
 
   public FitxerInfo() {
   }
@@ -134,53 +135,53 @@ public class FitxerInfo {
     this.mimeType = mimeType;
   }
 
-  public FitxerInfo dataCreacio(@javax.annotation.Nullable String dataCreacio) {
+  public FitxerInfo dataCreacio(@javax.annotation.Nullable OffsetDateTime dataCreacio) {
     
     this.dataCreacio = dataCreacio;
     return this;
   }
 
   /**
-   * Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss
+   * Get dataCreacio
    * @return dataCreacio
    */
   @javax.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_DATA_CREACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getDataCreacio() {
+  public OffsetDateTime getDataCreacio() {
     return dataCreacio;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA_CREACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDataCreacio(@javax.annotation.Nullable String dataCreacio) {
+  public void setDataCreacio(@javax.annotation.Nullable OffsetDateTime dataCreacio) {
     this.dataCreacio = dataCreacio;
   }
 
-  public FitxerInfo dataModificacio(@javax.annotation.Nullable String dataModificacio) {
+  public FitxerInfo dataModificacio(@javax.annotation.Nullable OffsetDateTime dataModificacio) {
     
     this.dataModificacio = dataModificacio;
     return this;
   }
 
   /**
-   * Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss
+   * Get dataModificacio
    * @return dataModificacio
    */
   @javax.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_DATA_MODIFICACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getDataModificacio() {
+  public OffsetDateTime getDataModificacio() {
     return dataModificacio;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA_MODIFICACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDataModificacio(@javax.annotation.Nullable String dataModificacio) {
+  public void setDataModificacio(@javax.annotation.Nullable OffsetDateTime dataModificacio) {
     this.dataModificacio = dataModificacio;
   }
 

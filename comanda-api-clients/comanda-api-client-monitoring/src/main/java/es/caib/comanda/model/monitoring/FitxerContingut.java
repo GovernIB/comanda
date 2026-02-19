@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import java.io.File;
+import java.time.OffsetDateTime;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -52,11 +52,11 @@ public class FitxerContingut {
 
   public static final String JSON_PROPERTY_DATA_CREACIO = "dataCreacio";
   @javax.annotation.Nullable
-  private String dataCreacio;
+  private OffsetDateTime dataCreacio;
 
   public static final String JSON_PROPERTY_DATA_MODIFICACIO = "dataModificacio";
   @javax.annotation.Nullable
-  private String dataModificacio;
+  private OffsetDateTime dataModificacio;
 
   public static final String JSON_PROPERTY_CONTINGUT = "contingut";
   @javax.annotation.Nullable
@@ -140,53 +140,53 @@ public class FitxerContingut {
     this.mimeType = mimeType;
   }
 
-  public FitxerContingut dataCreacio(@javax.annotation.Nullable String dataCreacio) {
+  public FitxerContingut dataCreacio(@javax.annotation.Nullable OffsetDateTime dataCreacio) {
     
     this.dataCreacio = dataCreacio;
     return this;
   }
 
   /**
-   * Data de creació del fitxer en format dd/MM/yyyy HH:mm:ss
+   * Get dataCreacio
    * @return dataCreacio
    */
   @javax.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_DATA_CREACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getDataCreacio() {
+  public OffsetDateTime getDataCreacio() {
     return dataCreacio;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA_CREACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDataCreacio(@javax.annotation.Nullable String dataCreacio) {
+  public void setDataCreacio(@javax.annotation.Nullable OffsetDateTime dataCreacio) {
     this.dataCreacio = dataCreacio;
   }
 
-  public FitxerContingut dataModificacio(@javax.annotation.Nullable String dataModificacio) {
+  public FitxerContingut dataModificacio(@javax.annotation.Nullable OffsetDateTime dataModificacio) {
     
     this.dataModificacio = dataModificacio;
     return this;
   }
 
   /**
-   * Data de modificació del fitxer en format dd/MM/yyyy HH:mm:ss
+   * Get dataModificacio
    * @return dataModificacio
    */
   @javax.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_DATA_MODIFICACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getDataModificacio() {
+  public OffsetDateTime getDataModificacio() {
     return dataModificacio;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA_MODIFICACIO, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDataModificacio(@javax.annotation.Nullable String dataModificacio) {
+  public void setDataModificacio(@javax.annotation.Nullable OffsetDateTime dataModificacio) {
     this.dataModificacio = dataModificacio;
   }
 
@@ -229,12 +229,12 @@ public class FitxerContingut {
         Objects.equals(this.mimeType, fitxerContingut.mimeType) &&
         Objects.equals(this.dataCreacio, fitxerContingut.dataCreacio) &&
         Objects.equals(this.dataModificacio, fitxerContingut.dataModificacio) &&
-        Objects.equals(this.contingut, fitxerContingut.contingut);
+        Arrays.equals(this.contingut, fitxerContingut.contingut);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(nom, mida, mimeType, dataCreacio, dataModificacio, contingut);
+    return Objects.hash(nom, mida, mimeType, dataCreacio, dataModificacio, Arrays.hashCode(contingut));
   }
 
   @Override

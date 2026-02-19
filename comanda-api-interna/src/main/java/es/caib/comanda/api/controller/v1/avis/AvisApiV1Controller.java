@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,7 +64,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearAvis",
             summary = "Creació d'un avís",
-            description = "Afegeix un missatge d'alta d'avís a una cua de events per a que es crei aquest de forma asíncrona a Comanda."
+            description = "Afegeix un missatge d'alta d'avís a una cua de events per a que es crei aquest de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -93,7 +95,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarAvis",
             summary = "Modificació d'un avís existent",
-            description = "Es comprova si l'avís existeix, i en cas afirmatiu, s'afegeix un missatge de modificació d'avís a una cua de events per a que es modifiqui aquest de forma asíncrona a Comanda."
+            description = "Es comprova si l'avís existeix, i en cas afirmatiu, s'afegeix un missatge de modificació d'avís a una cua de events per a que es modifiqui aquest de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -128,7 +131,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearMultiplesAvisos",
             summary = "Creació de múltiples avisos",
-            description = "Afegeix múltiples missatges d'alta d'avisos a una cua de events per a que es creïn aquests de forma asíncrona a Comanda."
+            description = "Afegeix múltiples missatges d'alta d'avisos a una cua de events per a que es creïn aquests de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -152,7 +156,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarMultiplesAvisos",
             summary = "Modificació de múltiples avisos",
-            description = "Es comprova si els avisos existeixen, i en cas afirmatiu, s'afegeixen missatges de modificació d'avisos a una cua de events per a que es modifiquin aquests de forma asíncrona a Comanda."
+            description = "Es comprova si els avisos existeixen, i en cas afirmatiu, s'afegeixen missatges de modificació d'avisos a una cua de events per a que es modifiquin aquests de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -209,12 +214,53 @@ public class AvisApiV1Controller extends BaseController {
         return ResponseEntity.ok(enviats + " avisos modificats enviats; " + ignorats + " ignorats per no existir");
     }
 
+    @DeleteMapping("/{identificador}")
+    @SecurityRequirement(name = SECURITY_NAME)
+    @Operation(
+            operationId = "eliminarAvis",
+            summary = "Eliminació d'un avís existent",
+            description = "Es comprova si l'avís existeix, i en cas afirmatiu, s'afegeix un missatge d'eliminació d'avís a una cua de events per a que s'elimini aquest de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Avisos"}
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "Avís no trobat"),
+            @ApiResponse(responseCode = "400", description = "Petició incorrecta"),
+            @ApiResponse(responseCode = "401", description = "No autenticat"),
+            @ApiResponse(responseCode = "403", description = "Prohibit"),
+            @ApiResponse(responseCode = "500", description = "Error intern")
+    })
+    public ResponseEntity<String> eliminarAvis(
+            @Parameter(name = "identificador", description = "Identificador de l'avís", required = true) @PathVariable String identificador,
+            @Parameter(name = "appCodi", description = "Codi de l'aplicació", required = true) @RequestParam String appCodi,
+            @Parameter(name = "entornCodi", description = "Codi de l'entorn", required = true) @RequestParam String entornCodi) {
+
+        if (!existApp(appCodi)) return ResponseEntity.badRequest().body("No existeix l'aplicació amb el codi indicat");
+        if (!existEntorn(entornCodi)) return ResponseEntity.badRequest().body("No existeix l'entorn amb el codi indicat");
+
+        Optional<es.caib.comanda.client.model.Avis> avisExistent = getAvisByCodi(identificador, appCodi, entornCodi);
+        if (avisExistent.isEmpty()) {
+            return ResponseEntity.status(404).body("No s'ha trobat l'avís amb identificador " + identificador + " per a l'aplicació " + appCodi + " i entorn " + entornCodi);
+        }
+
+        Avis avisEliminar = Avis.builder()
+                .identificador(identificador)
+                .appCodi(appCodi)
+                .entornCodi(entornCodi)
+                .esborrar(true)
+                .build();
+
+        jmsTemplate.convertAndSend(CUA_AVISOS, avisEliminar);
+        return ResponseEntity.ok("Missatge d'eliminació enviat a " + CUA_AVISOS);
+    }
+
     @GetMapping("/{identificador}")
     @SecurityRequirement(name = SECURITY_NAME)
     @Operation(
             operationId = "consultarAvis",
             summary = "Consulta d'un avís",
-            description = "Obté les dades d'un avís a partir del seu identificador, codi d'aplicació i codi d'entorn."
+            description = "Obté les dades d'un avís a partir del seu identificador, codi d'aplicació i codi d'entorn.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Avís trobat", content = @Content(schema = @Schema(implementation = Avis.class))),
@@ -238,7 +284,8 @@ public class AvisApiV1Controller extends BaseController {
     @Operation(
             operationId = "obtenirLlistatAvisos",
             summary = "Llistat d'avisos",
-            description = "Obté un llistat paginat d'avisos amb la possibilitat d'aplicar filtres de cerca."
+            description = "Obté un llistat paginat d'avisos amb la possibilitat d'aplicar filtres de cerca.",
+            tags = {"APP → COMANDA / Avisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Llistat obtingut", content = @Content(schema = @Schema(implementation = AvisPage.class))),

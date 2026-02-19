@@ -1,0 +1,2 @@
+-- Changeset db/changelog/changes/0.1.0/0.1.0_con_014.yaml::con-change-0.1.0.014-1::limit
+INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, VALOR, EDITABLE) VALUES ('API Interna', 'Logs', 'TEXT', 'es.caib.comanda.log.dir', 'Directori on es guarden els logs', '', 1);

@@ -4,10 +4,77 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**descarregarFitxerDirecte**](ComandaAppLogsApi.md#descarregarFitxerDirecte) | **GET** /logs/v1/{nomFitxer}/directe | Descarregar fitxer de log complet |
 | [**getFitxerByNom**](ComandaAppLogsApi.md#getFitxerByNom) | **GET** /logs/v1/{nomFitxer} | Obtenir contingut complet d&#39;un fitxer de log |
 | [**llegitUltimesLinies**](ComandaAppLogsApi.md#llegitUltimesLinies) | **GET** /logs/v1/{nomFitxer}/linies/{nLinies} | Obtenir les darreres línies d&#39;un fitxer de log |
 | [**llistarFitxers**](ComandaAppLogsApi.md#llistarFitxers) | **GET** /logs/v1 | Obtenir el llistat de fitxers de log disponibles |
 
+
+
+## descarregarFitxerDirecte
+
+> java.io.File descarregarFitxerDirecte(nomFitxer)
+
+Descarregar fitxer de log complet
+
+Descarrega el fitxer de log complet que es troba dins la carpeta de logs del servidor, i que té el nom indicat
+
+### Example
+
+```java
+// Import classes:
+import es.caib.comanda.service.monitoring.ApiClient;
+import es.caib.comanda.service.monitoring.ApiException;
+import es.caib.comanda.service.monitoring.Configuration;
+import es.caib.comanda.service.monitoring.models.*;
+import es.caib.comanda.api.monitoring.ComandaAppLogsApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost");
+
+        ComandaAppLogsApi apiInstance = new ComandaAppLogsApi(defaultClient);
+        String nomFitxer = "nomFitxer_example"; // String | Nom del firxer
+        try {
+            java.io.File result = apiInstance.descarregarFitxerDirecte(nomFitxer);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling ComandaAppLogsApi#descarregarFitxerDirecte");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **nomFitxer** | **String**| Nom del firxer | |
+
+### Return type
+
+[**java.io.File**](File.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/octet-stream
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | successful operation |  -  |
 
 
 ## getFitxerByNom

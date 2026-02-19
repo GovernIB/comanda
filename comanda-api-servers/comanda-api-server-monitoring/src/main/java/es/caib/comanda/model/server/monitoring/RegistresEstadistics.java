@@ -1,9 +1,9 @@
 package es.caib.comanda.model.server.monitoring;
 
 import es.caib.comanda.model.server.monitoring.RegistreEstadistic;
-import es.caib.comanda.model.server.monitoring.Temps;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("RegistresEstadistics")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", comments = "Generator version: 7.17.0")
 public class RegistresEstadistics   {
-  private Temps temps;
+  private OffsetDateTime temps;
   private @Valid List<@Valid RegistreEstadistic> fets = new ArrayList<>();
 
   public RegistresEstadistics() {
@@ -32,14 +32,14 @@ public class RegistresEstadistics   {
 
   @JsonCreator
   public RegistresEstadistics(
-    @JsonProperty(required = true, value = "temps") Temps temps
+    @JsonProperty(required = true, value = "temps") OffsetDateTime temps
   ) {
     this.temps = temps;
   }
 
   /**
    **/
-  public RegistresEstadistics temps(Temps temps) {
+  public RegistresEstadistics temps(OffsetDateTime temps) {
     this.temps = temps;
     return this;
   }
@@ -47,12 +47,12 @@ public class RegistresEstadistics   {
   
   @ApiModelProperty(required = true, value = "")
   @JsonProperty(required = true, value = "temps")
-  @NotNull @Valid public Temps getTemps() {
+  @NotNull @Valid public OffsetDateTime getTemps() {
     return temps;
   }
 
   @JsonProperty(required = true, value = "temps")
-  public void setTemps(Temps temps) {
+  public void setTemps(OffsetDateTime temps) {
     this.temps = temps;
   }
 
