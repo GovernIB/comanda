@@ -4,7 +4,6 @@ import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
-import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -54,6 +53,9 @@ public class AlarmaEntity extends BaseAuditableEntity<Alarma> {
 		this.entornAppId = alarma.getEntornAppId();
 		this.missatge = alarma.getMissatge();
 		this.estat = alarma.getEstat();
+        this.dataActivacio = alarma.getDataActivacio();
+        this.dataEnviament = alarma.getDataEnviament();
+        this.dataEsborrat = alarma.getDataEsborrat();
 		this.alarmaConfig = alarmaConfig;
 	}
 

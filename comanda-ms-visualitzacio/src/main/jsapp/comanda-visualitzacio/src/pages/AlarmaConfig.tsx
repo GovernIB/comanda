@@ -94,7 +94,6 @@ export const AlarmaConfigForm: React.FC = () => {
         setCondicioValorDisabled(condicioValorDisabled);
         if (periodeShow === undefined) {
             const ps = data?.periodeValor != null || data?.periodeUnitat != null;
-            console.log('>>> setPeriodeShow', ps)
             setPeriodeShow(ps);
         }
     }

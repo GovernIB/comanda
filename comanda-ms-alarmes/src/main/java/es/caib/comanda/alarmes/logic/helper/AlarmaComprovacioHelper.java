@@ -103,12 +103,13 @@ public class AlarmaComprovacioHelper {
 
 	private void crearAlarma(AlarmaConfigEntity alarmaConfig) {
 		AlarmaEntity alarmaActivada = null;
+		Optional<AlarmaEntity> alarmaAnterior = alarmaRepository.findTopByAlarmaConfigOrderByIdDesc(alarmaConfig);
+		if (alarmaAnterior.isPresent() && AlarmaEstat.ACTIVA.equals(alarmaAnterior.get().getEstat())) {
+			return; //Si ya tiene una alarma activada no crearemos otra
+		}
 		if (alarmaConfig.getPeriodeValor() != null && alarmaConfig.getPeriodeUnitat() != null) {
-			Optional<AlarmaEntity> alarmaEsborrany = alarmaRepository.findTopByAlarmaConfigAndEstatOrderByIdDesc(
-					alarmaConfig,
-					AlarmaEstat.ESBORRANY);
-			if (alarmaEsborrany.isPresent()) {
-				Duration duration = Duration.between(alarmaEsborrany.get().getCreatedDate(), LocalDateTime.now());
+			if (alarmaAnterior.isPresent() && AlarmaEstat.ESBORRANY.equals(alarmaAnterior.get().getEstat())) {
+				Duration duration = Duration.between(alarmaAnterior.get().getCreatedDate(), LocalDateTime.now());
 				boolean activar = false;
 				switch (alarmaConfig.getPeriodeUnitat()) {
 					case SEGONS:
@@ -125,9 +126,9 @@ public class AlarmaComprovacioHelper {
 						break;
 				}
 				if (activar) {
-					alarmaEsborrany.get().setEstat(AlarmaEstat.ACTIVA);
-					alarmaEsborrany.get().setDataActivacio(LocalDateTime.now());
-					alarmaActivada = alarmaEsborrany.get();
+					alarmaAnterior.get().setEstat(AlarmaEstat.ACTIVA);
+					alarmaAnterior.get().setDataActivacio(LocalDateTime.now());
+					alarmaActivada = alarmaAnterior.get();
 					log.debug("Alarma de tipus esborrany activada (configId={}, configNom={}, destinatari={}",
 							alarmaConfig.getId(),
 							alarmaConfig.getNom(),
