@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
-import org.keycloak.representations.IDToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
@@ -23,7 +22,10 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Configuració de Spring Security.
@@ -142,7 +144,7 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 						log.debug("Keycloak token realm roles: {}", realmAccess.getRoles());
 						realmAccess.getRoles().stream().map(r -> ROLE_PREFIX + r).forEach(roles::add);
 					}
-					IDToken idToken = keycloakPrincipal.getKeycloakSecurityContext().getIdToken();
+					AccessToken accessToken = keycloakPrincipal.getKeycloakSecurityContext().getToken();
 					Collection<? extends GrantedAuthority> grantedAuthorities = j2eeUserRoles2GrantedAuthoritiesMapper.
 							getGrantedAuthorities(roles);
 					filterAllowedGrantedAuthorities(grantedAuthorities);
@@ -151,11 +153,11 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 							grantedAuthorities,
 							keycloakPrincipal.getKeycloakSecurityContext().getIdTokenString(),
 							nameAttributeKey.equals("preferred_username") ?
-									idToken.getPreferredUsername() :
-									(String)idToken.getOtherClaims().get(nameAttributeKey),
-							idToken.getName(),
-							idToken.getEmail(),
-							(String)idToken.getOtherClaims().get("nif"),
+									accessToken.getPreferredUsername() :
+									(String)accessToken.getOtherClaims().get(nameAttributeKey),
+							accessToken.getName(),
+							accessToken.getEmail(),
+							(String)accessToken.getOtherClaims().get("nif"),
 							roles.toArray(new String[0]));
 				} else {
 					Collection<? extends GrantedAuthority> grantedAuthorities = j2eeUserRoles2GrantedAuthoritiesMapper.
