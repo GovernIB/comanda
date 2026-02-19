@@ -11,7 +11,7 @@ export const Alarms = () => {
     const { isReady: apiIsReady, artifactReport: report } = useResourceApiService('alarma');
     const [count, setCount] = React.useState<number>();
     const fetchAlarms = async () => {
-        const response = await report(undefined, {code: "ALARMA_FIND_ACTIVES"});
+        const response = await report(undefined, {code: "ALARMA_FIND_ACTIVES"}) as any[];
         setCount(response?.length ?? 0);
     };
     React.useEffect(() => {
