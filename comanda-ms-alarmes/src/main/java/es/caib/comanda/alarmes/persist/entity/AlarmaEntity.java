@@ -38,6 +38,8 @@ public class AlarmaEntity extends BaseAuditableEntity<Alarma> {
 	private LocalDateTime dataEnviament;
 	@Column(name = "data_esborrat")
 	private LocalDateTime dataEsborrat;
+	@Column(name = "data_finalitzacio")
+	private LocalDateTime dataFinalitzacio;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
@@ -56,6 +58,7 @@ public class AlarmaEntity extends BaseAuditableEntity<Alarma> {
         this.dataActivacio = alarma.getDataActivacio();
         this.dataEnviament = alarma.getDataEnviament();
         this.dataEsborrat = alarma.getDataEsborrat();
+        this.dataFinalitzacio = alarma.getDataFinalitzacio();
 		this.alarmaConfig = alarmaConfig;
 	}
 

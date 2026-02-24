@@ -163,3 +163,13 @@ databaseChangeLog:
             name: llegida
             type: BOOLEAN
         tableName: ${db_prefix}alarma_usuari
+- changeSet:
+      id: alarmes-init-table-4
+      author: limit
+      changes:
+          - addColumn:
+                tableName: ${db_prefix}alarma
+                columns:
+                    - column:
+                          name: data_finalitzacio
+                          type: TIMESTAMP

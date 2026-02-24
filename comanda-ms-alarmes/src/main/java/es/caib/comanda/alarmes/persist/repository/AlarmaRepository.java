@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 
-    Optional<AlarmaEntity> findTopByAlarmaConfigOrderByIdDesc(AlarmaConfigEntity alarmaConfig);
+    Optional<AlarmaEntity> findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(AlarmaConfigEntity alarmaConfig);
 	Optional<AlarmaEntity> findTopByAlarmaConfigAndEstatOrderByIdDesc(
 			AlarmaConfigEntity alarmaConfig,
 			AlarmaEstat estat);

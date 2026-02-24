@@ -11,6 +11,7 @@ import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.UsuariServiceClient;
 import es.caib.comanda.client.model.Salut;
 import es.caib.comanda.client.model.Usuari;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,15 +58,15 @@ public class AlarmaComprovacioHelper {
 
 	private boolean comprovarAppCaiguda(AlarmaConfigEntity alarmaConfig) {
 		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
-		boolean alarma = false;
+		boolean condicioAlarma = false;
 		if (salut != null) {
-			alarma = salut.getAppEstat().equals("DOWN");
+			condicioAlarma = salut.getAppEstat().equals(EstatSalutEnum.DOWN.name()) || salut.getAppEstat().equals(EstatSalutEnum.ERROR.name());
 		}
-		if (alarma) {
-			crearAlarma(alarmaConfig);
+		if (condicioAlarma) {
+			processarCondicioAfirmativa(alarmaConfig);
 			return true;
 		} else {
-			eliminarEsborranys(alarmaConfig);
+			processarCondicioNegativa(alarmaConfig);
 			return false;
 		}
 	}
@@ -93,23 +94,46 @@ public class AlarmaComprovacioHelper {
 			 }
 		}
 		if (alarma) {
-			crearAlarma(alarmaConfig);
+			processarCondicioAfirmativa(alarmaConfig);
 			return true;
 		} else {
-			eliminarEsborranys(alarmaConfig);
+			processarCondicioNegativa(alarmaConfig);
 			return false;
 		}
 	}
 
-	private void crearAlarma(AlarmaConfigEntity alarmaConfig) {
+	/**
+	 * Processa la condició afirmativa d'una alarma basada en la seva configuració.
+	 * Aquesta lògica s'encarrega de gestionar la creació, activació i enviament
+	 * de correus per a alarmes segons el seu estat i condicions definides.
+	 *
+	 * @param alarmaConfig Entitat de configuració de l'alarma
+	 */
+	private void processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
+		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		AlarmaEntity alarmaActivada = null;
-		Optional<AlarmaEntity> alarmaAnterior = alarmaRepository.findTopByAlarmaConfigOrderByIdDesc(alarmaConfig);
-		if (alarmaAnterior.isPresent() && AlarmaEstat.ACTIVA.equals(alarmaAnterior.get().getEstat())) {
-			return; //Si ya tiene una alarma activada no crearemos otra
-		}
-		if (alarmaConfig.getPeriodeValor() != null && alarmaConfig.getPeriodeUnitat() != null) {
-			if (alarmaAnterior.isPresent() && AlarmaEstat.ESBORRANY.equals(alarmaAnterior.get().getEstat())) {
-				Duration duration = Duration.between(alarmaAnterior.get().getCreatedDate(), LocalDateTime.now());
+
+		if (hasAlarmaConfigPeriodes(alarmaConfig)) {
+			if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) {
+				Alarma alarma = new Alarma();
+				alarma.setEntornAppId(alarmaConfig.getEntornAppId());
+				alarma.setEstat(AlarmaEstat.ESBORRANY);
+				alarma.setMissatge(alarmaConfig.getMissatge());
+				alarmaRepository.save(
+						AlarmaEntity.builder().
+								alarma(alarma).
+								alarmaConfig(alarmaConfig).
+								build());
+				log.debug("Nova alarma de tipus esborrany creada (configId={}, configNom={}, destinatari={}",
+						alarmaConfig.getId(),
+						alarmaConfig.getNom(),
+						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
+				return;
+			}
+			AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
+
+			if (alarmaAnteriorNoFinalitzada.getEstat() == AlarmaEstat.ESBORRANY) {
+				Duration duration = Duration.between(alarmaAnteriorNoFinalitzada.getCreatedDate(), LocalDateTime.now());
 				boolean activar = false;
 				switch (alarmaConfig.getPeriodeUnitat()) {
 					case SEGONS:
@@ -126,30 +150,25 @@ public class AlarmaComprovacioHelper {
 						break;
 				}
 				if (activar) {
-					alarmaAnterior.get().setEstat(AlarmaEstat.ACTIVA);
-					alarmaAnterior.get().setDataActivacio(LocalDateTime.now());
-					alarmaActivada = alarmaAnterior.get();
+					alarmaAnteriorNoFinalitzada.setEstat(AlarmaEstat.ACTIVA);
+					alarmaAnteriorNoFinalitzada.setDataActivacio(LocalDateTime.now());
+					alarmaActivada = alarmaAnteriorNoFinalitzada;
 					log.debug("Alarma de tipus esborrany activada (configId={}, configNom={}, destinatari={}",
 							alarmaConfig.getId(),
 							alarmaConfig.getNom(),
 							alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
 				}
-			} else {
-				Alarma alarma = new Alarma();
-				alarma.setEntornAppId(alarmaConfig.getEntornAppId());
-				alarma.setEstat(AlarmaEstat.ESBORRANY);
-				alarma.setMissatge(alarmaConfig.getMissatge());
-				alarmaRepository.save(
-						AlarmaEntity.builder().
-								alarma(alarma).
-								alarmaConfig(alarmaConfig).
-								build());
-				log.debug("Nova alarma de tipus esborrany creada (configId={}, configNom={}, destinatari={}",
-						alarmaConfig.getId(),
-						alarmaConfig.getNom(),
-						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
 			}
 		} else {
+			if (optionalAlarmaAnteriorNoFinalitzada.isPresent()) {
+				// Si una alarma per període es canvia a alarma sense període, les alarmes en esborrany que s'han quedat
+				// pendents d'activar-se poden activar-se sempre que la condició segueixi activa.
+				if (optionalAlarmaAnteriorNoFinalitzada.get().getEstat() == AlarmaEstat.ESBORRANY) {
+					optionalAlarmaAnteriorNoFinalitzada.get().setEstat(AlarmaEstat.ACTIVA);
+				}
+				return;
+			}
+
 			Alarma alarma = new Alarma();
 			alarma.setEntornAppId(alarmaConfig.getEntornAppId());
 			alarma.setEstat(AlarmaEstat.ACTIVA);
@@ -165,16 +184,35 @@ public class AlarmaComprovacioHelper {
 					alarmaConfig.getNom(),
 					alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
 		}
+
 		if (alarmaActivada != null) {
 			enviarCorreuAlarma(alarmaActivada);
 		}
 	}
 
-	private void eliminarEsborranys(AlarmaConfigEntity alarmaConfig) {
-		alarmaRepository.deleteAll(
-				alarmaRepository.findByAlarmaConfigAndEstat(
-						alarmaConfig,
-						AlarmaEstat.ESBORRANY));
+	/**
+	 * Processa la condició negativa d'una alarma basada en la seva configuració.
+	 * Aquesta lògica s'encarrega de cercar una alarma no finalitzada associada
+	 * a la configuració, i en funció del seu estat, eliminar-la o marcar-la com
+	 * finalitzada.
+	 *
+	 * @param alarmaConfig Entitat de configuració de l'alarma. Conté la informació
+	 * necessària per identificar i operar sobre les alarmes associades.
+	 */
+	private void processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
+		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
+		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) return;
+		AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
+
+		if (alarmaAnteriorNoFinalitzada.getEstat() == AlarmaEstat.ESBORRANY) {
+			alarmaRepository.delete(alarmaAnteriorNoFinalitzada);
+		} else {
+			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(LocalDateTime.now());
+		}
+	}
+
+	private boolean hasAlarmaConfigPeriodes(AlarmaConfigEntity alarmaConfig) {
+		return alarmaConfig.getPeriodeValor() != null && alarmaConfig.getPeriodeUnitat() != null;
 	}
 
 	private void enviarCorreuAlarma(AlarmaEntity alarma) {

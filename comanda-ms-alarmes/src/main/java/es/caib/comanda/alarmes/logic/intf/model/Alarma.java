@@ -58,6 +58,7 @@ public class Alarma extends BaseResource<Long> {
 	private LocalDateTime dataActivacio;
 	private LocalDateTime dataEnviament;
 	private LocalDateTime dataEsborrat;
+	private LocalDateTime dataFinalitzacio;
 
 	@NotNull
 	private ResourceReference<AlarmaConfig, Long> alarmaConfig;

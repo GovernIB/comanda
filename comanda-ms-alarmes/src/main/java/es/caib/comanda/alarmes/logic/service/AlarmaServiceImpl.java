@@ -105,17 +105,23 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 				boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
 				String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
 				boolean tePermisos = (alarmaIsAdmin && isCurrentUserAdmin) || (!alarmaIsAdmin && currentUser.equals(alarmaCreatedBy));
-				if (tePermisos) {
-					entity.setEstat(AlarmaEstat.ESBORRADA);
-					entity.setDataEsborrat(LocalDateTime.now());
-				} else {
+                if (!tePermisos) {
+                    throw new ActionExecutionException(
+                            Alarma.class,
+                            entity.getId(),
+                            code,
+                            "Sense permisos per a esborrar l'alarma");
+                }
+				if (entity.getEstat() != AlarmaEstat.ACTIVA) {
 					throw new ActionExecutionException(
 							Alarma.class,
 							entity.getId(),
 							code,
-							"Sense permisos per a esborrar l'alarma");
+							"Només es poden esborrar alarmes actives");
 				}
-			} else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
+                entity.setEstat(AlarmaEstat.ESBORRADA);
+                entity.setDataEsborrat(LocalDateTime.now());
+            } else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
 				alarmaRepository.updateAllEstatEsborradaNoAdmin(
 						currentUser,
 						AlarmaEstat.ACTIVA,
