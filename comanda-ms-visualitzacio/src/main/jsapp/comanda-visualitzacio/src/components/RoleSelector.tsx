@@ -18,6 +18,16 @@ function RoleSelector() {
         setCurrentRole(event.target.value as string);
         //authButtonApiRef.current?.close();
     }
+    const getRoleTranslation = (role: string) => {
+        switch (role) {
+            case 'COM_ADMIN':
+            return t($ => $.enum.userRole.COM_ADMIN);
+            case 'COM_CONSULTA':
+            return t($ => $.enum.userRole.COM_CONSULTA);
+            default:
+            return role;
+        }
+    };
     return userRoles ? <MenuItem onClick={()=>setOpen(prev=>!prev)}>
         <ListItemIcon>
             <Icon fontSize="small">badge</Icon>
@@ -32,7 +42,7 @@ function RoleSelector() {
                 value={currentRole}
                 onChange={handleSelectOnChange}>
                 {userRoles.map(r => <MenuItem key={r} value={r}>
-                    <ListItemText>{r === 'COM_ADMIN' ? t($ => $.enum.userRole.COM_ADMIN) : t($ => $.enum.userRole.COM_CONSULTA)}</ListItemText>
+                    <ListItemText>{getRoleTranslation(r)}</ListItemText>
                 </MenuItem>)}
             </Select>
         </FormControl>
