@@ -37,11 +37,12 @@ import java.util.Set;
 public class WebSecurityConfig extends BaseWebSecurityConfig {
 
 	private static final String ROLE_PREFIX = "";
-
-	@Value("${" + BaseConfig.PROP_SECURITY_MAPPABLE_ROLES + ":" +
+	public static final String MAPPABLE_ROLES_SOURCE = BaseConfig.PROP_SECURITY_MAPPABLE_ROLES + ":" +
 			BaseConfig.ROLE_ADMIN + "," +
 			BaseConfig.ROLE_CONSULTA + "," +
-			BaseConfig.ROLE_WEBSERVICE + "}")
+			BaseConfig.ROLE_WEBSERVICE;
+
+	@Value("${" + MAPPABLE_ROLES_SOURCE + "}")
 	private String mappableRoles;
 	@Value("${" + BaseConfig.PROP_SECURITY_ROLE_HTTP_HEADER + ":X-App-Role}")
 	private String selectedRoleHttpHeader;

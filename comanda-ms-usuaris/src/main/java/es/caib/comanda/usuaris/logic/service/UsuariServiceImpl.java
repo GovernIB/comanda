@@ -2,7 +2,6 @@ package es.caib.comanda.usuaris.logic.service;
 
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
-import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.back.config.WebSecurityConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -27,9 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, UsuariEntity> implements UsuariService {
 
-	@Value("${" + BaseConfig.PROP_SECURITY_MAPPABLE_ROLES + ":" +
-			BaseConfig.ROLE_ADMIN + "," +
-			BaseConfig.ROLE_CONSULTA + "}")
+	@Value("${" + WebSecurityConfig.MAPPABLE_ROLES_SOURCE + "}")
 	private String mappableRoles;
 
 	private final AuthenticationHelper authenticationHelper;
