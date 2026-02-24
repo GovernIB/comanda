@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.0.015-1
+      author: limit
+      changes:
+        - modifyDataType:
+            tableName: ${db_prefix}ENTORN_APP
+            columnName: JDK_VERSION
+            newDataType: varchar(32 ${varcharUnit})

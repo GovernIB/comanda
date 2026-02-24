@@ -38,7 +38,7 @@ CREATE TABLE com_entorn_app (
     estadistica_cron VARCHAR2(40 CHAR),
     estadistica_auth NUMBER(1) DEFAULT 0 NOT NULL,
     versio VARCHAR2(10 CHAR),
-    jdk_version VARCHAR2(10 CHAR),
+    jdk_version VARCHAR2(32 CHAR),
     revisio VARCHAR2(64 CHAR),
     compactable NUMBER(1) DEFAULT 0 NOT NULL,
     compactacio_setmanal NUMBER(19),

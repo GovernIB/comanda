@@ -58,7 +58,7 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	private String versio;
 	@Column(name = "revisio", length = 64)
 	private String revisio;
-	@Column(name = "jdk_version", length = 10)
+	@Column(name = "jdk_version", length = 32)
 	private String jdkVersion;
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
