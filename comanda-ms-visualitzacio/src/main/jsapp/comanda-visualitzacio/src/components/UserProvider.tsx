@@ -3,7 +3,8 @@ import { useResourceApiService, useResourceApiContext } from 'reactlib';
 import { UserContext } from './UserContext';
 import { UsuariModel } from '../types/usuari.model';
 
-const ROLE_DEFAULT_ORDER = ['COM_CONSULTA', 'COM_ADMIN'];
+const ROLE_DEFAULT_ORDER = ['COM_ADMIN', 'COM_CONSULTA'];
+const USER_ROLE_LOCAL_STORAGE_KEY = 'comanda_userRole';
 
 const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const {
@@ -24,8 +25,11 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
                 setUser(user);
                 const userRoles = user?.rols as string[];
                 if (!currentRole) {
-                    const currentRole = ROLE_DEFAULT_ORDER.find(role => userRoles?.includes(role));
-                    setCurrentRole(currentRole);
+                    const roleFromLocalStorage = localStorage.getItem(USER_ROLE_LOCAL_STORAGE_KEY) ?? "";
+                    if (userRoles?.includes(roleFromLocalStorage))
+                        setCurrentRole(roleFromLocalStorage);
+                    else
+                        setCurrentRole(ROLE_DEFAULT_ORDER.find(role => userRoles?.includes(role)));
                 }
             }).
             catch(error => console.log('Error obtenint usuari', error));
@@ -44,7 +48,10 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         user,
         refresh,
         currentRole,
-        setCurrentRole,
+        setCurrentRole: (newRole?: string) => {
+            setCurrentRole(newRole);
+            localStorage.setItem(USER_ROLE_LOCAL_STORAGE_KEY, newRole ?? "");
+        },
     };
     return <UserContext.Provider value={contextValue}>
         {children}
