@@ -40,6 +40,8 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	private BigDecimal valor;
 	@Column(name = "admin", nullable = false)
 	private boolean admin;
+	@Column(name = "correu_generic", nullable = false)
+	private boolean correuGeneric;
 	@Column(name = "periode_unitat", length = 10)
     @Enumerated(EnumType.STRING)
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
@@ -57,6 +59,7 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 		this.periodeUnitat = alarmaConfig.getPeriodeUnitat();
 		this.periodeValor = alarmaConfig.getPeriodeValor();
 		this.admin = alarmaConfig.isAdmin();
+		this.correuGeneric = alarmaConfig.isCorreuGeneric();
 	}
 
 }

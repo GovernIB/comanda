@@ -79,7 +79,6 @@ export const App: React.FC = () => {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
         icon: 'settings',
-        resourceName: 'parametre',
         children: [
             {
                 id: 'app',

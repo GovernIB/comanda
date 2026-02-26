@@ -161,13 +161,16 @@ export const AlarmaConfigForm: React.FC = () => {
                         <FormField name="missatge" />
                     </Grid>
                     <Grid size={6}>
+                        <FormField name="admin" />
+                    </Grid>
+                    <Grid size={6}>
+                        <FormField name="correuGeneric" />
+                    </Grid>
+                    <Grid size={6}>
                         <FormControlLabel
                             control={<Checkbox size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}
                             label={t($ => $.page.alarmaConfig.periode.switch)}
                             sx={{ ml: 1 }} />
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField name="admin" />
                     </Grid>
                     {periodeShow && <Grid size={12}>
                         <Card variant="outlined">

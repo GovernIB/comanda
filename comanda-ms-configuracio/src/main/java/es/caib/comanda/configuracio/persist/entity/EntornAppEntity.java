@@ -6,18 +6,10 @@ import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Formula;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -104,5 +96,10 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
     private Integer compactacioMensualMesos;
     @Column(name = "eliminacio")
     private Integer eliminacioMesos;
+
+	// Correu per a l'enviament genèric de alarmes
+	@Column(name = "alarmes_email", length = 255)
+	@Comment("Dirección de correo electrónico genérico para la notificación de alarmas")
+	private String alarmesEmail;
 
 }

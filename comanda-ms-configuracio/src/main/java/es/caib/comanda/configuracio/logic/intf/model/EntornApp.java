@@ -144,6 +144,8 @@ public class EntornApp extends BaseResource<Long> {
     private Integer compactacioMensualMesos;
     private Integer eliminacioMesos;
 
+	private String alarmesEmail;
+
 	// Camps calculats
 	private String entornAppDescription;
 

@@ -26,7 +26,7 @@ import java.math.BigDecimal;
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-						roles = { BaseConfig.ROLE_ADMIN },
+						roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
 						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
 				),
 		}
@@ -48,5 +48,6 @@ public class AlarmaConfig extends BaseResource<Long> {
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	private BigDecimal periodeValor;
 	private boolean admin;
+	private boolean correuGeneric;
 
 }

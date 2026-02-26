@@ -26,6 +26,8 @@ export interface IEntornAppModel extends IBaseEntity {
     compactacioSetmanalMesos? : number | null;
     compactacioMensualMesos?  : number | null;
     eliminacioMesos?          : number | null;
+
+    alarmesEmail?             : string | null;
 }
 
 export interface IAppRef {
