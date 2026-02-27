@@ -129,6 +129,8 @@ const translationEs: translationResourcesType = {
                     estat: "Estado",
                     infoData: "Última consulta",
                     infoDataDescription: "Fecha última consulta de información",
+                    upData: "Fecha de arranque",
+                    upDataDescription: "Fecha de arranque",
                     codi: "Código",
                     nom: "Nombre",
                     versio: "Versión",

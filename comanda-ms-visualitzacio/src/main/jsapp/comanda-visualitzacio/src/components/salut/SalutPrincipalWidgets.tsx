@@ -301,17 +301,18 @@ const AppDataTable: React.FC<{
             {
                 flex: 0.3,
                 field: 'infoData',
-                headerName: t($ => $.page.salut.apps.column.infoData),
-                description: t($ => $.page.salut.apps.column.infoDataDescription),
+                headerName: t($ => $.page.salut.apps.column.upData),
+                description: t($ => $.page.salut.apps.column.upDataDescription),
                 minWidth: 160,
-                renderCell: ({ id }) => {
-                    const salutItem: SalutModel | null = findSalutItem(id);
+                renderCell: (params) => {
+                    const salutItem: SalutModel | null = findSalutItem(params.id);
                     if (salutItem == null) {
                         return '';
                     }
-                    return salutItem?.data
-                        ? dateFormatLocale(salutItem?.data, true)
-                        : t($ => $.page.salut.nd);
+
+                    const data = salutItem?.detalls?.filter?.((d)=>d.codi == 'ST')?.[0]?.valor
+                    // console.log('params', params, salutItem)
+                    return data || t($ => $.page.salut.nd);
                 },
             },
             {

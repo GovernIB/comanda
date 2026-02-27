@@ -129,6 +129,8 @@ const translationEn: translationResourcesType = {
                     estat: "State",
                     infoData: "Last query",
                     infoDataDescription: "Date of last information query",
+                    upData: "Startup date",
+                    upDataDescription: "Startup date",
                     codi: "Code",
                     nom: "Name",
                     versio: "Version",

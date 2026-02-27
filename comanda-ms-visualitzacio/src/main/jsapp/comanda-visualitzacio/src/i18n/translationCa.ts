@@ -129,6 +129,8 @@ const translationCa = {
                     estat: "Estat",
                     infoData: "Darrera consulta",
                     infoDataDescription: "Data darrera consulta d'informació",
+                    upData: "Data arrancada",
+                    upDataDescription: "Data d'arrancada",
                     codi: "Codi",
                     nom: "Nom",
                     versio: "Versió",

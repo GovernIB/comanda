@@ -160,7 +160,18 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						"salut")).
 					collect(Collectors.toList()));
 		}
-	}
+
+        @Override
+        public boolean applyMultiple(String code, List<SalutEntity> entities, List<Salut> resources) throws PerspectiveApplicationException {
+            for (SalutEntity salutEntity : entities) {
+                Salut salut = resources.stream().filter(s-> salutEntity.getId().equals(s.getId())).findFirst().orElse(null);
+                if (salut != null) {
+                    this.applySingle(code, salutEntity, salut);
+                }
+            }
+            return true;
+        }
+    }
 
 	/**
 	 * Darrera informació de salut de cada aplicació/entorn.
@@ -185,7 +196,9 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			metricsHelper.getSalutLastGlobalTimer().record(
 					Duration.between(t0, Instant.now()));
 			if (saluts != null) {
-				return entitiesToResources(saluts);
+				List<Salut> salutsResource = entitiesToResources(saluts);
+                new PerspectiveDetalls().applyMultiple(null, saluts, salutsResource);
+                return salutsResource;
 			} else {
 				return List.of();
 			}
