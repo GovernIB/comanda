@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.2.001-1
+      author: limit
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Salut"
+              - column:
+                  name: SUBGRUP
+                  value: "Configuració"
+              - column:
+                  name: TIPUS
+                  value: "NUMBER"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.subsistem.num.error"
+              - column:
+                  name: NOM
+                  value: "Numero d'errors per subsistema"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Fins que no hagui x peticiones amb error, no es considará que el subsistema está caigut"
+              - column:
+                  name: VALOR
+                  value: "5"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+

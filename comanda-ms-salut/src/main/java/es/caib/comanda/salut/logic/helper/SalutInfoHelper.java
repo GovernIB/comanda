@@ -9,6 +9,7 @@ import es.caib.comanda.model.v1.salut.IntegracioSalut;
 import es.caib.comanda.model.v1.salut.MissatgeSalut;
 import es.caib.comanda.model.v1.salut.SalutInfo;
 import es.caib.comanda.model.v1.salut.SubsistemaSalut;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -74,8 +75,9 @@ public class SalutInfoHelper {
 
 	// Locks per assegurar compactació "synchronized" per entornAppId
 	private static final ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new ConcurrentHashMap<>();
+    private final ParametresHelper parametresHelper;
 
-	@Transactional
+    @Transactional
 	public void getSalutInfo(EntornApp entornApp) {
 		log.debug("Obtenint dades de salut de l'app {}, entorn {}",
 				entornApp.getApp().getNom(),
@@ -286,7 +288,14 @@ public class SalutInfoHelper {
 			filteredSubsistemes.forEach(s -> {
 				SalutSubsistemaEntity salutSubsistema = new SalutSubsistemaEntity();
 				salutSubsistema.setCodi(s.getCodi());
-				salutSubsistema.setEstat(toSalutEstat(s.getEstat()));
+
+//                Sobreescritura para commparar cantidad de errores issue #83
+                Double num = parametresHelper.getParametreNumeric("es.caib.comanda.subsistem.num.error");
+                if (num != null && (s.getTotalError() == null || s.getTotalError() < num)) {
+                    salutSubsistema.setEstat(SalutEstat.UP);
+                } else {
+                    salutSubsistema.setEstat(toSalutEstat(s.getEstat()));
+                }
 				salutSubsistema.setLatencia(s.getLatencia());
                 salutSubsistema.setLatenciaMitjana(s.getLatencia());
 				salutSubsistema.setTotalOk(s.getTotalOk() != null ? s.getTotalOk() : 0L);
