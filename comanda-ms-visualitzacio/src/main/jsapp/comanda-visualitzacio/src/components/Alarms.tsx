@@ -23,7 +23,7 @@ export const Alarms = () => {
         const response = (await report(undefined, { code: 'ALARMA_FIND_ACTIVES' })) as AlarmType[];
         const newAlarms = response.filter(alarm => !alarms?.some(a => a.id === alarm.id));
 
-        if (alarms == null) {
+        if (alarms == null && response.length > 0) {
             showMessage(
                 t($ => $.page.alarma.snackbar.title),
                 t($ => $.page.alarma.snackbar.existingAlarms, { count: response.length}),
