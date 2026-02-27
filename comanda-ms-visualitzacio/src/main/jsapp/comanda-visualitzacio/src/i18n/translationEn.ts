@@ -400,6 +400,10 @@ const translationEn: translationResourcesType = {
                 showOnlyActiveEnabled: "Showing only active alarms (click to include deleted ones)",
                 showOnlyActiveDisabled: "Showing active and deleted alarms (click to show only active ones)",
             },
+            estats: {
+                finalitzada: "Finalized",
+                finalitzadaEsborrada: "Finalized (deleted)",
+            },
         },
         apps: {
             title: "Applications",

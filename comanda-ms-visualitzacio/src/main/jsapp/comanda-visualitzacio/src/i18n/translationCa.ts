@@ -400,6 +400,10 @@ const translationCa = {
                 showOnlyActiveEnabled: "Mostrant només alarmes actives (clic per incloure eliminades)",
                 showOnlyActiveDisabled: "Mostrant alarmes actives i eliminades (clic per mostrar només actives)",
             },
+            estats: {
+                finalitzada: "Finalitzada",
+                finalitzadaEsborrada: "Finalitzada (esborrada)",
+            },
         },
         apps: {
             title: "Aplicacions",

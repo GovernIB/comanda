@@ -1,5 +1,5 @@
 import { Button, Icon } from '@mui/material';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     GridPage,
@@ -7,25 +7,6 @@ import {
     useMuiDataGridApiRef,
     useMuiActionReportLogic
 } from 'reactlib';
-
-const dataGridColumns = [
-    {
-        field: 'missatge',
-        flex: 1,
-    },
-    {
-        field: 'dataActivacio',
-        flex: 0.5,
-    },
-    {
-        field: 'dataFinalitzacio',
-        flex: 0.5,
-    },
-    {
-        field: 'estat',
-        flex: 0.5,
-    },
-];
 
 const Alarmes = () => {
     const { t } = useTranslation();
@@ -80,6 +61,36 @@ const Alarmes = () => {
         onClick: exec,
         hidden: (row:any) => !row?.id || row?.dataEsborrat,
     }];
+
+    const dataGridColumns = useMemo(
+        () => [
+            {
+                field: 'missatge',
+                flex: 1,
+            },
+            {
+                field: 'dataActivacio',
+                flex: 0.5,
+            },
+            {
+                field: 'dataFinalitzacio',
+                flex: 0.5,
+            },
+            {
+                field: 'estat',
+                renderCell: (params: any) => {
+                    if (params.row?.dataFinalitzacio != null) {
+                        if (params.row?.estat === 'ESBORRADA')
+                            return t($ => $.page.alarma.estats.finalitzadaEsborrada);
+                        return t($ => $.page.alarma.estats.finalitzada);
+                    }
+                },
+                flex: 0.5,
+            },
+        ],
+        [t]
+    );
+
     return (
         <GridPage>
             {actionInitialized && <>
