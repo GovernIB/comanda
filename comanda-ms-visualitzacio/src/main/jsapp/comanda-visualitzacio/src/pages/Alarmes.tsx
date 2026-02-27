@@ -8,16 +8,24 @@ import {
     useMuiActionReportLogic
 } from 'reactlib';
 
-const dataGridColumns = [{
-    field: 'missatge',
-    flex: 1,
-}, {
-    field: 'dataActivacio',
-    flex: 0.5,
-}, {
-    field: 'estat',
-    flex: 0.5,
-}];
+const dataGridColumns = [
+    {
+        field: 'missatge',
+        flex: 1,
+    },
+    {
+        field: 'dataActivacio',
+        flex: 0.5,
+    },
+    {
+        field: 'dataFinalitzacio',
+        flex: 0.5,
+    },
+    {
+        field: 'estat',
+        flex: 0.5,
+    },
+];
 
 const Alarmes = () => {
     const { t } = useTranslation();

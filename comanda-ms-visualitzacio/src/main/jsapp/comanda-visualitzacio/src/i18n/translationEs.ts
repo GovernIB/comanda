@@ -382,6 +382,15 @@ const translationEs: translationResourcesType = {
             },
         },
         alarma: {
+            snackbar: {
+                title: "Alarmas",
+                existingAlarms: "Tiene {{count}} alarma activa",
+                existingAlarms_one: "Tiene {{count}} alarma activa",
+                existingAlarms_other: "Tiene {{count}} alarmas activas",
+                newAlarms: "Nueva alarma activa",
+                newAlarms_one: "Nueva alarma activa",
+                newAlarms_other: "{{count}} nuevas alarmas activas",
+            },
             action: {
                 clear: {
                     label: "Borrar",

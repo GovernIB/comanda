@@ -382,6 +382,15 @@ const translationCa = {
             },
         },
         alarma: {
+            snackbar: {
+                title: "Alarmes",
+                existingAlarms: "Té {{count}} alarma activa",
+                existingAlarms_one: "Té {{count}} alarma activa",
+                existingAlarms_other: "Té {{count}} alarmes actives",
+                newAlarms: "Nova alarma activa",
+                newAlarms_one: "Nova alarma activa",
+                newAlarms_other: "{{count}} noves alarmes actives",
+            },
             action: {
                 clear: {
                     label: "Esborrar",
