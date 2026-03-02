@@ -8,7 +8,6 @@ import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.SalutServiceClient;
-import es.caib.comanda.client.UsuariServiceClient;
 import es.caib.comanda.client.model.Salut;
 import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
@@ -41,9 +40,9 @@ public class AlarmaComprovacioHelper {
 
 	private final AlarmaRepository alarmaRepository;
 	private final SalutServiceClient salutServiceClient;
-	private final UsuariServiceClient usuariServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 	private final AlarmaMailHelper alarmaMailHelper;
+	private final UserInformationHelper userInformationHelper;
 
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
 		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_CAIGUDA) {
@@ -216,17 +215,20 @@ public class AlarmaComprovacioHelper {
 	}
 
 	private void enviarCorreuAlarma(AlarmaEntity alarma) {
-		boolean enviarMail = false;
+		boolean enviarMailUsuari = false;
 		if (alarma.getAlarmaConfig().isAdmin()) {
-			enviarMail = alarmaMailAdmin && !alarmaMailAdminAgrupar;
+			enviarMailUsuari = alarmaMailAdmin && !alarmaMailAdminAgrupar;
 		} else {
-			Usuari usuari = usuariFindByUsername(alarma.getAlarmaConfig().getCreatedBy());
+			Usuari usuari = userInformationHelper.usuariFindByUsername(alarma.getAlarmaConfig().getCreatedBy());
 			if (usuari != null) {
-				enviarMail = usuari.isAlarmaMail() && !usuari.isAlarmaMailAgrupar();
+				enviarMailUsuari = usuari.isAlarmaMail() && !usuari.isAlarmaMailAgrupar();
 			}
 		}
-		if (enviarMail) {
-			alarmaMailHelper.sendAlarma(alarma);
+		if (enviarMailUsuari) {
+			alarmaMailHelper.sendAlarmaUser(alarma);
+		}
+		if (alarma.getAlarmaConfig().isCorreuGeneric()) {
+			alarmaMailHelper.sendAlarmaGeneric(alarma);
 		}
 	}
 
@@ -242,22 +244,6 @@ public class AlarmaComprovacioHelper {
 				httpAuthorizationHeaderHelper.getAuthorizationHeader());
 		if (saluts == null) return null;
 		return saluts.getContent().stream().
-				findFirst().
-				map(EntityModel::getContent).
-				orElse(null);
-	}
-
-	private Usuari usuariFindByUsername(String username) {
-		PagedModel<EntityModel<Usuari>> usuaris = usuariServiceClient.find(
-				null,
-				"codi:'" + username + "'",
-				null,
-				null,
-				"0",
-				1,
-				httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		if (usuaris == null) return null;
-		return usuaris.getContent().stream().
 				findFirst().
 				map(EntityModel::getContent).
 				orElse(null);

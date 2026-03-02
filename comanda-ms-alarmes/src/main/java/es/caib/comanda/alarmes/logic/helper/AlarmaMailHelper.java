@@ -3,11 +3,16 @@ package es.caib.comanda.alarmes.logic.helper;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.Usuari;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.mail.MessagingException;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -27,11 +32,30 @@ public class AlarmaMailHelper {
 	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_NAME + ":#{null}}")
 	private String alarmaMailFromName;
 
+	private final AlarmaClientHelper alarmaClientHelper;
 	private final MailHelper mailHelper;
 	private final UserInformationHelper userInformationHelper;
 	private final AlarmaRepository alarmaRepository;
 
-	public void sendAlarma(AlarmaEntity alarma) {
+	public void sendAlarmaGeneric(AlarmaEntity alarma) {
+        EntornApp alarmaEntornApp = alarmaClientHelper.entornAppFindById(alarma.getEntornAppId());
+		if (alarmaEntornApp == null || Strings.isEmpty(alarmaEntornApp.getAlarmesEmail())) {
+			return;
+		}
+
+		try {
+			sendAlarmaMail(
+					alarmaEntornApp.getAlarmesEmail(),
+					"Correu genèric (" + alarmaEntornApp.getApp().getNom() + " - " + alarmaEntornApp.getEntorn().getNom() + ")",
+					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
+					alarma.getMissatge()
+			);
+		} catch (MessagingException | UnsupportedEncodingException e) {
+			log.error("Error enviant correu d'alarma genèrica", e);
+		}
+	}
+
+	public void sendAlarmaUser(AlarmaEntity alarma) {
 		if (alarma.getAlarmaConfig().isAdmin()) {
 			String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
 			Arrays.stream(adminUsers).forEach(a -> {
@@ -75,14 +99,13 @@ public class AlarmaMailHelper {
 			AlarmaEntity alarma,
 			String username) {
 		try {
-			UserInformationHelper.UserInformation userInformation = userInformationHelper.getUserInfo(username);
-			mailHelper.sendSimple(
-					alarmaMailFromAddress != null ? alarmaMailFromAddress : "comanda@caib.es",
-					alarmaMailFromName != null ? alarmaMailFromName : "Comanda",
-					userInformation.getEmail(),
-					userInformation.getFullName(),
-					"[COMANDA] Alarma activada: " + alarma.getMissatge(),
-					"S'ha produït una alarma!");
+			Usuari usuari = userInformationHelper.usuariFindByUsername(username);
+
+			sendAlarmaMail(
+					usuari.getEmail(),
+					usuari.getNom(),
+					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
+					alarma.getMissatge());
 		} catch (Exception ex) {
 			log.error("No s'ha pogut enviar missatge d'alarma", ex);
 		}
@@ -93,12 +116,10 @@ public class AlarmaMailHelper {
 			String username) {
 		try {
 			if (isUserProfileAlarmaActiva(username)) {
-				UserInformationHelper.UserInformation userInformation = userInformationHelper.getUserInfo(username);
-				return mailHelper.sendSimple(
-						alarmaMailFromAddress != null ? alarmaMailFromAddress : "comanda@caib.es",
-						alarmaMailFromName != null ? alarmaMailFromName : "Comanda",
-						userInformation.getEmail(),
-						userInformation.getFullName(),
+				Usuari usuari = userInformationHelper.usuariFindByUsername(username);
+				return sendAlarmaMail(
+						usuari.getEmail(),
+						usuari.getNom(),
 						"[COMANDA] Resum diari d'alarmes activades",
 						getAlarmesGroupedText(alarmes));
 			}
@@ -116,17 +137,19 @@ public class AlarmaMailHelper {
 		return sb.toString();
 	}
 
-	private boolean isUserAdmin(String username) {
-		String[] roles = userInformationHelper.getRolesByUsername(username);
-		if (roles != null) {
-			return Arrays.asList(roles).contains(BaseConfig.ROLE_ADMIN);
-		} else {
-			return false;
-		}
+	private boolean isUserProfileAlarmaActiva(String username) {
+        Usuari user = userInformationHelper.usuariFindByUsername(username);
+		return user.isAlarmaMail();
 	}
 
-	private boolean isUserProfileAlarmaActiva(String username) {
-		return true;
+	private boolean sendAlarmaMail(String toMail, String toName, String subject, String text) throws MessagingException, UnsupportedEncodingException {
+		return mailHelper.sendSimple(
+				alarmaMailFromAddress != null ? alarmaMailFromAddress : "comanda@caib.es",
+				alarmaMailFromName != null ? alarmaMailFromName : "Comanda",
+				toMail,
+				toName,
+				subject,
+				text);
 	}
 
 }
