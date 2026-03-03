@@ -392,6 +392,29 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
         return result;
     }
 
+    private LocalDateTime plusTime(LocalDateTime dataInici, long time, TipusRegistreSalut tipus) {
+        switch (tipus) {
+            case HORA:
+                return dataInici.plusHours(time);
+            case DIA:
+                return dataInici.plusDays(time);
+            default:
+                return dataInici.plusMinutes(time);
+        }
+    }
+    private List<LocalDateTime> generarFechas(LocalDateTime dataInici, TipusRegistreSalut tipus) {
+        List<LocalDateTime> resultado = new ArrayList<>();
+        LocalDateTime actual = plusTime(dataInici, -1, tipus);
+        LocalDateTime ahora = LocalDateTime.now();
+
+        while (!actual.isAfter(ahora)) {
+            resultado.add(actual);
+            actual = plusTime(actual, 1, tipus);
+        }
+
+        return resultado;
+    }
+
     /**
      * Genera una llista d'objectes SalutInformeEstatItem basats en els paràmetres proporcionats.
      *
@@ -405,7 +428,31 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
                 entornAppId,
                 dataInici,
                 tipus);
-        return salutEntityList.stream().map(SalutInformeEstatItem::new).collect(Collectors.toList());
+        List<SalutInformeEstatItem> result = salutEntityList.stream().map(SalutInformeEstatItem::new).collect(Collectors.toList());
+        List<LocalDateTime> dates = result.stream().map(SalutInformeEstatItem::getData).collect(Collectors.toList());
+        for (LocalDateTime data :generarFechas(dataInici, tipus)) {
+            if (!dates.contains(data)) {
+                result.add(new SalutInformeEstatItem(
+                        data,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        100
+                ));
+            }
+        }
+        return result;
     }
 
     /**
