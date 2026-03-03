@@ -19,6 +19,7 @@ import {
 } from 'reactlib';
 import { Button, Icon } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
+import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 
 const useDataGridColumns = () => {
     const { isReady: apiIsReady, find: apiFind } = useResourceApiService('entornApp');
@@ -30,23 +31,26 @@ const useDataGridColumns = () => {
             });
         }
     }, [apiIsReady]);
-    return [{
-        field: 'entornAppId',
-        valueFormatter: (value?: number) => {
-            if (value == null) {
-                return '';
-            }
-            const entornApp = entornApps?.find(ea => ea.id === value);
-            return entornApp?.entornAppDescription ?? '';
-        },
-        flex: 1,
-    }, {
-        field: 'nom',
-        flex: 3,
-    }, {
-        field: 'tipus',
-        flex: 1,
-    }];
+    return {
+        initialized: apiIsReady && entornApps != null,
+        columns: [{
+            field: 'entornAppId',
+            valueFormatter: (value?: number) => {
+                if (value == null) {
+                    return '';
+                }
+                const entornApp = entornApps?.find(ea => ea.id === value);
+                return entornApp?.entornAppDescription ?? '';
+            },
+            flex: 1,
+        }, {
+            field: 'nom',
+            flex: 3,
+        }, {
+            field: 'tipus',
+            flex: 1,
+        }],
+    };
 }
 
 export const EntornAppSelector : React.FC<any> = (props) => {
@@ -207,7 +211,7 @@ export const AlarmaConfigForm: React.FC = () => {
 const AlarmaConfig = () => {
     const { t } = useTranslation();
     const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(false);
-    const dataGridColumns = useDataGridColumns();
+    const { columns: dataGridColumns, initialized: columnsInitialized } = useDataGridColumns();
     const { user, currentRole } = useUserContext();
     const isCurrentUserAdmin = React.useMemo(() => { return currentRole == 'COM_ADMIN';}, [currentRole]);
     const toolbarElementsWithPositions = React.useMemo(() => {
@@ -231,6 +235,9 @@ const AlarmaConfig = () => {
         }]
     }, [isCurrentUserAdmin, showOnlyOwn, t]);
     const currentFilter = showOnlyOwn ? `createdBy:'${user?.codi}'` : undefined;
+
+    if (!columnsInitialized) return <CenteredCircularProgress />;
+
     return (
         <GridPage>
             <MuiDataGrid
