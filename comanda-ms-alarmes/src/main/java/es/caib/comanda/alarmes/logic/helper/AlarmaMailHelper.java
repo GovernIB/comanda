@@ -3,6 +3,8 @@ package es.caib.comanda.alarmes.logic.helper;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.Usuari;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +16,10 @@ import org.springframework.stereotype.Component;
 import javax.mail.MessagingException;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Enviament de correus d'alarmes.
@@ -26,6 +30,8 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class AlarmaMailHelper {
+	private static final DateTimeFormatter ALARMA_DIA_FORMATTER =
+			DateTimeFormatter.ofPattern("dd/MM/yyyy 'a les' HH:mm");
 
 	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS + ":#{null}}")
 	private String alarmaMailFromAddress;
@@ -36,6 +42,23 @@ public class AlarmaMailHelper {
 	private final MailHelper mailHelper;
 	private final UserInformationHelper userInformationHelper;
 	private final AlarmaRepository alarmaRepository;
+
+
+	private String generateAlarmaBodyMessage(AlarmaEntity alarma) {
+		String nom = alarma.getAlarmaConfig().getNom();
+		EntornApp alarmaEntornApp = alarmaClientHelper.entornAppFindById(alarma.getEntornAppId());
+		App alarmaApp = alarmaClientHelper.appFindById(alarmaEntornApp.getApp().getId());
+		Entorn alarmaEntorn = alarmaClientHelper.entornById(alarmaEntornApp.getEntorn().getId());
+		String app = alarmaApp.getNom();
+		String entorn = alarmaEntorn.getNom();
+		String message = alarma.getMissatge();
+		String dataActivacio = alarma.getDataActivacio().format(ALARMA_DIA_FORMATTER);
+		String missatgeFinalitzacio = alarma.getDataFinalitzacio() != null ? "\nFinalitzada el " + alarma.getDataFinalitzacio().format(ALARMA_DIA_FORMATTER) : "";
+
+		return "Alarma \"" + nom + "\" activada el " + dataActivacio +
+				" per a l'aplicació " + app + " - " + entorn + ":\n" +
+				message + missatgeFinalitzacio;
+	}
 
 	public void sendAlarmaGeneric(AlarmaEntity alarma) {
         EntornApp alarmaEntornApp = alarmaClientHelper.entornAppFindById(alarma.getEntornAppId());
@@ -48,7 +71,7 @@ public class AlarmaMailHelper {
 					alarmaEntornApp.getAlarmesEmail(),
 					"Correu genèric (" + alarmaEntornApp.getApp().getNom() + " - " + alarmaEntornApp.getEntorn().getNom() + ")",
 					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
-					alarma.getMissatge()
+					generateAlarmaBodyMessage(alarma)
 			);
 		} catch (MessagingException | UnsupportedEncodingException e) {
 			log.error("Error enviant correu d'alarma genèrica", e);
@@ -105,7 +128,8 @@ public class AlarmaMailHelper {
 					usuari.getEmail(),
 					usuari.getNom(),
 					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
-					alarma.getMissatge());
+					generateAlarmaBodyMessage(alarma)
+			);
 		} catch (Exception ex) {
 			log.error("No s'ha pogut enviar missatge d'alarma", ex);
 		}
@@ -130,11 +154,9 @@ public class AlarmaMailHelper {
 	}
 
 	private String getAlarmesGroupedText(List<AlarmaEntity> alarmes) {
-		StringBuilder sb = new StringBuilder();
-		alarmes.forEach(a -> {
-			sb.append("\t ").append(a.getMissatge());
-		});
-		return sb.toString();
+		return alarmes.stream()
+				.map(this::generateAlarmaBodyMessage)
+				.collect(Collectors.joining("\n\n"));
 	}
 
 	private boolean isUserProfileAlarmaActiva(String username) {
