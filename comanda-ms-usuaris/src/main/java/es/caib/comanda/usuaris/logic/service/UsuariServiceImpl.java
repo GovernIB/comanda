@@ -4,6 +4,7 @@ import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.ms.back.config.WebSecurityConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.usuaris.logic.intf.model.LanguageEnum;
 import es.caib.comanda.usuaris.logic.intf.model.NumOfElementsPerPageENum;
@@ -19,6 +20,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +33,11 @@ public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, 
 	private String mappableRoles;
 
 	private final AuthenticationHelper authenticationHelper;
+
+    @PostConstruct
+    public void init() {
+        register(Usuari.Fields.alarmaMail, new AlarmaMailOnchangeLogicProcessor());
+    }
 
 	@Override
 	protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
@@ -126,6 +134,15 @@ public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, 
         Set<String> allowedRoles = Set.of(mappableRoles.split(","));
         roles.removeIf(r -> !allowedRoles.contains(r));
         return roles.toArray(new String[0]);
+    }
+
+    private class AlarmaMailOnchangeLogicProcessor implements OnChangeLogicProcessor<Usuari> {
+        @Override
+        public void onChange(Serializable id, Usuari previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Usuari target) {
+            if (Boolean.FALSE.equals(fieldValue)) {
+                target.setAlarmaMailAgrupar(false);
+            }
+        }
     }
 
 }
