@@ -380,6 +380,10 @@ const translationEn: translationResourcesType = {
                 subtitle: "Time period during which the condition must be met to trigger the alarm",
                 switch: "With activation period"
             },
+            filter: {
+                showOnlyOwnEnabled: "Show only my alarms",
+                showOnlyOwnDisabled: "Show all alarms",
+            },
         },
         alarma: {
             snackbar: {

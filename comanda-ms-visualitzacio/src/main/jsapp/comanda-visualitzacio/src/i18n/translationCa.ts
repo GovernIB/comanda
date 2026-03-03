@@ -380,6 +380,10 @@ const translationCa = {
                 subtitle: "Període de temps durant el qual s'ha de complir la condició per a generar l'alarma",
                 switch: "Amb període d'activació"
             },
+            filter: {
+                showOnlyOwnEnabled: "Mostrar només les meves alarmes",
+                showOnlyOwnDisabled: "Mostra totes les alarmes",
+            },
         },
         alarma: {
             snackbar: {

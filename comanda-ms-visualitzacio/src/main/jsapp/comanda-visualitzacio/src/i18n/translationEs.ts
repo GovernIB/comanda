@@ -380,6 +380,10 @@ const translationEs: translationResourcesType = {
                 subtitle: "Periodo de tiempo durante el cual se debe cumplir la condición para generar la alarma",
                 switch: "Con periodo de activación"
             },
+            filter: {
+                showOnlyOwnEnabled: "Mostrar solo mis alarmas",
+                showOnlyOwnDisabled: "Mostrar todas las alarmas",
+            },
         },
         alarma: {
             snackbar: {

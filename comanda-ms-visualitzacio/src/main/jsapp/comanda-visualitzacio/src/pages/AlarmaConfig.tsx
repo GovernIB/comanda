@@ -17,6 +17,8 @@ import {
     useFormApiRef,
     useResourceApiService,
 } from 'reactlib';
+import { Button, Icon } from '@mui/material';
+import { useUserContext } from '../components/UserContext';
 
 const useDataGridColumns = () => {
     const { isReady: apiIsReady, find: apiFind } = useResourceApiService('entornApp');
@@ -88,6 +90,8 @@ export const AlarmaConfigForm: React.FC = () => {
     const [validationErrors, setValidationErrors] = React.useState<any>();
     const [condicioValorDisabled, setCondicioValorDisabled] = React.useState<boolean>(true);
     const [periodeShow, setPeriodeShow] = React.useState<boolean>();
+    const { currentRole } = useUserContext();
+    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == 'COM_ADMIN';}, [currentRole]);
     const handleDataChange = (data: any) => {
         setEntornAppId(data?.entornAppId);
         const condicioValorDisabled = data?.tipus !== 'APP_LATENCIA';
@@ -161,7 +165,7 @@ export const AlarmaConfigForm: React.FC = () => {
                         <FormField name="missatge" />
                     </Grid>
                     <Grid size={6}>
-                        <FormField name="admin" />
+                        <FormField name="admin" disabled={!isCurrentUserAdmin} />
                     </Grid>
                     <Grid size={6}>
                         <FormField name="correuGeneric" />
@@ -202,7 +206,31 @@ export const AlarmaConfigForm: React.FC = () => {
 
 const AlarmaConfig = () => {
     const { t } = useTranslation();
+    const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(false);
     const dataGridColumns = useDataGridColumns();
+    const { user, currentRole } = useUserContext();
+    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == 'COM_ADMIN';}, [currentRole]);
+    const toolbarElementsWithPositions = React.useMemo(() => {
+        if (!isCurrentUserAdmin) {
+            setShowOnlyOwn(false);
+            return undefined;
+        }
+        return [{
+        position: 2,
+        element: <Button
+            onClick={() => setShowOnlyOwn(prev => !prev)}
+            variant={showOnlyOwn ? 'contained' : 'outlined'}
+            title={showOnlyOwn ?
+                    t($ => $.page.alarmaConfig.filter.showOnlyOwnEnabled) :
+                    t($ => $.page.alarmaConfig.filter.showOnlyOwnDisabled)
+            }
+            sx={{ mr: 2 }}
+        >
+            <Icon>{showOnlyOwn ? 'account_circle' : 'people'}</Icon>
+        </Button>,
+        }]
+    }, [isCurrentUserAdmin, showOnlyOwn, t]);
+    const currentFilter = showOnlyOwn ? `createdBy:'${user?.codi}'` : undefined;
     return (
         <GridPage>
             <MuiDataGrid
@@ -210,6 +238,8 @@ const AlarmaConfig = () => {
                 resourceName="alarmaConfig"
                 columns={dataGridColumns}
                 toolbarType="upper"
+                toolbarElementsWithPositions={toolbarElementsWithPositions}
+                filter={currentFilter}
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
             />

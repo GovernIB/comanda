@@ -1,5 +1,6 @@
 package es.caib.comanda.alarmes.logic.intf.model;
 
+import es.caib.comanda.alarmes.back.intf.validation.ValidAdminValue;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
@@ -47,6 +48,7 @@ public class AlarmaConfig extends BaseResource<Long> {
 	private BigDecimal valor;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	private BigDecimal periodeValor;
+    @ValidAdminValue
 	private boolean admin;
 	private boolean correuGeneric;
 
