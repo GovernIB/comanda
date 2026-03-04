@@ -125,7 +125,7 @@ public class AlarmaMailHelper {
 			Usuari usuari = userInformationHelper.usuariFindByUsername(username);
 
 			sendAlarmaMail(
-					usuari.getEmail(),
+					getMailFromUsuari(usuari),
 					usuari.getNom(),
 					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
 					generateAlarmaBodyMessage(alarma)
@@ -142,7 +142,7 @@ public class AlarmaMailHelper {
 			if (isUserProfileAlarmaActiva(username)) {
 				Usuari usuari = userInformationHelper.usuariFindByUsername(username);
 				return sendAlarmaMail(
-						usuari.getEmail(),
+						getMailFromUsuari(usuari),
 						usuari.getNom(),
 						"[COMANDA] Resum diari d'alarmes activades",
 						getAlarmesGroupedText(alarmes));
@@ -162,6 +162,15 @@ public class AlarmaMailHelper {
 	private boolean isUserProfileAlarmaActiva(String username) {
         Usuari user = userInformationHelper.usuariFindByUsername(username);
 		return user.isAlarmaMail();
+	}
+
+	/**
+	 * Recupera el correu electrònic a usar d'acord amb un Usuari, respectant l'email de preferencia establert
+	 */
+	private String getMailFromUsuari(Usuari usuari) {
+		return Strings.isNotBlank(usuari.getEmailAlternatiu())
+				? usuari.getEmailAlternatiu()
+				: usuari.getEmail();
 	}
 
 	private boolean sendAlarmaMail(String toMail, String toName, String subject, String text) throws MessagingException, UnsupportedEncodingException {

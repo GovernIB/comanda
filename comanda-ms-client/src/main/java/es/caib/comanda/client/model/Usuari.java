@@ -18,6 +18,8 @@ public class Usuari implements Serializable {
     private String nif;
     private String email;
 
+    private String emailAlternatiu;
+
     private boolean alarmaMail;
     private boolean alarmaMailAgrupar;
 
