@@ -6,6 +6,7 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import Checkbox from '@mui/material/Checkbox';
+import Skeleton from '@mui/material/Skeleton';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import {
     FormPage,
@@ -16,10 +17,12 @@ import {
     FormField,
     useFormApiRef,
     useResourceApiService,
+    springFilterBuilder, useBaseAppContext, useConfirmDialogButtons, useMuiDataGridApiRef,
 } from 'reactlib';
 import { Button, Icon } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
+import {toToolbarIcon} from "../../lib/components/mui/ToolbarIcon.tsx";
 
 const useDataGridColumns = () => {
     const { isReady: apiIsReady, find: apiFind } = useResourceApiService('entornApp');
@@ -67,7 +70,7 @@ export const EntornAppSelector : React.FC<any> = (props) => {
             });
         }
     }, [apiIsReady, id]);
-    return (!id || entornApp != null) && <MuiFilter
+    return (!id || entornApp != null) ? <MuiFilter
         resourceName="entornApp"
         code="salut_entornApp_filter"
         commonFieldComponentProps={{ size: 'small' }}
@@ -75,6 +78,9 @@ export const EntornAppSelector : React.FC<any> = (props) => {
         initialData={{ entornApp: entornApp }}
         springFilterBuilder={() => ''}
         onDataChange={data => onEntornAppChange(data?.entornApp)}
+        componentProps={{
+            margin: '0 !important',
+        }}
         formApiRef={formApiRef}>
             <FormField
             name="entornApp"
@@ -83,7 +89,7 @@ export const EntornAppSelector : React.FC<any> = (props) => {
                 field: 'entornAppDescription',
                 flex: 1,
             }]} />
-    </MuiFilter>;
+    </MuiFilter> : <Skeleton height={'100%'}/>;
 }
 
 export const AlarmaConfigForm: React.FC = () => {
@@ -119,6 +125,23 @@ export const AlarmaConfigForm: React.FC = () => {
     const handlePeriodeShowChange = (event: any) => {
         setPeriodeShow(event.target.checked);
     }
+
+    const {goBack} = useBaseAppContext();
+    const afterDelete = () => {
+        goBack("/alarma")
+    }
+
+    const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(afterDelete)
+    const elementsWithPositions = React.useMemo(() => [
+        {
+            position: 3,
+            element: toToolbarIcon('delete', {
+                title: tLib('form.delete.title'),
+                onClick: () => apiDelete(id),
+            }),
+        }
+    ], [apiIsReady, tLib]);
+
     return (
         <FormPage>
             <MuiForm
@@ -129,6 +152,11 @@ export const AlarmaConfigForm: React.FC = () => {
                 createLink="form/{{id}}"
                 apiRef={formApiRef}
                 onDataChange={handleDataChange}
+                hiddenBackButton
+                hiddenRevertButton
+                hiddenSaveButton
+                hiddenDeleteButton
+                // toolbarElementsWithPositions={elementsWithPositions}
                 onValidationErrorsChange={handleValidationErrorsChange}>
                 <Grid container spacing={2}>
                     <Grid size={3}>
@@ -208,8 +236,45 @@ export const AlarmaConfigForm: React.FC = () => {
     );
 }
 
+const useAlarmaConfigAction = (refresh?: () => void) => {
+    const {
+        isReady: apiIsReady,
+        patch: apiPatch,
+    } = useResourceApiService("alarmaConfig")
+    const {messageDialogShow, temporalMessageShow, t: tLib} = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = {maxWidth: 'sm', fullWidth: true};
+
+    const apiDelete = (id:any) => {
+        messageDialogShow(
+            tLib('datacommon.delete.single.label'),
+            tLib('datacommon.delete.single.confirm'),
+            confirmDialogButtons,
+            confirmDialogComponentProps)
+            .then((value: any) => {
+                if (value) {
+                    apiPatch(id, {data: {esborrat: true}})
+                        .then(() => {
+                            refresh?.()
+                            temporalMessageShow(null, tLib('datacommon.delete.single.success'), 'success');
+                        })
+                        .catch((error) => {
+                            temporalMessageShow(tLib('datacommon.delete.single.error'), error?.message, 'error');
+                        })
+                }
+            })
+    }
+
+    return {
+        tLib,
+        apiIsReady,
+        apiDelete,
+    }
+}
+
 const AlarmaConfig = () => {
     const { t } = useTranslation();
+    const apiRef = useMuiDataGridApiRef();
     const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(false);
     const { columns: dataGridColumns, initialized: columnsInitialized } = useDataGridColumns();
     const { user, currentRole } = useUserContext();
@@ -234,21 +299,41 @@ const AlarmaConfig = () => {
         </Button>,
         }]
     }, [isCurrentUserAdmin, showOnlyOwn, t]);
-    const currentFilter = showOnlyOwn ? `createdBy:'${user?.codi}'` : undefined;
+    const currentFilter = springFilterBuilder.and(
+        showOnlyOwn && springFilterBuilder.eq('createdBy', `'${user?.codi}'`),
+        springFilterBuilder.eq('esborrat', false)
+    )
+
+    const refresh = () => {
+        apiRef.current?.refresh?.();
+    }
+
+    const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(refresh)
+    const actions = React.useMemo(() => [
+        {
+            label: tLib('datacommon.delete.label'),
+            icon: 'delete',
+            showInMenu: true,
+            onClick: apiDelete,
+        }
+    ], [apiIsReady, tLib]);
 
     if (!columnsInitialized) return <CenteredCircularProgress />;
 
     return (
         <GridPage>
             <MuiDataGrid
+                apiRef={apiRef}
                 title={t($ => $.page.alarmaConfig.title)}
                 resourceName="alarmaConfig"
                 columns={dataGridColumns}
                 toolbarType="upper"
+                rowAdditionalActions={actions}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 filter={currentFilter}
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
+                rowHideDeleteButton
             />
         </GridPage>
     );

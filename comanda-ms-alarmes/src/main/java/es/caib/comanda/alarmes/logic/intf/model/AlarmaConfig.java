@@ -52,4 +52,6 @@ public class AlarmaConfig extends BaseResource<Long> {
 	private boolean admin;
 	private boolean correuGeneric;
 
+    private boolean esborrat;
+
 }
