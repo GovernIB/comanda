@@ -68,6 +68,7 @@ public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, 
 			usuariEntity.setCodi(usuariAuth.getCodi());
 			usuariEntity.setIdioma(LanguageEnum.CA);
 			usuariEntity.setNumElementsPagina(NumOfElementsPerPageENum.AUTOMATIC);
+			usuariEntity.setAlarmaMail(true);
 		}
 		usuariEntity.setNom(usuariAuth.getNom());
 		usuariEntity.setNif(usuariAuth.getNif());
