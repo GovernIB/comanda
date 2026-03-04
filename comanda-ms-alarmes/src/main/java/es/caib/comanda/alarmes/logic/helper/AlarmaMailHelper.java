@@ -99,15 +99,20 @@ public class AlarmaMailHelper {
 		LocalDateTime dataDesde = LocalDateTime.now().minusHours(24);
 		List<AlarmaEntity> alarmesPendentsAdmin = alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(
 				dataDesde);
-		String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
-		long adminMailCount = Arrays.stream(adminUsers).filter(a -> {
-			if (isUserProfileAlarmaActiva(a)) {
-				return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, a);
-			} else {
-				return false;
-			}
-		}).count();
-		// Envia les alarmes dels usuaris no administradors
+        long adminMailCount = 0;
+        try {
+            String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
+            adminMailCount = Arrays.stream(adminUsers).filter(a -> {
+                if (isUserProfileAlarmaActiva(a)) {
+                    return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, a);
+                } else {
+                    return false;
+                }
+            }).count();
+        } catch (UserInformationHelper.UserInformationException e) {
+            log.error("Error recuperant usuaris administradors. No s'enviaran els correus de les alarmes agrupades pels administradors.");
+        }
+        // Envia les alarmes dels usuaris no administradors
 		List<String> usuaris = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfter(dataDesde);
 		long userMailCount = usuaris.stream().filter(u -> {
 			List<AlarmaEntity> alarmesPendentsUser = alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
