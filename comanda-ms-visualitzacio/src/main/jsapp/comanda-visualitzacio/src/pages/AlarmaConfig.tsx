@@ -17,12 +17,13 @@ import {
     FormField,
     useFormApiRef,
     useResourceApiService,
-    springFilterBuilder, useBaseAppContext, useConfirmDialogButtons, useMuiDataGridApiRef,
+    useBaseAppContext,
+    useConfirmDialogButtons,
+    useMuiDataGridApiRef,
 } from 'reactlib';
 import { Button, Icon } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
-import {toToolbarIcon} from "../../lib/components/mui/ToolbarIcon.tsx";
 
 const useDataGridColumns = () => {
     const { isReady: apiIsReady, find: apiFind } = useResourceApiService('entornApp');
@@ -131,16 +132,16 @@ export const AlarmaConfigForm: React.FC = () => {
         goBack("/alarma")
     }
 
-    const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(afterDelete)
-    const elementsWithPositions = React.useMemo(() => [
-        {
-            position: 3,
-            element: toToolbarIcon('delete', {
-                title: tLib('form.delete.title'),
-                onClick: () => apiDelete(id),
-            }),
-        }
-    ], [apiIsReady, tLib]);
+    // const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(afterDelete)
+    // // const elementsWithPositions = React.useMemo(() => [
+    // //     {
+    // //         position: 3,
+    // //         element: toToolbarIcon('delete', {
+    // //             title: tLib('form.delete.title'),
+    // //             onClick: () => apiDelete(id),
+    // //         }),
+    // //     }
+    // // ], [apiIsReady, tLib]);
 
     return (
         <FormPage>
@@ -152,9 +153,6 @@ export const AlarmaConfigForm: React.FC = () => {
                 createLink="form/{{id}}"
                 apiRef={formApiRef}
                 onDataChange={handleDataChange}
-                hiddenBackButton
-                hiddenRevertButton
-                hiddenSaveButton
                 hiddenDeleteButton
                 // toolbarElementsWithPositions={elementsWithPositions}
                 onValidationErrorsChange={handleValidationErrorsChange}>
@@ -239,7 +237,7 @@ export const AlarmaConfigForm: React.FC = () => {
 const useAlarmaConfigAction = (refresh?: () => void) => {
     const {
         isReady: apiIsReady,
-        patch: apiPatch,
+        artifactAction,
     } = useResourceApiService("alarmaConfig")
     const {messageDialogShow, temporalMessageShow, t: tLib} = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
@@ -253,7 +251,7 @@ const useAlarmaConfigAction = (refresh?: () => void) => {
             confirmDialogComponentProps)
             .then((value: any) => {
                 if (value) {
-                    apiPatch(id, {data: {esborrat: true}})
+                    artifactAction(id, { code: 'delete_alarmaConfig' })
                         .then(() => {
                             refresh?.()
                             temporalMessageShow(null, tLib('datacommon.delete.single.success'), 'success');
@@ -298,10 +296,7 @@ const AlarmaConfig = () => {
         </Button>,
         }]
     }, [isCurrentUserAdmin, showOnlyOwn, t]);
-    const currentFilter = springFilterBuilder.and(
-        (showOnlyOwn && isCurrentUserAdmin) && springFilterBuilder.eq('createdBy', `'${user?.codi}'`),
-        springFilterBuilder.eq('esborrat', false)
-    )
+    const currentFilter = (showOnlyOwn && isCurrentUserAdmin) ? `createdBy:'${user?.codi}'` : undefined;
 
     const refresh = () => {
         apiRef.current?.refresh?.();
