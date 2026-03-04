@@ -275,13 +275,12 @@ const useAlarmaConfigAction = (refresh?: () => void) => {
 const AlarmaConfig = () => {
     const { t } = useTranslation();
     const apiRef = useMuiDataGridApiRef();
-    const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(false);
+    const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(true);
     const { columns: dataGridColumns, initialized: columnsInitialized } = useDataGridColumns();
     const { user, currentRole } = useUserContext();
     const isCurrentUserAdmin = React.useMemo(() => { return currentRole == 'COM_ADMIN';}, [currentRole]);
     const toolbarElementsWithPositions = React.useMemo(() => {
         if (!isCurrentUserAdmin) {
-            setShowOnlyOwn(false);
             return undefined;
         }
         return [{
@@ -300,7 +299,7 @@ const AlarmaConfig = () => {
         }]
     }, [isCurrentUserAdmin, showOnlyOwn, t]);
     const currentFilter = springFilterBuilder.and(
-        showOnlyOwn && springFilterBuilder.eq('createdBy', `'${user?.codi}'`),
+        (showOnlyOwn && isCurrentUserAdmin) && springFilterBuilder.eq('createdBy', `'${user?.codi}'`),
         springFilterBuilder.eq('esborrat', false)
     )
 
