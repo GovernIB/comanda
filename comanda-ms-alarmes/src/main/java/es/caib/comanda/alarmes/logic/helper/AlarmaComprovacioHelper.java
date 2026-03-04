@@ -6,7 +6,6 @@ import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
-import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.Salut;
 import es.caib.comanda.client.model.Usuari;
@@ -14,7 +13,6 @@ import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
@@ -32,11 +30,6 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class AlarmaComprovacioHelper {
-
-	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_ADMIN + ":false}")
-	private boolean alarmaMailAdmin;
-	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_ADMIN_AGRUPAR + ":false}")
-	private boolean alarmaMailAdminAgrupar;
 
 	private final AlarmaRepository alarmaRepository;
 	private final SalutServiceClient salutServiceClient;
@@ -217,7 +210,7 @@ public class AlarmaComprovacioHelper {
 	private void enviarCorreuAlarma(AlarmaEntity alarma) {
 		boolean enviarMailUsuari = false;
 		if (alarma.getAlarmaConfig().isAdmin()) {
-			enviarMailUsuari = alarmaMailAdmin && !alarmaMailAdminAgrupar;
+			enviarMailUsuari = true;
 		} else {
 			Usuari usuari = userInformationHelper.usuariFindByUsername(alarma.getAlarmaConfig().getCreatedBy());
 			if (usuari != null) {

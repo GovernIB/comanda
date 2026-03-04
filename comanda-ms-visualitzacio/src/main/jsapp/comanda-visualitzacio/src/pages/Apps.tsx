@@ -103,6 +103,9 @@ const AppEntornForm: React.FC = () => {
             <Grid size={12}>
                 <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={pingUrl}/>}}}} />
             </Grid>
+            <Grid size={12}>
+                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={pingUrl}/>}}}} />
+            </Grid>
             <Grid size={12} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
                     <FormLabel component="legend">{t($ => $.page.apps.fields.salutAuthLegend)}</FormLabel>

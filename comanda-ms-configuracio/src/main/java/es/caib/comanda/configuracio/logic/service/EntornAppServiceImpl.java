@@ -276,7 +276,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
             HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
 
-            String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) + "/v1/logs"; // TODO
+            String logsUrl = entornAppEntity.getLogsUrl();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<FitxerInfo>> response = restTemplate
                     .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<FitxerInfo>>() {});
@@ -312,7 +312,9 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
 
             EntornAppEntity entornAppEntity = entornAppRepository.findById(params.getEntornAppId()).get();
-            String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) + "/v1/logs/" + params.getNomFitxer(); // TODO
+            String baseUrl = entornAppEntity.getLogsUrl();
+            String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/")
+                    + params.getNomFitxer();
             URI uri = URI.create(logsUrl);
             ResponseEntity<FitxerContingut> response = restTemplate
                     .exchange(uri, HttpMethod.GET, httpEntity, FitxerContingut.class);
@@ -332,8 +334,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         public List<EntornApp.PrevisualitzarLogResponse> generateData(String code, EntornAppEntity entornAppEntity, EntornApp.PrevisualitzarLogParams params) throws ReportGenerationException {
             HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
 
-            String logsUrl = entornAppEntity.getSalutUrl().substring(0, entornAppEntity.getSalutUrl().lastIndexOf("/")) +
-                    "/v1/logs/" + params.getFileName() + "/linies/" + params.getLineCount(); // TODO
+            String baseUrl = entornAppEntity.getLogsUrl();
+            String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "linies/" + params.getLineCount();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<String>> response = restTemplate
                     .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<String>>() {});

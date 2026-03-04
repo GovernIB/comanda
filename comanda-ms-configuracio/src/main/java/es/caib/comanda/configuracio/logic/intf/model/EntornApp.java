@@ -106,6 +106,11 @@ public class EntornApp extends BaseResource<Long> {
 	@Builder.Default
 	private boolean activa = true;
 
+	// Logs
+	@URL
+	@Size(max = 200)
+	private String logsUrl;
+
 	// Informació de salut
 	@URL
 	@NotNull

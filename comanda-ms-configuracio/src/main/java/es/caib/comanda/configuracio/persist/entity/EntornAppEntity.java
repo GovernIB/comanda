@@ -55,6 +55,10 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	@Column(name = "activa", nullable = false)
 	private boolean activa;
 
+	// Logs
+	@Column(name = "logs_url", length = 200)
+	private String logsUrl;
+
 	// Informació de salut
 	@Column(name = "salut_url", length = 200, nullable = false)
 	private String salutUrl;

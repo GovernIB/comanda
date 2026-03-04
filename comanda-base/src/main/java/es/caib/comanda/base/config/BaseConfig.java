@@ -56,8 +56,6 @@ public class BaseConfig {
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
 	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
 	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
-	public static final String PROP_ALARMA_MAIL_ADMIN = PROPERTY_PREFIX + "alarma.mail.admin";
-	public static final String PROP_ALARMA_MAIL_ADMIN_AGRUPAR = PROPERTY_PREFIX + "alarma.mail.admin.agrupar";
 
 	public static final String PROP_BROKER_PORT = PROPERTY_PREFIX + "broker.port";
 	public static final String PROP_BROKER_USERNAME = PROPERTY_PREFIX + "broker.username";
