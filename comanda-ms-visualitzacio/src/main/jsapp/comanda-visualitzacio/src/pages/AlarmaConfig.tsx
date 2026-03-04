@@ -127,10 +127,10 @@ export const AlarmaConfigForm: React.FC = () => {
         setPeriodeShow(event.target.checked);
     }
 
-    const {goBack} = useBaseAppContext();
-    const afterDelete = () => {
-        goBack("/alarma")
-    }
+    // const {goBack} = useBaseAppContext();
+    // const afterDelete = () => {
+    //     goBack("/alarma")
+    // }
 
     // const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(afterDelete)
     // // const elementsWithPositions = React.useMemo(() => [
