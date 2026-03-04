@@ -25,6 +25,9 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 
 	@Column(name = "entorn_app_id", nullable = false)
 	private Long entornAppId;
+	// Camp intern usat per fer soft-delete de AlarmaConfig
+	@Column(name = "esborrat", nullable = false)
+	private boolean esborrat;
 
 	@Column(name = "nom", length = 200, nullable = false)
 	private String nom;
