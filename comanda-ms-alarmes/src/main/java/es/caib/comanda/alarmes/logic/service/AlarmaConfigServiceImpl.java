@@ -1,8 +1,10 @@
 package es.caib.comanda.alarmes.logic.service;
 
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig;
+import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
+import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
@@ -29,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaConfig, Long, AlarmaConfigEntity> implements AlarmaConfigService {
     private final AuthenticationHelper authenticationHelper;
+    private final AlarmaRepository alarmaRepository;
 
     @PostConstruct
     public void init() {
@@ -58,11 +62,15 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         }
     }
 
-    private static class DeleteAlarmaConfigAction implements ActionExecutor<AlarmaConfigEntity, String, AlarmaConfig> {
+    private class DeleteAlarmaConfigAction implements ActionExecutor<AlarmaConfigEntity, String, AlarmaConfig> {
 
         @Override
         public AlarmaConfig exec(String code, AlarmaConfigEntity entity, String params) throws ActionExecutionException {
             entity.setEsborrat(true);
+
+            alarmaRepository.deleteByAlarmaConfigAndEstat(entity, AlarmaEstat.ESBORRANY);
+            alarmaRepository.finalizeByAlarmaConfig(entity, LocalDateTime.now());
+
             return null;
         }
 

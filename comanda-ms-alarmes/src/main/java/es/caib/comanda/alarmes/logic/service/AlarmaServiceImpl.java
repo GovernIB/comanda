@@ -66,7 +66,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	@Transactional
 	public void comprovacioScheduledTask() {
 		log.debug("Iniciant comprovació d'alarmes...");
-		long activadesCount = alarmaConfigRepository.findAll().stream()
+		long activadesCount = alarmaConfigRepository.findAllByEsborratFalse().stream()
 				.filter(alarmaComprovacioHelper::comprovar)
 				.count();
 		log.debug("...comprovació d'alarmes finalitzada ({} alarmes activades)", activadesCount);
