@@ -81,14 +81,14 @@ public class AlarmaMailHelper {
 	public void sendAlarmaUser(AlarmaEntity alarma) {
 		if (alarma.getAlarmaConfig().isAdmin()) {
 			String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
-			Arrays.stream(adminUsers).forEach(a -> {
-				if (isUserProfileAlarmaActiva(a)) {
-					sendAlarmaMailForUser(alarma, a);
+			Arrays.stream(adminUsers).forEach(adminUser -> {
+				if (isUserProfileAlarmaActivaAndUngrouped(adminUser)) {
+					sendAlarmaMailForUser(alarma, adminUser);
 				}
 			});
 		} else {
 			String username = alarma.getAlarmaConfig().getCreatedBy();
-			if (isUserProfileAlarmaActiva(username)) {
+			if (isUserProfileAlarmaActivaAndUngrouped(username)) {
 				sendAlarmaMailForUser(alarma, username);
 			}
 		}
@@ -102,9 +102,9 @@ public class AlarmaMailHelper {
         long adminMailCount = 0;
         try {
             String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
-            adminMailCount = Arrays.stream(adminUsers).filter(a -> {
-                if (isUserProfileAlarmaActiva(a)) {
-                    return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, a);
+            adminMailCount = Arrays.stream(adminUsers).filter(adminUser -> {
+                if (isUserProfileAlarmaActivaAndGrouped(adminUser)) {
+                    return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, adminUser);
                 } else {
                     return false;
                 }
@@ -144,7 +144,7 @@ public class AlarmaMailHelper {
 			List<AlarmaEntity> alarmes,
 			String username) {
 		try {
-			if (isUserProfileAlarmaActiva(username)) {
+			if (isUserProfileAlarmaActivaAndGrouped(username)) {
 				Usuari usuari = userInformationHelper.usuariFindByUsername(username);
 				return sendAlarmaMail(
 						getMailFromUsuari(usuari),
@@ -164,9 +164,14 @@ public class AlarmaMailHelper {
 				.collect(Collectors.joining("\n\n"));
 	}
 
-	private boolean isUserProfileAlarmaActiva(String username) {
-        Usuari user = userInformationHelper.usuariFindByUsername(username);
-		return user.isAlarmaMail();
+	private boolean isUserProfileAlarmaActivaAndGrouped(String username) {
+		Usuari user = userInformationHelper.usuariFindByUsername(username);
+		return user != null && user.isAlarmaMail() && user.isAlarmaMailAgrupar();
+	}
+
+	private boolean isUserProfileAlarmaActivaAndUngrouped(String username) {
+		Usuari user = userInformationHelper.usuariFindByUsername(username);
+		return user != null && user.isAlarmaMail() && !user.isAlarmaMailAgrupar();
 	}
 
 	/**

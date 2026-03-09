@@ -8,7 +8,6 @@ import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.Salut;
-import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,6 @@ public class AlarmaComprovacioHelper {
 	private final SalutServiceClient salutServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 	private final AlarmaMailHelper alarmaMailHelper;
-	private final UserInformationHelper userInformationHelper;
 
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
 		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_CAIGUDA) {
@@ -208,19 +206,9 @@ public class AlarmaComprovacioHelper {
 	}
 
 	private void enviarCorreuAlarma(AlarmaEntity alarma) {
-		boolean enviarMailUsuari = false;
-		if (alarma.getAlarmaConfig().isAdmin()) {
-			enviarMailUsuari = true;
-		} else {
-			Usuari usuari = userInformationHelper.usuariFindByUsername(alarma.getAlarmaConfig().getCreatedBy());
-			if (usuari != null) {
-				enviarMailUsuari = usuari.isAlarmaMail() && !usuari.isAlarmaMailAgrupar();
-			}
-		}
-		if (enviarMailUsuari) {
-			alarmaMailHelper.sendAlarmaUser(alarma);
-		}
-		if (alarma.getAlarmaConfig().isCorreuGeneric()) {
+        alarmaMailHelper.sendAlarmaUser(alarma);
+
+        if (alarma.getAlarmaConfig().isCorreuGeneric()) {
 			alarmaMailHelper.sendAlarmaGeneric(alarma);
 		}
 	}
