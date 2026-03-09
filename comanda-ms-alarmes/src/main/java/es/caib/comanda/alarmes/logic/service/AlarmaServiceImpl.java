@@ -17,6 +17,7 @@ import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,11 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	private final AuthenticationHelper authenticationHelper;
     private final EntityManager entityManager;
 
+	@Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
+	private Boolean schedulerLeader;
+	@Value("${" + BaseConfig.PROP_SCHEDULER_BACK + ":#{false}}")
+	private Boolean schedulerBack;
+
 	@PostConstruct
 	public void init() {
 		register(
@@ -65,6 +71,9 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	@Override
 	@Transactional
 	public void comprovacioScheduledTask() {
+		if (!isLeader()) {
+			return;
+		}
 		log.debug("Iniciant comprovació d'alarmes...");
 		long activadesCount = alarmaConfigRepository.findAllByEsborratFalse().stream()
 				.filter(alarmaComprovacioHelper::comprovar)
@@ -75,6 +84,9 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	@Override
 	@Transactional
 	public void enviamentsAgrupatsScheduledTask() {
+		if (!isLeader()) {
+			return;
+		}
 		log.debug("Iniciant enviaments agrupats d'alarmes...");
 		long mailCount = alarmaMailHelper.sendAlarmesAgrupades();
 		log.debug("...enviaments agrupats d'alarmes finalitzat ({} correus enviats)", mailCount);
@@ -170,4 +182,9 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
         public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
         }
     }
+
+	private boolean isLeader() {
+		// TODO: Implementar per microserveis
+		return schedulerLeader && schedulerBack;
+	}
 }
