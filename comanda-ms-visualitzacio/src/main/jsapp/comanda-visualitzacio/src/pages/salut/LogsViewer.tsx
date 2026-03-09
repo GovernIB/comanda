@@ -1,4 +1,4 @@
-import { useCloseDialogButtons, useResourceApiService } from 'reactlib';
+import { dateFormatLocale, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, ToggleButton, Typography } from '@mui/material';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -18,6 +18,7 @@ import { ResourceApiBlobResponse } from '../../../lib/components/ResourceApiProv
 import CircularProgress from '@mui/material/CircularProgress';
 import { mergeSequentialStringArrays } from '../../util/stringUtils';
 import { useTranslation } from 'react-i18next';
+import useDataGridLocale from '../../hooks/useDataGridLocale';
 
 interface FitxerInfo {
     nom: string;
@@ -45,6 +46,7 @@ const LogList = ({
 }) => {
     const { t } = useTranslation();
     const { isReady, artifactReport } = useResourceApiService('entornApp');
+    const dataGridLocale = useDataGridLocale();
     const [logs, setLogs] = useState<FitxerInfo[]>([]);
     useEffect(() => {
         if (!isReady) {
@@ -68,11 +70,13 @@ const LogList = ({
             {
                 field: 'dataCreacio',
                 headerName: t($ => $.page.salut.logs.logsList.dataCreacio),
+                valueFormatter: (value) => dateFormatLocale(value, true),
                 flex: 0.5,
             },
             {
                 field: 'dataModificacio',
                 headerName: t($ => $.page.salut.logs.logsList.dataModificacio),
+                valueFormatter: (value) => dateFormatLocale(value, true),
                 flex: 0.5,
             },
             {
@@ -132,6 +136,7 @@ const LogList = ({
     return (
         <DataGridPro
             loading={!logs.length || loading}
+            localeText={dataGridLocale}
             initialState={{
                 sorting: {
                     sortModel: [{ field: 'showPreview', sort: 'desc' }],
