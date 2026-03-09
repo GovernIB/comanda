@@ -206,6 +206,7 @@ const translationEn: translationResourcesType = {
                 integracioDownCount: "Inactive",
                 integracioDesconegutCount: "Unknown state",
                 noInfo: "There is no information about integrations",
+                noResults: "There is no information about integrations with the selected states",
                 column: {
                     codi: "Code",
                     nom: "Name",
@@ -215,6 +216,9 @@ const translationEn: translationResourcesType = {
                     peticionsPeriode: "Time period requests",
                     tempsMigPeriode: "Time period avg. time",
                 },
+                filter: {
+                    estat: "States",
+                },
             },
             subsistemes: {
                 title: "Subsystems",
@@ -223,6 +227,7 @@ const translationEn: translationResourcesType = {
                 subsistemaWarnCount: "Warning",
                 subsistemaDesconegutCount: "Unknown state",
                 noInfo: "There is no information about subsystems",
+                noResults: "There is no information about subsystems with the selected states.",
                 column: {
                     codi: "Code",
                     nom: "Name",
@@ -231,6 +236,9 @@ const translationEn: translationResourcesType = {
                     tempsMigTotal: "Total avg. time",
                     peticionsPeriode: "Time period requests",
                     tempsMigPeriode: "Time period avg. time",
+                },
+                filter: {
+                    estat: "States",
                 },
             },
             missatges: {

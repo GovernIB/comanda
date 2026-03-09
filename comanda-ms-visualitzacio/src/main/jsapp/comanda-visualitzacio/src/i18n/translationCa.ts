@@ -206,6 +206,7 @@ const translationCa = {
                 integracioDownCount: "Inactives",
                 integracioDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació d'integracions",
+                noResults: "No hi ha informació d'integracions amb els estats seleccionats",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
@@ -215,6 +216,9 @@ const translationCa = {
                     peticionsPeriode: "Peticions període",
                     tempsMigPeriode: "Temps mig període",
                 },
+                filter: {
+                    estat: "Estats",
+                },
             },
             subsistemes: {
                 title: "Subsistemes",
@@ -223,6 +227,7 @@ const translationCa = {
                 subsistemaDownCount: "Inactives",
                 subsistemaDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de subsistemes",
+                noResults: "No hi ha informació de subsistemes amb els estats seleccionats",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
@@ -231,6 +236,9 @@ const translationCa = {
                     tempsMigTotal: "Temps mig total",
                     peticionsPeriode: "Peticions període",
                     tempsMigPeriode: "Temps mig període",
+                },
+                filter: {
+                    estat: "Estats",
                 },
             },
             missatges: {
@@ -794,7 +802,8 @@ const translationCa = {
         permisos: {
             title: "Permisos",
             resourceTitle: "permís"
-        }
+        },
+        selectAll: "Seleccionar tots",
     },
     form: {
         field: {

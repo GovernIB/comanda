@@ -39,10 +39,12 @@ import {
     NivellEnum,
     SalutIntegracioModel,
     SalutModel,
+    SalutEstatEnum,
+    useSalutEstatTranslation,
 } from '../../types/salut.model.tsx';
 import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
-import { Alert, LinearProgress, Tooltip } from '@mui/material';
+import { Alert, Checkbox, FormControl, InputLabel, LinearProgress, ListItemText, MenuItem, OutlinedInput, Select, SelectChangeEvent, Tooltip } from '@mui/material';
 import { SalutData } from './Salut.tsx';
 import { AppDataState, SalutInformeLatenciaItem } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
@@ -326,19 +328,90 @@ const Integracions: React.FC<{
 }> = props => {
     const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand } = props;
     const { t } = useTranslation();
+    const { tTitle } = useSalutEstatTranslation();
     const integracions = salutCurrentApp?.integracions;
+    const [selectedEstats, setSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
+    const ALL_ESTATS = Object.values(SalutEstatEnum);//Si no se respeta el orden, hay que crear un array ordenado.
+    /** Obtiene los IDs de todos los ancestros (campo padre) */
+    const getAncestorIds = (integracioId: number): number[] => {
+        const integracio = integracions?.find(i => i.id === integracioId);
+        if (!integracio || !integracio.pare?.id) return [];
+        return [integracio.pare.id, ...getAncestorIds(integracio.pare.id)];
+    };
+    /** Verifica si una integración tiene descendientes que cumplen con los estados seleccionados. */
+    const hasMatchingDescendant = (integracioId: number): boolean => {
+        if (!integracions) return false;
+        const directChildren = integracions.filter(i => i.pare?.id === integracioId);
+        const hasDirectMatch = directChildren.some(child => selectedEstats.includes(child.estat as SalutEstatEnum));
+        if (hasDirectMatch) return true;
+        return directChildren.some(child => hasMatchingDescendant(child.id));
+    };
+    const filteredIntegracions = React.useMemo(() => {
+        if (!integracions?.length || selectedEstats.length === 0) {
+            return integracions?.filter(i => i.pare == null) || [];
+        }
+        const matchingIds = integracions
+            .filter(i => selectedEstats.includes(i.estat as SalutEstatEnum))
+            .map(i => i.id);
+        if (matchingIds.length === 0) return [];
+        const ancestorIds = matchingIds.flatMap(id => getAncestorIds(id));
+        const allIdsToShow = [...new Set([...matchingIds, ...ancestorIds])];
+        return integracions.filter(i => 
+            i.pare == null && allIdsToShow.includes(i.id)
+        );
+    }, [integracions, selectedEstats]);
+    /** Devuelve los hijos de que cumplen el filtro. */
+    const filterFills = (parentId: number): typeof integracions => {
+        if (!integracions) return [];
+        const directFills = integracions.filter(i => i.pare?.id === parentId);
+        if (selectedEstats.length === 0) return directFills;
+        return directFills.filter(fill => {
+            const matchesFilter = selectedEstats.includes(fill.estat as SalutEstatEnum);
+            const hasMatchingChildren = hasMatchingDescendant(fill.id);
+            return matchesFilter || hasMatchingChildren;
+        });
+    };
+    const handleEstatChange = (event: SelectChangeEvent<SalutEstatEnum[]>) => {
+        setSelectedEstats(event.target.value as SalutEstatEnum[]);
+    };
+    const isFiltered = selectedEstats.length > 0;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t($ => $.page.salut.integracions.title)}
-                </Typography>
-                {!integracions?.length && (
-                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                        {t($ => $.page.salut.integracions.noInfo)}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between',alignItems: 'center', flexWrap: 'wrap', mb: 2, gap: 1 }}>
+                    <Typography variant="h5" component="div">
+                        {t($ => $.page.salut.integracions.title)}
+                    </Typography>
+                    <Box sx={{ minWidth: '200px' }}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel id="estats-integracions-label">
+                                {t($ => $.page.salut.integracions.filter.estat)}
+                            </InputLabel>
+                            <Select
+                                labelId="estats-integracions-label"
+                                id="estats-integracions-select"
+                                multiple
+                                value={selectedEstats}
+                                onChange={handleEstatChange}
+                                input={<OutlinedInput label={t($ => $.page.salut.integracions.filter.estat)} />}
+                                renderValue={(selected: SalutEstatEnum[]) => selected.map(v => tTitle(v)).join(', ')}
+                            >
+                                {ALL_ESTATS.map((estat) => (
+                                    <MenuItem key={estat} value={estat}>
+                                        <Checkbox checked={selectedEstats.includes(estat)} />
+                                        <ListItemText primary={tTitle(estat)} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                </Box>
+                {!filteredIntegracions.length && (
+                    <Typography sx={{display: 'flex', justifyContent: 'center', py: 3, color: isFiltered ? 'text.secondary' : 'text.primary'}}>
+                        {isFiltered ? t($ => $.page.salut.integracions.noResults) : t($ => $.page.salut.integracions.noInfo)}
                     </Typography>
                 )}
-                {!!integracions?.length && (
+                {!!filteredIntegracions.length && (
                     <Table size="small">
                         <TableHead>
                             <TableRow>
@@ -366,17 +439,15 @@ const Integracions: React.FC<{
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {integracions
-                                .filter(i => i.pare == null)
-                                .map(i => (
-                                    <IntegracioRow
-                                        open={integracionsExpandState.includes(i.codi)}
-                                        toggleOpen={() => toggleIntegracioExpand(i.codi)}
-                                        integracio={i}
-                                        fills={integracions.filter(i2 => i2.pare?.id === i.id)}
-                                        key={`integracioRow-${i.id}`}
-                                    />
-                                ))}
+                            {filteredIntegracions.map(i => (
+                                <IntegracioRow
+                                    open={integracionsExpandState.includes(i.codi)}
+                                    toggleOpen={() => toggleIntegracioExpand(i.codi)}
+                                    integracio={i}
+                                    fills={filterFills(i.id)}
+                                    key={`integracioRow-${i.id}`}
+                                />
+                            ))}
                         </TableBody>
                     </Table>
                 )}
@@ -387,19 +458,55 @@ const Integracions: React.FC<{
 
 const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
+    const { tTitle } = useSalutEstatTranslation();
     const subsistemes = salutCurrentApp.subsistemes;
+    const [selectedEstats, setSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
+    const ALL_ESTATS = Object.values(SalutEstatEnum);//Si no se respeta el orden, hay que crear un array ordenado.
+    const filteredSubsistemes = React.useMemo(() => {
+        if (selectedEstats.length === 0) return subsistemes || [];
+        return (subsistemes || []).filter(s => selectedEstats.includes(s.estat as SalutEstatEnum));
+    }, [subsistemes, selectedEstats]);
+    const handleEstatChange = (event: SelectChangeEvent<SalutEstatEnum[]>) => {
+        setSelectedEstats(event.target.value as SalutEstatEnum[]);
+    };
+    const isFiltered = selectedEstats.length > 0;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t($ => $.page.salut.subsistemes.title)}
-                </Typography>
-                {!subsistemes?.length && (
-                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                        {t($ => $.page.salut.subsistemes.noInfo)}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', mb: 2, gap: 1 }}>
+                    <Typography variant="h5" component="div">
+                        {t($ => $.page.salut.subsistemes.title)}
+                    </Typography>
+                    <Box sx={{ minWidth: '200px' }}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel id="estats-label">
+                                {t($ => $.page.salut.subsistemes.filter.estat)}
+                            </InputLabel>
+                            <Select
+                                labelId="estats-label"
+                                id="estats-select"
+                                multiple
+                                value={selectedEstats}
+                                onChange={handleEstatChange}
+                                input={<OutlinedInput label={t($ => $.page.salut.subsistemes.filter.estat)} />}
+                                renderValue={(selected: SalutEstatEnum[]) => selected.map(v => tTitle(v)).join(', ')}
+                            >
+                                {ALL_ESTATS.map((estat) => (
+                                    <MenuItem key={estat} value={estat}>
+                                        <Checkbox checked={selectedEstats.includes(estat)} />
+                                        <ListItemText primary={tTitle(estat)} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                </Box>
+                {!filteredSubsistemes.length && (
+                    <Typography sx={{ display: 'flex', justifyContent: 'center', py: 3, color: isFiltered ? 'text.secondary' : 'text.primary'}}>
+                        {isFiltered ? t($ => $.page.salut.subsistemes.noResults) : t($ => $.page.salut.subsistemes.noInfo)}
                     </Typography>
                 )}
-                {!!subsistemes?.length && (
+                {!!filteredSubsistemes?.length && (
                     <Table size="small">
                         <TableHead>
                             <TableRow>
@@ -427,7 +534,7 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {subsistemes.map((s, key: number) => (
+                            {filteredSubsistemes.map((s, key: number) => (
                                 <TableRow key={key}>
                                     <TableCell>{s.codi}</TableCell>
                                     <TableCell>{s.nom}</TableCell>

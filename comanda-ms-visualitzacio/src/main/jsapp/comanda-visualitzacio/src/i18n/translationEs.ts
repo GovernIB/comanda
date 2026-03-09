@@ -206,6 +206,7 @@ const translationEs: translationResourcesType = {
                 integracioDownCount: "Inactivas",
                 integracioDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de integraciones",
+                noResults: "No hay información de integraciones con los estados seleccionados",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -215,6 +216,9 @@ const translationEs: translationResourcesType = {
                     peticionsPeriode: "Peticiones periodo",
                     tempsMigPeriode: "Tiempo medio periodo",
                 },
+                filter: {
+                    estat: "Estats",
+                },
             },
             subsistemes: {
                 title: "Subsistemas",
@@ -223,6 +227,7 @@ const translationEs: translationResourcesType = {
                 subsistemaDownCount: "Inactivos",
                 subsistemaDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de subsistemas",
+                noResults: "No hay información de subsistemas con los estados seleccionados",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -231,6 +236,9 @@ const translationEs: translationResourcesType = {
                     tempsMigTotal: "Tiempo medio total",
                     peticionsPeriode: "Peticiones periodo",
                     tempsMigPeriode: "Tiempo medio periodo",
+                },
+                filter: {
+                    estat: "Estats",
                 },
             },
             missatges: {
