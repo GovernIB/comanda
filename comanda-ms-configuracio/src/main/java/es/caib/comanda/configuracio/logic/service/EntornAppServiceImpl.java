@@ -335,7 +335,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
 
             String baseUrl = entornAppEntity.getLogsUrl();
-            String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "linies/" + params.getLineCount();
+            String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + params.getFileName() + "/linies/" + params.getLineCount();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<String>> response = restTemplate
                     .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<String>>() {});
