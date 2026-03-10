@@ -35,7 +35,12 @@ import java.util.List;
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
                         grantedPermissions = { PermissionEnum.READ }
-                )
+                ),
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.DELETE }
+                ),
         },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Tasca.FILTER, formClass = Tasca.TascaFilter.class),
@@ -74,7 +79,7 @@ public class Tasca extends BaseResource<Long> {
     private LocalDateTime dataInici;
     private LocalDateTime dataFi;
     private LocalDateTime dataCaducitat;
-    @NotNull @Size(max = 255)
+    @NotNull
     private URL url;
     @Size(max = 128)
     private String responsable;

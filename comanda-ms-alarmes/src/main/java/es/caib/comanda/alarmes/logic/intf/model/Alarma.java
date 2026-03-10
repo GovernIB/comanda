@@ -32,11 +32,6 @@ import java.time.LocalDateTime;
 						roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
 						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
 				),
-                @ResourceAccessConstraint(
-                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-                        roles = { BaseConfig.ROLE_ADMIN },
-                        grantedPermissions = { PermissionEnum.DELETE }
-                ),
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_ACTION, requiresId = true),
