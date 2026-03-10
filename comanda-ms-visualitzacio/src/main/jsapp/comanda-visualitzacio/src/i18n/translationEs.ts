@@ -267,8 +267,11 @@ const translationEs: translationResourcesType = {
             logs: {
                 preview: "Previsualizar",
                 download: "Descargar",
+                refresh: "Refrescar",
                 noSelected: "Seleccionar un archivo",
                 noPreview: "No hay previsualización",
+                softWrap: "Ajustar texto",
+                scrollToBottom: "Ir al final",
                 logsList: {
                     title: "Logs",
                     nom: "Nombre",

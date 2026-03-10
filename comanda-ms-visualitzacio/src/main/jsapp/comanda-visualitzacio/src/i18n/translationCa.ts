@@ -267,8 +267,11 @@ const translationCa = {
             logs: {
                 preview: "Previsualitzar",
                 download: "Descarregar",
+                refresh: "Refrescar",
                 noSelected: "Seleccionar un fitxer",
                 noPreview: "No hi ha previsualització",
+                softWrap: "Ajustar text",
+                scrollToBottom: "Anar al final",
                 logsList: {
                     title: "Logs",
                     nom: "Nom",

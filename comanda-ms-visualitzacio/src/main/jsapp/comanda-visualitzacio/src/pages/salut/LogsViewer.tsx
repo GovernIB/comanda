@@ -1,6 +1,6 @@
 import { dateFormatLocale, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, ToggleButton, Typography } from '@mui/material';
+import { Box, Button, ToggleButton, Tooltip, Typography } from '@mui/material';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import WrapTextIcon from '@mui/icons-material/WrapText';
 import VerticalAlignBottomIcon from '@mui/icons-material/VerticalAlignBottom';
@@ -9,7 +9,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import Dialog from '../../../lib/components/mui/Dialog';
-import { DataGridPro, GridActionsCell, GridActionsCellItem } from '@mui/x-data-grid-pro';
+import { DataGridPro, GridActionsCellItem } from '@mui/x-data-grid-pro';
 import type { GridColDef } from '@mui/x-data-grid';
 import DownloadIcon from '@mui/icons-material/Download';
 import PageviewIcon from '@mui/icons-material/Pageview';
@@ -20,6 +20,9 @@ import { mergeSequentialStringArrays } from '../../util/stringUtils';
 import { useTranslation } from 'react-i18next';
 import useDataGridLocale from '../../hooks/useDataGridLocale';
 
+/**
+ * Informació de la llista de fitxers de log.
+ */
 interface FitxerInfo {
     nom: string;
     mida: number;
@@ -27,12 +30,21 @@ interface FitxerInfo {
     dataModificacio: string;
 }
 
+/**
+ * Extensió de FitxerInfo per a la taula de logs amb suport de previsualització.
+ */
 interface LogListRow extends FitxerInfo {
     showPreview: boolean;
 }
 
+/**
+ * Tipus de fitxers que permeten previsualització.
+ */
 const allowedFileTypes = ['.log', '.txt'];
 
+/**
+ * Component que mostra la llista de logs disponibles en una taula (DataGridPro).
+ */
 const LogList = ({
     entornAppId,
     onDownload,
@@ -60,6 +72,7 @@ const LogList = ({
         }
         requests();
     }, [isReady, artifactReport, entornAppId]);
+    // Columnes de la taula de logs.
     const logListColumns: GridColDef<LogListRow>[] = useMemo(
         () => [
             {
@@ -82,7 +95,7 @@ const LogList = ({
             {
                 field: 'mida',
                 headerName: t($ => $.page.salut.logs.logsList.mida),
-                // type: 'number',
+                // Formata la mida del fitxer per mostrar-la en MB, KB o B.
                 valueFormatter: value => {
                     if (value >= 1024 * 1024) {
                         return `${(value / (1024 * 1024)).toFixed(2)} MB`;
@@ -102,23 +115,28 @@ const LogList = ({
                 type: 'actions',
                 align: 'right',
                 width: 90,
-                renderCell: params => {
-                    return (
-                        <GridActionsCell {...params}>
-                            {params.row.showPreview && (
-                                <GridActionsCellItem
-                                    icon={<PageviewIcon />}
-                                    onClick={() => onPreview(params.row.nom)}
-                                    label={t($ => $.page.salut.logs.preview)}
-                                />
-                            )}
+                // Accions disponibles per cada fila (previsualització i descàrrega).
+                getActions: params => {
+                    const actions = [];
+                    if (params.row.showPreview) {
+                        actions.push(
                             <GridActionsCellItem
-                                icon={<DownloadIcon />}
-                                onClick={() => onDownload(params.row.nom)}
-                                label={t($ => $.page.salut.logs.download)}
+                                icon={<PageviewIcon />}
+                                onClick={() => onPreview(params.row.nom)}
+                                label={t($ => $.page.salut.logs.preview)}
+                                showInMenu={false}
                             />
-                        </GridActionsCell>
+                        );
+                    }
+                    actions.push(
+                        <GridActionsCellItem
+                            icon={<DownloadIcon />}
+                            onClick={() => onDownload(params.row.nom)}
+                            label={t($ => $.page.salut.logs.download)}
+                            showInMenu={false}
+                        />
                     );
+                    return actions;
                 },
             },
         ],
@@ -135,7 +153,7 @@ const LogList = ({
     );
     return (
         <DataGridPro
-            loading={!logs.length || loading}
+            loading={loading}
             localeText={dataGridLocale}
             initialState={{
                 sorting: {
@@ -154,15 +172,21 @@ const LogList = ({
 };
 
 const getLineNumber = (virtualizerLineIndex: number) =>
-    (virtualizerLineIndex + 1).toString().slice(-2);
+    (virtualizerLineIndex + 1).toString();
 
+/**
+ * Component per visualitzar el text del log de forma eficient utilitzant virtualització.
+ * Permet navegar per milers de línies sense penalització de rendiment.
+ */
 const Virtualizer = ({
     lines,
     scrollToBottom,
+    onScrollToBottomChange,
     softWrap,
 }: {
     lines: string[];
     scrollToBottom: boolean;
+    onScrollToBottomChange: (value: boolean) => void;
     softWrap: boolean;
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -176,32 +200,62 @@ const Virtualizer = ({
             containerRef.current.scrollTop = containerRef.current.scrollHeight;
         }
     }, [scrollToBottom, lines]);
+
+    // Manejador del desplaçament per detectar si l'usuari surt del final del fitxer.
+    const handleScroll = useCallback(() => {
+        if (!scrollToBottom || !containerRef.current) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 10;
+
+        if (!isAtBottom) {
+            onScrollToBottomChange(false);
+        }
+    }, [scrollToBottom, onScrollToBottomChange]);
+
     const virtualRows = rowVirtualizer.getVirtualItems();
     return (
         <Box
             ref={containerRef}
+            onScroll={handleScroll}
             sx={{
                 height: '100%',
                 flexGrow: 1,
                 overflow: 'scroll',
-                overflowY: scrollToBottom ? 'hidden' : 'scroll',
+                overflowY: 'scroll',
                 overflowX: softWrap ? 'hidden' : 'scroll',
                 contain: 'strict',
+                // backgroundColor: theme => (theme.palette.mode === 'dark' ? '#363636' : '#1e1e1e'),
+                backgroundColor: '#363636',
+                color: '#d4d4d4',
+                fontFamily: 'monospace',
+                fontSize: '0.75rem',
+                p: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
                 '& p': {
-                    pl: 3,
+                    pl: 6,
                     position: 'relative',
                     textWrap: softWrap ? 'wrap' : 'nowrap',
+                    wordBreak: softWrap ? 'break-all' : 'none',
+                    minHeight: '1.25rem',
                 },
                 '& .lineNumber': {
                     position: 'absolute',
                     top: 0,
-                    left: -1,
+                    left: 0,
+                    width: '40px',
                     display: 'inline-flex',
+                    justifyContent: 'flex-end',
+                    pr: 1,
                     alignItems: 'baseline',
                     lineHeight: 'inherit',
-                    color: 'text.secondary',
+                    color: '#858585',
                     pointerEvents: 'none',
                     userSelect: 'none',
+                    borderRight: '1px solid #444',
+                    mr: 1,
                 },
             }}
         >
@@ -238,13 +292,18 @@ const Virtualizer = ({
     );
 };
 
+/**
+ * Component intermediari per carregar o visualitzar la previsualització en directe.
+ */
 const LivePreview = ({
     lines,
     scrollToBottom,
+    onScrollToBottomChange,
     softWrap,
 }: {
     lines?: string[] | null;
     scrollToBottom: boolean;
+    onScrollToBottomChange: (value: boolean) => void;
     softWrap: boolean;
 }) => {
     if (lines == null) {
@@ -256,15 +315,30 @@ const LivePreview = ({
                     justifyContent: 'center',
                     alignItems: 'center',
                     height: '100%',
+                    backgroundColor: theme => (theme.palette.mode === 'dark' ? '#121212' : '#1e1e1e'),
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
                 }}
             >
                 <CircularProgress size={100} />
             </Box>
         );
     }
-    return <Virtualizer lines={lines} scrollToBottom={scrollToBottom} softWrap={softWrap} />;
+    return (
+        <Virtualizer
+            lines={lines}
+            scrollToBottom={scrollToBottom}
+            onScrollToBottomChange={onScrollToBottomChange}
+            softWrap={softWrap}
+        />
+    );
 };
 
+/**
+ * Component principal de la pestanya de logs de salut.
+ * Gestiona la selecció de fitxers, la càrrega de dades i la previsualització en directe.
+ */
 const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
     const { t } = useTranslation();
     const [selected, setSelected] = useState<string>();
@@ -275,7 +349,14 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { isReady, artifactReport } = useResourceApiService('entornApp');
 
+    /**
+     * Actualitza el contingut del log actualment seleccionat.
+     * Només recupera les últimes 1000 línies i les fusiona amb les ja existents.
+     */
     const refreshPreview = useCallback(async () => {
+        if (!selected) {
+            return;
+        }
         setIsRefreshLoading(true);
         const list = await artifactReport(entornAppId, {
             code: 'previsualitzar_log',
@@ -296,9 +377,14 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
             return;
         }
         setLines(null);
-        refreshPreview();
+        if (selected) {
+            refreshPreview();
+        }
     }, [isReady, artifactReport, entornAppId, selected, refreshPreview]);
 
+    /**
+     * Funció per descarregar un fitxer de log directament des de l'API.
+     */
     const download = useCallback(
         async (name: string) => {
             if (!isReady) return;
@@ -323,6 +409,10 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
         },
         [artifactReport, entornAppId, isReady]
     );
+
+    /**
+     * Selecciona un fitxer per a la seva previsualització.
+     */
     const preview = useCallback((name: string) => {
         setSelected(name);
         setDialogOpen(false);
@@ -395,47 +485,56 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
                     </Button>
                     {selected && (
                         <>
-                            <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()}>
-                                <RefreshIcon />
-                            </IconButton>
-                            <IconButton
-                                loading={isDownloadLoading}
-                                onClick={() => download(selected)}
-                            >
-                                <DownloadIcon />
-                            </IconButton>
+                            <Tooltip title={t($ => $.page.salut.logs.refresh)}>
+                                <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()}>
+                                    <RefreshIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t($ => $.page.salut.logs.download)}>
+                                <IconButton
+                                    loading={isDownloadLoading}
+                                    onClick={() => download(selected)}
+                                >
+                                    <DownloadIcon />
+                                </IconButton>
+                            </Tooltip>
                         </>
                     )}
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <ToggleButton
-                        value="wrapText"
-                        size="small"
-                        selected={softWrap}
-                        color="primary"
-                        onChange={() => setSoftWrap(prevSelected => !prevSelected)}
-                        disabled={!selected}
-                    >
-                        <WrapTextIcon />
-                    </ToggleButton>
-                    <ToggleButton
-                        value="alignBottom"
-                        size="small"
-                        selected={scrollToBottom}
-                        color="primary"
-                        onChange={() => setScrollToBottom(prevSelected => !prevSelected)}
-                        disabled={!selected}
-                    >
-                        <VerticalAlignBottomIcon />
-                    </ToggleButton>
+                    <Tooltip title={t($ => $.page.salut.logs.softWrap)}>
+                        <ToggleButton
+                            value="wrapText"
+                            size="small"
+                            selected={softWrap}
+                            color="primary"
+                            onChange={() => setSoftWrap(prevSelected => !prevSelected)}
+                            disabled={!selected}
+                        >
+                            <WrapTextIcon />
+                        </ToggleButton>
+                    </Tooltip>
+                    <Tooltip title={t($ => $.page.salut.logs.scrollToBottom)}>
+                        <ToggleButton
+                            value="alignBottom"
+                            size="small"
+                            selected={scrollToBottom}
+                            color="primary"
+                            onChange={() => setScrollToBottom(prevSelected => !prevSelected)}
+                            disabled={!selected}
+                        >
+                            <VerticalAlignBottomIcon />
+                        </ToggleButton>
+                    </Tooltip>
                 </Box>
             </Box>
-            <Divider />
+            <Divider sx={{ mb: 2 }} />
             {selected ? (
                 <LivePreview
                     key={selected + entornAppId}
                     lines={lines}
                     scrollToBottom={scrollToBottom}
+                    onScrollToBottomChange={setScrollToBottom}
                     softWrap={softWrap}
                 />
             ) : (

@@ -53,12 +53,8 @@ public class LogApiV1Controller {
 
     private final ParametresHelper parametresHelper;
 
-    private static String logDir;
     private String getLogDir() {
-        if (logDir == null) {
-            logDir = parametresHelper.getParametreText(BaseConfig.PROP_LOG_DIR);
-        }
-        return logDir;
+        return parametresHelper.getParametreText(BaseConfig.PROP_LOG_DIR);
     }
 
     @Operation(

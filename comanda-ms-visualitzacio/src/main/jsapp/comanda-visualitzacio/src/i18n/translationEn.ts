@@ -267,8 +267,11 @@ const translationEn: translationResourcesType = {
             logs: {
                 preview: "Preview",
                 download: "Download",
+                refresh: "Refresh",
                 noSelected: "Select a file",
                 noPreview: "No preview available",
+                softWrap: "Soft wrap",
+                scrollToBottom: "Scroll to bottom",
                 logsList: {
                     title: "Logs",
                     nom: "Name",
