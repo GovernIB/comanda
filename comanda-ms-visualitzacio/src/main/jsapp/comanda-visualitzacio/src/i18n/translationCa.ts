@@ -803,7 +803,6 @@ const translationCa = {
             title: "Permisos",
             resourceTitle: "permís"
         },
-        selectAll: "Seleccionar tots",
     },
     form: {
         field: {

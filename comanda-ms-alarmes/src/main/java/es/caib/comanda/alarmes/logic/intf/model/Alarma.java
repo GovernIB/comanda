@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -33,6 +32,11 @@ import java.time.LocalDateTime;
 						roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
 						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
 				),
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.DELETE }
+                ),
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_ACTION, requiresId = true),

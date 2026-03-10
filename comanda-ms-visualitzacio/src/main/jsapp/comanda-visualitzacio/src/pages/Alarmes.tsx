@@ -3,8 +3,13 @@ import {
     GridPage,
     MuiDataGrid,
     useMuiDataGridApiRef,
-    useMuiActionReportLogic
+    useMuiActionReportLogic,
+    useBaseAppContext
 } from 'reactlib';
+import { useUserContext } from '../components/UserContext';
+import { ROLE_ADMIN } from '../components/UserProvider';
+import React from 'react';
+import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon';
 
 const dataGridColumns = [{
     field: 'missatge',
@@ -15,13 +20,12 @@ const dataGridColumns = [{
 }, {
     field: 'estat',
     flex: 0.5,
-}, {
-    field: 'estat',
-    flex: 0.5,
 }];
 
 const Alarmes = () => {
     const { t } = useTranslation();
+    const { t: tLib } = useBaseAppContext();
+    const { currentRole } = useUserContext();
     const gridApiRef = useMuiDataGridApiRef();
     const {
         available: actionInitialized,
@@ -42,6 +46,7 @@ const Alarmes = () => {
         null,
         undefined,
         () => gridApiRef.current.refresh());
+    const isAdmin = currentRole === ROLE_ADMIN;
     /*const toolbarElementsWithPositions = [{
         position: 3,
         element: <MuiActionReportButton
@@ -50,12 +55,22 @@ const Alarmes = () => {
             onSuccess={() => gridApiRef.current.refresh()}
             buttonComponentProps={{ variant: 'contained', sx: { ml: 1 } }} />
     }];*/
-    const rowAdditionalActions = [{
-        action: 'ALARMA_ESBORRAR',
-        icon: 'check',
-        showInMenu: false,
-        onClick: exec
-    }];
+    const rowAdditionalActions = React.useMemo(() => {
+        const additionalActions: DataCommonAdditionalAction[] = [{
+            action: 'ALARMA_ESBORRAR',
+            icon: 'check',
+            showInMenu: false,
+            onClick: exec,
+        }];
+        if (isAdmin) {
+            additionalActions.push({
+                label: tLib('datacommon.delete.label'),
+                icon: 'delete',
+                clickTriggerDelete: true,
+            });
+        }
+        return additionalActions;
+    }, [isAdmin, exec, tLib])
     return (
         <GridPage>
             {actionInitialized && <>

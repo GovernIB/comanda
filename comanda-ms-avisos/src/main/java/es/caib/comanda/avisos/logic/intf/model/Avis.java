@@ -34,7 +34,12 @@ import java.util.List;
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
                         grantedPermissions = { PermissionEnum.READ }
-                )
+                ),
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_ADMIN },
+                        grantedPermissions = { PermissionEnum.DELETE }
+                ),
         },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Avis.ACTION_MARCAR_AVIS_LLEGIT, formClass = Avis.AvisMarcarLlegitsAction.class,
@@ -74,7 +79,6 @@ public class Avis extends BaseResource<Long> {
     private LocalDateTime dataInici;
     private LocalDateTime dataFi;
 
-    @Size(max = 255)
     private URL url;
     @Size(max = 128)
     private String responsable;
