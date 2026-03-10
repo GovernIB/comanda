@@ -22,7 +22,7 @@ import PageTitle from '../components/PageTitle.tsx';
 import SalutChip from '../components/salut/SalutChip.tsx';
 import { useGetColorByAvisTipus, AvisTipusEnum } from '../types/salut.model.tsx';
 
-const AvisTipusChip = (props: { tipus: AvisTipusEnum }) => {
+const AvisTipusChip = (props: { tipus?: AvisTipusEnum }) => {
     const { tipus } = props;
     const { t } = useTranslation();
     const getColorByAvisTipus = useGetColorByAvisTipus();
@@ -65,6 +65,8 @@ const AvisTipusChip = (props: { tipus: AvisTipusEnum }) => {
                 return '';
         }
     };
+
+    if (!tipus) return null;
 
     return (
         <SalutChip

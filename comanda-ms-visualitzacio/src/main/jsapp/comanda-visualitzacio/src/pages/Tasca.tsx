@@ -28,7 +28,7 @@ import {
     useGetColorByTascaPrioritat
 } from '../types/salut.model.tsx';
 
-const TascaPrioritatChip = (props: { prioritat: TascaPrioritatEnum }) => {
+const TascaPrioritatChip = (props: { prioritat?: TascaPrioritatEnum }) => {
     const { prioritat } = props;
     const { t } = useTranslation();
     const getColorByTascaPrioritat = useGetColorByTascaPrioritat();
@@ -75,6 +75,8 @@ const TascaPrioritatChip = (props: { prioritat: TascaPrioritatEnum }) => {
         return prioritat === TascaPrioritatEnum.NORMAL ? 'inherit' : 'white !important';
     };
 
+    if (!prioritat) return null;
+
     return (
         <SalutChip
             label={getLabel(prioritat)}
@@ -86,7 +88,7 @@ const TascaPrioritatChip = (props: { prioritat: TascaPrioritatEnum }) => {
     );
 };
 
-const TascaEstatChip = (props: { estat: TascaEstatEnum }) => {
+const TascaEstatChip = (props: { estat?: TascaEstatEnum }) => {
     const { estat } = props;
     const { t } = useTranslation();
     const getColorByTascaEstat = useGetColorByTascaEstat();
@@ -129,6 +131,8 @@ const TascaEstatChip = (props: { estat: TascaEstatEnum }) => {
                 return '';
         }
     };
+
+    if (!estat) return null;
 
     return (
         <SalutChip
