@@ -343,6 +343,36 @@ const translationEs: translationResourcesType = {
                 },
                 column: {
                     appEntorn: "Aplicación - Entorno",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Tarea de tipo noticia",
+                            INFO: "Tarea de tipo informativo",
+                            ALERTA: "Tarea de tipo alerta",
+                            ERROR: "Tarea de tipo error",
+                            CRITIC: "Tarea de tipo crítico",
+                        }
+                    },
+                    prioritat: {
+                        tooltip: {
+                            NONE: "Prioridad no definida",
+                            BAIXA: "Prioridad baja",
+                            NORMAL: "Prioridad normal",
+                            ALTA: "Prioridad alta",
+                            MAXIMA: "Prioridad máxima",
+                        }
+                    },
+                    estat: {
+                        tooltip: {
+                            PENDENT: "Tarea pendiente de iniciar",
+                            INICIADA: "Tarea en curso",
+                            FINALITZADA: "Tarea finalizada",
+                            CANCELADA: "Tarea cancelada",
+                            ERROR: "Tarea con error",
+                        }
+                    },
+                    dataCaducitat: {
+                        tooltip: "Fecha límite para la realización de la tarea",
+                    },
                 },
                 entornAppInvalid: "Entorno de la aplicación eliminado",
             }
@@ -361,6 +391,17 @@ const translationEs: translationResourcesType = {
                 groupHeader: "Nombre",
                 column: {
                     appEntorn: "Aplicación - Entorno",
+                    global: "Global",
+                    globalTooltip: "Este es un aviso global",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Aviso de tipo noticia",
+                            INFO: "Aviso de tipo informativo",
+                            ALERTA: "Aviso de tipo alerta",
+                            ERROR: "Aviso de tipo error",
+                            CRITIC: "Aviso de tipo crítico",
+                        }
+                    }
                 },
                 action: {
                     obrir: "Abrir aviso",

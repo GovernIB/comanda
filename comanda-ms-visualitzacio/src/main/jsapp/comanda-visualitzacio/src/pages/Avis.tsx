@@ -11,16 +11,84 @@ import {
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import { useTreeData } from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
 import { GridSortModel, useGridApiRef} from '@mui/x-data-grid-pro';
-import { SxProps } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
+import SalutChip from '../components/salut/SalutChip.tsx';
+import { useGetColorByAvisTipus, AvisTipusEnum } from '../types/salut.model.tsx';
+
+const AvisTipusChip = (props: { tipus: AvisTipusEnum }) => {
+    const { tipus } = props;
+    const { t } = useTranslation();
+    const getColorByAvisTipus = useGetColorByAvisTipus();
+
+    const getIcon = (tipus: AvisTipusEnum) => {
+        switch (tipus) {
+            case AvisTipusEnum.NOTICIA:
+                return 'add_circle_outlined';
+            case AvisTipusEnum.INFO:
+                return 'info_outlined';
+            case AvisTipusEnum.ALERTA:
+                return 'error_outline';
+            case AvisTipusEnum.ERROR:
+                return 'highlight_off_outline';
+            case AvisTipusEnum.CRITIC:
+                return 'crisis_alert_outlined';
+            default:
+                return 'help_outline';
+        }
+    };
+
+    const getLabel = (tipus: AvisTipusEnum) => {
+        const text = tipus.toLowerCase();
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    };
+
+    const getTooltip = (tipus: AvisTipusEnum) => {
+        switch (tipus) {
+            case AvisTipusEnum.NOTICIA:
+                return t($ => $.page.avisos.grid.column.tipus.tooltip.NOTICIA);
+            case AvisTipusEnum.INFO:
+                return t($ => $.page.avisos.grid.column.tipus.tooltip.INFO);
+            case AvisTipusEnum.ALERTA:
+                return t($ => $.page.avisos.grid.column.tipus.tooltip.ALERTA);
+            case AvisTipusEnum.ERROR:
+                return t($ => $.page.avisos.grid.column.tipus.tooltip.ERROR);
+            case AvisTipusEnum.CRITIC:
+                return t($ => $.page.avisos.grid.column.tipus.tooltip.CRITIC);
+            default:
+                return '';
+        }
+    };
+
+    return (
+        <SalutChip
+            label={getLabel(tipus)}
+            backgroundColor={getColorByAvisTipus(tipus)}
+            icon={<Icon sx={{ color: 'white !important' }}>{getIcon(tipus)}</Icon>}
+            tooltip={getTooltip(tipus)}
+        />
+    );
+};
+
+const AvisGlobalChip = () => {
+    const { t } = useTranslation();
+    const getColorByAvisTipus = useGetColorByAvisTipus();
+
+    return (
+        <SalutChip
+            label={t($ => $.page.avisos.grid.column.global)}
+            backgroundColor={getColorByAvisTipus('ORANGE')}
+            icon={<Icon sx={{ color: 'white !important' }}>public</Icon>}
+            tooltip={t($ => $.page.avisos.grid.column.globalTooltip)}
+        />
+    );
+};
 
 const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
@@ -135,29 +203,14 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [{
     flex: 1,
 }, {
     field: 'tipus',
-    flex: 0.5,
+    flex: 0.8,
     renderCell: (param) => {
-        let style: SxProps = {};
-        switch (param?.row?.tipus) {
-            case 'NOTICIA':
-                style = { backgroundColor: 'success.main', color: 'white' }
-                break;
-            case 'INFO':
-                style = { backgroundColor: 'info.main', color: 'white' }
-                break;
-            case 'ALERTA':
-                style = { backgroundColor: 'warning.main', color: 'white' }
-                break;
-            case 'ERROR':
-                style = { backgroundColor: 'error.main', color: 'white' }
-                break;
-            case 'CRITIC':
-                style = { backgroundColor: '#6b0707', color: 'white' }
-                break;
-        }
-        return <Typography variant={'inherit'} sx={{ p: 1, borderRadius: '4px', ...style }}>
-            {param?.formattedValue}
-        </Typography>;
+        return (
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
+                <AvisTipusChip tipus={param?.row?.tipus} />
+                {param?.row?.global && <AvisGlobalChip />}
+            </Box>
+        );
     }
 }, {
     field: 'responsable',

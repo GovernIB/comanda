@@ -81,6 +81,30 @@ export enum SalutEstatEnum {
     ERROR='ERROR'
 }
 
+export enum AvisTipusEnum {
+    NOTICIA = 'NOTICIA',
+    INFO = 'INFO',
+    ALERTA = 'ALERTA',
+    ERROR = 'ERROR',
+    CRITIC = 'CRITIC'
+}
+
+export enum TascaPrioritatEnum {
+    NONE = 'NONE',
+    BAIXA = 'BAIXA',
+    NORMAL = 'NORMAL',
+    ALTA = 'ALTA',
+    MAXIMA = 'MAXIMA'
+}
+
+export enum TascaEstatEnum {
+    PENDENT = 'PENDENT',
+    INICIADA = 'INICIADA',
+    FINALITZADA = 'FINALITZADA',
+    CANCELADA = 'CANCELADA',
+    ERROR = 'ERROR'
+}
+
 export enum NivellEnum {
     INFO='INFO',
     WARN='WARN',
@@ -514,6 +538,76 @@ export const useGetColorByMissatge = () => {
                 return currentColorScheme.BLUE;
             } else {
                 return currentColorScheme.RED_DARK;
+            }
+        },
+        [currentColorScheme]
+    );
+};
+
+export const useGetColorByAvisTipus = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (tipus: AvisTipusEnum | string): string {
+            switch (tipus) {
+                case AvisTipusEnum.NOTICIA:
+                    return currentColorScheme.GREEN;
+                case AvisTipusEnum.INFO:
+                    return currentColorScheme.BLUE;
+                case AvisTipusEnum.ALERTA:
+                    return currentColorScheme.YELLOW;
+                case AvisTipusEnum.ERROR:
+                    return currentColorScheme.RED_LIGHT;
+                case AvisTipusEnum.CRITIC:
+                    return currentColorScheme.RED_DARK;
+                case 'ORANGE':
+                    return currentColorScheme.ORANGE;
+                default:
+                    return currentColorScheme.GRAY;
+            }
+        },
+        [currentColorScheme]
+    );
+};
+
+export const useGetColorByTascaPrioritat = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (prioritat: TascaPrioritatEnum | string): string {
+            switch (prioritat) {
+                case TascaPrioritatEnum.MAXIMA:
+                    return currentColorScheme.RED_DARK;
+                case TascaPrioritatEnum.ALTA:
+                    return currentColorScheme.ORANGE;
+                case TascaPrioritatEnum.NORMAL:
+                    return currentColorScheme.GRAY;
+                case TascaPrioritatEnum.BAIXA:
+                    return currentColorScheme.GREEN;
+                case TascaPrioritatEnum.NONE:
+                default:
+                    return currentColorScheme.GRAY;
+            }
+        },
+        [currentColorScheme]
+    );
+};
+
+export const useGetColorByTascaEstat = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (estat: TascaEstatEnum | string): string {
+            switch (estat) {
+                case TascaEstatEnum.PENDENT:
+                    return currentColorScheme.YELLOW;
+                case TascaEstatEnum.INICIADA:
+                    return currentColorScheme.BLUE;
+                case TascaEstatEnum.FINALITZADA:
+                    return currentColorScheme.GREEN;
+                case TascaEstatEnum.CANCELADA:
+                    return currentColorScheme.GRAY;
+                case TascaEstatEnum.ERROR:
+                    return currentColorScheme.RED_LIGHT;
+                default:
+                    return currentColorScheme.GRAY;
             }
         },
         [currentColorScheme]

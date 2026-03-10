@@ -167,6 +167,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
     private Specification<AvisEntity> avisSensePermisos() {
         return (root, query, cb) -> cb.and(
+                cb.isNull(root.get("responsable")),
                 cb.isEmpty(root.get("usuarisAmbPermis")),
                 cb.isEmpty(root.get("grupsAmbPermis"))
         );

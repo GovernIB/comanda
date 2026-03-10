@@ -62,7 +62,7 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 								new AntPathRequestMatcher("/apidocs"),
 								new AntPathRequestMatcher("/apidocs/*"),
 								new AntPathRequestMatcher("/swagger-ui/*"),
-								new AntPathRequestMatcher(BaseConfig.API_SALUT_V1 + "/**/*")
+								new AntPathRequestMatcher(BaseConfig.API_SALUT_V1)
 						}
 				).permitAll().
 				requestMatchers(

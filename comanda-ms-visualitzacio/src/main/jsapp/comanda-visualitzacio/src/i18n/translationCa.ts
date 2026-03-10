@@ -343,6 +343,36 @@ const translationCa = {
                 },
                 column: {
                     appEntorn: "Aplicació - Entorn",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Tasca de tipus notícia",
+                            INFO: "Tasca de tipus informatiu",
+                            ALERTA: "Tasca de tipus alerta",
+                            ERROR: "Tasca de tipus error",
+                            CRITIC: "Tasca de tipus crític",
+                        }
+                    },
+                    prioritat: {
+                        tooltip: {
+                            NONE: "Prioritat no definida",
+                            BAIXA: "Prioritat baixa",
+                            NORMAL: "Prioritat normal",
+                            ALTA: "Prioritat alta",
+                            MAXIMA: "Prioritat màxima",
+                        }
+                    },
+                    estat: {
+                        tooltip: {
+                            PENDENT: "Tasca pendent d'iniciar",
+                            INICIADA: "Tasca en curs",
+                            FINALITZADA: "Tasca finalitzada",
+                            CANCELADA: "Tasca cancel·lada",
+                            ERROR: "Tasca amb error",
+                        }
+                    },
+                    dataCaducitat: {
+                        tooltip: "Data límit per a la realització de la tasca",
+                    },
                 },
                 entornAppInvalid: "Entorn de l'aplicació esborrat",
             }
@@ -361,6 +391,17 @@ const translationCa = {
                 groupHeader: "Nom",
                 column: {
                     appEntorn: "Aplicació - Entorn",
+                    global: "Global",
+                    globalTooltip: "Aquest és un avís global",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Avís de tipus notícia",
+                            INFO: "Avís de tipus informatiu",
+                            ALERTA: "Avís de tipus alerta",
+                            ERROR: "Avís de tipus error",
+                            CRITIC: "Avís de tipus crític",
+                        }
+                    }
                 },
                 action: {
                     obrir: "Obrir avís",

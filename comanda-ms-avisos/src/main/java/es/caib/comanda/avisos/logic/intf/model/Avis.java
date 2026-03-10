@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Transient;
 
 import javax.validation.constraints.NotNull;
@@ -73,6 +75,13 @@ public class Avis extends BaseResource<Long> {
     @Transient private String[] treePath;
     @Transient private String entornCodi;
     @Transient private String appCodi;
+
+    public boolean isGlobal() {
+        return StringUtils.isEmpty(responsable)
+//                && StringUtils.isEmpty(grup)
+                && CollectionUtils.isEmpty(usuarisAmbPermis)
+                && CollectionUtils.isEmpty(grupsAmbPermis);
+    }
 
     @Getter
     @Setter
