@@ -24,6 +24,7 @@ import {
 import { Button, Icon } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
+import { ROLE_ADMIN } from '../components/UserProvider.tsx';
 
 const useDataGridColumns = () => {
     const { isReady: apiIsReady, find: apiFind } = useResourceApiService('entornApp');
@@ -102,7 +103,7 @@ export const AlarmaConfigForm: React.FC = () => {
     const [condicioValorDisabled, setCondicioValorDisabled] = React.useState<boolean>(true);
     const [periodeShow, setPeriodeShow] = React.useState<boolean>();
     const { currentRole } = useUserContext();
-    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == 'COM_ADMIN';}, [currentRole]);
+    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == ROLE_ADMIN;}, [currentRole]);
     const handleDataChange = (data: any) => {
         setEntornAppId(data?.entornAppId);
         const condicioValorDisabled = data?.tipus !== 'APP_LATENCIA';
@@ -276,7 +277,7 @@ const AlarmaConfig = () => {
     const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(true);
     const { columns: dataGridColumns, initialized: columnsInitialized } = useDataGridColumns();
     const { user, currentRole } = useUserContext();
-    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == 'COM_ADMIN';}, [currentRole]);
+    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == ROLE_ADMIN;}, [currentRole]);
     const toolbarElementsWithPositions = React.useMemo(() => {
         if (!isCurrentUserAdmin) {
             return undefined;

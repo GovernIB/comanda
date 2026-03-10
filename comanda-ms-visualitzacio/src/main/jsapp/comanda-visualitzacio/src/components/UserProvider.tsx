@@ -6,6 +6,7 @@ import { UsuariModel } from '../types/usuari.model';
 export const ROLE_ADMIN = 'COM_ADMIN';
 export const ROLE_CONSULTA = 'COM_CONSULTA';
 const ROLE_DEFAULT_ORDER = [ROLE_CONSULTA, ROLE_ADMIN];
+export const MAPPABLE_ROLES = [ROLE_ADMIN, ROLE_CONSULTA];
 const USER_ROLE_LOCAL_STORAGE_KEY = 'comanda_userRole';
 
 const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {

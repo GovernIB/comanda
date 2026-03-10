@@ -7,6 +7,7 @@ import Icon from '@mui/material/Icon';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { useUserContext } from './UserContext';
+import { MAPPABLE_ROLES, ROLE_ADMIN, ROLE_CONSULTA } from './UserProvider.tsx';
 
 function RoleSelector() {
     const { t } = useTranslation();
@@ -20,9 +21,9 @@ function RoleSelector() {
     }
     const getRoleTranslation = (role: string) => {
         switch (role) {
-            case 'COM_ADMIN':
+            case ROLE_ADMIN:
             return t($ => $.enum.userRole.COM_ADMIN);
-            case 'COM_CONSULTA':
+            case ROLE_CONSULTA:
             return t($ => $.enum.userRole.COM_CONSULTA);
             default:
             return role;
@@ -41,7 +42,9 @@ function RoleSelector() {
                 fullWidth
                 value={currentRole}
                 onChange={handleSelectOnChange}>
-                {userRoles.map(r => <MenuItem key={r} value={r}>
+                {userRoles
+                    .filter(r => MAPPABLE_ROLES.includes(r))
+                    .map(r => <MenuItem key={r} value={r}>
                     <ListItemText>{getRoleTranslation(r)}</ListItemText>
                 </MenuItem>)}
             </Select>
