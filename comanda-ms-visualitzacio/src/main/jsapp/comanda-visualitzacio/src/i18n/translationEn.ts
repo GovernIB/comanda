@@ -84,6 +84,7 @@ const translationEn: translationResourcesType = {
         entorn: "Environments",
         versionsEntorn: "Versions by environment",
         alarmaConfig: "Alarms",
+        alarmaConfigConsultor: "Configure alarms",
         integracio: "Integrations",
         widget: "Statistic widgets",
         dashboard: "Dashboards",

@@ -1,19 +1,22 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BaseApp } from './components/BaseApp';
+import { BaseApp, MenuEntryWithResource } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
 import logoDark from './assets/goib_logo.png';
 import ComandaLogo from './assets/COM_DRA_COL.svg?react';
 import AppRoutes from './AppRoutes';
-import { useUserContext } from './components/UserContext';
+import { useIsUserAdmin, useIsUserConsulta, useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import notNull from './util/arrayUtils';
 
 const APPBAR_HEIGHT = '64px';
 
 export const App: React.FC = () => {
     const { user } = useUserContext();
+    const isUserAdmin = useIsUserAdmin();
+    const isUserConsulta = useIsUserConsulta();
     const { t } = useTranslation();
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
@@ -75,6 +78,13 @@ export const App: React.FC = () => {
             }
         ]
     };
+    const menuAlarmaConfig = {
+        id: 'alarma',
+        title: isUserAdmin ? t($ => $.menu.alarmaConfig) : t($ => $.menu.alarmaConfigConsultor),
+        to: '/alarma',
+        icon: 'notifications',
+        resourceName: 'alarmaConfig',
+    };
     const menuConfiguracio = {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
@@ -101,13 +111,7 @@ export const App: React.FC = () => {
                 icon: 'format_list_numbered_rtl',
                 resourceName: 'entornApp',
             },
-            {
-                id: 'alarma',
-                title: t($ => $.menu.alarmaConfig),
-                to: '/alarma',
-                icon: 'notifications',
-                resourceName: 'alarmaConfig',
-            },
+            menuAlarmaConfig,
             {
                 id: 'integracio',
                 title: t($ => $.menu.integracio),
@@ -165,14 +169,15 @@ export const App: React.FC = () => {
         menuTasca,
         menuAvis,
     ];
-    const caibMenuEntries = [
+    const caibMenuEntries: MenuEntryWithResource[] = [
         menuSalut,
         menuEstadistiques,
         menuTasca,
         menuAvis,
         menuMonitoritzacio,
-        menuConfiguracio,
-    ];
+        isUserAdmin ? menuConfiguracio : null,
+        isUserConsulta ? menuAlarmaConfig : null,
+    ].filter(notNull);
     return (
         <BaseApp
             code="com"

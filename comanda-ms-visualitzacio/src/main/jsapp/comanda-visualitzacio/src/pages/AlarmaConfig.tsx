@@ -22,9 +22,8 @@ import {
     useMuiDataGridApiRef,
 } from 'reactlib';
 import { Button, Icon } from '@mui/material';
-import { useUserContext } from '../components/UserContext';
+import { useIsUserAdmin, useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
-import { ROLE_ADMIN } from '../components/UserProvider.tsx';
 
 const useDataGridColumns = () => {
     const { isReady: apiIsReady, find: apiFind } = useResourceApiService('entornApp');
@@ -102,8 +101,7 @@ export const AlarmaConfigForm: React.FC = () => {
     const [validationErrors, setValidationErrors] = React.useState<any>();
     const [condicioValorDisabled, setCondicioValorDisabled] = React.useState<boolean>(true);
     const [periodeShow, setPeriodeShow] = React.useState<boolean>();
-    const { currentRole } = useUserContext();
-    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == ROLE_ADMIN;}, [currentRole]);
+    const isCurrentUserAdmin = useIsUserAdmin();
     const handleDataChange = (data: any) => {
         setEntornAppId(data?.entornAppId);
         const condicioValorDisabled = data?.tipus !== 'APP_LATENCIA';
@@ -276,8 +274,8 @@ const AlarmaConfig = () => {
     const apiRef = useMuiDataGridApiRef();
     const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(true);
     const { columns: dataGridColumns, initialized: columnsInitialized } = useDataGridColumns();
-    const { user, currentRole } = useUserContext();
-    const isCurrentUserAdmin = React.useMemo(() => { return currentRole == ROLE_ADMIN;}, [currentRole]);
+    const { user } = useUserContext();
+    const isCurrentUserAdmin = useIsUserAdmin();
     const toolbarElementsWithPositions = React.useMemo(() => {
         if (!isCurrentUserAdmin) {
             return undefined;

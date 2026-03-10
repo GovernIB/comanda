@@ -84,6 +84,7 @@ const translationCa = {
         entorn: "Entorns",
         versionsEntorn: "Versions per entorn",
         alarmaConfig: "Alarmes",
+        alarmaConfigConsultor: "Configurar alarmes",
         integracio: "Integracions",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
