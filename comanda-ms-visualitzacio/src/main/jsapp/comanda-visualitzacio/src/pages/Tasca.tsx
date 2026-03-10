@@ -159,6 +159,8 @@ const TascaDataCaducitatChip = (props: { row: any, formattedValue: any }) => {
                         ? 'warning.main'
                         : 'success.main';
 
+    if (!formattedValue) return null;
+
     return (
         <SalutChip
             label={formattedValue}
