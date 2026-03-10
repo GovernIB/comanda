@@ -8,6 +8,7 @@ import {
     useFormApiRef,
     useFilterApiRef,
     MuiDataGridColDef,
+    useBaseAppContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -27,6 +28,8 @@ import {
     useGetColorByTascaEstat,
     useGetColorByTascaPrioritat
 } from '../types/salut.model.tsx';
+import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
+import { ROLE_ADMIN } from '../components/UserProvider.tsx';
 
 const TascaPrioritatChip = (props: { prioritat?: TascaPrioritatEnum }) => {
     const { prioritat } = props;
@@ -357,8 +360,11 @@ const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
 
 const Tasca = () => {
     const { t } = useTranslation();
+    const { t: tLib } = useBaseAppContext();
+    const { currentRole } = useUserContext();
     const [filter, setFilter] = React.useState<string>();
     const gridApiRef = useGridApiRef();
+    const isAdmin = currentRole === ROLE_ADMIN;
     const treePathFormatInvalidEntornApp = (invalidPath: string) =>
         t($ => $.page.tasques.grid.entornAppInvalid) + ` [ID: ${invalidPath.split(' ')[1]}]`;
     const {
@@ -392,15 +398,25 @@ const Tasca = () => {
             ? dataGridCommonColumns.slice(0, -1)
             : dataGridCommonColumns),
     ];
-    const actions = [{
-        icon: 'open_in_new',
-        label: t($ => $.page.tasques.grid.action.obrir),
-        showInMenu: false,
-        linkTo: (row: any) => row?.url,
-        linkTarget: '_blank',
-        disabled: (row: any) => !row?.url,
-        hidden: (row: any) => !row?.id,
-    }];
+    const rowAdditionalActions = React.useMemo(() => {
+        const additionalActions: DataCommonAdditionalAction[] = [{
+            icon: 'open_in_new',
+            label: t($ => $.page.tasques.grid.action.obrir),
+            showInMenu: false,
+            linkTo: (row: any) => row?.url,
+            linkTarget: '_blank',
+            disabled: (row: any) => !row?.url,
+            hidden: (row: any) => !row?.id,
+        }];
+        if (isAdmin) {
+            additionalActions.push({
+                label: tLib('datacommon.delete.label'),
+                icon: 'delete',
+                clickTriggerDelete: true,
+            });
+        }
+        return additionalActions;
+    }, [isAdmin, tLib])
     const filterElement = <TascaFilter onSpringFilterChange={setFilter}/>;
 
     return (
@@ -420,7 +436,7 @@ const Tasca = () => {
                 toolbarHideQuickFilter
                 toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
                 toolbarAdditionalRow={filterElement}
-                rowAdditionalActions={actions}
+                rowAdditionalActions={rowAdditionalActions}
                 {...treeDataGridProps}
             />
         </Box>

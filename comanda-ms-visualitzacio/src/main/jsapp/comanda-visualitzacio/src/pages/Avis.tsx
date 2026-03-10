@@ -8,6 +8,7 @@ import {
     useFormApiRef,
     useFilterApiRef,
     MuiDataGridColDef,
+    useBaseAppContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -21,6 +22,8 @@ import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
 import SalutChip from '../components/salut/SalutChip.tsx';
 import { useGetColorByAvisTipus, AvisTipusEnum } from '../types/salut.model.tsx';
+import { ROLE_ADMIN } from '../components/UserProvider.tsx';
+import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
 
 const AvisTipusChip = (props: { tipus?: AvisTipusEnum }) => {
     const { tipus } = props;
@@ -229,8 +232,11 @@ const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
 const Avis = () => {
     const { t } = useTranslation();
+    const { t: tLib } = useBaseAppContext();
+    const { currentRole } = useUserContext();
     const [filter, setFilter] = React.useState<string>();
     const gridApiRef = useGridApiRef();
+    const isAdmin = currentRole === ROLE_ADMIN;
     const {
         treeView,
         treeViewSwitch,
@@ -259,15 +265,25 @@ const Avis = () => {
             ? dataGridCommonColumns.slice(0, -1)
             : dataGridCommonColumns),
     ];
-    const actions = [{
-        icon: 'open_in_new',
-        label: t($ => $.page.avisos.grid.action.obrir),
-        showInMenu: false,
-        linkTo: (row: any) => row?.url,
-        linkTarget: '_blank',
-        disabled: (row: any) => !row?.url,
-        hidden: (row: any) => !row?.url,
-    }];
+    const actions = React.useMemo<DataCommonAdditionalAction[]>(() => {
+        const baseActions: DataCommonAdditionalAction[] = [{
+                icon: 'open_in_new',
+                label: t($ => $.page.avisos.grid.action.obrir),
+                showInMenu: false,
+                linkTo: (row: any) => row?.url,
+                linkTarget: '_blank',
+                disabled: (row: any) => !row?.url,
+                hidden: (row: any) => !row?.url,
+            }];
+        if (isAdmin) {
+            baseActions.push({
+                label: tLib('datacommon.delete.label'),
+                icon: 'delete',
+                clickTriggerDelete: true,
+            });
+        }
+        return baseActions;
+    }, [t, tLib, isAdmin,]);
     const filterElement = <AvisFilter onSpringFilterChange={setFilter}/>;
 
     return (

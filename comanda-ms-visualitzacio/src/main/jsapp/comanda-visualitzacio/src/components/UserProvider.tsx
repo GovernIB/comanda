@@ -3,7 +3,9 @@ import { useResourceApiService, useResourceApiContext } from 'reactlib';
 import { UserContext } from './UserContext';
 import { UsuariModel } from '../types/usuari.model';
 
-const ROLE_DEFAULT_ORDER = ['COM_ADMIN', 'COM_CONSULTA'];
+export const ROLE_ADMIN = 'COM_ADMIN';
+export const ROLE_CONSULTA = 'COM_CONSULTA';
+const ROLE_DEFAULT_ORDER = [ROLE_CONSULTA, ROLE_ADMIN];
 const USER_ROLE_LOCAL_STORAGE_KEY = 'comanda_userRole';
 
 const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {

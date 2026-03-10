@@ -849,7 +849,7 @@ const translationEs: translationResourcesType = {
         permisos: {
             title: "Permisos",
             resourceTitle: "permiso"
-        }
+        },
     },
     form: {
         field: {
