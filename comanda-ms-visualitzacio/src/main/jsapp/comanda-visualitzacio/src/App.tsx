@@ -5,7 +5,7 @@ import logo from './assets/goib_logo.svg';
 import logoDark from './assets/goib_logo.png';
 import ComandaLogo from './assets/COM_DRA_COL.svg?react';
 import AppRoutes from './AppRoutes';
-import { useIsUserAdmin, useUserContext } from './components/UserContext';
+import { useIsUserAdmin, useIsUserConsulta, useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -16,7 +16,7 @@ const APPBAR_HEIGHT = '64px';
 export const App: React.FC = () => {
     const { user } = useUserContext();
     const isUserAdmin = useIsUserAdmin();
-    // const isUserConsulta = useIsUserConsulta();
+    const isUserConsulta = useIsUserConsulta();
     const { t } = useTranslation();
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
@@ -209,7 +209,7 @@ export const App: React.FC = () => {
             }
             version="0.1"
             availableLanguages={['ca', 'es']}
-            menuEntries={caibMenuEntries}
+            menuEntries={(isUserAdmin || isUserConsulta) ? caibMenuEntries : undefined}
             headerMenuEntries={headerMenuEntries}
             appbarBackgroundColor={appbarBackgroundColor}
             appbarStyle={{
