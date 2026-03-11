@@ -5,7 +5,7 @@ import logo from './assets/goib_logo.svg';
 import logoDark from './assets/goib_logo.png';
 import ComandaLogo from './assets/COM_DRA_COL.svg?react';
 import AppRoutes from './AppRoutes';
-import { useIsUserAdmin, useIsUserConsulta, useUserContext } from './components/UserContext';
+import { useIsUserAdmin, useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -16,7 +16,7 @@ const APPBAR_HEIGHT = '64px';
 export const App: React.FC = () => {
     const { user } = useUserContext();
     const isUserAdmin = useIsUserAdmin();
-    const isUserConsulta = useIsUserConsulta();
+    // const isUserConsulta = useIsUserConsulta();
     const { t } = useTranslation();
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
@@ -80,7 +80,8 @@ export const App: React.FC = () => {
     };
     const menuAlarmaConfig = {
         id: 'alarma',
-        title: isUserAdmin ? t($ => $.menu.alarmaConfig) : t($ => $.menu.alarmaConfigConsultor),
+        // title: isUserAdmin ? t($ => $.menu.alarmaConfig) : t($ => $.menu.alarmaConfigConsultor),
+        title: t($ => $.menu.alarmaConfig),
         to: '/alarma',
         icon: 'notifications',
         resourceName: 'alarmaConfig',
@@ -89,7 +90,7 @@ export const App: React.FC = () => {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
         icon: 'settings',
-        children: [
+        children: ([
             {
                 id: 'app',
                 title: t($ => $.menu.app),
@@ -133,13 +134,13 @@ export const App: React.FC = () => {
                 icon: 'insights',
                 resourceName: 'indicador',
             },
-            {
+            isUserAdmin ? {
                 id: 'estadisticaWidget',
                 title: t($ => $.menu.widget),
                 to: '/estadisticaWidget',
                 icon: 'widgets',
                 resourceName: 'dashboard',
-            },
+            } : null,
             {
                 id: 'dashboard',
                 title: t($ => $.menu.dashboard),
@@ -154,14 +155,14 @@ export const App: React.FC = () => {
                 icon: 'calendar_month',
                 resourceName: 'fet',
             },
-            {
+            isUserAdmin ? {
                 id: 'parametre',
                 title: t($ => $.menu.parametre),
                 to: '/parametre',
                 icon: 'settings',
                 resourceName: 'parametre',
-            }
-        ]
+            } : null,
+        ].filter(notNull))
     };
     const headerMenuEntries = [
         menuSalut,
@@ -175,8 +176,9 @@ export const App: React.FC = () => {
         menuTasca,
         menuAvis,
         menuMonitoritzacio,
-        isUserAdmin ? menuConfiguracio : null,
-        isUserConsulta ? menuAlarmaConfig : null,
+        menuConfiguracio,
+        // isUserAdmin ? menuConfiguracio : null,
+        // isUserConsulta ? menuAlarmaConfig : null,
     ].filter(notNull);
     return (
         <BaseApp
