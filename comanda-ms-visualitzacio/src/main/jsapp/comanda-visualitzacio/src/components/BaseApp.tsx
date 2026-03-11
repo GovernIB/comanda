@@ -145,7 +145,7 @@ const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
         } else {
             return [];
         }
-    }, [apiIsReady, apiIndex]);
+    }, [apiIsReady, apiIndex?.links, menuEntries]);
 }
 
 const footerHeight = 36;
