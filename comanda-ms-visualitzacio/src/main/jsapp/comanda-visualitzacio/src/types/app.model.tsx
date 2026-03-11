@@ -94,6 +94,7 @@ export class EntornAppModel extends BaseEntity implements Partial<IEntornAppMode
     activa?     : boolean;
 
     salutUrl?   : string;
+    logsUrl?   : string;
 
     integracioCount?: number;
     subsistemaCount?: number;
