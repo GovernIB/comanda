@@ -172,7 +172,7 @@ const LogList = ({
 };
 
 const getLineNumber = (virtualizerLineIndex: number) =>
-    (virtualizerLineIndex + 1).toString();
+    (virtualizerLineIndex + 1).toString().slice(-4);
 
 /**
  * Component per visualitzar el text del log de forma eficient utilitzant virtualització.
