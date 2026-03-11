@@ -19,6 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { mergeSequentialStringArrays } from '../../util/stringUtils';
 import { useTranslation } from 'react-i18next';
 import useDataGridLocale from '../../hooks/useDataGridLocale';
+import { useMessage } from '../../components/MessageShow';
 
 /**
  * Informació de la llista de fitxers de log.
@@ -58,6 +59,7 @@ const LogList = ({
 }) => {
     const { t } = useTranslation();
     const { isReady, artifactReport } = useResourceApiService('entornApp');
+    const { showTemporal: showMessage, component } = useMessage();
     const dataGridLocale = useDataGridLocale();
     const [logs, setLogs] = useState<FitxerInfo[]>([]);
     useEffect(() => {
@@ -65,10 +67,15 @@ const LogList = ({
             return;
         }
         async function requests() {
-            const list = await artifactReport(entornAppId, {
-                code: 'llistar_logs',
-            });
-            setLogs(list as FitxerInfo[]);
+            try {
+                const list = await artifactReport(entornAppId, {
+                    code: 'llistar_logs',
+                });
+                setLogs(list as FitxerInfo[]);
+            } catch (e) {
+                // @ts-ignore
+                showMessage("Error", e?.message, 'error');
+            }
         }
         requests();
     }, [isReady, artifactReport, entornAppId]);
@@ -152,7 +159,9 @@ const LogList = ({
         [logs]
     );
     return (
-        <DataGridPro
+        <>
+            {component}
+            <DataGridPro
             loading={loading}
             localeText={dataGridLocale}
             initialState={{
@@ -167,7 +176,8 @@ const LogList = ({
             }}
             columns={logListColumns}
             rows={rows}
-        ></DataGridPro>
+            />
+        </>
     );
 };
 
@@ -348,6 +358,7 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
     const closeDialogButtons = useCloseDialogButtons();
     const [dialogOpen, setDialogOpen] = useState(false);
     const { isReady, artifactReport } = useResourceApiService('entornApp');
+    const { showTemporal: showMessage, component } = useMessage();
 
     /**
      * Actualitza el contingut del log actualment seleccionat.
@@ -358,18 +369,24 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
             return;
         }
         setIsRefreshLoading(true);
-        const list = await artifactReport(entornAppId, {
-            code: 'previsualitzar_log',
-            data: {
-                fileName: selected,
-                lineCount: 1000,
-            },
-        });
-        setLines(prevState => {
-            const newLines = (list as any[]).map(liniaDto => liniaDto.linia) as string[];
-            return mergeSequentialStringArrays(prevState ?? [], newLines);
-        });
-        setIsRefreshLoading(false);
+        try {
+            const list = await artifactReport(entornAppId, {
+                code: 'previsualitzar_log',
+                data: {
+                    fileName: selected,
+                    lineCount: 1000,
+                },
+            });
+            setLines(prevState => {
+                const newLines = (list as any[]).map(liniaDto => liniaDto.linia) as string[];
+                return mergeSequentialStringArrays(prevState ?? [], newLines);
+            });
+        } catch (e) {
+            // @ts-ignore
+            showMessage("Error", e?.message, 'error');
+        } finally {
+            setIsRefreshLoading(false);
+        }
     }, [artifactReport, entornAppId, selected]);
 
     useEffect(() => {
@@ -389,23 +406,29 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
         async (name: string) => {
             if (!isReady) return;
             setIsDownloadLoading(true);
-            const file = (await artifactReport(entornAppId, {
-                code: 'descarregar_log',
-                data: name,
-                fileType: 'CSV', // El fileType s'ignora, però és obligatori enviar-lo al backend
-            })) as ResourceApiBlobResponse;
-            const blob = file?.blob;
-            const url = window.URL.createObjectURL(blob);
+            try {
+                const file = (await artifactReport(entornAppId, {
+                    code: 'descarregar_log',
+                    data: name,
+                    fileType: 'CSV', // El fileType s'ignora, però és obligatori enviar-lo al backend
+                })) as ResourceApiBlobResponse;
+                const blob = file?.blob;
+                const url = window.URL.createObjectURL(blob);
 
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = file.fileName;
-            document.body.appendChild(a);
-            a.click();
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.fileName;
+                document.body.appendChild(a);
+                a.click();
 
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            setIsDownloadLoading(false);
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (e) {
+                // @ts-ignore
+                showMessage("Error", e?.message, 'error');
+            } finally {
+                setIsDownloadLoading(false);
+            }
         },
         [artifactReport, entornAppId, isReady]
     );
@@ -434,6 +457,7 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
                 },
             }}
         >
+            {component}
             <Dialog
                 title={t($ => $.page.salut.logs.logsList.title)}
                 open={dialogOpen}
