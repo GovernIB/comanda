@@ -469,7 +469,6 @@ const Apps: React.FC = () => {
                 toolbarType="upper"
                 paginationActive
                 //readOnly
-                rowDetailLink="/dd"
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}

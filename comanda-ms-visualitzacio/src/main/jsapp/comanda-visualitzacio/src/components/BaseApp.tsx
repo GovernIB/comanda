@@ -241,10 +241,10 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ...generateLanguageItems(availableLanguages), // Idioma
         ]}
         headerAdditionalAuthComponents={[
-            <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
+            <UserProfileFormDialogButton key="userProfile" onClick={() => userDialogApiRef.current?.show(
                 user?.id,
             )} />,
-            <RoleSelector />
+            <RoleSelector key="roleSelector" />
         ]}
         headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
         footer={generateFooter()}
