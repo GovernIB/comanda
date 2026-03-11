@@ -33,9 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -315,11 +317,45 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             String baseUrl = entornAppEntity.getLogsUrl();
             String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/")
                     + params.getNomFitxer();
-            URI uri = URI.create(logsUrl);
-            ResponseEntity<FitxerContingut> response = restTemplate
-                    .exchange(uri, HttpMethod.GET, httpEntity, FitxerContingut.class);
+            String logsUrlDirecte = logsUrl + "/directe";
 
-            return new DownloadableFile(response.getBody().getNom(), response.getBody().getMimeType(), response.getBody().getContingut());
+            // Provem si existeix el mètode /directe (per evitar carregar en memòria base64)
+            try {
+                URI uriDirecte = URI.create(logsUrlDirecte);
+                return restTemplate.execute(uriDirecte, HttpMethod.GET, request -> {
+                    request.getHeaders().addAll(httpEntity.getHeaders());
+                }, response -> {
+                    if (response.getStatusCode().is2xxSuccessful()) {
+                        String contentDisposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
+                        String filename = params.getNomFitxer();
+                        if (contentDisposition != null) {
+                            ContentDisposition cd = ContentDisposition.parse(contentDisposition);
+                            if (cd.getFilename() != null) {
+                                filename = cd.getFilename();
+                            }
+                        }
+                        String contentType = response.getHeaders().getContentType() != null ?
+                                response.getHeaders().getContentType().toString() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+                        byte[] buffer = new byte[8192];
+                        int read;
+                        while ((read = response.getBody().read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
+                        out.flush();
+                        return new DownloadableFile(filename, contentType, null);
+                    } else {
+                        throw new ResourceAccessException("L'endpoint /directe ha retornat " + response.getStatusCode());
+                    }
+                });
+            } catch (Exception e) {
+                log.debug("No s'ha pogut descarregar el log via /directe, provem el mètode actual: " + e.getMessage());
+                URI uri = URI.create(logsUrl);
+                ResponseEntity<FitxerContingut> response = restTemplate
+                        .exchange(uri, HttpMethod.GET, httpEntity, FitxerContingut.class);
+
+                return new DownloadableFile(response.getBody().getNom(), response.getBody().getMimeType(), response.getBody().getContingut());
+            }
         }
 
         @Override
