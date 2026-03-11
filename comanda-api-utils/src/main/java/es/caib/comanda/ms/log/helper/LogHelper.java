@@ -59,12 +59,7 @@ public class LogHelper {
 
     public static FitxerContingut getFitxerByNom(String directoriPath, String nom) {
 
-        var logDirPath = resolveLogDirectoryPath(directoriPath);
-
-        var filePath = logDirPath.resolve(nom);
-        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            throw new ComandaApiException("El fitxer de log no existeix: " + nom);
-        }
+        var filePath = getFilePath(directoriPath, nom);
 
         try {
             var fitxer = getFitxerInfo(filePath);
@@ -84,12 +79,7 @@ public class LogHelper {
 
     public static LogFileStream getFileStreamByNom(String directoriPath, String nom) {
 
-        var logDirPath = resolveLogDirectoryPath(directoriPath);
-
-        var filePath = logDirPath.resolve(nom);
-        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            throw new ComandaApiException("El fitxer de log no existeix: " + nom);
-        }
+        var filePath = getFilePath(directoriPath, nom);
 
         try {
             var mime = getMimeTypeByExtension(nom);
@@ -130,12 +120,7 @@ public class LogHelper {
 
     public static List<String> readLastNLines(String directoriPath, String nomFitxer, Long nLinies) {
 
-        var logDirPath = resolveLogDirectoryPath(directoriPath);
-
-        var filePath = logDirPath.resolve(nomFitxer);
-        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            throw new ComandaApiException("El fitxer de log no existeix: " + nomFitxer);
-        }
+        var filePath = getFilePath(directoriPath, nomFitxer);
 
         LinkedList<String> lines = new LinkedList<>();
         nLinies = getValidLineCount(nLinies);
@@ -167,6 +152,20 @@ public class LogHelper {
             log.error("[LogService.readLastNLines] Error no controlat", ex);
             throw new ComandaApiException("Error llegint últimes línia del fitxer de log", ex);
         }
+    }
+
+    @Nonnull
+    private static Path getFilePath(String directoriPath, String nom) {
+        if (!(nom.toLowerCase().contains(".log") || nom.toLowerCase().contains(appNom.toLowerCase()))) {
+            throw new ComandaApiException("El fitxer ha de contenir o bé l'extensió .log, o bé el nom de l'aplicació (" + nom + ")");
+        }
+
+        var logDirPath = resolveLogDirectoryPath(directoriPath);
+        var filePath = logDirPath.resolve(nom);
+        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+            throw new ComandaApiException("El fitxer de log no existeix: " + nom);
+        }
+        return filePath;
     }
 
     private static Long getValidLineCount(Long nLinies) {
