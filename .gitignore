@@ -40,3 +40,4 @@ build/
 /comanda-back/liquibase/databasechangelog.csv
 /derby.log
 /application.properties
+/comanda_docker.sh
