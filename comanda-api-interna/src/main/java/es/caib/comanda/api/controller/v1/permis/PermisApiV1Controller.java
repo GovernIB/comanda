@@ -58,7 +58,8 @@ public class PermisApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearPermis",
             summary = "Creació d'un permís",
-            description = "Afegeix un missatge d'alta de permís a una cua de events per a que es crei aquest de forma asíncrona a Comanda."
+            description = "Afegeix un missatge d'alta de permís a una cua de events per a que es crei aquest de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Permisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -81,7 +82,8 @@ public class PermisApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarPermis",
             summary = "Modificació d'un permís existent",
-            description = "Es comprova si el permís existeix, i en cas afirmatiu, s'afegeix un missatge de modificació de permís a una cua de events per a que es modifiqui aquest de forma asíncrona a Comanda."
+            description = "Es comprova si el permís existeix, i en cas afirmatiu, s'afegeix un missatge de modificació de permís a una cua de events per a que es modifiqui aquest de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Permisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatge acceptat", content = @Content(schema = @Schema(implementation = String.class))),
@@ -106,7 +108,8 @@ public class PermisApiV1Controller extends BaseController {
     @Operation(
             operationId = "crearMultiplesPermisos",
             summary = "Creació de múltiples permisos",
-            description = "Afegeix múltiples missatges d'alta de permisos a una cua de events per a que es creïn aquests de forma asíncrona a Comanda."
+            description = "Afegeix múltiples missatges d'alta de permisos a una cua de events per a que es creïn aquests de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Permisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -131,7 +134,8 @@ public class PermisApiV1Controller extends BaseController {
     @Operation(
             operationId = "modificarMultiplesPermisos",
             summary = "Modificació de múltiples permisos",
-            description = "Es comprova si els permisos existeixen, i en cas afirmatiu, s'afegeixen múltiples missatges de modificació de permisos a una cua de events per a que es modifiquin aquests de forma asíncrona a Comanda. Els permisos no existents s'ignoren."
+            description = "Es comprova si els permisos existeixen, i en cas afirmatiu, s'afegeixen múltiples missatges de modificació de permisos a una cua de events per a que es modifiquin aquests de forma asíncrona a Comanda. Els permisos no existents s'ignoren.",
+            tags = {"APP → COMANDA / Permisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges acceptats", content = @Content(schema = @Schema(implementation = String.class))),
@@ -154,7 +158,8 @@ public class PermisApiV1Controller extends BaseController {
     @Operation(
             operationId = "consultarPermis",
             summary = "Consulta d'un permís",
-            description = "Obté les dades d'un permís identificat pel seu identificador, codi d'aplicació i codi d'entorn."
+            description = "Obté les dades d'un permís identificat pel seu identificador, codi d'aplicació i codi d'entorn.",
+            tags = {"APP → COMANDA / Permisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Permís trobat", content = @Content(
@@ -178,7 +183,8 @@ public class PermisApiV1Controller extends BaseController {
     @Operation(
             operationId = "eliminarPermisos",
             summary = "Eliminació de permisos",
-            description = "Afegeix múltiples missatges d'eliminació de permisos a una cua de events per a que s'eliminin aquests de forma asíncrona a Comanda."
+            description = "Afegeix múltiples missatges d'eliminació de permisos a una cua de events per a que s'eliminin aquests de forma asíncrona a Comanda.",
+            tags = {"APP → COMANDA / Permisos"}
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Missatges d'eliminació acceptats", content = @Content(schema = @Schema(implementation = String.class))),

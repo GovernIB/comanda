@@ -129,4 +129,26 @@ public class AvisApiExternalIT {
         System.out.println("Batch create response: " + res);
         assertThat(res).isNotNull();
     }
+
+    @Test
+    void eliminarAvis_ok() throws Exception {
+        Avis avis = new Avis();
+        avis.setIdentificador("test-avis-" + System.currentTimeMillis());
+        avis.setAppCodi("NOT");
+        avis.setEntornCodi("DEV");
+        avis.setNom("Avís de prova per borrar");
+        avis.setDescripcio("Descripció de l'avís de prova");
+        avis.setDataInici(OffsetDateTime.now());
+        avis.setDataFi(OffsetDateTime.now().plusDays(10));
+        avis.setTipus(AvisTipus.INFO);
+        avis.setResponsable("com_admin");
+
+        String res = api.crearAvis(avis);
+        System.out.println("Create response: " + res);
+        assertThat(res).isNotNull();
+
+        String deleteRes = api.eliminarAvis(avis.getIdentificador(), avis.getAppCodi(), avis.getEntornCodi());
+        System.out.println("Delete response: " + deleteRes);
+        assertThat(deleteRes).isNotNull();
+    }
 }

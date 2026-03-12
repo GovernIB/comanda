@@ -38,10 +38,12 @@ public class ComandaAppSalutApi {
   /**
    * Obtenir informació de l&#39;estat de salut de l&#39;aplicació
    * Retorna l&#39;estat de salut funcional i integracions, amb metadades de versió.
+   * @param dataPeriode Data mínima de la que es demana informació per període (optional)
+   * @param dataTotal Data mínima de la que demana informació per totals (optional)
    * @return a {@code SalutInfo}
    * @throws ApiException if fails to make API call
    */
-  public SalutInfo salut() throws ApiException {
+  public SalutInfo salut(@javax.annotation.Nullable java.time.OffsetDateTime dataPeriode, @javax.annotation.Nullable java.time.OffsetDateTime dataTotal) throws ApiException {
     Object localVarPostBody = null;
     
     // create path and map variables
@@ -53,6 +55,8 @@ public class ComandaAppSalutApi {
     Map<String, String> localVarCookieParams = new HashMap<String, String>();
     Map<String, Object> localVarFormParams = new HashMap<String, Object>();
 
+    localVarQueryParams.addAll(apiClient.parameterToPairs("", "dataPeriode", dataPeriode));
+    localVarQueryParams.addAll(apiClient.parameterToPairs("", "dataTotal", dataTotal));
 
     
     

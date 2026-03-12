@@ -7,6 +7,7 @@ All URIs are relative to *http://localhost*
 | [**consultarTasca**](AppComandaTasquesApi.md#consultarTasca) | **GET** /tasques/v1/{identificador} | Consulta d&#39;una tasca |
 | [**crearMultiplesTasques**](AppComandaTasquesApi.md#crearMultiplesTasques) | **POST** /tasques/v1/multiple | Creació de múltiples tasques |
 | [**crearTasca**](AppComandaTasquesApi.md#crearTasca) | **POST** /tasques/v1 | Creació s&#39;una tasca |
+| [**eliminarTasca**](AppComandaTasquesApi.md#eliminarTasca) | **DELETE** /tasques/v1/{identificador} | Eliminació una tasca existent |
 | [**modificarMultiplesTasques**](AppComandaTasquesApi.md#modificarMultiplesTasques) | **PUT** /tasques/v1/multiple | Modificació de múltiples tasques |
 | [**modificarTasca**](AppComandaTasquesApi.md#modificarTasca) | **PUT** /tasques/v1/{identificador} | Modificació una tasca |
 | [**obtenirLlistatTasques**](AppComandaTasquesApi.md#obtenirLlistatTasques) | **GET** /tasques/v1 | Consulta de tasques |
@@ -206,6 +207,76 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: application/json
+- **Accept**: text/plain
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | successful operation |  -  |
+
+
+## eliminarTasca
+
+> String eliminarTasca(identificador, appCodi, entornCodi)
+
+Eliminació una tasca existent
+
+Es comprova si la tasca existeix, i en cas afirmatiu, s&#39;afegeix un missatge d&#39;eliminació de tasca a una cua de events per a que s&#39;elimini aquesta de forma asíncrona a Comanda.
+
+### Example
+
+```java
+// Import classes:
+import es.caib.comanda.service.management.ApiClient;
+import es.caib.comanda.service.management.ApiException;
+import es.caib.comanda.service.management.Configuration;
+import es.caib.comanda.service.management.models.*;
+import es.caib.comanda.api.management.AppComandaTasquesApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost");
+
+        AppComandaTasquesApi apiInstance = new AppComandaTasquesApi(defaultClient);
+        String identificador = "identificador_example"; // String | Identificador de la tasca
+        String appCodi = "appCodi_example"; // String | Codi de l'aplicació
+        String entornCodi = "entornCodi_example"; // String | Codi de l'entorn
+        try {
+            String result = apiInstance.eliminarTasca(identificador, appCodi, entornCodi);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppComandaTasquesApi#eliminarTasca");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **identificador** | **String**| Identificador de la tasca | |
+| **appCodi** | **String**| Codi de l&#39;aplicació | |
+| **entornCodi** | **String**| Codi de l&#39;entorn | |
+
+### Return type
+
+**String**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
 - **Accept**: text/plain
 
 

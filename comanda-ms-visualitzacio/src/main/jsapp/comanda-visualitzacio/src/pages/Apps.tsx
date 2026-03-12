@@ -103,6 +103,9 @@ const AppEntornForm: React.FC = () => {
             <Grid size={12}>
                 <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={pingUrl}/>}}}} />
             </Grid>
+            <Grid size={12}>
+                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={pingUrl}/>}}}} />
+            </Grid>
             <Grid size={12} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
                     <FormLabel component="legend">{t($ => $.page.apps.fields.salutAuthLegend)}</FormLabel>
@@ -127,6 +130,9 @@ const AppEntornForm: React.FC = () => {
             </Grid>
             <Grid size={6}>
                 <FormField name="estadisticaCron" />
+            </Grid>
+            <Grid size={12}>
+                <FormField name="alarmesEmail" />
             </Grid>
             <Grid size={12}>
                 <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />
@@ -464,7 +470,6 @@ const Apps: React.FC = () => {
                 toolbarType="upper"
                 paginationActive
                 //readOnly
-                rowDetailLink="/dd"
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}

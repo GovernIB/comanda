@@ -31,6 +31,7 @@ import drassana from '../assets/drassana.png';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
 import { useTheme } from '@mui/material/styles';
+import { ROLE_ADMIN } from './UserProvider.tsx';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -222,12 +223,12 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ...generateLanguageItems(availableLanguages), // Idioma
         ]}
         headerAdditionalAuthComponents={[
-            <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
+            <UserProfileFormDialogButton key="userProfile" onClick={() => userDialogApiRef.current?.show(
                 user?.id,
             )} />,
-            <RoleSelector />
+            <RoleSelector key="roleSelector" />
         ]}
-        headerAuthBadgeIcon={currentRole === 'COM_ADMIN' ? 'settings' : undefined}
+        headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
         footer={generateFooter()}
         footerHeight={footerHeight}
         persistentSession

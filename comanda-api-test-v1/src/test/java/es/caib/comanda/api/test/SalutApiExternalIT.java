@@ -36,7 +36,7 @@ public class SalutApiExternalIT {
 
     @Test
     void salut_ok() throws Exception {
-        SalutInfo salut = api.salut();
+        SalutInfo salut = api.salut(null, null);
         System.out.println(objectMapper.writeValueAsString(salut));
         assertThat(salut).isNotNull();
     }

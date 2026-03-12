@@ -84,6 +84,7 @@ const translationEn: translationResourcesType = {
         entorn: "Environments",
         versionsEntorn: "Versions by environment",
         alarmaConfig: "Alarms",
+        alarmaConfigConsultor: "Configure alarms",
         integracio: "Integrations",
         widget: "Statistic widgets",
         dashboard: "Dashboards",
@@ -282,8 +283,11 @@ const translationEn: translationResourcesType = {
             logs: {
                 preview: "Preview",
                 download: "Download",
+                refresh: "Refresh",
                 noSelected: "Select a file",
                 noPreview: "No preview available",
+                softWrap: "Soft wrap",
+                scrollToBottom: "Scroll to bottom",
                 logsList: {
                     title: "Logs",
                     nom: "Name",
@@ -359,6 +363,36 @@ const translationEn: translationResourcesType = {
                 },
                 column: {
                     appEntorn: "Application - Environment",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "News type task",
+                            INFO: "Information type task",
+                            ALERTA: "Alert type task",
+                            ERROR: "Error type task",
+                            CRITIC: "Critical type task",
+                        }
+                    },
+                    prioritat: {
+                        tooltip: {
+                            NONE: "Priority not defined",
+                            BAIXA: "Low priority",
+                            NORMAL: "Normal priority",
+                            ALTA: "High priority",
+                            MAXIMA: "Maximum priority",
+                        }
+                    },
+                    estat: {
+                        tooltip: {
+                            PENDENT: "Task pending to start",
+                            INICIADA: "Task in progress",
+                            FINALITZADA: "Task finished",
+                            CANCELADA: "Task cancelled",
+                            ERROR: "Task with error",
+                        }
+                    },
+                    dataCaducitat: {
+                        tooltip: "Deadline for the task",
+                    },
                 },
                 entornAppInvalid: "Deleted application environment",
             }
@@ -375,6 +409,20 @@ const translationEn: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Name",
+                column: {
+                    appEntorn: "Application - Environment",
+                    global: "Global",
+                    globalTooltip: "This is a global notice",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "News type notice",
+                            INFO: "Information type notice",
+                            ALERTA: "Alert type notice",
+                            ERROR: "Error type notice",
+                            CRITIC: "Critical type notice",
+                        }
+                    }
+                },
             },
             action: {
                 obrir: "Open notice",
@@ -400,6 +448,34 @@ const translationEn: translationResourcesType = {
                 title: "Period",
                 subtitle: "Time period during which the condition must be met to trigger the alarm",
                 switch: "With activation period"
+            },
+            filter: {
+                showOnlyOwnEnabled: "Show only my alarms",
+                showOnlyOwnDisabled: "Show all alarms",
+            },
+        },
+        alarma: {
+            snackbar: {
+                title: "Alarms",
+                existingAlarms: "Has {{count}} alarm active",
+                existingAlarms_one: "Has {{count}} alarm active",
+                existingAlarms_other: "Has {{count}} alarms active",
+                newAlarms: "New alarm active",
+                newAlarms_one: "New alarm active",
+                newAlarms_other: "{{count}} new alarms active",
+            },
+            action: {
+                clear: {
+                    label: "Delete",
+                },
+            },
+            filter: {
+                showOnlyActiveEnabled: "Showing only active alarms (click to include deleted ones)",
+                showOnlyActiveDisabled: "Showing active and deleted alarms (click to show only active ones)",
+            },
+            estats: {
+                finalitzada: "Finalized",
+                finalitzadaEsborrada: "Finalized (deleted)",
             },
         },
         apps: {

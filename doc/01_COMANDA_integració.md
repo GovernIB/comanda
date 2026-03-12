@@ -9,7 +9,7 @@ gener de 2026
 
 Lot 2\. Serveis d’administració electrònica
 
-versio 1.1
+versio 1.3
 
 # **Control de versions del document** {#control-de-versions-del-document}
 
@@ -19,7 +19,7 @@ versio 1.1
 | 06/10/25 | Límit Tecnologies | 1.0 | Versió inicial |
 | 16/01/26 | Limit Tecnologies | 1.1 | Reestructuració de la API: nous mètodes, concreció de urls, hempers i exemples |
 | 03/02/26 | Limit Tecnologies | 1.2 | Unificació de llibreries i canvi de URLs  |
-|  |  |  |  |
+| 12/02/23 | Limit Tecnologies | 1.3 | Afegit nou mètode per descàrrega directa de log |
 
 | Revisat per |  |  |
 | :---- | :---- | :---- |
@@ -62,91 +62,91 @@ versio 1.1
 
 [**3\. Tasques	12**](#tasques)
 
-[Model de dades	17](#model-de-dades)
+[Model de dades	18](#model-de-dades)
 
-[**4\. Avisos	19**](#avisos)
+[**4\. Avisos	20**](#avisos)
 
-[Model de dades	23](#model-de-dades-1)
+[Model de dades	25](#model-de-dades-1)
 
-[**5\. Exemples	25**](#exemples)
+[**5\. Exemples	26**](#exemples)
 
-[Enviar una tasca	25](#enviar-una-tasca)
+[Enviar una tasca	26](#enviar-una-tasca)
 
-[Enviar un avís	25](#enviar-un-avís)
+[Enviar un avís	27](#enviar-un-avís)
 
-[**6\. Salut	26**](#salut-1)
+[**6\. Salut	27**](#salut-1)
 
-[6.1. Obtenció de informació de l’aplicació	26](#obtenció-de-informació-de-l’aplicació)
+[6.1. Obtenció de informació de l’aplicació	28](#obtenció-de-informació-de-l’aplicació)
 
-[Model de dades	28](#model-de-dades-2)
+[Model de dades	29](#model-de-dades-2)
 
-[6.2. Obtenció de informació de salut	30](#obtenció-de-informació-de-salut)
+[6.2. Obtenció de informació de salut	31](#obtenció-de-informació-de-salut)
 
-[Model de dades	32](#model-de-dades-3)
+[Model de dades	34](#model-de-dades-3)
 
-[Helpers	38](#helpers)
+[Helpers	39](#helpers)
 
-[Model de dades internes	42](#model-de-dades-internes)
+[Model de dades internes	44](#heading=h.uyu5fqwormsc)
 
-[Exemples d’ús	43](#exemples-d’ús)
+[Exemples d’ús	45](#heading=h.iuthxhohjluc)
 
-[**7\. Estadístiques	43**](#estadístiques)
+[**7\. Estadístiques	46**](#estadístiques)
 
-[7.1. Obtenció de informació estadística de l’aplicació	44](#obtenció-de-informació-estadística-de-l’aplicació)
+[7.1. Obtenció de informació estadística de l’aplicació	46](#obtenció-de-informació-estadística-de-l’aplicació)
 
-[Model de dades	45](#model-de-dades-4)
+[Model de dades	48](#model-de-dades-4)
 
-[7.2. Obtenció de dades estadístiques	46](#obtenció-de-dades-estadístiques)
+[7.2. Obtenció de dades estadístiques	48](#obtenció-de-dades-estadístiques)
 
-[Model de dades	48](#model-de-dades-5)
+[Model de dades	50](#model-de-dades-5)
 
-[Helpers	51](#helpers-1)
+[Helpers	54](#helpers-1)
 
-[Exemples d’ús	53](#exemples-d’ús-1)
+[Exemples d’ús	55](#exemples-d’ús)
 
-[**8\. Logs	55**](#logs)
+[**8\. Logs	57**](#logs)
 
-[Model de dades	57](#model-de-dades-6)
+[Model de dades	59](#model-de-dades-6)
 
-[Helpers	57](#helpers-2)
+[Helpers	60](#helpers-2)
 
-[Exemples d’ús	60](#exemples-d’ús-2)
+[Exemples d’ús	63](#exemples-d’ús-1)
 
-[**Annex 1 \- Servers amb Spring	61**](#annex-1---servers-amb-spring)
+[**Annex 1 \- Servers amb Spring	65**](#annex-1---servers-amb-spring)
 
-[**Salut	61**](#salut-2)
+[**Salut	65**](#salut-2)
 
-[Estadística	61](#estadística)
+[Estadística	66](#estadística)
 
-[Log	62](#log-1)
+[Log	67](#log-1)
 
-[**Annex 2 \- Spring-filter	64**](#annex-2---spring-filter)
+[**Annex 2 \- Spring-filter	69**](#annex-2---spring-filter)
 
-[Camp filter – Sintaxi bàsica	64](#camp-filter-–-sintaxi-bàsica)
+[Camp filter – Sintaxi bàsica	69](#camp-filter-–-sintaxi-bàsica)
 
-[Format general	64](#format-general)
+[Format general	69](#format-general)
 
-[Operadors disponibles	64](#operadors-disponibles)
+[Operadors disponibles	69](#operadors-disponibles)
 
-[Comparació	64](#comparació)
+[Comparació	69](#comparació)
 
-[Text	64](#text)
+[Text	69](#text)
 
-[Operadors lògics	65](#operadors-lògics)
+[Operadors lògics	70](#operadors-lògics)
 
-[Agrupació amb parèntesis	65](#agrupació-amb-parèntesis)
+[Agrupació amb parèntesis	70](#agrupació-amb-parèntesis)
 
-[Valors admesos	65](#valors-admesos)
+[Valors admesos	70](#valors-admesos)
 
-[Tipus bàsics	65](#tipus-bàsics)
+[Tipus bàsics	70](#tipus-bàsics)
 
-[Accés a camps anidats	66](#accés-a-camps-anidats)
+[Accés a camps anidats	71](#accés-a-camps-anidats)
 
-[Operador in	66](#operador-in)
+[Operador in	71](#operador-in)
 
-[Exemples complets	66](#exemples-complets)
+[Exemples complets	71](#exemples-complets)
 
-[Notes importants	66](#notes-importants)
+[Notes importants	71](#notes-importants)
 
 # 
 
@@ -211,7 +211,7 @@ Aquests clients es poden afegir com a dependències Maven:
 |     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-client-management</artifactId>         <version>1.0.0</version>     </dependency>`     |
 | :---- |
 
-Aquestes llibreria inclou dependències a les llibreries de RestEasy versió 4.7.6.Final. En cas que el seu projecte ja inclogui les dependències, encara que sigui amb una versió inferior (3.x), es poden excloure les dependències, per evitar conflictes.  
+**Aquestes llibreria inclou dependències a les llibreries de RestEasy versió 4.7.6.Final. En cas que el seu projecte ja inclogui les dependències, encara que sigui amb una versió inferior (3.x), es poden excloure les dependències, per evitar conflictes.**  
 Aquesta llibreria inclou els models de dades que Comanda espera rebre per a les integracions, com:
 
 * Tasques:   
@@ -238,6 +238,7 @@ També inclou un client **AppComandaClient**, que implementa els següents mèto
 * String **crearMultiplesTasques**(List\<Tasca\> tasques)  
 * String **modificarTasca**(String identificador, Tasca tasca)  
 * String **modificarMultiplesTasques**(List\<Tasca\> tasques)  
+* String **eliminarTasca**(String identificador, String appCodi, String entornCodi)  
 * TascaPage **obtenirLlistatTasques**(String quickFilter, String filter, String page, Integer size)  
   * quickFilter: text que Comanda utilitza per filtrar per el camp nom  
   * filter: filtre en format spring-filter (veure Annex 1\) 
@@ -250,6 +251,7 @@ També inclou un client **AppComandaClient**, que implementa els següents mèto
 * String **crearMultiplesAvisos**(List\<Avis\> avisos)  
 * String **modificarAvis**(String identificador, Avis avis)  
 * String **modificarMultiplesAvisos**(List\<Avis\> avisos)  
+* String **eliminarAvis**(String identificador, String appCodi, String entornCodi)  
 * AvisPage **obtenirLlistatAvisos**(String quickFilter, String filter, String page, Integer size)  
   * quickFilter: text que Comanda utilitza per filtrar per el camp nom  
   * filter: filtre en format spring-filter (veure Annex 1\)
@@ -309,21 +311,22 @@ A més, comanda disposa d’un altre mòdul ofereix una sèrie de mètodes d’a
 |     `<dependency>         <groupId>es.caib.comanda</groupId>         <artifactId>comanda-api-utils</artifactId>         <version>1.0.0</version>     </dependency>` |
 | :---- |
 
-Tot seguit us donem exemples d’implementació dels serveis utilitzant  jaxrs \+ resteasy.
+Tot seguit us donem exemples d’implementació dels serveis utilitzant  jaxrs \+ resteasy.  
+**Cal tenir present que les APIs d’Estadístiques i Logs han d’implementar autenticació BASIC.**
 
 1. ### **Salut** {#salut}
 
-| import es.caib.comanda.model.server.monitoring.AppInfo; import es.caib.comanda.model.server.monitoring.SalutInfo; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; @ApplicationScoped @Path("/") public class ComandaAppSalutApiImpl implements ComandaAppSalutApi {    @Inject    SalutService salutService;    @Override    public SalutInfo salut() {        return salutService.getSalut();    }    @Override    public AppInfo salutInfo() {        return salutService.getInfo();    }    */\*\*     \* Contracte de servei: implementa-ho a la teva webapp     \*/*    public interface SalutService {        SalutInfo getSalut();        AppInfo getInfo();    } } |
+| import es.caib.comanda.model.server.monitoring.AppInfo; import es.caib.comanda.model.server.monitoring.SalutInfo; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; @ApplicationScoped @Path("/") public class ComandaAppSalutApiImpl implements ComandaAppSalutApi {    @Inject    SalutService salutService;    @Override    public SalutInfo salut(OffsetDateTime dataPeriode, OffsetDateTime dataTotal){        return salutService.getSalut(dataPeriode, dataTotal);    }    @Override    public AppInfo salutInfo() {        return salutService.getInfo();    }  } |
 | :---- |
 
    2. ### **Estadistica** {#estadistica}
 
-| import es.caib.comanda.model.server.monitoring.EstadistiquesInfo; import es.caib.comanda.model.server.monitoring.RegistresEstadistics; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; import java.util.List; @ApplicationScoped @Path("/") public class ComandaAppEstadistiquesApiImpl implements ComandaAppEstadistiquesApi {    @Inject    EstadistiquesService estadistiquesService;    @Override    public RegistresEstadistics estadistiques() {        return estadistiquesService.darreres();    }    @Override    public EstadistiquesInfo estadistiquesInfo() {        return estadistiquesService.info();    }    @Override    public RegistresEstadistics estadistiquesPerData(String data) {        return estadistiquesService.perData(data);    }    @Override    public List\<RegistresEstadistics\> estadistiquesPerRang(String dataInici, String dataFi) {        return estadistiquesService.perRang(dataInici, dataFi);    }    */\*\*     \* Contracte de servei: implementa-ho a la teva webapp.     \*/*    public interface EstadistiquesService {        RegistresEstadistics darreres();        EstadistiquesInfo info();        RegistresEstadistics perData(String ddMMyyyy);        List\<RegistresEstadistics\> perRang(String inici, String fi);    } } |
+| import es.caib.comanda.model.server.monitoring.EstadistiquesInfo; import es.caib.comanda.model.server.monitoring.RegistresEstadistics; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; import java.util.List; @ApplicationScoped @Path("/") @PreAuthorize("hasRole(APP\_WS)") public class ComandaAppEstadistiquesApiImpl implements ComandaAppEstadistiquesApi {    @Inject    EstadistiquesService estadistiquesService;    @Override    public RegistresEstadistics estadistiques() {        return estadistiquesService.darreres();    }    @Override    public EstadistiquesInfo estadistiquesInfo() {        return estadistiquesService.info();    }    @Override    public RegistresEstadistics estadistiquesPerData(String data) {        return estadistiquesService.perData(data);    }    @Override    public List\<RegistresEstadistics\> estadistiquesPerRang(String dataInici, String dataFi) {        return estadistiquesService.perRang(dataInici, dataFi);    } } |
 | :---- |
 
       3. ### **Log** {#log}
 
-| import es.caib.comanda.model.server.monitoring.FitxerContingut; import es.caib.comanda.model.server.monitoring.FitxerInfo; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; import java.util.List; @ApplicationScoped @Path("/") public class ComandaAppLogsApiImpl implements ComandaAppLogsApi {    @Inject    LogsService logsService;    @Override    public FitxerContingut getFitxerByNom(String nomFitxer) {        return logsService.getFitxer(nomFitxer);    }    @Override    public List\<String\> llegitUltimesLinies(String nomFitxer, Long nLinies) {        return logsService.getUltimesLinies(nomFitxer, nLinies);    }    @Override    public List\<FitxerInfo\> llistarFitxers() {        return logsService.llistarFitxers();    }    */\*\*     \* Contracte de servei: implementa-ho a la teva webapp     \*/*    public interface LogsService {        List\<FitxerInfo\> llistarFitxers();        FitxerContingut getFitxer(String nomFitxer);        List\<String\> getUltimesLinies(String nomFitxer, Long nLinies);    } } |
+| import es.caib.comanda.model.server.monitoring.FitxerContingut; import es.caib.comanda.model.server.monitoring.FitxerInfo; import javax.enterprise.context.ApplicationScoped; import javax.inject.Inject; import javax.ws.rs.Path; import javax.ws.rs.core.Response; import java.util.List; @ApplicationScoped @Path("/") @PreAuthorize("hasRole(APP\_WS)") public class ComandaAppLogsApiImpl implements ComandaAppLogsApi {    @Inject    LogsService logsService;    @Override    public FitxerContingut getFitxerByNom(String nomFitxer) {        return logsService.getFitxer(nomFitxer);    }    @Override    public Response descarregarFitxerDirecte(String nomFitxer) {        LogFileStream *file* \= logService.getLogFile(nomFitxer);        if (*file* \== null) {           return Response.*status*(Response.Status.*NOT\_FOUND*).build();        }        StreamingOutput *stream* \= output \-\> {           try (InputStream in \= *file*.getInputStream()) {               byte\[\] buffer \= new byte\[8192\];               int read;               while ((read \= in.read(buffer)) \!= \-1) {                   output.write(buffer, 0, read);               }           }        };        return Response.ok(*stream*, *file*.getContentType())               .header("Content-Disposition",                        "attachment; filename=\\"" \+ *file*.getFileName() \+ "\\"")               .header("Content-Length", *file*.getSize())               .build();    }    @Override    public List\<String\> llegitUltimesLinies(String nomFitxer, Long nLinies) {        return logsService.getUltimesLinies(nomFitxer, nLinies);    }    @Override    public List\<FitxerInfo\> llistarFitxers() {        return logsService.llistarFitxers();    } } |
 | :---- |
 
 Al utilitzar jaxrs \+ RestEasy, es pot utilitzar jakarta.ws.rs.\* enlloc de javax.ws.rs.\*
@@ -338,6 +341,7 @@ Per a poder donar d’alta o modificar tasques a Comanda es disposa dels següen
 * PUT /comandaapi/interna/tasques/v1/{identificador}: modifica una tasca a Comanda.  
 * POST /comandaapi/interna/tasques/v1/multiple: crea o modifica múltiples tasques a Comanda.  
 * PUT /comandaapi/interna/tasques/v1/multiple: modifica múltiples tasques a Comanda.  
+* DELETE /comandaapi/interna/tasques/v1/{identificador}: elimina una tasca a Comanda.  
 * GET /comandaapi/interna/tasques/v1/{identificador}: Consulta una tasca a Comanda.  
 * GET /comandaapi/interna/tasques/v1/tasque: Consulta un llistat de tasques a Comanda.
 
@@ -378,15 +382,25 @@ Per a poder donar d’alta o modificar tasques a Comanda es disposa dels següen
 | **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba cap tasca a modificar |
 | **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/tasques/v1' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] }\]' |
 
+| Eliminació d’una tasca |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/tasques/v1/{identificador} Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1?appCodi=APP\&entornCodi=DEV |
+| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
+| **Mètode** | DELETE |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **identificador**: identificador de la tasca a eliminar **appCodi**: codi de l’aplicació a la que pertany la tasca **entornCodi**: codi de l’entorn en el que està desplegada l’aplicació |
+| **Resposta** | HTTP Status OK |
+| **Ex. de petició** | curl \--location \--request DELETE 'dev.caib.es/comandaapi/interna/tasques/v1?appCodi=APP\&entornCodi=DEV' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX=='  |
+
 | Consulta una tasca |  |
 | ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/tasques/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1/1234 |
+| **Adreça API** |  /comandaapi/interna/tasques/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/tasques/v1/1234?appCodi=APP\&entornCodi=DEV |
 | **Descripció** | Aquest servei consulta una tasca Comanda. |
 | **Mètode** | GET |
 | **Autenticació** | BASIC |
-| **Paràmetres** | **identificador**: identificador de la tasca a cercar |
+| **Paràmetres** | **identificador**: identificador de la tasca a cercar **appCodi**: codi de l’aplicació a la que pertany la tasca **entornCodi**: codi de l’entorn en el que està desplegada l’aplicació |
 | **Resposta** | Tasca si s’ha trobat la tasca HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
-| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/tasques/v1/31489824 \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
+| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/tasques/v1/31489824?appCodi=NOT\&entornCodi=DEV \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
 | **Ex. de resposta** | {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "NOTIFICACIO",   "nom": "Nom de la notificacio",   "descripcio": "Descripcio de la notificació",   "estat": "INICIADA",   "estatDescripcio": "Enviada a Notifica",   "numeroExpedient": "1850488",   "prioritat": null,   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null,   "dataCaducitat": "2025-08-28T16:08:28.295",   "redireccio": "http://dev.caib.es/notiback/notificacio/31489821/enviament/31489824",   "responsable": "u000000",   "grup": null,   "usuarisAmbPermis": \["u000000", "u999000"\],   "grupsAmbPermis": \["ROL\_001", "ROL\_002"\] } |
 
 | Consulta de múltiples tasques |  |
@@ -477,6 +491,7 @@ Per a poder donar d’alta o modificar avisos a Comanda es disposa dels següent
 * PUT /comandaapi/interna/avisos/v1/{identificador}: modifica un avís a Comanda.  
 * POST /comandaapi/interna/avisos/v1/multiple: crea o modifica múltiples avisos a Comanda.  
 * PUT /comandaapi/interna/avisos/v1/multiple: modifica múltiples avisos a Comanda.  
+* DELETE /comandaapi/interna/avisos/v1/{identificador}: elimina un avís a Comanda.  
 * GET /comandaapi/interna/avisos/v1/{identificador}: Consulta un avís a Comanda.  
 * GET /comandaapi/interna/avisos/v1: Consulta un llistat d’avisos a Comanda.
 
@@ -518,15 +533,25 @@ Per a poder donar d’alta o modificar avisos a Comanda es disposa dels següent
 | **Resposta** | HTTP Status OK si les dades son correctes HTTP Status BAD\_REQUEST en cas de dades incorrectes HTTP Status NOT\_FOUND si no es troba cap tasca a modificar |
 | **Ex. de petició** | curl \--location \--request PUT 'dev.caib.es/comandaapi/interna/avisos/v1 \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX==' \\ \--data '\[{   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, }\]' |
 
+| Eliminació d’un avís |  |
+| ----- | :---- |
+| **Adreça API** |  /comandaapi/interna/avisos/v1/{identificador} Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1?appCodi=APP\&entornCodi=DEV |
+| **Descripció** | Aquest servei  crea o modifica una tasca a Comanda. |
+| **Mètode** | DELETE |
+| **Autenticació** | BASIC |
+| **Paràmetres** | **identificador**: identificador de l’avís a eliminar **appCodi**: codi de l’aplicació a la que pertany la tasca **entornCodi**: codi de l’entorn en el que està desplegada l’aplicació |
+| **Resposta** | HTTP Status OK |
+| **Ex. de petició** | curl \--location \--request DELETE 'dev.caib.es/comandaapi/interna/avisos/v1?appCodi=APP\&entornCodi=DEV' \\ \--header 'Content-Type: application/json' \\ \--header 'Authorization: Basic XXXXXXXXXXX=='  |
+
 | Consulta una avís |  |
 | ----- | :---- |
-| **Adreça API** |  /comandaapi/interna/avisos/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1/1234 |
+| **Adreça API** |  /comandaapi/interna/avisos/v1/{identificador}   Ex. https:/dev.caib.es/comandaapi/interna/avisos/v1/123?appCodi=APP\&entornCodi=DEV |
 | **Descripció** | Aquest servei consulta una tasca Comanda. |
 | **Mètode** | GET |
 | **Autenticació** | BASIC |
-| **Paràmetres** | **identificador**: identificador de la tasca a cercar |
+| **Paràmetres** | **identificador**: identificador de l’avís a cercar **appCodi**: codi de l’aplicació a la que pertany la tasca **entornCodi**: codi de l’entorn en el que està desplegada l’aplicació |
 | **Resposta** | Tasca si s’ha trobat la tasca HTTP Status NOT\_FOUND si no es troba la tasca a modificar |
-| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/avisos/v1/31489824 \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
+| **Ex. de petició** | curl \--location 'http://localhost:8080/comandaapi/interna/avisos/v1/31489824?appCodi=NOT\&entornCodi=DEV \\ \--header 'Authorization: Basic XXXXXXXXXXX==' |
 | **Ex. de resposta** | {   "appCodi": "NOT",   "entornCodi": "DEV",   "identificador": "31489824",   "tipus": "INFO",   "nom": "Nom de l’avís",   "descripcio": "Descripcio de l’avís",   "dataInici": "2025-08-28T16:08:28.295",   "dataFi": null, } |
 
 | Consulta de múltiples avisos |  |
@@ -625,7 +650,9 @@ Cada aplicació que es vulgui integrar amb el mòdul de Salut de comanda haurà 
 * GET /salut/info: retorna informació d’aplicació (AppInfo) per a la pantalla de Salut de Comanda.  
 * GET /salut: retorna informació de salut de l’aplicació (SalutInfo).
 
-  1. ### **Obtenció de informació de l’aplicació** {#obtenció-de-informació-de-l’aplicació}
+**Aqeusts endpoints seran oberts, sense autenticació.**
+
+1. ## **Obtenció de informació de l’aplicació** {#obtenció-de-informació-de-l’aplicació}
 
 | Obtenció de informació de l’aplicació |  |
 | ----- | :---- |
@@ -661,11 +688,11 @@ Cada aplicació que es vulgui integrar amb el mòdul de Salut de comanda haurà 
 | codi | cadena(16) | 1 | Codi de la integració. |
 | nom | cadena(100) | 1 | Nom de la integració |
 
-Per emplenar la informació de la integració es pot utilitzar l’enumerat es.caib.comanda.ms.salut.model.IntegracioApp, que és un llistat de integracions, amb el codi i el nom.
+Per emplenar la informació de la integració es pot utilitzar l’enumerat es.caib.comanda.ms.salut.helper.IntegracioApp, que és un llistat de integracions, amb el codi i el nom.
 
 Si s’utilitza aquest enumerat per informar d’una integració es pot utilitzar el builder:
 
-| `IntegracioInfo integracioInfo = IntegracioInfo.builder().integracioApp(IntegracioApp.COD).build();` |
+| `IntegracioInfo integracioInfo = new IntegracioInfo()     .codi(IntegracioApp.COD.getCodi())     .nom(IntegracioApp.COD.getNom());` |
 | :---- |
 
 | SubsistemaInfo |  |  |  |
@@ -697,7 +724,7 @@ En cas de utilitzar els contexts de backoffice, api interna i api externa es rec
 | nom | cadena(128) | 1 | Nom del manual |
 | path | cadena(255) | 1 | URL on es pot accedir al manual |
 
-2. ### **Obtenció de informació de salut** {#obtenció-de-informació-de-salut}
+2. ## **Obtenció de informació de salut** {#obtenció-de-informació-de-salut}
 
 | Obtenció de informació de salut |  |
 | ----- | :---- |
@@ -705,9 +732,9 @@ En cas de utilitzar els contexts de backoffice, api interna i api externa es rec
 | **Descripció** | Aquest servei retorna informació de salut de l’aplicació |
 | **Mètode** | GET |
 | **Autenticació** | Actualment es requereix que el mètode no tingui autenticació. S’espera que en un futur s’utilitzi autenticació BASIC |
-| **Paràmetres** | No accepta paràmetres |
+| **Paràmetres** | OffsetDateTime **dataPeriode**: data a partir de la que calcular les peticions per període OffsetDateTime **dataTotal**: data a partir de la que calcular les peticions totals Ambdós paràmetres son opcionals. En cas de no enviar-los, serà la pròpia aplicació l’encarregada de gestionar el període (temps entre dues peticions) i el total. |
 | **Resposta** | SalutInfo |
-| **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/salut' |
+| **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/salut?dataPeriode=2026-02-11T11:33:06.570760335+01:00\&dataTotal=2026-01-11T11:39:06.392074155+01:00' |
 | **Ex. de resposta** | {     "codi": "NOT",     "data": 1759754016720,     "estat": {         "estat": "UP",         "latencia": 29     },     "bd": {         "estat": "UP",         "latencia": 0     },     "integracions": \[         {             "codi": "ARX",             "peticions": {                 "totalOk": 0,                 "totalError": 0,                 "totalTempsMig": 0,                 "peticionsOkUltimPeriode": 0,                 "peticionsErrorUltimPeriode": 0,                 "tempsMigUltimPeriode": 0,                 "peticionsPerEntorn": {}             }         },         {             "estat": "UP",             "latencia": 0,             "codi": "USR",             "peticions": {                 "totalOk": 34,                 "totalError": 0,                 "totalTempsMig": 303,                 "peticionsOkUltimPeriode": 0,                 "peticionsErrorUltimPeriode": 0,                 "tempsMigUltimPeriode": 0,                 "peticionsPerEntorn": {}             }         }     \],     "altres": \[         {             "codi": "PRC",             "nom": "Processadors",             "valor": "4"         },         {             "codi": "SCPU",             "nom": "Càrrega del sistema",             "valor": "No disponible"         },         {             "codi": "PCPU",             "nom": "Càrrega del procés",             "valor": "0.0%"         },         {             "codi": "MED",             "nom": "Memòria disponible",             "valor": "382,5 MB"         },         {             "codi": "MET",             "nom": "Memòria total",             "valor": "2,1 GB"         },         {             "codi": "EDT",             "nom": "Espai de disc total",             "valor": "56,6 GB"         },         {             "codi": "EDL",             "nom": "Espai de disc lliure",             "valor": "4,6 GB"         },         {             "codi": "SO",             "nom": "Sistema operatiu",             "valor": "Linux 3.10.0-957.10.1.el7.x86\_64 (amd64)"         }     \],     "versio": "2.0.11",     "subsistemes": \[         {             "estat": "UP",             "latencia": 0,             "codi": "AWE",             "totalOk": 5,             "totalError": 0,             "totalTempsMig": 116,             "peticionsOkUltimPeriode": 0,             "peticionsErrorUltimPeriode": 0,             "tempsMigUltimPeriode": 0         },         {             "estat": "UP",             "latencia": 0,             "codi": "ARE",             "totalOk": 19,             "totalError": 0,             "totalTempsMig": 252,             "peticionsOkUltimPeriode": 0,             "peticionsErrorUltimPeriode": 0,             "tempsMigUltimPeriode": 0         }     \] } |
 
 2. \*\* Aquest mètode ha de contestar amb el mínim temps possible per no afectar al rendiment de comanda. Per aquest motiu es desaconsella que al consultar les dades de les integracions es facin peticions a les aplicacions integrades. La informació de salut s’hauria d’obtenir únicament amb dades de la pròpia aplicació.
@@ -845,7 +872,11 @@ La llibreria de comanda, al mòdul comanda-api-utils, ofereix unes classes d’a
 
 * es.caib.comanda.ms.salut.helper.EstatHelper  
 * es.caib.comanda.ms.salut.helper.MonitorHelper  
+* es.caib.comanda.ms.salut.helper.SalutHelper  
+* es.caib.comanda.ms.salut.helper.SalutComponentsHelper  
 * es.caib.comanda.ms.salut.helper.IntegracioApp
+
+  ### **EstatHelper**
 
 La classe **EstatHelper** proporciona funcionalitats de suport per al càlcul de l’estat de les integracions i subsistemes. 
 
@@ -877,6 +908,15 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Paràmetres** | **estat1**: Primer estat a comparar **estat2**: Segon estat a comparar |
 | **Resposta** | EstatSalutEnum |
 | **Ús principal** | Agrupar estats de diversos serveis i obtenir una visió agregada del seu comportament |
+
+### **Exemples d’ús**
+
+Calcular estats
+
+| EstatSalutEnum estat \= EstatHelper.calculaEstat(peticionsOk, peticionsError); EstatSalutEnum estat \= EstatHelper.*calculaEstat*(errorRatePct); |
+| :---- |
+
+### **MonitorHelper**
 
 La classe **MonitorHelper** proporciona un conjunt complet de funcionalitats per obtenir informació de salut i rendiment del sistema, incloent memòria, CPU, disc, JVM i servidor d’aplicacions. S’utilitza per construir la resposta del servei /salut i per generar objectes InformacioSistema.
 
@@ -954,22 +994,7 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Resposta** | String |
 | **Ús principal** | Mostrar informació d’entorn en diagnòstics. |
 
-La classe **IntegracioApp** és un enumerat amb el codi i nom de múltiples aplicacions amb les que potser es fa alguna integració.  
-Aquest enumerat serveix per disposar dels codis i noms d’aplicacions, de manera que, a ser possible, totes les aplicacions enviïn els mateixos codis i noms en la informació de les integracions.
-
-Si es tracta d’una aplicació registrada a la Caib, els codis haurien de ser els codis de 3 caràcters assignats a la aplicació per la Caib.
-
-Els mètodes per obtenir el codi i nom de l’aplicació són els següents:
-
-* getCodi(): retorna el codi de l’aplicació.  
-* getNom(): retorna el nom de l’aplicació.
-
-Exemple d’ús:
-
-| String codiNotib \= IntegracioApp.NOT.getCodi(); String nomNotib \= IntegracioApp.NOT.*getNom*(); IntegracioInfo intNotib \= new IntegracioInfo().codi(codiNotib).nom(nomNotib); |
-| :---- |
-
-### **Model de dades internes** {#model-de-dades-internes}
+#### **Model de dades internes**
 
 | MemoryUsage |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -1020,16 +1045,226 @@ Aquest model disposa de mètodes per retornar les dades en formats llegibles.
 | gcCount | Long | 0..1 | Nombre total de col·leccions de Garbage Collector realitzades per tots els GC de la JVM |
 | gcTime | Long | 0..1 | Temps total (en mil·lisegons) dedicat pel Garbage Collector |
 
-### **Exemples d’ús** {#exemples-d’ús}
-
-Calcular estats
-
-| EstatSalutEnum estat \= EstatHelper.calculaEstat(peticionsOk, peticionsError); EstatSalutEnum estat \= EstatHelper.*calculaEstat*(errorRatePct); |
-| :---- |
+#### **Exemples d’ús**
 
 Obtenir informació del sistema per Comanda
 
-| SalutInfo salutInfo \= SalutInfo.*builder*()        .codi("APP")        .versio(versio)        .data(OffsetDateTime.*now*())        .estatGlobal(estatSalut)        .estatBaseDeDades(salutDatabase)        .integracions(integracions)        .subsistemes(subsistemes)        .missatges(missatges)        .informacioSistema(MonitorHelper.*getInfoSistema*())        .build(); |
+| SalutInfo salutInfo \= SalutInfo.builder()        .codi("APP")        .versio(versio)        .data(OffsetDateTime.now())        .estatGlobal(estatSalut)        .estatBaseDeDades(salutDatabase)        .integracions(integracions)        .subsistemes(subsistemes)        .missatges(missatges)        .informacioSistema(MonitorHelper.getInfoSistema())        .build(); AppInfo appInfo \= AppInfo.builder()         .codi("APP")         .nom("Aplicacio")         .data(buildInfo.getBuildDate())         .versio(buildInfo.getVersion())         .revisio(buildInfo.getCommitId())         .jdkVersion(buildInfo.getBuildJDK())         .versioJboss(MonitorHelper.getApplicationServerInfo())         .contexts(getContexts(getBaseUrl(request)))         .integracions(Collections.emptyList())         .subsistemes(Collections.emptyList())         .build(); |
+| :---- |
+
+### **SalutHelper**
+
+La classe **SalutHelper** proporciona un funcionalitats de suport per obtenir informació de la compilació de l’aplicació. 
+
+A continuació es detallen els mètodes estàtics d’ajuda:
+
+| getBuildInfo |  |
+| ----- | :---- |
+| **Mètode** | BuildInfo **getBuildInfo**() |
+| **Descripció** | Genera informació de la data de compilació i del número de revisió de git |
+| **Comportament** | Recupera la informació de la data de compilació i del git del fitxer git.properties \*\* Aquest mètode només funcionarà si s’afegeix el git-commit-id-maven-plugin al pom pare:**\<build\>   \<plugins\>     \<plugin\>        \<groupId\>io.github.git-commit-id\</groupId\>          \<artifactId\>git-commit-id-maven-plugin\</artifactId\>        \<version\>7.0.0\</version\>        \<executions\>          \<execution\>            \<id\>get-the-git-infos\</id\>            \<goals\>              \<goal\>revision\</goal\>            \</goals\>          \</execution\>        \</executions\>        \<configuration\>          \<generateGitPropertiesFile\>true\</generateGitPropertiesFile\>          \<gitPropertiesPath\>${project.build.outputDirectory}\</gitPropertiesPath\>          \<\!-- Opcional: només incloure propietats que necessites \--\>          \<includeOnlyProperties\>            \<includeOnlyProperty\>git.commit.id\</includeOnlyProperty\>            \<includeOnlyProperty\>git.build.time\</includeOnlyProperty\>            \<includeOnlyProperty\>git.build.version\</includeOnlyProperty\>         \</includeOnlyProperties\>        \</configuration\>      \</plugin\>    \</plugins\>  \</build\>** |
+| **Resposta** | BuildInfo |
+| **Ús principal** | Mostrar informació de la revisió desplegada. |
+
+#### **Exemples d’ús**
+
+| SalutHelper.BuildInfo buildInfo \= SalutHelper.getBuildInfo(); return AppInfo.builder()         .codi("APP")         .nom("Aplicacio")         .data(buildInfo.getBuildDate())         .versio(buildInfo.getVersion())         .revisio(buildInfo.getCommitId())         .jdkVersion(buildInfo.getBuildJDK())         .versioJboss(MonitorHelper.getApplicationServerInfo())         .contexts(getContexts(getBaseUrl(request)))         .integracions(Collections.emptyList())         .subsistemes(Collections.emptyList())         .build(); |
+| :---- |
+
+### **SalutComponentsHelper**
+
+La classe **SalutComponentsHelper** permet **monitoritzar l’estat de salut** de components d’una aplicació (subsistemes interns, integracions externes, connectors, etc.) registrant:
+
+* **Execucions correctes** (OK) amb **latència** (ms)  
+* **Execucions amb error** (KO)  
+* Estadístiques **per període** (des de la darrera consulta) i **totals** (des de l’arrencada)  
+* Càlcul d’**estat de salut** per component segons estats calculats per EstatHelper (UP/WARN/DEGRADED/ERROR/DOWN)  
+* Càlcul d’**estat global** amb tractament diferenciat de components **crítics** i **no crítics**  
+* **Fallback per component** (finestra de darreres N peticions) quan hi ha poca mostra en el període  
+* **Darrer estat**: si en un període no hi ha peticions, es retorna l’últim estat calculat
+
+#### **Funcionalitats bàsiques**
+
+Bàsicament es pot utilitzar per mantenir informació de les peticions realitzades a cada component, i generar la informació per emplenar la informació de integracions i subsistemes que s’envien a Comanda.
+
+Característiques principals:
+
+* Registre d’èxits i errors per component, amb latència en ms en els èxits.  
+* Finestra de fallback per component per evitar canvis bruscos d’estat sense activitat recent.  
+* Possibilitat d’inicialitzar components amb o sense endpoint associat.  
+* Càlcul d’estat per component segons una política configurable i càlcul d’estat global tenint en compte si un component és crític.  
+* Conversió directa a IntegracioSalut i SubsistemaSalut del model servidor (es.caib.comanda.model.server.monitoring).Funciona tant amb components definits de forma estàtica com **dinàmica**, ja que la clau és un String componentId.
+
+#### **Dependències i mòduls**
+
+La llibreria es distribueix en dues classes per gestionar la informació de les peticions, una que guarda la informació en memòria, i una altre que la guarda utilitzant micrometer (exporta mètriques a Micrometer mitjançant tags: component=\<componentId\>).
+
+La dependència és opcional per evitar errors en projectes que no disposin de Micrometer.
+
+Sense dependències de Micrometer no es pot utilitzar la classe *MonitorComponentsMicrometer*, ja que es produirà un error en runtime.
+
+Ús recomanat: 
+
+Si el projecte no té Micrometer:
+
+| `// Monitor en memòria (fallback de 20 peticions per component) MonitorComponentsMemoria monitor = new MonitorComponentsMemoria(20);` |
+| :---- |
+
+Si el projecte sí té Micrometer
+
+| `// Core per estadístiques i fallback MonitorComponentsMemoria core = new MonitorComponentsMemoria(20); // Decorador micrometer: prefix de mètrica "integracio" MonitorComponentsMicrometer monitor = new MonitorComponentsMicrometer(registry, "integracio", core);` |
+| :---- |
+
+#### **Arquitectura de la solució**
+
+* Registre d’operacions. En el codi de l’aplicació s’han de realitzar crides als següents mètodes per contabilitzar les peticions que es realitzen correctament i les que donen error:  
+  * registraExit(componentId, duracioMs) quan una operació finalitza correctament.  
+  * registraError(componentId) quan una operació falla  
+* Estadístiques  
+  * Període: acumulació des de l’última consulta. Al obtenir l’informe el període es reseteja.  
+  * Totals: acumulació des de l’arrencada (no es reseteja).  
+* Càlcul d’estat del component (política)  
+  * Si el període té poca mostra, s’usa un fallback per component basat en una finestra circular de les darreres N peticions (sempre s’utilitzaran un mínim de N peticions per calcular l’estat).  
+  * Si el període té 0 peticions, es retorna el darrer estat calculat, o UNKNOWN si encara no s’ha realitzat cap petició.  
+    La política usa els llindars de EstatHelper:  
+    * DOWN: 100% errors  
+    * ERROR: \> 50% errors  
+    * DEGRADED: \> 20% errors  
+    * UP: \<= 10% errors  
+    * WARN: la resta  
+* Estat global. L’estat global es calcula combinant els estats individuals:  
+  * Si hi ha ERROR o DOWN en components crítics → ERROR global  
+  * Si hi ha DEGRADED en crítics → DEGRADED global  
+  * Qualsevol DEGRADED/ERROR/DOWN en no crítics es tracta com WARN  
+  * Si només hi ha UP → UP global  
+  * Si no hi ha informació → UNKNOWN
+
+#### **Classes disponibles**
+
+* es.caib.comanda.ms.salut.helper.components.MonitorComponentsMemoria  
+  Aquesta classe és l’encarregada de:  
+  * Registrar les operacions i estadístiques (període i total)  
+  * Mantenir el fallback per component (finestra de darreres N peticions)  
+* es.caib.comanda.ms.salut.helper.components.MonitorComponentsMicrometer  
+  Es tracta d’un decorador de MonitorComponentsMemoria, que utilitza la primera per mantenir informació de les peticions per període, i que utilitza micrometer per mantenir la informació dels totals. Exporta:  
+  * prefix.ok com a Timer amb tag component=\<id\>  
+  * prefix.errors com a Counter amb tag component=\<id\>  
+* es.caib.comanda.ms.salut.helper.components.PoliticaSalutPerDefecte. Realitza el càlcul d’estat per component amb els llindars d’EstatHelper  
+* es.caib.comanda.ms.salut.helper.components.CalculSalutGlobal: Realitza el càlcul de l’estat global a partir d’estats individuals i “crítics/no crítics”  
+* es.caib.comanda.ms.salut.helper.components.SalutComponentsHelper. Classe principal, encarregada de;  
+  * Generar l’informe complet (estadístiques \+ estats \+ global)  
+  * Gestionar darrerEstat (període=0 → retorna darrer estat)  
+  * Convertir informació de les peticions a List\<IntegracioInfo\> o List\<SubsistemaSalut\> per emplenar la informació de SalutInfo.
+
+#### **API bàsica**
+
+Constructors més habituals:
+
+* new SalutComponentsHelper(monitor, esCriticFunc)  
+* new SalutComponentsHelper(monitor, esCriticFunc, Collection\<String\>componentsInicials)  
+* new SalutComponentsHelper(monitor, esCriticFunc, Map\<String,String\> componentsInicialsAmbEndpoint) on la clau és l’ID del component i el valor el seu endpoint.
+
+
+Registre d’activitat:
+
+* registraExit(String componentId, long duracioMs)  
+* registraError(String componentId)
+
+
+Obtenció d’informe: 
+
+* InformeSalutComponents obtenInforme()
+
+  L’informe exposa: getEstadistiques(), getEstats() i getEstatGlobal().
+
+  Disposa de conversions: toIntegracionsSalut() i toSubsistemesSalut().
+
+
+A continuació es detallen els princiopals mètodes d’ajuda:
+
+| SalutComponentsHelper.registraExit() |  |
+| ----- | :---- |
+| **Mètode** | void **registraExit**(String componentId, long duracioMs) |
+| **Descripció** | Registra una execució correcta amb latència |
+| **Comportament** | Incrementa OK del període i total Acumula latència  Afegeix true al fallback del component |
+| **Paràmetres** | **componentId**: Identificador del component que ha realitzat l’operació**duracioMs**: Duració en milisegons de la operació realitzada |
+| **Resposta** | void |
+| **Ús principal** | Instrumentar operacions OK (crides a integracions, processos interns) |
+
+| SalutComponentsHelper.registraError() |  |
+| ----- | :---- |
+| **Mètode** | void **registraError**(String componentId) |
+| **Descripció** | Registra una execució amb error |
+| **Comportament** | Incrementa KO del període i total Afegeix false al fallback del component |
+| **Paràmetres** | **componentId**: Identificador del component que ha realitzat l’operació |
+| **Resposta** | void |
+| **Ús principal** | Instrumentar operacions amb error en integracions o subsistemes |
+
+| SalutComponentsHelper.obtenInforme() |  |
+| ----- | :---- |
+| **Mètode** | InformeSalutComponents **obtenInforme**() |
+| **Descripció** | Genera informe complet de l’estat i peticions dels components |
+| **Comportament** | Obté snapshot Calcula l’estat per component (període=0 → darrer estat) Calcula l’estat global |
+| **Resposta** | InformeSalutComponents |
+| **Ús principal** | Obtenció de l’estat de salut complet amb: estadístiques per component (període i totals) estat per component estat global |
+
+| InformeSalutComponents.toIntegracionsSalut() |  |
+| ----- | :---- |
+| **Mètode** | List\<IntegracioSalut\> **toIntegracionsSalut**() |
+| **Descripció** | Converteix l’informe de salut en una llista de IntegracioSalut |
+| **Resposta** | List\<IntegracioSalut\> |
+| **Ús principal** | Emplenar el camp integracions de SalutInfo |
+
+| InformeSalutComponents.toSubsistemesSalut() |  |
+| ----- | :---- |
+| **Mètode** | List\<SubsistemaSalut\> **toSubsistemesSalut**() |
+| **Descripció** | Converteix l’informe de salut en una llista de SubsistemaSalut |
+| **Resposta** | List\<SubsistemaSalut\> |
+| **Ús principal** | Emplenar el camp subsistemes de SalutInfo |
+
+#### **Model de dades internes:**
+
+| InformeSalutComponents |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| instantConsulta | Instant | 1 | Instant en que es realitza la consulta per obtenir l’informe |
+| estadistiques | Map\<String, EstadistiquesComponent\> | 1 | Informació de les peticions realitzades per component |
+| estats | Map\<String, EstatSalutEnum\> | 1 | Estat en que es troba cada component |
+| estatGlobal | EstatSalutEnum | 1 | Estat global del conjunt de components |
+
+| EstadistiquesComponent |  |  |  |
+| ----- | :---- | :---- | :---- |
+| Camp | Tipus | Car | Descripció |
+| componentId | String | 1 | Memòria total |
+| endpoint | String | 0..1 | Url on realitza les peticions el component (en cas de integracions) |
+| okPeriode | Long | 1 | Peticions realitzades correctament des de la darrera consulta |
+| errorPeriode | Long | 1 | Peticions realitzades amb error des de la darrera consulta |
+| tempsMigMsPeriode | Double | 1 | Duració mitjana de les peticions realitzades correctament des de la darrera consulta |
+| okTotal | Long | 1 | Peticions realitzades correctament des de l’arrencada del sistema |
+| errorTotal | Long | 1 | Peticions realitzades amb error des de l’arrencada del sistema |
+| tempsMigMsTotal | Double | 1 | Duració mitjana de les peticions realitzades correctament des de l’arrencada del sistema |
+| instantSnapshot | Instant | 0..1 | Moment de generació de l’snapshot del període i total |
+
+#### **Exemples d’ús**
+
+| // Monitor en memòria (fallback de 20 peticions per component) // Política amb minim de 20 mostres per confiar en el període // 1\. Inicialitzar l’element que guarda informació de les peticions// En aquest exemple son els components de tipus integració.  // Es faria el mateix per els components de tipus subsistema. // Monitor en memòria (fallback de 20 peticions per component) MonitorComponentsMemoria monitor \= new MonitorComponentsMemoria(20); // Determinar quins components són crítics Function\<String, Boolean\> esCritic \= componentId \-\>                 componentId.equals("SIR") || componentId.equals("REGISTRE"); // Servei que genera l'informe complet SalutComponentsHelper integr \= new SalutComponentsHelper(monitor, esCritic); // 2\. En cada component anar registrant el resultat de les operacions integr.registraExit("SIR", 120); integr.registraError("SIR"); integr.registraExit("GDO", 80); // 3\. Al rebre una petició per generar la informació de Salut, generar informe InformeSalutComponents informeIntegracions \= integr.obtenInforme(); SalutInfo salutInfo \= SalutInfo.builder()        .codi("APP")        .versio(versio)        .data(OffsetDateTime.now())        .estatGlobal(informeSubsistemes.getEstatGlobal())        .estatBaseDeDades(salutDatabase)        .integracions(informeIntegracions.toIntegracionsSalut())        .subsistemes(informeSubsistemes.toSubsistemesSalut())        .missatges(missatges)        .informacioSistema(MonitorHelper.getInfoSistema())        .build();  |
+| :---- |
+
+### **IntegracioApp**
+
+La classe **IntegracioApp** és un enumerat amb el codi i nom de múltiples aplicacions amb les que potser es fa alguna integració.  
+Aquest enumerat serveix per disposar dels codis i noms d’aplicacions, de manera que, a ser possible, totes les aplicacions enviïn els mateixos codis i noms en la informació de les integracions.
+
+Si es tracta d’una aplicació registrada a la Caib, els codis haurien de ser els codis de 3 caràcters assignats a la aplicació per la Caib.
+
+Els mètodes per obtenir el codi i nom de l’aplicació són els següents:
+
+* getCodi(): retorna el codi de l’aplicació.  
+* getNom(): retorna el nom de l’aplicació.
+
+Exemple d’ús:
+
+| `String codiNotib = IntegracioApp.NOT.getCodi(); String nomNotib = IntegracioApp.NOT.getNom(); IntegracioInfo intNotib = new IntegracioInfo().codi(codiNotib).nom(nomNotib);` |
 | :---- |
 
 7. # **Estadístiques** {#estadístiques}
@@ -1041,14 +1276,16 @@ Cada aplicació que es vulgui integrar amb el mòdul de Estadístiques de comand
 * GET /estadistiques/of/{dia}: retorna informació estadística d’un dia concret.  
 * GET /estadistiques/from/{diaInici}/to/{diaFi}: retorna la informació estadística de múltiples dies, entre la data inici i la data fi.
 
-  1. ### **Obtenció de informació estadística de l’aplicació** {#obtenció-de-informació-estadística-de-l’aplicació}
+**Aquests endpoints han d’implementar autenticació BASIC.**
+
+1. ## **Obtenció de informació estadística de l’aplicació** {#obtenció-de-informació-estadística-de-l’aplicació}
 
 | Obtenció de informació de l’aplicació |  |
 | ----- | :---- |
 | **Adreça API** | \[PATH\]/estadistiques/info Ex. https://dev.caib.es/notibapi/interna/estadistiques/info |
 | **Descripció** | Aquest servei retorna informació de les dimensions i dels indicadors estadístics que genera l’aplicació (AppInfo) |
 | **Mètode** | GET |
-| **Autenticació** | Actualment es requereix que el mètode no tingui autenticació. S’espera que en un futur s’utilitzi autenticació BASIC |
+| **Autenticació** | **Autenticació BASIC** |
 | **Paràmetres** | No accepta paràmetres |
 | **Resposta** | EstadistiquesInfo |
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/estadistiquesInfo' |
@@ -1083,7 +1320,7 @@ Cada aplicació que es vulgui integrar amb el mòdul de Estadístiques de comand
 | descripcio | cadena(1024) | 0..1 | Descripció de l’indicador. Serà el text d’ajuda o explicatiu de quin és el significat de la dimensió, que es mostrarà a Comanda |
 | format | Format | 0..1 | Format en que s’enviarà el valor de l’indicador. Sempre que sigui possible es recomanable que els valors dels indicadors siguin numèrics. |
 
-2. ### **Obtenció de dades estadístiques** {#obtenció-de-dades-estadístiques}
+2. ## **Obtenció de dades estadístiques** {#obtenció-de-dades-estadístiques}
 
 Per a la obtenció de dades estadístiques s’implementaran 3 mètodes. El mètode principal que recupera la darrera informació estadística generada (dia anterior), i 2 mètodes addicionals, amb la forma URL\_OBTENCIO\_ESTADISTICA**/of/{dia}** i URL\_OBTENCIO\_ESTADISTICA**/from/{dia}/to{dia}**
 
@@ -1092,7 +1329,7 @@ Per a la obtenció de dades estadístiques s’implementaran 3 mètodes. El mèt
 | **Adreça API** | \[PATH\]/estadistiques  Ex. https://dev.caib.es/notibapi/interna/estadistiques |
 | **Descripció** | Aquest servei retorna les darreres dades estadístiques generades per l’aplicació.Aquestes dades seran les del darrer dia.Comanda les consultarà un vegada al dia. |
 | **Mètode** | GET |
-| **Autenticació** | Actualment es requereix que el mètode no tingui autenticació. S’espera que en un futur s’utilitzi autenticació BASIC |
+| **Autenticació** | **Autenticació BASIC** |
 | **Paràmetres** | No accepta paràmetres |
 | **Resposta** | RegistresEstadistics |
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/estadistiques |
@@ -1103,8 +1340,6 @@ Per a la obtenció de dades estadístiques s’implementaran 3 mètodes. El mèt
 6. 
 
 ### **Model de dades** {#model-de-dades-5}
-
-### 
 
 | RegistresEstadistics |  |  |  |
 | ----- | :---- | :---- | :---- |
@@ -1180,7 +1415,7 @@ Per tal de poder recuperar dades estadístiques des del calendari de Comanda, se
 | **Adreça API** | \[PATH\]/estadistiques/of/{dia} Ex. https://dev.caib.es/notibapi/interna/estadistiques/of/{dia} |
 | **Descripció** | Aquest servei retorna les dades estadístiques generades per l’aplicació del dia indicat per paràmetre.Comanda pot realitzar la consulta des del calendari d’estadístiques. |
 | **Mètode** | GET |
-| **Autenticació** | Actualment es requereix que el mètode no tingui autenticació. S’espera que en un futur s’utilitzi autenticació BASIC |
+| **Autenticació** | **Autenticació BASIC** |
 | **Paràmetres** | **dia**: Data que es vol consultar amb format “dd-MM-yyyy”La data no ha de ser posterior al dia d’ahir, ja que no retornarà resultats, al no disposar encara d’estadístiques generades, o disposar únicament dades estadístiques parcials, si es consulta el dia d’avui. |
 | **Resposta** | RegistresEstadistics |
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/estadistiques/of/23-10-2025 |
@@ -1190,7 +1425,7 @@ Per tal de poder recuperar dades estadístiques des del calendari de Comanda, se
 | **Adreça API** | \[PATH\]/estadistiques/from/{dataInici}/to/{dataFi} Ex. https://dev.caib.es/notibapi/interna/estadistiques/from/{dataInici}/to /{dataFi} |
 | **Descripció** | Aquest servei retorna les dades estadístiques generades per l’aplicació del rang de dies indicats per paràmetre.Comanda pot realitzar la consulta des del calendari d’estadístiques. |
 | **Mètode** | GET |
-| **Autenticació** | Actualment es requereix que el mètode no tingui autenticació. S’espera que en un futur s’utilitzi autenticació BASIC |
+| **Autenticació** | **Autenticació BASIC** |
 | **Paràmetres** | **dataInici**: Data d’inici del rang de dates que es vol consultar. **dataFi**: Data de fi del rang de dates que es vol consultar. Ambdues dates s’han de posar amb format “dd-MM-yyyy”La dataFi no ha de ser posterior al dia d’ahir, ja que no retornarà resultats, al no disposar encara d’estadístiques generades, o disposar únicament dades estadístiques parcials, si es consulta el dia d’avui. |
 | **Resposta** | List\<RegistresEstadistics\> |
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/estadistiques/from/01-10-2025/to/23-10-2025 |
@@ -1244,7 +1479,7 @@ La classe EstadisticaHelper proporciona funcionalitats de suport per a la conver
 | **Resposta** | RegistreEstadistic |
 | **Ús principal** | Generar registres estadístics quan les dades ja estan en format mapa |
 
-### **Exemples d’ús** {#exemples-d’ús-1}
+### **Exemples d’ús** {#exemples-d’ús}
 
 Exemples convertint entitats a RegistreEstadistic:
 
@@ -1269,12 +1504,14 @@ Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda 
 * GET /logs/{nomFitxer}: Retorna el contingut i detalls del fitxer de log.  
 * GET /logs/{nomFitxer}/linies/{nLinies}: Retorna les darreres nLinies del fitxer de log indicat per nom.
 
+**Aquests endpoints han d’implementar autenticació BASIC.**
+
 | Obtenir el llistat de fitxers de log disponibles |  |
 | ----- | :---- |
 | **Adreça API** | \[PATH\]/logs Ex. https://dev.caib.es/notibapi/interna/logs |
 | **Descripció** | Aquest servei retorna una llista amb tots els fitxers que es troben dins la carpeta de logs del servidor de l'aplicació. |
 | **Mètode** | GET |
-| **Autenticació** | Autenticació BASIC. |
+| **Autenticació** | **Autenticació BASIC** |
 | **Paràmetres** | **dia**: Data que es vol consultar amb format “dd-MM-yyyy”La data no ha de ser posterior al dia d’ahir, ja que no retornarà resultats, al no disposar encara d’estadístiques generades, o disposar únicament dades estadístiques parcials, si es consulta el dia d’avui. |
 | **Resposta** | List\<FitxerInfo\> |
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/v1/logs |
@@ -1285,23 +1522,31 @@ Cada aplicació que vulgui fer accessibles els logs de l’aplicació a Comanda 
 | **Adreça API** | \[PATH\]/logs/{nomFitxer} Ex. https://dev.caib.es/notibapi/interna/logs/{nomFitxer} |
 | **Descripció** | Aquest servei retorna el contingut i detalls del fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat |
 | **Mètode** | GET |
-| **Autenticació** | Autenticació BASIC. |
+| **Autenticació** | **Autenticació BASIC** |
 | **Paràmetres** | **nomFitxer**: Nom del fitxer que es vol recuperar |
 | **Resposta** | FitxerContingut |
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/logs/server.log |
 | **Ex. de resposta** | {     "nom": "server.log",     "mida": 29401469,     "mimeType": "text/x-log",     "dataCreacio": "15/01/2026",     "dataModificacio": "15/01/2026",     "contingut": "MjAyNi0wMS0xNSAwMDowMDowMCwwMTEgRVJST1IgW29… } |
+
+| Descarrega un fitxer de log de forma directe |  |
+| ----- | :---- |
+| **Adreça API** | \[PATH\]/logs/{nomFitxer}/directe Ex. https://dev.caib.es/notibapi/interna/logs/{nomFitxer}/directe |
+| **Descripció** | Aquest servei descarrega el fitxer de log que es troba dins la carpeta de logs del servidor, i que té el nom indicat |
+| **Mètode** | GET |
+| **Autenticació** | **Autenticació BASIC** |
+| **Paràmetres** | **nomFitxer**: Nom del fitxer que es vol descarregar |
+| **Resposta** | File (stream) |
+| **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/logs/server.log/directe |
 
 | Obtenir les darreres línies d'un fitxer de log |  |
 | ----- | :---- |
 | **Adreça API** | \[PATH\]/logs/{nomFitxer}/linies/{nLinies} Ex. https://dev.caib.es/notibapi/interna/logs/{nomFitxer}/linies/{nLinies} |
 | **Descripció** | Aquest servei retorna les darreres linies del fitxer de log indicat per nom. Concretament es retorna el número de línies indicat al paràmetre nLinies |
 | **Mètode** | GET |
-| **Autenticació** | Autenticació BASIC. |
+| **Autenticació** | **Autenticació BASIC** |
 | **Paràmetres** | **nomFitxer**: Nom del fitxer del que es volen recuperar les darreres línies**nLinies**: Número de línies a recuperar |
 | **Resposta** | List\<String\> |
 | **Ex. de petició** | curl \--location 'https://dev.caib.es/notibapi/interna/logs/server.log/linies/50 |
-
-### 
 
 ### **Model de dades** {#model-de-dades-6}
 
@@ -1347,10 +1592,19 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | ----- | :---- |
 | **Mètode** | FitxerContingut **getFitxerByNom**(String directoriPath, String nom) |
 | **Descripció** | Carrega un fitxer concret i en retorna el contingut i metadades encapsulades en un objecte FitxerContingut |
-| **Comportament** | Valida que el directori i el fitxer existeixin. Llegeix: Nom Mida en bytes Data de creació i modificació (format dd/MM/yyyy HH:mm:ss) Contingut del fitxer en bytes Tipus MIME detectat amb Apache Tika  Si el fitxer és text pla (text/plain) o no es pot detectar el MIME: Es comprimeix automàticament en ZIP Es canvia el MIME a application/zip Es modifica el nom afegint .zip |
+| **Comportament** | Valida que el directori i el fitxer existeixin. Llegeix: Nom Mida en bytes Data de creació i modificació (format dd/MM/yyyy HH:mm:ss) Contingut del fitxer en bytes Tipus MIME  Si el fitxer és text pla (text/plain) o no es pot detectar el MIME: Es comprimeix automàticament en ZIP Es canvia el MIME a application/zip Es modifica el nom afegint .zip |
 | **Paràmetres** | **directoriPath**: Directori on cercar el fitxer de log**nom**: Nom del fitxer a llegir |
 | **Resposta** | FitxerContingut |
-| **Ús principal** | Descarregar fitxers de log, evitant problemes de grandària o encoding en fitxers de text grans |
+| **Ús principal** | Descarregar fitxers de log en base64 |
+
+| getFileStreamByNom |  |
+| ----- | :---- |
+| **Mètode** | FileStream **getFitxerByNom**(String directoriPath, String nom) |
+| **Descripció** | Carrega un fitxer concret i en retorna l’InputStream i metadades encapsulades en un objecte FileStream |
+| **Comportament** | Valida que el directori i el fitxer existeixin.  Si el fitxer és text pla (text/plain) o no es pot detectar el MIME: Es comprimeix automàticament en ZIP Es canvia el MIME a application/zip Es modifica el nom afegint .zip Obté:  l’InputStream del fitxer Nom Mida en bytes |
+| **Paràmetres** | **directoriPath**: Directori on cercar el fitxer de log**nom**: Nom del fitxer a llegir |
+| **Resposta** | FileStream |
+| **Ús principal** | Descarregar fitxers de log de forma directe, utilitzant streams, evitant problemes de grandària o encoding en fitxers de text grans |
 
 | readLastNLines |  |
 | ----- | :---- |
@@ -1386,14 +1640,15 @@ A continuació es detallen els mètodes estàtics d’ajuda:
 | **Resposta** | byte\[\] |
 | **Ús principal** | Reduir la mida de fitxers de log i evitar problemes d’encoding en la descàrrega |
 
-### 
-
-### **Exemples d’ús** {#exemples-d’ús-2}
+### **Exemples d’ús** {#exemples-d’ús-1}
 
 | public List\<FitxerInfo\> llistarFitxers() {    var directoriPath \= configHelper.getConfig("es.caib.notib.plugin.fitxer.logs.path");    if (Strings.*isNullOrEmpty*(directoriPath)) {        return new ArrayList\<\>();    }    return LogHelper.llistarFitxers(directoriPath, "notib"); } |
 | :---- |
 
 | public FitxerContingut getFitxerByNom(String nom) {    try {        var directoriPath \= "/app/logs";        return LogHelper.getFitxerByNom(directoriPath, nom);    } catch (Exception ex) {        *log*.error("Error llegint el fitxer " \+ nom, ex);        return FitxerContingut.*builder*().build();    } } |
+| :---- |
+
+| public Response descarregarFitxerDirecte(          @PathParam("nomFitxer") String nomFitxer) {       var dirPath \= "/app/logs";       LogFileStream file \= LogHelper.getFileStreamByNom(dirPath, nomFitxer);        if (file \== null) {           return Response.status(NOT\_FOUND).entity("Fitxer no trobat").build();       }       StreamingOutput stream \= outputStream \-\> {           try (InputStream in \= file.getInputStream()) {               byte\[\] buffer \= new byte\[8192\];               int read;               while ((read \= in.read(buffer)) \!= \-1) {                   outputStream.write(buffer, 0, read);               }               outputStream.flush();           }       };       String mediaType \= getMediaType(file);       return Response.ok(stream, mediaType)               .header("ContentDisposition", "attachment; filename=\\"" \+                            sanitizeFilename(file.getFileName()) \+ "\\"")               .header("Content-Length", file.getSize())               .build();    } }  |
 | :---- |
 
 | public List\<String\> readLastNLines(String nomFitxer, long nLinies) {    try {        if (Strings.*isNullOrEmpty*(nomFitxer) || nLinies \== null) {            *log*.error("Parametres incorrectes, nomFitxer " \+ nomFitxer \+ " nLinies" \+ nLinies);            return new ArrayList\<\>();        }        var directoriPath \= "/app/logs";        return LogHelper.readLastNLines(directoriPath, nomFitxer, nLinies);    } catch (Exception ex) {        *log*.error("Error no controlat", ex);        return new ArrayList\<\>();    } } |
@@ -1412,12 +1667,12 @@ Tot seguit es mostra com implementar els mètodes de server utilitzant Spring We
 
 ## **Estadística** {#estadística}
 
-| import es.caib.comanda.model.estadistica.EstadistiquesInfo; import es.caib.comanda.model.estadistica.RegistresEstadistics; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import javax.servlet.http.HttpServletRequest; import java.io.IOException; import java.util.List; */\*\* \* Contracte de l'API d'Estadístiques que COMANDA espera que implementin les APPs. \*/* @RestController @RequestMapping("/v1/estadistiques") public class EstadistiquesApiController {    @GetMapping("/info")    public EstadistiquesInfo estadistiquesInfo() throws IOException {       ...    }    @GetMapping    public RegistresEstadistics estadistiques(HttpServletRequest request)  throws IOException {       ...    }    @GetMapping("/of/{data}")    public RegistresEstadistics estadistiquesPerData(            HttpServletRequest request,            @PathVariable String data) throws Exception {       ...    }    @GetMapping("/from/{dataInici}/to/{dataFi}")    public List\<RegistresEstadistics\> estadistiquesPerRang(            HttpServletRequest request,            @PathVariable("dataInici") String dataInici,            @PathVariable("dataFi") String dataFi) throws Exception {       ...    } } |
+| import es.caib.comanda.model.estadistica.EstadistiquesInfo; import es.caib.comanda.model.estadistica.RegistresEstadistics; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import javax.servlet.http.HttpServletRequest; import java.io.IOException; import java.util.List; */\*\* \* Contracte de l'API d'Estadístiques que COMANDA espera que implementin les APPs. \*/* @RestController @RequestMapping("/v1/estadistiques") @PreAuthorize("hasRole(APP\_WS)") public class EstadistiquesApiController {    @GetMapping("/info")    public EstadistiquesInfo estadistiquesInfo() throws IOException {       ...    }    @GetMapping    public RegistresEstadistics estadistiques(HttpServletRequest request)  throws IOException {       ...    }    @GetMapping("/of/{data}")    public RegistresEstadistics estadistiquesPerData(            HttpServletRequest request,            @PathVariable String data) throws Exception {       ...    }    @GetMapping("/from/{dataInici}/to/{dataFi}")    public List\<RegistresEstadistics\> estadistiquesPerRang(            HttpServletRequest request,            @PathVariable("dataInici") String dataInici,            @PathVariable("dataFi") String dataFi) throws Exception {       ...    } } |
 | :---- |
 
 ## **Log** {#log-1}
 
-| import es.caib.comanda.model.log.FitxerContingut; import es.caib.comanda.model.log.FitxerInfo; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import java.util.List; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/*  @RestController @RequestMapping("/v1/logs") public class LogApiController {    @GetMapping()    public List\<FitxerInfo\> getFitxers() {       ...    }    @GetMapping("/{nomFitxer}")    public FitxerContingut getFitxerByNom(            @PathVariable("nomFitxer") String nomFitxer) {       ...    }    @GetMapping("/{nomFitxer}/linies/{nLinies}")    public List\<String\> getFitxerLinies(            @PathVariable("nomFitxer") String nomFitxer,            @PathVariable("nLinies") Long nLinies) {       ...    } } |
+| import es.caib.comanda.model.log.FitxerContingut; import es.caib.comanda.model.log.FitxerInfo; import org.springframework.http.HttpStatus; import org.springframework.web.bind.annotation.GetMapping; import org.springframework.web.bind.annotation.PathVariable; import org.springframework.web.bind.annotation.RequestMapping; import org.springframework.web.bind.annotation.RestController; import org.springframework.web.server.ResponseStatusException; import java.util.List; */\*\* \* Contracte de l'API de Salut que COMANDA espera que implementin les APPs. \*/*  @RestController @RequestMapping("/v1/logs") @PreAuthorize("hasRole(APP\_WS)") public class LogApiController {    @GetMapping()    public List\<FitxerInfo\> getFitxers() {       ...    }    @GetMapping("/{nomFitxer}")    public FitxerContingut getFitxerByNom(            @PathVariable("nomFitxer") String nomFitxer) {       ...    }    @GetMapping("/{nomFitxer}/linies/{nLinies}")    public List\<String\> getFitxerLinies(            @PathVariable("nomFitxer") String nomFitxer,            @PathVariable("nLinies") Long nLinies) {       ...    }    @GetMapping("/{nomFitxer}/directe")    public ResponseEntity\<StreamingResponseBody\> descarregarFitxerDirecte(          @PathVariable("nomFitxer") String nomFitxer) {       LogFileStream file \= logService.getLogFile(nomFitxer);       if (file \== null) {           throw new ResponseStatusException(NOT\_FOUND, "Fitxer no    trobat");       }       StreamingResponseBody body \= outputStream \-\> {           try (InputStream in \= file.getInputStream()) {               byte\[\] buffer \= new byte\[8192\];               int read;               while ((read \= in.read(buffer)) \!= \-1) {                   outputStream.write(buffer, 0, read);               }               outputStream.flush();           }       };       MediaType mediaType;       try {           mediaType \= (file.getContentType() \!= null &&                          \!file.getContentType().isBlank())                ? MediaType.parseMediaType(file.getContentType())                : MediaType.APPLICATION\_OCTET\_STREAM;       } catch (Exception e) {           mediaType \= MediaType.APPLICATION\_OCTET\_STREAM;       }       return ResponseEntity.ok()               .contentType(mediaType)               .contentLength(file.getSize())               .header(HttpHeaders.CONTENT\_DISPOSITION,                       ContentDisposition.attachment()                            .filename(file.getFileName())                            .build()                            .toString())               .body(body);    } } |
 | :---- |
 
 # **Annex 2 \- Spring-filter** {#annex-2---spring-filter}

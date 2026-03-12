@@ -87,4 +87,7 @@ public class Tasca implements Serializable {
     @Schema(description = "Llista de grups amb permís", example = "[\"GESTORS\", \"SUPORT\"]")
     private List<String> grupsAmbPermis;
 
+    @Schema(hidden = true)
+    private Boolean esborrar;
+
 }

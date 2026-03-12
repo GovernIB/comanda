@@ -30,7 +30,7 @@ public class BaseConfig {
 	public static final String AUTH_TOKEN_PATH = "/authToken";
 	public static final String SYSENV_PATH = "/sysenv";
 	public static final String MANIFEST_PATH = "/manifest";
-	public static final String API_SALUT_V1 = "/v1/salut";
+	public static final String API_SALUT_V1 = "/salut/v1";
 
 	public static final String DEFAULT_LOCALE = "ca";
 
@@ -56,12 +56,12 @@ public class BaseConfig {
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
 	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
 	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
-	public static final String PROP_ALARMA_MAIL_ADMIN = PROPERTY_PREFIX + "alarma.mail.admin";
-	public static final String PROP_ALARMA_MAIL_ADMIN_AGRUPAR = PROPERTY_PREFIX + "alarma.mail.admin.agrupar";
 
 	public static final String PROP_BROKER_PORT = PROPERTY_PREFIX + "broker.port";
 	public static final String PROP_BROKER_USERNAME = PROPERTY_PREFIX + "broker.username";
 	public static final String PROP_BROKER_PASSWORD = PROPERTY_PREFIX + "broker.password";
+
+	public static final String PROP_LOG_DIR = PROPERTY_PREFIX + "log.dir";
 
     // Propietats de CONFIGURACIO
     public static final String PROP_CONFIG_PREFIX = PROPERTY_PREFIX + "config.";

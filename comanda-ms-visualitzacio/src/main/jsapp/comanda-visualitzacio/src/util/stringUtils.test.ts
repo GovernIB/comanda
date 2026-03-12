@@ -29,6 +29,15 @@ describe('mergeSequentialStringArrays (strict log merge)', () => {
         expect(result).toEqual(['b', 'c', 'x']);
     });
 
+    it('merges on false overlap fail', () => {
+        const baseline = ['a', 'b', 'c', 'd', 'e', 'a', 'b', '1', '2', '3'];
+        const incoming = ['a', 'b', '1', '2', '3', '4', '5', '6'];
+
+        const result = mergeSequentialStringArrays(baseline, incoming);
+
+        expect(result).toEqual(['a', 'b', 'c', 'd', 'e', 'a', 'b', '1', '2', '3', '4', '5', '6']);
+    })
+
     it('returns incoming when no overlap start exists', () => {
         const baseline = ['a', 'b', 'c'];
         const incoming = ['x', 'y'];
@@ -63,5 +72,43 @@ describe('mergeSequentialStringArrays (strict log merge)', () => {
         const result = mergeSequentialStringArrays(baseline, incoming);
 
         expect(result).toEqual(['a', 'b']);
+    });
+
+    it('handles multiple partial matches correctly', () => {
+        const baseline = ['a', 'b', 'c', 'a', 'b', 'd'];
+        const incoming = ['a', 'b', 'd', 'e'];
+        // first 'a', 'b' is at index 0, but next is 'c' instead of 'd'.
+        // second 'a', 'b' is at index 3, next is 'd', which matches.
+
+        const result = mergeSequentialStringArrays(baseline, incoming);
+        expect(result).toEqual(['a', 'b', 'c', 'a', 'b', 'd', 'e']);
+    });
+
+    it('returns incoming if it is completely contained in baseline but not at the end', () => {
+        const baseline = ['a', 'b', 'c', 'd', 'e'];
+        const incoming = ['b', 'c'];
+
+        const result = mergeSequentialStringArrays(baseline, incoming);
+
+        expect(result).toEqual(['b', 'c']);
+    });
+
+    it('prefers extension over containment if both are present', () => {
+        // 'a', 'b' is contained at index 0
+        // 'a', 'b' also starts an extension at index 2
+        const baseline = ['a', 'b', 'x', 'a', 'b'];
+        const incoming = ['a', 'b', 'c'];
+
+        const result = mergeSequentialStringArrays(baseline, incoming);
+        expect(result).toEqual(['a', 'b', 'x', 'a', 'b', 'c']);
+    });
+
+    it('returns baseline merged with incoming if incoming extends baseline', () => {
+        const baseline = ['a', 'b', 'c'];
+        const incoming = ['a', 'b', 'c', 'd'];
+
+        const result = mergeSequentialStringArrays(baseline, incoming);
+
+        expect(result).toEqual(['a', 'b', 'c', 'd']);
     });
 });

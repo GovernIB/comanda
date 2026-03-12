@@ -45,6 +45,7 @@ import SalutIntegracionsChips from './SalutIntegracionsChips.tsx';
 import SalutSubsistemesChips from './SalutSubsistemesChips.tsx';
 import SalutMissatgesChips from './SalutMissatgesChips';
 import { useTreeDataWithoutSwitch } from '../../hooks/treeData';
+import useDataGridLocale from '../../hooks/useDataGridLocale';
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
@@ -198,6 +199,7 @@ const AppDataTable: React.FC<{
 }> = React.memo((props) => {
     const { salutLastItems, apps, entorns, entornApps, groupedEntorn, isGroupingDisabled } = props;
     const { t } = useTranslation();
+    const dataGridLocale = useDataGridLocale();
     const { getLinkComponent } = useBaseAppContext();
     const gridApiRef = useGridApiRef();
 
@@ -426,6 +428,7 @@ const AppDataTable: React.FC<{
             apiRef={gridApiRef}
             columns={columns}
             rows={entornApps}
+            localeText={dataGridLocale}
             hideFooter
             slots={{
                 noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],

@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
-import org.keycloak.representations.IDToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
@@ -35,11 +34,12 @@ import java.util.*;
 public class WebSecurityConfig extends BaseWebSecurityConfig {
 
 	private static final String ROLE_PREFIX = "";
-
-	@Value("${" + BaseConfig.PROP_SECURITY_MAPPABLE_ROLES + ":" +
+	public static final String MAPPABLE_ROLES_SOURCE = BaseConfig.PROP_SECURITY_MAPPABLE_ROLES + ":" +
 			BaseConfig.ROLE_ADMIN + "," +
 			BaseConfig.ROLE_CONSULTA + "," +
-			BaseConfig.ROLE_WEBSERVICE + "}")
+			BaseConfig.ROLE_WEBSERVICE;
+
+	@Value("${" + MAPPABLE_ROLES_SOURCE + "}")
 	private String mappableRoles;
 	@Value("${" + BaseConfig.PROP_SECURITY_ROLE_HTTP_HEADER + ":X-App-Role}")
 	private String selectedRoleHttpHeader;
@@ -59,7 +59,7 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 								new AntPathRequestMatcher("/apidocs"),
 								new AntPathRequestMatcher("/apidocs/*"),
 								new AntPathRequestMatcher("/swagger-ui/*"),
-								new AntPathRequestMatcher(BaseConfig.API_SALUT_V1 + "/**/*")
+								new AntPathRequestMatcher(BaseConfig.API_SALUT_V1)
 						}
 				).permitAll().
 				requestMatchers(
@@ -142,7 +142,7 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 						log.debug("Keycloak token realm roles: {}", realmAccess.getRoles());
 						realmAccess.getRoles().stream().map(r -> ROLE_PREFIX + r).forEach(roles::add);
 					}
-					IDToken idToken = keycloakPrincipal.getKeycloakSecurityContext().getIdToken();
+					AccessToken accessToken = keycloakPrincipal.getKeycloakSecurityContext().getToken();
 					Collection<? extends GrantedAuthority> grantedAuthorities = j2eeUserRoles2GrantedAuthoritiesMapper.
 							getGrantedAuthorities(roles);
 					filterAllowedGrantedAuthorities(grantedAuthorities);
@@ -151,11 +151,11 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 							grantedAuthorities,
 							keycloakPrincipal.getKeycloakSecurityContext().getIdTokenString(),
 							nameAttributeKey.equals("preferred_username") ?
-									idToken.getPreferredUsername() :
-									(String)idToken.getOtherClaims().get(nameAttributeKey),
-							idToken.getName(),
-							idToken.getEmail(),
-							(String)idToken.getOtherClaims().get("nif"),
+									accessToken.getPreferredUsername() :
+									(String)accessToken.getOtherClaims().get(nameAttributeKey),
+							accessToken.getName(),
+							accessToken.getEmail(),
+							(String)accessToken.getOtherClaims().get("nif"),
 							roles.toArray(new String[0]));
 				} else {
 					Collection<? extends GrantedAuthority> grantedAuthorities = j2eeUserRoles2GrantedAuthoritiesMapper.

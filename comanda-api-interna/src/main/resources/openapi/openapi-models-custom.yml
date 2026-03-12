@@ -1,0 +1,7 @@
+binaryFile:
+  type: string
+  format: binary
+
+base64Bytes:
+  type: string
+  format: byte

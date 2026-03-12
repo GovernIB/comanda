@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useEffect} from "react";
 import { useTranslation } from 'react-i18next';
 import {
     MuiDataGrid,
@@ -7,12 +8,12 @@ import {
     springFilterBuilder,
     useFormApiRef,
     useFilterApiRef,
-    MuiDataGridColDef, useResourceApiService,
+    MuiDataGridColDef,
+    useResourceApiService,
     useBaseAppContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
@@ -29,43 +30,158 @@ import dayjs from 'dayjs';
 import {Chip, SxProps } from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
-import {useEffect} from "react";
+import SalutChip from '../components/salut/SalutChip.tsx';
+import {
+    TascaEstatEnum,
+    TascaPrioritatEnum,
+    useGetColorByTascaEstat,
+    useGetColorByTascaPrioritat
+} from '../types/salut.model.tsx';
 import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
 import { ROLE_ADMIN } from '../components/UserProvider.tsx';
 
-export const StyledPrioritat = (props: {
-    entity: any;
-    children?: React.ReactNode;
-}) => {
-    const {entity, children} = props;
-    let style: SxProps = {};
-    switch (entity?.prioritat) {
-        case 'MAXIMA':
-            style = { backgroundColor: '#d99b9d' }
-            break;
-        case 'ALTA':
-            style = { backgroundColor: '#ffebae' }
-            break;
-        case 'NORMAL':
-            style = { border: '1px dashed #AAA' }
-            break;
-        case 'BAIXA':
-            style = { backgroundColor: '#c3e8d1' }
-            break;
-    }
-    return <Typography
-        variant="caption"
-        sx={{
-            padding: '1px 4px',
-            fontSize: '11px',
-            fontWeight: '500',
-            borderRadius: '2px',
-            display: 'flex',
-            alignItems: 'center',
-            width: 'max-content',
-            ...style
-        }}>{children}</Typography>;
-}
+const TascaPrioritatChip = (props: { prioritat?: TascaPrioritatEnum }) => {
+    const { prioritat } = props;
+    const { t } = useTranslation();
+    const getColorByTascaPrioritat = useGetColorByTascaPrioritat();
+
+    const getIcon = (prioritat: TascaPrioritatEnum) => {
+        switch (prioritat) {
+            case TascaPrioritatEnum.MAXIMA:
+                return 'keyboard_double_arrow_up';
+            case TascaPrioritatEnum.ALTA:
+                return 'expand_less_outlined';
+            case TascaPrioritatEnum.NORMAL:
+                return 'drag_handle';
+            case TascaPrioritatEnum.BAIXA:
+                return 'expand_more_outlined';
+            case TascaPrioritatEnum.NONE:
+            default:
+                return 'keyboard_double_arrow_down';
+        }
+    };
+
+    const getLabel = (prioritat: TascaPrioritatEnum) => {
+        const text = prioritat.toLowerCase();
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    };
+
+    const getTooltip = (prioritat: TascaPrioritatEnum) => {
+        switch (prioritat) {
+            case TascaPrioritatEnum.MAXIMA:
+                return t($ => $.page.tasques.grid.column.prioritat.tooltip.MAXIMA);
+            case TascaPrioritatEnum.ALTA:
+                return t($ => $.page.tasques.grid.column.prioritat.tooltip.ALTA);
+            case TascaPrioritatEnum.NORMAL:
+                return t($ => $.page.tasques.grid.column.prioritat.tooltip.NORMAL);
+            case TascaPrioritatEnum.BAIXA:
+                return t($ => $.page.tasques.grid.column.prioritat.tooltip.BAIXA);
+            case TascaPrioritatEnum.NONE:
+                return t($ => $.page.tasques.grid.column.prioritat.tooltip.NONE);
+            default:
+                return '';
+        }
+    };
+
+    const getIconColor = (prioritat: TascaPrioritatEnum) => {
+        return prioritat === TascaPrioritatEnum.NORMAL ? 'inherit' : 'white !important';
+    };
+
+    if (!prioritat) return null;
+
+    return (
+        <SalutChip
+            label={getLabel(prioritat)}
+            backgroundColor={prioritat === TascaPrioritatEnum.NORMAL ? undefined : getColorByTascaPrioritat(prioritat)}
+            textColor={prioritat === TascaPrioritatEnum.NORMAL ? 'inherit' : undefined}
+            icon={<Icon sx={{ color: getIconColor(prioritat) }}>{getIcon(prioritat)}</Icon>}
+            tooltip={getTooltip(prioritat)}
+        />
+    );
+};
+
+const TascaEstatChip = (props: { estat?: TascaEstatEnum }) => {
+    const { estat } = props;
+    const { t } = useTranslation();
+    const getColorByTascaEstat = useGetColorByTascaEstat();
+
+    const getIcon = (estat: TascaEstatEnum) => {
+        switch (estat) {
+            case TascaEstatEnum.PENDENT:
+                return 'schedule';
+            case TascaEstatEnum.INICIADA:
+                return 'play_circle_outline';
+            case TascaEstatEnum.FINALITZADA:
+                return 'check_circle_outline';
+            case TascaEstatEnum.CANCELADA:
+                return 'cancel_outlined';
+            case TascaEstatEnum.ERROR:
+                return 'error_outline';
+            default:
+                return 'help_outline';
+        }
+    };
+
+    const getLabel = (estat: TascaEstatEnum) => {
+        const text = estat.toLowerCase();
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    };
+
+    const getTooltip = (estat: TascaEstatEnum) => {
+        switch (estat) {
+            case TascaEstatEnum.PENDENT:
+                return t($ => $.page.tasques.grid.column.estat.tooltip.PENDENT);
+            case TascaEstatEnum.INICIADA:
+                return t($ => $.page.tasques.grid.column.estat.tooltip.INICIADA);
+            case TascaEstatEnum.FINALITZADA:
+                return t($ => $.page.tasques.grid.column.estat.tooltip.FINALITZADA);
+            case TascaEstatEnum.CANCELADA:
+                return t($ => $.page.tasques.grid.column.estat.tooltip.CANCELADA);
+            case TascaEstatEnum.ERROR:
+                return t($ => $.page.tasques.grid.column.estat.tooltip.ERROR);
+            default:
+                return '';
+        }
+    };
+
+    if (!estat) return null;
+
+    return (
+        <SalutChip
+            label={getLabel(estat)}
+            backgroundColor={getColorByTascaEstat(estat)}
+            icon={<Icon sx={{ color: 'white !important' }}>{getIcon(estat)}</Icon>}
+            tooltip={getTooltip(estat)}
+        />
+    );
+};
+
+
+const TascaDataCaducitatChip = (props: { row: any, formattedValue: any }) => {
+    const { row, formattedValue } = props;
+    const { t } = useTranslation();
+    const backgroundColor =
+        row?.diesPerCaducar == null
+            ? 'gray'
+            : row?.diesPerCaducar <= 0
+                ? '#6b0707'
+                : row?.diesPerCaducar <= 3
+                    ? 'error.main'
+                    : row?.diesPerCaducar <= 5
+                        ? 'warning.main'
+                        : 'success.main';
+
+    if (!formattedValue) return null;
+
+    return (
+        <SalutChip
+            label={formattedValue}
+            backgroundColor={backgroundColor}
+            // icon={<Icon sx={{ color: 'white !important' }}>schedule</Icon>}
+            tooltip={t($ => $.page.tasques.grid.column.dataCaducitat.tooltip)}
+        />
+    );
+};
 
 const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void }) => {
     const { onSpringFilterChange } = props;
@@ -201,12 +317,15 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
     },
     {
         field: 'estat',
-        flex: 0.1,
+        flex: 0.8,
         minWidth: 100,
+        renderCell: (param) => {
+            return <TascaEstatChip estat={param?.row?.estat} />;
+        }
     },
     {
         field: 'tipus',
-        flex: 0.5,
+        flex: 1,
         minWidth: 100,
     },
     {
@@ -215,11 +334,11 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
     },
     {
         field: 'prioritat',
-        flex: 0.5,
+        flex: 0.8,
         minWidth: 100,
-        renderCell: (param) => (
-            <StyledPrioritat entity={param.row}>{param?.formattedValue}</StyledPrioritat>
-        ),
+        renderCell: (param) => {
+            return <TascaPrioritatChip prioritat={param?.row?.prioritat} />;
+        }
     },
     {
         field: 'dataInici',
@@ -229,25 +348,11 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [
     },
     {
         field: 'dataCaducitat',
-        flex: 0.7,
+        flex: 0.8,
         minWidth: 100,
         valueFormatter: (value) => (value ? dayjs(value).format('DD/MM/YYYY') : value),
         renderCell: (param) => {
-            const style =
-                param?.row?.diesPerCaducar == null
-                    ? {}
-                    : param?.row?.diesPerCaducar <= 0
-                      ? { color: 'white', backgroundColor: '#6b0707' }
-                      : param?.row?.diesPerCaducar <= 3
-                        ? { color: 'white', backgroundColor: 'error.main' }
-                        : param?.row?.diesPerCaducar <= 5
-                          ? { color: 'white', backgroundColor: 'warning.main' }
-                          : {};
-            return (
-                <Typography variant={'inherit'} sx={{ p: 1, borderRadius: '4px', ...style }}>
-                    {param?.formattedValue}
-                </Typography>
-            );
+            return <TascaDataCaducitatChip row={param.row} formattedValue={param.formattedValue} />;
         },
     },
     {

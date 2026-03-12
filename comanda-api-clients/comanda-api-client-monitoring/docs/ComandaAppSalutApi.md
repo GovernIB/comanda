@@ -11,7 +11,7 @@ All URIs are relative to *http://localhost*
 
 ## salut
 
-> SalutInfo salut()
+> SalutInfo salut(dataPeriode, dataTotal)
 
 Obtenir informació de l&#39;estat de salut de l&#39;aplicació
 
@@ -33,8 +33,10 @@ public class Example {
         defaultClient.setBasePath("http://localhost");
 
         ComandaAppSalutApi apiInstance = new ComandaAppSalutApi(defaultClient);
+        java.time.OffsetDateTime dataPeriode = new java.time.OffsetDateTime(); // java.time.OffsetDateTime | Data mínima de la que es demana informació per període
+        java.time.OffsetDateTime dataTotal = new java.time.OffsetDateTime(); // java.time.OffsetDateTime | Data mínima de la que demana informació per totals
         try {
-            SalutInfo result = apiInstance.salut();
+            SalutInfo result = apiInstance.salut(dataPeriode, dataTotal);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ComandaAppSalutApi#salut");
@@ -49,7 +51,11 @@ public class Example {
 
 ### Parameters
 
-This endpoint does not need any parameter.
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **dataPeriode** | [**java.time.OffsetDateTime**](.md)| Data mínima de la que es demana informació per període | [optional] |
+| **dataTotal** | [**java.time.OffsetDateTime**](.md)| Data mínima de la que demana informació per totals | [optional] |
 
 ### Return type
 

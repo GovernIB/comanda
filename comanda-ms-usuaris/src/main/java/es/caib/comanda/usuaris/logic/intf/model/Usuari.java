@@ -2,18 +2,22 @@ package es.caib.comanda.usuaris.logic.intf.model;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
 	descriptionField = "nom",
 	accessConstraints = {
@@ -41,6 +45,10 @@ public class Usuari extends BaseResource<Long> {
     private LanguageEnum idioma;
     private Boolean temaObscur;
     private String[] rols;
+
+    @ResourceField(onChangeActive = true)
+    private boolean alarmaMail;
+    private boolean alarmaMailAgrupar;
 
     /************************************************ CONFIGURACIÓN GENÉRICA ******************************************/
     @NotNull

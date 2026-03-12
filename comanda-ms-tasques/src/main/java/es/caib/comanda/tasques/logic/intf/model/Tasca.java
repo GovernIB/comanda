@@ -32,8 +32,7 @@ import java.util.List;
         descriptionField = "nom",
         accessConstraints = {
                 @ResourceAccessConstraint(
-                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-                        roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
                         grantedPermissions = { PermissionEnum.READ }
                 ),
                 @ResourceAccessConstraint(

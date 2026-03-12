@@ -79,6 +79,17 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
             Optional<AvisEntity> avisExistent = ((AvisRepository)entityRepository).findByEntornAppIdAndIdentificador(
                     entornApp.get().getId(),
                     avisBroker.getIdentificador());
+
+            if (Boolean.TRUE.equals(avisBroker.getEsborrar())) {
+                if (avisExistent.isPresent()) {
+                    entityRepository.delete(avisExistent.get());
+                    log.debug("Esborrat avís {} de l'entornApp {}", avisBroker.getIdentificador(), entornApp.get().getId());
+                } else {
+                    log.warn("S'ha intentat esborrar un avís que no existeix: {} de l'entornApp {}", avisBroker.getIdentificador(), entornApp.get().getId());
+                }
+                return;
+            }
+
             if (avisExistent.isEmpty()) {
                 monitorAvisos.setCreateActionMessatge();
                 Avis avis = new Avis();
@@ -186,6 +197,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
     private Specification<AvisEntity> avisSensePermisos() {
         return (root, query, cb) -> cb.and(
+                cb.isNull(root.get("responsable")),
                 cb.isEmpty(root.get("usuarisAmbPermis")),
                 cb.isEmpty(root.get("grupsAmbPermis"))
         );

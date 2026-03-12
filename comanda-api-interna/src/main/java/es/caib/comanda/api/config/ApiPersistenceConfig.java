@@ -15,6 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 		basePackages = {
 				"es.caib.comanda.ms.persist",
 				"es.caib.comanda.configuracio.persist",
+				"es.caib.comanda.usuaris.persist",
 				"es.caib.comanda.salut.persist",
 				"es.caib.comanda.estadistica.persist",
 				"es.caib.comanda.monitor.persist",
@@ -32,6 +33,7 @@ public class ApiPersistenceConfig extends BasePersistenceConfig {
 		return new String [] {
 				"es.caib.comanda.ms.persist",
 				"es.caib.comanda.configuracio.persist",
+				"es.caib.comanda.usuaris.persist",
 				"es.caib.comanda.salut.persist",
 				"es.caib.comanda.estadistica.persist",
 				"es.caib.comanda.monitor.persist",

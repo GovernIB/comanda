@@ -18,6 +18,7 @@ import java.util.Optional;
  */
 public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 
+    Optional<AlarmaEntity> findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(AlarmaConfigEntity alarmaConfig);
 	Optional<AlarmaEntity> findTopByAlarmaConfigAndEstatOrderByIdDesc(
 			AlarmaConfigEntity alarmaConfig,
 			AlarmaEstat estat);
@@ -37,15 +38,19 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 			"    a.dataActivacio >= ?1")
 	List<String> findDistinctAlarmaConfigCreatedByDataActivacioAfter(LocalDateTime data);
 
-	List<AlarmaEntity> findByAlarmaConfigAdminTrueAndEstat(AlarmaEstat estat);
 	List<AlarmaEntity> findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(LocalDateTime data);
 
-	List<AlarmaEntity> findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndEstat(
-			String createdBy,
-			AlarmaEstat estat);
 	List<AlarmaEntity> findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
 			String createdBy,
 			LocalDateTime data);
+
+	@Modifying
+	@Query("DELETE FROM AlarmaEntity a WHERE a.alarmaConfig = ?1 AND a.estat = ?2")
+	void deleteByAlarmaConfigAndEstat(AlarmaConfigEntity alarmaConfig, AlarmaEstat estat);
+
+	@Modifying
+	@Query("UPDATE AlarmaEntity a SET a.dataFinalitzacio = ?2 WHERE a.alarmaConfig = ?1 AND a.dataFinalitzacio IS NULL")
+	void finalizeByAlarmaConfig(AlarmaConfigEntity alarmaConfig, LocalDateTime dataFinalitzacio);
 
 	@Modifying
 	@Query("UPDATE " +

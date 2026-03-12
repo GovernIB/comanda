@@ -84,6 +84,7 @@ const translationEs: translationResourcesType = {
         entorn: "Entornos",
         versionsEntorn: "Versiones por entorno",
         alarmaConfig: "Alarmas",
+        alarmaConfigConsultor: "Configurar alarmas",
         integracio: "Integraciones",
         widget: "Widgets estadísticos",
         dashboard: "Cuadros de control",
@@ -282,8 +283,11 @@ const translationEs: translationResourcesType = {
             logs: {
                 preview: "Previsualizar",
                 download: "Descargar",
+                refresh: "Refrescar",
                 noSelected: "Seleccionar un archivo",
                 noPreview: "No hay previsualización",
+                softWrap: "Ajustar texto",
+                scrollToBottom: "Ir al final",
                 logsList: {
                     title: "Logs",
                     nom: "Nombre",
@@ -359,6 +363,36 @@ const translationEs: translationResourcesType = {
                 },
                 column: {
                     appEntorn: "Aplicación - Entorno",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Tarea de tipo noticia",
+                            INFO: "Tarea de tipo informativo",
+                            ALERTA: "Tarea de tipo alerta",
+                            ERROR: "Tarea de tipo error",
+                            CRITIC: "Tarea de tipo crítico",
+                        }
+                    },
+                    prioritat: {
+                        tooltip: {
+                            NONE: "Prioridad no definida",
+                            BAIXA: "Prioridad baja",
+                            NORMAL: "Prioridad normal",
+                            ALTA: "Prioridad alta",
+                            MAXIMA: "Prioridad máxima",
+                        }
+                    },
+                    estat: {
+                        tooltip: {
+                            PENDENT: "Tarea pendiente de iniciar",
+                            INICIADA: "Tarea en curso",
+                            FINALITZADA: "Tarea finalizada",
+                            CANCELADA: "Tarea cancelada",
+                            ERROR: "Tarea con error",
+                        }
+                    },
+                    dataCaducitat: {
+                        tooltip: "Fecha límite para la realización de la tarea",
+                    },
                 },
                 entornAppInvalid: "Entorno de la aplicación eliminado",
             }
@@ -375,6 +409,19 @@ const translationEs: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Nombre",
+                column: {
+                    global: "Global",
+                    globalTooltip: "Este es un aviso global",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Aviso de tipo noticia",
+                            INFO: "Aviso de tipo informativo",
+                            ALERTA: "Aviso de tipo alerta",
+                            ERROR: "Aviso de tipo error",
+                            CRITIC: "Aviso de tipo crítico",
+                        }
+                    }
+                },
             },
             action: {
                 obrir: "Abrir aviso",
@@ -400,6 +447,34 @@ const translationEs: translationResourcesType = {
                 title: "Periodo",
                 subtitle: "Periodo de tiempo durante el cual se debe cumplir la condición para generar la alarma",
                 switch: "Con periodo de activación"
+            },
+            filter: {
+                showOnlyOwnEnabled: "Mostrar solo mis alarmas",
+                showOnlyOwnDisabled: "Mostrar todas las alarmas",
+            },
+        },
+        alarma: {
+            snackbar: {
+                title: "Alarmas",
+                existingAlarms: "Tiene {{count}} alarma activa",
+                existingAlarms_one: "Tiene {{count}} alarma activa",
+                existingAlarms_other: "Tiene {{count}} alarmas activas",
+                newAlarms: "Nueva alarma activa",
+                newAlarms_one: "Nueva alarma activa",
+                newAlarms_other: "{{count}} nuevas alarmas activas",
+            },
+            action: {
+                clear: {
+                    label: "Borrar",
+                },
+            },
+            filter: {
+                showOnlyActiveEnabled: "Mostrando solo alarmas activas (clic para incluir eliminadas)",
+                showOnlyActiveDisabled: "Mostrando alarmas activas y eliminadas (clic para mostrar solo activas)",
+            },
+            estats: {
+                finalitzada: "Finalizada",
+                finalitzadaEsborrada: "Finalizada (eliminada)",
             },
         },
         apps: {

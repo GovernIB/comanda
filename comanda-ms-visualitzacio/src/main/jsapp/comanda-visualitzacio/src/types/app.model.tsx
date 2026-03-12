@@ -26,6 +26,8 @@ export interface IEntornAppModel extends IBaseEntity {
     compactacioSetmanalMesos? : number | null;
     compactacioMensualMesos?  : number | null;
     eliminacioMesos?          : number | null;
+
+    alarmesEmail?             : string | null;
 }
 
 export interface IAppRef {
@@ -92,6 +94,7 @@ export class EntornAppModel extends BaseEntity implements Partial<IEntornAppMode
     activa?     : boolean;
 
     salutUrl?   : string;
+    logsUrl?   : string;
 
     integracioCount?: number;
     subsistemaCount?: number;

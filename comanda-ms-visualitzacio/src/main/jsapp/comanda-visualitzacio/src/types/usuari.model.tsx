@@ -11,6 +11,8 @@ export interface IUsuari extends IBaseEntity {
     idioma: LanguageEnum;
     temaObscur: boolean | undefined;
     rols: string[] | undefined;
+    alarmaMail: boolean | undefined;
+    alarmaMailAgrupar: boolean | undefined;
 
     numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
 }
@@ -27,6 +29,8 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     static readonly TEMA_OBSCUR: keyof UsuariModel = "temaObscur";
     static readonly ROLS: keyof UsuariModel = "rols";
     static readonly NUM_ELEMENTS_PAGINA: keyof UsuariModel = "numElementsPagina";
+    static readonly ALARMA_MAIL: keyof UsuariModel = "alarmaMail";
+    static readonly ALARMA_MAIL_AGRUPAT: keyof UsuariModel = "alarmaMailAgrupar";
 
     codi: string;
     nom: string;
@@ -37,6 +41,8 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     temaObscur: boolean | undefined;
     rols: string[] | undefined;
     numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
+    alarmaMail: boolean | undefined;
+    alarmaMailAgrupar: boolean | undefined;
 
     constructor(usuari: IUsuari) {
         super(usuari);
@@ -44,6 +50,8 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
         this.nom = usuari.nom;
         this.idioma = usuari.idioma;
         this.numElementsPagina = usuari.numElementsPagina;
+        this.alarmaMail = usuari.alarmaMail;
+        this.alarmaMailAgrupar = usuari.alarmaMailAgrupar;
         Object.assign(this, usuari);
     }
 }

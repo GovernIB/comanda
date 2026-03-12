@@ -109,6 +109,11 @@ public class EntornApp extends BaseResource<Long> {
 	@Builder.Default
 	private boolean activa = true;
 
+	// Logs
+	@URL
+	@Size(max = 200)
+	private String logsUrl;
+
 	// Informació de salut
 	@URL
 	@NotNull
@@ -146,6 +151,8 @@ public class EntornApp extends BaseResource<Long> {
     private Integer compactacioSetmanalMesos;
     private Integer compactacioMensualMesos;
     private Integer eliminacioMesos;
+
+	private String alarmesEmail;
 
 	// Camps calculats
 	private String entornAppDescription;

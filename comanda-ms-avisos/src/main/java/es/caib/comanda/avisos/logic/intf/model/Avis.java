@@ -15,6 +15,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Transient;
 
 import javax.validation.constraints.NotNull;
@@ -31,8 +33,7 @@ import java.util.List;
         descriptionField = "nom",
         accessConstraints = {
                 @ResourceAccessConstraint(
-                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-                        roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
                         grantedPermissions = { PermissionEnum.READ }
                 ),
                 @ResourceAccessConstraint(
@@ -94,6 +95,13 @@ public class Avis extends BaseResource<Long> {
     @Transient private String appCodi;
     @Transient private AppRef app;
     @Transient private EntornRef entorn;
+
+    public boolean isGlobal() {
+        return StringUtils.isEmpty(responsable)
+//                && StringUtils.isEmpty(grup)
+                && CollectionUtils.isEmpty(usuarisAmbPermis)
+                && CollectionUtils.isEmpty(grupsAmbPermis);
+    }
 
     @Getter
     @Setter

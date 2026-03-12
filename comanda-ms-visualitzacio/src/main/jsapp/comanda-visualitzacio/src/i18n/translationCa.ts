@@ -84,6 +84,7 @@ const translationCa = {
         entorn: "Entorns",
         versionsEntorn: "Versions per entorn",
         alarmaConfig: "Alarmes",
+        alarmaConfigConsultor: "Configurar alarmes",
         integracio: "Integracions",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
@@ -282,8 +283,11 @@ const translationCa = {
             logs: {
                 preview: "Previsualitzar",
                 download: "Descarregar",
+                refresh: "Refrescar",
                 noSelected: "Seleccionar un fitxer",
                 noPreview: "No hi ha previsualització",
+                softWrap: "Ajustar text",
+                scrollToBottom: "Anar al final",
                 logsList: {
                     title: "Logs",
                     nom: "Nom",
@@ -359,6 +363,36 @@ const translationCa = {
                 },
                 column: {
                     appEntorn: "Aplicació - Entorn",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Tasca de tipus notícia",
+                            INFO: "Tasca de tipus informatiu",
+                            ALERTA: "Tasca de tipus alerta",
+                            ERROR: "Tasca de tipus error",
+                            CRITIC: "Tasca de tipus crític",
+                        }
+                    },
+                    prioritat: {
+                        tooltip: {
+                            NONE: "Prioritat no definida",
+                            BAIXA: "Prioritat baixa",
+                            NORMAL: "Prioritat normal",
+                            ALTA: "Prioritat alta",
+                            MAXIMA: "Prioritat màxima",
+                        }
+                    },
+                    estat: {
+                        tooltip: {
+                            PENDENT: "Tasca pendent d'iniciar",
+                            INICIADA: "Tasca en curs",
+                            FINALITZADA: "Tasca finalitzada",
+                            CANCELADA: "Tasca cancel·lada",
+                            ERROR: "Tasca amb error",
+                        }
+                    },
+                    dataCaducitat: {
+                        tooltip: "Data límit per a la realització de la tasca",
+                    },
                 },
                 entornAppInvalid: "Entorn de l'aplicació esborrat",
             }
@@ -375,6 +409,20 @@ const translationCa = {
             },
             grid: {
                 groupHeader: "Nom",
+                column: {
+                    appEntorn: "Aplicació - Entorn",
+                    global: "Global",
+                    globalTooltip: "Aquest és un avís global",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Avís de tipus notícia",
+                            INFO: "Avís de tipus informatiu",
+                            ALERTA: "Avís de tipus alerta",
+                            ERROR: "Avís de tipus error",
+                            CRITIC: "Avís de tipus crític",
+                        }
+                    }
+                },
             },
             action: {
                 obrir: "Obrir avís",
@@ -400,6 +448,34 @@ const translationCa = {
                 title: "Període",
                 subtitle: "Període de temps durant el qual s'ha de complir la condició per a generar l'alarma",
                 switch: "Amb període d'activació"
+            },
+            filter: {
+                showOnlyOwnEnabled: "Mostrar només les meves alarmes",
+                showOnlyOwnDisabled: "Mostra totes les alarmes",
+            },
+        },
+        alarma: {
+            snackbar: {
+                title: "Alarmes",
+                existingAlarms: "Té {{count}} alarma activa",
+                existingAlarms_one: "Té {{count}} alarma activa",
+                existingAlarms_other: "Té {{count}} alarmes actives",
+                newAlarms: "Nova alarma activa",
+                newAlarms_one: "Nova alarma activa",
+                newAlarms_other: "{{count}} noves alarmes actives",
+            },
+            action: {
+                clear: {
+                    label: "Esborrar",
+                },
+            },
+            filter: {
+                showOnlyActiveEnabled: "Mostrant només alarmes actives (clic per incloure eliminades)",
+                showOnlyActiveDisabled: "Mostrant alarmes actives i eliminades (clic per mostrar només actives)",
+            },
+            estats: {
+                finalitzada: "Finalitzada",
+                finalitzadaEsborrada: "Finalitzada (esborrada)",
             },
         },
         apps: {

@@ -1220,6 +1220,7 @@ const SalutAppInfo: React.FC<{
             id: 'logs',
             label: t($ => $.page.salut.tabs.logs),
             icon: <Icon>notes</Icon>,
+            disabled: !entornApp?.logsUrl,
         },
     ];
 
@@ -1241,6 +1242,7 @@ const SalutAppInfo: React.FC<{
                         iconPosition="start"
                         label={tab.label}
                         icon={tab.icon}
+                        disabled={tab.disabled}
                     />
                 ))}
             </Tabs>

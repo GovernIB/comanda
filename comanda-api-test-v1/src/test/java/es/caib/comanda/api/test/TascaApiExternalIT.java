@@ -129,4 +129,32 @@ public class TascaApiExternalIT {
         System.out.println("Batch create response: " + res);
         assertThat(res).isNotNull();
     }
+
+    @Test
+    void deleteTasca_ok() throws Exception {
+        String identificador = "test-tasca-" + System.currentTimeMillis();
+        Tasca tasca = new Tasca();
+        tasca.setIdentificador(identificador);
+        tasca.setAppCodi("NOT");
+        tasca.setEntornCodi("DEV");
+        tasca.setNom("Tasca de prova per borrar");
+        tasca.setDescripcio("Descripció de la tasca de prova");
+        tasca.setTipus("PROVA");
+        tasca.setEstat(TascaEstat.PENDENT);
+        tasca.setEstatDescripcio("Pendent");
+        tasca.setDataInici(OffsetDateTime.now());
+        tasca.setDataCaducitat(OffsetDateTime.now().plusDays(10));
+        tasca.setUsuarisAmbPermis(List.of("com_admin"));
+        tasca.setPrioritat(Prioritat.ALTA);
+        tasca.setNumeroExpedient("EXP-123456789");
+        tasca.setRedireccio(new URL("http://localhost:8080/tasca/mock"));
+
+        String res = api.crearTasca(tasca);
+        System.out.println("Create response: " + res);
+        assertThat(res).isNotNull();
+
+        String deleteRes = api.eliminarTasca(identificador, "NOT", "DEV");
+        System.out.println("Delete response: " + deleteRes);
+        assertThat(deleteRes).isNotNull();
+    }
 }

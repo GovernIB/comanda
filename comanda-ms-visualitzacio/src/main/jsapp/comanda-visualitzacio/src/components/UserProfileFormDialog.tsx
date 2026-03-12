@@ -69,6 +69,123 @@ export const TemaObscurSelector: React.FC = () => {
     );
 };
 
+const UserProfileForm = () => {
+    const { t } = useTranslation();
+    const { data } = useFormContext();
+
+    return <Grid container spacing={1} sx={{ px: 1, }}>
+        <Grid size={{ xs: 12 }}>
+            <Divider sx={{ mb: 2 }}>
+                {t($ => $.menu.user.options.profile.form.userData)}
+            </Divider>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4, md: 4, lg: 2 }}>
+            <FormField
+                name={UsuariModel.CODI}
+                readOnly={true}
+                disabled
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end">
+                        <Tag />
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 8, md: 8, lg: 4 }}>
+            <FormField
+                name={UsuariModel.NOM}
+                readOnly={true}
+                disabled
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end">
+                        <Person />
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4, md: 4, lg: 2 }}>
+            <FormField
+                name={UsuariModel.NIF}
+                readOnly={true}
+                disabled
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end">
+                        <Badge />
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 8, md: 8, lg: 4 }}>
+            <FormField
+                name={UsuariModel.EMAIL}
+                readOnly={true}
+                disabled
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end">
+                        <AlternateEmail />
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12 }}>
+            <FormField
+                name={UsuariModel.ROLS}
+                readOnly={true}
+                disabled
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end">
+                        <RecentActors />
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 8, md: 6, lg: 4 }}>
+            <FormField
+                name={UsuariModel.EMAIL_ALTERNATIU}
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end">
+                        <Mail />
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 4 }}>
+            <FormField name={UsuariModel.ALARMA_MAIL} />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3, lg: 4 }}>
+            <FormField name={UsuariModel.ALARMA_MAIL_AGRUPAT} disabled={!data[UsuariModel.ALARMA_MAIL]} />
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+            <Divider sx={{ my: 2 }}>
+                {t($ => $.menu.user.options.profile.form.genericConfig)}
+            </Divider>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+            <FormField
+                name={UsuariModel.NUM_ELEMENTS_PAGINA}
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end" sx={{ mr: 2 }}>
+                        <FormatListNumbered/>
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+            <FormField
+                name={UsuariModel.IDIOMA}
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end" sx={{ mr: 2 }}>
+                        <Language/>
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+            <TemaObscurSelector />
+        </Grid>
+    </Grid>
+}
+
 
 export const UserProfileFormDialog = ({
     dialogApiRef,
@@ -90,111 +207,7 @@ export const UserProfileFormDialog = ({
                 componentProps: { sx: { mt: 0 } },
             }}
         >
-            <Grid container spacing={1} sx={{ px: 1, }}>
-                <Grid size={{ xs: 12 }}>
-                    <Divider sx={{ mb: 2 }}>
-                        {t($ => $.menu.user.options.profile.form.userData)}
-                    </Divider>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4, md: 4, lg: 2 }}>
-                    <FormField
-                        name={UsuariModel.CODI}
-                        readOnly={true}
-                        disabled
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end">
-                                <Tag />
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 8, md: 8, lg: 4 }}>
-                    <FormField
-                        name={UsuariModel.NOM}
-                        readOnly={true}
-                        disabled
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end">
-                                <Person />
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4, md: 4, lg: 2 }}>
-                    <FormField
-                        name={UsuariModel.NIF}
-                        readOnly={true}
-                        disabled
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end">
-                                <Badge />
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 8, md: 8, lg: 4 }}>
-                    <FormField
-                        name={UsuariModel.EMAIL}
-                        readOnly={true}
-                        disabled
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end">
-                                <AlternateEmail />
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12 }}>
-                    <FormField
-                        name={UsuariModel.ROLS}
-                        readOnly={true}
-                        disabled
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end">
-                                <RecentActors />
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 8, md: 6, lg: 4 }}>
-                    <FormField
-                        name={UsuariModel.EMAIL_ALTERNATIU}
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end">
-                                <Mail />
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                    <Divider sx={{ my: 2 }}>
-                        {t($ => $.menu.user.options.profile.form.genericConfig)}
-                    </Divider>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-                    <FormField
-                        name={UsuariModel.NUM_ELEMENTS_PAGINA}
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end" sx={{ mr: 2 }}>
-                                <FormatListNumbered/>
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-                    <FormField
-                        name={UsuariModel.IDIOMA}
-                        componentProps={{ slotProps: { input: { endAdornment: (
-                            <InputAdornment position="end" sx={{ mr: 2 }}>
-                                <Language/>
-                            </InputAdornment>
-                        ), }, } }}
-                    />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-                    <TemaObscurSelector />
-                </Grid>
-            </Grid>
+            <UserProfileForm/>
         </MuiFormDialog>
     );
 };

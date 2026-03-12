@@ -170,6 +170,64 @@ public class AppComandaTasquesApi {
     return apiClient.invokeAPI(localVarPath, "POST", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
       }
   /**
+   * Eliminació una tasca existent
+   * Es comprova si la tasca existeix, i en cas afirmatiu, s&#39;afegeix un missatge d&#39;eliminació de tasca a una cua de events per a que s&#39;elimini aquesta de forma asíncrona a Comanda.
+   * @param identificador Identificador de la tasca (required)
+   * @param appCodi Codi de l&#39;aplicació (required)
+   * @param entornCodi Codi de l&#39;entorn (required)
+   * @return a {@code String}
+   * @throws ApiException if fails to make API call
+   */
+  public String eliminarTasca(@javax.annotation.Nonnull String identificador, @javax.annotation.Nonnull String appCodi, @javax.annotation.Nonnull String entornCodi) throws ApiException {
+    Object localVarPostBody = null;
+    
+    // verify the required parameter 'identificador' is set
+    if (identificador == null) {
+      throw new ApiException(400, "Missing the required parameter 'identificador' when calling eliminarTasca");
+    }
+    
+    // verify the required parameter 'appCodi' is set
+    if (appCodi == null) {
+      throw new ApiException(400, "Missing the required parameter 'appCodi' when calling eliminarTasca");
+    }
+    
+    // verify the required parameter 'entornCodi' is set
+    if (entornCodi == null) {
+      throw new ApiException(400, "Missing the required parameter 'entornCodi' when calling eliminarTasca");
+    }
+    
+    // create path and map variables
+    String localVarPath = "/tasques/v1/{identificador}".replaceAll("\\{format\\}","json")
+      .replaceAll("\\{" + "identificador" + "\\}", apiClient.escapeString(identificador.toString()));
+
+    // query params
+    List<Pair> localVarQueryParams = new ArrayList<Pair>();
+    Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+    Map<String, String> localVarCookieParams = new HashMap<String, String>();
+    Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+    localVarQueryParams.addAll(apiClient.parameterToPairs("", "appCodi", appCodi));
+    localVarQueryParams.addAll(apiClient.parameterToPairs("", "entornCodi", entornCodi));
+
+    
+    
+    
+    final String[] localVarAccepts = {
+      "text/plain"
+    };
+    final String localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+
+    final String[] localVarContentTypes = {
+      
+    };
+    final String localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+    String[] localVarAuthNames = new String[] {  };
+
+    GenericType<String> localVarReturnType = new GenericType<String>() {};
+    return apiClient.invokeAPI(localVarPath, "DELETE", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+      }
+  /**
    * Modificació de múltiples tasques
    * Es comprova si les tasques existeixen, i en cas afirmatiu, s&#39;afegeixen múltiples missatges de modificació de tasques a una cua de events per a que es modifiquin aquestes de forma asíncrona a Comanda. Les tasques no existents s&#39;ignoren.
    * @param tasca  (optional)

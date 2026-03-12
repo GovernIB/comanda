@@ -7,6 +7,7 @@ import Icon from '@mui/material/Icon';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { useUserContext } from './UserContext';
+import { MAPPABLE_ROLES, ROLE_ADMIN, ROLE_CONSULTA } from './UserProvider.tsx';
 
 function RoleSelector() {
     const { t } = useTranslation();
@@ -18,6 +19,16 @@ function RoleSelector() {
         setCurrentRole(event.target.value as string);
         //authButtonApiRef.current?.close();
     }
+    const getRoleTranslation = (role: string) => {
+        switch (role) {
+            case ROLE_ADMIN:
+            return t($ => $.enum.userRole.COM_ADMIN);
+            case ROLE_CONSULTA:
+            return t($ => $.enum.userRole.COM_CONSULTA);
+            default:
+            return role;
+        }
+    };
     return userRoles ? <MenuItem onClick={()=>setOpen(prev=>!prev)}>
         <ListItemIcon>
             <Icon fontSize="small">badge</Icon>
@@ -31,8 +42,10 @@ function RoleSelector() {
                 fullWidth
                 value={currentRole}
                 onChange={handleSelectOnChange}>
-                {userRoles.map(r => <MenuItem key={r} value={r}>
-                    <ListItemText>{r === 'COM_ADMIN' ? t($ => $.enum.userRole.COM_ADMIN) : t($ => $.enum.userRole.COM_CONSULTA)}</ListItemText>
+                {userRoles
+                    .filter(r => MAPPABLE_ROLES.includes(r))
+                    .map(r => <MenuItem key={r} value={r}>
+                    <ListItemText>{getRoleTranslation(r)}</ListItemText>
                 </MenuItem>)}
             </Select>
         </FormControl>

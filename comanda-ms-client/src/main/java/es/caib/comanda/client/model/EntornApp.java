@@ -45,4 +45,6 @@ public class EntornApp implements Serializable {
     private Integer compactacioSetmanalMesos;
     private Integer compactacioMensualMesos;
     private Integer eliminacioMesos;
+
+    private String alarmesEmail;
 }

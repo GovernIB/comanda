@@ -34,7 +34,7 @@ public class AvisClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId.toString()")
+    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
     public EntornApp entornAppFindById(Long entornAppId) {
         EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
                 entornAppId,
@@ -89,7 +89,7 @@ public class AvisClientHelper {
     // Client App
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = APP_CACHE, key = "#appId.toString()")
+    @Cacheable(value = APP_CACHE, key = "#appId?.toString()")
     public App appById(Long appId) {
         EntityModel<App> app = appServiceClient.getOne(
                 appId,
@@ -104,7 +104,7 @@ public class AvisClientHelper {
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_CACHE, key = "#entornId.toString()")
+    @Cacheable(value = ENTORN_CACHE, key = "#entornId?.toString()")
     public Entorn entornById(Long entornId) {
         EntityModel<Entorn> entorn = entornServiceClient.getOne(
                 entornId,

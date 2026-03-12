@@ -1,14 +1,15 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import {BaseApp, MenuEntryWithResource} from './components/BaseApp';
+import { BaseApp, MenuEntryWithResource } from './components/BaseApp';
 import logo from './assets/goib_logo.svg';
 import logoDark from './assets/goib_logo.png';
 import ComandaLogo from './assets/COM_DRA_COL.svg?react';
 import AppRoutes from './AppRoutes';
-import { useUserContext } from './components/UserContext';
+import { useIsUserAdmin, useIsUserConsulta, useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import notNull from './util/arrayUtils';
 import {useResourceApiContext} from "reactlib";
 
 const APPBAR_HEIGHT = '64px';
@@ -50,6 +51,7 @@ const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
 
 export const useAppEntries = () => {
     const { t } = useTranslation();
+    const isUserAdmin = useIsUserAdmin();
     const menuSalut = {
         id: 'salut',
         title: t($ => $.menu.salut),
@@ -106,11 +108,19 @@ export const useAppEntries = () => {
             }
         ]
     };
+    const menuAlarmaConfig = {
+        id: 'alarma',
+        // title: isUserAdmin ? t($ => $.menu.alarmaConfig) : t($ => $.menu.alarmaConfigConsultor),
+        title: t($ => $.menu.alarmaConfig),
+        to: '/alarma',
+        icon: 'notifications',
+        resourceName: 'alarmaConfig',
+    };
     const menuConfiguracio = {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
         icon: 'settings',
-        children: [
+        children: ([
             {
                 id: 'app',
                 title: t($ => $.menu.app),
@@ -132,13 +142,7 @@ export const useAppEntries = () => {
                 icon: 'format_list_numbered_rtl',
                 resourceName: 'entornApp',
             },
-            {
-                id: 'alarma',
-                title: t($ => $.menu.alarmaConfig),
-                to: '/alarma',
-                icon: 'notifications',
-                resourceName: 'alarmaConfig',
-            },
+            menuAlarmaConfig,
             {
                 id: 'integracio',
                 title: t($ => $.menu.integracio),
@@ -160,13 +164,13 @@ export const useAppEntries = () => {
                 icon: 'insights',
                 resourceName: 'indicador',
             },
-            {
+            isUserAdmin ? {
                 id: 'estadisticaWidget',
                 title: t($ => $.menu.widget),
                 to: '/estadisticaWidget',
                 icon: 'widgets',
                 resourceName: 'dashboard',
-            },
+            } : null,
             {
                 id: 'dashboard',
                 title: t($ => $.menu.dashboard),
@@ -181,14 +185,14 @@ export const useAppEntries = () => {
                 icon: 'calendar_month',
                 resourceName: 'fet',
             },
-            {
+            isUserAdmin ? {
                 id: 'parametre',
                 title: t($ => $.menu.parametre),
                 to: '/parametre',
                 icon: 'settings',
                 resourceName: 'parametre',
-            }
-        ]
+            } : null,
+        ].filter(notNull))
     };
     const headerMenuEntries = [
         menuSalut,
@@ -196,14 +200,16 @@ export const useAppEntries = () => {
         menuTasca,
         menuAvis,
     ];
-    const caibMenuEntries = [
+    const caibMenuEntries: MenuEntryWithResource[] = [
         menuSalut,
         menuEstadistiques,
         menuTasca,
         menuAvis,
         menuMonitoritzacio,
         menuConfiguracio,
-    ];
+        // isUserAdmin ? menuConfiguracio : null,
+        // isUserConsulta ? menuAlarmaConfig : null,
+    ].filter(notNull);
 
     return {
         headerMenuEntries: useBaseAppMenuEntries(headerMenuEntries),
@@ -216,6 +222,8 @@ export const App: React.FC = () => {
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
     const appbarBackgroundColor = darkThemeActive ? undefined : '#fff';
+    const isUserAdmin = useIsUserAdmin();
+    const isUserConsulta = useIsUserConsulta();
 
     const {caibMenuEntries, headerMenuEntries} = useAppEntries();
     return (
@@ -247,7 +255,7 @@ export const App: React.FC = () => {
             }
             version="0.1"
             availableLanguages={['ca', 'es']}
-            menuEntries={caibMenuEntries}
+            menuEntries={(isUserAdmin || isUserConsulta) ? caibMenuEntries : undefined}
             headerMenuEntries={headerMenuEntries}
             appbarBackgroundColor={appbarBackgroundColor}
             appbarStyle={{

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
+import useDataGridLocale from '../hooks/useDataGridLocale';
 import {
     GridPage,
     useMuiContentDialog,
@@ -200,6 +201,7 @@ const MessageDetails: React.FC<{ data: MessageInfo }> = ({ data }) => {
 // Main queue messages page component
 const QueueMessages: React.FC = () => {
     const { t } = useTranslation();
+    const dataGridLocale = useDataGridLocale();
     const { queueName } = useParams<{ queueName: string }>();
     const navigate = useNavigate();
     const closeDialogButton = useCloseDialogButtons();
@@ -415,6 +417,7 @@ const QueueMessages: React.FC = () => {
                 <DataGridPro
                     rows={messages}
                     columns={columns}
+                    localeText={dataGridLocale}
                     getRowId={(row) => row.messageID}
                     onRowClick={(params) => handleShowMessageDetails(params.row)}
                     autoHeight

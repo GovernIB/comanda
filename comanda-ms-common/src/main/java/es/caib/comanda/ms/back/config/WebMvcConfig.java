@@ -1,11 +1,15 @@
 package es.caib.comanda.ms.back.config;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.back.intf.HandlerInterceptorWithPath;
 import es.caib.comanda.ms.logic.intf.model.UnpagedButSorted;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,10 +18,12 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolverSupport
 import org.springframework.data.web.SortArgumentResolver;
 import org.springframework.data.web.SortHandlerMethodArgumentResolver;
 import org.springframework.lang.Nullable;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -35,10 +41,31 @@ import java.util.List;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    @Value("${" + BaseConfig.PROP_WORKER_POOL_SIZE + ":4}")
+    private Integer workerPoolSize;
+    @Value("${" + BaseConfig.PROP_WORKER_QUEUE_SIZE + ":100}")
+    private Integer workerQueueSize;
+
     private final List<HandlerInterceptorWithPath> handlerInterceptors;
 
     public WebMvcConfig(List<HandlerInterceptorWithPath> handlerInterceptors) {
         this.handlerInterceptors = handlerInterceptors;
+    }
+
+    @Bean(name = "mvcAsyncTaskExecutor")
+    public AsyncTaskExecutor mvcAsyncTaskExecutor() {
+        ThreadPoolTaskExecutor ex = new ThreadPoolTaskExecutor();
+        ex.setCorePoolSize(workerPoolSize);
+        ex.setMaxPoolSize(workerPoolSize);
+        ex.setQueueCapacity(workerQueueSize);
+        ex.setThreadNamePrefix("mvc-async-");
+        ex.initialize();
+        return ex;
+    }
+
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        configurer.setTaskExecutor(mvcAsyncTaskExecutor());
     }
 
     @Override

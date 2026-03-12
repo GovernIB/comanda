@@ -68,4 +68,7 @@ public class Avis implements Serializable {
 
     @Schema(description = "Grups amb permís de visualització", example = "[\"USUARIS\"]")
     private List<String> grupsAmbPermis;
+
+    @Schema(hidden = true)
+    private Boolean esborrar;
 }

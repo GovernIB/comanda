@@ -35,6 +35,8 @@ export const useAclPermissionManager = (resourceType: string) => {
                 formAdditionalData: {
                     resourceType,
                     resourceId: id,
+                    subjectType: 'ROLE',
+                    readAllowed: true,
                 },
                 popupEditActive: true,
                 popupEditFormContent: <AclEntryForm />,

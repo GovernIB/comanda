@@ -27,6 +27,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesUserDetailsService;
 import org.springframework.security.web.authentication.preauth.j2ee.J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.preauth.j2ee.J2eePreAuthenticatedProcessingFilter;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -56,12 +57,18 @@ public abstract class BaseWebSecurityConfig {
 			http.addFilterBefore(
 					webContainerProcessingFilter(),
 					BasicAuthenticationFilter.class);
-			http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+			// Això és per a que funcioni correctament l'autenticació amb el provider de JBoss i les aplicacions React
+			http.sessionManagement().
+					sessionCreationPolicy(SessionCreationPolicy.STATELESS).
+					sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy());
 		}
 		if (isOauth2ResourceServerActive()) {
 			log.info("OAUTH2 resource server active");
 			http.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwtAuthConverter());
-			http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+			// Això és per a que funcioni correctament l'autenticació amb el provider de JBoss i les aplicacions React
+			http.sessionManagement().
+					sessionCreationPolicy(SessionCreationPolicy.STATELESS).
+					sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy());
 		}
 		var auth = http.authorizeHttpRequests().requestMatchers(internalPublicRequestMatchers()).permitAll();
 		customHttpSecurityConfiguration(http);
@@ -89,11 +96,6 @@ public abstract class BaseWebSecurityConfig {
 		http.cors();
 		http.csrf().disable();
 		http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
-		if (isWebContainerAuthActive()) {
-			// Això és per a que funcioni correctament l'autenticació amb el provider de JBoss i les aplicacions React
-			http.sessionManagement(session ->
-					session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-		}
 	}
 
 	/**

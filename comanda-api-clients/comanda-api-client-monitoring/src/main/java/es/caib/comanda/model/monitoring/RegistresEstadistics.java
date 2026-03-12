@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import es.caib.comanda.model.monitoring.RegistreEstadistic;
-import es.caib.comanda.model.monitoring.Temps;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class RegistresEstadistics {
   public static final String JSON_PROPERTY_TEMPS = "temps";
   @javax.annotation.Nonnull
-  private Temps temps;
+  private OffsetDateTime temps;
 
   public static final String JSON_PROPERTY_FETS = "fets";
   @javax.annotation.Nullable
@@ -49,7 +49,7 @@ public class RegistresEstadistics {
   public RegistresEstadistics() {
   }
 
-  public RegistresEstadistics temps(@javax.annotation.Nonnull Temps temps) {
+  public RegistresEstadistics temps(@javax.annotation.Nonnull OffsetDateTime temps) {
     
     this.temps = temps;
     return this;
@@ -63,14 +63,14 @@ public class RegistresEstadistics {
   @JsonProperty(value = JSON_PROPERTY_TEMPS, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
-  public Temps getTemps() {
+  public OffsetDateTime getTemps() {
     return temps;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_TEMPS, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setTemps(@javax.annotation.Nonnull Temps temps) {
+  public void setTemps(@javax.annotation.Nonnull OffsetDateTime temps) {
     this.temps = temps;
   }
 

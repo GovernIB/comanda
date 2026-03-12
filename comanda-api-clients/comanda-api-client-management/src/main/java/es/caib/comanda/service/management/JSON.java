@@ -13,14 +13,17 @@
 
 package es.caib.comanda.service.management;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
-import com.fasterxml.jackson.datatype.jsr310.*;
-
-import java.text.DateFormat;
 
 import javax.ws.rs.ext.ContextResolver;
+import java.text.DateFormat;
+import java.time.OffsetDateTime;
 
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.17.0")
 public class JSON implements ContextResolver<ObjectMapper> {
@@ -38,6 +41,11 @@ public class JSON implements ContextResolver<ObjectMapper> {
     JsonNullableModule jnm = new JsonNullableModule();
     mapper.registerModule(jnm);
     mapper.registerModule(new JavaTimeModule());
+
+    // Afegir el deserialitzador personalitzat per OffsetDateTime
+    SimpleModule customModule = new SimpleModule();
+    customModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
+    mapper.registerModule(customModule);
   }
 
   /**

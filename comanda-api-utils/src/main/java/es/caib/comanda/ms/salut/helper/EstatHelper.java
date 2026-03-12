@@ -34,21 +34,11 @@ public class EstatHelper {
     }
 
     public static EstatSalutEnum mergeEstats(EstatSalutEnum estat1, EstatSalutEnum estat2) {
-        if (estat1 == EstatSalutEnum.DOWN || estat2 == EstatSalutEnum.DOWN) {
-            return EstatSalutEnum.DOWN;
-        }
-        if (estat1 == EstatSalutEnum.ERROR || estat2 == EstatSalutEnum.ERROR) {
-            return EstatSalutEnum.ERROR;
-        }
-        if (estat1 == EstatSalutEnum.DEGRADED || estat2 == EstatSalutEnum.DEGRADED) {
-            return EstatSalutEnum.DEGRADED;
-        }
-        if (estat1 == EstatSalutEnum.WARN || estat2 == EstatSalutEnum.WARN) {
-            return EstatSalutEnum.WARN;
-        }
-        if (estat1 == EstatSalutEnum.UP || estat2 == EstatSalutEnum.UP) {
-            return EstatSalutEnum.UP;
-        }
+        if (estat1 == EstatSalutEnum.DOWN || estat2 == EstatSalutEnum.DOWN) return EstatSalutEnum.DOWN;
+        if (estat1 == EstatSalutEnum.ERROR || estat2 == EstatSalutEnum.ERROR) return EstatSalutEnum.ERROR;
+        if (estat1 == EstatSalutEnum.DEGRADED || estat2 == EstatSalutEnum.DEGRADED) return EstatSalutEnum.DEGRADED;
+        if (estat1 == EstatSalutEnum.WARN || estat2 == EstatSalutEnum.WARN) return EstatSalutEnum.WARN;
+        if (estat1 == EstatSalutEnum.UP || estat2 == EstatSalutEnum.UP) return EstatSalutEnum.UP;
         return EstatSalutEnum.UNKNOWN;
     }
 }
