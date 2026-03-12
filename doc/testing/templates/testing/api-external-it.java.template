@@ -1,0 +1,31 @@
+package ${PACKAGE};
+
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class ${API_NAME}ExternalIT {
+
+    private static ${CLIENT_CLASS} client;
+
+    @BeforeAll
+    static void setUp() {
+        System.setProperty(${BASE_URL_PROP_CONST}, "${DEFAULT_BASE_URL}");
+        System.setProperty(${USER_PROP_CONST}, "${DEFAULT_USER}");
+        System.setProperty(${PWD_PROP_CONST}, "${DEFAULT_PASSWORD}");
+
+        String base = ${CLIENT_PROPS_CLASS}.get(${BASE_URL_PROP_CONST}).orElse(null);
+        Assumptions.assumeTrue(base != null && !base.isBlank(),
+                () -> "SKIPPED: define -D" + ${BASE_URL_PROP_CONST} + "=<baseUrl> to run these tests");
+        client = ${CLIENT_FACTORY_CLASS}.create();
+    }
+
+    @Test
+    void ${ENDPOINT_SCENARIO}_ok() throws Exception {
+        ${REQUEST_CLASS} request = ${REQUEST_FACTORY};
+        ${RESPONSE_TYPE} response = client.${CLIENT_METHOD}(request);
+        assertThat(response).isNotNull();
+    }
+}

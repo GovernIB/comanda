@@ -1,0 +1,29 @@
+package ${PACKAGE};
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("test")
+class ${FEATURE_NAME}IntegrationTest {
+
+    @Autowired
+    private ${SERVICE_CLASS} ${SERVICE_FIELD};
+
+    @Test
+    void ${SCENARIO_NAME}_fluxComplet_ok() {
+        // Arrange
+        ${REQUEST_CLASS} request = ${REQUEST_FACTORY};
+
+        // Act
+        ${RESPONSE_CLASS} response = ${SERVICE_FIELD}.${SERVICE_METHOD}(request);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.${RESPONSE_ASSERTION_METHOD}()).isEqualTo(${EXPECTED_VALUE});
+    }
+}

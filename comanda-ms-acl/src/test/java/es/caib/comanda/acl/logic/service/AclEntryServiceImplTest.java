@@ -1,88 +1,344 @@
 package es.caib.comanda.acl.logic.service;
 
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import es.caib.comanda.acl.logic.helper.AclHelper;
+import es.caib.comanda.acl.logic.intf.model.AclEntry;
+import es.caib.comanda.acl.logic.intf.model.ResourceType;
+import es.caib.comanda.acl.logic.intf.model.SubjectType;
+import es.caib.comanda.acl.persist.entity.AclEntryEntity;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.ObjectIdentityImpl;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
 
-@ExtendWith(MockitoExtension.class)
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 class AclEntryServiceImplTest {
 
-    /*@Mock
-    private AclEntryMapRepository aclEntryMapRepository;
-    @Mock
-    private MutableAclService mutableAclService;
-    @Mock
-    private Acl acl; // utilitzat per simular Spring ACL
+    @Test
+    void anyPermissionGranted_converteixPermisosIConsultaElHelper() {
+        // Comprova que el servei transforma PermissionEnum i delega la comprovació al helper ACL.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        when(helper.anyPermissionGranted(any(), eq(30L), Mockito.anyList())).thenReturn(false);
 
-    private AclEntryServiceImpl service;
+        boolean granted = service.anyPermissionGranted(ResourceType.ENTORN_APP, 30L, null);
 
-    @BeforeEach
-    void setUp() {
-        service = new AclEntryServiceImpl(aclEntryMapRepository, mutableAclService);
+        assertThat(granted).isFalse();
     }
 
     @Test
-    void checkPermission_returnsTrue_whenSpringAclGrants() {
-        // Spring ACL resol correctament i concedeix permís
-        when(mutableAclService.readAclById(any(), anyList())).thenReturn(acl);
-        when(acl.isGranted(anyList(), anyList(), anyBoolean())).thenReturn(true);
+    void findIdsWithAnyPermission_converteixPermisosINormalitzaNulls() {
+        // Verifica que el servei delega la cerca d'ids amb la llista de permisos ja convertida.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        when(helper.findIdsWithAnyPermission(any(), eq(List.of()))).thenReturn(Set.of());
 
-        boolean allowed = service.checkPermission(
-                "user1",
-                Arrays.asList("ROLE_A", "ROLE_B"),
-                ResourceType.ENTORN_APP,
-                10L,
-                AclAction.READ);
+        Set<Serializable> ids = service.findIdsWithAnyPermission(ResourceType.ENTORN_APP, null);
 
-        assertThat(allowed).isTrue();
-        verifyNoInteractions(aclEntryMapRepository);
+        assertThat(ids).isEmpty();
     }
 
     @Test
-    void checkPermission_returnsFalse_whenSpringAclNotFound() {
-        when(mutableAclService.readAclById(any(), anyList())).thenThrow(new NotFoundException("no acl"));
+    void entityRepositoryFindOne_retornaBuitQuanNoHiHaAclPelRecurs() {
+        // Cobreix la cerca per PK quan el helper ACL no troba cap recurs protegit.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        String id = new AclEntry.AclEntryPk(ResourceType.ENTORN_APP, 22L, false, "user1").serializeToString();
+        when(helper.get(any(), eq(22L), Mockito.isNull())).thenReturn(null);
 
-        boolean allowed = service.checkPermission(
-                "user1",
-                java.util.Collections.singletonList("ROLE_A"),
-                ResourceType.DASHBOARD,
-                22L,
-                AclAction.READ);
+        Optional<?> result = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "entityRepositoryFindOne", id);
 
-        assertThat(allowed).isFalse();
-        verifyNoInteractions(aclEntryMapRepository);
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void syncSpringAclForResource_buildsAcesFromRepository() throws Exception {
-        // Preparem entrades al mapping per a reconstruir ACEs
-        AclEntryMapEntity eUserAllowRead = new AclEntryMapEntity();
-        eUserAllowRead.setSubjectType(SubjectType.USER);
-        eUserAllowRead.setSubjectValue("userZ");
-        eUserAllowRead.setAction(AclAction.READ);
-        eUserAllowRead.setEffect(AclEffect.ALLOW);
-        AclEntryMapEntity eRoleDenyWrite = new AclEntryMapEntity();
-        eRoleDenyWrite.setSubjectType(SubjectType.ROLE);
-        eRoleDenyWrite.setSubjectValue("ROLE_Y");
-        eRoleDenyWrite.setAction(AclAction.WRITE);
-        eRoleDenyWrite.setEffect(AclEffect.DENY);
-        when(aclEntryMapRepository.findAllByResource(ResourceType.ENTORN_APP, 99L))
-                .thenReturn(java.util.Arrays.asList(eUserAllowRead, eRoleDenyWrite));
+    void entityRepositoryFindOne_retornaEntradaQuanElSidCoincideix() {
+        // Verifica que la cerca per PK recupera l'entrada ACL corresponent al SID indicat.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        String id = new AclEntry.AclEntryPk(ResourceType.ENTORN_APP, 20L, false, "anna").serializeToString();
+        Acl acl = mock(Acl.class);
+        AccessControlEntry ace = mock(AccessControlEntry.class);
+        when(helper.get(any(), eq(20L), Mockito.isNull())).thenReturn(acl);
+        when(acl.getEntries()).thenReturn(List.of(ace));
+        when(acl.getObjectIdentity()).thenReturn(new ObjectIdentityImpl("es.caib.comanda.client.model.EntornApp", 20L));
+        when(ace.getSid()).thenReturn(new PrincipalSid("anna"));
+        when(ace.getPermission()).thenReturn(PermissionEnum.toPermission(PermissionEnum.READ));
 
-        // Forcem que no existeixi l'ACL prèviament
-        when(mutableAclService.readAclById(any())).thenThrow(new NotFoundException("no acl"));
+        Optional<AclEntryEntity> result = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "entityRepositoryFindOne", id);
 
-        // Simulem un MutableAcl per comptar els insertAce
-        org.springframework.security.acls.model.MutableAcl mockMutableAcl = mock(org.springframework.security.acls.model.MutableAcl.class);
-        when(mutableAclService.createAcl(any())).thenReturn(mockMutableAcl);
+        assertThat(result).isPresent();
+        assertThat(result.get().getResource().getSubjectValue()).isEqualTo("anna");
+    }
 
-        // Invoquem el mètode privat via reflexió
-        java.lang.reflect.Method m = AclEntryServiceImpl.class.getDeclaredMethod("syncSpringAclForResource", ResourceType.class, Long.class);
-        m.setAccessible(true);
-        m.invoke(service, ResourceType.ENTORN_APP, 99L);
+    @Test
+    void entityRepositoryFindEntities_retornaPaginaOrdenadaQuanElFiltreEsValid() {
+        // Exercita la cerca filtrada d'entrades ACL i l'ordenació pel camp de subjecte.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        Acl acl = mock(Acl.class);
+        AccessControlEntry ace = mock(AccessControlEntry.class);
+        when(helper.get(any(), eq(20L), Mockito.isNull())).thenReturn(acl);
+        when(acl.getEntries()).thenReturn(List.of(ace));
+        when(acl.getObjectIdentity()).thenReturn(new ObjectIdentityImpl("es.caib.comanda.client.model.EntornApp", 20L));
+        when(ace.getSid()).thenReturn(new PrincipalSid("anna"));
+        when(ace.getPermission()).thenReturn(PermissionEnum.toPermission(PermissionEnum.READ));
 
-        // S'han d'inserir ACEs per READ (ALLOW) i per WRITE+ADMIN (DENY)
-        verify(mockMutableAcl, atLeast(2)).insertAce(anyInt(), any(Permission.class), any(Sid.class), anyBoolean());
-        verify(mutableAclService).updateAcl(mockMutableAcl);
-    }*/
+        Page<AclEntryEntity> page = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "entityRepositoryFindEntities",
+                null,
+                "resourceType:ENTORN_APP and resourceId:20",
+                null,
+                PageRequest.of(0, 10, Sort.by("subjectValue")));
 
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent().get(0).getResource().getSubjectValue()).isEqualTo("anna");
+    }
+
+    @Test
+    void entityRepositoryFindEntities_retornaPaginaBuidaQuanAclNoExisteix() {
+        // Comprova el ramal on el filtre és vàlid però no hi ha ACL per al recurs indicat.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        when(helper.get(any(), eq(30L), Mockito.isNull())).thenReturn(null);
+
+        Page<AclEntryEntity> page = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "entityRepositoryFindEntities",
+                null,
+                "resourceType:ENTORN_APP and resourceId:30",
+                null,
+                PageRequest.of(0, 10));
+
+        assertThat(page.getContent()).isEmpty();
+    }
+
+    @Test
+    void entityRepositoryFindEntities_fallaQuanElFiltreNoEsSuportat() {
+        // Verifica que el servei rebutja filtres amb OR perquè no formen part del contracte suportat.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+
+        assertThatThrownBy(() ->
+                org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                        service,
+                        "entityRepositoryFindEntities",
+                        null,
+                        "resourceType:ENTORN_APP or resourceId:22",
+                        null,
+                        PageRequest.of(0, 10)))
+                .hasMessageContaining("Filtre no suportat");
+    }
+
+    @Test
+    void entitySaveFlushAndRefresh_activaElsPermisosMarcatsAlResource() {
+        // Exercita la persistència lògica dels permisos marcats dins el resource ACL.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        AclEntry resource = resource(SubjectType.ROLE, "ROLE_ADMIN");
+        resource.setReadAllowed(true);
+        resource.setAdminAllowed(true);
+        resource.setPerm0Allowed(true);
+        AclEntryEntity entity = AclEntryEntity.builder().id("pk").resource(resource).build();
+
+        AclEntryEntity saved = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "entitySaveFlushAndRefresh", entity);
+
+        assertThat(saved).isSameAs(entity);
+        verify(helper).set(any(), eq(1L), eq("ROLE_ADMIN"), eq(true), Mockito.argThat(list ->
+                list.contains(PermissionEnum.READ) && list.contains(PermissionEnum.ADMINISTRATION) && list.contains(PermissionEnum.PERM0)));
+    }
+
+    @Test
+    void entityRepositoryDelete_delegaLEsborratAlHelperAcl() {
+        // Comprova que l'esborrat de l'entitat es tradueix a una eliminació ACL del mateix subjecte.
+        AclHelper helper = mock(AclHelper.class);
+        AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
+        AclEntryEntity entity = AclEntryEntity.builder().id("pk").resource(resource(SubjectType.ROLE, "ROLE_ADMIN")).build();
+
+        org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "entityRepositoryDelete", entity);
+
+        verify(helper).delete(any(), eq(1L), eq("ROLE_ADMIN"), eq(true));
+    }
+
+    @Test
+    void entityDetachConvertAndMerge_retornaElResourceDeLentitat() {
+        // Verifica que el servei retorna el resource original després de la conversió i merge lògic.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+        AclEntry resource = resource(SubjectType.USER, "anna");
+        AclEntryEntity entity = AclEntryEntity.builder().id("pk").resource(resource).build();
+
+        AclEntry detached = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "entityDetachConvertAndMerge",
+                entity,
+                Map.<String, AnswerRequiredException.AnswerValue>of(),
+                true);
+
+        assertThat(detached).isSameAs(resource);
+    }
+
+    @Test
+    void createGetterBasedComparator_ordenaPerSubjectValue() {
+        // Exercita el comparador reflectiu quan s'ordena per una propietat coneguda del resource.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+        Comparator<AclEntryEntity> comparator = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "createGetterBasedComparator",
+                Sort.by(Sort.Order.asc("subjectValue")));
+        AclEntryEntity a = AclEntryEntity.builder().resource(resource(SubjectType.USER, "anna")).build();
+        AclEntryEntity b = AclEntryEntity.builder().resource(resource(SubjectType.ROLE, "zeta")).build();
+
+        assertThat(comparator.compare(a, b)).isLessThan(0);
+    }
+
+    @Test
+    void createGetterBasedComparator_retornaZeroPerPropietatDesconeguda() {
+        // Comprova el comportament defensiu del comparador quan la propietat no existeix.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+        Comparator<AclEntryEntity> comparator = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "createGetterBasedComparator",
+                Sort.by(Sort.Order.asc("unknownProperty")));
+        AclEntryEntity a = AclEntryEntity.builder().resource(resource(SubjectType.USER, "anna")).build();
+        AclEntryEntity b = AclEntryEntity.builder().resource(resource(SubjectType.ROLE, "zeta")).build();
+
+        assertThat(comparator.compare(a, b)).isZero();
+    }
+
+    @Test
+    void getClassFromResourceType_resolEntornApp() {
+        // Verifica que el servei resol el tipus de recurs ENTORN_APP a la classe Java corresponent.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+
+        Class<?> resourceClass = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "getClassFromResourceType", ResourceType.ENTORN_APP);
+
+        assertThat(resourceClass.getName()).isEqualTo("es.caib.comanda.client.model.EntornApp");
+    }
+
+    @Test
+    void getClassFromResourceType_retornaNullQuanLaClasseNoEsPotResoldre() {
+        // Cobreix el mapping defensiu del tipus DASHBOARD quan la classe no està disponible al classpath.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+
+        Class<?> dashboardClass = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "getClassFromResourceType", ResourceType.DASHBOARD);
+
+        assertThat(dashboardClass).isNull();
+    }
+
+    @Test
+    void getResourceTypeFromClassName_resolEntornApp() {
+        // Comprova el mapping invers des del nom de classe fins al ResourceType.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+
+        ResourceType resourceType = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "getResourceTypeFromClassName", "es.caib.comanda.client.model.EntornApp");
+
+        assertThat(resourceType).isEqualTo(ResourceType.ENTORN_APP);
+    }
+
+    @Test
+    void getResourceTypeFromClassName_resolDashboardIClasseDesconeguda() {
+        // Exercita tant el mapping de DASHBOARD com el cas d'una classe desconeguda.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+
+        ResourceType dashboardType = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "getResourceTypeFromClassName", "es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard");
+        ResourceType unknownType = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "getResourceTypeFromClassName", "unknown.Class");
+
+        assertThat(dashboardType).isEqualTo(ResourceType.DASHBOARD);
+        assertThat(unknownType).isNull();
+    }
+
+    @Test
+    void extractFilterTriplets_extreuElsTripletsDelFiltreSuportat() {
+        // Verifica el parseig de triplets camp-operador-valor del filtre simplificat.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+
+        @SuppressWarnings("unchecked")
+        List<String[]> triplets = (List<String[]>) org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "extractFilterTriplets",
+                "resourceType:ENTORN_APP and resourceId:15 and subjectValue:'admin'");
+
+        assertThat(triplets).hasSize(3);
+        assertThat(triplets.get(0)).containsExactly("resourceType", ":", "ENTORN_APP");
+    }
+
+    @Test
+    void formAccessControlEntryToAclEntryEntity_converteixUnPrincipalAmbPermisRead() {
+        // Comprova la conversió d'una ACE de principal a una entitat ACL amb permisos llegits.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+        AccessControlEntry userAce = mock(AccessControlEntry.class);
+        when(userAce.getPermission()).thenReturn(PermissionEnum.toPermission(PermissionEnum.READ));
+
+        AclEntryEntity converted = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "formAccessControlEntryToAclEntryEntity",
+                "es.caib.comanda.client.model.EntornApp",
+                15L,
+                new PrincipalSid("anna"),
+                List.of(userAce));
+
+        assertThat(converted.getResource().getSubjectType()).isEqualTo(SubjectType.USER);
+        assertThat(converted.getResource().isReadAllowed()).isTrue();
+    }
+
+    @Test
+    void formAccessControlEntryToAclEntryEntity_converteixUnRolAmbPermisWrite() {
+        // Verifica la conversió d'una ACE de rol a una entitat ACL amb permís d'escriptura.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+        AccessControlEntry roleAce = mock(AccessControlEntry.class);
+        when(roleAce.getPermission()).thenReturn(PermissionEnum.toPermission(PermissionEnum.WRITE));
+
+        AclEntryEntity converted = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service,
+                "formAccessControlEntryToAclEntryEntity",
+                "es.caib.comanda.client.model.EntornApp",
+                15L,
+                new GrantedAuthoritySid("ROLE_ADMIN"),
+                List.of(roleAce));
+
+        assertThat(converted.getResource().getSubjectType()).isEqualTo(SubjectType.ROLE);
+        assertThat(converted.getResource().isWriteAllowed()).isTrue();
+    }
+
+    @Test
+    void toAclEntries_retornaBuitQuanLaclNoTeEntrades() {
+        // Cobreix el ramal on una ACL existeix però no té cap ACE associada.
+        AclEntryServiceImpl service = new AclEntryServiceImpl(mock(AclHelper.class));
+        Acl acl = mock(Acl.class);
+        when(acl.getEntries()).thenReturn(null);
+
+        List<?> entries = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "toAclEntries", acl);
+
+        assertThat(entries).isEmpty();
+    }
+
+    private static AclEntry resource(SubjectType subjectType, String subjectValue) {
+        AclEntry resource = new AclEntry();
+        resource.setSubjectType(subjectType);
+        resource.setSubjectValue(subjectValue);
+        resource.setResourceType(ResourceType.ENTORN_APP);
+        resource.setResourceId(1L);
+        return resource;
+    }
 }

@@ -1,0 +1,30 @@
+package ${PACKAGE};
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DataJpaTest
+class ${REPOSITORY_CLASS}Test {
+
+    @Autowired
+    private ${REPOSITORY_CLASS} repository;
+
+    @Test
+    void findBy${FIELD_NAME}_quanExisteix_registraRetornat() {
+        // Arrange
+        ${ENTITY_CLASS} entity = ${ENTITY_FACTORY};
+        repository.save(entity);
+
+        // Act
+        Optional<${ENTITY_CLASS}> result = repository.findBy${FIELD_NAME}(${FIELD_VALUE});
+
+        // Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().get${FIELD_NAME}()).isEqualTo(${FIELD_VALUE});
+    }
+}

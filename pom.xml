@@ -27,7 +27,7 @@
 		<maven.compiler.source>11</maven.compiler.source>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.version>0.8.11</jacoco.version>
-		<testcontainers.version>1.19.3</testcontainers.version>
+		<testcontainers.version>1.20.6</testcontainers.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -84,6 +84,12 @@
 				<groupId>org.jboss.logmanager</groupId>
 				<artifactId>jboss-logmanager</artifactId>
 				<version>2.1.10.Final</version>
+			</dependency>
+			<dependency>
+				<groupId>com.h2database</groupId>
+				<artifactId>h2</artifactId>
+				<version>2.2.224</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.testcontainers</groupId>
