@@ -119,6 +119,7 @@ export interface ISalut extends IBaseEntity {
     contexts?       : IAppContext[];
     missatges?      : ISalutMissatge[];
     detalls?        : ISalutDetall[];
+    entornAppEstats?: ISalutEntornAppEstats;
 }
 
 export class SalutModel extends BaseEntity implements Partial<ISalut> {
@@ -174,6 +175,7 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     contexts?: IAppContext[];
     missatges?: SalutMissatge[];
     detalls?: SalutDetall[];
+    entornAppEstats?: ISalutEntornAppEstats;
 
     /**
      * Constructor
@@ -350,6 +352,39 @@ export class SalutDetall extends BaseEntity implements Partial<ISalutDetall> {
         this.nom = salutDetall.nom;
         this.valor = salutDetall.valor;
         Object.assign(this, salutDetall);
+    }
+}
+
+export interface ISalutEntornAppEstats extends IBaseEntity {
+
+    entornAppId: number;
+    darrerActiu?: string;
+    darrerAdvertencia?: string;
+    darrerDegradada?: string;
+    darrerError?: string;
+    darrerCaiguda?: string;
+    darrerManteniment?: string;
+    darrerDesconegut?: string;
+    darrerPeticioError?: string;
+
+}
+
+export class SalutEntornAppEstat extends BaseEntity implements Partial<ISalutEntornAppEstats> {
+
+    entornAppId: number;
+    darrerActiu?: string;
+    darrerAdvertencia?: string;
+    darrerDegradada?: string;
+    darrerError?: string;
+    darrerCaiguda?: string;
+    darrerManteniment?: string;
+    darrerDesconegut?: string;
+    darrerPeticioError?: string;
+
+    constructor(salutEntornAppEstats: ISalutEntornAppEstats) {
+        super(salutEntornAppEstats);
+        this.entornAppId = salutEntornAppEstats.entornAppId;
+        Object.assign(this, salutEntornAppEstats);
     }
 }
 

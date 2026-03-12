@@ -9,16 +9,8 @@ import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.intf.model.*;
 import es.caib.comanda.salut.logic.intf.service.SalutService;
-import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
-import es.caib.comanda.salut.persist.entity.SalutEntity;
-import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
-import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
-import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
-import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
-import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
-import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
-import es.caib.comanda.salut.persist.repository.SalutRepository;
-import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import es.caib.comanda.salut.persist.entity.*;
+import es.caib.comanda.salut.persist.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,6 +46,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
+    private final SalutEntornAppEstatsRepository salutEntornAppEstatsRepository;
 	private final SalutClientHelper salutClientHelper;
 	private final MetricsHelper metricsHelper;
 
@@ -69,6 +62,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
+        register(Salut.PERSP_ENTORN_APP_ESTATS, new PerspectiveSalutEntornAppEstats());
 	}
 
 	public class PerspectiveIntegracions implements PerspectiveApplicator<SalutEntity, Salut> {
@@ -170,6 +164,21 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
                 }
             }
             return true;
+        }
+    }
+
+    public class PerspectiveSalutEntornAppEstats implements PerspectiveApplicator<SalutEntity, Salut> {
+        @Override
+        public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+            Optional<SalutEntornAppEstatsEntity> salutEntornAppEstatsEntity =
+                    salutEntornAppEstatsRepository.findByEntornAppId(entity.getEntornAppId());
+            salutEntornAppEstatsEntity.ifPresent(salutEntornAppEstats ->
+                    resource.setEntornAppEstats(
+                            resourceEntityMappingHelper.entityToResource(
+                                    salutEntornAppEstats,
+                                    SalutEntornAppEstats.class)
+                    )
+            );
         }
     }
 

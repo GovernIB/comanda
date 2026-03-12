@@ -190,6 +190,7 @@ const translationEs: translationResourcesType = {
                 detalls: "Detalles",
                 noInfo: 'No hay datos disponibles para este entorno',
                 downAlert: "La aplicación se encuentra caída. No se puede mostrar toda la información de salud.",
+                darreraDataInfo: "La aplicación estuvo operativa por última vez el ",
             },
             latencia: {
                 title: "Latencia",

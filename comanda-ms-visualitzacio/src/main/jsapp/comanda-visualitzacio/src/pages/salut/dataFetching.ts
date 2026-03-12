@@ -90,6 +90,7 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
                         'SAL_CONTEXTS',
                         'SAL_MISSATGES',
                         'SAL_DETALLS',
+                        'SAL_ENTORN_APP_ESTATS',
                     ],
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('tipusRegistre', `'MINUT'`),

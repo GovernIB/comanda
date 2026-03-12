@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: salut-change-2642-1
+      author: Limit
+      comment: Creació de la taula salut_entorn_app_estats per a definir informació d'estats salut d'un entorn app
+      changes:
+      - createTable:
+          tableName: ${db_prefix}salut_entorn_app_estats
+          columns:
+            - column:
+                constraints:
+                  nullable: false
+                  primaryKey: true
+                  primaryKeyName: ${db_prefix}salut_entorn_app_estats_pk
+                name: id
+                type: BIGINT
+                autoIncrement: true
+            - column:
+                constraints:
+                  nullable: false
+                name: entorn_app_id
+                type: BIGINT
+            - column:
+                name: darrera_activa
+                type: TIMESTAMP
+            - column:
+                name: darrera_advertencia
+                type: TIMESTAMP
+            - column:
+                name: darrera_degradada
+                type: TIMESTAMP
+            - column:
+                name: darrera_error
+                type: TIMESTAMP
+            - column:
+                name: darrera_caiguda
+                type: TIMESTAMP
+            - column:
+                name: darrera_manteniment
+                type: TIMESTAMP
+            - column:
+                name: darrera_desconegut
+                type: TIMESTAMP
+            - column:
+                name: darrera_peticio_error
+                type: TIMESTAMP

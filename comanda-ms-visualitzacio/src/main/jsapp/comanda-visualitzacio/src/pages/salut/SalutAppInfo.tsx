@@ -934,9 +934,49 @@ const DownAlert = () => {
     return <Alert severity="error">{t($ => $.page.salut.info.downAlert)}</Alert>;
 };
 
+interface AlertUltimaDataActivaProps {
+    salutCurrentApp: SalutModel;
+}
+const ESTATS_ESTABLES = [
+    SalutEstatEnum.UP,
+    SalutEstatEnum.WARN,
+    SalutEstatEnum.DEGRADED,
+];
+const AlertUltimaDataActiva: React.FC<AlertUltimaDataActivaProps> = ({ salutCurrentApp }) => {
+    const { t } = useTranslation();
+    if (ESTATS_ESTABLES.includes(salutCurrentApp.appEstat as SalutEstatEnum)) {
+        return null;
+    }
+
+    const estatsEstablesDates = [
+        { estat: SalutEstatEnum.UP, data: salutCurrentApp.entornAppEstats?.darrerActiu },
+        { estat: SalutEstatEnum.WARN, data: salutCurrentApp.entornAppEstats?.darrerAdvertencia },
+        { estat: SalutEstatEnum.DEGRADED, data: salutCurrentApp.entornAppEstats?.darrerDegradada },
+    ].filter(item => item.data?.trim()) as Array<{ estat: SalutEstatEnum; data: string }>;
+    if (estatsEstablesDates.length === 0) {
+        return null;
+    }
+    const darreraDataEstable = estatsEstablesDates.reduce((latest, current) => {
+        const latestDate = new Date(latest.data).getTime();
+        const currentDate = new Date(current.data).getTime();
+        return currentDate > latestDate ? current : latest;
+    }, estatsEstablesDates[0]);
+
+    return (
+        <Grid size={{ sm: 12, lg: 12 }}>
+            <Alert severity="info">
+                {t($ => $.page.salut.info.darreraDataInfo)}
+                <strong>{dateFormatLocale(darreraDataEstable.data, true)}</strong>{' '}
+                ({t($ => $.enum.appEstat[darreraDataEstable.estat].title)})
+            </Alert>
+        </Grid>
+    );
+};
+
 const TabEntorn: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp }) => {
     return (
         <Grid container spacing={2} sx={{ mb: 2 }}>
+            <AlertUltimaDataActiva salutCurrentApp={salutCurrentApp} />
             <Grid size={{ sm: 12, lg: 12 }}>
                 <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
             </Grid>

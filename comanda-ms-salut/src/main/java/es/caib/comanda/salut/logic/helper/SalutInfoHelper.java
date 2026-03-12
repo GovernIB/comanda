@@ -14,16 +14,8 @@ import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
-import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
-import es.caib.comanda.salut.persist.entity.SalutEntity;
-import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
-import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
-import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
-import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
-import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
-import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
-import es.caib.comanda.salut.persist.repository.SalutRepository;
-import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import es.caib.comanda.salut.persist.entity.*;
+import es.caib.comanda.salut.persist.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -66,6 +58,7 @@ public class SalutInfoHelper {
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
+    private final SalutEntornAppEstatsRepository salutEntornAppEstatsRepository;
 
 	private final SalutClientHelper salutClientHelper;
 	private final RestTemplate restTemplate;
@@ -135,6 +128,7 @@ public class SalutInfoHelper {
         salut.setPeticioError(true);
         salut.setNumElements(1);
         SalutEntity saved = salutRepository.save(salut);
+        updateEntornAppEstats(salut, true);
         if (!monitorSalut.isFinishedAction()) {
             monitorSalut.endAction(ex, null);
         }
@@ -182,6 +176,7 @@ public class SalutInfoHelper {
 			crearSalutSubsistemes(saved, info.getSubsistemes());
             crearSalutMissatges(saved, info.getMissatges());
             crearSalutDetalls(saved, toDetallSalutList(info.getInformacioSistema()));
+            updateEntornAppEstats(salut, false);
             return saved.getId();
         }
         return null;
@@ -775,6 +770,58 @@ public class SalutInfoHelper {
         return dateTime != null && dateTime.getHour() == 0 && dateTime.getMinute() == 0;
     }
 
+    /**
+     * Actualitza o crea un registre {@link SalutEntornAppEstatsEntity} amb la darrera vegada
+     * que s'ha vist cada {@link SalutEstat estat} per a una {@link EntornApp}.
+     *
+     * @param salut        El registre {@link SalutEntity} que conté l'estat i la data
+     * @param peticioError Si és true, actualitza {@link SalutEntornAppEstatsEntity#darrerPeticioError darrerPeticioError} ignorant l'estat
+     */
+    private void updateEntornAppEstats(SalutEntity salut, boolean peticioError) {
+        SalutEntornAppEstatsEntity salutEntornAppEstats = salutEntornAppEstatsRepository
+                .findByEntornAppId(salut.getEntornAppId())
+                .orElse(new SalutEntornAppEstatsEntity());
+        if (salutEntornAppEstats.getId() == null) {
+            salutEntornAppEstats.setEntornAppId(salut.getEntornAppId());
+        }
+        if (peticioError) {
+            salutEntornAppEstats.setDarrerPeticioError(salut.getData());
+        } else {
+            actualitzarCampPerEstat(salutEntornAppEstats, salut.getAppEstat(), salut.getData());
+        }
+        salutEntornAppEstatsRepository.save(salutEntornAppEstats);
+    }
+
+    /** Mapeja un {@link SalutEstat} al seu camp corresponent a {@link SalutEntornAppEstatsEntity}. */
+    private void actualitzarCampPerEstat(SalutEntornAppEstatsEntity salutEntornAppEstats, SalutEstat estat, LocalDateTime data) {
+        if (data == null) return;
+        switch (estat) {
+            case UP:
+                salutEntornAppEstats.setDarrerActiu(data);
+                break;
+            case WARN:
+                salutEntornAppEstats.setDarrerAdvertencia(data);
+                break;
+            case DEGRADED:
+                salutEntornAppEstats.setDarrerDegradada(data);
+                break;
+            case DOWN:
+                salutEntornAppEstats.setDarrerCaiguda(data);
+                break;
+            case MAINTENANCE:
+                salutEntornAppEstats.setDarrerManteniment(data);
+                break;
+            case UNKNOWN:
+                salutEntornAppEstats.setDarrerDesconegut(data);
+                break;
+            case ERROR:
+                salutEntornAppEstats.setDarrerError(data);
+                break;
+            default:
+                log.debug("Estat no gestionat per actualitzar salutEntornAppEstats: {}", estat);
+        }
+        log.debug("Actualitzat camp per estat {}={} per entornAppId={}", estat, data, salutEntornAppEstats.getEntornAppId());
+    }
 
 }
 
