@@ -27,7 +27,7 @@ import {
     useGridApiRef, useGridSelector
 } from '@mui/x-data-grid-pro';
 import dayjs from 'dayjs';
-import {Chip, SxProps } from '@mui/material';
+import {Chip} from '@mui/material';
 import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
 import SalutChip from '../components/salut/SalutChip.tsx';

@@ -10,6 +10,7 @@ import {
     MuiDataGridColDef,
     useResourceApiService,
     useBaseAppContext,
+    useMuiDataGridApiRef,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -27,14 +28,12 @@ import {
 } from '@mui/x-data-grid-pro';
 import { useUserContext } from '../components/UserContext';
 import PageTitle from '../components/PageTitle.tsx';
-import {Chip, SxProps} from '@mui/material';
+import {Chip} from '@mui/material';
 import SalutChip from '../components/salut/SalutChip.tsx';
 import { useGetColorByAvisTipus, AvisTipusEnum } from '../types/salut.model.tsx';
 import { ROLE_ADMIN } from '../components/UserProvider.tsx';
 import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
 import {useEffect, useMemo, useRef} from "react";
-import { ROLE_ADMIN } from '../components/UserProvider.tsx';
-import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
 
 const AvisTipusChip = (props: { tipus?: AvisTipusEnum }) => {
     const { tipus } = props;

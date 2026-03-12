@@ -6,7 +6,6 @@ import * as React from 'react';
 import Grid from '@mui/material/Grid';
 import { useTranslation } from 'react-i18next';
 import {
-    dateFormatLocale,
     MuiDataGridColDef,
     useBaseAppContext,
 } from 'reactlib';
@@ -313,7 +312,6 @@ const AppDataTable: React.FC<{
                     }
 
                     const data = salutItem?.detalls?.filter?.((d)=>d.codi == 'ST')?.[0]?.valor
-                    // console.log('params', params, salutItem)
                     return data || t($ => $.page.salut.nd);
                 },
             },

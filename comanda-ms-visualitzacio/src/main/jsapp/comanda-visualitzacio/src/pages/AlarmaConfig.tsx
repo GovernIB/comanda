@@ -80,9 +80,6 @@ export const EntornAppSelector : React.FC<any> = (props) => {
         initialData={{ entornApp: entornApp }}
         springFilterBuilder={() => ''}
         onDataChange={data => onEntornAppChange(data?.entornApp)}
-        componentProps={{
-            margin: '0 !important',
-        }}
         formApiRef={formApiRef}>
             <FormField
             name="entornApp"

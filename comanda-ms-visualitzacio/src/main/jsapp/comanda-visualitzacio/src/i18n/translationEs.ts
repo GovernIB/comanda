@@ -410,6 +410,7 @@ const translationEs: translationResourcesType = {
             grid: {
                 groupHeader: "Nombre",
                 column: {
+                    appEntorn: "Aplicación - Entorno",
                     global: "Global",
                     globalTooltip: "Este es un aviso global",
                     tipus: {
