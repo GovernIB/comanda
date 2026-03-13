@@ -22,9 +22,14 @@ export default defineConfig(({ mode }) => {
             globals: true,
             environment: 'jsdom',
             setupFiles: './vitest.setup.ts',
+            clearMocks: true,
+            restoreMocks: true,
+            unstubGlobals: true,
+            pool: 'forks',
             coverage: {
                 provider: 'v8',
                 reporter: ['text', 'json', 'html'],
+                exclude: ['lib/**'],
             },
         },
     };

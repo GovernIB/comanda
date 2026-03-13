@@ -201,7 +201,7 @@ const CalendariDadesDialog: React.FC<CalendariDadesDialogProps> = ({
                 </Grid>
 
                 {dimensions.map((dimension: any) => (
-                  <Grid size={3} hidden={open}>
+                  <Grid key={dimension.codi} size={3} hidden={open}>
                     <TextField
                       id={`textField-${dimension.codi}`}
                       label={dimension.nom}
