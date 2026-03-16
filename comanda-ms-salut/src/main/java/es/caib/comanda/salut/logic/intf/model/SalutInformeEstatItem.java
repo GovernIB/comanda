@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,6 +18,8 @@ import java.time.LocalDateTime;
  * @author Límit Tecnologies
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class SalutInformeEstatItem implements Serializable {
 
