@@ -120,7 +120,7 @@ describe('UpdownBarChart', () => {
         expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
         expect(mocks.barChartMock).toHaveBeenCalledWith(
             expect.objectContaining({
-                yAxis: [{ max: 100 }],
+                yAxis: [{ max: 100, valueFormatter: expect.any(Function), }],
                 series: expect.arrayContaining([
                     expect.objectContaining({ label: 'tr:enum.appEstat.UP.title', color: 'color-UP' }),
                     expect.objectContaining({ label: 'tr:enum.appEstat.UNKNOWN.title', color: 'color-UNKNOWN' }),
