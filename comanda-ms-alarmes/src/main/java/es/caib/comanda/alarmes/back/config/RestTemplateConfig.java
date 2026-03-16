@@ -44,6 +44,7 @@ public class RestTemplateConfig {
 		objectMapper.registerModule(new JavaTimeModule());
 		objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
 		objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		SimpleModule module = new SimpleModule();
 		module.addAbstractTypeMapping(es.caib.comanda.model.v1.estadistica.Dimensio.class, GenericDimensio.class);
 		module.addAbstractTypeMapping(es.caib.comanda.model.v1.estadistica.Fet.class, GenericFet.class);
