@@ -64,6 +64,9 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 				Alarma.ESBORRAR_TOTES_ACTION,
 				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
         register(
+                Alarma.REACTIVAR_ACTION,
+                new ReactivarActionExecutor(authenticationHelper));
+        register(
                 Alarma.FIND_ACTIVES_REPORT,
                 new ReportLlistatIdAlarmaActiva(entityManager));
 	}
@@ -150,6 +153,41 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
 		}
 	}
+
+    @RequiredArgsConstructor
+    public static class ReactivarActionExecutor implements ActionExecutor<AlarmaEntity, Serializable, Serializable> {
+        private final AuthenticationHelper authenticationHelper;
+        @Override
+        public Serializable exec(String code, AlarmaEntity entity, Serializable params) {
+            String currentUser = authenticationHelper.getCurrentUserName();
+            boolean isCurrentUserAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
+            if (Alarma.REACTIVAR_ACTION.equals(code) && entity != null) {
+                boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
+                String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
+                boolean tePermisos = (alarmaIsAdmin && isCurrentUserAdmin) || (!alarmaIsAdmin && currentUser.equals(alarmaCreatedBy));
+                if (!tePermisos) {
+                    throw new ActionExecutionException(
+                            Alarma.class,
+                            entity.getId(),
+                            code,
+                            "Sense permisos per a reactivar l'alarma");
+                }
+                if (entity.getEstat() != AlarmaEstat.ESBORRADA) {
+                    throw new ActionExecutionException(
+                            Alarma.class,
+                            entity.getId(),
+                            code,
+                            "Només es poden reactivar alarmes esborrades");
+                }
+                entity.setEstat(AlarmaEstat.ACTIVA);
+                entity.setDataEsborrat(null);
+            }
+            return null;
+        }
+        @Override
+        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
+        }
+    }
 
     @RequiredArgsConstructor
     private class ReportLlistatIdAlarmaActiva implements ReportGenerator<AlarmaEntity, Serializable, AlarmaReduidaResource> {
