@@ -20,6 +20,9 @@ const mocks = vi.hoisted(() => ({
                         clear: {
                             label: 'Esborrar alarma',
                         },
+                        reactivate: {
+                            label: 'Reactivar alarma',
+                        },
                     },
                     estats: {
                         finalitzada: 'Finalitzada',
@@ -93,12 +96,12 @@ describe('Alarmes', () => {
     });
 
     it('Alarmes_quanEsRenderitza_mostraElFiltreInicialIElDialegDaccio', () => {
-        // Comprova que la pàgina arrenca filtrant només les alarmes actives i mostra el diàleg d'acció disponible.
+        // Comprova que la pàgina arrenca filtrant només les alarmes actives i mostra els diàlegs d'acció disponibles.
         render(<Alarmes />);
 
         expect(screen.getByRole('heading', { name: 'Alarmes' })).toBeInTheDocument();
         expect(screen.getByTestId('filter-value')).toHaveTextContent("estat:'ACTIVA'");
-        expect(screen.getByText('Diàleg alarma')).toBeInTheDocument();
+        expect(screen.getAllByText('Diàleg alarma')).toHaveLength(2);
         expect(screen.getByTestId('hidden-active')).toHaveTextContent('false');
         expect(screen.getByTestId('hidden-cleared')).toHaveTextContent('true');
         expect(screen.getByTestId('estat-finalitzada')).toHaveTextContent('Finalitzada');

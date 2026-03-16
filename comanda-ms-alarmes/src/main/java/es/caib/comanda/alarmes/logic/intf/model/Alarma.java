@@ -38,7 +38,8 @@ import java.time.LocalDateTime;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_ACTION, requiresId = true),
-				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_TOTES_ACTION),
+//				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_TOTES_ACTION),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.REACTIVAR_ACTION, requiresId = true),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Alarma.FIND_ACTIVES_REPORT),
 		}
 )
@@ -46,7 +47,8 @@ import java.time.LocalDateTime;
 public class Alarma extends BaseResource<Long> {
 
 	public static final String ESBORRAR_ACTION = "ALARMA_ESBORRAR";
-	public static final String ESBORRAR_TOTES_ACTION = "ALARMA_ESBORRAR_TOTES";
+//	public static final String ESBORRAR_TOTES_ACTION = "ALARMA_ESBORRAR_TOTES";
+    public static final String REACTIVAR_ACTION = "ALARMA_REACTIVAR";
     public static final String FIND_ACTIVES_REPORT = "ALARMA_FIND_ACTIVES";
 
 	@NotNull

@@ -60,9 +60,12 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		register(
 				Alarma.ESBORRAR_ACTION,
 				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
-		register(
-				Alarma.ESBORRAR_TOTES_ACTION,
-				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
+//		register(
+//				Alarma.ESBORRAR_TOTES_ACTION,
+//				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
+        register(
+                Alarma.REACTIVAR_ACTION,
+                new ReactivarActionExecutor(authenticationHelper));
         register(
                 Alarma.FIND_ACTIVES_REPORT,
                 new ReportLlistatIdAlarmaActiva(entityManager));
@@ -111,13 +114,11 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		private final AlarmaRepository alarmaRepository;
 		@Override
 		public Serializable exec(String code, AlarmaEntity entity, Serializable params) {
-			String currentUser = authenticationHelper.getCurrentUserName();
-			boolean isCurrentUserAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
 			if (Alarma.ESBORRAR_ACTION.equals(code) && entity != null) {
-				boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
-				String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
-				boolean tePermisos = (alarmaIsAdmin && isCurrentUserAdmin) || (!alarmaIsAdmin && currentUser.equals(alarmaCreatedBy));
-                if (!tePermisos) {
+                if (usuariSensePermisosActionEsborrar(
+                        entity,
+                        authenticationHelper.getCurrentUserName(),
+                        authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN))) {
                     throw new ActionExecutionException(
                             Alarma.class,
                             entity.getId(),
@@ -133,23 +134,63 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 				}
                 entity.setEstat(AlarmaEstat.ESBORRADA);
                 entity.setDataEsborrat(LocalDateTime.now());
-            } else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
-				alarmaRepository.updateAllEstatEsborradaNoAdmin(
-						currentUser,
-						AlarmaEstat.ACTIVA,
-						AlarmaEstat.ESBORRADA);
-				if (isCurrentUserAdmin) {
-					alarmaRepository.updateAllEstatEsborradaAdmin(
-							AlarmaEstat.ACTIVA,
-							AlarmaEstat.ESBORRADA);
-				}
-			}
+            }
+//            else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
+//				alarmaRepository.updateAllEstatEsborradaNoAdmin(
+//						currentUser,
+//						AlarmaEstat.ACTIVA,
+//						AlarmaEstat.ESBORRADA);
+//				if (isCurrentUserAdmin) {
+//					alarmaRepository.updateAllEstatEsborradaAdmin(
+//							AlarmaEstat.ACTIVA,
+//							AlarmaEstat.ESBORRADA);
+//				}
+//			}
 			return null;
 		}
 		@Override
 		public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
 		}
 	}
+
+    @RequiredArgsConstructor
+    public static class ReactivarActionExecutor implements ActionExecutor<AlarmaEntity, Serializable, Serializable> {
+        private final AuthenticationHelper authenticationHelper;
+        @Override
+        public Serializable exec(String code, AlarmaEntity entity, Serializable params) {
+            if (Alarma.REACTIVAR_ACTION.equals(code) && entity != null) {
+                if (usuariSensePermisosActionEsborrar(
+                        entity,
+                        authenticationHelper.getCurrentUserName(),
+                        authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN))) {
+                    throw new ActionExecutionException(
+                            Alarma.class,
+                            entity.getId(),
+                            code,
+                            "Sense permisos per a reactivar l'alarma");
+                }
+                if (entity.getEstat() != AlarmaEstat.ESBORRADA) {
+                    throw new ActionExecutionException(
+                            Alarma.class,
+                            entity.getId(),
+                            code,
+                            "Només es poden reactivar alarmes esborrades");
+                }
+                entity.setEstat(AlarmaEstat.ACTIVA);
+                entity.setDataEsborrat(null);
+            }
+            return null;
+        }
+        @Override
+        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
+        }
+    }
+
+    private static boolean usuariSensePermisosActionEsborrar(AlarmaEntity entity, String currentUser, boolean isCurrentUserAdmin) {
+        boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
+        String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
+        return (!alarmaIsAdmin || !isCurrentUserAdmin) && (alarmaIsAdmin || !currentUser.equals(alarmaCreatedBy));
+    }
 
     @RequiredArgsConstructor
     private class ReportLlistatIdAlarmaActiva implements ReportGenerator<AlarmaEntity, Serializable, AlarmaReduidaResource> {

@@ -140,7 +140,7 @@ const UpdownBarChart: React.FC<{
         estats != null && (
             <BarChart
                 xAxis={xAxis}
-                yAxis={[{ max: 100 }]}
+                yAxis={[{ max: 100, valueFormatter: (v: number) => `${v}%`, }]}
                 series={series}
                 // borderRadius={6}
                 grid={{
