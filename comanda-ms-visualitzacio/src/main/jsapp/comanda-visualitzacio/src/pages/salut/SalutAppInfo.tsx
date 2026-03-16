@@ -157,7 +157,7 @@ const LatenciaLineChart: React.FC<{
                                 agrupacio === 'HORA' ? value.substring(3) : value,
                         },
                     ]}
-                    yAxis={[{ label: ' ms', id: 'latencia-y-axis-id' }]}
+                    yAxis={[{ label: t($ => $.page.salut.latencia.title)+' (ms)', id: 'latencia-y-axis-id' }]}
                 >
                     <LinePlot />
                     <MarkPlot />
@@ -178,6 +178,9 @@ const EstatsBarCard: React.FC<{
     const { grupsDates, agrupacio, estats } = props;
     const { t } = useTranslation();
     const hasData = estats && Object.keys(estats).length > 0;
+    console.log("agrupacio", agrupacio);
+    console.log("estats", estats);
+    console.log("grupsDates", grupsDates);
     return (
         <Card variant="outlined" sx={{ height: '340px' }}>
             <CardContent sx={{ height: '100%' }}>
