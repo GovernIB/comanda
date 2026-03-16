@@ -13,12 +13,31 @@ const Alarmes = () => {
     const [showOnlyActive, setShowOnlyActive] = React.useState<boolean>(true);
     const gridApiRef = useMuiDataGridApiRef();
     const {
-        available: actionInitialized,
-        formDialogComponent,
-        exec,
+        available: actionEsborrarInitialized,
+        formDialogComponent: formEsborrarDialogComponent,
+        exec: execEsborrar,
     } = useMuiActionReportLogic(
         'alarma',
         'ALARMA_ESBORRAR',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        null,
+        undefined,
+        () => gridApiRef.current.refresh());
+    const {
+        available: actionReactivarInitialized,
+        formDialogComponent: formReactivarDialogComponent,
+        exec: execReactivar,
+    } = useMuiActionReportLogic(
+        'alarma',
+        'ALARMA_REACTIVAR',
         undefined,
         undefined,
         undefined,
@@ -58,8 +77,15 @@ const Alarmes = () => {
         action: 'ALARMA_ESBORRAR',
         icon: 'check',
         showInMenu: false,
-        onClick: exec,
+        onClick: execEsborrar,
         hidden: (row:any) => !row?.id || row?.dataEsborrat,
+    }, {
+        label: t($ => $.page.alarma.action.reactivate.label),
+        action: 'ALARMA_REACTIVAR',
+        icon: 'restore',
+        showInMenu: false,
+        onClick: execReactivar,
+        hidden: (row:any) => !row?.id || !row?.dataEsborrat,
     }];
 
     const dataGridColumns = useMemo(
@@ -93,7 +119,7 @@ const Alarmes = () => {
 
     return (
         <GridPage>
-            {actionInitialized && <>
+            {actionEsborrarInitialized && actionReactivarInitialized && <>
                 <MuiDataGrid
                     title={t($ => $.menu.alarmes)}
                     resourceName="alarma"
@@ -106,7 +132,8 @@ const Alarmes = () => {
                     filter={showOnlyActive ? "estat:'ACTIVA'" : "estat in('ACTIVA', 'ESBORRADA')"}
                     sortModel={[{ field: 'dataActivacio', sort: 'desc' }]}
                     rowAdditionalActions={rowAdditionalActions} />
-                {formDialogComponent}
+                {formEsborrarDialogComponent}
+                {formReactivarDialogComponent}
             </>}
         </GridPage>
     );

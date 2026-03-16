@@ -468,6 +468,9 @@ const translationCa = {
                 clear: {
                     label: "Esborrar",
                 },
+                reactivate: {
+                    label: "Reactivar",
+                },
             },
             filter: {
                 showOnlyActiveEnabled: "Mostrant només alarmes actives (clic per incloure eliminades)",
