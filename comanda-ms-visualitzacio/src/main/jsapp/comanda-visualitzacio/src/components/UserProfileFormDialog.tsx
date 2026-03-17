@@ -8,7 +8,6 @@ import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormD
 import { useTranslation } from 'react-i18next';
 import {
     AlternateEmail,
-    Badge,
     FormatListNumbered,
     Language,
     Mail,
@@ -91,7 +90,7 @@ const UserProfileForm = () => {
                 ), }, } }}
             />
         </Grid>
-        <Grid size={{ xs: 12, sm: 8, md: 8, lg: 4 }}>
+        <Grid size={{ xs: 12, sm: 8, md: 8, lg: 5 }}>
             <FormField
                 name={UsuariModel.NOM}
                 readOnly={true}
@@ -103,19 +102,7 @@ const UserProfileForm = () => {
                 ), }, } }}
             />
         </Grid>
-        <Grid size={{ xs: 12, sm: 4, md: 4, lg: 2 }}>
-            <FormField
-                name={UsuariModel.NIF}
-                readOnly={true}
-                disabled
-                componentProps={{ slotProps: { input: { endAdornment: (
-                    <InputAdornment position="end">
-                        <Badge />
-                    </InputAdornment>
-                ), }, } }}
-            />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 8, md: 8, lg: 4 }}>
+        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 5 }}>
             <FormField
                 name={UsuariModel.EMAIL}
                 readOnly={true}
@@ -139,7 +126,7 @@ const UserProfileForm = () => {
                 ), }, } }}
             />
         </Grid>
-        <Grid size={{ xs: 12, sm: 8, md: 6, lg: 4 }}>
+        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 4 }}>
             <FormField
                 name={UsuariModel.EMAIL_ALTERNATIU}
                 componentProps={{ slotProps: { input: { endAdornment: (
@@ -180,7 +167,7 @@ const UserProfileForm = () => {
                 ), }, } }}
             />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 4 }}>
             <TemaObscurSelector />
         </Grid>
     </Grid>
