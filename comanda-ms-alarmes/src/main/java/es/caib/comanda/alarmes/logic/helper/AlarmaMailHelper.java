@@ -73,8 +73,8 @@ public class AlarmaMailHelper {
 					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
 					generateAlarmaBodyMessage(alarma)
 			);
-		} catch (MessagingException | UnsupportedEncodingException e) {
-			log.error("Error enviant correu d'alarma genèrica", e);
+		} catch (Exception ex) {
+			log.error("Error enviant correu d'alarma genèrica", ex);
 		}
 	}
 
