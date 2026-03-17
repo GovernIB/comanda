@@ -291,6 +291,7 @@ describe('EstadisticaDashboardEdit', () => {
         mocks.patchDashboardTitolMock.mockResolvedValue(undefined);
         mocks.showContentDialogMock.mockImplementation(() => undefined);
         mocks.showFormDialogMock.mockResolvedValue(undefined);
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterEach(() => {
