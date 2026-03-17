@@ -1,7 +1,5 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.spring.cache.HazelcastCache;
 import es.caib.comanda.estadistica.logic.intf.model.cache.ComandaCache;
@@ -59,15 +57,18 @@ class CacheServiceImplTest {
         try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
             mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
 
-            HazelcastCache mockCache = mock(HazelcastCache.class);
-            HazelcastInstance instance = Hazelcast.newHazelcastInstance();
-            IMap<Object, Object> nativeCache = instance.getMap(cacheId);
-            nativeCache.put("key1", "value1");
-            nativeCache.put("key2", "value2");
+//            HazelcastInstance instance = Hazelcast.newHazelcastInstance();
+//            IMap<Object, Object> nativeCache = instance.getMap(cacheId);
+//            nativeCache.put("key1", "value1");
+//            nativeCache.put("key2", "value2");
 
+            HazelcastCache mockCache = mock(HazelcastCache.class);
+            IMap<Object, Object> nativeCache = mock(IMap.class);
 
             when(cacheHelper.getCache(cacheId)).thenReturn(mockCache);
             when(mockCache.getNativeCache()).thenReturn(nativeCache);
+            when(nativeCache.size()).thenReturn(2);
+            when(nativeCache.values()).thenReturn(java.util.List.of("value1", "value2"));
 
             // Act
             ComandaCache result = cacheService.getOne(cacheId, new String[0]);
@@ -77,10 +78,11 @@ class CacheServiceImplTest {
             assertThat(result.getId()).isEqualTo(cacheId);
             assertThat(result.getEntrades()).isEqualTo(2);
             assertThat(result.getMida()).isGreaterThan(0);
+
             verify(cacheHelper).getCache(cacheId);
 
-            // Neteja Hazelcast
-            instance.shutdown();
+//            // Neteja Hazelcast
+//            instance.shutdown();
         }
     }
 
@@ -95,7 +97,6 @@ class CacheServiceImplTest {
         try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
             mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
 
-            HazelcastInstance instance = Hazelcast.newHazelcastInstance();
             when(cacheHelper.getCache(cacheId)).thenReturn(null);
 
             // Act
@@ -108,8 +109,6 @@ class CacheServiceImplTest {
             assertThat(result.getMida()).isEqualTo(0L);
             verify(cacheHelper).getCache(cacheId);
 
-            // Neteja Hazelcast
-            instance.shutdown();
         }
     }
 
@@ -118,17 +117,13 @@ class CacheServiceImplTest {
     void findPage_retornaLlistaDeCaches() {
         // Arrange
         Set<String> cacheNames = new HashSet(Arrays.asList("cache1", "cache2"));
+
         I18nUtil mockI18nUtil = mock(I18nUtil.class);
         when(mockI18nUtil.getI18nMessage(anyString(), any())).thenReturn("Descripció mocada");
 
         try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
             mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
 
-            String cacheId = "testCache";
-            HazelcastInstance instance = Hazelcast.newHazelcastInstance();
-            IMap<Object, Object> nativeCache = instance.getMap(cacheId);
-            nativeCache.put("key1", "value1");
-            nativeCache.put("key2", "value2");
             when(cacheHelper.getCacheNames()).thenReturn(cacheNames);
             when(cacheHelper.getCache(anyString())).thenReturn(null);
 
@@ -142,8 +137,6 @@ class CacheServiceImplTest {
             assertThat(result.getContent()).hasSize(2);
             verify(cacheHelper, times(2)).getCacheNames();
 
-            // Neteja Hazelcast
-            instance.shutdown();
         }
     }
 
