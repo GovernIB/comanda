@@ -220,4 +220,18 @@ describe('Avis', () => {
         expect(screen.getByTestId('row-action-count')).toHaveTextContent('2');
         expect(screen.getByTestId('row-action-hidden')).toHaveTextContent('true');
     });
+
+    it('Avis_quanEsPremNetejar_sinvocaElsClearsDelFiltre', () => {
+        render(<Avis />);
+        fireEvent.click(screen.getByTitle('Netejar'));
+        expect(mocks.clearAppEntornMock).toHaveBeenCalled();
+        expect(mocks.clearMoreMock).toHaveBeenCalled();
+    });
+
+    it('Avis_quanLaFilaEsGlobal_mostraElChipGlobal', () => {
+        render(<Avis />);
+        
+        const tipusCell = screen.getByTestId('tipus-cell');
+        expect(tipusCell).toHaveTextContent('Global');
+    });
 });

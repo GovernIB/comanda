@@ -256,4 +256,25 @@ describe('Tasca', () => {
         expect(screen.getByTestId('row-action-count')).toHaveTextContent('2');
         expect(screen.getByTestId('row-action-hidden')).toHaveTextContent('true');
     });
+
+    it('Tasca_quanElToggleDeNoFinalitzadesEstaActiu_elFiltreInclouDataFiIsNull', () => {
+        render(<Tasca />);
+
+        expect(screen.getByTitle('Només no finalitzades')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByTitle('Només no finalitzades'));
+        expect(screen.getByTitle('Inclou finalitzades')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByTitle('Inclou finalitzades'));
+        expect(screen.getByTitle('Només no finalitzades')).toBeInTheDocument();
+    });
+
+    it('Tasca_quanEsPremNetejar_esReinicienElsFiltres', () => {
+        render(<Tasca />);
+
+        fireEvent.click(screen.getByTitle('Netejar'));
+
+        expect(mocks.clearAppEntornMock).toHaveBeenCalled();
+        expect(mocks.clearMoreMock).toHaveBeenCalled();
+    });
 });

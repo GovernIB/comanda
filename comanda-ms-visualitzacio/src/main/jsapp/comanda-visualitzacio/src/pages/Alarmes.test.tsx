@@ -127,7 +127,6 @@ describe('Alarmes', () => {
 
         expect(screen.getByRole('heading', { name: 'Alarmes' })).toBeInTheDocument();
         expect(screen.getByTestId('filter-value')).toHaveTextContent("estat:'ACTIVA'");
-        //expect(screen.getAllByText('Diàleg alarma')).toHaveLength(2);
         expect(screen.getByTestId('dialog-esborrar')).toBeInTheDocument();
         expect(screen.getByTestId('dialog-reactivar')).toBeInTheDocument();
         expect(screen.getByTestId('esborrar-visible-activa')).toHaveTextContent('true');

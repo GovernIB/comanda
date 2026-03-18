@@ -413,6 +413,7 @@ const Tasca = () => {
                 label: tLib('datacommon.delete.label'),
                 icon: 'delete',
                 clickTriggerDelete: true,
+                hidden(row) {return !row?.id;},
             });
         }
         return additionalActions;
