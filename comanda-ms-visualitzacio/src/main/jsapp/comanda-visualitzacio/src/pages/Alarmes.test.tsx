@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import Alarmes from './Alarmes';
 
 const mocks = vi.hoisted(() => ({
-    execMock: vi.fn(),
+    execEsborrarMock: vi.fn(),
+    execReactivarMock: vi.fn(),
     refreshMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
@@ -47,10 +48,22 @@ vi.mock('reactlib', () => ({
             refresh: mocks.refreshMock,
         },
     }),
-    useMuiActionReportLogic: () => ({
-        available: true,
-        formDialogComponent: <div>Diàleg alarma</div>,
-        exec: mocks.execMock,
+    useMuiActionReportLogic: vi.fn((_resourceName, action) => {
+        if (action === 'ALARMA_ESBORRAR') {
+            return {
+                available: true,
+                formDialogComponent: <div data-testid="dialog-esborrar">Diàleg esborrar</div>,
+                exec: mocks.execEsborrarMock,
+            };
+        }
+        if (action === 'ALARMA_REACTIVAR') {
+            return {
+                available: true,
+                formDialogComponent: <div data-testid="dialog-reactivar">Diàleg reactivar</div>,
+                exec: mocks.execReactivarMock,
+            };
+        }
+        return { available: false, formDialogComponent: null, exec: vi.fn() };
     }),
     MuiDataGrid: ({
         title,
@@ -71,14 +84,27 @@ vi.mock('reactlib', () => ({
             {toolbarElementsWithPositions?.map((entry, index) => (
                 <div key={index}>{entry.element}</div>
             ))}
-            <button onClick={() => rowAdditionalActions?.[0]?.onClick('alarma-1')}>
+            <button data-testid="btn-esborrar"
+                onClick={() => rowAdditionalActions?.[0]?.onClick('alarma-1')}
+                disabled={rowAdditionalActions?.[0]?.hidden?.({ id: '1', dataEsborrat: false })}>
                 {rowAdditionalActions?.[0]?.label}
             </button>
-            <div data-testid="hidden-active">
-                {String(rowAdditionalActions?.[0]?.hidden?.({ id: '1', dataEsborrat: false }))}
+            <button data-testid="btn-reactivar"
+                onClick={() => rowAdditionalActions?.[1]?.onClick('alarma-1')}
+                disabled={rowAdditionalActions?.[1]?.hidden?.({ id: '1', dataEsborrat: true })}>
+                {rowAdditionalActions?.[1]?.label}
+            </button>
+            <div data-testid="esborrar-visible-activa">
+                {String(!rowAdditionalActions?.[0]?.hidden?.({ id: '1', dataEsborrat: false }))}
             </div>
-            <div data-testid="hidden-cleared">
-                {String(rowAdditionalActions?.[0]?.hidden?.({ id: '1', dataEsborrat: true }))}
+            <div data-testid="esborrar-visible-esborrada">
+                {String(!rowAdditionalActions?.[0]?.hidden?.({ id: '1', dataEsborrat: true }))}
+            </div>
+            <div data-testid="reactivar-visible-activa">
+                {String(!rowAdditionalActions?.[1]?.hidden?.({ id: '1', dataEsborrat: false }))}
+            </div>
+            <div data-testid="reactivar-visible-esborrada">
+                {String(!rowAdditionalActions?.[1]?.hidden?.({ id: '1', dataEsborrat: true }))}
             </div>
             <div data-testid="estat-finalitzada">
                 {columns[3]?.renderCell?.({ row: { dataFinalitzacio: '2026-03-13', estat: 'ACTIVA' } })}
@@ -101,9 +127,13 @@ describe('Alarmes', () => {
 
         expect(screen.getByRole('heading', { name: 'Alarmes' })).toBeInTheDocument();
         expect(screen.getByTestId('filter-value')).toHaveTextContent("estat:'ACTIVA'");
-        expect(screen.getAllByText('Diàleg alarma')).toHaveLength(2);
-        expect(screen.getByTestId('hidden-active')).toHaveTextContent('false');
-        expect(screen.getByTestId('hidden-cleared')).toHaveTextContent('true');
+        //expect(screen.getAllByText('Diàleg alarma')).toHaveLength(2);
+        expect(screen.getByTestId('dialog-esborrar')).toBeInTheDocument();
+        expect(screen.getByTestId('dialog-reactivar')).toBeInTheDocument();
+        expect(screen.getByTestId('esborrar-visible-activa')).toHaveTextContent('true');
+        expect(screen.getByTestId('esborrar-visible-esborrada')).toHaveTextContent('false');
+        expect(screen.getByTestId('reactivar-visible-activa')).toHaveTextContent('false');
+        expect(screen.getByTestId('reactivar-visible-esborrada')).toHaveTextContent('true');
         expect(screen.getByTestId('estat-finalitzada')).toHaveTextContent('Finalitzada');
         expect(screen.getByTestId('estat-esborrada')).toHaveTextContent('Finalitzada i esborrada');
     });
@@ -117,12 +147,21 @@ describe('Alarmes', () => {
         expect(screen.getByTestId('filter-value')).toHaveTextContent("estat in('ACTIVA', 'ESBORRADA')");
     });
 
-    it('Alarmes_quanEsPremLaccioDeFila_executaLaccióDeTancarAlarma', () => {
-        // Comprova que l'acció de fila reutilitza la lògica d'acció/report configurada per al mòdul.
+    it('Alarmes_quanEsPremLaccioDesborrar_executaLaccióDesborrarAlarma', () => {
         render(<Alarmes />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Esborrar alarma' }));
+        fireEvent.click(screen.getByTestId('btn-esborrar'));
 
-        expect(mocks.execMock).toHaveBeenCalledWith('alarma-1');
+        expect(mocks.execEsborrarMock).toHaveBeenCalledWith('alarma-1');
+        expect(mocks.refreshMock).not.toHaveBeenCalled();
+    });
+
+    it('Alarmes_quanEsPremLaccioDeReactivar_executaLaccióDeReactivarAlarma', () => {
+        render(<Alarmes />);
+
+        fireEvent.click(screen.getByTestId('btn-reactivar'));
+
+        expect(mocks.execReactivarMock).toHaveBeenCalledWith('alarma-1');
+        expect(mocks.refreshMock).not.toHaveBeenCalled();
     });
 });

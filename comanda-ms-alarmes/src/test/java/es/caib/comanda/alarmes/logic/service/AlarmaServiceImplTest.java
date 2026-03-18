@@ -11,7 +11,6 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
-import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,25 +22,21 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.persistence.EntityManager;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma.AlarmaReduidaResource;
-import es.caib.comanda.ms.logic.service.BaseMutableResourceService.ActionExecutor;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService.ReportGenerator;
-import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import org.mockito.quality.Strictness;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -152,12 +147,7 @@ class AlarmaServiceImplTest {
     @DisplayName("EsborrarActionExecutor canvia estat a ESBORRADA si l'alarma està ACTIVA")
     void esborrarActionExecutor_quanActiva_canviaEstat() {
         // Arrange
-        AlarmaEntity entity = new AlarmaEntity();
-        entity.setEstat(AlarmaEstat.ACTIVA);
-        AlarmaConfigEntity config = new AlarmaConfigEntity();
-        config.setAdmin(false);
-        ReflectionTestUtils.setField(config, "createdBy", CURRENT_USER);
-        entity.setAlarmaConfig(config);
+        AlarmaEntity entity = crearAlarmaEntity(AlarmaEstat.ACTIVA, false, CURRENT_USER);
 
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
@@ -176,12 +166,7 @@ class AlarmaServiceImplTest {
     @DisplayName("EsborrarActionExecutor llança excepció si l'alarma no està ACTIVA")
     void esborrarActionExecutor_quanNoActiva_llancaExcepcio() {
         // Arrange
-        AlarmaEntity entity = new AlarmaEntity();
-        entity.setEstat(AlarmaEstat.ESBORRANY);
-        AlarmaConfigEntity config = new AlarmaConfigEntity();
-        config.setAdmin(false);
-        ReflectionTestUtils.setField(config, "createdBy", CURRENT_USER);
-        entity.setAlarmaConfig(config);
+        AlarmaEntity entity = crearAlarmaEntity(AlarmaEstat.ESBORRANY, false, CURRENT_USER);
 
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
@@ -198,12 +183,7 @@ class AlarmaServiceImplTest {
     @DisplayName("ReactivarActionExecutor canvia estat a ACTIVA si l'alarma està ESBORRADA")
     void reactivarActionExecutor_quanEsborrada_canviaEstat() {
         // Arrange
-        AlarmaEntity entity = new AlarmaEntity();
-        entity.setEstat(AlarmaEstat.ESBORRADA);
-        AlarmaConfigEntity config = new AlarmaConfigEntity();
-        config.setAdmin(false);
-        ReflectionTestUtils.setField(config, "createdBy", CURRENT_USER);
-        entity.setAlarmaConfig(config);
+        AlarmaEntity entity = crearAlarmaEntity(AlarmaEstat.ESBORRADA, false, CURRENT_USER);
 
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
@@ -222,12 +202,7 @@ class AlarmaServiceImplTest {
     @DisplayName("ReactivarActionExecutor llança excepció si l'usuari no té permisos")
     void reactivarActionExecutor_quanSensePermisos_llancaExcepcio() {
         // Arrange
-        AlarmaEntity entity = new AlarmaEntity();
-        entity.setEstat(AlarmaEstat.ESBORRADA);
-        AlarmaConfigEntity config = new AlarmaConfigEntity();
-        config.setAdmin(true); // Requereix admin
-        ReflectionTestUtils.setField(config, "createdBy", "altre_usuari");
-        entity.setAlarmaConfig(config);
+        AlarmaEntity entity = crearAlarmaEntity(AlarmaEstat.ESBORRADA, true, "altre_usuari");
 
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
@@ -244,12 +219,7 @@ class AlarmaServiceImplTest {
     @DisplayName("ReactivarActionExecutor llança excepció si l'alarma no està ESBORRADA")
     void reactivarActionExecutor_quanNoEsborrada_llancaExcepcio() {
         // Arrange
-        AlarmaEntity entity = new AlarmaEntity();
-        entity.setEstat(AlarmaEstat.ACTIVA);
-        AlarmaConfigEntity config = new AlarmaConfigEntity();
-        config.setAdmin(false);
-        ReflectionTestUtils.setField(config, "createdBy", CURRENT_USER);
-        entity.setAlarmaConfig(config);
+        AlarmaEntity entity = crearAlarmaEntity(AlarmaEstat.ACTIVA, false, CURRENT_USER);
 
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
@@ -260,6 +230,91 @@ class AlarmaServiceImplTest {
         assertThatThrownBy(() -> executor.exec(Alarma.REACTIVAR_ACTION, entity, null))
                 .isInstanceOf(ActionExecutionException.class)
                 .hasMessageContaining("Només es poden reactivar alarmes esborrades");
+    }
+
+    @Test
+    @DisplayName("ReactivarActionExecutor: admin pot reactivar alarma admin")
+    void reactivarActionExecutor_adminReactivaAlarmaAdmin_permesConcedit() {
+        // Arrange
+        AlarmaEntity entity = crearAlarmaEntity(AlarmaEstat.ESBORRADA, true, "altre_usuari");
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        AlarmaServiceImpl.ReactivarActionExecutor executor =
+                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+
+        // Act
+        Serializable result = executor.exec(Alarma.REACTIVAR_ACTION, entity, null);
+
+        // Assert
+        assertThat(entity.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
+        assertThat(entity.getDataEsborrat()).isNull();
+        assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("ReactivarActionExecutor: usuari pot reactivar la seva pròpia alarma no-admin")
+    void reactivarActionExecutor_usuariReactivaSevaAlarmaNoAdmin_permesConcedit() {
+        // Arrange
+        AlarmaEntity entity = crearAlarmaEntity(AlarmaEstat.ESBORRADA, false, CURRENT_USER);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        AlarmaServiceImpl.ReactivarActionExecutor executor =
+                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+
+        // Act
+        Serializable result = executor.exec(Alarma.REACTIVAR_ACTION, entity, null);
+
+        // Assert
+        assertThat(entity.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
+        assertThat(entity.getDataEsborrat()).isNull();
+    }
+
+    @Test
+    @DisplayName("ReactivarActionExecutor: entitat null no llança excepció")
+    void reactivarActionExecutor_entitatNull_noLlancaExcepcio() {
+        // Arrange
+        AlarmaServiceImpl.ReactivarActionExecutor executor =
+                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+
+        // Act & Assert
+        assertThatCode(() -> executor.exec(Alarma.REACTIVAR_ACTION, null, null))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("ReactivarActionExecutor: codi d'acció desconegut no modifica entitat")
+    void reactivarActionExecutor_codiAccioDesconegut_noModificaEntitat() {
+        // Arrange
+        AlarmaEntity entity = new AlarmaEntity();
+        entity.setEstat(AlarmaEstat.ESBORRADA);
+        LocalDateTime dataOriginal = LocalDateTime.now().minusDays(1);
+        entity.setDataEsborrat(dataOriginal);
+
+        AlarmaServiceImpl.ReactivarActionExecutor executor =
+                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+
+        // Act
+        executor.exec("CODI_DESCONEGUT", entity, null);
+
+        // Assert
+        assertThat(entity.getEstat()).isEqualTo(AlarmaEstat.ESBORRADA);
+        assertThat(entity.getDataEsborrat()).isEqualTo(dataOriginal);
+    }
+
+    @Test
+    @DisplayName("ReactivarActionExecutor.onChange no llança excepció")
+    void reactivarActionExecutor_onChange() {
+        // Arrange
+        AlarmaServiceImpl.ReactivarActionExecutor executor =
+                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+
+        // Act & Assert
+        assertThatCode(() -> executor.onChange(1L, null, "campo", "valor", Map.of(), new String[0], null))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -305,5 +360,17 @@ class AlarmaServiceImplTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(1).getId()).isEqualTo(2L);
+    }
+
+    private AlarmaEntity crearAlarmaEntity(AlarmaEstat estat, boolean isAdmin, String createdBy) {
+        AlarmaEntity entity = new AlarmaEntity();
+        entity.setEstat(estat);
+
+        AlarmaConfigEntity config = new AlarmaConfigEntity();
+        config.setAdmin(isAdmin);
+        ReflectionTestUtils.setField(config, "createdBy", createdBy);
+        entity.setAlarmaConfig(config);
+
+        return entity;
     }
 }
