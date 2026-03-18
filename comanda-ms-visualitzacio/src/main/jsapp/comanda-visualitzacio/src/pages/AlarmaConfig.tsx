@@ -163,7 +163,7 @@ export const AlarmaConfigForm: React.FC = () => {
                             validationErrors={validationErrors} />
                     </Grid>
                     <Grid size={9}>
-                        <FormField name="nom" />
+                        <FormField name="nom" componentProps={{ title: t($ => $.page.alarmaConfig.nomHelperText) }} />
                     </Grid>
                     <Grid size={12}>
                         <Card variant="outlined">

@@ -416,6 +416,7 @@ const translationEn: translationResourcesType = {
             title: "Alarm configuration",
             create: "Create alarm configuration",
             update: "Edit alarm configuration",
+            nomHelperText: "When an alarm email notification is sent, the name is used to identify the alarm in the email subject.",
             condicio: {
                 title: "Condition",
                 subtitle: "Condition that must be met to trigger the alarm",

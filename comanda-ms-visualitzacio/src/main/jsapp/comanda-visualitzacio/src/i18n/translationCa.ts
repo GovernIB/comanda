@@ -416,6 +416,7 @@ const translationCa = {
             title: "Configuració d'alarmes",
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
+            nomHelperText: "En fer-se una notificació per correu de l'alarma, el nom s'usa per a indicar l'alarma a l'assumpte del correu.",
             condicio: {
                 title: "Condició",
                 subtitle: "Condició que s'ha de complir per a generar l'alarma",

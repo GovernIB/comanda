@@ -416,6 +416,7 @@ const translationEs: translationResourcesType = {
             title: "Configuración de alarmas",
             create: "Crear configuración de alarma",
             update: "Modificar configuración de alarma",
+            nomHelperText: "Al realizarse una notificación por correo de la alarma, el nombre se utiliza para indicar la alarma en el asunto del correo.",
             condicio: {
                 title: "Condición",
                 subtitle: "Condición que se debe cumplir para generar la alarma",
