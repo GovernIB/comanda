@@ -2,11 +2,13 @@ import React, { useMemo } from 'react';
 import { useResourceApiContext } from 'reactlib';
 import { Box, CircularProgress, Typography, Fade } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import {Navigate} from "react-router-dom";
 
 interface ProtectedRouteProps {
   /** Un o diversos resources necessaris (s'han de complir tots) */
   resourceName: string | string[];
   children: React.ReactNode;
+  redirect?: string;
 }
 
 const FullscreenCenter: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -29,7 +31,7 @@ const FullscreenCenter: React.FC<{ children: React.ReactNode }> = ({ children })
 );
 
 /** Mostrarà el contingut si té els resources sol·licitats. */
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ resourceName, children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ resourceName, children, redirect }) => {
     const { t } = useTranslation();
     const { indexState } = useResourceApiContext();
 
@@ -42,8 +44,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ resourceName, children 
     if (hasAccess === undefined)
         return <FullscreenCenter><Fade in><CircularProgress /></Fade></FullscreenCenter>;
 
-    if (!hasAccess)
-        return <FullscreenCenter><Typography variant="h3">{t($ => $.page.noPermissions)}</Typography></FullscreenCenter>;
+    if (!hasAccess) {
+        if (redirect) {
+            return <Navigate to={redirect}/>
+        }
+
+        return <FullscreenCenter><Typography
+            variant="h3">{t($ => $.page.noPermissions)}</Typography></FullscreenCenter>;
+    }
 
     return <>{children}</>;
 };

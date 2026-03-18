@@ -33,7 +33,7 @@ export const ESTADISTIQUES_PATH = 'estadistiques';
 const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            <Route index element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
+            <Route index element={<ProtectedRoute resourceName="salut" redirect={'tasca'}><Salut /></ProtectedRoute>} />
             <Route path="/appinfo/:id" element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
             <Route path={DASHBOARDS_PATH}>
                 <Route index element={<EstadisticaDashboards />} />

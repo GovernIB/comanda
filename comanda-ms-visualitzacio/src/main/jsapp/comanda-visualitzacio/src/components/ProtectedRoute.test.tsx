@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import ProtectedRoute from './ProtectedRoute';
+import {MemoryRouter, Routes, Route } from "react-router-dom";
 
 const mocks = vi.hoisted(() => ({
     useResourceApiContextMock: vi.fn(),
@@ -49,6 +50,41 @@ describe('ProtectedRoute', () => {
 
         expect(screen.getByText('Sense permisos')).toBeInTheDocument();
         expect(screen.queryByText('Contingut')).not.toBeInTheDocument();
+    });
+
+    it('ProtectedRoute_quanNoHiHaAcces_iHiHaRedirect', () => {
+        // Verifica que el component bloqueja el contingut y redirigeix.
+        mocks.useResourceApiContextMock.mockReturnValue({
+            indexState: {
+                links: new Map([['dashboard', {}]]),
+            },
+        });
+
+        render(
+            <MemoryRouter initialEntries={['/contingut']}>
+                <Routes>
+                    <Route
+                        path="/contingut"
+                        element={
+                            <ProtectedRoute
+                                resourceName={['dashboard', 'dashboardItem']}
+                                redirect="/contingut2"
+                            >
+                                <div>Contingut</div>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route path="/contingut2" element={<div>Redireccionat</div>} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        // Verifica que ha redirigit
+        expect(screen.getByText('Redireccionat')).toBeInTheDocument();
+
+        // Opcional: asegurar que no muestra contingut protejit ni missatje
+        expect(screen.queryByText('Contingut')).not.toBeInTheDocument();
+        expect(screen.queryByText('Sense permisos')).not.toBeInTheDocument();
     });
 
     it('ProtectedRoute_quanTeAccesATotsElsResources_renderitzaElsFills', () => {
