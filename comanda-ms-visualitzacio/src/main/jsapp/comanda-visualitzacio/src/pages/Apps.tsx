@@ -28,7 +28,8 @@ import UrlPingAdornment from '../components/UrlPingAdornment';
 import { useAclPermissionManager } from '../components/AclPermissionManager';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
-import {Cancel, CheckCircle} from '@mui/icons-material';
+import Cancel from '@mui/icons-material/Cancel';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
 

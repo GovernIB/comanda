@@ -1,5 +1,6 @@
 import React from 'react';
-import { AccessTime, CalendarMonth } from '@mui/icons-material';
+import AccessTime from '@mui/icons-material/AccessTime';
+import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import dayjs from 'dayjs';
 import { useTheme } from '@mui/material/styles';
 

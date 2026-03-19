@@ -6,15 +6,13 @@ import ListItemText from '@mui/material/ListItemText';
 import { FormField, MuiFormDialog, useFormContext } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
 import { useTranslation } from 'react-i18next';
-import {
-    AlternateEmail,
-    FormatListNumbered,
-    Language,
-    Mail,
-    Person,
-    RecentActors,
-    Tag,
-} from '@mui/icons-material';
+import AlternateEmail from '@mui/icons-material/AlternateEmail';
+import FormatListNumbered from '@mui/icons-material/FormatListNumbered';
+import Language from '@mui/icons-material/Language';
+import Mail from '@mui/icons-material/Mail';
+import Person from '@mui/icons-material/Person';
+import RecentActors from '@mui/icons-material/RecentActors';
+import Tag from '@mui/icons-material/Tag';
 import Grid from '@mui/material/Grid';
 import { UsuariModel } from '../types/usuari.model.tsx';
 import { useUserContext } from './UserContext';
