@@ -443,7 +443,7 @@ const translationCa = {
             },
             action: {
                 clear: {
-                    label: "Esborrar",
+                    label: "Marcar com llegida",
                 },
                 reactivate: {
                     label: "Reactivar",
@@ -455,7 +455,7 @@ const translationCa = {
             },
             estats: {
                 finalitzada: "Finalitzada",
-                finalitzadaEsborrada: "Finalitzada (esborrada)",
+                finalitzadaEsborrada: "Finalitzada (Llegida)",
             },
         },
         apps: {

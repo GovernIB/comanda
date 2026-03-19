@@ -443,7 +443,7 @@ const translationEs: translationResourcesType = {
             },
             action: {
                 clear: {
-                    label: "Borrar",
+                    label: "Marcar como leída",
                 },
                 reactivate: {
                     label: "Reactivar",
@@ -455,7 +455,7 @@ const translationEs: translationResourcesType = {
             },
             estats: {
                 finalitzada: "Finalizada",
-                finalitzadaEsborrada: "Finalizada (eliminada)",
+                finalitzadaEsborrada: "Finalizada (leída)",
             },
         },
         apps: {
