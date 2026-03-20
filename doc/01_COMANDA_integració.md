@@ -860,8 +860,8 @@ Els detalls que s’espera que s’enviin, tot i que no és obligatori son:
 | :---- | :---- | :---- |
 | PRC | Processadors | Número de nuclis del processador |
 | SCPU | Càrrega del sistema | Percentatge de càrrega del sistema |
-| MED | Memòria disponible | Memòria disponible, no utilitzada del sistema |
-| MET | Memòria total | Memòria total del sistema |
+| MED | Memòria disponible | Memòria lliure de la JVM |
+| MET | Memòria total | Memòria total assignada de la JVM |
 | EDT | Espai total de disc | Mida total del disc on es s’executa l’aplicació |
 | EDL | Espai lliure de disc | Mita total lliure del disc on es s’executa l’aplicació |
 | SO | Sistema operatiu | Informació del sistema operatiu.*Ex. Linux 3.10.0-957.10.1.el7.x86\_64 (amd64)* |
