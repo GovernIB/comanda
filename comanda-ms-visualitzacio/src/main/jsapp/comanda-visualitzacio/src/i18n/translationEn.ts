@@ -166,7 +166,7 @@ const translationEn: translationResourcesType = {
                 P1M: "Last month",
             },
             tabs: {
-                entorn: "Environment",
+                entorn: "Details",
                 estatActual: "Current state",
                 integracions: "Integrations",
                 subsistemes: "Subsystems",
