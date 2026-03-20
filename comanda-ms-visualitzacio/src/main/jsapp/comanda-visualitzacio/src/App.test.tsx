@@ -114,7 +114,7 @@ describe('App', () => {
         expect(props.logo).toBe('logo-clar');
         expect(props.appbarBackgroundColor).toBe('#fff');
         expect(props.availableLanguages).toEqual(['ca', 'es']);
-        expect(props.headerMenuEntries).toHaveLength(4);
+        expect(props.headerMenuEntries).toBeUndefined();
         expect(props.menuEntries).toHaveLength(6);
         expect(props.defaultMuiComponentProps.dataGrid.paginationModel).toEqual({
             page: 0,
@@ -135,6 +135,33 @@ describe('App', () => {
 
         expect(props.menuEntries).toBeUndefined();
         expect(props.headerMenuEntries).toHaveLength(4);
+    });
+
+    it('App_quanLusuariEsConsulta_noMostraElMenuSuperior', () => {
+        // Verifica que un usuari amb el rol consulta no veu el menú superior.
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+
+        render(<App />);
+
+        const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
+
+        expect(props.headerMenuEntries).toBeUndefined();
+    });
+
+    it('App_quanLusuariNoEstaLlest_noMostraElMenuSuperior', () => {
+        // Verifica que si l'usuari no està llest (!isUserReady), no es mostra el menú superior.
+        mocks.useUserContextMock.mockReturnValue({
+            user: null,
+        });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+
+        render(<App />);
+
+        const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
+
+        expect(props.headerMenuEntries).toBeUndefined();
     });
 
     it('App_quanElTemaEsFosc_usaElLogoFoscISenseColorDeFonsFix', () => {

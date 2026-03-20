@@ -17,6 +17,7 @@ export const App: React.FC = () => {
     const { user } = useUserContext();
     const isUserAdmin = useIsUserAdmin();
     const isUserConsulta = useIsUserConsulta();
+    const isUserReady = user != null;
     const { t } = useTranslation();
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
@@ -210,7 +211,7 @@ export const App: React.FC = () => {
             version="0.1"
             availableLanguages={['ca', 'es']}
             menuEntries={(isUserAdmin || isUserConsulta) ? caibMenuEntries : undefined}
-            headerMenuEntries={headerMenuEntries}
+            headerMenuEntries={(isUserAdmin || isUserConsulta || !isUserReady) ? undefined : headerMenuEntries}
             appbarBackgroundColor={appbarBackgroundColor}
             appbarStyle={{
                 cssText: `min-height: ${APPBAR_HEIGHT} !important`,
