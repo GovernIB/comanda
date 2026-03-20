@@ -29,7 +29,7 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	@Column(name = "esborrat", nullable = false)
 	private boolean esborrat;
 
-	@Column(name = "nom", length = 200, nullable = false)
+	@Column(name = "nom", length = 200)
 	private String nom;
 	@Column(name = "missatge", length = 1024, nullable = false)
 	private String missatge;

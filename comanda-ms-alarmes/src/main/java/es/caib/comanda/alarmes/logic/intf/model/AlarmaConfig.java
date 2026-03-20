@@ -43,7 +43,6 @@ public class AlarmaConfig extends BaseResource<Long> {
 
 	@NotNull
 	private Long entornAppId;
-	@NotNull
 	@Size(max = 200)
 	private String nom;
 	@NotNull

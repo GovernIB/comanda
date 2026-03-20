@@ -96,7 +96,28 @@ class AlarmaMailHelperTest {
         verify(mailHelper).sendSimple(
                 eq("from@caib.es"), eq("Comanda"),
                 eq("admin@caib.es"), anyString(),
-                contains("Alarma activada"), anyString());
+                eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
+    }
+
+    @Test
+    @DisplayName("Envia correu d'alarma genèrica correctament sense nom")
+    void sendAlarmaGeneric_quanNoNom_enviamentOk() throws MessagingException, UnsupportedEncodingException {
+        // Arrange
+        config.setNom(null);
+        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
+        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(true);
+
+        // Act
+        alarmaMailHelper.sendAlarmaGeneric(alarma);
+
+        // Assert
+        verify(mailHelper).sendSimple(
+                eq("from@caib.es"), eq("Comanda"),
+                eq("admin@caib.es"), anyString(),
+                eq("[COMANDA] Alarma activada"), anyString());
     }
 
     @Test
@@ -104,6 +125,7 @@ class AlarmaMailHelperTest {
     void sendAlarmaUser_quanUsuariNoAdmin_enviamentOk() throws MessagingException, UnsupportedEncodingException {
         // Arrange
         config.setAdmin(false);
+        config.setNom("Test Alarma");
         Usuari usuari = Usuari.builder()
                 .codi("creator")
                 .nom("Creator Name")
@@ -125,7 +147,37 @@ class AlarmaMailHelperTest {
         verify(mailHelper).sendSimple(
                 eq("from@caib.es"), anyString(),
                 eq("creator@caib.es"), eq("Creator Name"),
-                anyString(), anyString());
+                eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
+    }
+
+    @Test
+    @DisplayName("Envia correu d'alarma a l'usuari creador sense nom")
+    void sendAlarmaUser_quanUsuariNoAdminNoNom_enviamentOk() throws MessagingException, UnsupportedEncodingException {
+        // Arrange
+        config.setAdmin(false);
+        config.setNom(null);
+        Usuari usuari = Usuari.builder()
+                .codi("creator")
+                .nom("Creator Name")
+                .email("creator@caib.es")
+                .alarmaMail(true)
+                .alarmaMailAgrupar(false)
+                .build();
+
+        when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
+        // Per generateAlarmaBodyMessage:
+        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
+        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+
+        // Act
+        alarmaMailHelper.sendAlarmaUser(alarma);
+
+        // Assert
+        verify(mailHelper).sendSimple(
+                eq("from@caib.es"), anyString(),
+                eq("creator@caib.es"), eq("Creator Name"),
+                eq("[COMANDA] Alarma activada"), anyString());
     }
 
     @Test

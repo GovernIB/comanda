@@ -43,9 +43,12 @@ public class AlarmaMailHelper {
 	private final UserInformationHelper userInformationHelper;
 	private final AlarmaRepository alarmaRepository;
 
+	private String generateIndividualAlarmaSubject(AlarmaEntity alarma) {
+		return "[COMANDA] Alarma activada" + (Strings.isNotBlank(alarma.getAlarmaConfig().getNom()) ? ": " + alarma.getAlarmaConfig().getNom() : "");
+	}
 
 	private String generateAlarmaBodyMessage(AlarmaEntity alarma) {
-		String nom = alarma.getAlarmaConfig().getNom();
+		String formattedNom = Strings.isNotBlank(alarma.getAlarmaConfig().getNom()) ? "\"" + alarma.getAlarmaConfig().getNom() + "\" " : "";
 		EntornApp alarmaEntornApp = alarmaClientHelper.entornAppFindById(alarma.getEntornAppId());
 		App alarmaApp = alarmaClientHelper.appFindById(alarmaEntornApp.getApp().getId());
 		Entorn alarmaEntorn = alarmaClientHelper.entornById(alarmaEntornApp.getEntorn().getId());
@@ -55,7 +58,7 @@ public class AlarmaMailHelper {
 		String dataActivacio = alarma.getDataActivacio().format(ALARMA_DIA_FORMATTER);
 		String missatgeFinalitzacio = alarma.getDataFinalitzacio() != null ? "\nFinalitzada el " + alarma.getDataFinalitzacio().format(ALARMA_DIA_FORMATTER) : "";
 
-		return "Alarma \"" + nom + "\" activada el " + dataActivacio +
+		return "Alarma " + formattedNom + "activada el " + dataActivacio +
 				" per a l'aplicació " + app + " - " + entorn + ":\n" +
 				message + missatgeFinalitzacio;
 	}
@@ -70,7 +73,7 @@ public class AlarmaMailHelper {
 			sendAlarmaMail(
 					alarmaEntornApp.getAlarmesEmail(),
 					"Correu genèric (" + alarmaEntornApp.getApp().getNom() + " - " + alarmaEntornApp.getEntorn().getNom() + ")",
-					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
+					generateIndividualAlarmaSubject(alarma),
 					generateAlarmaBodyMessage(alarma)
 			);
 		} catch (Exception ex) {
@@ -132,7 +135,7 @@ public class AlarmaMailHelper {
 			sendAlarmaMail(
 					getMailFromUsuari(usuari),
 					usuari.getNom(),
-					"[COMANDA] Alarma activada: " + alarma.getAlarmaConfig().getNom(),
+					generateIndividualAlarmaSubject(alarma),
 					generateAlarmaBodyMessage(alarma)
 			);
 		} catch (Exception ex) {
