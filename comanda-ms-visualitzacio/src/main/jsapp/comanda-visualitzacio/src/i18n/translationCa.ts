@@ -166,7 +166,7 @@ const translationCa = {
                 P1M: "Darrer mes",
             },
             tabs: {
-                entorn: "Entorn",
+                entorn: "Detalls",
                 estatActual: "Estat actual",
                 integracions: "Integracions",
                 subsistemes: "Subsistemes",
