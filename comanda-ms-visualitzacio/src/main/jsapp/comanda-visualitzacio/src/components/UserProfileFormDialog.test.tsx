@@ -116,6 +116,33 @@ describe('UserProfileFormDialog', () => {
         vi.clearAllMocks();
     });
 
+    it('UserProfileFormDialog_quanEsRenderitza_totsElsCampsSonRenderitzats', () => {
+        // Verifica que tots els camps esperats es mostren en el formulari del perfil.
+        mocks.useFormContextMock.mockReturnValue({
+            data: { alarmaMail: true, temaObscur: '' },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+        const dialogApiRef = { current: undefined };
+
+        render(<UserProfileFormDialog dialogApiRef={dialogApiRef} />);
+
+        // Camps del model UsuariModel
+        expect(screen.getByText('codi')).toBeInTheDocument();
+        expect(screen.getByText('nom')).toBeInTheDocument();
+        expect(screen.getByText('email')).toBeInTheDocument();
+        expect(screen.getByText('rols')).toBeInTheDocument();
+        expect(screen.getByText('emailAlternatiu')).toBeInTheDocument();
+        expect(screen.getByText('alarmaMail')).toBeInTheDocument();
+        expect(screen.getByText('alarmaMailAgrupat')).toBeInTheDocument();
+        expect(screen.getByText('numElementsPagina')).toBeInTheDocument();
+        expect(screen.getByText('idioma')).toBeInTheDocument();
+
+        // TemaObscurSelector (que conté les tres opcions)
+        expect(screen.getByText('Clar')).toBeInTheDocument();
+        expect(screen.getByText('Obscur')).toBeInTheDocument();
+        expect(screen.getByText('Sistema')).toBeInTheDocument();
+    });
+
     it('UserProfileFormDialog_quanEsRenderitza_configuraElDialegIElRefreshEnGuardar', () => {
         // Comprova que el diàleg de perfil es configura amb el títol i el callback de refresc esperats.
         mocks.useFormContextMock.mockReturnValue({
