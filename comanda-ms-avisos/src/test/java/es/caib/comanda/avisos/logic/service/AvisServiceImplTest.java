@@ -2,6 +2,7 @@ package es.caib.comanda.avisos.logic.service;
 
 import es.caib.comanda.avisos.logic.helper.AvisClientHelper;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
+import es.caib.comanda.avisos.logic.mapper.AvisMapper;
 import es.caib.comanda.avisos.persist.entity.AvisEntity;
 import es.caib.comanda.avisos.persist.repository.AvisRepository;
 import es.caib.comanda.client.model.*;
@@ -45,6 +46,9 @@ class AvisServiceImplTest {
 
     @Mock
     private AvisRepository avisRepository;
+
+    @Mock
+    private AvisMapper avisMapper;
 
     @Mock
     private Message jmsMessage;
@@ -114,22 +118,35 @@ class AvisServiceImplTest {
 
         EntornApp entornApp = new EntornApp();
         entornApp.setId(10L);
-        ReflectionTestUtils.setField(entornApp, "entorn", EntornRef.builder().id(1L).build());
-        ReflectionTestUtils.setField(entornApp, "app", AppRef.builder().id(2L).build());
+        entornApp.setEntorn(EntornRef.builder().id(1L).build());
+        entornApp.setApp(AppRef.builder().id(2L).build());
 
         when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
         when(avisRepository.findByEntornAppIdAndIdentificador(10L, "ID1")).thenReturn(Optional.empty());
+        Avis avisMapejat = new Avis();
+        avisMapejat.setEntornAppId(10L);
+        avisMapejat.setEntornId(1L);
+        avisMapejat.setAppId(2L);
+        avisMapejat.setIdentificador("ID1");
+        avisMapejat.setNom("Nou Avís");
+        avisMapejat.setTipus(AvisTipus.INFO);
+        AvisEntity avisEntityMapejat = new AvisEntity();
+        avisEntityMapejat.setEntornAppId(10L);
+        avisEntityMapejat.setEntornId(1L);
+        avisEntityMapejat.setAppId(2L);
+        avisEntityMapejat.setIdentificador("ID1");
+        avisEntityMapejat.setNom("Nou Avís");
+        avisEntityMapejat.setTipus(AvisTipus.INFO);
+        when(avisMapper.toAvis(avisBroker, entornApp)).thenReturn(avisMapejat);
+        when(avisMapper.toAvisEntity(avisMapejat)).thenReturn(avisEntityMapejat);
 
         // Act
         avisService.receiveMessage(avisBroker, jmsMessage);
 
         // Assert
-        ArgumentCaptor<AvisEntity> captor = ArgumentCaptor.forClass(AvisEntity.class);
-        verify(avisRepository).save(captor.capture());
-        AvisEntity guardat = captor.getValue();
-        assertThat(guardat.getIdentificador()).isEqualTo("ID1");
-        assertThat(guardat.getNom()).isEqualTo("Nou Avís");
-        assertThat(guardat.getEntornAppId()).isEqualTo(10L);
+        verify(avisMapper).toAvis(avisBroker, entornApp);
+        verify(avisMapper).toAvisEntity(avisMapejat);
+        verify(avisRepository).save(avisEntityMapejat);
         verify(jmsMessage).acknowledge();
     }
 
@@ -219,9 +236,10 @@ class AvisServiceImplTest {
         avisService.receiveMessage(avisBroker, jmsMessage);
 
         // Assert
+        verify(avisMapper).updateAvis(avisBroker, avisExistent);
+        verify(avisMapper, never()).toAvis(any(es.caib.comanda.model.v1.avis.Avis.class), any(EntornApp.class));
+        verify(avisMapper, never()).toAvisEntity(any());
         verify(avisRepository).save(avisExistent);
-        assertThat(avisExistent.getNom()).isEqualTo("Nom Actualitzat");
-        assertThat(avisExistent.getTipus()).isEqualTo(AvisTipus.ERROR);
         verify(jmsMessage).acknowledge();
     }
 

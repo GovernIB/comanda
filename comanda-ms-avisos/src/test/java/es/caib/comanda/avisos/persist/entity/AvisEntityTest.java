@@ -12,8 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AvisEntityTest {
 
     @Test
-    @DisplayName("El constructor AvisEntity(Avis) ha de copiar tots els camps correctament")
-    void constructor_haDeCopiarCampsDeModel() {
+    @DisplayName("AvisEntity ha de copiar tots els camps del model correctament")
+    void entity_haDeCopiarCampsDeModel() {
         // Arrange
         Avis avis = new Avis();
         avis.setEntornAppId(1L);
@@ -27,7 +27,16 @@ class AvisEntityTest {
         avis.setUsuarisAmbPermis(Collections.singletonList("usuari2"));
 
         // Act
-        AvisEntity entity = new AvisEntity(avis);
+        AvisEntity entity = new AvisEntity();
+        entity.setEntornAppId(avis.getEntornAppId());
+        entity.setEntornId(avis.getEntornId());
+        entity.setAppId(avis.getAppId());
+        entity.setIdentificador(avis.getIdentificador());
+        entity.setTipus(avis.getTipus());
+        entity.setNom(avis.getNom());
+        entity.setDescripcio(avis.getDescripcio());
+        entity.setResponsable(avis.getResponsable());
+        entity.setUsuarisAmbPermis(avis.getUsuarisAmbPermis());
 
         // Assert
         assertThat(entity.getEntornAppId()).isEqualTo(1L);

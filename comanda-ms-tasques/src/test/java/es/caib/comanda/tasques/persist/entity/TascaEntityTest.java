@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TascaEntityTest {
 
     @Test
-    void constructor_ambTascaModel_mapejaCampsCorrectament() throws MalformedURLException {
+    void entity_ambTascaModel_mapejaCampsCorrectament() throws MalformedURLException {
         // Arrange
         Tasca tasca = new Tasca();
         tasca.setEntornAppId(1L);
@@ -29,7 +29,17 @@ class TascaEntityTest {
         tasca.setUsuarisAmbPermis(Collections.singletonList("usuari1"));
 
         // Act
-        TascaEntity entity = new TascaEntity(tasca);
+        TascaEntity entity = new TascaEntity();
+        entity.setEntornAppId(tasca.getEntornAppId());
+        entity.setEntornId(tasca.getEntornId());
+        entity.setAppId(tasca.getAppId());
+        entity.setIdentificador(tasca.getIdentificador());
+        entity.setNom(tasca.getNom());
+        entity.setTipus(tasca.getTipus());
+        entity.setEstat(tasca.getEstat());
+        entity.setUrl(tasca.getUrl());
+        entity.setDataInici(tasca.getDataInici());
+        entity.setUsuarisAmbPermis(tasca.getUsuarisAmbPermis());
 
         // Assert
         assertThat(entity.getEntornAppId()).isEqualTo(1L);

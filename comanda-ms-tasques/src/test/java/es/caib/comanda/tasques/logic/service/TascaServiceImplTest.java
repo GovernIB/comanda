@@ -5,6 +5,7 @@ import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.tasques.logic.helper.TasquesClientHelper;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
+import es.caib.comanda.tasques.logic.mapper.TascaMapper;
 import es.caib.comanda.tasques.persist.entity.TascaEntity;
 import es.caib.comanda.tasques.persist.repository.TascaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import java.util.Optional;
 
 import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -42,6 +44,9 @@ class TascaServiceImplTest {
 
     @Mock
     private Message jmsMessage;
+
+    @Mock
+    private TascaMapper tascaMapper;
 
     @InjectMocks
     private TascaServiceImpl tascaService;
@@ -102,19 +107,33 @@ class TascaServiceImplTest {
 
         EntornApp entornApp = new EntornApp();
         entornApp.setId(100L);
-        AppRef app = AppRef.builder().id(10L).build();
-        EntornRef entorn = EntornRef.builder().id(20L).build();
-        entornApp.setApp(app);
-        entornApp.setEntorn(entorn);
-        
+        entornApp.setApp(AppRef.builder().id(10L).build());
+        entornApp.setEntorn(EntornRef.builder().id(20L).build());
+
         when(tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
         when(tascaRepository.findByEntornAppIdAndIdentificador(100L, "ID1")).thenReturn(Optional.empty());
+        Tasca tascaMapejada = new Tasca();
+        tascaMapejada.setEntornAppId(100L);
+        tascaMapejada.setEntornId(20L);
+        tascaMapejada.setAppId(10L);
+        tascaMapejada.setIdentificador("ID1");
+        tascaMapejada.setNom("Tasca Nova");
+        TascaEntity entityMapejada = new TascaEntity();
+        entityMapejada.setEntornAppId(100L);
+        entityMapejada.setEntornId(20L);
+        entityMapejada.setAppId(10L);
+        entityMapejada.setIdentificador("ID1");
+        entityMapejada.setNom("Tasca Nova");
+        when(tascaMapper.toTasca(tascaBroker, entornApp)).thenReturn(tascaMapejada);
+        when(tascaMapper.toTascaEntity(tascaMapejada)).thenReturn(entityMapejada);
 
         // Act
         tascaService.receiveMessage(tascaBroker, jmsMessage);
 
         // Assert
-        verify(tascaRepository).save(any(TascaEntity.class));
+        verify(tascaMapper).toTasca(tascaBroker, entornApp);
+        verify(tascaMapper).toTascaEntity(tascaMapejada);
+        verify(tascaRepository).save(entityMapejada);
         verify(jmsMessage).acknowledge();
     }
 
@@ -134,14 +153,19 @@ class TascaServiceImplTest {
 
         when(tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
 
-        TascaEntity entity = spy(new TascaEntity());
+        Tasca tascaMapejada = new Tasca();
+        tascaMapejada.setNom("Nom Nou");
+        TascaEntity entity = new TascaEntity();
         when(tascaRepository.findByEntornAppIdAndIdentificador(100L, "ID1")).thenReturn(Optional.of(entity));
+        when(tascaMapper.toTasca(tascaBroker, entornApp)).thenReturn(tascaMapejada);
 
         // Act
         tascaService.receiveMessage(tascaBroker, jmsMessage);
 
         // Assert
-        verify(entity).setNom("Nom Nou");
+        verify(tascaMapper).toTasca(tascaBroker, entornApp);
+        verify(tascaMapper).updateTasca(eq(tascaMapejada), eq(entity));
+        verify(tascaMapper, never()).toTascaEntity(any());
         verify(tascaRepository, never()).save(any());
         verify(jmsMessage).acknowledge();
     }
