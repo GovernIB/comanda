@@ -97,6 +97,7 @@ public class TascaEntity extends BaseAuditableEntity<Tasca> {
         this.descripcio = tasca.getDescripcio();
         this.estat = tasca.getEstat();
         this.estatDescripcio = tasca.getEstatDescripcio();
+        this.numeroExpedient = tasca.getNumeroExpedient();
         this.prioritat = tasca.getPrioritat();
         this.dataInici = tasca.getDataInici();
         this.dataFi = tasca.getDataFi();
