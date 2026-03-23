@@ -6,36 +6,43 @@ import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
+import es.caib.comanda.configuracio.logic.intf.model.ExpectedResponseTypeEnum;
 import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl;
-import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornEntity;
-import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
+import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.model.v1.log.FitxerInfo;
+import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
-import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import javax.validation.ConstraintViolation;
+import javax.validation.Path;
+import javax.validation.Validator;
+import java.util.*;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,10 +63,11 @@ public class EntornAppServiceImplTest {
                                           CacheHelper cacheHeper,
                                           ConfiguracioSchedulerService schedulerService,
                                           RestTemplate restTemplate,
+                                          Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
                                           ApplicationEventPublisher eventPublisher) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, appInfoHelper,
-                    cacheHeper, schedulerService, restTemplate, resourceEntityMappingHelper, eventPublisher);
+                    cacheHeper, schedulerService, restTemplate, validator, resourceEntityMappingHelper, eventPublisher);
         }
 
         @Override
@@ -112,10 +120,18 @@ public class EntornAppServiceImplTest {
     private RestTemplate restTemplate;
 
     @Mock
+    private Validator validator;
+
+    @Mock
     private ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private I18nUtil i18nUtil;
+    @Mock
+    private ApplicationContext applicationContext;
 
     private TestableEntornAppServiceImpl entornAppService;
 
@@ -123,6 +139,9 @@ public class EntornAppServiceImplTest {
     private EntornApp entornAppResource;
     private List<AppIntegracioEntity> integracions;
     private List<AppSubsistemaEntity> subsistemes;
+
+    private String statsAuthUser;
+    private String statsAuthPassword;
 
     @BeforeEach
     void setUp() {
@@ -136,6 +155,7 @@ public class EntornAppServiceImplTest {
             cacheHelper,
             schedulerService,
             restTemplate,
+            validator,
             resourceEntityMappingHelper,
             eventPublisher
         );
@@ -183,6 +203,11 @@ public class EntornAppServiceImplTest {
         
         subsistemes = new ArrayList<>();
         subsistemes.add(subsistema);
+
+        this.statsAuthUser = "test_user";
+        this.statsAuthPassword = "test_pass";
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
     }
 
     @Test
@@ -223,5 +248,324 @@ public class EntornAppServiceImplTest {
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
 
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: ping bàsic sense validació de tipus")
+    void pingUrlAction_pingBasic_resposta200() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        formData.setSalutUrl("http://test.com/salut");
+        formData.setEstadisticaUrl("http://test.com/estadistica");
+        formData.setEstadisticaInfoUrl("http://test.com/estadistica-info");
+
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/any-endpoint");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(null);
+
+        ResponseEntity<Void> response = ResponseEntity.ok().build();
+        when(restTemplate.exchange(
+                eq("http://test.com/any-endpoint"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(Void.class)))
+                .thenReturn(response);
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertTrue(result.getSuccess());
+        verify(restTemplate).exchange(anyString(), eq(HttpMethod.GET), any(), eq(Void.class));
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: ping bàsic amb error HTTP 404")
+    void pingUrlAction_pingBasic_error404() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/not-found");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.BASIC_PING);
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(), eq(Void.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found"));
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertFalse(result.getSuccess());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: validació de tipus amb resposta correcta (AppInfo)")
+    void pingUrlAction_validacioTipus_respostaValida() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        formData.setInfoUrl("http://test.com/info");
+
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/info");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.INFO);
+
+        AppInfo appInfo = new AppInfo();
+        appInfo.setCodi("APP");
+        appInfo.setNom("Aplicació Test");
+
+        ResponseEntity<AppInfo> response = ResponseEntity.ok(appInfo);
+        when(restTemplate.exchange(
+                eq("http://test.com/info"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(AppInfo.class)))
+                .thenReturn(response);
+
+        when(validator.validate(appInfo)).thenReturn(Set.of());
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertTrue(result.getSuccess());
+        verify(validator).validate(appInfo);
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: validació de tipus amb tipus incorrecte")
+    void pingUrlAction_validacioTipus_tipusIncorrecte() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/info");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.INFO);
+
+        ResponseEntity<String> response = ResponseEntity.ok("Resposta inesperada");
+        when(restTemplate.exchange(
+                eq("http://test.com/info"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(AppInfo.class)))
+                .thenReturn((ResponseEntity) response);
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertFalse(result.getSuccess());
+        verify(validator, never()).validate(any());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: validació de tipus amb cos buit (null)")
+    void pingUrlAction_validacioTipus_cosBuit() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/info");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.INFO);
+
+        ResponseEntity<AppInfo> response = ResponseEntity.ok(null);
+        when(restTemplate.exchange(
+                eq("http://test.com/info"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(AppInfo.class)))
+                .thenReturn(response);
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertFalse(result.getSuccess());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: validació Bean Validation falla per @Size")
+    void pingUrlAction_validacioBean_sizeViolat() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/info");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.INFO);
+
+        AppInfo appInfoInvalida = new AppInfo();
+        appInfoInvalida.setCodi("");
+        appInfoInvalida.setNom("Nom Vàlid");
+
+        ResponseEntity<AppInfo> response = ResponseEntity.ok(appInfoInvalida);
+        when(restTemplate.exchange(
+                eq("http://test.com/info"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(AppInfo.class)))
+                .thenReturn(response);
+
+        ConstraintViolation<AppInfo> violation = mock(ConstraintViolation.class);
+        when(violation.getPropertyPath()).thenReturn(mock(Path.class));
+        when(violation.getPropertyPath().toString()).thenReturn("codi");
+        when(violation.getMessage()).thenReturn("size must be between 1 and 16");
+        when(validator.validate(appInfoInvalida)).thenReturn(Set.of(violation));
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertFalse(result.getSuccess());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: validació Bean Validation falla per @NotNull")
+    void pingUrlAction_validacioBean_notNullViolat() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/info");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.INFO);
+
+        AppInfo appInfoInvalida = new AppInfo();
+        appInfoInvalida.setCodi(null);
+        appInfoInvalida.setNom("Nom Vàlid");
+
+        ResponseEntity<AppInfo> response = ResponseEntity.ok(appInfoInvalida);
+        when(restTemplate.exchange(
+                eq("http://test.com/info"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(AppInfo.class)))
+                .thenReturn(response);
+
+        ConstraintViolation<AppInfo> violation = mock(ConstraintViolation.class);
+        when(violation.getPropertyPath()).thenReturn(mock(Path.class));
+        when(violation.getPropertyPath().toString()).thenReturn("codi");
+        when(violation.getMessage()).thenReturn("must not be null");
+        when(validator.validate(appInfoInvalida)).thenReturn(Set.of(violation));
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertFalse(result.getSuccess());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: error de deserialització JSON (HttpMessageNotReadableException)")
+    void pingUrlAction_errorDeserialitzacio() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/info");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.INFO);
+
+        when(restTemplate.exchange(
+                eq("http://test.com/info"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(AppInfo.class)))
+                .thenThrow(new HttpMessageNotReadableException(
+                        "JSON parse error: Unexpected character",
+                        new java.io.IOException("Mock error")));
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertFalse(result.getSuccess());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: timeout de connexió (ResourceAccessException)")
+    void pingUrlAction_timeoutConnexio() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test-no-existeix.com/info");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.INFO);
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(), eq(AppInfo.class)))
+                .thenThrow(new ResourceAccessException("Connection timed out"));
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertFalse(result.getSuccess());
+    }
+
+    @Test
+    @DisplayName("PingUrlAction: validació de llista genèrica List<FitxerInfo>")
+    void pingUrlAction_validacioLlistaGenerica_respostaValida() {
+        // Arrange
+        EntornApp formData = new EntornApp();
+        formData.setLogsUrl("http://test.com/logs");
+
+        EntornApp.EntornAppPingAction params = new EntornApp.EntornAppPingAction();
+        params.setEndpoint("http://test.com/logs");
+        params.setFormData(formData);
+        params.setExpectedResponseTypeEnum(ExpectedResponseTypeEnum.LOGS);
+
+        FitxerInfo fitxer1 = new FitxerInfo();
+        fitxer1.setNom("log1.txt");
+        fitxer1.setMida(1024L);
+
+        List<FitxerInfo> logs = List.of(fitxer1);
+
+        ParameterizedTypeReference<List<FitxerInfo>> typeRef =
+                new ParameterizedTypeReference<List<FitxerInfo>>() {};
+
+        ResponseEntity<List<FitxerInfo>> response = ResponseEntity.ok(logs);
+        when(restTemplate.exchange(
+                eq("http://test.com/logs"),
+                eq(HttpMethod.GET),
+                any(),
+                eq(typeRef)))
+                .thenReturn(response);
+
+        when(validator.validate(logs)).thenReturn(Set.of());
+
+        EntornAppServiceImpl.PingUrlAction pingAction =
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+
+        // Act
+        EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
+
+        // Assert
+        assertTrue(result.getSuccess());
     }
 }

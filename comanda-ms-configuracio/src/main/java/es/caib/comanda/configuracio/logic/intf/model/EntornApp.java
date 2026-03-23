@@ -167,6 +167,7 @@ public class EntornApp extends BaseResource<Long> {
 		@NotNull
 		private String endpoint;
 		private EntornApp formData;
+        private ExpectedResponseTypeEnum expectedResponseTypeEnum;
 	}
 
 	@Getter
