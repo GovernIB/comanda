@@ -7,7 +7,7 @@ import {
     SalutEstatEnum,
     TITLE,
 } from '../../types/salut.model.tsx';
-import { XAxis } from '@mui/x-charts';
+import { XAxis, YAxis } from '@mui/x-charts';
 import { SalutData } from '../../pages/salut/Salut.tsx';
 import { numericObjectKeys } from '../../util/objectUtils.ts';
 import useTranslationStringKey from '../../hooks/useTranslationStringKey';
@@ -37,6 +37,8 @@ export const calculateEstatsSeries = (
         return estatPercent / estatApps.length;
     });
 };
+
+const yAxis: ReadonlyArray<YAxis> = [{ max: 100, valueFormatter: (v: number) => `${v}%`, }];
 
 const UpdownBarChart: React.FC<{
     agrupacio: string;
@@ -126,7 +128,7 @@ const UpdownBarChart: React.FC<{
         },
     ];
 
-    const xAxis: ReadonlyArray<XAxis<'band'>> = [
+    const xAxis: ReadonlyArray<XAxis<'band'>> = React.useMemo(() => ([
         {
             scaleType: 'band',
             data: dataGroups,
@@ -134,13 +136,14 @@ const UpdownBarChart: React.FC<{
             // TODO Fer un formatter generic per a totes les agrupacions
             valueFormatter: (value: string) => (agrupacio === 'HORA' ? value.substring(3) : value),
         },
-    ];
+    ]), [agrupacio, dataGroups]);
 
     return (
         estats != null && (
             <BarChart
+                renderer="svg-batch"
                 xAxis={xAxis}
-                yAxis={[{ max: 100, valueFormatter: (v: number) => `${v}%`, }]}
+                yAxis={yAxis}
                 series={series}
                 // borderRadius={6}
                 grid={{

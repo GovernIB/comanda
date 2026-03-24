@@ -39,9 +39,12 @@ const useActions = (refresh?: () => void) => {
     const { temporalMessageShow } = useBaseAppContext();
     const { t } = useTranslation();
 
-    const pingUrl = React.useCallback(async (additionalData: any): Promise<boolean> => {
+    const pingUrl = React.useCallback(async (
+        additionalData: any, 
+        expectedResponseTypeEnum: string
+    ): Promise<boolean> => {
         try {
-            const data = await apiAction(null, { code: 'pingUrl', data: additionalData });
+            const data = await apiAction(null, { code: 'pingUrl', data: {...additionalData, expectedResponseTypeEnum} });
             refresh?.();
             temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
             return data.success;
@@ -99,13 +102,13 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="activa" />
             </Grid>
             <Grid size={12}>
-                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO')}/>}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={(formData) => pingUrl(formData, 'SALUT')}/>}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={(formData) => pingUrl(formData, 'LOGS')}/>}}}} />
             </Grid>
             <Grid size={12} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
@@ -116,10 +119,10 @@ const AppEntornForm: React.FC = () => {
                 </FormControl>
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO')}/>}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA')}/>}}}} />
             </Grid>
             <Grid size={6} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">

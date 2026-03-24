@@ -123,7 +123,12 @@ export const AlarmaConfigForm: React.FC = () => {
         formApiRef.current.setFieldValue('entornAppId', entornApp?.id);
     }
     const handlePeriodeShowChange = (event: any) => {
-        setPeriodeShow(event.target.checked);
+        const newValue = event.target.checked;
+        setPeriodeShow(newValue);
+        if (!newValue) {
+            formApiRef.current?.setFieldValue('periodeValor', null);
+            formApiRef.current?.setFieldValue('periodeUnitat', null);
+        } 
     }
 
     // const {goBack} = useBaseAppContext();

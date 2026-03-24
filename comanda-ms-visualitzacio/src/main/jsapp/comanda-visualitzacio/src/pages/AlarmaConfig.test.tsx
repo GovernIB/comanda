@@ -243,6 +243,22 @@ describe('AlarmaConfigForm', () => {
             expect(mocks.setFieldValueMock).toHaveBeenCalledWith('entornAppId', 9);
         });
     });
+
+    it('AlarmaConfigForm_quanEsDesactivaElToggleDePeriode_esborraElsValorsDelsCampsPeriode', async () => {
+        render(<AlarmaConfigForm />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
+        });
+
+        const periodeToggle = screen.getByLabelText(/Configurar període/);
+        expect(periodeToggle).toBeChecked();
+        fireEvent.click(periodeToggle);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('periodeValor', null);
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('periodeUnitat', null);
+        expect(periodeToggle).not.toBeChecked();
+    });
 });
 
 describe('AlarmaConfig', () => {
