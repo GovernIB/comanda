@@ -3,14 +3,13 @@ import Box from '@mui/material/Box';
 import estils from '../estadistiques/WidgetEstils.ts';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import Grid from '@mui/material/Grid';
 import { useTranslation } from 'react-i18next';
 import {
     dateFormatLocale,
     MuiDataGridColDef,
     useBaseAppContext,
 } from 'reactlib';
-import { Button, Paper, styled } from '@mui/material';
+import { Button, Paper, styled, useTheme } from '@mui/material';
 import { SalutField } from './SalutChipTooltip.tsx';
 import {
     ENUM_APP_ESTAT_PREFIX,
@@ -46,6 +45,7 @@ import SalutSubsistemesChips from './SalutSubsistemesChips.tsx';
 import SalutMissatgesChips from './SalutMissatgesChips';
 import { useTreeDataWithoutSwitch } from '../../hooks/treeData';
 import useDataGridLocale from '../../hooks/useDataGridLocale';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
@@ -209,7 +209,7 @@ const AppDataTable: React.FC<{
         []
     );
     const groupingColDefAdditionalProps = React.useMemo(
-        () => ({ renderCell: treeDataRenderCell }),
+        () => ({ renderCell: treeDataRenderCell, minWidth: 265 }),
         [treeDataRenderCell]
     );
     const { dataGridProps: treeDataGridProps } = useTreeDataWithoutSwitch(
@@ -332,11 +332,11 @@ const AppDataTable: React.FC<{
                 flex: 0.3,
                 field: 'bd',
                 headerName: t($ => $.page.salut.apps.column.bd),
-                minWidth: 128,
+                minWidth: 130,
                 renderCell: ({ id }) => renderItemStateChip(id, SalutField.BD_ESTAT),
             },
             {
-                flex: 0.3,
+                flex: 0.1,
                 field: 'latencia',
                 headerName: t($ => $.page.salut.apps.column.latencia),
                 minWidth: 100,
@@ -490,6 +490,7 @@ export const SalutWidgetTitle: React.FC<{
 export const SalutWidgetContent: React.FC<{
     expanded: boolean;
     setExpanded: (expanded: boolean) => void;
+    parentContainerFullWidth: number | null;
     isGroupingDisabled: boolean;
     salutLastItems: SalutModel[];
     agrupacio: string;
@@ -504,6 +505,7 @@ export const SalutWidgetContent: React.FC<{
 }> = ({
     expanded: expandedProp,
     setExpanded,
+    parentContainerFullWidth,
     isGroupingDisabled,
     salutLastItems,
     agrupacio,
@@ -516,6 +518,8 @@ export const SalutWidgetContent: React.FC<{
     entorns,
     grupsDates,
 }) => {
+    const theme = useTheme();
+    const isScreenSmall = useMediaQuery(theme.breakpoints.down('lg'));
     const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
     const expanded = !isGroupingDisabled ? expandedProp : true;
 
@@ -532,45 +536,71 @@ export const SalutWidgetContent: React.FC<{
         );
 
     return (
-        <Box
+        <Paper
+            elevation={1}
             sx={{
-                height: !expanded ? '220px' : trackedGridSize?.height + 'px',
-                transition: 'height 0.3s ease-in-out',
+                height: !expanded ? '230px' : trackedGridSize?.height + 'px',
+                width: !expanded ? '400px' : '100%',
+                transition: 'height 0.3s ease-in-out, width 0.3s ease-in-out',
                 overflow: 'hidden',
                 position: 'relative',
             }}
         >
-            <Grid ref={trackedGridRef} container spacing={2}>
-                <Grid
-                    size={{ xs: 12, sm: 11, md: 11, lg: 3 }}
-                    sx={{ display: 'flex', flexDirection: 'column', height: '200px' }}
+            <Box
+                sx={{
+                    width: !expanded ? undefined : parentContainerFullWidth + 'px', // Evita que los gráficos usen el ancho interpolado del transition, saltan directamente a la anchura entera.
+                    px: 2,
+                    pt: 1,
+                }}
+                ref={trackedGridRef}
+            >
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        width: '100%',
+                    }}
                 >
                     <SalutWidgetTitle app={groupedApp} entorn={groupedEntorn} />
                     <Box
                         sx={{
-                            height: '100%',
-                            minHeight: 0,
                             display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                            flexDirection: isScreenSmall ? 'column' : 'row',
+                            gap: isScreenSmall ? 2 : 0,
+                            mb: 1,
                         }}
                     >
-                        <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                            <UpdownPieChart salutLastItems={salutLastItems} />
-                        </ErrorBoundary>
+                        <Box
+                            sx={{
+                                minHeight: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '170px',
+                                width: !isScreenSmall ? '340px' : '100%',
+                                flexShrink: 0, // Evita que el PieChart "pegue un salto" al expandir el Widget
+                            }}
+                        >
+                            <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                                <UpdownPieChart salutLastItems={salutLastItems} />
+                            </ErrorBoundary>
+                        </Box>
+                        <React.Activity mode={expanded ? 'visible' : 'hidden'}>
+                            <Box sx={{ height: '200px', flexGrow: 1 }}>
+                                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                                    <UpdownBarChart
+                                        agrupacio={agrupacio}
+                                        estats={estats}
+                                        grupsDates={grupsDates}
+                                    />
+                                </ErrorBoundary>
+                            </Box>
+                        </React.Activity>
+
                     </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 9 }} sx={{ height: '200px' }}>
-                    <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                        <UpdownBarChart
-                            agrupacio={agrupacio}
-                            estats={estats}
-                            grupsDates={grupsDates}
-                        />
-                    </ErrorBoundary>
-                </Grid>
-                {expanded && (
-                    <Grid size={12}>
+                </Box>
+                <Box sx={{ width: '100%' }}>
+                    <React.Activity mode={expanded ? 'visible' : 'hidden'}>
                         <AppDataTable
                             groupedApp={groupedApp}
                             groupedEntorn={groupedEntorn}
@@ -580,36 +610,38 @@ export const SalutWidgetContent: React.FC<{
                             entornApps={entornApps}
                             salutLastItems={salutLastItems}
                         />
-                    </Grid>
-                )}
-                {!isGroupingDisabled && (
-                    <Grid
-                        size={12}
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            position: 'absolute',
-                            bottom: '0px',
-                            width: '100%',
-                        }}
-                    >
-                        <Button sx={{width: '100%', color: 'grey'}} onClick={() => setExpanded(!expanded)}>
-                            {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                        </Button>
-                    </Grid>
-                )}
+                    </React.Activity>
+                </Box>
                 {/* Botón de expansión duplicado para ocupar la altura del botón original con position: absolute */}
-                <Grid size={12}>
-                    <IconButton>
+                <Box sx={{ width: '100%', mt: 1 }}>
+                    <IconButton disabled>
                         <KeyboardArrowUpIcon
                             sx={{
                                 visibility: 'hidden',
                             }}
                         />
                     </IconButton>
-                </Grid>
-            </Grid>
-        </Box>
+                </Box>
+            </Box>
+            {!isGroupingDisabled && (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        position: 'absolute',
+                        bottom: '0px',
+                        width: '100%',
+                    }}
+                >
+                    <Button
+                        sx={{ width: '100%', color: 'grey' }}
+                        onClick={() => setExpanded(!expanded)}
+                    >
+                        {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                    </Button>
+                </Box>
+            )}
+        </Paper>
     );
 };
 
@@ -631,18 +663,29 @@ export const SalutLlistat = ({
     setExpanded: (expand: boolean, context: SalutData) => void;
     isExpanded: (salutGroup: SalutData) => boolean;
 }) => {
+    const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
     if (!salutGroups.length || grupsDates == null || agrupacio == null) return;
 
     return (
-        <>
-            {salutGroups.map((salutGroup, index) => {
+        <Box
+            ref={trackedGridRef}
+            sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 2,
+                justifyContent: 'flex-start',
+            }}
+        >
+            {salutGroups.map((salutGroup) => {
                 // Si no se ha agrupado por app ni entorn, la agrupación debe estar desactivada
-                const isGroupingDisabled = salutGroup.groupedApp == null && salutGroup.groupedEntorn == null;
+                const isGroupingDisabled =
+                    salutGroup.groupedApp == null && salutGroup.groupedEntorn == null;
                 return (
-                    <Paper key={index} elevation={1} sx={{ px: 2, pt: 1, marginBottom: 1 }}>
                         <SalutWidgetContent
+                            key={`salutWidgetContent-${salutGroup.groupedApp?.id}-${salutGroup.groupedEntorn?.id}`}
                             expanded={isExpanded(salutGroup)}
-                            setExpanded={(expand) => setExpanded(expand, salutGroup)}
+                            setExpanded={expand => setExpanded(expand, salutGroup)}
+                            parentContainerFullWidth={trackedGridSize?.width ?? null}
                             isGroupingDisabled={isGroupingDisabled}
                             salutLastItems={salutGroup.salutLastItems}
                             agrupacio={agrupacio}
@@ -654,9 +697,8 @@ export const SalutLlistat = ({
                             entornApps={salutGroup.entornApps}
                             grupsDates={grupsDates}
                         />
-                    </Paper>
                 );
             })}
-        </>
+        </Box>
     );
 };

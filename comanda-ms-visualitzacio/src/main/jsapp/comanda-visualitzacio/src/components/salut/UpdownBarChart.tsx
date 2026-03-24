@@ -128,7 +128,7 @@ const UpdownBarChart: React.FC<{
         },
     ];
 
-    const xAxis: ReadonlyArray<XAxis<'band'>> = React.useMemo(() => ([
+    const xAxis = React.useMemo<ReadonlyArray<XAxis<'band'>>>(() => ([
         {
             scaleType: 'band',
             data: dataGroups,
@@ -145,6 +145,7 @@ const UpdownBarChart: React.FC<{
                 xAxis={xAxis}
                 yAxis={yAxis}
                 series={series}
+                hideLegend
                 // borderRadius={6}
                 grid={{
                     horizontal: true,
