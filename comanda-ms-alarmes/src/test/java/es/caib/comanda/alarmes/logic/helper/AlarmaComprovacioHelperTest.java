@@ -1,5 +1,6 @@
 package es.caib.comanda.alarmes.logic.helper;
 
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigCondicio;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
@@ -40,6 +41,8 @@ class AlarmaComprovacioHelperTest {
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock
     private AlarmaMailHelper alarmaMailHelper;
+    @Mock
+    private ComandaSseEventPublisher comandaSseEventPublisher;
 
     @InjectMocks
     private AlarmaComprovacioHelper alarmaComprovacioHelper;

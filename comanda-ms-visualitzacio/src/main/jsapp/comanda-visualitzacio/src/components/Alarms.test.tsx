@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Alarms } from './Alarms';
@@ -7,13 +8,22 @@ import { Alarms } from './Alarms';
 const mocks = vi.hoisted(() => ({
     reportMock: vi.fn(),
     showTemporalMock: vi.fn(),
+    subscribeMock: vi.fn(),
+    sseStatus: 'connected' as 'connecting' | 'connected' | 'disconnected',
     componentFactory: () => React.createElement('div', { 'data-testid': 'message-component' }, 'Missatge'),
 }));
 
 vi.mock('reactlib', () => ({
-    useResourceApiService: () => ({
+    useResourceApiService: ((() => ({
         isReady: true,
         artifactReport: mocks.reportMock,
+    })) as unknown) as typeof import('reactlib').useResourceApiService,
+}));
+vi.mock('./SseProvider', () => ({
+    useSseContext: () => ({
+        connected: mocks.sseStatus === 'connected',
+        status: mocks.sseStatus,
+        subscribe: mocks.subscribeMock,
     }),
 }));
 
@@ -23,8 +33,15 @@ vi.mock('./MessageShow', () => ({
         component: mocks.componentFactory(),
     }),
 }));
+vi.mock('@mui/x-data-grid-pro', () => ({}));
+vi.mock('@mui/x-data-grid', () => ({}));
+vi.mock('@mui/x-data-grid/locales', () => ({}));
 
 vi.mock('react-i18next', () => ({
+    initReactI18next: {
+        type: '3rdParty',
+        init: () => undefined,
+    },
     useTranslation: () => ({
         t: (selector: any, params?: { count?: number }) =>
             selector({
@@ -43,6 +60,8 @@ vi.mock('react-i18next', () => ({
 
 describe('Alarms', () => {
     beforeEach(() => {
+        mocks.sseStatus = 'connected';
+        mocks.subscribeMock.mockImplementation((_eventType: string, _listener: unknown) => vi.fn());
         let intervalId = 1;
         vi.spyOn(globalThis, 'setInterval').mockImplementation(
             ((callback: TimerHandler) => {
@@ -83,7 +102,8 @@ describe('Alarms', () => {
     });
 
     it('Alarms_quanLApiEstaPreparada_registraLaRefrescadaPeriodica', async () => {
-        // Verifica que el component programa la refrescada automàtica amb l'interval esperat.
+        // Verifica que el component fa fallback a polling si l'alta al SSE falla.
+        mocks.sseStatus = 'disconnected';
         mocks.reportMock.mockResolvedValue([{ id: 1 }]);
 
         render(
@@ -94,6 +114,66 @@ describe('Alarms', () => {
 
         await waitFor(() => {
             expect(globalThis.setInterval).toHaveBeenCalledWith(expect.any(Function), 30_000);
+        });
+    });
+
+    it('Alarms_quanElSseEsRegistra_noProgramaPolling', async () => {
+        // Comprova que amb SSE operatiu no s'activa el polling i que el payload rebut actualitza el badge.
+        mocks.reportMock.mockResolvedValue([{ id: 1 }]);
+        let sseListener: ((event: { payload?: { id: number }[] }) => void) | undefined;
+        mocks.subscribeMock.mockImplementation((_eventType: string, listener: typeof sseListener) => {
+            sseListener = listener;
+            return vi.fn();
+        });
+
+        render(
+            <MemoryRouter>
+                <Alarms />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(mocks.subscribeMock).toHaveBeenCalled();
+        });
+        expect(globalThis.setInterval).not.toHaveBeenCalledWith(expect.any(Function), 30_000);
+
+        act(() => {
+            sseListener?.({ payload: [{ id: 1 }, { id: 2 }] });
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText('2')).toBeInTheDocument();
+        });
+    });
+
+    it('Alarms_quanRepUnEventSse_actualitzaElNumeroDelBotoDalarmesActives', async () => {
+        mocks.reportMock.mockResolvedValue([{ id: 1 }]);
+        let sseListener: ((event: { payload?: { id: number }[] }) => void) | undefined;
+        mocks.subscribeMock.mockImplementation((_eventType: string, listener: typeof sseListener) => {
+            sseListener = listener;
+            return vi.fn();
+        });
+
+        await act(async () => {
+            render(
+                <MemoryRouter>
+                    <Alarms />
+                </MemoryRouter>
+            );
+        });
+
+        const alarmsButton = screen.getByRole('link');
+
+        await waitFor(() => {
+            expect(within(alarmsButton).getByText('1')).toBeInTheDocument();
+        });
+
+        act(() => {
+            sseListener?.({ payload: [{ id: 1 }, { id: 2 }, { id: 3 }] });
+        });
+
+        await waitFor(() => {
+            expect(within(alarmsButton).getByText('3')).toBeInTheDocument();
         });
     });
 });

@@ -1,5 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
@@ -33,6 +35,7 @@ import java.util.Map;
 public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaConfig, Long, AlarmaConfigEntity> implements AlarmaConfigService {
     private final AuthenticationHelper authenticationHelper;
     private final AlarmaRepository alarmaRepository;
+    private final ComandaSseEventPublisher comandaSseEventPublisher;
 
     @PostConstruct
     public void init() {
@@ -70,6 +73,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 
             alarmaRepository.deleteByAlarmaConfigAndEstat(entity, AlarmaEstat.ESBORRANY);
             alarmaRepository.finalizeByAlarmaConfig(entity, LocalDateTime.now());
+            comandaSseEventPublisher.publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
 
             return null;
         }

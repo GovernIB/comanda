@@ -1,5 +1,6 @@
 package es.caib.comanda.alarmes.logic.service;
 
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.helper.AlarmaComprovacioHelper;
 import es.caib.comanda.alarmes.logic.helper.AlarmaMailHelper;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
@@ -56,6 +57,8 @@ class AlarmaServiceImplTest {
     private AlarmaRepository alarmaRepository;
     @Mock
     private EntityManager entityManager;
+    @Mock
+    private ComandaSseEventPublisher comandaSseEventPublisher;
 
     @InjectMocks
     private AlarmaServiceImpl alarmaService;

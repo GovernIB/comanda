@@ -1,5 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.helper.AlarmaComprovacioHelper;
 import es.caib.comanda.alarmes.logic.helper.AlarmaMailHelper;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
@@ -11,6 +13,7 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
@@ -30,6 +33,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,9 +50,11 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 
 	private final AlarmaComprovacioHelper alarmaComprovacioHelper;
 	private final AlarmaConfigRepository alarmaConfigRepository;
+	private final AlarmaRepository alarmaRepository;
 	private final AlarmaMailHelper alarmaMailHelper;
 	private final AuthenticationHelper authenticationHelper;
     private final EntityManager entityManager;
+    private final ComandaSseEventPublisher comandaSseEventPublisher;
 
 	@Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
 	private Boolean schedulerLeader;
@@ -94,6 +100,36 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		long mailCount = alarmaMailHelper.sendAlarmesAgrupades();
 		log.debug("...enviaments agrupats d'alarmes finalitzat ({} correus enviats)", mailCount);
 	}
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AlarmaReduidaResource> findActiveAlarmIdsForSubscriber(String currentUser, boolean isAdmin) {
+        List<AlarmaEntity> activeAlarms = new ArrayList<>(
+                alarmaRepository.findByEstatAndAlarmaConfigAdminFalseAndAlarmaConfigCreatedBy(
+                        AlarmaEstat.ACTIVA,
+                        currentUser));
+        if (isAdmin) {
+            activeAlarms.addAll(alarmaRepository.findByEstatAndAlarmaConfigAdminTrue(AlarmaEstat.ACTIVA));
+        }
+        return activeAlarms.stream()
+                .map(AlarmaEntity::getId)
+                .distinct()
+                .map(AlarmaReduidaResource::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public <P extends Serializable> Serializable artifactActionExec(
+            Long id,
+            String code,
+            P params) throws ArtifactNotFoundException, ActionExecutionException {
+        Serializable response = super.artifactActionExec(id, code, params);
+        if (Alarma.ESBORRAR_ACTION.equals(code) || Alarma.REACTIVAR_ACTION.equals(code)) {
+            publishActiveAlarmsChangedEvent();
+        }
+        return response;
+    }
 
 	@Override
 	protected String additionalSpringFilter(
@@ -190,6 +226,25 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
         boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
         String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
         return (!alarmaIsAdmin || !isCurrentUserAdmin) && (alarmaIsAdmin || !currentUser.equals(alarmaCreatedBy));
+    }
+
+    @Override
+    protected void afterCreateSave(AlarmaEntity entity, Alarma resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        publishActiveAlarmsChangedEvent();
+    }
+
+    @Override
+    protected void afterUpdateSave(AlarmaEntity entity, Alarma resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        publishActiveAlarmsChangedEvent();
+    }
+
+    @Override
+    protected void afterDelete(AlarmaEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        publishActiveAlarmsChangedEvent();
+    }
+
+    private void publishActiveAlarmsChangedEvent() {
+        comandaSseEventPublisher.publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
     }
 
     @RequiredArgsConstructor

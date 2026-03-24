@@ -1,5 +1,7 @@
 package es.caib.comanda.alarmes.logic.helper;
 
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
@@ -34,6 +36,7 @@ public class AlarmaComprovacioHelper {
 	private final SalutServiceClient salutServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 	private final AlarmaMailHelper alarmaMailHelper;
+    private final ComandaSseEventPublisher comandaSseEventPublisher;
 
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
 		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_CAIGUDA) {
@@ -143,6 +146,7 @@ public class AlarmaComprovacioHelper {
 					alarmaAnteriorNoFinalitzada.setEstat(AlarmaEstat.ACTIVA);
 					alarmaAnteriorNoFinalitzada.setDataActivacio(LocalDateTime.now());
 					alarmaActivada = alarmaAnteriorNoFinalitzada;
+                    publishActiveAlarmsChangedEvent();
 					log.debug("Alarma de tipus esborrany activada (configId={}, configNom={}, destinatari={}",
 							alarmaConfig.getId(),
 							alarmaConfig.getNom(),
@@ -155,6 +159,7 @@ public class AlarmaComprovacioHelper {
 				// pendents d'activar-se poden activar-se sempre que la condició segueixi activa.
 				if (optionalAlarmaAnteriorNoFinalitzada.get().getEstat() == AlarmaEstat.ESBORRANY) {
 					optionalAlarmaAnteriorNoFinalitzada.get().setEstat(AlarmaEstat.ACTIVA);
+                    publishActiveAlarmsChangedEvent();
 				}
 				return;
 			}
@@ -169,6 +174,7 @@ public class AlarmaComprovacioHelper {
 							alarma(alarma).
 							alarmaConfig(alarmaConfig).
 							build());
+            publishActiveAlarmsChangedEvent();
 			log.debug("Nova alarma activa creada (configId={}, configNom={}, destinatari={}",
 					alarmaConfig.getId(),
 					alarmaConfig.getNom(),
@@ -198,8 +204,13 @@ public class AlarmaComprovacioHelper {
 			alarmaRepository.delete(alarmaAnteriorNoFinalitzada);
 		} else {
 			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(LocalDateTime.now());
+            publishActiveAlarmsChangedEvent();
 		}
 	}
+
+    private void publishActiveAlarmsChangedEvent() {
+        comandaSseEventPublisher.publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
+    }
 
 	private boolean hasAlarmaConfigPeriodes(AlarmaConfigEntity alarmaConfig) {
 		return alarmaConfig.getPeriodeValor() != null && alarmaConfig.getPeriodeUnitat() != null;

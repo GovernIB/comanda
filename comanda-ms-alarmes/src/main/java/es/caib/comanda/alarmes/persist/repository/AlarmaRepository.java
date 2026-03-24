@@ -29,6 +29,8 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 
 	List<AlarmaEntity> findByAlarmaConfigCreatedByAndDataEnviamentIsNull(String username);
 	List<AlarmaEntity> findByAlarmaConfigAdminAndDataEnviamentIsNull(boolean admin);
+    List<AlarmaEntity> findByEstatAndAlarmaConfigAdminTrue(AlarmaEstat estat);
+    List<AlarmaEntity> findByEstatAndAlarmaConfigAdminFalseAndAlarmaConfigCreatedBy(AlarmaEstat estat, String createdBy);
 
 	@Query("SELECT " +
 			"    DISTINCT a.alarmaConfig.createdBy " +
