@@ -1,0 +1,36 @@
+databaseChangeLog:
+- changeSet:
+    id: salut-fk-index-1
+    author: limit
+    comment: Afegir índexos a FK per optimitzar consultes
+    changes:
+    - createIndex:
+        tableName: ${db_prefix}salut_integracio
+        indexName: ${db_prefix}salutint_pare_i
+        columns:
+        - column:
+            name: pare_id
+    - createIndex:
+        tableName: ${db_prefix}salut_integracio
+        indexName: ${db_prefix}salutint_salut_i
+        columns:
+        - column:
+            name: salut_id
+    - createIndex:
+        tableName: ${db_prefix}salut_subsistema
+        indexName: ${db_prefix}salutsub_salut_i
+        columns:
+        - column:
+            name: salut_id
+    - createIndex:
+        tableName: ${db_prefix}salut_missatge
+        indexName: ${db_prefix}salutmsg_salut_i
+        columns:
+        - column:
+            name: salut_id
+    - createIndex:
+        tableName: ${db_prefix}salut_detall
+        indexName: ${db_prefix}salutdet_salut_i
+        columns:
+        - column:
+            name: salut_id

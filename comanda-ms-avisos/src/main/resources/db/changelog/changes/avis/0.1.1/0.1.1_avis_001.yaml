@@ -1,0 +1,18 @@
+databaseChangeLog:
+- changeSet:
+    id: avis-fk-index-1
+    author: limit
+    comment: Afegir índexos a FK per optimitzar consultes
+    changes:
+    - createIndex:
+        tableName: com_avis_usuari
+        indexName: com_avisusr_avis_i
+        columns:
+        - column:
+            name: avis_id
+    - createIndex:
+        tableName: com_avis_grup
+        indexName: com_avisgrp_avis_i
+        columns:
+        - column:
+            name: avis_id

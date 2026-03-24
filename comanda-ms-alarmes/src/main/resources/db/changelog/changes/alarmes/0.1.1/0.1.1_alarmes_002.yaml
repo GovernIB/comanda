@@ -1,0 +1,18 @@
+databaseChangeLog:
+- changeSet:
+    id: alarmes-fk-index-1
+    author: limit
+    comment: Afegir índexos a FK per optimitzar consultes
+    changes:
+    - createIndex:
+        tableName: ${db_prefix}alarma
+        indexName: ${db_prefix}alarma_alarmcfg_i
+        columns:
+        - column:
+            name: alarma_config_id
+    - createIndex:
+        tableName: ${db_prefix}alarma_usuari
+        indexName: ${db_prefix}alarmausu_alarma_i
+        columns:
+        - column:
+            name: alarma_id

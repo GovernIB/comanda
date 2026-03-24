@@ -1,0 +1,24 @@
+databaseChangeLog:
+- changeSet:
+    id: acl-fk-index-1
+    author: limit
+    comment: Afegir índexos a FK per optimitzar consultes
+    changes:
+    - createIndex:
+        tableName: ${db_prefix}acl_object_identity
+        indexName: ${db_prefix}acloid_parent_i
+        columns:
+        - column:
+            name: parent_object
+    - createIndex:
+        tableName: ${db_prefix}acl_entry
+        indexName: ${db_prefix}aclentry_sid_i
+        columns:
+        - column:
+            name: sid
+    - createIndex:
+        tableName: ${db_prefix}acl_object_identity
+        indexName: ${db_prefix}acloid_ownersid_i
+        columns:
+        - column:
+            name: owner_sid
