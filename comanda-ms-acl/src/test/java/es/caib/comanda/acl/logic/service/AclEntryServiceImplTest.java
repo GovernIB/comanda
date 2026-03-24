@@ -42,7 +42,7 @@ class AclEntryServiceImplTest {
         // Comprova que el servei transforma PermissionEnum i construeix els SIDs a partir de l'usuari i els rols.
         AclHelper helper = mock(AclHelper.class);
         AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
-        when(helper.anyPermissionGranted(any(), eq(30L), anyList(), Mockito.<Sid[]>any())).thenReturn(false);
+        when(helper.anyPermissionGranted(any(), eq(30L), anyList(), Mockito.<Sid>any(), Mockito.<Sid>any(), Mockito.<Sid>any())).thenReturn(false);
 
         boolean granted = service.anyPermissionGranted(ResourceType.ENTORN_APP, 30L, null, "anna", List.of("COM_USER", "COM_ADMIN"));
 
@@ -51,13 +51,12 @@ class AclEntryServiceImplTest {
                 any(),
                 eq(30L),
                 eq(List.of()),
-                Mockito.argThat((Sid[] sids) -> sids.length == 3
-                        && sids[0] instanceof PrincipalSid
-                        && "anna".equals(((PrincipalSid) sids[0]).getPrincipal())
-                        && sids[1] instanceof GrantedAuthoritySid
-                        && "COM_USER".equals(((GrantedAuthoritySid) sids[1]).getGrantedAuthority())
-                        && sids[2] instanceof GrantedAuthoritySid
-                        && "COM_ADMIN".equals(((GrantedAuthoritySid) sids[2]).getGrantedAuthority())));
+                Mockito.argThat((Sid sid) -> sid instanceof PrincipalSid
+                        && "anna".equals(((PrincipalSid) sid).getPrincipal())),
+                Mockito.argThat((Sid sid) -> sid instanceof GrantedAuthoritySid
+                        && "COM_USER".equals(((GrantedAuthoritySid) sid).getGrantedAuthority())),
+                Mockito.argThat((Sid sid) -> sid instanceof GrantedAuthoritySid
+                        && "COM_ADMIN".equals(((GrantedAuthoritySid) sid).getGrantedAuthority())));
     }
 
     @Test
@@ -65,7 +64,7 @@ class AclEntryServiceImplTest {
         // Verifica que el servei delega la cerca d'ids amb els permisos convertits i els SIDs construïts.
         AclHelper helper = mock(AclHelper.class);
         AclEntryServiceImpl service = new AclEntryServiceImpl(helper);
-        when(helper.findIdsWithAnyPermission(any(), eq(List.of()), Mockito.<Sid[]>any())).thenReturn(Set.of());
+        when(helper.findIdsWithAnyPermission(any(), eq(List.of()), Mockito.<Sid>any(), Mockito.<Sid>any())).thenReturn(Set.of());
 
         Set<Serializable> ids = service.findIdsWithAnyPermission(ResourceType.ENTORN_APP, null, "anna", List.of("COM_USER"));
 
@@ -73,11 +72,10 @@ class AclEntryServiceImplTest {
         verify(helper).findIdsWithAnyPermission(
                 any(),
                 eq(List.of()),
-                Mockito.argThat((Sid[] sids) -> sids.length == 2
-                        && sids[0] instanceof PrincipalSid
-                        && "anna".equals(((PrincipalSid) sids[0]).getPrincipal())
-                        && sids[1] instanceof GrantedAuthoritySid
-                        && "COM_USER".equals(((GrantedAuthoritySid) sids[1]).getGrantedAuthority())));
+                Mockito.argThat((Sid sid) -> sid instanceof PrincipalSid
+                        && "anna".equals(((PrincipalSid) sid).getPrincipal())),
+                Mockito.argThat((Sid sid) -> sid instanceof GrantedAuthoritySid
+                        && "COM_USER".equals(((GrantedAuthoritySid) sid).getGrantedAuthority())));
     }
 
     @Test
@@ -181,7 +179,8 @@ class AclEntryServiceImplTest {
         resource.setReadAllowed(true);
         resource.setAdminAllowed(true);
         resource.setPerm0Allowed(true);
-        AclEntryEntity entity = AclEntryEntity.builder().id("pk").resource(resource).build();
+        String id = new AclEntry.AclEntryPk(ResourceType.ENTORN_APP, 1L, false, "ROLE_ADMIN").serializeToString();
+        AclEntryEntity entity = AclEntryEntity.builder().id(id).resource(resource).build();
 
         AclEntryEntity saved = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "entitySaveFlushAndRefresh", entity);
 

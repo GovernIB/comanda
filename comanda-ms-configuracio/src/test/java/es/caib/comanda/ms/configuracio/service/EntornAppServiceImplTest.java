@@ -180,10 +180,6 @@ public class EntornAppServiceImplTest {
             resourceEntityMappingHelper,
             eventPublisher
         );
-        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer test");
-        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
-        when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
-        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{"COM_USER"});
         
         // Setup test data
         AppEntity appEntity = new AppEntity();
@@ -233,6 +229,13 @@ public class EntornAppServiceImplTest {
         this.statsAuthPassword = "test_pass";
         ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
         lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+    }
+
+    private void stubAclContext(String... roles) {
+        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer test");
+        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
+        when(authenticationHelper.getCurrentUserRoles()).thenReturn(roles);
     }
 
     @Test
@@ -288,6 +291,7 @@ public class EntornAppServiceImplTest {
 
     @Test
     void additionalSpringFilter_quanHiHaPermisosPerAppIEntornApp_combinaElsDosFiltres() {
+        stubAclContext("COM_USER");
         when(aclServiceClient.findIdsWithAnyPermission(
                 eq(ResourceType.APP),
                 eq(Collections.singletonList(PermissionEnum.READ)),
@@ -307,7 +311,82 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
+    void additionalSpringFilter_quanNomesHiHaPermisosPerApp_retornaFiltrePerAplicacions() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L, 2L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = entornAppService.exposedAdditionalSpringFilter();
+
+        assertEquals("app.id:1 or app.id:2", result);
+    }
+
+    @Test
+    void additionalSpringFilter_quanNomesHiHaPermisosPerEntornApp_retornaFiltrePerEntornsApp() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(5L, 7L)));
+
+        String result = entornAppService.exposedAdditionalSpringFilter();
+
+        assertEquals("id:5 or id:7", result);
+    }
+
+    @Test
+    void additionalSpringFilter_quanConsultaAcl_passaUsuariIRolsActuals() {
+        stubAclContext("COM_USER", "COM_EXTRA");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER", "COM_EXTRA")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER", "COM_EXTRA")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        entornAppService.exposedAdditionalSpringFilter();
+
+        verify(aclServiceClient).findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER", "COM_EXTRA")),
+                eq("Bearer test"));
+        verify(aclServiceClient).findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER", "COM_EXTRA")),
+                eq("Bearer test"));
+    }
+
+    @Test
     void additionalSpringFilter_quanNoHiHaPermisos_retornaFiltreBuit() {
+        stubAclContext("COM_USER");
         when(aclServiceClient.findIdsWithAnyPermission(
                 eq(ResourceType.APP),
                 eq(Collections.singletonList(PermissionEnum.READ)),

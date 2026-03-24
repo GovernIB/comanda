@@ -39,6 +39,7 @@ import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		LinkedHashSet<Long> mergedIds = new LinkedHashSet<>();
 		if (!appPermissionIds.isEmpty()) {
 			String appFilter = appPermissionIds.stream()
+					.sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
 					.map(String::valueOf)
 					.map(id -> "app.id:" + id)
 					.collect(Collectors.joining(" or "));
@@ -106,6 +108,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		}
 		if (!entornAppPermissionIds.isEmpty()) {
 			String entornAppFilter = entornAppPermissionIds.stream()
+					.sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
 					.map(String::valueOf)
 					.map(id -> "id:" + id)
 					.collect(Collectors.joining(" or "));
