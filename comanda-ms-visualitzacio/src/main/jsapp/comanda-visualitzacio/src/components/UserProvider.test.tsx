@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import UserProvider, { ROLE_ADMIN, ROLE_CONSULTA } from './UserProvider';
+import UserProvider, { ROLE_ADMIN, ROLE_CONSULTA, ROLE_USER } from './UserProvider';
 import { useUserContext } from './UserContext';
 
 const mocks = vi.hoisted(() => ({
@@ -99,6 +99,41 @@ describe('UserProvider', () => {
 
         await waitFor(() => {
             expect(screen.getByTestId('current-role')).toHaveTextContent(ROLE_CONSULTA);
+        });
+    });
+
+    it('UserProvider_quanLusuariNoTeRolsFuncionals_usaUsuariPerDefecte', async () => {
+        mocks.findMock.mockResolvedValue({
+            rows: [{ id: 4, rols: [] }],
+        });
+
+        render(
+            <UserProvider>
+                <Consumer />
+            </UserProvider>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByTestId('current-role')).toHaveTextContent(ROLE_USER);
+        });
+
+        expect(mocks.setHttpHeadersMock).toHaveBeenCalledWith([{ 'X-App-Role': ROLE_USER }]);
+    });
+
+    it('UserProvider_quanElRolDesatEsUsuari_elRecuperaEncaraQueNoSiguiUnRolFuncional', async () => {
+        localStorage.setItem('comanda_userRole', ROLE_USER);
+        mocks.findMock.mockResolvedValue({
+            rows: [{ id: 10, rols: [ROLE_CONSULTA, ROLE_ADMIN] }],
+        });
+
+        render(
+            <UserProvider>
+                <Consumer />
+            </UserProvider>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByTestId('current-role')).toHaveTextContent(ROLE_USER);
         });
     });
 

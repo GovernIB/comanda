@@ -1,5 +1,8 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
@@ -17,6 +20,8 @@ import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.model.v1.log.FitxerContingut;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -55,6 +60,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
@@ -81,6 +88,9 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final AppInfoHelper appInfoHelper;
     private final CacheHelper cacheHelper;
     private final ConfiguracioSchedulerService schedulerService;
+    private final AuthenticationHelper authenticationHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final AclServiceClient aclServiceClient;
     private final RestTemplate restTemplate;
     private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
@@ -99,13 +109,45 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
 			String[] namedQueries) {
-		/*ResponseEntity<Set<Serializable>> idsResponseEntity = aclServiceClient.findIdsWithAnyPermission(
-				ResourceType.ENTORN_APP,
-				Collections.singletonList(PermissionEnum.READ),
-				httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		System.out.println(">>> allowedIds: " + idsResponseEntity.getBody());*/
-		return null;
+		if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+				|| authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+			return null;
+		}
+		Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
+		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
+		String appFilter = buildOrFilter("app.id", appPermissionIds);
+		String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
+		if (appFilter == null && entornAppFilter == null) {
+			return "id:0";
+		}
+		if (appFilter == null) {
+			return entornAppFilter;
+		}
+		if (entornAppFilter == null) {
+			return appFilter;
+		}
+		return appFilter + " or " + entornAppFilter;
 	}
+
+    private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+                resourceType,
+                Collections.singletonList(PermissionEnum.READ),
+                authenticationHelper.getCurrentUserName(),
+                Arrays.asList(authenticationHelper.getCurrentUserRoles()),
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                .orElse(Collections.emptySet());
+    }
+
+    private String buildOrFilter(String fieldName, Set<Serializable> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+        return ids.stream()
+                .map(String::valueOf)
+                .map(id -> fieldName + ":" + id)
+                .collect(Collectors.joining(" or "));
+    }
 
     @Override
     protected void afterConversion(EntornAppEntity entity, EntornApp resource) {

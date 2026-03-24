@@ -19,9 +19,9 @@ class AclEntryControllerTest {
         // Verifica que el controller delega la comprovació de permisos al servei ACL.
         AclEntryService service = mock(AclEntryService.class);
         AclEntryController controller = new AclEntryController(service);
-        when(service.anyPermissionGranted(ResourceType.ENTORN_APP, 7L, List.of(PermissionEnum.READ))).thenReturn(true);
+        when(service.anyPermissionGranted(ResourceType.ENTORN_APP, 7L, List.of(PermissionEnum.READ), "anna", List.of("COM_USER"))).thenReturn(true);
 
-        var response = controller.anyPermissionGranted(ResourceType.ENTORN_APP, 7L, List.of(PermissionEnum.READ));
+        var response = controller.anyPermissionGranted(ResourceType.ENTORN_APP, 7L, List.of(PermissionEnum.READ), "anna", List.of("COM_USER"));
 
         assertThat(response.getBody()).isTrue();
     }
@@ -31,9 +31,9 @@ class AclEntryControllerTest {
         // Comprova que el controller retorna els ids resolts pel servei ACL.
         AclEntryService service = mock(AclEntryService.class);
         AclEntryController controller = new AclEntryController(service);
-        when(service.findIdsWithAnyPermission(ResourceType.DASHBOARD, List.of(PermissionEnum.WRITE))).thenReturn(Set.of(3L));
+        when(service.findIdsWithAnyPermission(ResourceType.DASHBOARD, List.of(PermissionEnum.WRITE), "anna", List.of("COM_USER"))).thenReturn(Set.of(3L));
 
-        var response = controller.findIdsWithAnyPermission(ResourceType.DASHBOARD, List.of(PermissionEnum.WRITE));
+        var response = controller.findIdsWithAnyPermission(ResourceType.DASHBOARD, List.of(PermissionEnum.WRITE), "anna", List.of("COM_USER"));
 
         assertThat(response.getBody()).containsExactly(3L);
     }

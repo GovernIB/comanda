@@ -29,21 +29,29 @@ public class AclEntryController extends BaseMutableResourceController<AclEntry, 
 	public ResponseEntity<Boolean> anyPermissionGranted(
 			@RequestParam ResourceType resourceType,
 			@RequestParam Serializable resourceId,
-			@RequestParam List<PermissionEnum> permissions) {
+			@RequestParam List<PermissionEnum> permissions,
+			@RequestParam String user,
+			@RequestParam List<String> roles) {
 		boolean granted = aclEntryService.anyPermissionGranted(
 				resourceType,
 				resourceId,
-				permissions);
+				permissions,
+				user,
+				roles);
 		return ResponseEntity.ok(granted);
 	}
 
 	@GetMapping("/findIdsWithAnyPermission")
 	public ResponseEntity<Set<Serializable>> findIdsWithAnyPermission(
 			@RequestParam ResourceType resourceType,
-			@RequestParam List<PermissionEnum> permissions) {
+			@RequestParam List<PermissionEnum> permissions,
+			@RequestParam String user,
+			@RequestParam List<String> roles) {
 		Set<Serializable> ids = aclEntryService.findIdsWithAnyPermission(
 				resourceType,
-				permissions);
+				permissions,
+				user,
+				roles);
 		return ResponseEntity.ok(ids);
 	}
 

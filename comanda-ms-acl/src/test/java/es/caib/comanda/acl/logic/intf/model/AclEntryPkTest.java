@@ -9,7 +9,7 @@ class AclEntryPkTest {
     @Test
     void serializeToStringIParseig_recuperenElsValorsOriginals() {
         // Comprova que la PK lògica d'ACL es pot serialitzar i recuperar sense pèrdua.
-        AclEntry.AclEntryPk pk = new AclEntry.AclEntryPk(ResourceType.ENTORN_APP, 15L, true, "ROLE_ADMIN");
+        AclEntry.AclEntryPk pk = new AclEntry.AclEntryPk(ResourceType.ENTORN_APP, 15L, false, "ROLE_ADMIN");
 
         String serialized = pk.serializeToString();
         AclEntry.AclEntryPk restored = AclEntry.AclEntryPk.deserializeFromString(serialized);

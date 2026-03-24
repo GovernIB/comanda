@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
@@ -8,7 +8,9 @@ const mocks = vi.hoisted(() => ({
     useUserContextMock: vi.fn(),
     useIsUserAdminMock: vi.fn(),
     useIsUserConsultaMock: vi.fn(),
+    useIsUserUsuariMock: vi.fn(),
     useThemeMock: vi.fn(),
+    entornAppFindMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             menu: {
@@ -56,6 +58,21 @@ vi.mock('./components/UserContext', () => ({
     useUserContext: () => mocks.useUserContextMock(),
     useIsUserAdmin: () => mocks.useIsUserAdminMock(),
     useIsUserConsulta: () => mocks.useIsUserConsultaMock(),
+    useIsUserUsuari: () => mocks.useIsUserUsuariMock(),
+}));
+
+vi.mock('reactlib', () => ({
+    useResourceApiService: (resourceName: string) => {
+        if (resourceName === 'entornApp') {
+            return {
+                isReady: true,
+                find: mocks.entornAppFindMock,
+            };
+        }
+        return {
+            isReady: true,
+        };
+    },
 }));
 
 vi.mock('react-i18next', () => ({
@@ -89,6 +106,7 @@ describe('App', () => {
         });
         mocks.useIsUserAdminMock.mockReturnValue(true);
         mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
         mocks.useThemeMock.mockReturnValue({
             palette: {
                 mode: 'light',
@@ -96,6 +114,7 @@ describe('App', () => {
                 getContrastText: vi.fn(() => '#111'),
             },
         });
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [{ id: 1 }] });
     });
 
     afterEach(() => {
@@ -124,44 +143,49 @@ describe('App', () => {
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
     });
 
-    it('App_quanLusuariNoTePermisosDeMenu_noPassaLesEntradesLaterals', () => {
-        // Verifica que per un usuari sense perfil admin ni consulta no s’envien les entrades del menú lateral.
+    it('App_quanLusuariNoTeRolsFuncionals_mostraElMenuLateralLimitat', async () => {
+        // Verifica que un usuari sense rol funcional veu només salut si hi té accés, tasques, avisos i alarmes.
         mocks.useIsUserAdminMock.mockReturnValue(false);
         mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(true);
 
         render(<App />);
 
-        const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
-
-        expect(props.menuEntries).toBeUndefined();
-        expect(props.headerMenuEntries).toHaveLength(4);
+        await waitFor(() => {
+            const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
+            expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['salut', 'tasca', 'avis', 'alarma']);
+        });
     });
 
     it('App_quanLusuariEsConsulta_noMostraElMenuSuperior', () => {
         // Verifica que un usuari amb el rol consulta no veu el menú superior.
         mocks.useIsUserAdminMock.mockReturnValue(false);
         mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
 
         render(<App />);
 
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
 
         expect(props.headerMenuEntries).toBeUndefined();
+        expect(props.menuEntries).toHaveLength(6);
     });
 
     it('App_quanLusuariNoEstaLlest_noMostraElMenuSuperior', () => {
-        // Verifica que si l'usuari no està llest (!isUserReady), no es mostra el menú superior.
+        // Verifica que si l'usuari no està llest no es mostra cap menú funcional encara.
         mocks.useUserContextMock.mockReturnValue({
             user: null,
         });
         mocks.useIsUserAdminMock.mockReturnValue(false);
         mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
 
         render(<App />);
 
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
 
         expect(props.headerMenuEntries).toBeUndefined();
+        expect(props.menuEntries).toBeUndefined();
     });
 
     it('App_quanElTemaEsFosc_usaElLogoFoscISenseColorDeFonsFix', () => {
@@ -192,6 +216,7 @@ describe('App', () => {
         // Verifica que el perfil consulta veu el menú lateral però sense les entrades reservades a administració.
         mocks.useIsUserAdminMock.mockReturnValue(false);
         mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
 
         render(<App />);
 
@@ -201,5 +226,19 @@ describe('App', () => {
         expect(props.menuEntries).toHaveLength(6);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'parametre')).toBe(false);
+    });
+
+    it('App_quanLusuariNoTeAccesASalut_amagaLentradaSalutDelMenuLimitat', async () => {
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(true);
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [] });
+
+        render(<App />);
+
+        await waitFor(() => {
+            const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
+            expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['tasca', 'avis', 'alarma']);
+        });
     });
 });

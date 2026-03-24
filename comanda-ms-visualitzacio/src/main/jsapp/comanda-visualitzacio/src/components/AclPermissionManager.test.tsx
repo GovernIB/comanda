@@ -57,14 +57,20 @@ describe('useAclPermissionManager', () => {
             dataGridComponentProps: expect.objectContaining({
                 title: 'Permisos',
                 staticFilter: "resourceType:'widget' and resourceId:25",
-                formAdditionalData: expect.objectContaining({
-                    resourceType: 'widget',
-                    resourceId: 25,
-                    subjectType: 'ROLE',
-                    readAllowed: true,
-                }),
+                formAdditionalData: expect.any(Function),
                 popupEditFormDialogResourceTitle: 'Permís del recurs',
             }),
+        });
+        const formAdditionalData = mocks.showMock.mock.calls[0][0].dataGridComponentProps.formAdditionalData;
+        expect(formAdditionalData(undefined, 'create')).toEqual({
+            resourceType: 'widget',
+            resourceId: 25,
+            subjectType: 'ROLE',
+            readAllowed: true,
+        });
+        expect(formAdditionalData({ subjectType: 'USER' }, 'update')).toEqual({
+            resourceType: 'widget',
+            resourceId: 25,
         });
     });
 

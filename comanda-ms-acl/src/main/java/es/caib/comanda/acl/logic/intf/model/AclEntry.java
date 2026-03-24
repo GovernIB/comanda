@@ -70,7 +70,7 @@ public class AclEntry extends BaseResource<String> {
 		private final boolean sidPrincipal;
 		private final String sidName;
 		public String serializeToString() {
-			String joined = resourceType + "|" + resourceId + "|" + (sidPrincipal ? 0 : 1) + "|" + sidName;
+			String joined = resourceType + "|" + resourceId + "|" + (sidPrincipal ? 1 : 0) + "|" + sidName;
 			return Base64.getEncoder().encodeToString(joined.getBytes());
 		}
 		public static AclEntryPk deserializeFromString(String str) {

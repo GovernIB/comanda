@@ -5,6 +5,7 @@ package es.caib.comanda.acl.logic.intf.model;
  * Extensible en el futur.
  */
 public enum ResourceType {
+    APP,
     ENTORN_APP,
     DASHBOARD
 }

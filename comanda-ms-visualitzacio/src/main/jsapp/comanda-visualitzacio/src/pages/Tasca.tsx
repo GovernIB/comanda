@@ -285,7 +285,7 @@ const TascaFilter = (props: { onSpringFilterChange: (springFilter: string | unde
                 <Grid size={{ xs: 12, sm: 6, md:3}}><FormField name="descripcio" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md:3, lg: 2}}><FormField name="numeroExpedient" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md:3, lg: 2}}><FormField name="tipus" /></Grid>
-                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2}}><FormField name="prioritat" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md:3, lg: 2}}><FormField name="prioritat" autocomplete /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataInici1" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataInici2" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md:3, lg: 2 }}><FormField name="dataFi1" /></Grid>

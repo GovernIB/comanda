@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
         selector({
             enum: {
                 userRole: {
+                    COM_USER: 'Usuari',
                     COM_ADMIN: 'Administrador',
                     COM_CONSULTA: 'Consulta',
                 },
@@ -28,7 +29,8 @@ vi.mock('./UserContext', () => ({
 }));
 
 vi.mock('./UserProvider.tsx', () => ({
-    MAPPABLE_ROLES: ['COM_ADMIN', 'COM_CONSULTA'],
+    MAPPABLE_ROLES: ['COM_USER', 'COM_ADMIN', 'COM_CONSULTA'],
+    ROLE_USER: 'COM_USER',
     ROLE_ADMIN: 'COM_ADMIN',
     ROLE_CONSULTA: 'COM_CONSULTA',
 }));
@@ -63,6 +65,7 @@ describe('RoleSelector', () => {
 
         fireEvent.click(screen.getByRole('menuitem'));
 
+        expect(screen.getByText('Usuari')).toBeInTheDocument();
         expect((await screen.findAllByText('Administrador')).length).toBeGreaterThan(0);
         expect(screen.getByText('Consulta')).toBeInTheDocument();
         expect(screen.queryByText('ALTRE')).not.toBeInTheDocument();
@@ -82,5 +85,21 @@ describe('RoleSelector', () => {
         fireEvent.click(await screen.findByText('Consulta'));
 
         expect(mocks.setCurrentRoleMock).toHaveBeenCalledWith('COM_CONSULTA');
+    });
+
+    it('RoleSelector_quanUsuariNoTeRolsFuncionals_mostraIgualmentLOpcioUsuari', async () => {
+        mocks.useUserContextMock.mockReturnValue({
+            user: { rols: [] },
+            currentRole: 'COM_USER',
+            setCurrentRole: mocks.setCurrentRoleMock,
+        });
+
+        render(<RoleSelector />);
+
+        fireEvent.click(screen.getByRole('menuitem'));
+
+        expect((await screen.findAllByText('Usuari')).length).toBeGreaterThan(0);
+        expect(screen.queryByText('Administrador')).not.toBeInTheDocument();
+        expect(screen.queryByText('Consulta')).not.toBeInTheDocument();
     });
 });

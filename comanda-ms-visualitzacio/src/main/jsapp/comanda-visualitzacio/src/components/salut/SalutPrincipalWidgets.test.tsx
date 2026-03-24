@@ -7,6 +7,18 @@ import {
     SalutWidgetTitle,
 } from './SalutPrincipalWidgets';
 
+const baseSalutWidgetContentProps = {
+    expanded: false,
+    setExpanded: () => undefined,
+    parentContainerFullWidth: 1024,
+    isGroupingDisabled: false,
+    salutLastItems: [] as any[],
+    agrupacio: 'HORA',
+    estats: {} as any,
+    entornApps: [] as any[],
+    grupsDates: ['2026-03-13'],
+};
+
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: (selector: any) =>
@@ -151,14 +163,7 @@ describe('SalutWidgetContent', () => {
         // Verifica que el contingut del widget mostra placeholders quan encara no hi ha dades disponibles.
         const { container } = render(
             <SalutWidgetContent
-                expanded={false}
-                setExpanded={() => undefined}
-                isGroupingDisabled={false}
-                salutLastItems={[]}
-                agrupacio="HORA"
-                estats={{} as any}
-                entornApps={[]}
-                grupsDates={['2026-03-13']}
+                {...baseSalutWidgetContentProps}
                 loading={true}
             />
         );
@@ -171,14 +176,9 @@ describe('SalutWidgetContent', () => {
         const setExpanded = vi.fn();
         render(
             <SalutWidgetContent
-                expanded={false}
+                {...baseSalutWidgetContentProps}
                 setExpanded={setExpanded}
-                isGroupingDisabled={false}
                 salutLastItems={[{ appEstat: 'UP' } as any]}
-                agrupacio="HORA"
-                estats={{} as any}
-                entornApps={[]}
-                grupsDates={['2026-03-13']}
             />
         );
 
@@ -192,14 +192,9 @@ describe('SalutWidgetContent', () => {
         // Verifica que l'estat expandit inclou el llistat detallat de dades.
         render(
             <SalutWidgetContent
+                {...baseSalutWidgetContentProps}
                 expanded={true}
-                setExpanded={() => undefined}
-                isGroupingDisabled={false}
                 salutLastItems={[{ appEstat: 'UP' } as any]}
-                agrupacio="HORA"
-                estats={{} as any}
-                entornApps={[]}
-                grupsDates={['2026-03-13']}
             />
         );
 
@@ -210,14 +205,8 @@ describe('SalutWidgetContent', () => {
         // Verifica que el resum visual continua funcionant quan no hi ha cap item de salut.
         render(
             <SalutWidgetContent
-                expanded={false}
-                setExpanded={() => undefined}
+                {...baseSalutWidgetContentProps}
                 isGroupingDisabled={true}
-                salutLastItems={[]}
-                agrupacio="HORA"
-                estats={{} as any}
-                entornApps={[]}
-                grupsDates={['2026-03-13']}
             />
         );
 
@@ -228,14 +217,9 @@ describe('SalutWidgetContent', () => {
         // Comprova que quan no hi ha agrupació el widget força l’estat expandit i oculta el control d’expansió.
         render(
             <SalutWidgetContent
-                expanded={false}
-                setExpanded={() => undefined}
+                {...baseSalutWidgetContentProps}
                 isGroupingDisabled={true}
                 salutLastItems={[{ appEstat: 'UP' } as any]}
-                agrupacio="HORA"
-                estats={{} as any}
-                entornApps={[]}
-                grupsDates={['2026-03-13']}
             />
         );
 

@@ -6,10 +6,12 @@ import {
     UserContext,
     useIsUserAdmin,
     useIsUserConsulta,
+    useIsUserUsuari,
     useUserContext,
 } from './UserContext';
 
 vi.mock('./UserProvider.tsx', () => ({
+    ROLE_USER: 'COM_USER',
     ROLE_ADMIN: 'COM_ADMIN',
     ROLE_CONSULTA: 'COM_CONSULTA',
 }));
@@ -37,8 +39,8 @@ describe('UserContext', () => {
         expect(result.current).toBe(contextValue);
     });
 
-    it('useIsUserAdminIConsulta_quanCanviaElRol_retornenLestatCorrecte', () => {
-        // Comprova que els dos selectors deriven correctament l'estat a partir del rol actual.
+    it('useIsUserAdminIConsultaIUsuari_quanCanviaElRol_retornenLestatCorrecte', () => {
+        // Comprova que els selectors deriven correctament l'estat a partir del rol actual.
         const wrapperAdmin = ({ children }: { children: React.ReactNode }) =>
             React.createElement(
                 UserContext.Provider,
@@ -63,17 +65,34 @@ describe('UserContext', () => {
                 },
                 children
             );
+        const wrapperUsuari = ({ children }: { children: React.ReactNode }) =>
+            React.createElement(
+                UserContext.Provider,
+                {
+                    value: {
+                        refresh: () => undefined,
+                        currentRole: 'COM_USER',
+                        setCurrentRole: () => undefined,
+                    },
+                },
+                children
+            );
 
         const { result: adminResult } = renderHook(
-            () => ({ isAdmin: useIsUserAdmin(), isConsulta: useIsUserConsulta() }),
+            () => ({ isAdmin: useIsUserAdmin(), isConsulta: useIsUserConsulta(), isUsuari: useIsUserUsuari() }),
             { wrapper: wrapperAdmin }
         );
         const { result: consultaResult } = renderHook(
-            () => ({ isAdmin: useIsUserAdmin(), isConsulta: useIsUserConsulta() }),
+            () => ({ isAdmin: useIsUserAdmin(), isConsulta: useIsUserConsulta(), isUsuari: useIsUserUsuari() }),
             { wrapper: wrapperConsulta }
         );
+        const { result: usuariResult } = renderHook(
+            () => ({ isAdmin: useIsUserAdmin(), isConsulta: useIsUserConsulta(), isUsuari: useIsUserUsuari() }),
+            { wrapper: wrapperUsuari }
+        );
 
-        expect(adminResult.current).toEqual({ isAdmin: true, isConsulta: false });
-        expect(consultaResult.current).toEqual({ isAdmin: false, isConsulta: true });
+        expect(adminResult.current).toEqual({ isAdmin: true, isConsulta: false, isUsuari: false });
+        expect(consultaResult.current).toEqual({ isAdmin: false, isConsulta: true, isUsuari: false });
+        expect(usuariResult.current).toEqual({ isAdmin: false, isConsulta: false, isUsuari: true });
     });
 });

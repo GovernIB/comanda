@@ -65,6 +65,7 @@ const translationEn: translationResourcesType = {
             },
         },
         userRole: {
+            COM_USER: 'User',
             COM_ADMIN: 'Administrator',
             COM_CONSULTA: 'Consultant'
         }

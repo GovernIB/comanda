@@ -14,10 +14,14 @@ public interface AclEntryService extends MutableResourceService<AclEntry, String
 	boolean anyPermissionGranted(
 			ResourceType resourceType,
 			Serializable resourceId,
-			List<PermissionEnum> permissions);
+			List<PermissionEnum> permissions,
+			String user,
+			List<String> roles);
 
 	Set<Serializable> findIdsWithAnyPermission(
 			ResourceType resourceType,
-			List<PermissionEnum> permissions);
+			List<PermissionEnum> permissions,
+			String user,
+			List<String> roles);
 
 }

@@ -1,6 +1,12 @@
 package es.caib.comanda.salut.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
@@ -31,11 +37,15 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
@@ -56,6 +66,9 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutDetallRepository salutDetallRepository;
 	private final SalutClientHelper salutClientHelper;
 	private final MetricsHelper metricsHelper;
+    private final AuthenticationHelper authenticationHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final AclServiceClient aclServiceClient;
 
 	@PostConstruct
 	public void init() {
@@ -69,6 +82,53 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
+	}
+
+	@Override
+	protected String additionalSpringFilter(
+			String currentSpringFilter,
+			String[] namedQueries) {
+		if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+				|| authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+			return null;
+		}
+		Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
+		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
+		Set<Long> allowedEntornAppIds = Collections.emptySet();
+		LinkedHashSet<Long> mergedIds = new LinkedHashSet<>();
+		if (!appPermissionIds.isEmpty()) {
+			String appFilter = appPermissionIds.stream()
+					.map(String::valueOf)
+					.map(id -> "app.id:" + id)
+					.collect(Collectors.joining(" or "));
+			salutClientHelper.entornAppFindByActivaTrue(appFilter)
+					.forEach(entornApp -> mergedIds.add(entornApp.getId()));
+		}
+		if (!entornAppPermissionIds.isEmpty()) {
+			String entornAppFilter = entornAppPermissionIds.stream()
+					.map(String::valueOf)
+					.map(id -> "id:" + id)
+					.collect(Collectors.joining(" or "));
+			salutClientHelper.entornAppFindByActivaTrue(entornAppFilter)
+					.forEach(entornApp -> mergedIds.add(entornApp.getId()));
+		}
+		allowedEntornAppIds = mergedIds;
+		if (allowedEntornAppIds.isEmpty()) {
+			return "entornAppId:0";
+		}
+		return allowedEntornAppIds.stream()
+				.map(id -> "entornAppId:" + id)
+				.collect(Collectors.joining(" or "));
+	}
+
+	private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+		return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+				resourceType,
+				Collections.singletonList(PermissionEnum.READ),
+				authenticationHelper.getCurrentUserName(),
+				Arrays.asList(authenticationHelper.getCurrentUserRoles()),
+				httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+				.orElse(Collections.emptySet());
 	}
 
 	public class PerspectiveIntegracions implements PerspectiveApplicator<SalutEntity, Salut> {

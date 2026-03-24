@@ -5,10 +5,11 @@ import logo from './assets/goib_logo.svg';
 import logoDark from './assets/goib_logo.png';
 import ComandaLogo from './assets/COM_DRA_COL.svg?react';
 import AppRoutes from './AppRoutes';
-import { useIsUserAdmin, useIsUserConsulta, useUserContext } from './components/UserContext';
+import { useIsUserAdmin, useIsUserUsuari, useUserContext } from './components/UserContext';
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import { useResourceApiService } from 'reactlib';
 import notNull from './util/arrayUtils';
 
 const APPBAR_HEIGHT = '64px';
@@ -16,12 +17,15 @@ const APPBAR_HEIGHT = '64px';
 export const App: React.FC = () => {
     const { user } = useUserContext();
     const isUserAdmin = useIsUserAdmin();
-    const isUserConsulta = useIsUserConsulta();
+    const isUserUsuari = useIsUserUsuari();
     const isUserReady = user != null;
+    const isLimitedUser = isUserReady && isUserUsuari;
     const { t } = useTranslation();
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
     const appbarBackgroundColor = darkThemeActive ? undefined : '#fff';
+    const { isReady: entornAppApiIsReady, find: entornAppFind } = useResourceApiService('entornApp');
+    const [hasSalutAccess, setHasSalutAccess] = React.useState(false);
     const menuSalut = {
         id: 'salut',
         title: t($ => $.menu.salut),
@@ -165,12 +169,6 @@ export const App: React.FC = () => {
             } : null,
         ].filter(notNull))
     };
-    const headerMenuEntries = [
-        menuSalut,
-        menuEstadistiques,
-        menuTasca,
-        menuAvis,
-    ];
     const caibMenuEntries: MenuEntryWithResource[] = [
         menuSalut,
         menuEstadistiques,
@@ -178,9 +176,38 @@ export const App: React.FC = () => {
         menuAvis,
         menuMonitoritzacio,
         menuConfiguracio,
-        // isUserAdmin ? menuConfiguracio : null,
-        // isUserConsulta ? menuAlarmaConfig : null,
     ].filter(notNull);
+    const limitedMenuEntries: MenuEntryWithResource[] = [
+        hasSalutAccess ? { ...menuSalut, resourceName: undefined } : null,
+        { ...menuTasca, resourceName: undefined },
+        { ...menuAvis, resourceName: undefined },
+        { ...menuAlarmaConfig, resourceName: undefined },
+    ].filter(notNull);
+    const visibleMenuEntries = !isUserReady
+        ? undefined
+        : isLimitedUser
+            ? limitedMenuEntries
+            : caibMenuEntries;
+
+    React.useEffect(() => {
+        if (!isLimitedUser) {
+            setHasSalutAccess(false);
+            return;
+        }
+        if (!entornAppApiIsReady) {
+            return;
+        }
+        void entornAppFind({
+            page: 0,
+            size: 1,
+            filter: 'activa:true and app.activa:true',
+        }).then(response => {
+            setHasSalutAccess((response.rows?.length ?? 0) > 0);
+        }).catch(() => {
+            setHasSalutAccess(false);
+        });
+    }, [entornAppApiIsReady, entornAppFind, isLimitedUser]);
+
     return (
         <BaseApp
             code="com"
@@ -210,8 +237,7 @@ export const App: React.FC = () => {
             }
             version="0.1"
             availableLanguages={['ca', 'es']}
-            menuEntries={(isUserAdmin || isUserConsulta) ? caibMenuEntries : undefined}
-            headerMenuEntries={(isUserAdmin || isUserConsulta || !isUserReady) ? undefined : headerMenuEntries}
+            menuEntries={visibleMenuEntries}
             appbarBackgroundColor={appbarBackgroundColor}
             appbarStyle={{
                 cssText: `min-height: ${APPBAR_HEIGHT} !important`,

@@ -431,7 +431,16 @@ const Apps: React.FC = () => {
     const { temporalMessageShow } = useBaseAppContext();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
+    const {
+        show: appPermissionShow,
+        component: appPermissionComponent
+    } = useAclPermissionManager('APP');
     const appActions: DataCommonAdditionalAction[] = [
+        {
+            label: t($ => $.components.permisos.title),
+            icon: 'lock',
+            onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
+        },
         {
             label: t($ => $.page.apps.action.export),
             icon: 'download',
@@ -479,6 +488,7 @@ const Apps: React.FC = () => {
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 {...dataGridProps}
             />
+            {appPermissionComponent}
         </GridPage>
     );
 };

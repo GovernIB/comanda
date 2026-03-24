@@ -160,13 +160,17 @@ class AclEntryControllerWebMvcTest {
         when(aclEntryService.anyPermissionGranted(
                 eq(ResourceType.ENTORN_APP),
                 argThat(id -> "7".equals(String.valueOf(id))),
-                eq(List.of(PermissionEnum.READ)))).thenReturn(true);
+                eq(List.of(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER", "COM_ADMIN")))).thenReturn(true);
         doNothing().when(resourceApiService).resourceRegister(AclEntry.class);
 
         mockMvc.perform(get("/api/aclEntries/anyPermissionGranted")
                         .param("resourceType", "ENTORN_APP")
                         .param("resourceId", "7")
-                        .param("permissions", "READ"))
+                        .param("permissions", "READ")
+                        .param("user", "anna")
+                        .param("roles", "COM_USER", "COM_ADMIN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(true));
     }
@@ -174,12 +178,14 @@ class AclEntryControllerWebMvcTest {
     @Test
     void findIdsWithAnyPermission_quanHiHaCoincidencies_retornaLaLlistaDids() throws Exception {
         // Comprova el endpoint específic que retorna els ids permesos per a un conjunt de permisos.
-        when(aclEntryService.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.WRITE)))).thenReturn(Set.of(3L, 5L));
+        when(aclEntryService.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.WRITE)), eq("anna"), eq(List.of("COM_USER", "COM_ADMIN")))).thenReturn(Set.of(3L, 5L));
         doNothing().when(resourceApiService).resourceRegister(AclEntry.class);
 
         mockMvc.perform(get("/api/aclEntries/findIdsWithAnyPermission")
                         .param("resourceType", "ENTORN_APP")
-                        .param("permissions", "WRITE"))
+                        .param("permissions", "WRITE")
+                        .param("user", "anna")
+                        .param("roles", "COM_USER", "COM_ADMIN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0]").exists());
     }

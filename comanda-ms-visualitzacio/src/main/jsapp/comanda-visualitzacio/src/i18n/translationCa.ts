@@ -65,6 +65,7 @@ const translationCa = {
             },
         },
         userRole: {
+            COM_USER: 'Usuari',
             COM_ADMIN: 'Administrador',
             COM_CONSULTA: 'Consultor'
         }

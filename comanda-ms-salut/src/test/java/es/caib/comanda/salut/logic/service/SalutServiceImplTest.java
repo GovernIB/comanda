@@ -1,9 +1,14 @@
 package es.caib.comanda.salut.logic.service;
 
+import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.AppContext;
 import es.caib.comanda.client.model.AppIntegracio;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.IntegracioRef;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
@@ -34,23 +39,44 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SalutServiceImplTest {
+
+    static class TestableSalutServiceImpl extends SalutServiceImpl {
+        public TestableSalutServiceImpl(SalutIntegracioRepository salutIntegracioRepository,
+                                        SalutSubsistemaRepository salutSubsistemaRepository,
+                                        SalutMissatgeRepository salutMissatgeRepository,
+                                        SalutDetallRepository salutDetallRepository,
+                                        SalutClientHelper salutClientHelper,
+                                        MetricsHelper metricsHelper,
+                                        AuthenticationHelper authenticationHelper,
+                                        HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
+                                        AclServiceClient aclServiceClient) {
+            super(salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, salutDetallRepository,
+                    salutClientHelper, metricsHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient);
+        }
+
+        public String exposedAdditionalSpringFilter() {
+            return super.additionalSpringFilter(null, null);
+        }
+    }
 
     @Mock
     private SalutRepository salutRepository;
@@ -76,22 +102,92 @@ class SalutServiceImplTest {
     @Mock
     private ObjectMappingHelper objectMappingHelper;
 
-    private SalutServiceImpl service;
+    @Mock
+    private AuthenticationHelper authenticationHelper;
+
+    @Mock
+    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+
+    @Mock
+    private AclServiceClient aclServiceClient;
+
+    private TestableSalutServiceImpl service;
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new SalutServiceImpl(
+        service = new TestableSalutServiceImpl(
                 salutIntegracioRepository,
                 salutSubsistemaRepository,
                 salutMissatgeRepository,
                 salutDetallRepository,
                 salutClientHelper,
-                metricsHelper);
+                metricsHelper,
+                authenticationHelper,
+                httpAuthorizationHeaderHelper,
+                aclServiceClient);
         injectBaseField("entityRepository", salutRepository);
         injectBaseField("objectMappingHelper", objectMappingHelper);
         injectBaseField("resourceEntityMappingHelper", new ResourceEntityMappingHelper(new ObjectMappingHelper()));
         injectBaseField("jasperReportsHelper", org.mockito.Mockito.mock(JasperReportsHelper.class));
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer test");
+        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
+        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{"COM_USER"});
         service.init();
+    }
+
+    @Test
+    void additionalSpringFilter_quanLusuariEsAdmin_noAplicaCapRestriccioAcl() {
+        when(authenticationHelper.isCurrentUserInRole("COM_ADMIN")).thenReturn(true);
+
+        String result = service.exposedAdditionalSpringFilter();
+
+        assertThat(result).isNull();
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    void additionalSpringFilter_quanTePermisosPerAppIEntornApp_retornaElsEntornsActiusPermesos() {
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(5L)));
+        when(salutClientHelper.entornAppFindByActivaTrue("app.id:1"))
+                .thenReturn(List.of(EntornApp.builder().id(10L).build(), EntornApp.builder().id(11L).build()));
+        when(salutClientHelper.entornAppFindByActivaTrue("id:5"))
+                .thenReturn(List.of(EntornApp.builder().id(11L).build(), EntornApp.builder().id(12L).build()));
+
+        String result = service.exposedAdditionalSpringFilter();
+
+        assertThat(result).isEqualTo("entornAppId:10 or entornAppId:11 or entornAppId:12");
+    }
+
+    @Test
+    void additionalSpringFilter_quanNoHiHaPermisos_retornaFiltreSenseResultats() {
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(null));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = service.exposedAdditionalSpringFilter();
+
+        assertThat(result).isEqualTo("entornAppId:0");
     }
 
     @Test

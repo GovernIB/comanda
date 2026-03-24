@@ -1,6 +1,9 @@
 package es.caib.comanda.ms.configuracio.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
@@ -10,7 +13,9 @@ import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
@@ -23,12 +28,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,8 +50,12 @@ public class AppServiceImplTest {
                                       AppExportMapper appExportMapper,
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
-                                      EntornAppRepository entornAppRepository) {
-            super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
+                                      EntornAppRepository entornAppRepository,
+                                      AuthenticationHelper authenticationHelper,
+                                      HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
+                                      AclServiceClient aclServiceClient) {
+            super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository,
+                    authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient);
         }
         
         @Override
@@ -54,6 +66,10 @@ public class AppServiceImplTest {
         @Override
         public void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
             super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        public String exposedAdditionalSpringFilter() {
+            return super.additionalSpringFilter(null, null);
         }
     }
 
@@ -75,6 +91,15 @@ public class AppServiceImplTest {
     @Mock
     private EntornAppRepository entornAppRepository;
 
+    @Mock
+    private AuthenticationHelper authenticationHelper;
+
+    @Mock
+    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+
+    @Mock
+    private AclServiceClient aclServiceClient;
+
     private TestableAppServiceImpl appService;
 
     private AppEntity appEntity;
@@ -85,7 +110,20 @@ public class AppServiceImplTest {
     @BeforeEach
     void setUp() {
         // Initialize the service with mocked dependencies
-        appService = new TestableAppServiceImpl(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
+        appService = new TestableAppServiceImpl(
+                cacheHelper,
+                objectMapper,
+                appExportMapper,
+                appRepository,
+                entornRepository,
+                entornAppRepository,
+                authenticationHelper,
+                httpAuthorizationHeaderHelper,
+                aclServiceClient);
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer test");
+        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
+        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{"COM_USER"});
         
         // Setup test data
         appEntity = new AppEntity();
@@ -152,5 +190,61 @@ public class AppServiceImplTest {
         appService.afterUpdateSave(appEntity, appResource, answers, false);
 
         verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
+    }
+
+    @Test
+    void additionalSpringFilter_quanLusuariEsAdmin_noAplicaFiltreAcl() {
+        when(authenticationHelper.isCurrentUserInRole("COM_ADMIN")).thenReturn(true);
+
+        String result = appService.exposedAdditionalSpringFilter();
+
+        assertNull(result);
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    void additionalSpringFilter_quanLusuariSenseRols_tePermisPerAppIEntornApp_filtraAppsVisibles() {
+        AppEntity secondAppEntity = new AppEntity();
+        secondAppEntity.setId(2L);
+        EntornAppEntity permittedEntornApp = new EntornAppEntity();
+        permittedEntornApp.setId(11L);
+        permittedEntornApp.setApp(secondAppEntity);
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(1L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(11L)));
+        when(entornAppRepository.findAllById(Set.of(11L))).thenReturn(List.of(permittedEntornApp));
+
+        String result = appService.exposedAdditionalSpringFilter();
+
+        assertEquals("id:1 or id:2", result);
+    }
+
+    @Test
+    void additionalSpringFilter_quanAclNoRetornaCapId_retornaFiltreQueNoTornaResultats() {
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(null));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Collections.emptySet()));
+
+        String result = appService.exposedAdditionalSpringFilter();
+
+        assertEquals("id:0", result);
     }
 }

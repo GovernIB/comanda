@@ -10,7 +10,8 @@ const mocks = vi.hoisted(() => ({
     artifactActionMock: vi.fn(),
     artifactReportMock: vi.fn(),
     setFieldValueMock: vi.fn(),
-    permissionShowMock: vi.fn(),
+    entornPermissionShowMock: vi.fn(),
+    appPermissionShowMock: vi.fn(),
     iniciaDescargaJSONMock: vi.fn(),
     useFormContextValue: {
         data: {},
@@ -22,6 +23,11 @@ const mocks = vi.hoisted(() => ({
     } as any,
     tMock: vi.fn((selector: any) =>
         selector({
+            components: {
+                permisos: {
+                    title: 'Permisos',
+                },
+            },
             page: {
                 apps: {
                     title: 'Aplicacions',
@@ -123,10 +129,15 @@ vi.mock('reactlib', () => ({
                     key={action.label}
                     type="button"
                     onClick={() =>
-                        (action.onClick as any)?.(undefined, {
-                            entorn: { description: 'PRO' },
-                            activa: false,
-                        })
+                        (action.onClick as any)?.(
+                            title === 'Aplicacions' ? 12 : undefined,
+                            title === 'Aplicacions'
+                                ? { nom: 'Comanda', activa: true }
+                                : {
+                                    entorn: { description: 'PRO' },
+                                    activa: false,
+                                }
+                        )
                     }
                 >
                     {action.label}
@@ -213,9 +224,9 @@ vi.mock('../components/UrlPingAdornment', () => ({
 }));
 
 vi.mock('../components/AclPermissionManager', () => ({
-    useAclPermissionManager: () => ({
-        show: mocks.permissionShowMock,
-        component: <div>Gestor permisos</div>,
+    useAclPermissionManager: (resourceType: string) => ({
+        show: resourceType === 'APP' ? mocks.appPermissionShowMock : mocks.entornPermissionShowMock,
+        component: <div>{`Gestor permisos ${resourceType}`}</div>,
     }),
 }));
 
@@ -257,9 +268,10 @@ describe('AppForm', () => {
         expect(screen.getByText('General')).toBeInTheDocument();
         expect(screen.getByText('Entorns')).toBeInTheDocument();
         expect(mocks.setMarginsDisabledMock).toHaveBeenCalledWith(true);
-        expect(screen.getByText('Permisos')).toBeInTheDocument();
+        expect(screen.getAllByRole('button', { name: 'Permisos' })).toHaveLength(1);
         expect(screen.getByText('Activar')).toBeInTheDocument();
         expect(screen.getByText('Desactivar')).toBeInTheDocument();
+        expect(screen.getByText('Gestor permisos ENTORN_APP')).toBeInTheDocument();
     });
 
     it('AppForm_quanEsRenderitzaPerCrear_mostraElsCampsPrincipals', () => {
@@ -356,7 +368,7 @@ describe('Apps', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Exportar' }));
 
         await waitFor(() => {
-            expect(mocks.artifactReportMock).toHaveBeenCalledWith(undefined, {
+            expect(mocks.artifactReportMock).toHaveBeenCalledWith(12, {
                 code: 'app_export',
                 fileType: 'JSON',
             });
@@ -509,7 +521,19 @@ describe('Apps', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Permisos' }));
 
-        expect(mocks.permissionShowMock).toHaveBeenCalledWith(undefined, 'PRO');
+        expect(mocks.entornPermissionShowMock).toHaveBeenCalledWith(undefined, 'PRO');
+    });
+
+    it('Apps_quanEsPremPermisosDalAplicacio_obriElGestorAssociatALapp', () => {
+        // Comprova que el llistat d'aplicacions obri el gestor ACL de l'app des de l'acció de fila.
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+
+        render(<Apps />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Permisos' }));
+
+        expect(mocks.appPermissionShowMock).toHaveBeenCalledWith(12, 'Comanda');
+        expect(screen.getByText('Gestor permisos APP')).toBeInTheDocument();
     });
 
     it('AppForm_quanEsCanviaLEstatDEntorn_refrescaILlançaElMissatgeDexit', async () => {

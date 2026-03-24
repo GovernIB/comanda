@@ -1,7 +1,10 @@
 package es.caib.comanda.ms.configuracio.service;
 
+import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
@@ -10,6 +13,7 @@ import es.caib.comanda.configuracio.logic.intf.model.ExpectedResponseTypeEnum;
 import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
 import es.caib.comanda.configuracio.persist.repository.ContextRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
@@ -62,12 +66,16 @@ public class EntornAppServiceImplTest {
                                           AppInfoHelper appInfoHelper,
                                           CacheHelper cacheHeper,
                                           ConfiguracioSchedulerService schedulerService,
+                                          AuthenticationHelper authenticationHelper,
+                                          HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
+                                          AclServiceClient aclServiceClient,
                                           RestTemplate restTemplate,
                                           Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
                                           ApplicationEventPublisher eventPublisher) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, appInfoHelper,
-                    cacheHeper, schedulerService, restTemplate, validator, resourceEntityMappingHelper, eventPublisher);
+                    cacheHeper, schedulerService, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
+                    restTemplate, validator, resourceEntityMappingHelper, eventPublisher);
         }
 
         @Override
@@ -83,6 +91,10 @@ public class EntornAppServiceImplTest {
         @Override
         public void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
             super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        public String exposedAdditionalSpringFilter() {
+            return super.additionalSpringFilter(null, null);
         }
     }
 
@@ -103,6 +115,12 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private HttpAuthorizationHeaderHelper keycloakHelper;
+
+    @Mock
+    private AuthenticationHelper authenticationHelper;
+
+    @Mock
+    private AclServiceClient aclServiceClient;
 
     @Mock
     private SalutServiceClient salutServiceClient;
@@ -154,11 +172,18 @@ public class EntornAppServiceImplTest {
             appInfoHelper,
             cacheHelper,
             schedulerService,
+            authenticationHelper,
+            keycloakHelper,
+            aclServiceClient,
             restTemplate,
             validator,
             resourceEntityMappingHelper,
             eventPublisher
         );
+        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer test");
+        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
+        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{"COM_USER"});
         
         // Setup test data
         AppEntity appEntity = new AppEntity();
@@ -248,6 +273,57 @@ public class EntornAppServiceImplTest {
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
 
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+    }
+
+    @Test
+    void additionalSpringFilter_quanLusuariEsConsulta_noAplicaFiltreAcl() {
+        when(authenticationHelper.isCurrentUserInRole("COM_ADMIN")).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole("COM_CONSULTA")).thenReturn(true);
+
+        String result = entornAppService.exposedAdditionalSpringFilter();
+
+        assertNull(result);
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    void additionalSpringFilter_quanHiHaPermisosPerAppIEntornApp_combinaElsDosFiltres() {
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L, 2L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(5L)));
+
+        String result = entornAppService.exposedAdditionalSpringFilter();
+
+        assertEquals("app.id:1 or app.id:2 or id:5", result);
+    }
+
+    @Test
+    void additionalSpringFilter_quanNoHiHaPermisos_retornaFiltreBuit() {
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(null));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = entornAppService.exposedAdditionalSpringFilter();
+
+        assertEquals("id:0", result);
     }
 
     @Test
