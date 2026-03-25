@@ -3,7 +3,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { describe, expect, it, vi } from 'vitest';
 import { AppModel, EntornAppModel } from './app.model';
 import { EntornModel } from './entorn.model';
-import { LanguageEnum, NUM_ELEMENT_PAGE_OPTIONS, UsuariModel } from './usuari.model';
+import { LanguageEnum, MenuEstil, NUM_ELEMENT_PAGE_OPTIONS, UsuariModel } from './usuari.model';
 import {
     AvisTipusEnum,
     getMaterialIconByState,
@@ -86,6 +86,7 @@ describe('Models', () => {
             emailAlternatiu: undefined,
             idioma: LanguageEnum.CA,
             temaObscur: true,
+            estilMenu: MenuEstil.TEMA,
             rols: ['ADMIN'],
             alarmaMail: true,
             alarmaMailAgrupar: false,

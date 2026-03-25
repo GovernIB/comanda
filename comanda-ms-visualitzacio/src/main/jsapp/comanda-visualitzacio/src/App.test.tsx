@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     useIsUserUsuariMock: vi.fn(),
     useThemeMock: vi.fn(),
     entornAppFindMock: vi.fn(),
+    useStatsEnabledMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             menu: {
@@ -19,10 +20,12 @@ const mocks = vi.hoisted(() => ({
                 tasca: 'Tasca',
                 avis: 'Avisos',
                 monitoritzacio: 'Monitorització',
+                monitoritzacioDescription: 'Descripció monitorització',
                 monitor: 'Monitor',
                 cache: 'Cache',
                 broker: 'Broker',
                 configuracio: 'Configuració',
+                configuracioDescription: 'Descripció configuració',
                 app: 'Apps',
                 entorn: 'Entorns',
                 versionsEntorn: 'Versions',
@@ -52,6 +55,10 @@ vi.mock('./AppRoutes', () => ({
 
 vi.mock('./components/KeepAlive', () => ({
     default: () => <div>KeepAlive mock</div>,
+}));
+
+vi.mock('./hooks/useStatsEnabled', () => ({
+    default: () => mocks.useStatsEnabledMock(),
 }));
 
 vi.mock('./components/UserContext', () => ({
@@ -102,6 +109,7 @@ describe('App', () => {
         mocks.useUserContextMock.mockReturnValue({
             user: {
                 numElementsPagina: '20',
+                estilMenu: 'TEMA',
             },
         });
         mocks.useIsUserAdminMock.mockReturnValue(true);
@@ -115,6 +123,7 @@ describe('App', () => {
             },
         });
         mocks.entornAppFindMock.mockResolvedValue({ rows: [{ id: 1 }] });
+        mocks.useStatsEnabledMock.mockReturnValue(true);
     });
 
     afterEach(() => {
@@ -135,12 +144,15 @@ describe('App', () => {
         expect(props.availableLanguages).toEqual(['ca', 'es']);
         expect(props.headerMenuEntries).toBeUndefined();
         expect(props.menuEntries).toHaveLength(6);
+        expect(props.menuAppearance).toBe('theme');
         expect(props.defaultMuiComponentProps.dataGrid.paginationModel).toEqual({
             page: 0,
             pageSize: 20,
         });
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
+        expect(props.menuEntries[4].description).toBeUndefined();
+        expect(props.menuEntries[5].description).toBe('Descripció configuració');
     });
 
     it('App_quanLusuariNoTeRolsFuncionals_mostraElMenuLateralLimitat', async () => {
@@ -200,6 +212,7 @@ describe('App', () => {
         mocks.useUserContextMock.mockReturnValue({
             user: {
                 numElementsPagina: 'AUTOMATIC',
+                estilMenu: 'TEMA',
             },
         });
 
@@ -209,6 +222,7 @@ describe('App', () => {
 
         expect(props.logo).toBe('logo-fosc');
         expect(props.appbarBackgroundColor).toBeUndefined();
+        expect(props.menuAppearance).toBe('theme');
         expect(props.defaultMuiComponentProps.dataGrid.paginationModel).toBeUndefined();
     });
 
@@ -240,5 +254,57 @@ describe('App', () => {
             const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
             expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['tasca', 'avis', 'alarma']);
         });
+    });
+
+    it('App_quanLesEstadistiquesNoEstanActives_amagaElsMenusRelacionats', () => {
+        mocks.useStatsEnabledMock.mockReturnValue(false);
+
+        render(<App />);
+
+        const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
+        const configuracioChildren = props.menuEntries[4].children;
+
+        expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual([
+            'salut',
+            'tasca',
+            'avis',
+            'monitoritzacio',
+            'configuracio',
+        ]);
+        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'dimensio')).toBe(false);
+        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'indicador')).toBe(false);
+        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
+        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(false);
+        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'calendari')).toBe(false);
+    });
+
+    it('App_quanLusuariDemanaMenuInvertit_passaLaparençaInvertida', () => {
+        mocks.useUserContextMock.mockReturnValue({
+            user: {
+                numElementsPagina: '20',
+                estilMenu: 'TEMA_INVERTIT',
+            },
+        });
+
+        render(<App />);
+
+        const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
+
+        expect(props.menuAppearance).toBe('inverse');
+    });
+
+    it('App_quanLusuariDemanaMenuDelPeu_passaLaparençaDelPeu', () => {
+        mocks.useUserContextMock.mockReturnValue({
+            user: {
+                numElementsPagina: '20',
+                estilMenu: 'PEU',
+            },
+        });
+
+        render(<App />);
+
+        const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
+
+        expect(props.menuAppearance).toBe('footer');
     });
 });

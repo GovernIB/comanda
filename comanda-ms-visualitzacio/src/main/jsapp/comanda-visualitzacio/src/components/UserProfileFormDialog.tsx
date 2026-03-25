@@ -14,8 +14,18 @@ import Person from '@mui/icons-material/Person';
 import RecentActors from '@mui/icons-material/RecentActors';
 import Tag from '@mui/icons-material/Tag';
 import Grid from '@mui/material/Grid';
-import { UsuariModel } from '../types/usuari.model.tsx';
+import Typography from '@mui/material/Typography';
+import { MenuEstil, UsuariModel } from '../types/usuari.model.tsx';
 import { useUserContext } from './UserContext';
+
+const selectorLabelSx = {
+    display: 'block',
+    ml: 1.75,
+    mb: 0.75,
+    fontSize: '0.75rem',
+    lineHeight: 1,
+    color: 'text.secondary',
+};
 
 export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void }) => {
     const { t } = useTranslation();
@@ -42,27 +52,70 @@ export const TemaObscurSelector: React.FC = () => {
         }
     };
     return (
-        <ToggleButtonGroup
-            value={data?.temaObscur ?? ""}
-            exclusive
-            onChange={handleChange}
-            size="small"
-            sx={{
-                display: 'flex',
-                width: '100%',
-                justifyContent: 'center',
-            }}
-        >
-            <ToggleButton value={false} sx={{ flex: 1, gap: 1 }}>
-                <Icon>light_mode</Icon> {t($ => $.menu.user.options.profile.tema.clar)}
-            </ToggleButton>
-            <ToggleButton value={true} sx={{ flex: 1, gap: 1 }}>
-                <Icon>dark_mode</Icon> {t($ => $.menu.user.options.profile.tema.obscur)}
-            </ToggleButton>
-            <ToggleButton value={""} sx={{ flex: 1, gap: 1 }}>
-                <Icon>settings_brightness</Icon> {t($ => $.menu.user.options.profile.tema.sistema)}
-            </ToggleButton>
-        </ToggleButtonGroup>
+        <>
+            <Typography component="label" sx={selectorLabelSx}>
+                {t($ => $.menu.user.options.profile.form.applicationTheme)}
+            </Typography>
+            <ToggleButtonGroup
+                value={data?.temaObscur ?? ""}
+                exclusive
+                onChange={handleChange}
+                size="small"
+                sx={{
+                    display: 'flex',
+                    width: '100%',
+                    justifyContent: 'center',
+                }}
+            >
+                <ToggleButton value={false} sx={{ flex: 1, gap: 1 }}>
+                    <Icon>light_mode</Icon> {t($ => $.menu.user.options.profile.tema.clar)}
+                </ToggleButton>
+                <ToggleButton value={true} sx={{ flex: 1, gap: 1 }}>
+                    <Icon>dark_mode</Icon> {t($ => $.menu.user.options.profile.tema.obscur)}
+                </ToggleButton>
+                <ToggleButton value={""} sx={{ flex: 1, gap: 1 }}>
+                    <Icon>settings_brightness</Icon> {t($ => $.menu.user.options.profile.tema.sistema)}
+                </ToggleButton>
+            </ToggleButtonGroup>
+        </>
+    );
+};
+
+export const EstilMenuSelector: React.FC = () => {
+    const { t } = useTranslation();
+    const { data, apiRef } = useFormContext();
+    const handleChange = (_event: React.MouseEvent<HTMLElement>, newValue: MenuEstil | null) => {
+        if (newValue !== null) {
+            apiRef?.current?.setFieldValue(UsuariModel.ESTIL_MENU, newValue);
+        }
+    };
+    return (
+        <>
+            <Typography component="label" sx={selectorLabelSx}>
+                {t($ => $.menu.user.options.profile.form.menuTheme)}
+            </Typography>
+            <ToggleButtonGroup
+                value={data?.estilMenu ?? MenuEstil.TEMA}
+                exclusive
+                onChange={handleChange}
+                size="small"
+                sx={{
+                    display: 'flex',
+                    width: '100%',
+                    justifyContent: 'center',
+                }}
+            >
+                <ToggleButton value={MenuEstil.TEMA} sx={{ flex: 1, gap: 1 }}>
+                    <Icon>palette</Icon> {t($ => $.menu.user.options.profile.estilMenu.tema)}
+                </ToggleButton>
+                <ToggleButton value={MenuEstil.TEMA_INVERTIT} sx={{ flex: 1, gap: 1 }}>
+                    <Icon>invert_colors</Icon> {t($ => $.menu.user.options.profile.estilMenu.temaInvertit)}
+                </ToggleButton>
+                <ToggleButton value={MenuEstil.PEU} sx={{ flex: 1, gap: 1 }}>
+                    <Icon>vertical_align_bottom</Icon> {t($ => $.menu.user.options.profile.estilMenu.peu)}
+                </ToggleButton>
+            </ToggleButtonGroup>
+        </>
     );
 };
 
@@ -165,8 +218,11 @@ const UserProfileForm = () => {
                 ), }, } }}
             />
         </Grid>
-        <Grid size={{ xs: 12, sm: 12, md: 6, lg: 4 }}>
+        <Grid size={{ xs: 12, sm: 12, md: 8, lg: 6 }}>
             <TemaObscurSelector />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 12, md:8, lg: 6 }}>
+            <EstilMenuSelector />
         </Grid>
     </Grid>
 }

@@ -96,7 +96,7 @@ describe('Alarms', () => {
 
         render(
             <MemoryRouter>
-                <Alarms />
+                <Alarms onButtonClick={vi.fn()} />
             </MemoryRouter>
         );
 
@@ -120,7 +120,7 @@ describe('Alarms', () => {
 
         render(
             <MemoryRouter>
-                <Alarms />
+                <Alarms onButtonClick={vi.fn()} />
             </MemoryRouter>
         );
 
@@ -140,7 +140,7 @@ describe('Alarms', () => {
 
         render(
             <MemoryRouter>
-                <Alarms />
+                <Alarms onButtonClick={vi.fn()} />
             </MemoryRouter>
         );
 
@@ -169,7 +169,7 @@ describe('Alarms', () => {
         await act(async () => {
             render(
                 <MemoryRouter>
-                    <Alarms />
+                    <Alarms onButtonClick={vi.fn()} />
                 </MemoryRouter>
             );
         });

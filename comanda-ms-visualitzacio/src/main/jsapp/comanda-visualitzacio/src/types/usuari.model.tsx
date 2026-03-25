@@ -10,6 +10,7 @@ export interface IUsuari extends IBaseEntity {
     emailAlternatiu: string | undefined;
     idioma: LanguageEnum;
     temaObscur: boolean | undefined;
+    estilMenu: MenuEstil;
     rols: string[] | undefined;
     alarmaMail: boolean | undefined;
     alarmaMailAgrupar: boolean | undefined;
@@ -27,6 +28,7 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     static readonly EMAIL_ALTERNATIU: keyof UsuariModel = "emailAlternatiu";
     static readonly IDIOMA: keyof UsuariModel = "idioma";
     static readonly TEMA_OBSCUR: keyof UsuariModel = "temaObscur";
+    static readonly ESTIL_MENU: keyof UsuariModel = "estilMenu";
     static readonly ROLS: keyof UsuariModel = "rols";
     static readonly NUM_ELEMENTS_PAGINA: keyof UsuariModel = "numElementsPagina";
     static readonly ALARMA_MAIL: keyof UsuariModel = "alarmaMail";
@@ -39,6 +41,7 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     emailAlternatiu: string | undefined;
     idioma: LanguageEnum;
     temaObscur: boolean | undefined;
+    estilMenu!: MenuEstil;
     rols: string[] | undefined;
     numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
     alarmaMail: boolean | undefined;
@@ -59,4 +62,10 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
 export enum LanguageEnum {
     CA = "CA",
     ES = "ES"
+}
+
+export enum MenuEstil {
+    TEMA = "TEMA",
+    TEMA_INVERTIT = "TEMA_INVERTIT",
+    PEU = "PEU",
 }

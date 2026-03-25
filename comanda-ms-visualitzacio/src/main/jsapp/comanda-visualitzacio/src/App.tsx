@@ -10,7 +10,9 @@ import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import { useResourceApiService } from 'reactlib';
+import useStatsEnabled from './hooks/useStatsEnabled';
 import notNull from './util/arrayUtils';
+import { MenuEstil } from './types/usuari.model.tsx';
 
 const APPBAR_HEIGHT = '64px';
 
@@ -22,7 +24,14 @@ export const App: React.FC = () => {
     const isLimitedUser = isUserReady && isUserUsuari;
     const { t } = useTranslation();
     const theme = useTheme();
+    const statsEnabled = useStatsEnabled() === true;
     const darkThemeActive = theme.palette.mode === "dark";
+    const menuAppearance =
+        user?.estilMenu === MenuEstil.TEMA_INVERTIT
+            ? 'inverse'
+            : user?.estilMenu === MenuEstil.PEU
+              ? 'footer'
+              : 'theme';
     const appbarBackgroundColor = darkThemeActive ? undefined : '#fff';
     const { isReady: entornAppApiIsReady, find: entornAppFind } = useResourceApiService('entornApp');
     const [hasSalutAccess, setHasSalutAccess] = React.useState(false);
@@ -57,7 +66,8 @@ export const App: React.FC = () => {
     const menuMonitoritzacio = {
         id: 'monitoritzacio',
         title: t($ => $.menu.monitoritzacio),
-        icon: 'settings',
+        // description: t($ => $.menu.monitoritzacioDescription),
+        icon: 'monitor',
         resourceName: 'monitor',
         children: [
             {
@@ -94,6 +104,7 @@ export const App: React.FC = () => {
     const menuConfiguracio = {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
+        description: t($ => $.menu.configuracioDescription),
         icon: 'settings',
         children: ([
             {
@@ -125,41 +136,41 @@ export const App: React.FC = () => {
                 icon: 'integration_instructions',
                 resourceName: 'integracio',
             },
-            {
+            statsEnabled ? {
                 id: 'dimensio',
                 title: t($ => $.menu.dimensio),
                 to: '/dimensio',
                 icon: 'category',
                 resourceName: 'dimensio',
-            },
-            {
+            } : null,
+            statsEnabled ? {
                 id: 'indicador',
                 title: t($ => $.menu.indicador),
                 to: '/indicador',
                 icon: 'insights',
                 resourceName: 'indicador',
-            },
-            isUserAdmin ? {
+            } : null,
+            statsEnabled && isUserAdmin ? {
                 id: 'estadisticaWidget',
                 title: t($ => $.menu.widget),
                 to: '/estadisticaWidget',
                 icon: 'widgets',
                 resourceName: 'dashboard',
             } : null,
-            {
+            statsEnabled ? {
                 id: 'dashboard',
                 title: t($ => $.menu.dashboard),
                 to: '/dashboard',
                 icon: 'dashboardCustomize',
                 resourceName: 'dashboard',
-            },
-            {
+            } : null,
+            statsEnabled ? {
                 id: 'calendari',
                 title: t($ => $.menu.calendari),
                 to: '/calendari',
                 icon: 'calendar_month',
                 resourceName: 'fet',
-            },
+            } : null,
             isUserAdmin ? {
                 id: 'parametre',
                 title: t($ => $.menu.parametre),
@@ -171,7 +182,7 @@ export const App: React.FC = () => {
     };
     const caibMenuEntries: MenuEntryWithResource[] = [
         menuSalut,
-        menuEstadistiques,
+        statsEnabled ? menuEstadistiques : null,
         menuTasca,
         menuAvis,
         menuMonitoritzacio,
@@ -213,7 +224,7 @@ export const App: React.FC = () => {
             code="com"
             logo={darkThemeActive ? logoDark : logo}
             logoStyle={{
-                '& img': { height: '38px' },
+                '& img': { height: '38px', width: '115px' },
                 pl: 2,
                 pr: 4,
                 mr: 4,
@@ -238,6 +249,7 @@ export const App: React.FC = () => {
             version="0.1"
             availableLanguages={['ca', 'es']}
             menuEntries={visibleMenuEntries}
+            menuAppearance={menuAppearance}
             appbarBackgroundColor={appbarBackgroundColor}
             appbarStyle={{
                 cssText: `min-height: ${APPBAR_HEIGHT} !important`,

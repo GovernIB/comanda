@@ -77,10 +77,12 @@ const translationEs: translationResourcesType = {
         avis: "Avisos",
         alarmes: "Alarmas activas",
         monitoritzacio: "Monitorización",
+        monitoritzacioDescription: "Monitorización de integraciones, caches y colas.",
         monitor: "Monitor",
         cache: "Gestión de cachés",
         broker: "Gestor de colas",
         configuracio: "Configuración",
+        configuracioDescription: "Opciones de administración de la aplicación.",
         app: "Aplicaciones",
         entorn: "Entornos",
         versionsEntorn: "Versiones por entorno",
@@ -102,11 +104,18 @@ const translationEs: translationResourcesType = {
                     form: {
                         userData: "Datos del usuario",
                         genericConfig: "Configuración genérica",
+                        applicationTheme: "Tema de la aplicación",
+                        menuTheme: "Tema del menú",
                     },
                     tema: {
                         clar: "Claro",
                         obscur: "Oscuro",
                         sistema: "Sistema",
+                    },
+                    estilMenu: {
+                        tema: "Igual que el tema",
+                        temaInvertit: "Tema invertido",
+                        peu: "Colores del pie",
                     },
                 }
             }

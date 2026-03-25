@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { act } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+    EstilMenuSelector,
     TemaObscurSelector,
     UserProfileFormDialog,
     UserProfileFormDialogButton,
@@ -20,9 +21,16 @@ const mocks = vi.hoisted(() => ({
                                 obscur: 'Obscur',
                                 sistema: 'Sistema',
                             },
+                            estilMenu: {
+                                tema: 'Mateix que el tema',
+                                temaInvertit: 'Tema invertit',
+                                peu: 'Colors del peu',
+                            },
                             form: {
                                 userData: 'Dades usuari',
                                 genericConfig: 'Configuració genèrica',
+                                applicationTheme: "Tema de l'aplicació",
+                                menuTheme: 'Tema del menú',
                             },
                         },
                     },
@@ -60,6 +68,11 @@ vi.mock('./UserContext', () => ({
 }));
 
 vi.mock('../types/usuari.model.tsx', () => ({
+    MenuEstil: {
+        TEMA: 'TEMA',
+        TEMA_INVERTIT: 'TEMA_INVERTIT',
+        PEU: 'PEU',
+    },
     UsuariModel: {
         CODI: 'codi',
         NOM: 'nom',
@@ -71,6 +84,7 @@ vi.mock('../types/usuari.model.tsx', () => ({
         ALARMA_MAIL_AGRUPAT: 'alarmaMailAgrupat',
         NUM_ELEMENTS_PAGINA: 'numElementsPagina',
         IDIOMA: 'idioma',
+        ESTIL_MENU: 'estilMenu',
     },
 }));
 
@@ -111,6 +125,25 @@ describe('TemaObscurSelector', () => {
     });
 });
 
+describe('EstilMenuSelector', () => {
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('EstilMenuSelector_quanEsSeleccionaUnaOpcio_actualitzaElCampDelFormulari', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: { estilMenu: 'TEMA' },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstilMenuSelector />);
+
+        fireEvent.click(screen.getByText('Tema invertit'));
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('estilMenu', 'TEMA_INVERTIT');
+    });
+});
+
 describe('UserProfileFormDialog', () => {
     afterEach(() => {
         vi.clearAllMocks();
@@ -119,7 +152,7 @@ describe('UserProfileFormDialog', () => {
     it('UserProfileFormDialog_quanEsRenderitza_totsElsCampsSonRenderitzats', () => {
         // Verifica que tots els camps esperats es mostren en el formulari del perfil.
         mocks.useFormContextMock.mockReturnValue({
-            data: { alarmaMail: true, temaObscur: '' },
+            data: { alarmaMail: true, temaObscur: '', estilMenu: 'TEMA' },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
         const dialogApiRef = { current: undefined };
@@ -136,8 +169,13 @@ describe('UserProfileFormDialog', () => {
         expect(screen.getByText('alarmaMailAgrupat')).toBeInTheDocument();
         expect(screen.getByText('numElementsPagina')).toBeInTheDocument();
         expect(screen.getByText('idioma')).toBeInTheDocument();
+        expect(screen.getByText('Mateix que el tema')).toBeInTheDocument();
+        expect(screen.getByText('Tema invertit')).toBeInTheDocument();
+        expect(screen.getByText('Colors del peu')).toBeInTheDocument();
 
         // TemaObscurSelector (que conté les tres opcions)
+        expect(screen.getByText("Tema de l'aplicació")).toBeInTheDocument();
+        expect(screen.getByText('Tema del menú')).toBeInTheDocument();
         expect(screen.getByText('Clar')).toBeInTheDocument();
         expect(screen.getByText('Obscur')).toBeInTheDocument();
         expect(screen.getByText('Sistema')).toBeInTheDocument();
@@ -146,7 +184,7 @@ describe('UserProfileFormDialog', () => {
     it('UserProfileFormDialog_quanEsRenderitza_configuraElDialegIElRefreshEnGuardar', () => {
         // Comprova que el diàleg de perfil es configura amb el títol i el callback de refresc esperats.
         mocks.useFormContextMock.mockReturnValue({
-            data: { alarmaMail: true, temaObscur: '' },
+            data: { alarmaMail: true, temaObscur: '', estilMenu: 'TEMA' },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
         const dialogApiRef = { current: undefined };

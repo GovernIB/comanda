@@ -55,6 +55,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
     appbarStyle?: any;
+    menuAppearance?: 'theme' | 'inverse' | 'footer';
     defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
@@ -199,6 +200,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         appbarBackgroundColor,
         appbarBackgroundImg,
         appbarStyle,
+        menuAppearance,
         defaultMuiComponentProps,
         children
     } = props;
@@ -262,6 +264,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
         menuEntries={baseAppMenuEntries}
+        menuAppearance={menuAppearance}
         defaultMuiComponentProps={defaultMuiComponentProps}
         fixedContentExpandsToAvailableHeightEnabled
         marginsDisabled>

@@ -26,14 +26,14 @@ export function AlarmsDialog({ open, setOpen }: { open: boolean, setOpen: (open:
             closeCallback={() => setOpen(false)}
             buttons={buttons}
             componentProps={{
-                maxWidth: 'md',
+                maxWidth: 'lg',
+                fullWidth: true,
             }}
         >
             <Box
                 sx={{
                     mt: 3,
                     height: '500px',
-                    width: '600px',
                 }}
             >
                 <Alarmes />

@@ -44,6 +44,8 @@ public class Usuari extends BaseResource<Long> {
     @NotNull
     private LanguageEnum idioma;
     private Boolean temaObscur;
+    @NotNull
+    private MenuEstilEnum estilMenu;
     private String[] rols;
 
     @ResourceField(onChangeActive = true)

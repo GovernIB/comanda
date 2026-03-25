@@ -77,10 +77,12 @@ const translationEn: translationResourcesType = {
         avis: "Warnings",
         alarmes: "Active alarms",
         monitoritzacio: "Monitoring",
+        monitoritzacioDescription: "Integration, caches and cue monitoring.",
         monitor: "Monitor",
         cache: "Cache management",
         broker: "Queue Manager",
         configuracio: "Configuration",
+        configuracioDescription: "Application's administration options.",
         app: "Applications",
         entorn: "Environments",
         versionsEntorn: "Versions by environment",
@@ -102,11 +104,18 @@ const translationEn: translationResourcesType = {
                     form: {
                         userData: "User data",
                         genericConfig: "Generic config",
+                        applicationTheme: "Application theme",
+                        menuTheme: "Menu theme",
                     },
                     tema: {
                         clar: "Light",
                         obscur: "Dark",
                         sistema: "System",
+                    },
+                    estilMenu: {
+                        tema: "Match theme",
+                        temaInvertit: "Inverted theme",
+                        peu: "Footer colors",
                     },
                 }
             }
