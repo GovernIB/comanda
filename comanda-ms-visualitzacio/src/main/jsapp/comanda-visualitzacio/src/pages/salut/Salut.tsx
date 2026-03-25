@@ -51,6 +51,70 @@ export type SalutData = {
     groupedEntorn?: EntornModel;
 };
 
+const normalizeAppsFromEntornApps = (
+    entornApps: EntornAppModel[],
+    apps?: AppModel[]
+): AppModel[] => {
+    const appsById = new Map<number, AppModel>();
+
+    apps?.forEach(app => {
+        if (app.id != null) {
+            appsById.set(app.id, app);
+        }
+    });
+
+    entornApps.forEach(entornApp => {
+        const appId = entornApp.app?.id;
+        if (appId == null || appsById.has(appId)) {
+            return;
+        }
+        const fallbackName = entornApp.app?.description ?? String(appId);
+        appsById.set(
+            appId,
+            new AppModel({
+                id: appId,
+                codi: fallbackName,
+                nom: fallbackName,
+                links: null,
+            })
+        );
+    });
+
+    return Array.from(appsById.values());
+};
+
+const normalizeEntornsFromEntornApps = (
+    entornApps: EntornAppModel[],
+    entorns?: EntornModel[]
+): EntornModel[] => {
+    const entornsById = new Map<number, EntornModel>();
+
+    entorns?.forEach(entorn => {
+        if (entorn.id != null) {
+            entornsById.set(entorn.id, entorn);
+        }
+    });
+
+    entornApps.forEach(entornApp => {
+        const entornId = entornApp.entorn?.id;
+        if (entornId == null || entornsById.has(entornId)) {
+            return;
+        }
+        const fallbackName = entornApp.entorn?.description ?? String(entornId);
+        entornsById.set(
+            entornId,
+            new EntornModel({
+                id: entornId,
+                codi: fallbackName,
+                nom: fallbackName,
+                links: null,
+            })
+        );
+    });
+
+    return Array.from(entornsById.values());
+};
+
 const splitSalutDataIntoGroups = ({
     estats,
     salutLastItems,
@@ -230,23 +294,40 @@ const useSalutData = ({
                 }),
             ]);
 
-            const salutLastItems = (salutLastItemsResponse as SalutModel[]).map(
-                item => new SalutModel(item)
+            const visibleEntornApps = activeEntornAppsResponse.rows as EntornAppModel[];
+            const visibleEntornAppIds = new Set(
+                visibleEntornApps
+                    .map(({ id }) => id as number | undefined)
+                    .filter((id): id is number => id != null)
             );
+            const salutLastItems = (salutLastItemsResponse as SalutModel[])
+                .map(item => new SalutModel(item))
+                .filter(item => visibleEntornAppIds.has(item.entornAppId));
             // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars
-            const { [BaseEntity.LINKS]: _links, ...estats } = (estatsResponse as any[])[0];
+            const { [BaseEntity.LINKS]: _links, ...rawEstats } = (estatsResponse as any[])[0];
+            const estats = filterNumericObjectKeys(rawEstats, key =>
+                visibleEntornAppIds.has(Number(key))
+            );
+            const apps = normalizeAppsFromEntornApps(
+                visibleEntornApps,
+                activeAppsResponse?.rows as AppModel[]
+            );
+            const entorns = normalizeEntornsFromEntornApps(
+                visibleEntornApps,
+                entornsResponse?.rows as EntornModel[]
+            );
 
             setSalutData({
                 lastRefresh: new Date(),
-                apps: activeAppsResponse?.rows as AppModel[],
-                entorns: entornsResponse?.rows,
+                apps,
+                entorns,
                 groups: splitSalutDataIntoGroups({
                     estats,
                     salutLastItems,
                     groupBy,
-                    apps: activeAppsResponse?.rows as AppModel[],
-                    entorns: entornsResponse?.rows,
-                    entornApps: activeEntornAppsResponse.rows,
+                    apps,
+                    entorns,
+                    entornApps: visibleEntornApps,
                 }),
                 grupsDates: (grupsDatesResponse as { data: string }[]).map(item => item.data),
                 agrupacio,
