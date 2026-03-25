@@ -129,7 +129,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				resourceType,
 				Collections.singletonList(PermissionEnum.READ),
 				authenticationHelper.getCurrentUserName(),
-				Arrays.asList(authenticationHelper.getCurrentUserRoles()),
+				Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
 				httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
 				.orElse(Collections.emptySet());
 	}

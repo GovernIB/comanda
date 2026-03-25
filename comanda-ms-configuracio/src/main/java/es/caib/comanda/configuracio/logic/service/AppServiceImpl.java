@@ -110,7 +110,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 				resourceType,
 				Collections.singletonList(PermissionEnum.READ),
 				authenticationHelper.getCurrentUserName(),
-				Arrays.asList(authenticationHelper.getCurrentUserRoles()),
+				Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
 				httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
 				.orElse(Collections.emptySet());
 	}

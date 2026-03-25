@@ -107,7 +107,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     @Override
     protected Specification<AvisEntity> additionalSpecification(String[] namedQueries) {
         String userName = authenticationHelper.getCurrentUserName();
-        String[] roles = authenticationHelper.getCurrentUserRoles();
+        String[] roles = authenticationHelper.getCurrentUserRealmRoles();
 
         // Els usuaris amb rol admin poden visualitzar tots els avisos.
         // Per a aquest motiu, l'usuari de httpauth.username ha de tenir el rol ROLE_ADMIN,

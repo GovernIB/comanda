@@ -76,7 +76,7 @@ public class EntornServiceImplTest {
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer test");
         when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
-        when(authenticationHelper.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(roles);
     }
 
     @Test

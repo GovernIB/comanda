@@ -78,7 +78,7 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
                 resourceType,
                 Collections.singletonList(PermissionEnum.READ),
                 authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRoles()),
+                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
                 httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
                 .orElse(Collections.emptySet());
     }

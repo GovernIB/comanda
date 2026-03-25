@@ -107,7 +107,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     @Override
     protected Specification<TascaEntity> additionalSpecification(String[] namedQueries) {
         String userName = authenticationHelper.getCurrentUserName();
-        String[] roles = authenticationHelper.getCurrentUserRoles();
+        String[] roles = authenticationHelper.getCurrentUserRealmRoles();
 
         // Els usuaris amb rol admin poden visualitzar totes les tasques.
         // Per a aquest motiu, l'usuari de httpauth.username ha de tenir el rol ROLE_ADMIN,

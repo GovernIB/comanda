@@ -179,7 +179,7 @@ class AvisServiceImplTest {
     @DisplayName("additionalSpecification ha de retornar una especificació si l'usuari no és administrador")
     void additionalSpecification_quanNoAdmin_retornaEspecificacio() {
         // Arrange
-        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{"ROLE_USER"});
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
         when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
 
         // Act
@@ -249,7 +249,7 @@ class AvisServiceImplTest {
         // Arrange
         String roleAdmin = "COM_ADMIN";
         when(authenticationHelper.getCurrentUserName()).thenReturn("admin");
-        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{roleAdmin});
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{roleAdmin});
 
         // Act
         Specification<AvisEntity> spec = avisService.additionalSpecification(null);
@@ -439,7 +439,7 @@ class AvisServiceImplTest {
     @DisplayName("additionalSpecification ha de combinar correctament les especificacions per a usuari normal")
     void additionalSpecification_quanUsuariNormal_combinaEspecificacions() {
         // Arrange
-        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{"ROLE_USER", "GRUP_TEST"});
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER", "GRUP_TEST"});
         when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
 
         // Act

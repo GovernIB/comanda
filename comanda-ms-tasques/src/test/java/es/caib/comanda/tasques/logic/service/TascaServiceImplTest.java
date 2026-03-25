@@ -283,7 +283,7 @@ class TascaServiceImplTest {
     @Test
     void additionalSpecification_quanAdmin_retornaNull() {
         // Arrange
-        when(authenticationHelper.getCurrentUserRoles()).thenReturn(new String[]{ROLE_ADMIN});
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{ROLE_ADMIN});
 
         // Act
         Specification<TascaEntity> spec = tascaService.additionalSpecification(null);
@@ -297,7 +297,7 @@ class TascaServiceImplTest {
         // Arrange
         String[] roles = {"ROLE_USER", "GRUP_TEST"};
         when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
-        when(authenticationHelper.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(roles);
 
         // Act
         Specification<TascaEntity> spec = tascaService.additionalSpecification(null);
@@ -307,6 +307,6 @@ class TascaServiceImplTest {
         // Com que és una composició de specifications, no podem verificar-ne el contingut fàcilment,
         // però verifiquem que no és null i que s'han cridat els helpers d'autenticació.
         verify(authenticationHelper).getCurrentUserName();
-        verify(authenticationHelper).getCurrentUserRoles();
+        verify(authenticationHelper).getCurrentUserRealmRoles();
     }
 }

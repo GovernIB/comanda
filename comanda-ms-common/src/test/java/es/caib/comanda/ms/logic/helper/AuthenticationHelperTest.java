@@ -1,5 +1,6 @@
 package es.caib.comanda.ms.logic.helper;
 
+import es.caib.comanda.ms.back.config.WebSecurityConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -7,15 +8,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -101,6 +107,51 @@ class AuthenticationHelperTest {
 
         // Assert
         assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Retorna els rols del realm quan l'autenticació és amb Spring Boot")
+    void getCurrentUserRealmRoles_quanAuthEsJwt_retornaRealmRoles() {
+        // Arrange
+        Map<String, Object> realmAccess = new HashMap<>();
+        realmAccess.put("roles", List.of("consulta", "admin"));
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .claim("sub", "testuser")
+                .claim("realm_access", realmAccess)
+                .build();
+        JwtAuthenticationToken jwtAuthenticationToken = new JwtAuthenticationToken(jwt);
+        when(securityContext.getAuthentication()).thenReturn(jwtAuthenticationToken);
+
+        // Act
+        String[] result = authenticationHelper.getCurrentUserRealmRoles();
+
+        // Assert
+        assertThat(result).containsExactly("consulta", "admin");
+    }
+
+    @Test
+    @DisplayName("Retorna els rols originals quan l'autenticació és preautenticada de JBoss")
+    void getCurrentUserRealmRoles_quanAuthEsJboss_retornaOriginalRoles() {
+        // Arrange
+        WebSecurityConfig.PreauthWebAuthenticationDetails details =
+                new WebSecurityConfig.PreauthWebAuthenticationDetails(
+                        new MockHttpServletRequest(),
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        "jwt-token",
+                        "testuser",
+                        "Test User",
+                        "test@example.com",
+                        "12345678A",
+                        new String[]{"consulta", "admin"});
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getDetails()).thenReturn(details);
+
+        // Act
+        String[] result = authenticationHelper.getCurrentUserRealmRoles();
+
+        // Assert
+        assertThat(result).containsExactly("consulta", "admin");
     }
 
     // Helper per Mockito amb genèrics (getAuthorities retorna Collection<? extends GrantedAuthority>)
