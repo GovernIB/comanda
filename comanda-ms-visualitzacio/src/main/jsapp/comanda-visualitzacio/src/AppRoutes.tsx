@@ -30,9 +30,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Sitemap from './pages/Sitemap';
 import Accessibilitat from './pages/accessibilitat/Accessibilitat';
 import { useIsUserAdmin, useIsUserConsulta, useIsUserUsuari, useUserContext } from './components/UserContext';
+import useStatsEnabled from './hooks/useStatsEnabled';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
+const statsRoutePrefixes = ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/estadisticaWidget', '/calendari'];
 
 const LoadingRoute: React.FC = () => (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -89,7 +91,19 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
     const isUserConsulta = useIsUserConsulta();
     // const isUserUsuari = useIsUserUsuari();
     const hasSalutAccess = useHasSalutAccess();
+    const statsEnabled = useStatsEnabled();
     const location = useLocation();
+    const isStatsRoute = statsRoutePrefixes.some(path =>
+        location.pathname === path || location.pathname.startsWith(path + '/')
+    );
+
+    if (statsEnabled === undefined && isStatsRoute) {
+        return <LoadingRoute />;
+    }
+
+    if (statsEnabled === false && isStatsRoute) {
+        return <Navigate to={hasSalutAccess === false ? '/tasca' : '/'} replace />;
+    }
 
     if (isUserAdmin) {
         return <>{children}</>;
@@ -103,21 +117,17 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
         ? [
             '/',
             '/appinfo',
-            '/estadistiques',
-            '/dashboard',
             '/app',
             '/entorn',
             '/versionsEntorn',
             '/integracio',
-            '/dimensio',
-            '/indicador',
-            '/calendari',
             '/tasca',
             '/avis',
             '/alarma',
             '/alarmes',
             '/sitemap',
             '/accessibilitat',
+            ...(statsEnabled ? ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/calendari'] : []),
         ]
         : [
             ...(hasSalutAccess ? ['/', '/appinfo'] : []),
@@ -139,8 +149,9 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
     return <Navigate to={hasSalutAccess ? '/' : '/tasca'} replace />;
 };
 
+// Si se modifican las rutas de la aplicación, asegurarse de actualizar el componente UserRoleRouteGuard
 const AppRoutes: React.FC = () => {
-    // Si se modifican las rutas de la aplicación, asegurarse de actualizar el componente UserRoleRouteGuard
+    const statsEnabled = useStatsEnabled() === true;
 
     return (
         <UserRoleRouteGuard>
@@ -148,11 +159,15 @@ const AppRoutes: React.FC = () => {
                 {/* La ruta index y la ruta appinfo deben usar el mismo componente para no perder la información ya cargada al navegar entre el detalle y el listado */}
                 <Route index element={<HomeRoute />} />
                 <Route path="/appinfo/:id" element={<HomeRoute />} />
-                <Route path={DASHBOARDS_PATH}>
-                    <Route index element={<EstadisticaDashboards />} />
-                    <Route path=":id" element={<EstadisticaDashboardEdit />} />
-                </Route>
-                <Route path={`${ESTADISTIQUES_PATH}/:id?`} element={<EstadisticaDashboardView />} />
+                {statsEnabled && (
+                    <>
+                        <Route path={DASHBOARDS_PATH}>
+                            <Route index element={<EstadisticaDashboards />} />
+                            <Route path=":id" element={<EstadisticaDashboardEdit />} />
+                        </Route>
+                        <Route path={`${ESTADISTIQUES_PATH}/:id?`} element={<EstadisticaDashboardView />} />
+                    </>
+                )}
                 <Route path="app">
                     <Route index element={<Apps />} />
                     <Route path="form">
@@ -175,19 +190,23 @@ const AppRoutes: React.FC = () => {
                 <Route path="integracio">
                     <Route index element={<Integracions />} />
                 </Route>
-                <Route path="dimensio">
-                    <Route index element={<Dimensions />} />
-                    <Route path="valor/:id" element={<DimensioValor />} />
-                </Route>
-                <Route path="indicador">
-                    <Route index element={<Indicadors />} />
-                </Route>
-                <Route path="estadisticaWidget">
-                    <Route index element={<EstadisticaWidget />} />
-                </Route>
-                <Route path="calendari">
-                    <Route index element={<CalendariEstadistiques />} />
-                </Route>
+                {statsEnabled && (
+                    <>
+                        <Route path="dimensio">
+                            <Route index element={<Dimensions />} />
+                            <Route path="valor/:id" element={<DimensioValor />} />
+                        </Route>
+                        <Route path="indicador">
+                            <Route index element={<Indicadors />} />
+                        </Route>
+                        <Route path="estadisticaWidget">
+                            <Route index element={<EstadisticaWidget />} />
+                        </Route>
+                        <Route path="calendari">
+                            <Route index element={<CalendariEstadistiques />} />
+                        </Route>
+                    </>
+                )}
                 <Route path="tasca">
                     <Route index element={<Tasca />} />
                 </Route>

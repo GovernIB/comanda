@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AppRoutes from './AppRoutes';
 
 const mocks = vi.hoisted(() => ({
@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     useIsUserConsultaMock: vi.fn(),
     useIsUserUsuariMock: vi.fn(),
     entornAppFindMock: vi.fn(),
+    useStatsEnabledMock: vi.fn(),
 }));
 
 vi.mock('./pages/salut/Salut', () => ({
@@ -121,6 +122,10 @@ vi.mock('./components/UserContext', () => ({
     useIsUserUsuari: () => mocks.useIsUserUsuariMock(),
 }));
 
+vi.mock('./hooks/useStatsEnabled', () => ({
+    default: () => mocks.useStatsEnabledMock(),
+}));
+
 vi.mock('reactlib', () => ({
     useResourceApiService: (resourceName: string) => {
         if (resourceName === 'entornApp') {
@@ -140,6 +145,10 @@ vi.mock('./components/ProtectedRoute', () => ({
 }));
 
 describe('AppRoutes', () => {
+    beforeEach(() => {
+        mocks.useStatsEnabledMock.mockReturnValue(true);
+    });
+
     it('AppRoutes_quanEsCarregaLaRutaArrelIUsuariAmbRolFuncional_mostraSalut', async () => {
         // Comprova que per a un usuari admin/consulta la ruta inicial continua mostrant salut.
         mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
@@ -336,6 +345,7 @@ describe('AppRoutes', () => {
         mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
         mocks.useIsUserAdminMock.mockReturnValue(true);
         mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
         render(
             <MemoryRouter initialEntries={['/estadistiques/5']}>
                 <AppRoutes />
@@ -343,5 +353,21 @@ describe('AppRoutes', () => {
         );
 
         expect(screen.getByText('EstadisticaDashboardView page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanLesEstadistiquesNoEstanActives_redirigeixLesRutesDEstadistiques', async () => {
+        mocks.useStatsEnabledMock.mockReturnValue(false);
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/dashboard']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Salut page')).toBeInTheDocument();
     });
 });
