@@ -140,11 +140,14 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
 };
 
 const AppRoutes: React.FC = () => {
+    // Si se modifican las rutas de la aplicación, asegurarse de actualizar el componente UserRoleRouteGuard
+
     return (
         <UserRoleRouteGuard>
             <Routes>
+                {/* La ruta index y la ruta appinfo deben usar el mismo componente para no perder la información ya cargada al navegar entre el detalle y el listado */}
                 <Route index element={<HomeRoute />} />
-                <Route path="/appinfo/:id" element={<Salut />} />
+                <Route path="/appinfo/:id" element={<HomeRoute />} />
                 <Route path={DASHBOARDS_PATH}>
                     <Route index element={<EstadisticaDashboards />} />
                     <Route path=":id" element={<EstadisticaDashboardEdit />} />
