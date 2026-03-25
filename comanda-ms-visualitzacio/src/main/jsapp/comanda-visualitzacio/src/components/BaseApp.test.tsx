@@ -42,7 +42,40 @@ vi.mock('@mui/material/useMediaQuery', () => ({
 }));
 
 vi.mock('./Alarms', () => ({
-    default: () => <div data-testid="alarms-component">Alarmes</div>,
+    default: ({ onButtonClick }: { onButtonClick?: () => void }) => (
+        <button
+            data-testid="alarms-component"
+            onClick={onButtonClick}
+            aria-label="Veure alarmes"
+        >
+            <span data-testid="alarms-badge">0</span>
+        </button>
+    ),
+    AlarmsDialog: ({
+       open,
+       setOpen
+    }: {
+        open: boolean;
+        setOpen: (open: boolean) => void;
+    }) => {
+        if (!open) return null;
+
+        return (
+            <div role="dialog" data-testid="alarms-dialog" aria-modal="true">
+                <div data-testid="dialog-backdrop" onClick={() => setOpen(false)} />
+                <div data-testid="dialog-content">
+                    <button
+                        onClick={() => setOpen(false)}
+                        data-testid="dialog-close"
+                        aria-label="Tancar diàleg"
+                    >
+                        Tancar
+                    </button>
+                    <div data-testid="alarmes-content">Contingut d alarmes</div>
+                </div>
+            </div>
+        );
+    },
 }));
 
 vi.mock('./Footer', () => ({

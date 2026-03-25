@@ -2,7 +2,6 @@ import { Button, Icon } from '@mui/material';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    GridPage,
     MuiDataGrid,
     useMuiDataGridApiRef,
     useMuiActionReportLogic
@@ -117,8 +116,8 @@ const Alarmes = () => {
         [t]
     );
 
-    return (
-        <GridPage>
+    return (<>
+        {/*<GridPage>*/}
             {actionEsborrarInitialized && actionReactivarInitialized && <>
                 <MuiDataGrid
                     title={t($ => $.menu.alarmes)}
@@ -135,8 +134,8 @@ const Alarmes = () => {
                 {formEsborrarDialogComponent}
                 {formReactivarDialogComponent}
             </>}
-        </GridPage>
-    );
+        {/*</GridPage>*/}
+    </>);
 }
 
 export default Alarmes;

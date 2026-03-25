@@ -1,12 +1,13 @@
 import { useEffect, useEffectEvent, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import Badge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
-import { useResourceApiService } from 'reactlib';
+import {MuiDialog, useCloseDialogButtons, useResourceApiService} from 'reactlib';
 import { useMessage } from './MessageShow';
 import { useTranslation } from 'react-i18next';
 import { useSseContext } from './SseProvider';
+import { Box } from '@mui/material';
+import Alarmes from '../pages/Alarmes.tsx';
 
 const SEGONS_REFRESC = 30;
 const ACTIVE_ALARMS_CHANGED_EVENT_TYPE = 'alarm.active.changed';
@@ -15,7 +16,33 @@ type AlarmType = {
     id: number;
 };
 
-export const Alarms = () => {
+export function AlarmsDialog({ open, setOpen }: { open: boolean, setOpen: (open: boolean) => void }){
+    const buttons = useCloseDialogButtons();
+
+    return (
+        <MuiDialog
+            open={open}
+            buttonCallback={() => setOpen(false)}
+            closeCallback={() => setOpen(false)}
+            buttons={buttons}
+            componentProps={{
+                maxWidth: 'md',
+            }}
+        >
+            <Box
+                sx={{
+                    mt: 3,
+                    height: '500px',
+                    width: '600px',
+                }}
+            >
+                <Alarmes />
+            </Box>
+        </MuiDialog>
+    );
+}
+
+export const Alarms = ({ onButtonClick }: { onButtonClick: () => void }) => {
     const { t } = useTranslation();
     const { status: sseStatus, subscribe } = useSseContext();
     const { isReady: apiIsReady, artifactReport: report } = useResourceApiService('alarma');
@@ -81,7 +108,7 @@ export const Alarms = () => {
     return (
         <>
             {component}
-            <IconButton sx={{ mr: 2 }} to="alarmes" component={RouterLink}>
+            <IconButton sx={{ mr: 2 }} onClick={() => onButtonClick()}>
                 <Badge badgeContent={count} color="error" overlap="circular">
                     {icon}
                 </Badge>

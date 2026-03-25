@@ -60,7 +60,11 @@ vi.mock('react-router-dom', () => ({
     }),
 }));
 
-vi.mock('reactlib', () => ({
+vi.mock('reactlib', async (importOriginal) => {
+    const original = await importOriginal<typeof import('reactlib')>();
+
+    return {
+    ...original,
     FormPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiDataGrid: ({
@@ -162,7 +166,7 @@ vi.mock('reactlib', () => ({
             refresh: mocks.refreshMock,
         },
     }),
-}));
+}});
 
 vi.mock('../components/UserContext', () => ({
     useIsUserAdmin: () => true,

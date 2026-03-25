@@ -19,7 +19,7 @@ import {
     useResourceApiService,
     useBaseAppContext,
     useConfirmDialogButtons,
-    useMuiDataGridApiRef,
+    useMuiDataGridApiRef, springFilterBuilder,
 } from 'reactlib';
 import { Button, Icon } from '@mui/material';
 import { useIsUserAdmin, useUserContext } from '../components/UserContext';
@@ -85,6 +85,10 @@ export const EntornAppSelector : React.FC<any> = (props) => {
         formApiRef={formApiRef}>
             <FormField
             name="entornApp"
+            filter={springFilterBuilder.and(
+                springFilterBuilder.eq('activa', true),
+                springFilterBuilder.eq('app.activa', true),
+            )}
             advancedSearchResourceName="entornApp"
             advancedSearchColumns={[{
                 field: 'entornAppDescription',

@@ -1,24 +1,42 @@
-import React from 'react';
-import { act } from '@testing-library/react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor, within} from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Alarms } from './Alarms';
+import { Alarms, AlarmsDialog } from './Alarms';
 
 const mocks = vi.hoisted(() => ({
     reportMock: vi.fn(),
     showTemporalMock: vi.fn(),
     subscribeMock: vi.fn(),
     sseStatus: 'connected' as 'connecting' | 'connected' | 'disconnected',
-    componentFactory: () => React.createElement('div', { 'data-testid': 'message-component' }, 'Missatge'),
 }));
 
-vi.mock('reactlib', () => ({
-    useResourceApiService: ((() => ({
-        isReady: true,
-        artifactReport: mocks.reportMock,
-    })) as unknown) as typeof import('reactlib').useResourceApiService,
+vi.mock('reactlib', async (importOriginal) => {
+    const original = await importOriginal<typeof import('reactlib')>();
+
+    return {
+        ...original,
+        useResourceApiService: vi.fn(() => ({
+            isReady: true,
+            artifactReport: mocks.reportMock,
+        })),
+        useCloseDialogButtons: vi.fn(() => [
+            {
+                label: 'Tancar',
+                onClick: vi.fn(),
+                variant: 'outlined' as const,
+                color: 'primary' as const,
+            },
+        ]),
+    };
+});
+
+vi.mock('./MessageShow', () => ({
+    useMessage: () => ({
+        showTemporal: mocks.showTemporalMock,
+        component: <div data-testid="message-component">Missatge</div>,
+    }),
 }));
+
 vi.mock('./SseProvider', () => ({
     useSseContext: () => ({
         connected: mocks.sseStatus === 'connected',
@@ -27,15 +45,9 @@ vi.mock('./SseProvider', () => ({
     }),
 }));
 
-vi.mock('./MessageShow', () => ({
-    useMessage: () => ({
-        showTemporal: mocks.showTemporalMock,
-        component: mocks.componentFactory(),
-    }),
+vi.mock('../pages/Alarmes.tsx', () => ({
+    default: () => <div data-testid="alarmes-content">Contingut d alarmes</div>,
 }));
-vi.mock('@mui/x-data-grid-pro', () => ({}));
-vi.mock('@mui/x-data-grid', () => ({}));
-vi.mock('@mui/x-data-grid/locales', () => ({}));
 
 vi.mock('react-i18next', () => ({
     initReactI18next: {
@@ -162,7 +174,7 @@ describe('Alarms', () => {
             );
         });
 
-        const alarmsButton = screen.getByRole('link');
+        const alarmsButton = screen.getByRole('button', { name: /1/i });
 
         await waitFor(() => {
             expect(within(alarmsButton).getByText('1')).toBeInTheDocument();
@@ -175,5 +187,60 @@ describe('Alarms', () => {
         await waitFor(() => {
             expect(within(alarmsButton).getByText('3')).toBeInTheDocument();
         });
+    });
+});
+
+describe('AlarmsDialog', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mocks.reportMock.mockResolvedValue([{ id: 1 }]);
+    });
+
+    it('AlarmsDialog_quanOpenEsTrue_renderitzaElDialogAmbElComponentAlarmes', async () => {
+        const setOpen = vi.fn();
+
+        render(
+            <MemoryRouter>
+                <AlarmsDialog open={true} setOpen={setOpen} />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+        });
+
+        expect(screen.getByTestId('alarmes-content')).toBeInTheDocument();
+    });
+
+    it('AlarmsDialog_quanOpenEsFalse_noRenderitzaElDialog', () => {
+        const setOpen = vi.fn();
+
+        render(
+            <MemoryRouter>
+                <AlarmsDialog open={false} setOpen={setOpen} />
+            </MemoryRouter>
+        );
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('AlarmsDialog_quanEsTanca_cridaSetOpenAmbFalse', async () => {
+        const setOpen = vi.fn();
+
+        render(
+            <MemoryRouter>
+                <AlarmsDialog open={true} setOpen={setOpen} />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+        });
+
+        const closeButton = screen.getByRole('button', { name: 'close' });
+
+        fireEvent.click(closeButton);
+
+        expect(setOpen).toHaveBeenCalledWith(false);
     });
 });
