@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
                             tema: {
                                 clar: 'Clar',
                                 obscur: 'Obscur',
+                                dracula: 'Dracula',
                                 sistema: 'Sistema',
                             },
                             estilMenu: {
@@ -54,6 +55,9 @@ vi.mock('reactlib', () => ({
     FormField: ({ name, disabled }: { name: string; disabled?: boolean }) => (
         <div data-disabled={disabled ? 'true' : 'false'}>{name}</div>
     ),
+    useBaseAppContext: () => ({
+        t: (key: string) => key === 'buttons.form.cancel' ? 'Cancel·lar' : 'Desar',
+    }),
     MuiFormDialog: (props: any) => {
         mocks.muiFormDialogProps = props;
         return <div data-testid="mui-form-dialog">{props.children}</div>;
@@ -63,11 +67,23 @@ vi.mock('reactlib', () => ({
 
 vi.mock('./UserContext', () => ({
     useUserContext: () => ({
+        user: {
+            temaAplicacio: 'SISTEMA',
+            estilMenu: 'TEMA',
+        },
         refresh: mocks.refreshMock,
+        previewUser: vi.fn(),
+        clearUserPreview: vi.fn(),
     }),
 }));
 
 vi.mock('../types/usuari.model.tsx', () => ({
+    TemaAplicacio: {
+        CLAR: 'CLAR',
+        OBSCUR: 'OBSCUR',
+        DRACULA: 'DRACULA',
+        SISTEMA: 'SISTEMA',
+    },
     MenuEstil: {
         TEMA: 'TEMA',
         TEMA_INVERTIT: 'TEMA_INVERTIT',
@@ -84,6 +100,7 @@ vi.mock('../types/usuari.model.tsx', () => ({
         ALARMA_MAIL_AGRUPAT: 'alarmaMailAgrupat',
         NUM_ELEMENTS_PAGINA: 'numElementsPagina',
         IDIOMA: 'idioma',
+        TEMA_APLICACIO: 'temaAplicacio',
         ESTIL_MENU: 'estilMenu',
     },
 }));
@@ -113,7 +130,7 @@ describe('TemaObscurSelector', () => {
     it('TemaObscurSelector_quanEsSeleccionaUnaOpcio_actualitzaElCampDelFormulari', () => {
         // Verifica que el selector de tema escriu el nou valor al context del formulari.
         mocks.useFormContextMock.mockReturnValue({
-            data: { temaObscur: false },
+            data: { temaAplicacio: 'CLAR' },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
 
@@ -121,7 +138,7 @@ describe('TemaObscurSelector', () => {
 
         fireEvent.click(screen.getByText('Obscur'));
 
-        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('temaObscur', true);
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('temaAplicacio', 'OBSCUR');
     });
 });
 
@@ -152,7 +169,7 @@ describe('UserProfileFormDialog', () => {
     it('UserProfileFormDialog_quanEsRenderitza_totsElsCampsSonRenderitzats', () => {
         // Verifica que tots els camps esperats es mostren en el formulari del perfil.
         mocks.useFormContextMock.mockReturnValue({
-            data: { alarmaMail: true, temaObscur: '', estilMenu: 'TEMA' },
+            data: { alarmaMail: true, temaAplicacio: 'SISTEMA', estilMenu: 'TEMA' },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
         const dialogApiRef = { current: undefined };
@@ -178,13 +195,14 @@ describe('UserProfileFormDialog', () => {
         expect(screen.getByText('Tema del menú')).toBeInTheDocument();
         expect(screen.getByText('Clar')).toBeInTheDocument();
         expect(screen.getByText('Obscur')).toBeInTheDocument();
+        expect(screen.getByText('Dracula')).toBeInTheDocument();
         expect(screen.getByText('Sistema')).toBeInTheDocument();
     });
 
     it('UserProfileFormDialog_quanEsRenderitza_configuraElDialegIElRefreshEnGuardar', () => {
         // Comprova que el diàleg de perfil es configura amb el títol i el callback de refresc esperats.
         mocks.useFormContextMock.mockReturnValue({
-            data: { alarmaMail: true, temaObscur: '', estilMenu: 'TEMA' },
+            data: { alarmaMail: true, temaAplicacio: 'SISTEMA', estilMenu: 'TEMA' },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
         const dialogApiRef = { current: undefined };

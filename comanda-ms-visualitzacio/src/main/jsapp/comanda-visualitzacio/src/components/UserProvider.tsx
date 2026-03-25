@@ -1,7 +1,7 @@
 import React from 'react';
 import { useResourceApiService, useResourceApiContext } from 'reactlib';
 import { UserContext } from './UserContext';
-import { UsuariModel } from '../types/usuari.model';
+import { IUsuari, UsuariModel } from '../types/usuari.model';
 
 export const ROLE_USER = 'COM_USER';
 export const ROLE_ADMIN = 'COM_ADMIN';
@@ -22,14 +22,28 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         setHttpHeaders: apiSetHttpHeaders,
         refreshApiIndex: apiRefreshIndex
     } = useResourceApiContext();
-    const [user, setUser] = React.useState<UsuariModel>();
+    const [persistedUser, setPersistedUser] = React.useState<UsuariModel>();
+    const [previewOverrides, setPreviewOverrides] = React.useState<Partial<IUsuari>>();
+    const user = React.useMemo(() => {
+        if (!persistedUser) {
+            return undefined;
+        }
+        if (!previewOverrides) {
+            return persistedUser;
+        }
+        return new UsuariModel({
+            ...persistedUser,
+            ...previewOverrides,
+        });
+    }, [persistedUser, previewOverrides]);
     const [currentRole, setCurrentRole] = React.useState<string | undefined>();
     const refresh = () => {
         if (apiIsReady) {
             apiFind({ page: 0, size: 1 }).
             then((response) => {
                 const user = response.rows[0];
-                setUser(user);
+                setPersistedUser(user);
+                setPreviewOverrides(undefined);
                 const userRoles = user?.rols as string[];
                 if (!currentRole) {
                     const roleFromLocalStorage = localStorage.getItem(USER_ROLE_LOCAL_STORAGE_KEY);
@@ -54,6 +68,8 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const contextValue = {
         user,
         refresh,
+        previewUser: (changes?: Partial<IUsuari>) => setPreviewOverrides(changes),
+        clearUserPreview: () => setPreviewOverrides(undefined),
         currentRole,
         setCurrentRole: (newRole?: string) => {
             setCurrentRole(newRole);

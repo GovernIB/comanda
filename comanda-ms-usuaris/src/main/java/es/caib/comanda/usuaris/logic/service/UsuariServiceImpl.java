@@ -8,6 +8,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.usuaris.logic.intf.model.LanguageEnum;
 import es.caib.comanda.usuaris.logic.intf.model.MenuEstilEnum;
+import es.caib.comanda.usuaris.logic.intf.model.TemaAplicacioEnum;
 import es.caib.comanda.usuaris.logic.intf.model.NumOfElementsPerPageENum;
 import es.caib.comanda.usuaris.logic.intf.model.Usuari;
 import es.caib.comanda.usuaris.logic.intf.service.UsuariService;
@@ -69,8 +70,12 @@ public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, 
 			usuariEntity.setCodi(usuariAuth.getCodi());
 			usuariEntity.setIdioma(LanguageEnum.CA);
 			usuariEntity.setNumElementsPagina(NumOfElementsPerPageENum.AUTOMATIC);
+			usuariEntity.setTemaAplicacio(TemaAplicacioEnum.SISTEMA);
 			usuariEntity.setEstilMenu(MenuEstilEnum.TEMA);
 			usuariEntity.setAlarmaMail(true);
+		}
+		if (usuariEntity.getTemaAplicacio() == null) {
+			usuariEntity.setTemaAplicacio(TemaAplicacioEnum.SISTEMA);
 		}
 		if (usuariEntity.getEstilMenu() == null) {
 			usuariEntity.setEstilMenu(MenuEstilEnum.TEMA);

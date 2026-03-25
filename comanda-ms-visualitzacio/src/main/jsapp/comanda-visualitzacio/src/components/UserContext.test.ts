@@ -27,6 +27,8 @@ describe('UserContext', () => {
         const contextValue = {
             user: { id: 7 } as any,
             refresh: () => undefined,
+            previewUser: () => undefined,
+            clearUserPreview: () => undefined,
             currentRole: 'COM_ADMIN',
             setCurrentRole: () => undefined,
         };
@@ -47,6 +49,8 @@ describe('UserContext', () => {
                 {
                     value: {
                         refresh: () => undefined,
+                        previewUser: () => undefined,
+                        clearUserPreview: () => undefined,
                         currentRole: 'COM_ADMIN',
                         setCurrentRole: () => undefined,
                     },
@@ -59,6 +63,8 @@ describe('UserContext', () => {
                 {
                     value: {
                         refresh: () => undefined,
+                        previewUser: () => undefined,
+                        clearUserPreview: () => undefined,
                         currentRole: 'COM_CONSULTA',
                         setCurrentRole: () => undefined,
                     },
@@ -71,6 +77,8 @@ describe('UserContext', () => {
                 {
                     value: {
                         refresh: () => undefined,
+                        previewUser: () => undefined,
+                        clearUserPreview: () => undefined,
                         currentRole: 'COM_USER',
                         setCurrentRole: () => undefined,
                     },

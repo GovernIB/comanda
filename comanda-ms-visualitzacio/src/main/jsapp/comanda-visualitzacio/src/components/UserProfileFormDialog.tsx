@@ -3,7 +3,7 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { Icon, InputAdornment, ToggleButton, ToggleButtonGroup, Divider } from '@mui/material';
 import ListItemText from '@mui/material/ListItemText';
-import { FormField, MuiFormDialog, useFormContext } from 'reactlib';
+import { FormField, MuiFormDialog, useBaseAppContext, type DialogButton, useFormContext } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
 import { useTranslation } from 'react-i18next';
 import AlternateEmail from '@mui/icons-material/AlternateEmail';
@@ -15,7 +15,7 @@ import RecentActors from '@mui/icons-material/RecentActors';
 import Tag from '@mui/icons-material/Tag';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import { MenuEstil, UsuariModel } from '../types/usuari.model.tsx';
+import { MenuEstil, TemaAplicacio, UsuariModel } from '../types/usuari.model.tsx';
 import { useUserContext } from './UserContext';
 
 const selectorLabelSx = {
@@ -46,9 +46,9 @@ export const UserProfileFormDialogButton = ({ onClick }: { onClick: () => void }
 export const TemaObscurSelector: React.FC = () => {
     const { t } = useTranslation();
     const { data, apiRef } = useFormContext();
-    const handleChange = (_event: React.MouseEvent<HTMLElement>, newValue: boolean | null) => {
+    const handleChange = (_event: React.MouseEvent<HTMLElement>, newValue: TemaAplicacio | null) => {
         if (newValue !== null) {
-            apiRef?.current?.setFieldValue('temaObscur', newValue);
+            apiRef?.current?.setFieldValue(UsuariModel.TEMA_APLICACIO, newValue);
         }
     };
     return (
@@ -57,7 +57,7 @@ export const TemaObscurSelector: React.FC = () => {
                 {t($ => $.menu.user.options.profile.form.applicationTheme)}
             </Typography>
             <ToggleButtonGroup
-                value={data?.temaObscur ?? ""}
+                value={data?.temaAplicacio ?? TemaAplicacio.SISTEMA}
                 exclusive
                 onChange={handleChange}
                 size="small"
@@ -67,13 +67,16 @@ export const TemaObscurSelector: React.FC = () => {
                     justifyContent: 'center',
                 }}
             >
-                <ToggleButton value={false} sx={{ flex: 1, gap: 1 }}>
+                <ToggleButton value={TemaAplicacio.CLAR} sx={{ flex: 1, gap: 1 }}>
                     <Icon>light_mode</Icon> {t($ => $.menu.user.options.profile.tema.clar)}
                 </ToggleButton>
-                <ToggleButton value={true} sx={{ flex: 1, gap: 1 }}>
+                <ToggleButton value={TemaAplicacio.OBSCUR} sx={{ flex: 1, gap: 1 }}>
                     <Icon>dark_mode</Icon> {t($ => $.menu.user.options.profile.tema.obscur)}
                 </ToggleButton>
-                <ToggleButton value={""} sx={{ flex: 1, gap: 1 }}>
+                <ToggleButton value={TemaAplicacio.DRACULA} sx={{ flex: 1, gap: 1 }}>
+                    <Icon>auto_awesome</Icon> {t($ => $.menu.user.options.profile.tema.dracula)}
+                </ToggleButton>
+                <ToggleButton value={TemaAplicacio.SISTEMA} sx={{ flex: 1, gap: 1 }}>
                     <Icon>settings_brightness</Icon> {t($ => $.menu.user.options.profile.tema.sistema)}
                 </ToggleButton>
             </ToggleButtonGroup>
@@ -218,7 +221,7 @@ const UserProfileForm = () => {
                 ), }, } }}
             />
         </Grid>
-        <Grid size={{ xs: 12, sm: 12, md: 8, lg: 6 }}>
+        <Grid size={{ xs: 12, sm: 12, md: 12, lg: 8 }}>
             <TemaObscurSelector />
         </Grid>
         <Grid size={{ xs: 12, sm: 12, md:8, lg: 6 }}>
@@ -234,17 +237,86 @@ export const UserProfileFormDialog = ({
     dialogApiRef: React.RefObject<DataFormDialogApi | undefined>;
 }) => {
     const { t } = useTranslation();
-    const { refresh } = useUserContext();
+    const { t: tBase } = useBaseAppContext();
+    const { user, refresh, previewUser, clearUserPreview } = useUserContext();
+    const originalPreviewRef = React.useRef<{
+        temaAplicacio: any;
+        estilMenu: any;
+    } | null>(null);
+    const savedRef = React.useRef(false);
+
+    const ensureOriginalPreview = React.useCallback(() => {
+        if (originalPreviewRef.current == null) {
+            originalPreviewRef.current = {
+                temaAplicacio: user?.temaAplicacio,
+                estilMenu: user?.estilMenu,
+            };
+        }
+    }, [user]);
+
+    const revertPreview = React.useCallback(() => {
+        if (savedRef.current) {
+            clearUserPreview();
+            originalPreviewRef.current = null;
+            return;
+        }
+        if (originalPreviewRef.current != null) {
+            previewUser(originalPreviewRef.current);
+        } else {
+            clearUserPreview();
+        }
+        originalPreviewRef.current = null;
+    }, [clearUserPreview, previewUser]);
+
+    const dialogButtons = React.useMemo<DialogButton[]>(() => [
+        {
+            value: false,
+            text: tBase('buttons.form.cancel'),
+            componentProps: {
+                variant: 'outlined',
+                onClick: () => {
+                    revertPreview();
+                    dialogApiRef.current?.close();
+                },
+            },
+        },
+        {
+            value: true,
+            text: tBase('buttons.form.save'),
+            icon: 'save',
+            componentProps: { variant: 'contained' },
+        },
+    ], [dialogApiRef, revertPreview, tBase]);
 
     return (
         <MuiFormDialog
             resourceName="usuari"
             title={t($ => $.menu.user.options.profile.title)}
-            onClose={(reason?: string) => reason !== 'backdropClick'}
+            dialogButtons={dialogButtons}
+            onClose={(reason?: string) => {
+                if (reason === 'backdropClick') {
+                    return false;
+                }
+                revertPreview();
+                return true;
+            }}
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg', }}
             formComponentProps={{
-                onSaveSuccess: () => refresh(),
+                onDataChange: (data: any) => {
+                    savedRef.current = false;
+                    ensureOriginalPreview();
+                    previewUser({
+                        temaAplicacio: data?.temaAplicacio,
+                        estilMenu: data?.estilMenu,
+                    });
+                },
+                onSaveSuccess: () => {
+                    savedRef.current = true;
+                    clearUserPreview();
+                    originalPreviewRef.current = null;
+                    refresh();
+                },
                 componentProps: { sx: { mt: 0 } },
             }}
         >

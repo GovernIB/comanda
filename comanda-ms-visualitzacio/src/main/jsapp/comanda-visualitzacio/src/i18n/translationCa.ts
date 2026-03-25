@@ -110,6 +110,7 @@ const translationCa = {
                     tema: {
                         clar: "Clar",
                         obscur: "Obscur",
+                        dracula: "Dracula",
                         sistema: "Sistema",
                     },
                     estilMenu: {

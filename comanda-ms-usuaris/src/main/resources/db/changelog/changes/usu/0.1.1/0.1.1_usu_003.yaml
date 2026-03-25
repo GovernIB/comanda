@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: usu-change-51-03
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}usuari
+            columns:
+              - column:
+                  name: tema_aplicacio
+                  type: VARCHAR(16 ${varcharUnit})
+                  remarks: Tema visual de l'aplicació

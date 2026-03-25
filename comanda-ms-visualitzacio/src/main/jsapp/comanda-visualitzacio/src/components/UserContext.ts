@@ -1,10 +1,12 @@
 import { createContext, useContext } from 'react';
-import { UsuariModel } from '../types/usuari.model';
+import { IUsuari, UsuariModel } from '../types/usuari.model';
 import { ROLE_ADMIN, ROLE_CONSULTA, ROLE_USER } from './UserProvider.tsx';
 
 export type UserContextType = {
     user?: UsuariModel;
     refresh: () => void;
+    previewUser: (changes?: Partial<IUsuari>) => void;
+    clearUserPreview: () => void;
     currentRole?: string;
     setCurrentRole: (currentRole: string | undefined) => void;
 };

@@ -399,6 +399,8 @@ export const Menu: React.FC<MenuProps> = (props) => {
     const locationPath = useLocationPath();
     const [open, setOpen] = React.useState<boolean>(false);
     const [compactPanelEntryId, setCompactPanelEntryId] = React.useState<string>();
+    const compactMenuContainerRef = React.useRef<HTMLDivElement | null>(null);
+    const compactPanelRef = React.useRef<HTMLDivElement | null>(null);
     const compactMode = !smallScreen && !!shrink;
     const compactMenuWidth = `calc(${theme.spacing(7)} + 1px)`;
     const compactPanelTop = smallHeader ? theme.spacing(7) : theme.spacing(8);
@@ -418,6 +420,26 @@ export const Menu: React.FC<MenuProps> = (props) => {
             setCompactPanelEntryId(undefined);
         }
     }, [compactMode]);
+    React.useEffect(() => {
+        if (!compactMode || !compactPanelEntry) {
+            return;
+        }
+        const handlePointerDownOutside = (event: MouseEvent) => {
+            const target = event.target as Node | null;
+            if (
+                target != null &&
+                (compactPanelRef.current?.contains(target) ||
+                    compactMenuContainerRef.current?.contains(target))
+            ) {
+                return;
+            }
+            setCompactPanelEntryId(undefined);
+        };
+        document.addEventListener('mousedown', handlePointerDownOutside);
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDownOutside);
+        };
+    }, [compactMode, compactPanelEntry]);
     const handleMenuItemClick = () => {
         setOpen(false);
         setCompactPanelEntryId(undefined);
@@ -437,7 +459,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
             <Box sx={{ mt: smallHeader ? 7 : 8 }} />
             {title && <MenuTitle title={title} onClose={onTitleClose} colors={colors} />}
             {compactMode ? (
-                <Box sx={{ minHeight: 0, height: '100%' }}>
+                <Box ref={compactMenuContainerRef} sx={{ minHeight: 0, height: '100%' }}>
                     <StyledList
                         sx={{
                             width: compactMenuWidth,
@@ -496,6 +518,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                     </StyledList>
                     {compactPanelEntry ? (
                         <Box
+                            ref={compactPanelRef}
                             data-testid="compact-floating-panel"
                             sx={(theme) => ({
                                 position: 'fixed',

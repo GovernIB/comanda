@@ -21,6 +21,7 @@ vi.mock('./UserContext', () => ({
 vi.mock('../theme', () => ({
     darkTheme: { name: 'dark' },
     lightTheme: { name: 'light' },
+    draculaTheme: { name: 'dracula' },
 }));
 
 vi.mock('@mui/material', async () => {
@@ -58,7 +59,7 @@ describe('MuiThemeProvider', () => {
 
     it('MuiThemeProvider_quanLUsuariDefineixTema_clavaLaPreferenciaDeLUsuari', () => {
         // Verifica que la preferència explícita de l'usuari preval sobre el tema del sistema.
-        mocks.useUserContextMock.mockReturnValue({ user: { temaObscur: false } });
+        mocks.useUserContextMock.mockReturnValue({ user: { temaAplicacio: 'CLAR' } });
         mocks.useMediaQueryMock.mockReturnValue(true);
 
         render(
@@ -68,5 +69,18 @@ describe('MuiThemeProvider', () => {
         );
 
         expect(screen.getByTestId('theme-provider')).toHaveAttribute('data-theme', 'light');
+    });
+
+    it('MuiThemeProvider_quanLUsuariTriaDracula_usaElTemaDracula', () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { temaAplicacio: 'DRACULA' } });
+        mocks.useMediaQueryMock.mockReturnValue(false);
+
+        render(
+            <MuiThemeProvider>
+                <div>Contingut</div>
+            </MuiThemeProvider>
+        );
+
+        expect(screen.getByTestId('theme-provider')).toHaveAttribute('data-theme', 'dracula');
     });
 });

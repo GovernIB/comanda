@@ -110,6 +110,7 @@ const translationEs: translationResourcesType = {
                     tema: {
                         clar: "Claro",
                         obscur: "Oscuro",
+                        dracula: "Dracula",
                         sistema: "Sistema",
                     },
                     estilMenu: {

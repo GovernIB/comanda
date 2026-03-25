@@ -117,7 +117,9 @@ describe('UserProvider', () => {
             expect(screen.getByTestId('current-role')).toHaveTextContent(ROLE_USER);
         });
 
-        expect(mocks.setHttpHeadersMock).toHaveBeenCalledWith([{ 'X-App-Role': ROLE_USER }]);
+        await waitFor(() => {
+            expect(mocks.setHttpHeadersMock).toHaveBeenCalledWith([{ 'X-App-Role': ROLE_USER }]);
+        });
     });
 
     it('UserProvider_quanElRolDesatEsUsuari_elRecuperaEncaraQueNoSiguiUnRolFuncional', async () => {
