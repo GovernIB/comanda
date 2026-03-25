@@ -107,7 +107,7 @@ export const App: React.FC = () => {
                 id: 'entorn',
                 title: t($ => $.menu.entorn),
                 to: '/entorn',
-                icon: 'domain',
+                icon: 'layers',
                 resourceName: 'entorn',
             },
             {

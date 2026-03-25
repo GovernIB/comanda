@@ -227,7 +227,10 @@ describe('SalutToolbar render', () => {
             />
         );
 
-        expect(screen.getByLabelText('Agrupació')).toBeInTheDocument();
+        expect(screen.getByLabelText('grouping selection')).toBeInTheDocument();
+        expect(screen.getByTitle('Per aplicació')).toBeInTheDocument();
+        expect(screen.getByTitle('Per entorn')).toBeInTheDocument();
+        expect(screen.getByTitle('Cap')).toBeInTheDocument();
     });
 
     it('SalutToolbar_quanNoEstaReady_deshabilitaLesAccionsTemporals', () => {
@@ -236,6 +239,7 @@ describe('SalutToolbar render', () => {
             <SalutToolbar
                 title="Salut"
                 ready={false}
+                groupingActive={true}
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
@@ -251,6 +255,9 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Refrescar')).toBeDisabled();
         expect(screen.getByLabelText('Període de refresc')).toHaveAttribute('aria-disabled', 'true');
         expect(screen.getByLabelText('Rang temporal')).toHaveAttribute('aria-disabled', 'true');
+        expect(screen.getByTitle('Per aplicació')).toBeDisabled();
+        expect(screen.getByTitle('Per entorn')).toBeDisabled();
+        expect(screen.getByTitle('Cap')).toBeDisabled();
     });
 
     it('SalutToolbar_quanHiHaDatesDeRefresh_mostraElResumTemporal', () => {

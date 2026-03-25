@@ -145,8 +145,8 @@ const translationCa = {
             },
             groupingSelect: {
                 label: "Agrupació",
-                BY_APPLICATION: "Per aplicació",
-                BY_ENVIRONMENT: "Per entorn",
+                BY_APPLICATION: "Agrupar per aplicació",
+                BY_ENVIRONMENT: "Agrupar per entorn",
                 NONE: "Sense agrupació",
                 titleNoGrouping: "Totes les aplicacions i entorns",
             },

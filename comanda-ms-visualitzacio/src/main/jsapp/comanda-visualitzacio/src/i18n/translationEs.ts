@@ -145,8 +145,8 @@ const translationEs: translationResourcesType = {
             },
             groupingSelect: {
                 label: "Agrupación",
-                BY_APPLICATION: "Por aplicación",
-                BY_ENVIRONMENT: "Por entorno",
+                BY_APPLICATION: "Agrupar por aplicación",
+                BY_ENVIRONMENT: "Agrupar por entorno",
                 NONE: "Sin agrupación",
                 titleNoGrouping: "Todas las aplicaciones y entornos",
             },

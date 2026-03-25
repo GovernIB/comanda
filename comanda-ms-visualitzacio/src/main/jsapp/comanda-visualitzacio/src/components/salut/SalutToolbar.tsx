@@ -19,11 +19,10 @@ import {
     useFilterApiRef,
     useFormContext,
 } from 'reactlib';
-import { Box, InputLabel } from '@mui/material';
+import { Box, Button, ButtonGroup } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import { useId } from 'react';
 
 export type SalutToolbarProps = {
     title: string;
@@ -87,45 +86,48 @@ const getInitialGrouping = () => {
  * @param props
  * @constructor
  */
-const GroupForViewSelect = (props: { disabled?: boolean; onChange: (grouping: GroupingEnum) => void; value: GroupingEnum }) => {
+const GroupForViewSelect = (props: {
+    disabled?: boolean;
+    onChange: (grouping: GroupingEnum) => void;
+    value: GroupingEnum;
+}) => {
     const { value, onChange, disabled } = props;
     const { t } = useTranslation();
-    const labelId = useId();
-    const selectId = useId();
-
-    const handleChange = (event: SelectChangeEvent) => {
-        const selectedGrouping = event.target.value;
-        if (isValidGrouping(selectedGrouping))
-            onChange(selectedGrouping);
-        else
-            console.error('Invalid grouping:', selectedGrouping);
-    }
 
     return (
-        <FormControl sx={{ ml: 2, width: '12rem' }}>
-            <InputLabel id={labelId}>{t($ => $.page.salut.groupingSelect.label)}</InputLabel>
-            <Select
-                label={t($ => $.page.salut.groupingSelect.label)}
-                labelId={labelId}
-                id={selectId}
-                value={value}
+        <Box sx={{ ml: 2, display: 'flex', flexDirection: 'column' }}>
+            <ButtonGroup
                 size="small"
                 disabled={disabled}
-                onChange={handleChange}
+                aria-label="grouping selection"
+                sx={{ flexWrap: 'nowrap' }}
+                variant="outlined"
             >
-                <MenuItem value={GroupingEnum.APPLICATION}>
-                    {t($ => $.page.salut.groupingSelect.BY_APPLICATION)}
-                </MenuItem>
-                <MenuItem value={GroupingEnum.ENVIRONMENT}>
-                    {t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}
-                </MenuItem>
-                <MenuItem value={GroupingEnum.NONE}>
-                    {t($ => $.page.salut.groupingSelect.NONE)}
-                </MenuItem>
-            </Select>
-        </FormControl>
+                <Button
+                    variant={value === GroupingEnum.APPLICATION ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.APPLICATION)}
+                    title={t($ => $.page.salut.groupingSelect.BY_APPLICATION)}
+                >
+                    <Icon>apps</Icon>
+                </Button>
+                <Button
+                    variant={value === GroupingEnum.ENVIRONMENT ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.ENVIRONMENT)}
+                    title={t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}
+                >
+                    <Icon>layers</Icon>
+                </Button>
+                <Button
+                    variant={value === GroupingEnum.NONE ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.NONE)}
+                    title={t($ => $.page.salut.groupingSelect.NONE)}
+                >
+                    <Icon>block</Icon>
+                </Button>
+            </ButtonGroup>
+        </Box>
     );
-}
+};
 
 const getInitialRefreshDuration = () => {
     const storedValue = localStorage.getItem('refreshTimeoutSelect');

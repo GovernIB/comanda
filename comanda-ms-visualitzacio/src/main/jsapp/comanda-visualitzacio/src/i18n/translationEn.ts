@@ -145,9 +145,9 @@ const translationEn: translationResourcesType = {
             },
             groupingSelect: {
                 label: "Group",
-                BY_APPLICATION: "By application",
-                BY_ENVIRONMENT: "By environment",
-                NONE: "None",
+                BY_APPLICATION: "Group by application",
+                BY_ENVIRONMENT: "Group by environment",
+                NONE: "Do not group",
                 titleNoGrouping: "All applications and environments",
             },
             refreshperiod: {
