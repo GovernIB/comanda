@@ -63,8 +63,8 @@ class ComandaSseServiceImplTest {
         comandaSseService.subscribe();
         Object subscription = getSubscriptions().get(0);
         List<Alarma.AlarmaReduidaResource> activeAlarms = List.of(
-                new Alarma.AlarmaReduidaResource(1L),
-                new Alarma.AlarmaReduidaResource(2L));
+                new Alarma.AlarmaReduidaResource(1L, 101L),
+                new Alarma.AlarmaReduidaResource(2L, 202L));
         when(alarmaService.findActiveAlarmIdsForSubscriber("admin1", true)).thenReturn(activeAlarms);
         ComandaSseEvent event = new ComandaSseEvent(
                 ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED,
@@ -80,6 +80,8 @@ class ComandaSseServiceImplTest {
         assertThat(resolvedEvent).isNotNull();
         assertThat(resolvedEvent.getType()).isEqualTo(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
         assertThat(resolvedEvent.getPayload()).isEqualTo(activeAlarms);
+        assertThat(activeAlarms).extracting(Alarma.AlarmaReduidaResource::getEntornAppId)
+                .containsExactly(101L, 202L);
         verify(alarmaService).findActiveAlarmIdsForSubscriber("admin1", true);
     }
 

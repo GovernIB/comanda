@@ -8,7 +8,6 @@ import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -72,8 +71,13 @@ public class Alarma extends BaseResource<Long> {
     @Getter
     @Setter
     @NoArgsConstructor
-    @AllArgsConstructor
     public static class AlarmaReduidaResource implements Serializable {
         private Long id;
+        private Long entornAppId;
+
+        public AlarmaReduidaResource(Long id, Long entornAppId) {
+            this.id = id;
+            this.entornAppId = entornAppId;
+        }
     }
 }

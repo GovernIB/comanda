@@ -34,6 +34,7 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,9 +113,13 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
             activeAlarms.addAll(alarmaRepository.findByEstatAndAlarmaConfigAdminTrue(AlarmaEstat.ACTIVA));
         }
         return activeAlarms.stream()
-                .map(AlarmaEntity::getId)
-                .distinct()
-                .map(AlarmaReduidaResource::new)
+                .collect(Collectors.toMap(
+                        AlarmaEntity::getId,
+                        entity -> new AlarmaReduidaResource(entity.getId(), entity.getEntornAppId()),
+                        (first, ignored) -> first,
+                        LinkedHashMap::new))
+                .values()
+                .stream()
                 .collect(Collectors.toList());
     }
 
@@ -259,17 +264,17 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
                     null
             );
             CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<Long> query = cb.createQuery(Long.class);
+            CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
             Root<AlarmaEntity> root = query.from(AlarmaEntity.class);
 
             Predicate predicate = spec.toPredicate(root, query, cb);
             if (predicate != null) {
                 query.where(predicate);
             }
-            query.select(root.get("id"));
-            List<Long> ids = entityManager.createQuery(query).getResultList();
-            List<AlarmaReduidaResource> recursos = ids.stream()
-                    .map(AlarmaReduidaResource::new)
+            query.multiselect(root.get("id"), root.get("entornAppId"));
+            List<Object[]> rows = entityManager.createQuery(query).getResultList();
+            List<AlarmaReduidaResource> recursos = rows.stream()
+                    .map(row -> new AlarmaReduidaResource((Long) row[0], (Long) row[1]))
                     .collect(Collectors.toList());
             return recursos;
         }

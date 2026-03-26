@@ -321,23 +321,51 @@ class AlarmaServiceImplTest {
     }
 
     @Test
+    @DisplayName("findActiveAlarmIdsForSubscriber emplena id i entornAppId")
+    void findActiveAlarmIdsForSubscriber_emplenaIdIEntornAppId() {
+        AlarmaEntity alarmaUsuari = new AlarmaEntity();
+        alarmaUsuari.setId(1L);
+        alarmaUsuari.setEntornAppId(101L);
+
+        AlarmaEntity alarmaAdmin = new AlarmaEntity();
+        alarmaAdmin.setId(2L);
+        alarmaAdmin.setEntornAppId(202L);
+
+        when(alarmaRepository.findByEstatAndAlarmaConfigAdminFalseAndAlarmaConfigCreatedBy(
+                AlarmaEstat.ACTIVA,
+                CURRENT_USER)).thenReturn(List.of(alarmaUsuari));
+        when(alarmaRepository.findByEstatAndAlarmaConfigAdminTrue(AlarmaEstat.ACTIVA))
+                .thenReturn(List.of(alarmaAdmin));
+
+        List<AlarmaReduidaResource> result = alarmaService.findActiveAlarmIdsForSubscriber(CURRENT_USER, true);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(0).getEntornAppId()).isEqualTo(101L);
+        assertThat(result.get(1).getId()).isEqualTo(2L);
+        assertThat(result.get(1).getEntornAppId()).isEqualTo(202L);
+    }
+
+    @Test
     @DisplayName("ReportLlistatIdAlarmaActiva.generateData retorna llista de recursos")
     @SuppressWarnings("unchecked")
     @MockitoSettings(strictness = Strictness.LENIENT)
     void reportLlistatIdAlarmaActiva_generateData_retornaRecursos() throws Exception {
         // Arrange
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        CriteriaQuery<Long> query = mock(CriteriaQuery.class);
+        CriteriaQuery<Object[]> query = mock(CriteriaQuery.class);
         Root<AlarmaEntity> root = mock(Root.class);
-        TypedQuery<Long> typedQuery = mock(TypedQuery.class);
+        TypedQuery<Object[]> typedQuery = mock(TypedQuery.class);
         Path idPath = mock(Path.class);
+        Path entornAppIdPath = mock(Path.class);
         Path estatPath = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
 
         when(entityManager.getCriteriaBuilder()).thenReturn(cb);
-        when(cb.createQuery(Long.class)).thenReturn(query);
+        when(cb.createQuery(Object[].class)).thenReturn(query);
         when(query.from(AlarmaEntity.class)).thenReturn(root);
         when(root.get("id")).thenReturn(idPath);
+        when(root.get("entornAppId")).thenReturn(entornAppIdPath);
         when(root.get("estat")).thenReturn(estatPath);
         when(root.get(anyString())).thenAnswer(invocation -> {
             String fieldName = invocation.getArgument(0);
@@ -345,9 +373,12 @@ class AlarmaServiceImplTest {
             when(mockPath.getJavaType()).thenReturn((Class) String.class);
             return mockPath;
         });
+        when(query.multiselect(idPath, entornAppIdPath)).thenReturn(query);
 
         when(entityManager.createQuery(query)).thenReturn(typedQuery);
-        when(typedQuery.getResultList()).thenReturn(Arrays.asList(1L, 2L));
+        when(typedQuery.getResultList()).thenReturn(Arrays.asList(
+                new Object[] { 1L, 101L },
+                new Object[] { 2L, 202L }));
 
         Class<?> reportClass = Class.forName("es.caib.comanda.alarmes.logic.service.AlarmaServiceImpl$ReportLlistatIdAlarmaActiva");
         java.lang.reflect.Constructor<?> constructor = reportClass.getDeclaredConstructor(AlarmaServiceImpl.class, EntityManager.class);
@@ -362,7 +393,9 @@ class AlarmaServiceImplTest {
         // Assert
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(0).getEntornAppId()).isEqualTo(101L);
         assertThat(result.get(1).getId()).isEqualTo(2L);
+        assertThat(result.get(1).getEntornAppId()).isEqualTo(202L);
     }
 
     private AlarmaEntity crearAlarmaEntity(AlarmaEstat estat, boolean isAdmin, String createdBy) {
