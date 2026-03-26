@@ -509,6 +509,10 @@ const translationCa = {
                 noFile: "No s'ha seleccionat cap fitxer",
                 parseError: "Error en analitzar el fitxer",
             },
+            ping: {
+                validationError: "Resposta rebuda amb errors de validacions",
+                validationTrace: "Errors de validacions",
+            },
         },
         entorns: {
             title: "Entorns",

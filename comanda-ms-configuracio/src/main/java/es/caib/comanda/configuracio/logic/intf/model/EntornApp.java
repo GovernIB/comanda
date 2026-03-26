@@ -206,6 +206,7 @@ public class EntornApp extends BaseResource<Long> {
 	@FieldNameConstants
 	public static class PingUrlResponse implements Serializable {
 		private Boolean success;
+        private Boolean validationError;
 		private String message;
 	}
 

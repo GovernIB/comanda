@@ -14,7 +14,9 @@ import {
     MuiFormTabs,
     springFilterBuilder,
     useBaseAppContext,
+    useCloseDialogButtons,
     useFormContext,
+    useMuiContentDialog,
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
@@ -32,6 +34,9 @@ import Cancel from '@mui/icons-material/Cancel';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
+import ContentDetail from '../components/ContentDetail.tsx';
+import { StacktraceBlock } from '../components/RickTextDetail.tsx';
+import { ContentDialogShowFn } from '../../lib/components/BaseAppContext.tsx';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -41,12 +46,32 @@ const useActions = (refresh?: () => void) => {
 
     const pingUrl = React.useCallback(async (
         additionalData: any, 
-        expectedResponseTypeEnum: string
+        expectedResponseTypeEnum: string,
+        dialogShow: ContentDialogShowFn,
     ): Promise<boolean> => {
         try {
             const data = await apiAction(null, { code: 'pingUrl', data: {...additionalData, expectedResponseTypeEnum} });
             refresh?.();
-            temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
+            if (data?.validationError) {
+                const elementsDetail = [
+                    {
+                        contentValue: (
+                            <StacktraceBlock
+                                title={t($ => $.page.apps.ping.validationTrace)}
+                                value={data?.message}
+                            />
+                        ),
+                    },
+                ];
+                dialogShow(
+                    t($ => $.page.apps.ping.validationError),
+                    <ContentDetail title={""} elements={elementsDetail} />,
+                    undefined,
+                    { maxWidth: 'lg', fullWidth: true, }
+                );
+            } else {
+                temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
+            }
             return data.success;
         } catch (error: any) {
             temporalMessageShow(null, error.message, 'error');
@@ -92,9 +117,11 @@ const AppEntornForm: React.FC = () => {
     const { id: appId } = useParams();
     const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
     const { pingUrl } = useActions();
+    const closeDialogButton = useCloseDialogButtons();
+    const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
 
     return (
-        <Grid container spacing={2}>
+        <><Grid container spacing={2}>
             <Grid size={9}>
                 <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter}/>
             </Grid>
@@ -102,13 +129,13 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="activa" />
             </Grid>
             <Grid size={12}>
-                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO')}/>}}}} />
+                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO', detailDialogShow)}/>}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={(formData) => pingUrl(formData, 'SALUT')}/>}}}} />
+                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={(formData) => pingUrl(formData, 'SALUT', detailDialogShow)}/>}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={(formData) => pingUrl(formData, 'LOGS')}/>}}}} />
+                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={(formData) => pingUrl(formData, 'LOGS', detailDialogShow)}/>}}}} />
             </Grid>
             <Grid size={12} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
@@ -119,10 +146,10 @@ const AppEntornForm: React.FC = () => {
                 </FormControl>
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO')}/>}}}} />
+                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO', detailDialogShow)}/>}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA')}/>}}}} />
+                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA', detailDialogShow)}/>}}}} />
             </Grid>
             <Grid size={6} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
@@ -163,6 +190,7 @@ const AppEntornForm: React.FC = () => {
                 </>
             )}
         </Grid>
+        {detailDialogComponent}</>
     );
 };
 

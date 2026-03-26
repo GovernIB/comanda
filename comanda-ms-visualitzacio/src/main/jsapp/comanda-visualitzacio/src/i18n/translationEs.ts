@@ -509,6 +509,10 @@ const translationEs: translationResourcesType = {
                 noFile: "No se ha seleccionado ningún fichero",
                 parseError: "Error al analizar el fichero",
             },
+            ping: {
+                validationError: "Respuesta recibida con errores de validaciones",
+                validationTrace: "Errores de validaciones",
+            },
         },
         entorns: {
             title: "Entornos",

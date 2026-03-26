@@ -262,10 +262,11 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                             Object body = response.getBody();
                             Set<ConstraintViolation<Object>> violations = validator.validate(body);
                             if (!violations.isEmpty()) {
+                                pingUrlResponse.setValidationError(true);
                                 message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectValidate") +
                                         " " + violations.stream()
                                         .map(v -> "[" + v.getPropertyPath() + ": " + v.getMessage() + "]")
-                                        .collect(Collectors.joining(", "));
+                                        .collect(Collectors.joining(",\n "));
                             } else {
                                 pingUrlResponse.setSuccess(true);
                                 message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.correctBody");

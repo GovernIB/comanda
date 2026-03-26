@@ -509,6 +509,10 @@ const translationEn: translationResourcesType = {
                 noFile: "No file selected",
                 parseError: "Error when parsing the file",
             },
+            ping: {
+                validationError: "Response received with validation errors",
+                validationTrace: "Validation errors",
+            },
         },
         entorns: {
             title: "Environments",

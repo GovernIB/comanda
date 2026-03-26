@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
     entornPermissionShowMock: vi.fn(),
     appPermissionShowMock: vi.fn(),
     iniciaDescargaJSONMock: vi.fn(),
+    dialogShowMock: vi.fn(),
+    dialogComponentMock: vi.fn(),
     useFormContextValue: {
         data: {},
         apiRef: { current: { setFieldValue: vi.fn() } },
@@ -60,6 +62,10 @@ const mocks = vi.hoisted(() => ({
                     tooltips: {
                         compactacioMesos: 'Tooltip compactació',
                         borratMesos: 'Tooltip eliminació',
+                    },
+                    ping: {
+                        validationError: 'Error de validació',
+                        validationTrace: 'Traça de validació',
                     },
                 },
                 appsEntorns: {
@@ -203,6 +209,8 @@ vi.mock('reactlib', () => ({
             artifactReport: mocks.artifactReportMock,
         };
     },
+    useCloseDialogButtons: () => [{ value: false, text: 'Tancar', componentProps: { variant: 'contained' } }],
+    useMuiContentDialog: () => [mocks.dialogShowMock, mocks.dialogComponentMock],
 }));
 
 vi.mock('../../lib/util/reactNodePosition.ts', () => ({}));
@@ -220,7 +228,11 @@ vi.mock('../components/FasesCompactacio', () => ({
 }));
 
 vi.mock('../components/UrlPingAdornment', () => ({
-    default: () => <div>Ping URL</div>,
+  default: ({ onClick }: { onClick: () => void }) => (
+    <button data-testid="ping-button" onClick={onClick}>
+      Ping URL
+    </button>
+  ),
 }));
 
 vi.mock('../components/AclPermissionManager', () => ({
