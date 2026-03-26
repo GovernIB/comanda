@@ -1,22 +1,26 @@
-import { useEffect, useEffectEvent, useState } from 'react';
 import Badge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
-import {MuiDialog, useCloseDialogButtons, useResourceApiService} from 'reactlib';
-import { useMessage } from './MessageShow';
-import { useTranslation } from 'react-i18next';
-import { useSseContext } from './SseProvider';
-import { Box } from '@mui/material';
+import { MuiDialog, useCloseDialogButtons } from 'reactlib';
+import { Box, SxProps } from '@mui/material';
 import Alarmes from '../pages/Alarmes.tsx';
+import { useAlarmsContext } from './AlarmsContext.ts';
+import { useMemo } from 'react';
 
-const SEGONS_REFRESC = 30;
-const ACTIVE_ALARMS_CHANGED_EVENT_TYPE = 'alarm.active.changed';
-
-type AlarmType = {
+export type AlarmType = {
     id: number;
+    entornAppId: number;
 };
 
-export function AlarmsDialog({ open, setOpen }: { open: boolean, setOpen: (open: boolean) => void }){
+export function AlarmsDialog({
+    open,
+    setOpen,
+    filterBy,
+}: {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    filterBy?: { entornAppId?: number | string };
+}) {
     const buttons = useCloseDialogButtons();
 
     return (
@@ -36,85 +40,37 @@ export function AlarmsDialog({ open, setOpen }: { open: boolean, setOpen: (open:
                     height: '500px',
                 }}
             >
-                <Alarmes />
+                <Alarmes filterBy={filterBy} />
             </Box>
         </MuiDialog>
     );
 }
+export const AlarmsButton: React.FC<{
+    onClick?: () => void;
+    filterBy?: { entornAppId?: number | string };
+    sx?: SxProps,
+}> = ({ onClick, filterBy, sx }) => {
+    const { alarms } = useAlarmsContext();
+    const count = useMemo(() => {
+        const entornAppIdFilter = filterBy?.entornAppId;
+        const filteredAlarms = entornAppIdFilter != null
+            ? alarms?.filter(alarm => alarm.entornAppId === entornAppIdFilter)
+            : alarms;
 
-export const Alarms = ({ onButtonClick }: { onButtonClick: () => void }) => {
-    const { t } = useTranslation();
-    const { status: sseStatus, subscribe } = useSseContext();
-    const { isReady: apiIsReady, artifactReport: report } = useResourceApiService('alarma');
-    const { showTemporal: showMessage, component } = useMessage();
-    const [alarms, setAlarms] = useState<AlarmType[] | null>(null);
-    const count = alarms?.length ?? 0;
-
-    const applyAlarms = useEffectEvent((response: AlarmType[]) => {
-        const newAlarms = response.filter(alarm => !alarms?.some(a => a.id === alarm.id));
-
-        if (alarms == null && response.length > 0) {
-            showMessage(
-                t($ => $.page.alarma.snackbar.title),
-                t($ => $.page.alarma.snackbar.existingAlarms, { count: response.length}),
-                'error',
-                undefined,
-                5000
-            );
-        } else if (newAlarms.length > 0) {
-            showMessage(
-                t($ => $.page.alarma.snackbar.title),
-                t($ => $.page.alarma.snackbar.newAlarms, { count: newAlarms.length }),
-                'error',
-                undefined,
-                5000
-            );
-        }
-        setAlarms(response);
-    });
-    const fetchAlarms = useEffectEvent(async () => {
-        const response = (await report(undefined, { code: 'ALARMA_FIND_ACTIVES' })) as AlarmType[];
-        applyAlarms(response);
-    });
-
-    useEffect(() => {
-        if (apiIsReady) {
-            fetchAlarms();
-        }
-    }, [apiIsReady]);
-
-    useEffect(() => {
-        return subscribe(ACTIVE_ALARMS_CHANGED_EVENT_TYPE, (event) => {
-            if (event.payload != null) {
-                applyAlarms(event.payload as AlarmType[]);
-            }
-        });
-    }, [applyAlarms, subscribe]);
-
-    useEffect(() => {
-        if (!apiIsReady || sseStatus !== 'disconnected') {
-            return;
-        }
-
-        const interval = setInterval(() => {
-            fetchAlarms();
-        }, SEGONS_REFRESC * 1000);
-
-        return () => {
-            clearInterval(interval);
-        };
-    }, [apiIsReady, fetchAlarms, sseStatus]);
+        return filteredAlarms?.length ?? 0;
+    }, [alarms, filterBy?.entornAppId]);
     const icon = <Icon>notifications</Icon>;
     return (
-        <>
-            {component}
-            <IconButton sx={{ mr: 2 }} onClick={() => onButtonClick()}>
-                <Badge badgeContent={count} color="error" overlap="circular">
-                    {icon}
-                </Badge>
-            </IconButton>
-        </>
+        <IconButton onClick={onClick} sx={sx}>
+            <Badge badgeContent={count} color="error" overlap="circular">
+                {icon}
+            </Badge>
+        </IconButton>
     );
+};
+
+export const Alarms = ({ onButtonClick }: { onButtonClick: () => void }) => {
+    return <AlarmsButton sx={{ mr: 2 }} onClick={onButtonClick} />;
 };
 
 export default Alarms;

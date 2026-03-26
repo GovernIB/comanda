@@ -19,6 +19,7 @@ import SseProvider from './components/SseProvider.tsx';
 import UserProvider from './components/UserProvider';
 import MuiThemeProvider from './components/MuiThemeProvider.tsx';
 import { HelmetProvider } from '@dr.pogodin/react-helmet';
+import AlarmsProvider from './components/AlarmsProvider.tsx';
 
 dayjs.extend(duration);
 
@@ -65,14 +66,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
                 <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
                     <SseProvider>
-                        <UserProvider>
-                            <MuiThemeProvider>
-                                <CssBaseline />
-                                <BrowserRouter basename={import.meta.env.BASE_URL}>
-                                    <App />
-                                </BrowserRouter>
-                            </MuiThemeProvider>
-                        </UserProvider>
+                        <AlarmsProvider>
+                            <UserProvider>
+                                <MuiThemeProvider>
+                                    <CssBaseline />
+                                    <BrowserRouter basename={import.meta.env.BASE_URL}>
+                                        <App />
+                                    </BrowserRouter>
+                                </MuiThemeProvider>
+                            </UserProvider>
+                        </AlarmsProvider>
                     </SseProvider>
                 </ResourceApiProvider>
             </AuthProvider>
