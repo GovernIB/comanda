@@ -137,6 +137,7 @@ const getMenuColorSet = (
     theme: Theme,
     appearance: MenuProps['appearance']
 ): MenuColorSet | undefined => {
+    // `theme` no sobreescriu colors: el menú reutilitza directament la paleta activa de MUI.
     if (appearance === 'footer') {
         return {
             background: '#5F5D5D',
@@ -180,6 +181,8 @@ const isCurrentMenuEntryOrAnyChildrenSelected = (
     menuEntry: MenuEntry,
     locationPath: string
 ): boolean => {
+    // Un pare s'ha de marcar com a seleccionat si apunta a la ruta actual
+    // o si qualsevol descendent coincideix amb la navegació actual.
     const anyChildSelected =
         menuEntry.children?.find((e) => isCurrentMenuEntryOrAnyChildrenSelected(e, locationPath)) !=
         null;
@@ -262,12 +265,15 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
     };
     const handleMenuItemClick = () => {
         onEntryClick?.(entry);
+        // Les entrades amb fills no naveguen directament: obren o tanquen el seu arbre.
         if (children != null) {
             setExpanded((expanded) => !expanded);
         } else {
             onMenuItemClick?.();
         }
     };
+    // En mode compacte només es mostra la icona pròpia. En mode normal, els pares
+    // passen a mostrar l'estat expandit/col·lapsat.
     const processedIcon = shrink
         ? icon
         : children != null
@@ -311,6 +317,8 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
     return (
         <StyledList sx={{ backgroundColor: colors?.background, color: colors?.textPrimary }}>
             {entries?.map((item, index) => {
+                // Cada nivell recalcula la selecció perquè l'estat visual del pare depèn
+                // també del subtree, no només de la seva pròpia ruta.
                 const selected = isCurrentMenuEntryOrAnyChildrenSelected(item, locationPath);
                 const entryComponent = item.divider ? (
                     <Divider key={index} sx={{ borderColor: colors?.divider }} />
@@ -410,12 +418,15 @@ export const Menu: React.FC<MenuProps> = (props) => {
         : undefined;
 
     React.useEffect(() => {
+        // Al mòbil el menú s'obre i es tanca des de la icona de l'header.
         setOpen((o) => !o);
     }, [iconClicked]);
     React.useEffect(() => {
+        // En passar a mòbil o escriptori es reinicia l'estat del drawer temporal.
         setOpen(false);
     }, [smallScreen]);
     React.useEffect(() => {
+        // El submenú flotant només existeix en mode compacte d'escriptori.
         if (!compactMode) {
             setCompactPanelEntryId(undefined);
         }
@@ -424,6 +435,8 @@ export const Menu: React.FC<MenuProps> = (props) => {
         if (!compactMode || !compactPanelEntry) {
             return;
         }
+        // Si hi ha un panell flotant obert, qualsevol clic fora del panell i fora
+        // de la columna d'icones el tanca.
         const handlePointerDownOutside = (event: MouseEvent) => {
             const target = event.target as Node | null;
             if (
@@ -441,6 +454,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
         };
     }, [compactMode, compactPanelEntry]);
     const handleMenuItemClick = () => {
+        // En navegar es tanca tant el drawer mòbil com el submenú compacte obert.
         setOpen(false);
         setCompactPanelEntryId(undefined);
     };
@@ -448,6 +462,8 @@ export const Menu: React.FC<MenuProps> = (props) => {
         if (!compactMode) {
             return;
         }
+        // En compacte, els elements amb fills obren un segon panell lateral en lloc
+        // d'expandir-se dins la mateixa columna.
         if (entry.children?.length) {
             setCompactPanelEntryId((current) => (current === entry.id ? undefined : entry.id));
         } else {
@@ -460,6 +476,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
             {title && <MenuTitle title={title} onClose={onTitleClose} colors={colors} />}
             {compactMode ? (
                 <Box ref={compactMenuContainerRef} sx={{ minHeight: 0, height: '100%' }}>
+                    {/* Columna principal del menú compacte: només icones. */}
                     <StyledList
                         sx={{
                             width: compactMenuWidth,
@@ -521,6 +538,8 @@ export const Menu: React.FC<MenuProps> = (props) => {
                             ref={compactPanelRef}
                             data-testid="compact-floating-panel"
                             sx={(theme) => ({
+                                // El submenú flota al costat del rail compacte perquè
+                                // no redimensioni el drawer principal.
                                 position: 'fixed',
                                 top: compactPanelTop,
                                 bottom: compactPanelBottom,
