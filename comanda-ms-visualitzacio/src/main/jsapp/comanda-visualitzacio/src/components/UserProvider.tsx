@@ -70,6 +70,21 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         refresh,
         previewUser: (changes?: Partial<IUsuari>) => setPreviewOverrides(changes),
         clearUserPreview: () => setPreviewOverrides(undefined),
+        commitUserChanges: (changes?: Partial<IUsuari>) => {
+            if (changes == null) {
+                setPreviewOverrides(undefined);
+                return;
+            }
+            setPersistedUser((current) =>
+                current == null
+                    ? current
+                    : new UsuariModel({
+                          ...current,
+                          ...changes,
+                      })
+            );
+            setPreviewOverrides(undefined);
+        },
         currentRole,
         setCurrentRole: (newRole?: string) => {
             setCurrentRole(newRole);

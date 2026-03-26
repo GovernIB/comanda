@@ -238,35 +238,15 @@ export const UserProfileFormDialog = ({
 }) => {
     const { t } = useTranslation();
     const { t: tBase } = useBaseAppContext();
-    const { user, refresh, previewUser, clearUserPreview } = useUserContext();
-    const originalPreviewRef = React.useRef<{
-        temaAplicacio: any;
-        estilMenu: any;
-    } | null>(null);
-    const savedRef = React.useRef(false);
-
-    const ensureOriginalPreview = React.useCallback(() => {
-        if (originalPreviewRef.current == null) {
-            originalPreviewRef.current = {
-                temaAplicacio: user?.temaAplicacio,
-                estilMenu: user?.estilMenu,
-            };
-        }
-    }, [user]);
+    const { refresh, previewUser, clearUserPreview, commitUserChanges } = useUserContext();
+    const [formInstanceKey, setFormInstanceKey] = React.useState(0);
 
     const revertPreview = React.useCallback(() => {
-        if (savedRef.current) {
-            clearUserPreview();
-            originalPreviewRef.current = null;
-            return;
-        }
-        if (originalPreviewRef.current != null) {
-            previewUser(originalPreviewRef.current);
-        } else {
-            clearUserPreview();
-        }
-        originalPreviewRef.current = null;
-    }, [clearUserPreview, previewUser]);
+        clearUserPreview();
+    }, [clearUserPreview]);
+    const resetFormInstance = React.useCallback(() => {
+        setFormInstanceKey((current) => current + 1);
+    }, []);
 
     const dialogButtons = React.useMemo<DialogButton[]>(() => [
         {
@@ -276,6 +256,7 @@ export const UserProfileFormDialog = ({
                 variant: 'outlined',
                 onClick: () => {
                     revertPreview();
+                    resetFormInstance();
                     dialogApiRef.current?.close();
                 },
             },
@@ -298,23 +279,25 @@ export const UserProfileFormDialog = ({
                     return false;
                 }
                 revertPreview();
+                resetFormInstance();
                 return true;
             }}
             apiRef={dialogApiRef}
             dialogComponentProps={{ fullWidth: true, maxWidth: 'lg', }}
             formComponentProps={{
+                key: `user-profile-form-${formInstanceKey}`,
                 onDataChange: (data: any) => {
-                    savedRef.current = false;
-                    ensureOriginalPreview();
                     previewUser({
                         temaAplicacio: data?.temaAplicacio,
                         estilMenu: data?.estilMenu,
                     });
                 },
-                onSaveSuccess: () => {
-                    savedRef.current = true;
-                    clearUserPreview();
-                    originalPreviewRef.current = null;
+                onSaveSuccess: (data: any) => {
+                    commitUserChanges({
+                        temaAplicacio: data?.temaAplicacio,
+                        estilMenu: data?.estilMenu,
+                    });
+                    resetFormInstance();
                     refresh();
                 },
                 componentProps: { sx: { mt: 0 } },

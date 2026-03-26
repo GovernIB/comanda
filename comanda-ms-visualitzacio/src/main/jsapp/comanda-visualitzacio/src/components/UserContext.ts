@@ -7,6 +7,7 @@ export type UserContextType = {
     refresh: () => void;
     previewUser: (changes?: Partial<IUsuari>) => void;
     clearUserPreview: () => void;
+    commitUserChanges: (changes?: Partial<IUsuari>) => void;
     currentRole?: string;
     setCurrentRole: (currentRole: string | undefined) => void;
 };

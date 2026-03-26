@@ -42,6 +42,7 @@ const mocks = vi.hoisted(() => ({
     setFieldValueMock: vi.fn(),
     useFormContextMock: vi.fn(),
     refreshMock: vi.fn(),
+    commitUserChangesMock: vi.fn(),
     muiFormDialogProps: null as any,
 }));
 
@@ -74,6 +75,7 @@ vi.mock('./UserContext', () => ({
         refresh: mocks.refreshMock,
         previewUser: vi.fn(),
         clearUserPreview: vi.fn(),
+        commitUserChanges: mocks.commitUserChangesMock,
     }),
 }));
 
@@ -214,9 +216,16 @@ describe('UserProfileFormDialog', () => {
         expect(mocks.muiFormDialogProps.title).toBe('Perfil');
 
         act(() => {
-            mocks.muiFormDialogProps.formComponentProps.onSaveSuccess();
+            mocks.muiFormDialogProps.formComponentProps.onSaveSuccess({
+                temaAplicacio: 'DRACULA',
+                estilMenu: 'PEU',
+            });
         });
 
+        expect(mocks.commitUserChangesMock).toHaveBeenCalledWith({
+            temaAplicacio: 'DRACULA',
+            estilMenu: 'PEU',
+        });
         expect(mocks.refreshMock).toHaveBeenCalledTimes(1);
     });
 });
