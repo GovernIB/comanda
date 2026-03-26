@@ -19,43 +19,13 @@ import {
     useResourceApiService,
     useBaseAppContext,
     useConfirmDialogButtons,
-    useMuiDataGridApiRef, springFilterBuilder,
+    useMuiDataGridApiRef,
+    springFilterBuilder,
+    MuiDataGridColDef,
 } from 'reactlib';
 import { Button, Icon } from '@mui/material';
 import { useIsUserAdmin, useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
-
-const useDataGridColumns = () => {
-    const { isReady: apiIsReady, find: apiFind } = useResourceApiService('entornApp');
-    const [entornApps, setEntornApps] = React.useState<any[]>();
-    React.useEffect(() => {
-        if (apiIsReady) {
-            apiFind({ unpaged: true }).then(response => {
-                setEntornApps(response.rows);
-            });
-        }
-    }, [apiIsReady]);
-    return {
-        initialized: apiIsReady && entornApps != null,
-        columns: [{
-            field: 'entornAppId',
-            valueFormatter: (value?: number) => {
-                if (value == null) {
-                    return '';
-                }
-                const entornApp = entornApps?.find(ea => ea.id === value);
-                return entornApp?.entornAppDescription ?? '';
-            },
-            flex: 1,
-        }, {
-            field: 'nom',
-            flex: 3,
-        }, {
-            field: 'tipus',
-            flex: 1,
-        }],
-    };
-}
 
 export const EntornAppSelector : React.FC<any> = (props) => {
     const { id, onEntornAppChange, validationErrors } = props;
@@ -203,13 +173,13 @@ export const AlarmaConfigForm: React.FC = () => {
                         <FormField name="missatge" />
                     </Grid>
                     {isCurrentUserAdmin && (
-                        <Grid size={6}>
+                        <><Grid size={6}>
                             <FormField name="admin" />
                         </Grid>
+                        <Grid size={6}>
+                            <FormField name="correuGeneric" />
+                        </Grid></>
                     )}
-                    <Grid size={6}>
-                        <FormField name="correuGeneric" />
-                    </Grid>
                     <Grid size={6}>
                         <FormControlLabel
                             control={<Checkbox size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}
@@ -284,9 +254,50 @@ const AlarmaConfig = () => {
     const { t } = useTranslation();
     const apiRef = useMuiDataGridApiRef();
     const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(true);
-    const { columns: dataGridColumns, initialized: columnsInitialized } = useDataGridColumns();
     const { user } = useUserContext();
     const isCurrentUserAdmin = useIsUserAdmin();
+    const { isReady: apiIsReadyEntornApp, find: apiFindEntornApp } = useResourceApiService('entornApp');
+    const [entornApps, setEntornApps] = React.useState<any[]>();
+
+    React.useEffect(() => {
+        if (apiIsReadyEntornApp) {
+            apiFindEntornApp({ unpaged: true }).then(response => {
+                setEntornApps(response.rows);
+            });
+        }
+    }, [apiIsReadyEntornApp]);
+
+    const columns = React.useMemo(() => {
+        if (!entornApps) return [];
+        const baseColumns:MuiDataGridColDef[] = [{
+            field: 'entornAppId',
+            valueFormatter: (value?: number) => {
+                if (value == null) return '';
+                const entornApp = entornApps.find(ea => ea.id === value);
+                return entornApp?.entornAppDescription ?? '';
+            },
+            flex: 1,
+        }, {
+            field: 'nom',
+            flex: 3,
+        }, {
+            field: 'tipus',
+            flex: 1,
+        }];
+
+        if (!showOnlyOwn && isCurrentUserAdmin) {
+            baseColumns.push({
+                field: 'tipusUsuariAlarma',
+
+                flex: 1,
+                sortable: false,
+
+            },);
+        }
+
+        return baseColumns;
+    }, [entornApps, showOnlyOwn, isCurrentUserAdmin, t]);
+
     const toolbarElementsWithPositions = React.useMemo(() => {
         if (!isCurrentUserAdmin) {
             return undefined;
@@ -307,6 +318,9 @@ const AlarmaConfig = () => {
         }]
     }, [isCurrentUserAdmin, showOnlyOwn, t]);
     const currentFilter = (showOnlyOwn && isCurrentUserAdmin) ? `createdBy:'${user?.codi}'` : undefined;
+    const hideForRow = (row: any) => {
+        return !isCurrentUserAdmin && (row?.admin || row?.correuGeneric);
+    };
 
     const refresh = () => {
         apiRef.current?.refresh?.();
@@ -319,10 +333,11 @@ const AlarmaConfig = () => {
             icon: 'delete',
             showInMenu: true,
             onClick: apiDelete,
+            hidden: hideForRow,
         }
     ], [apiIsReady, tLib]);
 
-    if (!columnsInitialized) return <CenteredCircularProgress />;
+    if (!entornApps) return <CenteredCircularProgress />;
 
     return (
         <GridPage>
@@ -330,7 +345,7 @@ const AlarmaConfig = () => {
                 apiRef={apiRef}
                 title={t($ => $.page.alarmaConfig.title)}
                 resourceName="alarmaConfig"
-                columns={dataGridColumns}
+                columns={columns}
                 toolbarType="upper"
                 rowAdditionalActions={actions}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
@@ -338,6 +353,7 @@ const AlarmaConfig = () => {
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowHideDeleteButton
+                rowHideUpdateButton={hideForRow}
             />
         </GridPage>
     );

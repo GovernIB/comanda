@@ -2,6 +2,7 @@ import * as React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AlarmaConfig, { AlarmaConfigForm, EntornAppSelector } from './AlarmaConfig';
+import { MuiDataGridColDef } from 'reactlib';
 
 const mocks = vi.hoisted(() => ({
     setFieldValueMock: vi.fn(),
@@ -72,15 +73,22 @@ vi.mock('reactlib', async (importOriginal) => {
         filter,
         toolbarElementsWithPositions,
         rowAdditionalActions,
+        columns,
     }: {
         title: string;
         filter?: string;
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: unknown) => void }>;
+        columns?: MuiDataGridColDef[];
     }) => (
         <section>
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter ?? ''}</div>
+            {columns?.map((col: any, index: number) => (
+                <div key={index} data-testid={`column-${col.field}`}>
+                    {col.field}
+                </div>
+            ))}
             {toolbarElementsWithPositions?.map((entry, index) => (
                 <div key={index}>{entry.element}</div>
             ))}
@@ -308,5 +316,19 @@ describe('AlarmaConfig', () => {
 
         expect(mocks.refreshMock).toHaveBeenCalled();
         expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Eliminada', 'success');
+    });
+
+    it('AlarmaConfig_quanEsDesactivaElFiltreDeNomésMeva_mostraLaColumnaDeTipusUsuari', async () => {
+        render(<AlarmaConfig />);
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('column-tipusUsuariAlarma')).not.toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByTitle('Només meves'));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument();
+        });
     });
 });

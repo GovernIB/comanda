@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
@@ -61,5 +62,13 @@ public class AlarmaConfig extends BaseResource<Long> {
     @ValidAdminValue
 	private boolean admin;
 	private boolean correuGeneric;
+    @Transient
+    private AlarmaTipusUsuari tipusUsuariAlarma;
+
+    public AlarmaTipusUsuari getTipusUsuariAlarma() {
+        return admin
+                ? (correuGeneric ? AlarmaTipusUsuari.ADMINISTRADOR_GENERIC : AlarmaTipusUsuari.ADMINISTRADOR)
+                : (correuGeneric ? AlarmaTipusUsuari.USUARI_GENERIC        : AlarmaTipusUsuari.USUARI);
+    }
 
 }

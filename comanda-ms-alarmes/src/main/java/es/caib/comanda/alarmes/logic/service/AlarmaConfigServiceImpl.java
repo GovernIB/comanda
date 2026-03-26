@@ -53,14 +53,14 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 
     @Override
     protected void beforeCreateEntity(AlarmaConfigEntity entity, AlarmaConfig resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
-        if (resource.isAdmin() && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)){
+        if ((resource.isAdmin() || resource.isCorreuGeneric()) && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)){
             throw new ResourceNotCreatedException(resource.getClass(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeCreateEntity.not.admin"));
         }
     }
 
     @Override
     protected void beforeUpdateEntity(AlarmaConfigEntity entity, AlarmaConfig resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
-        if (entity.isAdmin() && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+        if ((entity.isAdmin() || entity.isCorreuGeneric()) && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
             throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.not.admin"));
         }
     }
