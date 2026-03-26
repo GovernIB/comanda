@@ -34,9 +34,7 @@ import Cancel from '@mui/icons-material/Cancel';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
-import ContentDetail from '../components/ContentDetail.tsx';
 import { StacktraceBlock } from '../components/RickTextDetail.tsx';
-import { ContentDialogShowFn } from '../../lib/components/BaseAppContext.tsx';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -47,8 +45,7 @@ const useActions = (refresh?: () => void) => {
     const pingUrl = React.useCallback(async (
         additionalData: any, 
         expectedResponseTypeEnum: string,
-        dialogShow: ContentDialogShowFn,
-    ): Promise<boolean> => {
+    ): Promise<any> => {
         try {
             const data = await apiAction(null, { code: 'pingUrl', data: {...additionalData, expectedResponseTypeEnum} });
             refresh?.();
@@ -63,16 +60,14 @@ const useActions = (refresh?: () => void) => {
                         ),
                     },
                 ];
-                dialogShow(
-                    t($ => $.page.apps.ping.validationError),
-                    <ContentDetail title={""} elements={elementsDetail} />,
-                    undefined,
-                    { maxWidth: 'lg', fullWidth: true, }
-                );
+                return {
+                    status: 'warning',
+                    elements: elementsDetail,
+                };
             } else {
                 temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
             }
-            return data.success;
+            return {status :data.success ? 'success' : 'error'};
         } catch (error: any) {
             temporalMessageShow(null, error.message, 'error');
             return false;
@@ -129,13 +124,13 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="activa" />
             </Grid>
             <Grid size={12}>
-                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO', detailDialogShow)}/>}}}} />
+                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={(formData) => pingUrl(formData, 'SALUT', detailDialogShow)}/>}}}} />
+                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={(formData) => pingUrl(formData, 'SALUT')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={(formData) => pingUrl(formData, 'LOGS', detailDialogShow)}/>}}}} />
+                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={(formData) => pingUrl(formData, 'LOGS')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
@@ -146,10 +141,10 @@ const AppEntornForm: React.FC = () => {
                 </FormControl>
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO', detailDialogShow)}/>}}}} />
+                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA', detailDialogShow)}/>}}}} />
+                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={6} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">

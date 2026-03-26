@@ -46,6 +46,7 @@ import SalutMissatgesChips from './SalutMissatgesChips';
 import { useTreeDataWithoutSwitch } from '../../hooks/treeData';
 import useDataGridLocale from '../../hooks/useDataGridLocale';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { AlarmsButton, AlarmsDialog } from '../Alarms.tsx';
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
@@ -202,6 +203,8 @@ const AppDataTable: React.FC<{
     const dataGridLocale = useDataGridLocale();
     const { getLinkComponent } = useBaseAppContext();
     const gridApiRef = useGridApiRef();
+    const [currentOpenActiveAlarmsId, setCurrentOpenActiveAlarmsId] = React.useState<string | number>();
+    // const [currentOpenConfigAlarmsId, setCurrentOpenConfigAlarmsId] = React.useState<string | number>();
 
     const treeDataRenderCell =  useTreeDataEntornAppRenderCell(apps);
     const getTreeDataPath = React.useCallback(
@@ -396,17 +399,31 @@ const AppDataTable: React.FC<{
             {
                 field: 'detalls',
                 headerName: '',
-                minWidth: 100,
+                width: 270,
                 renderCell: params =>
                     params.rowNode.type !== 'group' && (
-                        <Button
-                            variant="contained"
-                            size="small"
-                            component={getLinkComponent()}
-                            to={'appinfo/' + params.id}
-                        >
-                            {t($ => $.page.salut.apps.detalls)}
-                        </Button>
+                        <>
+                            {/*<Button*/}
+                            {/*    variant="contained"*/}
+                            {/*    size="small"*/}
+                            {/*    title={'Configurar alarmas TRAD TODO'}*/}
+                            {/*    sx={{ mr: 1 }}*/}
+                            {/*>*/}
+                            {/*    Conf. alarmas*/}
+                            {/*</Button>*/}
+                            <Button
+                                variant="contained"
+                                size="small"
+                                component={getLinkComponent()}
+                                to={'appinfo/' + params.id}
+                            >
+                                {t($ => $.page.salut.apps.detalls)}
+                            </Button>
+                            <AlarmsButton
+                                filterBy={{ entornAppId: params.id }}
+                                onClick={() => setCurrentOpenActiveAlarmsId(params.id)}
+                            />
+                        </>
                     ),
             },
         ];
@@ -423,17 +440,24 @@ const AppDataTable: React.FC<{
     ]);
 
     return (
-        <DataGridPro
-            apiRef={gridApiRef}
-            columns={columns}
-            rows={entornApps}
-            localeText={dataGridLocale}
-            hideFooter
-            slots={{
-                noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],
-            }}
-            {...treeDataGridProps}
-        />
+        <>
+            <AlarmsDialog
+                open={currentOpenActiveAlarmsId != null}
+                setOpen={(isOpen) => setCurrentOpenActiveAlarmsId(isOpen ? currentOpenActiveAlarmsId : undefined)}
+                filterBy={{ entornAppId: currentOpenActiveAlarmsId }}
+            />
+            <DataGridPro
+                apiRef={gridApiRef}
+                columns={columns}
+                rows={entornApps}
+                localeText={dataGridLocale}
+                hideFooter
+                slots={{
+                    noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],
+                }}
+                {...treeDataGridProps}
+            />
+        </>
     );
 });
 

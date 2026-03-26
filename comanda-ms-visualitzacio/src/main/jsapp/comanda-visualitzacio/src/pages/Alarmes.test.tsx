@@ -48,6 +48,9 @@ vi.mock('reactlib', () => ({
             refresh: mocks.refreshMock,
         },
     }),
+    springFilterBuilder: {
+        and: (...filters: string[]) => filters.filter(f => !!f).join(' AND '),
+    },
     useMuiActionReportLogic: vi.fn((_resourceName, action) => {
         if (action === 'ALARMA_ESBORRAR') {
             return {
