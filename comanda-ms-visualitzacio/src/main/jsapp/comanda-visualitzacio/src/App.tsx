@@ -66,7 +66,7 @@ export const App: React.FC = () => {
     const menuMonitoritzacio = {
         id: 'monitoritzacio',
         title: t($ => $.menu.monitoritzacio),
-        // description: t($ => $.menu.monitoritzacioDescription),
+        description: t($ => $.menu.monitoritzacioDescription),
         icon: 'monitor',
         resourceName: 'monitor',
         children: [
