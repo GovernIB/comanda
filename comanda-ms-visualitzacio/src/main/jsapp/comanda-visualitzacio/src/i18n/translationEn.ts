@@ -135,6 +135,10 @@ const translationEn: translationResourcesType = {
                 last: "Last refresh",
                 next: "Next refresh in",
             },
+            alarmes: {
+                configAlarmes: "Config. alarms",
+                configAlarmesTitle: "Configure environment alarms",
+            },
             apps: {
                 column: {
                     group: "Application / environment",
@@ -440,6 +444,8 @@ const translationEn: translationResourcesType = {
             filter: {
                 showOnlyOwnEnabled: "Show only my alarms",
                 showOnlyOwnDisabled: "Show all alarms",
+                more: "More fields",
+                entornApp: "Application environment",
             },
         },
         alarma: {

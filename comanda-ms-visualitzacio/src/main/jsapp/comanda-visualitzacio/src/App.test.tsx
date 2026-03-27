@@ -151,7 +151,7 @@ describe('App', () => {
         });
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
-        expect(props.menuEntries[4].description).toBeUndefined();
+        expect(props.menuEntries[4].description).toBe('Descripció monitorització');
         expect(props.menuEntries[5].description).toBe('Descripció configuració');
     });
 

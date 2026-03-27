@@ -47,6 +47,7 @@ import { useTreeDataWithoutSwitch } from '../../hooks/treeData';
 import useDataGridLocale from '../../hooks/useDataGridLocale';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { AlarmsButton, AlarmsDialog } from '../Alarms.tsx';
+import { AlarmaConfigDialog } from '../../pages/AlarmaConfig';
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
@@ -204,7 +205,7 @@ const AppDataTable: React.FC<{
     const { getLinkComponent } = useBaseAppContext();
     const gridApiRef = useGridApiRef();
     const [currentOpenActiveAlarmsId, setCurrentOpenActiveAlarmsId] = React.useState<string | number>();
-    // const [currentOpenConfigAlarmsId, setCurrentOpenConfigAlarmsId] = React.useState<string | number>();
+    const [currentOpenConfigAlarmsId, setCurrentOpenConfigAlarmsId] = React.useState<string | number>();
 
     const treeDataRenderCell =  useTreeDataEntornAppRenderCell(apps);
     const getTreeDataPath = React.useCallback(
@@ -342,7 +343,7 @@ const AppDataTable: React.FC<{
                 flex: 0.1,
                 field: 'latencia',
                 headerName: t($ => $.page.salut.apps.column.latencia),
-                minWidth: 100,
+                minWidth: 90,
                 valueGetter: (_value, row) => {
                     const salutItem: SalutModel | null = findSalutItem(row.id);
                     if (salutItem == null) {
@@ -399,18 +400,19 @@ const AppDataTable: React.FC<{
             {
                 field: 'detalls',
                 headerName: '',
-                width: 270,
+                width: 290,
                 renderCell: params =>
                     params.rowNode.type !== 'group' && (
-                        <>
-                            {/*<Button*/}
-                            {/*    variant="contained"*/}
-                            {/*    size="small"*/}
-                            {/*    title={'Configurar alarmas TRAD TODO'}*/}
-                            {/*    sx={{ mr: 1 }}*/}
-                            {/*>*/}
-                            {/*    Conf. alarmas*/}
-                            {/*</Button>*/}
+                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                title={t($ => $.page.salut.alarmes.configAlarmesTitle)}
+                                sx={{ mr: 1 }}
+                                onClick={() => setCurrentOpenConfigAlarmsId(params.id)}
+                            >
+                                {t($ => $.page.salut.alarmes.configAlarmes)}
+                            </Button>
                             <Button
                                 variant="contained"
                                 size="small"
@@ -423,7 +425,7 @@ const AppDataTable: React.FC<{
                                 filterBy={{ entornAppId: params.id }}
                                 onClick={() => setCurrentOpenActiveAlarmsId(params.id)}
                             />
-                        </>
+                        </Box>
                     ),
             },
         ];
@@ -443,8 +445,17 @@ const AppDataTable: React.FC<{
         <>
             <AlarmsDialog
                 open={currentOpenActiveAlarmsId != null}
-                setOpen={(isOpen) => setCurrentOpenActiveAlarmsId(isOpen ? currentOpenActiveAlarmsId : undefined)}
+                setOpen={isOpen =>
+                    setCurrentOpenActiveAlarmsId(isOpen ? currentOpenActiveAlarmsId : undefined)
+                }
                 filterBy={{ entornAppId: currentOpenActiveAlarmsId }}
+            />
+            <AlarmaConfigDialog
+                open={currentOpenConfigAlarmsId != null}
+                setOpen={isOpen =>
+                    setCurrentOpenConfigAlarmsId(isOpen ? currentOpenConfigAlarmsId : undefined)
+                }
+                filterBy={{ entornAppId: currentOpenConfigAlarmsId }}
             />
             <DataGridPro
                 apiRef={gridApiRef}

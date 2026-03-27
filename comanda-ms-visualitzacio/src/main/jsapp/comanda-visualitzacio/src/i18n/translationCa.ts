@@ -135,6 +135,10 @@ const translationCa = {
                 last: "Darrer refresc",
                 next: "Proper refresc en",
             },
+            alarmes: {
+                configAlarmes: "Config. alarmes",
+                configAlarmesTitle: "Configurar alarmes de l'entorn",
+            },
             apps: {
                 column: {
                     group: "Aplicació / entorn",
@@ -440,6 +444,8 @@ const translationCa = {
             filter: {
                 showOnlyOwnEnabled: "Mostrar només les meves alarmes",
                 showOnlyOwnDisabled: "Mostra totes les alarmes",
+                more: "Més camps",
+                entornApp: "Entorn d'aplicació",
             },
         },
         alarma: {
