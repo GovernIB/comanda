@@ -523,7 +523,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                         sx={{
                                             minWidth: 0,
                                             justifyContent: 'center',
-                                            color: 'inherit',
+                                            color: colors?.textPrimary ?? 'action.active',
                                         }}>
                                         <Icon fontSize="small">
                                             {item.icon ?? DEFAULT_MENU_ICON}
