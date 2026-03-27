@@ -343,7 +343,7 @@ const AppDataTable: React.FC<{
                 flex: 0.1,
                 field: 'latencia',
                 headerName: t($ => $.page.salut.apps.column.latencia),
-                minWidth: 100,
+                minWidth: 90,
                 valueGetter: (_value, row) => {
                     const salutItem: SalutModel | null = findSalutItem(row.id);
                     if (salutItem == null) {
@@ -400,10 +400,10 @@ const AppDataTable: React.FC<{
             {
                 field: 'detalls',
                 headerName: '',
-                width: 270,
+                width: 290,
                 renderCell: params =>
                     params.rowNode.type !== 'group' && (
-                        <>
+                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                             <Button
                                 variant="contained"
                                 size="small"
@@ -425,7 +425,7 @@ const AppDataTable: React.FC<{
                                 filterBy={{ entornAppId: params.id }}
                                 onClick={() => setCurrentOpenActiveAlarmsId(params.id)}
                             />
-                        </>
+                        </Box>
                     ),
             },
         ];
