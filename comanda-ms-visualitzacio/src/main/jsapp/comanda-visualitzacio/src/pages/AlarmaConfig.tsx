@@ -318,9 +318,10 @@ type AlarmaConfigFilterProps = {
     entornApps?: any[],
     showOnlyOwn: boolean,
     setShowOnlyOwn: (value: boolean) => void,
+    hideEntornAppField?: boolean,
 };
 const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
-    const { onSpringFilterChange, entornApps, showOnlyOwn, setShowOnlyOwn } = props;
+    const { onSpringFilterChange, entornApps, showOnlyOwn, setShowOnlyOwn, hideEntornAppField } = props;
     const { t } = useTranslation();
     const { user } = useUserContext();
     const isCurrentUserAdmin = useIsUserAdmin();
@@ -341,6 +342,7 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
             resourceName="alarmaConfig"
             code="alarmaConfig_filter"
             persistentState
+            detached
             formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             initialData={{ showOnlyOwn: showOnlyOwn }}
@@ -357,26 +359,30 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
             }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                    <Grid size={{xs: 12, sm:6}}>
-                        <FormField
-                            name={'entornApp'}
-                            type={'reference'}
-                            label={t($ => $.page.alarmaConfig.filter.entornApp)}
-                            required={false}
-                            optionsRequest={(q: string) => {
-                                const opts = (entornApps ?? []).map((ea: any) => ({
-                                    id: ea?.id,
-                                    description: ea.entornAppDescription,
-                                }));
-                                const filtered = q
-                                    ? opts.filter(o => o.description?.toLowerCase().includes(q.toLowerCase()))
-                                    : opts;
-                                return Promise.resolve({ options: filtered });
-                            }}
-                            componentProps={{ disabled: (entornApps ?? []).length === 0 }}
-                        />
-                    </Grid>
-                    <Grid size={{xs: 12, sm:6}}><FormField name={'nom'} /></Grid>
+                    {!hideEntornAppField && (
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <FormField
+                                name={'entornApp'}
+                                type={'reference'}
+                                label={t($ => $.page.alarmaConfig.filter.entornApp)}
+                                required={false}
+                                optionsRequest={(q: string) => {
+                                    const opts = (entornApps ?? []).map((ea: any) => ({
+                                        id: ea?.id,
+                                        description: ea.entornAppDescription,
+                                    }));
+                                    const filtered = q
+                                        ? opts.filter(o =>
+                                            o.description?.toLowerCase().includes(q.toLowerCase())
+                                        )
+                                        : opts;
+                                    return Promise.resolve({ options: filtered });
+                                }}
+                                componentProps={{ disabled: (entornApps ?? []).length === 0 }}
+                            />
+                        </Grid>
+                    )}
+                    <Grid size={{xs: 12, sm: hideEntornAppField ? 12 : 6}}><FormField name={'nom'} /></Grid>
                     {moreFields && <>
                         <Grid size={{xs: 12, sm:6}}><FormField name={'tipus'} /></Grid>
                         {isCurrentUserAdmin &&
@@ -535,23 +541,6 @@ const AlarmaConfig: React.FC<{
             return undefined;
         }
         return [
-            {
-                position: 2,
-                element: (
-                    <Button
-                        onClick={() => setShowOnlyOwn(prev => !prev)}
-                        variant={showOnlyOwn ? 'contained' : 'outlined'}
-                        title={
-                            showOnlyOwn
-                                ? t($ => $.page.alarmaConfig.filter.showOnlyOwnEnabled)
-                                : t($ => $.page.alarmaConfig.filter.showOnlyOwnDisabled)
-                        }
-                        sx={{ mr: 2 }}
-                    >
-                        <Icon>{showOnlyOwn ? 'account_circle' : 'people'}</Icon>
-                    </Button>
-                ),
-            },
             dialogMode
                 ? {
                       position: 2,
@@ -593,8 +582,10 @@ const AlarmaConfig: React.FC<{
             onSpringFilterChange={setFilter}
             entornApps={entornApps}
             showOnlyOwn={showOnlyOwn}
-            setShowOnlyOwn={setShowOnlyOwn} />
-    ), [entornApps, showOnlyOwn]);
+            setShowOnlyOwn={setShowOnlyOwn}
+            hideEntornAppField={filterBy?.entornAppId != null}
+        />
+    ), [entornApps, filterBy?.entornAppId, showOnlyOwn]);
 
     if (!entornApps) return <CenteredCircularProgress />;
 
