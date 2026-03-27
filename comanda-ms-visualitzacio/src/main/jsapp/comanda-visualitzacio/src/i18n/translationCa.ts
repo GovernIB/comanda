@@ -135,6 +135,10 @@ const translationCa = {
                 last: "Darrer refresc",
                 next: "Proper refresc en",
             },
+            alarmes: {
+                configAlarmes: "Config. alarmes",
+                configAlarmesTitle: "Configurar alarmes de l'entorn",
+            },
             apps: {
                 column: {
                     group: "Aplicació / entorn",

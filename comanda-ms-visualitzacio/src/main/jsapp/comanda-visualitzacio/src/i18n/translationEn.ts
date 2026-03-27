@@ -135,6 +135,10 @@ const translationEn: translationResourcesType = {
                 last: "Last refresh",
                 next: "Next refresh in",
             },
+            alarmes: {
+                configAlarmes: "Config. alarms",
+                configAlarmesTitle: "Configure environment alarms",
+            },
             apps: {
                 column: {
                     group: "Application / environment",

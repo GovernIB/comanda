@@ -135,6 +135,10 @@ const translationEs: translationResourcesType = {
                 last: "Último refresco",
                 next: "Próximo refresco en",
             },
+            alarmes: {
+                configAlarmes: "Config. alarmas",
+                configAlarmesTitle: "Configurar alarmas del entorno",
+            },
             apps: {
                 column: {
                     group: "Aplicación / entorno",

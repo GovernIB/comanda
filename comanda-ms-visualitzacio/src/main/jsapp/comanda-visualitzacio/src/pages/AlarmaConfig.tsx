@@ -9,7 +9,6 @@ import Checkbox from '@mui/material/Checkbox';
 import Skeleton from '@mui/material/Skeleton';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import {
-    FormPage,
     GridPage,
     MuiDataGrid,
     MuiForm,
@@ -22,11 +21,17 @@ import {
     useMuiDataGridApiRef,
     springFilterBuilder,
     MuiDataGridColDef,
+    useCloseDialogButtons,
+    MuiDialog,
+    Toolbar,
+    MuiFormProps,
     useFilterApiRef,
 } from 'reactlib';
 import { Box, Button, Icon, IconButton } from '@mui/material';
 import { useIsUserAdmin, useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
+import notNull from '../util/arrayUtils';
+import { toToolbarIcon } from '../../lib/components/mui/ToolbarIcon';
 
 export const EntornAppSelector : React.FC<any> = (props) => {
     const { id, onEntornAppChange, validationErrors } = props;
@@ -68,9 +73,16 @@ export const EntornAppSelector : React.FC<any> = (props) => {
     </MuiFilter> : <Skeleton height={'100%'}/>;
 }
 
-export const AlarmaConfigForm: React.FC = () => {
+export const AlarmaConfigForm: React.FC<{
+    entornAppId?: number | string;
+    dialogMode?: boolean;
+    dialogModeOnGoBack?: () => void;
+    id?: number | string,
+}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack }) => {
     const { t } = useTranslation();
-    const { id } = useParams();
+    const { t: tLib } = useBaseAppContext();
+    const { id: idFromPath } = useParams();
+    const id = idProp ?? idFromPath;
     const formApiRef = useFormApiRef();
     const [entornAppId, setEntornAppId] = React.useState<any>();
     const [validationErrors, setValidationErrors] = React.useState<any>();
@@ -103,7 +115,7 @@ export const AlarmaConfigForm: React.FC = () => {
         if (!newValue) {
             formApiRef.current?.setFieldValue('periodeValor', null);
             formApiRef.current?.setFieldValue('periodeUnitat', null);
-        } 
+        }
     }
 
     // const {goBack} = useBaseAppContext();
@@ -122,8 +134,50 @@ export const AlarmaConfigForm: React.FC = () => {
     // //     }
     // // ], [apiIsReady, tLib]);
 
+    const dialogModeProps: Partial<MuiFormProps> = dialogMode
+        ? {
+              hiddenToolbar: true,
+              // Si estamos haciendo un update, no debemos setear initialData nunca.
+              // Si lo hacemos, base-react no hará la petición getOne inicial
+              initialData: id ? undefined : {
+                  entornAppId: entornAppIdProp,
+              },
+              goBackLink: undefined,
+              createLink: undefined,
+              onCreateSuccess: dialogModeOnGoBack,
+          }
+        : {};
+
     return (
-        <FormPage>
+        <>
+            {dialogMode && (
+                <Toolbar
+                    title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)}
+                    elementsWithPositions={[
+                        {
+                            position: 0,
+                            element: toToolbarIcon('arrow_back', {
+                                title: tLib('form.goBack.title'),
+                                onClick: dialogModeOnGoBack,
+                                sx: { mr: 1 },
+                            }),
+                        },
+                        {
+                            position: 2,
+                            element: toToolbarIcon('save', {
+                                title: tLib('form.create.title'),
+                                onClick: () => {
+                                    formApiRef.current?.save();
+                                },
+                            }),
+                        },
+                    ]}
+                    upperToolbar
+                    sx={{
+                        mb: 2,
+                    }}
+                />
+            )}
             <MuiForm
                 id={id}
                 title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)}
@@ -134,16 +188,24 @@ export const AlarmaConfigForm: React.FC = () => {
                 onDataChange={handleDataChange}
                 hiddenDeleteButton
                 // toolbarElementsWithPositions={elementsWithPositions}
-                onValidationErrorsChange={handleValidationErrorsChange}>
+                onValidationErrorsChange={handleValidationErrorsChange}
+                {...dialogModeProps}
+            >
                 <Grid container spacing={2}>
-                    <Grid size={3}>
-                        <EntornAppSelector
-                            id={entornAppId}
-                            onEntornAppChange={handleEntornAppChange}
-                            validationErrors={validationErrors} />
-                    </Grid>
-                    <Grid size={9}>
-                        <FormField name="nom" componentProps={{ title: t($ => $.page.alarmaConfig.nomHelperText) }} />
+                    {!dialogMode &&
+                        <Grid size={3}>
+                            <EntornAppSelector
+                                id={entornAppId}
+                                onEntornAppChange={handleEntornAppChange}
+                                validationErrors={validationErrors}
+                            />
+                        </Grid>
+                    }
+                    <Grid size={dialogMode ? 12 : 9}>
+                        <FormField
+                            name="nom"
+                            componentProps={{ title: t($ => $.page.alarmaConfig.nomHelperText) }}
+                        />
                     </Grid>
                     <Grid size={12}>
                         <Card variant="outlined">
@@ -211,7 +273,7 @@ export const AlarmaConfigForm: React.FC = () => {
                     </Grid>}
                 </Grid>
             </MuiForm>
-        </FormPage>
+        </>
     );
 }
 
@@ -318,8 +380,8 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                     {moreFields && <>
                         <Grid size={{xs: 12, sm:6}}><FormField name={'tipus'} /></Grid>
                         {isCurrentUserAdmin &&
-                        (<><Grid size={{xs: 6, sm:3}}><FormField name={'admin'} /></Grid>
-                           <Grid size={{xs: 6, sm:3}}><FormField name={'correuGeneric'} /></Grid></>)}
+                            (<><Grid size={{xs: 6, sm:3}}><FormField name={'admin'} /></Grid>
+                                <Grid size={{xs: 6, sm:3}}><FormField name={'correuGeneric'} /></Grid></>)}
                     </>}
                 </Grid>
                 <Box sx={{ display: 'flex', flexDirection: 'row' }}>
@@ -337,8 +399,8 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                             onClick={() => setShowOnlyOwn(!showOnlyOwn)}
                             variant={showOnlyOwn ? 'contained' : 'outlined'}
                             title={showOnlyOwn ?
-                                    t($ => $.page.alarmaConfig.filter.showOnlyOwnEnabled) :
-                                    t($ => $.page.alarmaConfig.filter.showOnlyOwnDisabled)
+                                t($ => $.page.alarmaConfig.filter.showOnlyOwnEnabled) :
+                                t($ => $.page.alarmaConfig.filter.showOnlyOwnDisabled)
                             }
                             sx={{ mr: 2 }}
                         >
@@ -351,7 +413,74 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
     );
 };
 
-const AlarmaConfig = () => {
+export const AlarmaConfigDialog: React.FC<{
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    filterBy?: { entornAppId?: number | string };
+}> = ({ open, setOpen, filterBy }) => {
+    const [currentEditMode, setCurrentEditMode] = React.useState<false | "CREATE" | number>(false);
+    const buttons = useCloseDialogButtons();
+
+    const getDialogContent = () => {
+        if (currentEditMode === false) {
+            return (
+                <AlarmaConfig
+                    dialogMode
+                    onAdd={() => setCurrentEditMode('CREATE')}
+                    onEdit={id => setCurrentEditMode(id)}
+                    filterBy={filterBy}
+                />
+            );
+        }
+        if (currentEditMode === "CREATE") {
+            return (
+                <AlarmaConfigForm
+                    dialogMode
+                    dialogModeOnGoBack={() => setCurrentEditMode(false)}
+                    entornAppId={filterBy?.entornAppId}
+                />
+            );
+        }
+        return (
+            <AlarmaConfigForm
+                id={currentEditMode}
+                dialogMode
+                dialogModeOnGoBack={() => setCurrentEditMode(false)}
+                entornAppId={filterBy?.entornAppId}
+            />
+        );
+    }
+
+    return (
+        <MuiDialog
+            open={open}
+            buttonCallback={() => setOpen(false)}
+            closeCallback={() => setOpen(false)}
+            buttons={buttons}
+            componentProps={{
+                maxWidth: 'lg',
+                fullWidth: true,
+            }}
+        >
+            <Box
+                sx={{
+                    mt: 3,
+                    height: '500px',
+                }}
+            >
+                {getDialogContent()}
+            </Box>
+        </MuiDialog>
+    );
+
+};
+
+const AlarmaConfig: React.FC<{
+    filterBy?: { entornAppId?: number | string };
+    dialogMode?: boolean;
+    onEdit?: (id: any) => void;
+    onAdd?: () => void;
+}> = ({ filterBy, dialogMode, onEdit, onAdd }) => {
     const { t } = useTranslation();
     const apiRef = useMuiDataGridApiRef();
     const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(true);
@@ -359,6 +488,10 @@ const AlarmaConfig = () => {
     const { isReady: apiIsReadyEntornApp, find: apiFindEntornApp } = useResourceApiService('entornApp');
     const [entornApps, setEntornApps] = React.useState<any[]>();
     const [filter, setFilter] = React.useState<string | undefined>();
+    const refresh = () => {
+        apiRef.current?.refresh?.();
+    }
+    const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(refresh);
 
     React.useEffect(() => {
         if (apiIsReadyEntornApp) {
@@ -377,13 +510,13 @@ const AlarmaConfig = () => {
                 const entornApp = entornApps.find(ea => ea.id === value);
                 return entornApp?.entornAppDescription ?? '';
             },
-            flex: 1,
+            flex: 2,
         }, {
             field: 'nom',
             flex: 3,
         }, {
             field: 'tipus',
-            flex: 1,
+            width: 150,
         }];
 
         if (!showOnlyOwn && isCurrentUserAdmin) {
@@ -397,14 +530,56 @@ const AlarmaConfig = () => {
         return baseColumns;
     }, [entornApps, showOnlyOwn, isCurrentUserAdmin, t]);
 
+    const toolbarElementsWithPositions = React.useMemo(() => {
+        if (!isCurrentUserAdmin) {
+            return undefined;
+        }
+        return [
+            {
+                position: 2,
+                element: (
+                    <Button
+                        onClick={() => setShowOnlyOwn(prev => !prev)}
+                        variant={showOnlyOwn ? 'contained' : 'outlined'}
+                        title={
+                            showOnlyOwn
+                                ? t($ => $.page.alarmaConfig.filter.showOnlyOwnEnabled)
+                                : t($ => $.page.alarmaConfig.filter.showOnlyOwnDisabled)
+                        }
+                        sx={{ mr: 2 }}
+                    >
+                        <Icon>{showOnlyOwn ? 'account_circle' : 'people'}</Icon>
+                    </Button>
+                ),
+            },
+            dialogMode
+                ? {
+                      position: 2,
+                      element: (
+                          <IconButton
+                              title={tLib('datacommon.create.label')}
+                              onClick={onAdd}
+                              size="small"
+                          >
+                              <Icon>add</Icon>
+                          </IconButton>
+                      ),
+                  }
+                : null,
+        ].filter(notNull);
+    }, [isCurrentUserAdmin, showOnlyOwn, t, dialogMode, tLib, onAdd]);
     const hideForRow = React.useCallback((row: any) => {
         return !isCurrentUserAdmin && (row?.admin || row?.correuGeneric);
     }, [isCurrentUserAdmin]);
-    const refresh = () => {
-        apiRef.current?.refresh?.();
-    }
-    const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(refresh)
+
     const actions = React.useMemo(() => [
+        dialogMode ? {
+            label: tLib('datacommon.update.label'),
+            icon: 'edit',
+            onClick: (id: string | number) => {
+                onEdit?.(id);
+            },
+        } : null,
         {
             label: tLib('datacommon.delete.label'),
             icon: 'delete',
@@ -412,7 +587,7 @@ const AlarmaConfig = () => {
             onClick: apiDelete,
             hidden: hideForRow,
         }
-    ], [apiIsReady, tLib, hideForRow]);
+    ].filter(notNull), [dialogMode, apiIsReady, tLib, hideForRow]);
     const filterElement = React.useMemo(() => (
         <AlarmaConfigFilter
             onSpringFilterChange={setFilter}
@@ -422,6 +597,11 @@ const AlarmaConfig = () => {
     ), [entornApps, showOnlyOwn]);
 
     if (!entornApps) return <CenteredCircularProgress />;
+
+    const currentFilter = springFilterBuilder.and(
+        filter,
+        filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : "",
+    )
 
     return (
         <GridPage>
@@ -433,11 +613,13 @@ const AlarmaConfig = () => {
                 toolbarType="upper"
                 rowAdditionalActions={actions}
                 toolbarAdditionalRow={filterElement}
-                filter={filter}
+                toolbarElementsWithPositions={toolbarElementsWithPositions}
+                filter={currentFilter}
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowHideDeleteButton
-                rowHideUpdateButton={hideForRow}
+                rowHideUpdateButton={(row) => dialogMode || hideForRow(row)}
+                toolbarHideCreate={dialogMode || undefined}
                 toolbarHideQuickFilter
             />
         </GridPage>
