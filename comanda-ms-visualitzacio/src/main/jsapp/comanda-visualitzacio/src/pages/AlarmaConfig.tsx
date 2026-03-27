@@ -537,9 +537,6 @@ const AlarmaConfig: React.FC<{
     }, [entornApps, showOnlyOwn, isCurrentUserAdmin, t]);
 
     const toolbarElementsWithPositions = React.useMemo(() => {
-        if (!isCurrentUserAdmin) {
-            return undefined;
-        }
         return [
             dialogMode
                 ? {
@@ -556,7 +553,7 @@ const AlarmaConfig: React.FC<{
                   }
                 : null,
         ].filter(notNull);
-    }, [isCurrentUserAdmin, showOnlyOwn, t, dialogMode, tLib, onAdd]);
+    }, [showOnlyOwn, t, dialogMode, tLib, onAdd]);
     const hideForRow = React.useCallback((row: any) => {
         return !isCurrentUserAdmin && (row?.admin || row?.correuGeneric);
     }, [isCurrentUserAdmin]);

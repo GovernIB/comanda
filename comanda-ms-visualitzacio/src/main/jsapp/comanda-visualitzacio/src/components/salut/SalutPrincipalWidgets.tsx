@@ -9,7 +9,7 @@ import {
     MuiDataGridColDef,
     useBaseAppContext,
 } from 'reactlib';
-import { Button, Paper, styled, useTheme } from '@mui/material';
+import { Button, Icon, Paper, styled, useTheme } from '@mui/material';
 import { SalutField } from './SalutChipTooltip.tsx';
 import {
     ENUM_APP_ESTAT_PREFIX,
@@ -327,7 +327,7 @@ const AppDataTable: React.FC<{
                 minWidth: 90,
             },
             {
-                flex: 0.3,
+                flex: 0.05,
                 field: 'revisioSimplificat',
                 headerName: t($ => $.page.salut.apps.column.revisio),
                 minWidth: 100,
@@ -343,7 +343,7 @@ const AppDataTable: React.FC<{
                 flex: 0.1,
                 field: 'latencia',
                 headerName: t($ => $.page.salut.apps.column.latencia),
-                minWidth: 90,
+                minWidth: 80,
                 valueGetter: (_value, row) => {
                     const salutItem: SalutModel | null = findSalutItem(row.id);
                     if (salutItem == null) {
@@ -358,7 +358,7 @@ const AppDataTable: React.FC<{
                 flex: 0.1,
                 field: SalutModel.INTEGRACIONS,
                 headerName: t($ => $.page.salut.apps.column.integ),
-                minWidth: 160,
+                minWidth: 140,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
@@ -373,7 +373,7 @@ const AppDataTable: React.FC<{
                 flex: 0.2,
                 field: SalutModel.SUBSISTEMES,
                 headerName: t($ => $.page.salut.apps.column.subsis),
-                minWidth: 160,
+                minWidth: 140,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
@@ -387,7 +387,7 @@ const AppDataTable: React.FC<{
                 flex: 0.1,
                 field: 'msgs',
                 headerName: t($ => $.page.salut.apps.column.msgs),
-                minWidth: 130,
+                minWidth: 120,
                 renderCell: ({ id }) => {
                     const salutItem: SalutModel | null = findSalutItem(id);
 
@@ -400,19 +400,10 @@ const AppDataTable: React.FC<{
             {
                 field: 'detalls',
                 headerName: '',
-                width: 290,
+                width: 160,
                 renderCell: params =>
                     params.rowNode.type !== 'group' && (
                         <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                title={t($ => $.page.salut.alarmes.configAlarmesTitle)}
-                                sx={{ mr: 1 }}
-                                onClick={() => setCurrentOpenConfigAlarmsId(params.id)}
-                            >
-                                {t($ => $.page.salut.alarmes.configAlarmes)}
-                            </Button>
                             <Button
                                 variant="contained"
                                 size="small"
@@ -425,6 +416,13 @@ const AppDataTable: React.FC<{
                                 filterBy={{ entornAppId: params.id }}
                                 onClick={() => setCurrentOpenActiveAlarmsId(params.id)}
                             />
+                            <IconButton
+                                onClick={() => setCurrentOpenConfigAlarmsId(params.id)}
+                                title={t($ => $.page.salut.alarmes.configAlarmesTitle)}
+                                size="small"
+                            >
+                                <Icon>tune</Icon>
+                            </IconButton>
                         </Box>
                     ),
             },

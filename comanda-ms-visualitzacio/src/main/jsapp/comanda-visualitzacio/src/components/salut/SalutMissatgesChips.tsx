@@ -12,13 +12,13 @@ const SalutMissatgesChips = ({ salutItem }: { salutItem: SalutModel }) => {
                 tooltip={t($ => $.page.salut.msgs.missatgeErrorCount)}
                 backgroundColor={getColorByMissatge(SalutModel.MISSATGE_ERROR_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.missatgeWarnCount}
                 tooltip={t($ => $.page.salut.msgs.missatgeWarnCount)}
                 backgroundColor={getColorByMissatge(SalutModel.MISSATGE_WARN_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.missatgeInfoCount}
                 tooltip={t($ => $.page.salut.msgs.missatgeInfoCount)}
