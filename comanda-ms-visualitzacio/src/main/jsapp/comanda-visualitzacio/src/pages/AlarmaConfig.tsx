@@ -22,8 +22,9 @@ import {
     useMuiDataGridApiRef,
     springFilterBuilder,
     MuiDataGridColDef,
+    useFilterApiRef,
 } from 'reactlib';
-import { Button, Icon } from '@mui/material';
+import { Box, Button, Icon, IconButton } from '@mui/material';
 import { useIsUserAdmin, useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 
@@ -250,14 +251,114 @@ const useAlarmaConfigAction = (refresh?: () => void) => {
     }
 }
 
+type AlarmaConfigFilterProps = {
+    onSpringFilterChange: (springFilter?: string) => void,
+    entornApps?: any[],
+    showOnlyOwn: boolean,
+    setShowOnlyOwn: (value: boolean) => void,
+};
+const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
+    const { onSpringFilterChange, entornApps, showOnlyOwn, setShowOnlyOwn } = props;
+    const { t } = useTranslation();
+    const { user } = useUserContext();
+    const isCurrentUserAdmin = useIsUserAdmin();
+    const [moreFields, setMoreFields] = React.useState<boolean>(false);
+    const filterApiRef = useFilterApiRef();
+    const formApiRef = useFormApiRef();
+    const netejar = () => {
+        filterApiRef.current?.clear();
+        formApiRef.current?.setFieldValue('showOnlyOwn', showOnlyOwn);
+    };
+    React.useEffect(() => {
+        formApiRef.current?.setFieldValue('showOnlyOwn', showOnlyOwn);
+    }, [showOnlyOwn]);
+
+    return (
+        <MuiFilter
+            apiRef={filterApiRef}
+            resourceName="alarmaConfig"
+            code="alarmaConfig_filter"
+            persistentState
+            formApiRef={formApiRef}
+            commonFieldComponentProps={{ size: 'small' }}
+            initialData={{ showOnlyOwn: showOnlyOwn }}
+            onSpringFilterChange={onSpringFilterChange}
+            springFilterBuilder={data => {
+                return springFilterBuilder.and(
+                    data?.entornApp && springFilterBuilder.eq('entornAppId', data?.entornApp?.id ?? data?.entornApp),
+                    data?.nom && springFilterBuilder.like('nom', data?.nom),
+                    data?.tipus && springFilterBuilder.like('tipus', data?.tipus),
+                    moreFields && data?.admin && springFilterBuilder.eq('admin', data?.admin),
+                    moreFields && data?.correuGeneric && springFilterBuilder.eq('correuGeneric', data?.correuGeneric),
+                    isCurrentUserAdmin && user?.codi && data?.showOnlyOwn && springFilterBuilder.eq('createdBy', `'${user.codi}'`),
+                ) || '';
+            }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
+                    <Grid size={{xs: 12, sm:6}}>
+                        <FormField
+                            name={'entornApp'}
+                            type={'reference'}
+                            label={t($ => $.page.alarmaConfig.filter.entornApp)}
+                            required={false}
+                            optionsRequest={(q: string) => {
+                                const opts = (entornApps ?? []).map((ea: any) => ({
+                                    id: ea?.id,
+                                    description: ea.entornAppDescription,
+                                }));
+                                const filtered = q
+                                    ? opts.filter(o => o.description?.toLowerCase().includes(q.toLowerCase()))
+                                    : opts;
+                                return Promise.resolve({ options: filtered });
+                            }}
+                            componentProps={{ disabled: (entornApps ?? []).length === 0 }}
+                        />
+                    </Grid>
+                    <Grid size={{xs: 12, sm:6}}><FormField name={'nom'} /></Grid>
+                    {moreFields && <>
+                        <Grid size={{xs: 12, sm:6}}><FormField name={'tipus'} /></Grid>
+                        {isCurrentUserAdmin &&
+                        (<><Grid size={{xs: 6, sm:3}}><FormField name={'admin'} /></Grid>
+                           <Grid size={{xs: 6, sm:3}}><FormField name={'correuGeneric'} /></Grid></>)}
+                    </>}
+                </Grid>
+                <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                    <IconButton onClick={netejar} title={t($ => $.components.clear)}>
+                        <Icon>filter_alt_off</Icon>
+                    </IconButton>
+                    <IconButton
+                        onClick={() => setMoreFields(mf => !mf)}
+                        title={t($ => $.page.alarmaConfig.filter.more)}
+                        color={moreFields ? 'primary' : 'default'}>
+                        <Icon>filter_list</Icon>
+                    </IconButton>
+                    {isCurrentUserAdmin && (
+                        <Button
+                            onClick={() => setShowOnlyOwn(!showOnlyOwn)}
+                            variant={showOnlyOwn ? 'contained' : 'outlined'}
+                            title={showOnlyOwn ?
+                                    t($ => $.page.alarmaConfig.filter.showOnlyOwnEnabled) :
+                                    t($ => $.page.alarmaConfig.filter.showOnlyOwnDisabled)
+                            }
+                            sx={{ mr: 2 }}
+                        >
+                            <Icon>{showOnlyOwn ? 'account_circle' : 'people'}</Icon>
+                        </Button>
+                    )}
+                </Box>
+            </Box>
+        </MuiFilter>
+    );
+};
+
 const AlarmaConfig = () => {
     const { t } = useTranslation();
     const apiRef = useMuiDataGridApiRef();
     const [showOnlyOwn, setShowOnlyOwn] = React.useState<boolean>(true);
-    const { user } = useUserContext();
     const isCurrentUserAdmin = useIsUserAdmin();
     const { isReady: apiIsReadyEntornApp, find: apiFindEntornApp } = useResourceApiService('entornApp');
     const [entornApps, setEntornApps] = React.useState<any[]>();
+    const [filter, setFilter] = React.useState<string | undefined>();
 
     React.useEffect(() => {
         if (apiIsReadyEntornApp) {
@@ -288,44 +389,20 @@ const AlarmaConfig = () => {
         if (!showOnlyOwn && isCurrentUserAdmin) {
             baseColumns.push({
                 field: 'tipusUsuariAlarma',
-
                 flex: 1,
                 sortable: false,
-
             },);
         }
 
         return baseColumns;
     }, [entornApps, showOnlyOwn, isCurrentUserAdmin, t]);
 
-    const toolbarElementsWithPositions = React.useMemo(() => {
-        if (!isCurrentUserAdmin) {
-            return undefined;
-        }
-        return [{
-        position: 2,
-        element: <Button
-            onClick={() => setShowOnlyOwn(prev => !prev)}
-            variant={showOnlyOwn ? 'contained' : 'outlined'}
-            title={showOnlyOwn ?
-                    t($ => $.page.alarmaConfig.filter.showOnlyOwnEnabled) :
-                    t($ => $.page.alarmaConfig.filter.showOnlyOwnDisabled)
-            }
-            sx={{ mr: 2 }}
-        >
-            <Icon>{showOnlyOwn ? 'account_circle' : 'people'}</Icon>
-        </Button>,
-        }]
-    }, [isCurrentUserAdmin, showOnlyOwn, t]);
-    const currentFilter = (showOnlyOwn && isCurrentUserAdmin) ? `createdBy:'${user?.codi}'` : undefined;
-    const hideForRow = (row: any) => {
+    const hideForRow = React.useCallback((row: any) => {
         return !isCurrentUserAdmin && (row?.admin || row?.correuGeneric);
-    };
-
+    }, [isCurrentUserAdmin]);
     const refresh = () => {
         apiRef.current?.refresh?.();
     }
-
     const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(refresh)
     const actions = React.useMemo(() => [
         {
@@ -335,7 +412,14 @@ const AlarmaConfig = () => {
             onClick: apiDelete,
             hidden: hideForRow,
         }
-    ], [apiIsReady, tLib]);
+    ], [apiIsReady, tLib, hideForRow]);
+    const filterElement = React.useMemo(() => (
+        <AlarmaConfigFilter
+            onSpringFilterChange={setFilter}
+            entornApps={entornApps}
+            showOnlyOwn={showOnlyOwn}
+            setShowOnlyOwn={setShowOnlyOwn} />
+    ), [entornApps, showOnlyOwn]);
 
     if (!entornApps) return <CenteredCircularProgress />;
 
@@ -348,12 +432,13 @@ const AlarmaConfig = () => {
                 columns={columns}
                 toolbarType="upper"
                 rowAdditionalActions={actions}
-                toolbarElementsWithPositions={toolbarElementsWithPositions}
-                filter={currentFilter}
+                toolbarAdditionalRow={filterElement}
+                filter={filter}
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowHideDeleteButton
                 rowHideUpdateButton={hideForRow}
+                toolbarHideQuickFilter
             />
         </GridPage>
     );

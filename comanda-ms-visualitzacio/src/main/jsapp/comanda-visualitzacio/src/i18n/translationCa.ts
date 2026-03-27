@@ -440,6 +440,8 @@ const translationCa = {
             filter: {
                 showOnlyOwnEnabled: "Mostrar només les meves alarmes",
                 showOnlyOwnDisabled: "Mostra totes les alarmes",
+                more: "Més camps",
+                entornApp: "Entorn d'aplicació",
             },
         },
         alarma: {

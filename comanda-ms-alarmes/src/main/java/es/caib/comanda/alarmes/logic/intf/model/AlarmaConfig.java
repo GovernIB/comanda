@@ -8,13 +8,16 @@ import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
@@ -40,11 +43,13 @@ import java.math.BigDecimal;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = AlarmaConfig.ALARMA_CONFIG_DELETE_ACTION, requiresId = true),
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = AlarmaConfig.ALARMA_CONFIG_FILTER, formClass = AlarmaConfig.AlarmaConfigFilter.class)
 		}
 )
 public class AlarmaConfig extends BaseResource<Long> {
 
 	public final static String ALARMA_CONFIG_DELETE_ACTION = "delete_alarmaConfig";
+    public final static String ALARMA_CONFIG_FILTER = "alarmaConfig_filter";
 
 	@NotNull
 	private Long entornAppId;
@@ -61,6 +66,7 @@ public class AlarmaConfig extends BaseResource<Long> {
 	private BigDecimal periodeValor;
     @ValidAdminValue
 	private boolean admin;
+    @ValidAdminValue
 	private boolean correuGeneric;
     @Transient
     private AlarmaTipusUsuari tipusUsuariAlarma;
@@ -71,4 +77,16 @@ public class AlarmaConfig extends BaseResource<Long> {
                 : (correuGeneric ? AlarmaTipusUsuari.USUARI_GENERIC        : AlarmaTipusUsuari.USUARI);
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class AlarmaConfigFilter implements Serializable {
+        protected Long entornAppId;
+        protected String nom;
+        protected AlarmaConfigTipus tipus;
+        private boolean admin;
+        private boolean correuGeneric;
+    }
 }

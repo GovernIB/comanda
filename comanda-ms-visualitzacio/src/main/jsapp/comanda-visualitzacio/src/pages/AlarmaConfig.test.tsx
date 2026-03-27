@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
     refreshMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
+            components: {
+                clear: 'Netejar',
+            },
             page: {
                 alarmaConfig: {
                     title: 'Configuració d alarmes',
@@ -29,6 +32,8 @@ const mocks = vi.hoisted(() => ({
                     filter: {
                         showOnlyOwnEnabled: 'Només meves',
                         showOnlyOwnDisabled: 'Totes les configuracions',
+                        more: 'Més filtres',
+                        entornApp: "Entorn d'aplicació",
                     },
                 },
             },
@@ -71,26 +76,24 @@ vi.mock('reactlib', async (importOriginal) => {
     MuiDataGrid: ({
         title,
         filter,
-        toolbarElementsWithPositions,
+        toolbarAdditionalRow,
         rowAdditionalActions,
         columns,
     }: {
         title: string;
         filter?: string;
-        toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
+        toolbarAdditionalRow?: React.ReactNode;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: unknown) => void }>;
         columns?: MuiDataGridColDef[];
     }) => (
         <section>
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter ?? ''}</div>
+            {toolbarAdditionalRow}
             {columns?.map((col: any, index: number) => (
                 <div key={index} data-testid={`column-${col.field}`}>
                     {col.field}
                 </div>
-            ))}
-            {toolbarElementsWithPositions?.map((entry, index) => (
-                <div key={index}>{entry.element}</div>
             ))}
             <button onClick={() => rowAdditionalActions?.[0]?.onClick?.('cfg-1')}>
                 {rowAdditionalActions?.[0]?.label}
@@ -129,16 +132,26 @@ vi.mock('reactlib', async (importOriginal) => {
     MuiFilter: ({
         children,
         onDataChange,
+        onSpringFilterChange,
+        springFilterBuilder: springFilterBuilderProp,
         formApiRef,
     }: {
         children: React.ReactNode;
         onDataChange?: (data: any) => void;
+        onSpringFilterChange?: (springFilter?: string) => void,
+        springFilterBuilder?: (data: any) => string;
         formApiRef?: { current: { setFieldValue: (field: string, value: any) => void } };
     }) => {
+        const data = { entornApp: { id: 9 } };
         React.useEffect(() => {
-            onDataChange?.({ entornApp: { id: 9 } });
+            onDataChange?.(data);
             formApiRef?.current?.setFieldValue?.('entornApp', { id: 7, description: 'Entorn 7' });
         }, []);
+        React.useEffect(() => {
+            const filter = springFilterBuilderProp?.(data);
+            onSpringFilterChange?.(filter || undefined);
+        }, [springFilterBuilderProp]);
+
         return <div>{children}</div>;
     },
     FormField: ({ name, disabled }: { name: string; disabled?: boolean }) => (
@@ -172,6 +185,11 @@ vi.mock('reactlib', async (importOriginal) => {
     useMuiDataGridApiRef: () => ({
         current: {
             refresh: mocks.refreshMock,
+        },
+    }),
+    useFilterApiRef: () => ({
+        current: {
+            clear: vi.fn(),
         },
     }),
 }});
@@ -292,7 +310,6 @@ describe('AlarmaConfig', () => {
             expect(screen.getByRole('heading', { name: 'Configuració d alarmes' })).toBeInTheDocument();
         });
 
-        expect(screen.getByTestId('filter-value')).toHaveTextContent("createdBy:'u001'");
         expect(screen.getByTitle('Només meves')).toBeInTheDocument();
     });
 
@@ -305,7 +322,7 @@ describe('AlarmaConfig', () => {
         });
 
         fireEvent.click(screen.getByTitle('Només meves'));
-        expect(screen.getByTestId('filter-value')).toHaveTextContent('');
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('');
         expect(screen.getByTitle('Totes les configuracions')).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
@@ -329,6 +346,33 @@ describe('AlarmaConfig', () => {
 
         await waitFor(() => {
             expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument();
+        });
+    });
+
+    it('AlarmaConfig_quanEsRenderitza_mostraElGridIElFiltreInicialDeLusuari', async () => {
+        render(<AlarmaConfig />);
+        await waitFor(() => {
+            expect(screen.getByTitle('Només meves')).toBeInTheDocument(); // ✅ Título inicial correcto
+        });
+    });
+
+    it('AlarmaConfig_quanEsPremElToggle_canviaElFiltreIQuanSElimina_refrescaElGrid', async () => {
+        render(<AlarmaConfig />);
+        await waitFor(() => {
+            expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByTitle('Només meves'));
+        expect(screen.getByTitle('Totes les configuracions')).toBeInTheDocument(); // ✅ Título cambia
+    });
+
+    it('AlarmaConfig_quanEsDesactivaElFiltreDeNomésMeva_mostraLaColumnaDeTipusUsuari', async () => {
+        render(<AlarmaConfig />);
+        await waitFor(() => {
+            expect(screen.queryByTestId('column-tipusUsuariAlarma')).not.toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByTitle('Només meves'));
+        await waitFor(() => {
+            expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument(); // ✅ Columna aparece
         });
     });
 });

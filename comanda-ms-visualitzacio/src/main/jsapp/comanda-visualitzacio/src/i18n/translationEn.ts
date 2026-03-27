@@ -440,6 +440,8 @@ const translationEn: translationResourcesType = {
             filter: {
                 showOnlyOwnEnabled: "Show only my alarms",
                 showOnlyOwnDisabled: "Show all alarms",
+                more: "More fields",
+                entornApp: "Application environment",
             },
         },
         alarma: {
