@@ -404,6 +404,10 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		reorderableEntity.setOrder(nextValue);
 		return nextValue;
 	}
+	private long reorderGetNextSequence(long index) {
+		Integer increment = reorderGetIncrement();
+		return index * (increment != null ? increment : 1);
+	}
 	protected boolean reorderIfReorderable(
 			E entity,
 			Long sequenceForEntity,
@@ -461,10 +465,19 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 						currentSequence != null && currentSequence.compareTo(sequenceForEntity) >= 0 :
 						currentSequence != null && currentSequence.compareTo(sequenceForEntity) > 0);
 				if (!inserted && insertHere) {
+					boolean lineHandled = false;
+					if (reorderGetNextSequence(index) < sequenceForEntity) {
+						long seqLine = reorderSetNextSequence(line, index++);
+						log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, seqLine, currentSequence);
+						lineHandled = true;
+					}
 					long sequence = reorderSetNextSequence(reorderableEntity, index++);
 					log.debug("\tInsertant entitat {} amb ordre {}", reorderableEntity, sequence);
 					inserted = true;
 					anyOrderChanged = true;
+					if (lineHandled) {
+						continue;
+					}
 				}
 				long sequence = reorderSetNextSequence(line, index++);
 				log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, sequence, currentSequence);
