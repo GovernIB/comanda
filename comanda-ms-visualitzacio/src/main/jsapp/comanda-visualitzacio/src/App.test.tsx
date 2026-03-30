@@ -252,7 +252,7 @@ describe('App', () => {
 
         await waitFor(() => {
             const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
-            expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['tasca', 'avis', 'alarma']);
+            expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['tasca', 'avis']);
         });
     });
 
