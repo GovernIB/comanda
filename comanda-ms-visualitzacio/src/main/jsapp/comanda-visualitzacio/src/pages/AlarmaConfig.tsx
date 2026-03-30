@@ -588,7 +588,7 @@ const AlarmaConfig: React.FC<{
 
     const currentFilter = springFilterBuilder.and(
         filter,
-        filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : "",
+        filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : springFilterBuilder.inn('entornAppId', entornApps.map(e => e?.id)),
     )
 
     return (
