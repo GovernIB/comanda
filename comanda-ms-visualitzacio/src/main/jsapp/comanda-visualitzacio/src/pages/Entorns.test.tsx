@@ -56,6 +56,10 @@ vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
+vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
+  default: () => false,
+}));
+
 describe('Entorns', () => {
     afterEach(() => {
         vi.clearAllMocks();

@@ -192,7 +192,7 @@ export const App: React.FC = () => {
         hasSalutAccess ? { ...menuSalut, resourceName: undefined } : null,
         { ...menuTasca, resourceName: undefined },
         { ...menuAvis, resourceName: undefined },
-        { ...menuAlarmaConfig, resourceName: undefined },
+        hasSalutAccess ? { ...menuAlarmaConfig, resourceName: undefined } : null,
     ].filter(notNull);
     const visibleMenuEntries = !isUserReady
         ? undefined

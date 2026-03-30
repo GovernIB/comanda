@@ -336,6 +336,10 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
         formApiRef.current?.setFieldValue('showOnlyOwn', showOnlyOwn);
     }, [showOnlyOwn]);
 
+    if (!user) {
+        return null;
+    }
+
     return (
         <MuiFilter
             apiRef={filterApiRef}
@@ -354,7 +358,7 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                     data?.tipus && springFilterBuilder.like('tipus', data?.tipus),
                     moreFields && data?.admin && springFilterBuilder.eq('admin', data?.admin),
                     moreFields && data?.correuGeneric && springFilterBuilder.eq('correuGeneric', data?.correuGeneric),
-                    isCurrentUserAdmin && user?.codi && data?.showOnlyOwn && springFilterBuilder.eq('createdBy', `'${user.codi}'`),
+                    isCurrentUserAdmin && user.codi && data?.showOnlyOwn && springFilterBuilder.eq('createdBy', `'${user.codi}'`),
                 ) || '';
             }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -588,7 +592,7 @@ const AlarmaConfig: React.FC<{
 
     const currentFilter = springFilterBuilder.and(
         filter,
-        filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : "",
+        filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : springFilterBuilder.inn('entornAppId', entornApps.map(e => e?.id)),
     )
 
     return (

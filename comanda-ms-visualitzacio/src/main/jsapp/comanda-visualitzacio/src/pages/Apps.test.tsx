@@ -93,6 +93,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('react-router-dom', () => ({
     useParams: () => mocks.useParamsMock(),
+    useNavigate: () => vi.fn(),
 }));
 
 vi.mock('reactlib', () => ({
@@ -257,6 +258,10 @@ vi.mock('../hooks/reordering.tsx', () => ({
 
 vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
+}));
+
+vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
+  default: () => false,
 }));
 
 describe('AppForm', () => {
