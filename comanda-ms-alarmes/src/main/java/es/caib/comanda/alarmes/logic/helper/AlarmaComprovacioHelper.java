@@ -2,6 +2,7 @@ package es.caib.comanda.alarmes.logic.helper;
 
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
+import es.caib.comanda.alarmes.logic.event.AlarmaMailEventPublisher;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
@@ -35,7 +36,7 @@ public class AlarmaComprovacioHelper {
 	private final AlarmaRepository alarmaRepository;
 	private final SalutServiceClient salutServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
-	private final AlarmaMailHelper alarmaMailHelper;
+	private final AlarmaMailEventPublisher alarmaMailEventPublisher;
     private final ComandaSseEventPublisher comandaSseEventPublisher;
 
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
@@ -182,7 +183,7 @@ public class AlarmaComprovacioHelper {
 		}
 
 		if (alarmaActivada != null) {
-			enviarCorreuAlarma(alarmaActivada);
+			publishAlarmaMailEvent(alarmaActivada);
 		}
 	}
 
@@ -216,13 +217,9 @@ public class AlarmaComprovacioHelper {
 		return alarmaConfig.getPeriodeValor() != null && alarmaConfig.getPeriodeUnitat() != null;
 	}
 
-	private void enviarCorreuAlarma(AlarmaEntity alarma) {
-        alarmaMailHelper.sendAlarmaUser(alarma);
-
-        if (alarma.getAlarmaConfig().isCorreuGeneric()) {
-			alarmaMailHelper.sendAlarmaGeneric(alarma);
-		}
-	}
+    private void publishAlarmaMailEvent(AlarmaEntity alarma) {
+        alarmaMailEventPublisher.publish(alarma);
+    }
 
 	private Salut findSalutLast(Long entornAppId) {
 		PagedModel<EntityModel<Salut>> saluts = salutServiceClient.find(

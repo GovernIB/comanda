@@ -23,6 +23,7 @@ public class Monitor {
     private AccioTipusEnum tipus;
     @Setter
     private LocalDateTime data;
+    @Setter
     private String url;
     private String operacio;
     @Setter

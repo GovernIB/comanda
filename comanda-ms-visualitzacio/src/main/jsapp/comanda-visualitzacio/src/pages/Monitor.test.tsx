@@ -26,6 +26,13 @@ const mocks = vi.hoisted(() => ({
                         salut: 'Salut',
                         estadistica: 'Estadística',
                         configuracio: 'Configuració',
+                        alarmes: 'Alarmes',
+                    },
+                    column: {
+                        mailAddress: 'Adreça de correu',
+                    },
+                    tab: {
+                        email: 'EMAIL',
                     },
                     detailTipus: 'Tipus',
                 },
@@ -41,6 +48,9 @@ const mocks = vi.hoisted(() => ({
             'page.monitors.modulEnum.salut': 'Salut',
             'page.monitors.modulEnum.estadistica': 'Estadística',
             'page.monitors.modulEnum.configuracio': 'Configuració',
+            'page.monitors.modulEnum.alarmes': 'Alarmes',
+            'page.monitors.column.mailAddress': 'Adreça de correu',
+            'page.monitors.tab.email': 'EMAIL',
             'page.monitors.detail.estatEnum.ok': 'Correcte',
             'page.monitors.detail.estatEnum.error': 'Error',
             'page.monitors.detail.estatEnum.warn': 'Avís',
@@ -71,12 +81,13 @@ vi.mock('reactlib', () => ({
         toolbarAdditionalRow?: React.ReactNode;
         onRowClick?: (params: { row: Record<string, unknown> }) => void;
         staticFilter?: string;
-        columns: Array<{ field: string; renderCell?: (params: any) => React.ReactNode }>;
+        columns: Array<{ field: string; headerName?: string; renderCell?: (params: any) => React.ReactNode }>;
     }) => (
         <section>
             <h2>{title}</h2>
             <div data-testid="static-filter">{staticFilter}</div>
             <div>{toolbarAdditionalRow}</div>
+            <div data-testid="url-header">{columns[3]?.headerName ?? columns[3]?.field}</div>
             <button onClick={() => onRowClick?.({ row: { estat: 'ERROR', tipus: 'SORTIDA', excepcioStacktrace: 'stack' } })}>
                 Obre detall
             </button>
@@ -161,6 +172,8 @@ describe('Monitors', () => {
         expect(screen.getByRole('button', { name: 'Netejar' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Cercar' })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: 'Salut' })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: 'EMAIL' })).toBeInTheDocument();
+        expect(screen.getByTestId('url-header')).toHaveTextContent('URL');
         expect(screen.getByTestId('estat-cell')).toHaveTextContent('Avís');
     });
 
@@ -189,5 +202,14 @@ describe('Monitors', () => {
             expect.anything(),
             expect.objectContaining({ maxWidth: 'lg', fullWidth: true })
         );
+    });
+
+    it('Monitors_quanSeleccionaEmail_mostraElModulAlarmesIElHeaderDeCorreu', () => {
+        render(<Monitors />);
+
+        fireEvent.click(screen.getByRole('tab', { name: 'EMAIL' }));
+
+        expect(screen.getByTestId('static-filter')).toHaveTextContent("modul:'ALARMES'");
+        expect(screen.getByTestId('url-header')).toHaveTextContent('Adreça de correu');
     });
 });

@@ -1,6 +1,7 @@
 package es.caib.comanda.alarmes.logic.helper;
 
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.event.AlarmaMailEventPublisher;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigCondicio;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
@@ -40,7 +41,7 @@ class AlarmaComprovacioHelperTest {
     @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock
-    private AlarmaMailHelper alarmaMailHelper;
+    private AlarmaMailEventPublisher alarmaMailEventPublisher;
     @Mock
     private ComandaSseEventPublisher comandaSseEventPublisher;
 
@@ -367,7 +368,7 @@ class AlarmaComprovacioHelperTest {
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
         assertThat(alarmaEsborrany.getDataActivacio()).isNotNull();
-        verify(alarmaMailHelper).sendAlarmaUser(alarmaEsborrany);
+        verify(alarmaMailEventPublisher).publish(alarmaEsborrany);
     }
 
     @Test
@@ -396,7 +397,7 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
-        verify(alarmaMailHelper, never()).sendAlarmaUser(any()); // No s'assigna a alarmaActivada a la línia 157, només es canvia l'estat
+        verify(alarmaMailEventPublisher, never()).publish(any()); // No s'assigna a alarmaActivada a la línia 157, només es canvia l'estat
     }
 
     @Test
@@ -426,6 +427,6 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         verify(alarmaRepository).save(argThat(entity -> entity.getEstat() == AlarmaEstat.ACTIVA));
-        verify(alarmaMailHelper).sendAlarmaUser(novaAlarma);
+        verify(alarmaMailEventPublisher).publish(novaAlarma);
     }
 }

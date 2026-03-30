@@ -11,9 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
-
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -45,11 +42,9 @@ class UserInformationHelperTest {
         // Arrange
         Usuari usuari = Usuari.builder().codi(USERNAME).nom("Test User").build();
         EntityModel<Usuari> entityModel = EntityModel.of(usuari);
-        PagedModel<EntityModel<Usuari>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
-        when(usuariServiceClient.find(any(), eq("codi:'" + USERNAME + "'"), any(), any(), eq("0"), eq(1), eq(AUTH_HEADER)))
-                .thenReturn(pagedModel);
+        when(usuariServiceClient.getOneByCodiInternal(eq(USERNAME), eq(AUTH_HEADER))).thenReturn(entityModel);
 
         // Act
         Usuari result = userInformationHelper.usuariFindByUsername(USERNAME);
@@ -64,24 +59,8 @@ class UserInformationHelperTest {
     void usuariFindByUsername_quanNoExisteix_retornaNull() {
         // Arrange
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
-        when(usuariServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), anyString()))
+        when(usuariServiceClient.getOneByCodiInternal(anyString(), anyString()))
                 .thenReturn(null);
-
-        // Act
-        Usuari result = userInformationHelper.usuariFindByUsername(USERNAME);
-
-        // Assert
-        assertThat(result).isNull();
-    }
-
-    @Test
-    @DisplayName("Retorna null quan la llista d'usuaris és buida")
-    void usuariFindByUsername_quanLlistaBuida_retornaNull() {
-        // Arrange
-        PagedModel<EntityModel<Usuari>> pagedModel = PagedModel.empty();
-        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
-        when(usuariServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), anyString()))
-                .thenReturn(pagedModel);
 
         // Act
         Usuari result = userInformationHelper.usuariFindByUsername(USERNAME);

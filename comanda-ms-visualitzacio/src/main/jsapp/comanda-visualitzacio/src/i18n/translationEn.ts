@@ -571,6 +571,9 @@ const translationEn: translationResourcesType = {
         },
         monitors: {
             title: "Monitors",
+            column: {
+                mailAddress: "Email address",
+            },
             detail: {
                 title: "Communication details with the integration",
                 data: "Date",
@@ -596,6 +599,10 @@ const translationEn: translationResourcesType = {
                 salut: "Health",
                 estadistica: "Statistics",
                 configuracio: "Configuration",
+                alarmes: "Alarms",
+            },
+            tab: {
+                email: "EMAIL",
             },
         },
         widget: {
@@ -872,6 +879,7 @@ const translationEn: translationResourcesType = {
     components: {
         clear: "Clear",
         search: "Search",
+        details: "Details",
         copiarContingut: "Copy content",
         copiarContingutTitle: "Copy the content",
         copiarContingutSuccess: "Content copied to clipboard",

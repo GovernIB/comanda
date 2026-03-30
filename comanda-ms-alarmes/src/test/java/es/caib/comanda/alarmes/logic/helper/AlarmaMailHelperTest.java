@@ -5,6 +5,8 @@ import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.*;
+import es.caib.comanda.client.model.monitor.Monitor;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,8 @@ class AlarmaMailHelperTest {
     private UserInformationHelper userInformationHelper;
     @Mock
     private AlarmaRepository alarmaRepository;
+    @Mock
+    private ParametresHelper parametresHelper;
 
     @InjectMocks
     private AlarmaMailHelper alarmaMailHelper;
@@ -47,8 +51,10 @@ class AlarmaMailHelperTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(alarmaMailHelper, "alarmaMailFromAddress", "from@caib.es");
-        ReflectionTestUtils.setField(alarmaMailHelper, "alarmaMailFromName", "Comanda");
+        lenient().when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS, "comanda@caib.es"))
+                .thenReturn("from@caib.es");
+        lenient().when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_NAME, "Comanda"))
+                .thenReturn("Comanda");
 
         config = new AlarmaConfigEntity();
         config.setNom("Test Alarma");
@@ -97,6 +103,7 @@ class AlarmaMailHelperTest {
                 eq("from@caib.es"), eq("Comanda"),
                 eq("admin@caib.es"), anyString(),
                 eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
+        verify(alarmaClientHelper).monitorCreate(any(Monitor.class));
     }
 
     @Test
@@ -148,6 +155,7 @@ class AlarmaMailHelperTest {
                 eq("from@caib.es"), anyString(),
                 eq("creator@caib.es"), eq("Creator Name"),
                 eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
+        verify(alarmaClientHelper).monitorCreate(any(Monitor.class));
     }
 
     @Test
@@ -203,6 +211,7 @@ class AlarmaMailHelperTest {
 
         // Assert
         verify(mailHelper, times(2)).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(alarmaClientHelper, times(2)).monitorCreate(any(Monitor.class));
     }
 
     @Test

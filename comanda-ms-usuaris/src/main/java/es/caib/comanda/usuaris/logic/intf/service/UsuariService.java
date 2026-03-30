@@ -5,4 +5,5 @@ import es.caib.comanda.usuaris.logic.intf.model.Usuari;
 
 public interface UsuariService extends MutableResourceService<Usuari, Long> {
     void refreshCurrentUser();
+    Usuari findOneInternalByCodi(String codi);
 }

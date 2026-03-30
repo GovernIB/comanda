@@ -571,6 +571,9 @@ const translationCa = {
         },
         monitors: {
             title: "Monitors",
+            column: {
+                mailAddress: "Adreça de correu",
+            },
             detail: {
                 title: "Detalls de la comunicació amb la integració",
                 data: "Data",
@@ -596,6 +599,10 @@ const translationCa = {
                 salut: "Salut",
                 estadistica: "Estadística",
                 configuracio: "Configuració",
+                alarmes: "Alarmes",
+            },
+            tab: {
+                email: "EMAIL",
             },
         },
         widget: {
@@ -872,6 +879,7 @@ const translationCa = {
     components: {
         clear: "Netejar",
         search: "Cercar",
+        details: "Detalls",
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
