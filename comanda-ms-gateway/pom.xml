@@ -12,6 +12,9 @@
 	<artifactId>comanda-ms-gateway</artifactId>
 	<version>0.1.1</version>
 	<description>API Gateway per Comanda</description>
+	<properties>
+		<maven.site.skip>true</maven.site.skip>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

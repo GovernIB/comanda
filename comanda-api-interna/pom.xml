@@ -16,6 +16,7 @@
     <!-- El contracte OpenAPI es GENERA automàticament a build time a partir d'anotacions.
          No es manté cap JSON/YAML a src/main/openapi. -->
     <properties>
+        <maven.site.skip>true</maven.site.skip>
         <!-- Valors per defecte per a propietats de manifest (podran ser sobreescrits pel reactor arrel) -->
         <scmBranch>local</scmBranch>
         <buildNumber>0</buildNumber>

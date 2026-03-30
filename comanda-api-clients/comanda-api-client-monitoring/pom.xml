@@ -297,6 +297,7 @@
     		</repository>
     	</repositories>
     <properties>
+        <maven.site.skip>true</maven.site.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <resteasy-version>4.7.6.Final</resteasy-version>
         <jackson-version>2.19.2</jackson-version>

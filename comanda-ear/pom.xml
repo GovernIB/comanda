@@ -11,6 +11,7 @@
 	<version>0.1.1</version>
 	<packaging>ear</packaging>
 	<properties>
+		<maven.site.skip>true</maven.site.skip>
 		<docker.base.image>${project.parent.artifactId}</docker.base.image>
 		<docker.image.alias>${project.parent.artifactId}</docker.image.alias>
 		<docker.jboss.userhome>/home/jboss</docker.jboss.userhome>
