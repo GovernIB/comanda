@@ -1,0 +1,18 @@
+databaseChangeLog:
+- changeSet:
+    id: conf-fk-index-1
+    author: limit
+    comment: Afegir índexos a FK per optimitzar consultes
+    changes:
+      - createIndex:
+          tableName: ${db_prefix}entorn_app
+          indexName: ${db_prefix}entapp_app_i
+          columns:
+            - column:
+                name: app_id
+      - createIndex:
+          tableName: ${db_prefix}app_integracio
+          indexName: ${db_prefix}appinteg_integ_i
+          columns:
+            - column:
+                name: integracio_id

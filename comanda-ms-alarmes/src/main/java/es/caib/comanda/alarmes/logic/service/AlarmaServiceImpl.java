@@ -1,5 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.helper.AlarmaComprovacioHelper;
 import es.caib.comanda.alarmes.logic.helper.AlarmaMailHelper;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
@@ -11,6 +13,7 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
@@ -30,6 +33,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,9 +51,11 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 
 	private final AlarmaComprovacioHelper alarmaComprovacioHelper;
 	private final AlarmaConfigRepository alarmaConfigRepository;
+	private final AlarmaRepository alarmaRepository;
 	private final AlarmaMailHelper alarmaMailHelper;
 	private final AuthenticationHelper authenticationHelper;
     private final EntityManager entityManager;
+    private final ComandaSseEventPublisher comandaSseEventPublisher;
 
 	@Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
 	private Boolean schedulerLeader;
@@ -60,9 +67,12 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		register(
 				Alarma.ESBORRAR_ACTION,
 				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
-		register(
-				Alarma.ESBORRAR_TOTES_ACTION,
-				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
+//		register(
+//				Alarma.ESBORRAR_TOTES_ACTION,
+//				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
+        register(
+                Alarma.REACTIVAR_ACTION,
+                new ReactivarActionExecutor(authenticationHelper));
         register(
                 Alarma.REACTIVAR_ACTION,
                 new ReactivarActionExecutor(authenticationHelper));
@@ -95,6 +105,40 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		log.debug("...enviaments agrupats d'alarmes finalitzat ({} correus enviats)", mailCount);
 	}
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<AlarmaReduidaResource> findActiveAlarmIdsForSubscriber(String currentUser, boolean isAdmin) {
+        List<AlarmaEntity> activeAlarms = new ArrayList<>(
+                alarmaRepository.findByEstatAndAlarmaConfigAdminFalseAndAlarmaConfigCreatedBy(
+                        AlarmaEstat.ACTIVA,
+                        currentUser));
+        if (isAdmin) {
+            activeAlarms.addAll(alarmaRepository.findByEstatAndAlarmaConfigAdminTrue(AlarmaEstat.ACTIVA));
+        }
+        return activeAlarms.stream()
+                .collect(Collectors.toMap(
+                        AlarmaEntity::getId,
+                        entity -> new AlarmaReduidaResource(entity.getId(), entity.getEntornAppId()),
+                        (first, ignored) -> first,
+                        LinkedHashMap::new))
+                .values()
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public <P extends Serializable> Serializable artifactActionExec(
+            Long id,
+            String code,
+            P params) throws ArtifactNotFoundException, ActionExecutionException {
+        Serializable response = super.artifactActionExec(id, code, params);
+        if (Alarma.ESBORRAR_ACTION.equals(code) || Alarma.REACTIVAR_ACTION.equals(code)) {
+            publishActiveAlarmsChangedEvent();
+        }
+        return response;
+    }
+
 	@Override
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
@@ -114,13 +158,11 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		private final AlarmaRepository alarmaRepository;
 		@Override
 		public Serializable exec(String code, AlarmaEntity entity, Serializable params) {
-			String currentUser = authenticationHelper.getCurrentUserName();
-			boolean isCurrentUserAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
 			if (Alarma.ESBORRAR_ACTION.equals(code) && entity != null) {
-				boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
-				String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
-				boolean tePermisos = (alarmaIsAdmin && isCurrentUserAdmin) || (!alarmaIsAdmin && currentUser.equals(alarmaCreatedBy));
-                if (!tePermisos) {
+                if (usuariSensePermisosActionEsborrar(
+                        entity,
+                        authenticationHelper.getCurrentUserName(),
+                        authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN))) {
                     throw new ActionExecutionException(
                             Alarma.class,
                             entity.getId(),
@@ -136,17 +178,18 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 				}
                 entity.setEstat(AlarmaEstat.ESBORRADA);
                 entity.setDataEsborrat(LocalDateTime.now());
-            } else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
-				alarmaRepository.updateAllEstatEsborradaNoAdmin(
-						currentUser,
-						AlarmaEstat.ACTIVA,
-						AlarmaEstat.ESBORRADA);
-				if (isCurrentUserAdmin) {
-					alarmaRepository.updateAllEstatEsborradaAdmin(
-							AlarmaEstat.ACTIVA,
-							AlarmaEstat.ESBORRADA);
-				}
-			}
+            }
+//              else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
+//				alarmaRepository.updateAllEstatEsborradaNoAdmin(
+//						currentUser,
+//						AlarmaEstat.ACTIVA,
+//						AlarmaEstat.ESBORRADA);
+//				if (isCurrentUserAdmin) {
+//					alarmaRepository.updateAllEstatEsborradaAdmin(
+//							AlarmaEstat.ACTIVA,
+//							AlarmaEstat.ESBORRADA);
+//				}
+//			}
 			return null;
 		}
 		@Override
@@ -159,13 +202,11 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
         private final AuthenticationHelper authenticationHelper;
         @Override
         public Serializable exec(String code, AlarmaEntity entity, Serializable params) {
-            String currentUser = authenticationHelper.getCurrentUserName();
-            boolean isCurrentUserAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
             if (Alarma.REACTIVAR_ACTION.equals(code) && entity != null) {
-                boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
-                String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
-                boolean tePermisos = (alarmaIsAdmin && isCurrentUserAdmin) || (!alarmaIsAdmin && currentUser.equals(alarmaCreatedBy));
-                if (!tePermisos) {
+                if (usuariSensePermisosActionEsborrar(
+                        entity,
+                        authenticationHelper.getCurrentUserName(),
+                        authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN))) {
                     throw new ActionExecutionException(
                             Alarma.class,
                             entity.getId(),
@@ -189,6 +230,31 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
         }
     }
 
+    private static boolean usuariSensePermisosActionEsborrar(AlarmaEntity entity, String currentUser, boolean isCurrentUserAdmin) {
+        boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
+        String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
+        return (!alarmaIsAdmin || !isCurrentUserAdmin) && (alarmaIsAdmin || !currentUser.equals(alarmaCreatedBy));
+    }
+
+    @Override
+    protected void afterCreateSave(AlarmaEntity entity, Alarma resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        publishActiveAlarmsChangedEvent();
+    }
+
+    @Override
+    protected void afterUpdateSave(AlarmaEntity entity, Alarma resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        publishActiveAlarmsChangedEvent();
+    }
+
+    @Override
+    protected void afterDelete(AlarmaEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        publishActiveAlarmsChangedEvent();
+    }
+
+    private void publishActiveAlarmsChangedEvent() {
+        comandaSseEventPublisher.publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
+    }
+
     @RequiredArgsConstructor
     private class ReportLlistatIdAlarmaActiva implements ReportGenerator<AlarmaEntity, Serializable, AlarmaReduidaResource> {
         private final EntityManager entityManager;
@@ -201,17 +267,17 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
                     null
             );
             CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<Long> query = cb.createQuery(Long.class);
+            CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
             Root<AlarmaEntity> root = query.from(AlarmaEntity.class);
 
             Predicate predicate = spec.toPredicate(root, query, cb);
             if (predicate != null) {
                 query.where(predicate);
             }
-            query.select(root.get("id"));
-            List<Long> ids = entityManager.createQuery(query).getResultList();
-            List<AlarmaReduidaResource> recursos = ids.stream()
-                    .map(AlarmaReduidaResource::new)
+            query.multiselect(root.get("id"), root.get("entornAppId"));
+            List<Object[]> rows = entityManager.createQuery(query).getResultList();
+            List<AlarmaReduidaResource> recursos = rows.stream()
+                    .map(row -> new AlarmaReduidaResource((Long) row[0], (Long) row[1]))
                     .collect(Collectors.toList());
             return recursos;
         }

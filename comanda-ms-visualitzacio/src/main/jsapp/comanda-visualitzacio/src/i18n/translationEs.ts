@@ -65,6 +65,7 @@ const translationEs: translationResourcesType = {
             },
         },
         userRole: {
+            COM_USER: 'Usuario',
             COM_ADMIN: 'Administrador',
             COM_CONSULTA: 'Consultor'
         }
@@ -76,10 +77,12 @@ const translationEs: translationResourcesType = {
         avis: "Avisos",
         alarmes: "Alarmas activas",
         monitoritzacio: "Monitorización",
+        monitoritzacioDescription: "Monitorización de integraciones, caches y colas.",
         monitor: "Monitor",
         cache: "Gestión de cachés",
         broker: "Gestor de colas",
         configuracio: "Configuración",
+        configuracioDescription: "Opciones de administración de la aplicación.",
         app: "Aplicaciones",
         entorn: "Entornos",
         versionsEntorn: "Versiones por entorno",
@@ -101,11 +104,19 @@ const translationEs: translationResourcesType = {
                     form: {
                         userData: "Datos del usuario",
                         genericConfig: "Configuración genérica",
+                        applicationTheme: "Tema de la aplicación",
+                        menuTheme: "Tema del menú",
                     },
                     tema: {
                         clar: "Claro",
                         obscur: "Oscuro",
+                        dracula: "Dracula",
                         sistema: "Sistema",
+                    },
+                    estilMenu: {
+                        tema: "Igual que el tema",
+                        temaInvertit: "Tema invertido",
+                        peu: "Colores del pie",
                     },
                 }
             }
@@ -123,6 +134,10 @@ const translationEs: translationResourcesType = {
             refresh: {
                 last: "Último refresco",
                 next: "Próximo refresco en",
+            },
+            alarmes: {
+                configAlarmes: "Config. alarmas",
+                configAlarmesTitle: "Configurar alarmas del entorno",
             },
             apps: {
                 column: {
@@ -146,8 +161,8 @@ const translationEs: translationResourcesType = {
             },
             groupingSelect: {
                 label: "Agrupación",
-                BY_APPLICATION: "Por aplicación",
-                BY_ENVIRONMENT: "Por entorno",
+                BY_APPLICATION: "Agrupar por aplicación",
+                BY_ENVIRONMENT: "Agrupar por entorno",
                 NONE: "Sin agrupación",
                 titleNoGrouping: "Todas las aplicaciones y entornos",
             },
@@ -168,7 +183,7 @@ const translationEs: translationResourcesType = {
                 P1M: "Último mes",
             },
             tabs: {
-                entorn: "Entorno",
+                entorn: "Detalles",
                 estatActual: "Estado actual",
                 integracions: "Integraciones",
                 subsistemes: "Subsistemas",
@@ -440,6 +455,7 @@ const translationEs: translationResourcesType = {
             title: "Configuración de alarmas",
             create: "Crear configuración de alarma",
             update: "Modificar configuración de alarma",
+            nomHelperText: "Al realizarse una notificación por correo de la alarma, el nombre se utiliza para indicar la alarma en el asunto del correo.",
             condicio: {
                 title: "Condición",
                 subtitle: "Condición que se debe cumplir para generar la alarma",
@@ -452,6 +468,8 @@ const translationEs: translationResourcesType = {
             filter: {
                 showOnlyOwnEnabled: "Mostrar solo mis alarmas",
                 showOnlyOwnDisabled: "Mostrar todas las alarmas",
+                more: "Más campos",
+                entornApp: "Entorno de aplicación",
             },
         },
         alarma: {
@@ -466,7 +484,10 @@ const translationEs: translationResourcesType = {
             },
             action: {
                 clear: {
-                    label: "Borrar",
+                    label: "Marcar como leída",
+                },
+                reactivate: {
+                    label: "Reactivar",
                 },
                 reactivate: {
                     label: "Reactivar",
@@ -478,7 +499,7 @@ const translationEs: translationResourcesType = {
             },
             estats: {
                 finalitzada: "Finalizada",
-                finalitzadaEsborrada: "Finalizada (eliminada)",
+                finalitzadaEsborrada: "Finalizada (leída)",
             },
         },
         apps: {
@@ -520,6 +541,10 @@ const translationEs: translationResourcesType = {
                 success: "Importación ejecutada correctamente",
                 noFile: "No se ha seleccionado ningún fichero",
                 parseError: "Error al analizar el fichero",
+            },
+            ping: {
+                validationError: "Respuesta recibida con errores de validaciones",
+                validationTrace: "Errores de validaciones",
             },
         },
         entorns: {

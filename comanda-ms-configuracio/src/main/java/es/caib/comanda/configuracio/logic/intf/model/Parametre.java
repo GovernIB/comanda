@@ -28,6 +28,10 @@ import java.io.Serializable;
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
                         grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
+                ),
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED, // TODO S'ha afegit per a la consulta de useStatsEnabled
+                        grantedPermissions = { PermissionEnum.READ }
                 )
         }
 )

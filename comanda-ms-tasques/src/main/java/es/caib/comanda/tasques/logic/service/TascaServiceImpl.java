@@ -11,6 +11,7 @@ import es.caib.comanda.tasques.logic.helper.MonitorTasques;
 import es.caib.comanda.tasques.logic.helper.TasquesClientHelper;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import es.caib.comanda.tasques.logic.intf.service.TascaService;
+import es.caib.comanda.tasques.logic.mapper.TascaMapper;
 import es.caib.comanda.tasques.persist.entity.TascaEntity;
 import es.caib.comanda.tasques.persist.repository.TascaRepository;
 import lombok.AllArgsConstructor;
@@ -42,6 +43,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
 
     private final AuthenticationHelper authenticationHelper;
     private final TasquesClientHelper tasquesClientHelper;
+    private final TascaMapper tascaMapper;
 
     @PostConstruct
     public void init() {
@@ -82,52 +84,20 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
                 return;
             }
 
-            Tasca tasca = new Tasca();
-            tasca.setEntornAppId(entornApp.get().getId());
-            tasca.setEntornId(entornApp.get().getEntorn().getId());
-            tasca.setAppId(entornApp.get().getApp().getId());
-            tasca.setIdentificador(tascaBroker.getIdentificador());
-            tasca.setTipus(tascaBroker.getTipus());
-            tasca.setNom(tascaBroker.getNom());
-            tasca.setDescripcio(tascaBroker.getDescripcio());
-            tasca.setEstat(tascaBroker.getEstat());
-            tasca.setEstatDescripcio(tascaBroker.getEstatDescripcio());
-            tasca.setNumeroExpedient(tascaBroker.getNumeroExpedient());
-            tasca.setPrioritat(tascaBroker.getPrioritat());
-            tasca.setDataInici(tascaBroker.getDataInici() != null ? tascaBroker.getDataInici().toLocalDateTime() : null);
-            tasca.setDataFi(tascaBroker.getDataFi() != null ? tascaBroker.getDataFi().toLocalDateTime() : null);
-            tasca.setDataCaducitat(tascaBroker.getDataCaducitat() != null ? tascaBroker.getDataCaducitat().toLocalDateTime() : null);
-            tasca.setUrl(tascaBroker.getRedireccio());
-            tasca.setResponsable(tascaBroker.getResponsable());
-            tasca.setGrup(tascaBroker.getGrup());
-            tasca.setUsuarisAmbPermis(tascaBroker.getUsuarisAmbPermis());
-            tasca.setGrupsAmbPermis(tascaBroker.getGrupsAmbPermis());
+            Tasca tasca = tascaMapper.toTasca(tascaBroker, entornApp.get());
             if (tascaExistent.isEmpty()) {
                 monitorTasques.setCreateActionMessatge();
-                TascaEntity entity = TascaEntity.builder().tasca(tasca).build();
+                TascaEntity entity = tascaMapper.toTascaEntity(tasca);
                 entityRepository.save(entity);
             } else {
                 monitorTasques.setUpdateActionMessatge();
-                tascaExistent.get().setTipus(tasca.getTipus());
-                tascaExistent.get().setNom(tasca.getNom());
-                tascaExistent.get().setDescripcio(tasca.getDescripcio());
-                tascaExistent.get().setEstat(tasca.getEstat());
-                tascaExistent.get().setEstatDescripcio(tasca.getEstatDescripcio());
-                tascaExistent.get().setNumeroExpedient(tasca.getNumeroExpedient());
-                tascaExistent.get().setPrioritat(tasca.getPrioritat());
-                tascaExistent.get().setDataInici(tasca.getDataInici());
-                tascaExistent.get().setDataFi(tasca.getDataFi());
-                tascaExistent.get().setDataCaducitat(tasca.getDataCaducitat());
-                tascaExistent.get().setUrl(tasca.getUrl());
-                tascaExistent.get().setResponsable(tasca.getResponsable());
-                tascaExistent.get().setGrup(tasca.getGrup());
-                tascaExistent.get().setUsuarisAmbPermis(tasca.getUsuarisAmbPermis());
-                tascaExistent.get().setGrupsAmbPermis(tasca.getGrupsAmbPermis());
+                tascaMapper.updateTasca(tasca, tascaExistent.get());
             }
             monitorTasques.endAction();
         } catch (Throwable t) {
             monitorTasques.endAction(t, t.getMessage());
         }
+
     }
 
     private static LocalDateTime convertToLocalDateTime(Date dateToConvert) {
@@ -135,32 +105,6 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime() : null;
     }
-    
-    /*@Override
-    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
-        List<Filter> filters = new ArrayList<>();
-        if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
-            filters.add(Filter.parse(currentSpringFilter));
-        }
-        //if (namedQueries != null && Arrays.asList(namedQueries).contains("USER")) {
-            String userName = authenticationHelper.getCurrentUserName();
-            filters.add(Filter.parse("responsable: '" + userName + "' or usuarisAmbPermis.user:'" + userName + "'"));
-            //String[] roles = authenticationHelper.getCurrentUserRoles();
-            filters.add(
-                    FilterBuilder.or(
-                            FilterBuilder.equal("responsable", userName),
-                            FilterBuilder.exists(
-                                    FilterBuilder.in("usuarisAmbPermis", Filter.parse("[" + userName + "]"))),
-                            FilterBuilder.exists(
-                                    FilterBuilder.in("grupsAmbPermis", roles))
-                    )
-            );
-        //}
-        List<Filter> result = filters.stream().
-                filter(f -> f != null && !String.valueOf(f).isEmpty()).
-                collect(Collectors.toList());
-        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
-    }*/
 
     @Override
     protected void afterConversion(TascaEntity entity, Tasca resource) {
@@ -175,7 +119,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     @Override
     protected Specification<TascaEntity> additionalSpecification(String[] namedQueries) {
         String userName = authenticationHelper.getCurrentUserName();
-        String[] roles = authenticationHelper.getCurrentUserRoles();
+        String[] roles = authenticationHelper.getCurrentUserRealmRoles();
 
         // Els usuaris amb rol admin poden visualitzar totes les tasques.
         // Per a aquest motiu, l'usuari de httpauth.username ha de tenir el rol ROLE_ADMIN,

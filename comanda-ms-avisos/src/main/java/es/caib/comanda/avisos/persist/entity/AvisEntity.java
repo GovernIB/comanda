@@ -1,10 +1,9 @@
 package es.caib.comanda.avisos.persist.entity;
 
-import es.caib.comanda.model.v1.avis.AvisTipus;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.model.v1.avis.AvisTipus;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -73,24 +72,4 @@ public class AvisEntity extends BaseAuditableEntity<Avis> {
 
     @OneToMany(mappedBy= "avis", cascade = CascadeType.ALL)
     private List<AvisLlegitEntity> avisLlegits;
-
-    @Builder
-    public AvisEntity(Avis avis) {
-        this.entornAppId = avis.getEntornAppId();
-        this.entornId = avis.getEntornId();
-        this.appId = avis.getAppId();
-        this.identificador = avis.getIdentificador();
-        this.tipus = avis.getTipus();
-        this.nom = avis.getNom();
-        this.descripcio = avis.getDescripcio();
-        this.dataInici = avis.getDataInici();
-        this.dataFi = avis.getDataFi();
-
-        this.url = avis.getUrl();
-        this.responsable = avis.getResponsable();
-        this.grup = avis.getGrup();
-        this.usuarisAmbPermis = avis.getUsuarisAmbPermis();
-        this.grupsAmbPermis = avis.getGrupsAmbPermis();
-    }
-
 }

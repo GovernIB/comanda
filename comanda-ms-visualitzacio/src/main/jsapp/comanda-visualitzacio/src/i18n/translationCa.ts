@@ -65,6 +65,7 @@ const translationCa = {
             },
         },
         userRole: {
+            COM_USER: 'Usuari',
             COM_ADMIN: 'Administrador',
             COM_CONSULTA: 'Consultor'
         }
@@ -76,10 +77,12 @@ const translationCa = {
         avis: "Avisos",
         alarmes: "Alarmes actives",
         monitoritzacio: "Monitorització",
+        monitoritzacioDescription: "Monitorització de integracions, caches i cues.",
         monitor: "Monitor",
         cache: "Gestió de cachés",
         broker: "Gestor de cues",
         configuracio: "Configuració",
+        configuracioDescription: "Opcions de d'administració de l'aplicació.",
         app: "Aplicacions",
         entorn: "Entorns",
         versionsEntorn: "Versions per entorn",
@@ -101,11 +104,19 @@ const translationCa = {
                     form: {
                         userData: "Dades de l'usuari",
                         genericConfig: "Configuració genèrica",
+                        applicationTheme: "Tema de l'aplicació",
+                        menuTheme: "Tema del menú",
                     },
                     tema: {
                         clar: "Clar",
                         obscur: "Obscur",
+                        dracula: "Dracula",
                         sistema: "Sistema",
+                    },
+                    estilMenu: {
+                        tema: "Mateix que el tema",
+                        temaInvertit: "Tema invertit",
+                        peu: "Colors del peu",
                     },
                 },
             },
@@ -123,6 +134,10 @@ const translationCa = {
             refresh: {
                 last: "Darrer refresc",
                 next: "Proper refresc en",
+            },
+            alarmes: {
+                configAlarmes: "Config. alarmes",
+                configAlarmesTitle: "Configurar alarmes de l'entorn",
             },
             apps: {
                 column: {
@@ -146,8 +161,8 @@ const translationCa = {
             },
             groupingSelect: {
                 label: "Agrupació",
-                BY_APPLICATION: "Per aplicació",
-                BY_ENVIRONMENT: "Per entorn",
+                BY_APPLICATION: "Agrupar per aplicació",
+                BY_ENVIRONMENT: "Agrupar per entorn",
                 NONE: "Sense agrupació",
                 titleNoGrouping: "Totes les aplicacions i entorns",
             },
@@ -168,7 +183,7 @@ const translationCa = {
                 P1M: "Darrer mes",
             },
             tabs: {
-                entorn: "Entorn",
+                entorn: "Detalls",
                 estatActual: "Estat actual",
                 integracions: "Integracions",
                 subsistemes: "Subsistemes",
@@ -440,6 +455,7 @@ const translationCa = {
             title: "Configuració d'alarmes",
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
+            nomHelperText: "En fer-se una notificació per correu de l'alarma, el nom s'usa per a indicar l'alarma a l'assumpte del correu.",
             condicio: {
                 title: "Condició",
                 subtitle: "Condició que s'ha de complir per a generar l'alarma",
@@ -452,6 +468,8 @@ const translationCa = {
             filter: {
                 showOnlyOwnEnabled: "Mostrar només les meves alarmes",
                 showOnlyOwnDisabled: "Mostra totes les alarmes",
+                more: "Més camps",
+                entornApp: "Entorn d'aplicació",
             },
         },
         alarma: {
@@ -466,7 +484,10 @@ const translationCa = {
             },
             action: {
                 clear: {
-                    label: "Esborrar",
+                    label: "Marcar com llegida",
+                },
+                reactivate: {
+                    label: "Reactivar",
                 },
                 reactivate: {
                     label: "Reactivar",
@@ -478,7 +499,7 @@ const translationCa = {
             },
             estats: {
                 finalitzada: "Finalitzada",
-                finalitzadaEsborrada: "Finalitzada (esborrada)",
+                finalitzadaEsborrada: "Finalitzada (Llegida)",
             },
         },
         apps: {
@@ -520,6 +541,10 @@ const translationCa = {
                 success: "Importació executada correctament",
                 noFile: "No s'ha seleccionat cap fitxer",
                 parseError: "Error en analitzar el fitxer",
+            },
+            ping: {
+                validationError: "Resposta rebuda amb errors de validacions",
+                validationTrace: "Errors de validacions",
             },
         },
         entorns: {

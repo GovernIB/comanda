@@ -160,7 +160,7 @@ const LatenciaLineChart: React.FC<{
                                 agrupacio === 'HORA' ? value.substring(3) : value,
                         },
                     ]}
-                    yAxis={[{ label: ' ms', id: 'latencia-y-axis-id' }]}
+                    yAxis={[{ label: t($ => $.page.salut.latencia.title)+' (ms)', id: 'latencia-y-axis-id' }]}
                 >
                     <LinePlot />
                     <MarkPlot />

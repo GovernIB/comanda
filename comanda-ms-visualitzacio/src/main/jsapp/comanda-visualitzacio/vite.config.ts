@@ -18,6 +18,19 @@ export default defineConfig(({ mode }) => {
             open: env.DISABLE_OPEN_ON_START !== 'true',
         },
         plugins: [react(), tsconfigPaths(), svgr()],
-        test: {},
+        test: {
+            globals: true,
+            environment: 'jsdom',
+            setupFiles: './vitest.setup.ts',
+            clearMocks: true,
+            restoreMocks: true,
+            unstubGlobals: true,
+            pool: 'forks',
+            coverage: {
+                provider: 'v8',
+                reporter: ['text', 'json', 'html'],
+                exclude: ['lib/**'],
+            },
+        },
     };
 });

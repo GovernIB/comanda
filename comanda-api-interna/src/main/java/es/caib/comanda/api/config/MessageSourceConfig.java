@@ -16,9 +16,11 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 		return new String[] {
 			getBasename(),
 			"comanda.client-messages",
+			"comanda.acl-messages",
 			"comanda.alarmes-messages",
 			"comanda.estadistica-messages",
 			"comanda.configuracio-messages",
+			"comanda.usuaris-messages",
 		};
 	}
 

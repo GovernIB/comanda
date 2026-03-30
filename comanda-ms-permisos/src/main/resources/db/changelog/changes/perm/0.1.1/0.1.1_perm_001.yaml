@@ -1,0 +1,24 @@
+databaseChangeLog:
+- changeSet:
+    id: permis-fk-index-1
+    author: limit
+    comment: Afegir índexos a FK per optimitzar consultes
+    changes:
+    - createIndex:
+        tableName: ${db_prefix}permis_acces
+        indexName: ${db_prefix}permacc_acc_i
+        columns:
+        - column:
+            name: acces_id
+    - createIndex:
+        tableName: ${db_prefix}permis
+        indexName: ${db_prefix}permis_obj_i
+        columns:
+        - column:
+            name: objecte_id
+    - createIndex:
+        tableName: ${db_prefix}permis_hereus
+        indexName: ${db_prefix}permher_hereu_i
+        columns:
+        - column:
+            name: hereu_id

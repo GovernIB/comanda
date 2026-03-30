@@ -1,5 +1,8 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
@@ -17,6 +20,8 @@ import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.model.v1.log.FitxerContingut;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -39,18 +44,25 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Comparator;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
@@ -77,13 +89,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final AppInfoHelper appInfoHelper;
     private final CacheHelper cacheHelper;
     private final ConfiguracioSchedulerService schedulerService;
+    private final AuthenticationHelper authenticationHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final AclServiceClient aclServiceClient;
     private final RestTemplate restTemplate;
+    private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final ApplicationEventPublisher eventPublisher;
 
     @PostConstruct
     public void init() {
-        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate));
+        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword));
         register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs(restTemplate));
         register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository));
         register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate));
@@ -94,13 +110,46 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
 			String[] namedQueries) {
-		/*ResponseEntity<Set<Serializable>> idsResponseEntity = aclServiceClient.findIdsWithAnyPermission(
-				ResourceType.ENTORN_APP,
-				Collections.singletonList(PermissionEnum.READ),
-				httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		System.out.println(">>> allowedIds: " + idsResponseEntity.getBody());*/
-		return null;
+		if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+				|| authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+			return null;
+		}
+		Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
+		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
+		String appFilter = buildOrFilter("app.id", appPermissionIds);
+		String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
+		if (appFilter == null && entornAppFilter == null) {
+			return "id:0";
+		}
+		if (appFilter == null) {
+			return entornAppFilter;
+		}
+		if (entornAppFilter == null) {
+			return appFilter;
+		}
+		return appFilter + " or " + entornAppFilter;
 	}
+
+    private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+                resourceType,
+                Collections.singletonList(PermissionEnum.READ),
+                authenticationHelper.getCurrentUserName(),
+                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                .orElse(Collections.emptySet());
+    }
+
+    private String buildOrFilter(String fieldName, Set<Serializable> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+        return ids.stream()
+                .sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
+                .map(String::valueOf)
+                .map(id -> fieldName + ":" + id)
+                .collect(Collectors.joining(" or "));
+    }
 
     @Override
     protected void afterConversion(EntornAppEntity entity, EntornApp resource) {
@@ -162,11 +211,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     // ACCIONS
 
-    public class PingUrlAction implements ActionExecutor<EntornAppEntity, EntornAppPingAction, PingUrlResponse> {
+    public static class PingUrlAction implements ActionExecutor<EntornAppEntity, EntornAppPingAction, PingUrlResponse> {
         private final RestTemplate restTemplate;
+        private final Validator validator;
+        private String statsAuthUser;
+        private String statsAuthPassword;
 
-        public PingUrlAction(RestTemplate restTemplate) {
+        public PingUrlAction(RestTemplate restTemplate, Validator validator,  String statsAuthUser, String statsAuthPassword) {
             this.restTemplate = restTemplate;
+            this.validator = validator;
+            this.statsAuthUser = statsAuthUser;
+            this.statsAuthPassword = statsAuthPassword;
         }
 
         @Override
@@ -183,41 +238,53 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             pingUrlResponse.setSuccess(false);
             String message = null;
             try {
-                // Comprova si el params.getEndpoint() enviat pel client coincideix amb alguna de les URLs d'estadístiques
-                List<String> estadisticaURLs = Arrays.asList(params.getFormData().getEstadisticaUrl(), params.getFormData().getEstadisticaInfoUrl());
-                boolean isEstadisticaRequest = estadisticaURLs.contains(params.getEndpoint());
-                // Comprova si el params.getEndpoint() correspon a la URL de salut. Les peticions de salut que es fan cada minut
-                // no es poden autenticar per motius de rendiment amb el servei d'autenticació.
-                boolean isExcludedSalutRequest = params.getEndpoint().equals(params.getFormData().getSalutUrl());
-
-                ResponseEntity<Void> response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, buildAuthEntityIfNeeded(params.getFormData(), !isEstadisticaRequest, isExcludedSalutRequest), Void.class);
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    pingUrlResponse.setSuccess(true);
-                    message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
+                ResponseEntity<?> response;
+                ExpectedResponseTypeEnum responseType = params.getExpectedResponseTypeEnum();
+                boolean shouldValidateBody = (responseType != null && responseType.requiresBodyValidation());
+                HttpEntity<Void> entity = buildAuthEntityIfNeeded(params);
+                if (!shouldValidateBody || responseType == ExpectedResponseTypeEnum.BASIC_PING) {
+                    response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, entity, Void.class);
+                } else if (responseType.getGenericType() != null) {
+                    response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, entity, responseType.getGenericType());
+                } else {
+                    response = restTemplate.exchange(params.getEndpoint(), HttpMethod.GET, entity, responseType.getRawType());
                 }
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    if (shouldValidateBody) {
+                        boolean hasBody = response.getBody() != null;
+                        boolean hasCorrectType = hasBody && responseType.getRawType().isInstance(response.getBody());
+                        if (!hasBody) {
+                            message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.emptyBody");
+                        } else if (!hasCorrectType) {
+                            message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectBody");
+                        } else {
+                            Object body = response.getBody();
+                            Set<ConstraintViolation<Object>> violations = validator.validate(body);
+                            if (!violations.isEmpty()) {
+                                pingUrlResponse.setValidationError(true);
+                                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectValidate") +
+                                        " " + violations.stream()
+                                        .map(v -> "[" + v.getPropertyPath() + ": " + v.getMessage() + "]")
+                                        .collect(Collectors.joining(",\n "));
+                            } else {
+                                pingUrlResponse.setSuccess(true);
+                                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.correctBody");
+                            }
+                        }
+                    } else {
+                        pingUrlResponse.setSuccess(true);
+                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
+                    }
+                }
+            } catch (HttpMessageNotReadableException e) {
+                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.deserializationError");
             } catch (IllegalArgumentException e) {
                 message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.illegalArgument");
             } catch (ResourceAccessException e) {
                 message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.timeout");
             } catch (HttpStatusCodeException e) {
-                int statusCode = e.getRawStatusCode();
-                switch (statusCode) {
-                    case 401:
-                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.401");
-                        break;
-                    case 403 :
-                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.403");
-                        break;
-                    case 404 :
-                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.404");
-                        break;
-                    case 500 :
-                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.500");
-                        break;
-                    default :
-                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.default", statusCode, e.getStatusText());
-                        break;
-                }
+                message = getMessageForStatusCode(e.getRawStatusCode());
             } catch (Exception e) {
                 message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.unknown", e.getClass().getSimpleName());
             }
@@ -225,17 +292,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             return pingUrlResponse;
         }
 
-        private HttpEntity<Void> buildAuthEntityIfNeeded(EntornApp entornApp, boolean isSalutRequest, boolean ignoreAuth) {
-            if (ignoreAuth) {
-                return null;
-            }
-            if (isSalutRequest && !entornApp.isSalutAuth()) {
-                return null;
-            }
-            if (!isSalutRequest && !entornApp.isEstadisticaAuth()) {
-                return null;
-            }
-            if (statsAuthUser == null || statsAuthPassword == null) {
+        private HttpEntity<Void> buildAuthEntityIfNeeded(EntornAppPingAction params) {
+            // Comprova si el params.getEndpoint() enviat pel client coincideix amb alguna de les URLs d'estadístiques
+            List<String> estadisticaURLs = Arrays.asList(params.getFormData().getEstadisticaUrl(), params.getFormData().getEstadisticaInfoUrl());
+            boolean isEstadisticaRequest = estadisticaURLs.contains(params.getEndpoint());
+            // Comprova si el params.getEndpoint() correspon a la URL de salut. Les peticions de salut que es fan cada minut
+            // no es poden autenticar per motius de rendiment amb el servei d'autenticació.
+            boolean isExcludedSalutRequest = params.getEndpoint().equals(params.getFormData().getSalutUrl());
+            if (isExcludedSalutRequest ||
+                (isEstadisticaRequest && !params.getFormData().isEstadisticaAuth()) ||
+                (!isEstadisticaRequest && !params.getFormData().isSalutAuth()) ||
+                (statsAuthUser == null || statsAuthPassword == null)) {
                 return null;
             }
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
@@ -246,6 +313,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         private String basicAuthHeader(String user, String password) {
             String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return "Basic " + token;
+        }
+        private String getMessageForStatusCode(int statusCode) {
+            switch (statusCode) {
+                case 401: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.401");
+                case 403: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.403");
+                case 404: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.404");
+                case 500: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.500");
+                default: return I18nUtil.getInstance().getI18nMessage(
+                        "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.default",
+                        statusCode, "HTTP Error");
+            }
         }
     }
 

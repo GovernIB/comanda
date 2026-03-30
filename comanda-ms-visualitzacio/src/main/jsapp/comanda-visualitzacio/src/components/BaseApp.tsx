@@ -19,7 +19,7 @@ import {
     useResourceApiContext,
 } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
-import Alarms from './Alarms';
+import Alarms, { AlarmsDialog } from './Alarms';
 import Footer from './Footer';
 import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
@@ -55,6 +55,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
     appbarStyle?: any;
+    menuAppearance?: 'theme' | 'inverse' | 'footer';
     defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
@@ -181,6 +182,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         appbarBackgroundColor,
         appbarBackgroundImg,
         appbarStyle,
+        menuAppearance,
         defaultMuiComponentProps,
         children
     } = props;
@@ -189,6 +191,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
+    const [alarmsDialogOpen, setAlarmsDialogOpen] = React.useState(false);
     const { indexState } = useResourceApiContext();
     const {
         i18nUseTranslation,
@@ -219,7 +222,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAdditionalComponents={[
             <MenuItems key="menuItems" appMenuEntries={headerMenuEntries} />, // Menú
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
-            ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
+            ...(showAlarms ? [<Alarms key="alarms" onButtonClick={() => setAlarmsDialogOpen(true)} />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
         ]}
         headerAdditionalAuthComponents={[
@@ -243,9 +246,11 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
         menuEntries={baseAppMenuEntries}
+        menuAppearance={menuAppearance}
         defaultMuiComponentProps={defaultMuiComponentProps}
         fixedContentExpandsToAvailableHeightEnabled
         marginsDisabled>
+        <AlarmsDialog open={alarmsDialogOpen} setOpen={setAlarmsDialogOpen} />
         <UserProfileFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>
             {children}

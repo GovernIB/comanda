@@ -12,19 +12,19 @@ const SalutSubsistemesChips = ({ salutItem }: { salutItem: SalutModel }) => {
                 tooltip={t(($) => $.page.salut.subsistemes.subsistemaUpCount)}
                 backgroundColor={getColorBySubsistema(SalutModel.SUBSISTEMA_UP_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.subsistemaWarnCount}
                 tooltip={t(($) => $.page.salut.subsistemes.subsistemaWarnCount)}
                 backgroundColor={getColorBySubsistema(SalutModel.SUBSISTEMA_WARN_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.subsistemaDownCount}
                 tooltip={t(($) => $.page.salut.subsistemes.subsistemaDownCount)}
                 backgroundColor={getColorBySubsistema(SalutModel.SUBSISTEMA_DOWN_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.subsistemaDesconegutCount}
                 tooltip={t(($) => $.page.salut.subsistemes.subsistemaDesconegutCount)}

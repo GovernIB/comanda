@@ -43,7 +43,9 @@ public class Usuari extends BaseResource<Long> {
     private String emailAlternatiu;
     @NotNull
     private LanguageEnum idioma;
-    private Boolean temaObscur;
+    private TemaAplicacioEnum temaAplicacio;
+    @NotNull
+    private MenuEstilEnum estilMenu;
     private String[] rols;
 
     @ResourceField(onChangeActive = true)

@@ -74,7 +74,7 @@ begin
     end loop;
     return null;
 end current_value;
-
+/
 
 -- ALARMES
 

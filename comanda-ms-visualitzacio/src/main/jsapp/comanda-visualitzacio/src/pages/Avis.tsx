@@ -233,7 +233,7 @@ const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undef
                 <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
                     <Grid size={{ xs: 12, sm:4}}><FormField name="nom" /></Grid>
                     <Grid size={{ xs: 6, sm:4}}><FormField name="descripcio" /></Grid>
-                    <Grid size={{ xs: 6, sm:4}}><FormField name="tipus" /></Grid>
+                    <Grid size={{ xs: 6, sm:4}}><FormField name="tipus" autocomplete /></Grid>
                     <Grid size={{ xs: 5 }}><FormField name="dataInici1" /></Grid>
                     <Grid size={{ xs: 5 }}><FormField name="dataInici2" /></Grid>
                     <Grid size={{ xs: 2 }}><FormField name="noLlegit" type={'checkbox'}/></Grid>
@@ -429,6 +429,7 @@ const Avis = () => {
                 label: tLib('datacommon.delete.label'),
                 icon: 'delete',
                 clickTriggerDelete: true,
+                hidden(row) {return !row?.id;},
             });
         }
         return baseActions;

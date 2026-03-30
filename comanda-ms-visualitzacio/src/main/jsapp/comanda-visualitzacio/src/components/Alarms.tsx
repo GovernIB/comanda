@@ -1,67 +1,76 @@
-import { useEffect, useEffectEvent, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import Badge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
-import { useResourceApiService } from 'reactlib';
-import { useMessage } from './MessageShow';
-import { useTranslation } from 'react-i18next';
+import { MuiDialog, useCloseDialogButtons } from 'reactlib';
+import { Box, SxProps } from '@mui/material';
+import Alarmes from '../pages/Alarmes.tsx';
+import { useAlarmsContext } from './AlarmsContext.ts';
+import { useMemo } from 'react';
 
-const SEGONS_REFRESC = 30;
-
-type AlarmType = {
+export type AlarmType = {
     id: number;
+    entornAppId: number;
 };
 
-export const Alarms = () => {
-    const { t } = useTranslation();
-    const { isReady: apiIsReady, artifactReport: report } = useResourceApiService('alarma');
-    const { showTemporal: showMessage, component } = useMessage();
-    const [alarms, setAlarms] = useState<AlarmType[] | null>(null);
-    const count = alarms?.length ?? 0;
-    const fetchAlarms = useEffectEvent(async () => {
-        const response = (await report(undefined, { code: 'ALARMA_FIND_ACTIVES' })) as AlarmType[];
-        const newAlarms = response.filter(alarm => !alarms?.some(a => a.id === alarm.id));
+export function AlarmsDialog({
+    open,
+    setOpen,
+    filterBy,
+}: {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    filterBy?: { entornAppId?: number | string };
+}) {
+    const buttons = useCloseDialogButtons();
 
-        if (alarms == null && response.length > 0) {
-            showMessage(
-                t($ => $.page.alarma.snackbar.title),
-                t($ => $.page.alarma.snackbar.existingAlarms, { count: response.length}),
-                'error',
-                undefined,
-                5000
-            );
-        } else if (newAlarms.length > 0) {
-            showMessage(
-                t($ => $.page.alarma.snackbar.title),
-                t($ => $.page.alarma.snackbar.newAlarms, { count: newAlarms.length }),
-                'error',
-                undefined,
-                5000
-            );
-        }
-        setAlarms(response);
-    });
-    useEffect(() => {
-        if (apiIsReady) {
-            fetchAlarms();
-            const interval = setInterval(() => {
-                fetchAlarms();
-            }, SEGONS_REFRESC * 1000);
-            return () => clearInterval(interval);
-        }
-    }, [apiIsReady]);
+    return (
+        <MuiDialog
+            open={open}
+            buttonCallback={() => setOpen(false)}
+            closeCallback={() => setOpen(false)}
+            buttons={buttons}
+            componentProps={{
+                maxWidth: 'lg',
+                fullWidth: true,
+            }}
+        >
+            <Box
+                sx={{
+                    mt: 3,
+                    height: '500px',
+                }}
+            >
+                <Alarmes filterBy={filterBy} />
+            </Box>
+        </MuiDialog>
+    );
+}
+export const AlarmsButton: React.FC<{
+    onClick?: () => void;
+    filterBy?: { entornAppId?: number | string };
+    sx?: SxProps,
+}> = ({ onClick, filterBy, sx }) => {
+    const { alarms } = useAlarmsContext();
+    const count = useMemo(() => {
+        const entornAppIdFilter = filterBy?.entornAppId;
+        const filteredAlarms = entornAppIdFilter != null
+            ? alarms?.filter(alarm => alarm.entornAppId === entornAppIdFilter)
+            : alarms;
+
+        return filteredAlarms?.length ?? 0;
+    }, [alarms, filterBy?.entornAppId]);
     const icon = <Icon>notifications</Icon>;
     return (
-        <>
-            {component}
-            <IconButton sx={{ mr: 2 }} to="alarmes" component={RouterLink}>
-                <Badge badgeContent={count} color="error" overlap="circular">
-                    {icon}
-                </Badge>
-            </IconButton>
-        </>
+        <IconButton onClick={onClick} sx={sx}>
+            <Badge badgeContent={count} color="error" overlap="circular">
+                {icon}
+            </Badge>
+        </IconButton>
     );
+};
+
+export const Alarms = ({ onButtonClick }: { onButtonClick: () => void }) => {
+    return <AlarmsButton sx={{ mr: 2 }} onClick={onButtonClick} />;
 };
 
 export default Alarms;

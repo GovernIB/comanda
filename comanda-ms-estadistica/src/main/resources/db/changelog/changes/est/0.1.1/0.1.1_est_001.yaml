@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-fk-index-1
+      author: limit
+      comment: Afegir índexos a FK per optimitzar consultes
+      changes:
+        - createIndex:
+            tableName: ${db_prefix}est_indicador
+            indexName: ${db_prefix}estind_compact_i
+            columns:
+              - column:
+                  name: compactacio_indicador_id
+        - createIndex:
+            tableName: ${db_prefix}est_widget
+            indexName: ${db_prefix}estwid_ind_i
+            columns:
+              - column:
+                  name: indicador_id
+        - createIndex:
+            tableName: ${db_prefix}est_widget
+            indexName: ${db_prefix}estwid_agrdim_i
+            columns:
+              - column:
+                  name: agrupament_dimensio_id
+        - createIndex:
+            tableName: ${db_prefix}est_widget
+            indexName: ${db_prefix}estwid_descdim_i
+            columns:
+              - column:
+                  name: descomposicio_dimensio_id
+        - createIndex:
+            tableName: ${db_prefix}est_widget_dim_valor
+            indexName: ${db_prefix}estwdv_wid_i
+            columns:
+              - column:
+                  name: widget_id
+        - createIndex:
+            tableName: ${db_prefix}est_widget_dim_valor
+            indexName: ${db_prefix}estwdv_dval_i
+            columns:
+              - column:
+                  name: dimensio_valor_id
+        - createIndex:
+            tableName: ${db_prefix}est_indicador_table
+            indexName: ${db_prefix}estindt_ind_i
+            columns:
+              - column:
+                  name: indicador_id
+        - createIndex:
+            tableName: ${db_prefix}est_indicador_table
+            indexName: ${db_prefix}estindt_wid_i
+            columns:
+              - column:
+                  name: widget_id
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_item
+            indexName: ${db_prefix}estdbi_dsh_i
+            columns:
+              - column:
+                  name: dashboard_id
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_item
+            indexName: ${db_prefix}estdbi_wid_i
+            columns:
+              - column:
+                  name: widget_id
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_titol
+            indexName: ${db_prefix}estdbt_dsh_i
+            columns:
+              - column:
+                  name: dashboard_id

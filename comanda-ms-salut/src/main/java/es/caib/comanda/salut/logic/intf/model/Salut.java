@@ -8,6 +8,7 @@ import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,8 +26,13 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @ResourceConfig(
 		accessConstraints = {
+				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+						grantedPermissions = { PermissionEnum.READ }
+				),
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
 						roles = { BaseConfig.ROLE_ADMIN },

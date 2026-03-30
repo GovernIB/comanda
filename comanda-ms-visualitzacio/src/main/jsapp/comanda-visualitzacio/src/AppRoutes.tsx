@@ -1,5 +1,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
+import { useResourceApiService } from 'reactlib';
 import Salut from './pages/salut/Salut';
 import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
@@ -26,82 +29,212 @@ import Parametres from './pages/Parametres';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sitemap from './pages/Sitemap';
 import Accessibilitat from './pages/accessibilitat/Accessibilitat';
+import { useIsUserAdmin, useIsUserConsulta, useIsUserUsuari, useUserContext } from './components/UserContext';
+import useStatsEnabled from './hooks/useStatsEnabled';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
+const statsRoutePrefixes = ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/estadisticaWidget', '/calendari'];
 
+const LoadingRoute: React.FC = () => (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+    </Box>
+);
+
+const useHasSalutAccess = () => {
+    const isUserAdmin = useIsUserAdmin();
+    const isUserConsulta = useIsUserConsulta();
+    const isUserUsuari = useIsUserUsuari();
+    const { user } = useUserContext();
+    const { isReady: entornAppApiIsReady, find: entornAppFind } = useResourceApiService('entornApp');
+    const [hasSalutAccess, setHasSalutAccess] = React.useState<boolean>();
+
+    React.useEffect(() => {
+        if (!isUserUsuari && (isUserAdmin || isUserConsulta)) {
+            setHasSalutAccess(true);
+            return;
+        }
+        if (user == null || !entornAppApiIsReady) {
+            return;
+        }
+        void entornAppFind({
+            page: 0,
+            size: 1,
+            filter: 'activa:true and app.activa:true',
+        }).then(response => {
+            setHasSalutAccess((response.rows?.length ?? 0) > 0);
+        }).catch(() => {
+            setHasSalutAccess(false);
+        });
+    }, [entornAppApiIsReady, entornAppFind, isUserAdmin, isUserConsulta, isUserUsuari, user]);
+
+    return hasSalutAccess;
+};
+
+const HomeRoute: React.FC = () => {
+    const hasSalutAccess = useHasSalutAccess();
+
+    if (hasSalutAccess === undefined) {
+        return <LoadingRoute />;
+    }
+
+    if (!hasSalutAccess) {
+        return <Navigate to="/tasca" replace />;
+    }
+
+    return <Salut />;
+};
+
+const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const isUserAdmin = useIsUserAdmin();
+    const isUserConsulta = useIsUserConsulta();
+    // const isUserUsuari = useIsUserUsuari();
+    const hasSalutAccess = useHasSalutAccess();
+    const statsEnabled = useStatsEnabled();
+    const location = useLocation();
+    const isStatsRoute = statsRoutePrefixes.some(path =>
+        location.pathname === path || location.pathname.startsWith(path + '/')
+    );
+
+    if (statsEnabled === undefined && isStatsRoute) {
+        return <LoadingRoute />;
+    }
+
+    if (statsEnabled === false && isStatsRoute) {
+        return <Navigate to={hasSalutAccess === false ? '/tasca' : '/'} replace />;
+    }
+
+    if (isUserAdmin) {
+        return <>{children}</>;
+    }
+
+    if (hasSalutAccess === undefined) {
+        return <LoadingRoute />;
+    }
+
+    const allowedPrefixes = isUserConsulta
+        ? [
+            '/',
+            '/appinfo',
+            '/app',
+            '/entorn',
+            '/versionsEntorn',
+            '/integracio',
+            '/tasca',
+            '/avis',
+            '/alarma',
+            '/alarmes',
+            '/sitemap',
+            '/accessibilitat',
+            ...(statsEnabled ? ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/calendari'] : []),
+        ]
+        : [
+            ...(hasSalutAccess ? ['/', '/appinfo'] : []),
+            '/tasca',
+            '/avis',
+            '/alarma',
+            '/alarmes',
+            '/sitemap',
+            '/accessibilitat',
+        ];
+    const isAllowedPath = allowedPrefixes.some(path =>
+        location.pathname === path || (path !== '/' && location.pathname.startsWith(path + '/'))
+    );
+
+    if (isAllowedPath) {
+        return <>{children}</>;
+    }
+
+    return <Navigate to={hasSalutAccess ? '/' : '/tasca'} replace />;
+};
+
+// Si se modifican las rutas de la aplicación, asegurarse de actualizar el componente UserRoleRouteGuard
 const AppRoutes: React.FC = () => {
+    const statsEnabled = useStatsEnabled() === true;
+
     return (
-        <Routes>
-            <Route index element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
-            <Route path="/appinfo/:id" element={<ProtectedRoute resourceName="salut"><Salut /></ProtectedRoute>} />
-            <Route path={DASHBOARDS_PATH}>
-                <Route index element={<EstadisticaDashboards />} />
-                <Route path=":id" element={<EstadisticaDashboardEdit />} />
-            </Route>
-            <Route path={`${ESTADISTIQUES_PATH}/:id?`} element={<EstadisticaDashboardView />} />
-            <Route path="app">
-                <Route index element={<Apps />} />
-                <Route path="form">
-                    <Route index element={<AppForm />} />
-                    <Route path=":id" element={<AppForm />} />
+        <UserRoleRouteGuard>
+            <Routes>
+                {/* La ruta index y la ruta appinfo deben usar el mismo componente para no perder la información ya cargada al navegar entre el detalle y el listado */}
+                <Route index element={<HomeRoute />} />
+                <Route path="/appinfo/:id" element={<HomeRoute />} />
+                {statsEnabled && (
+                    <>
+                        <Route path={DASHBOARDS_PATH}>
+                            <Route index element={<EstadisticaDashboards />} />
+                            <Route path=":id" element={<EstadisticaDashboardEdit />} />
+                        </Route>
+                        <Route path={`${ESTADISTIQUES_PATH}/:id?`} element={<EstadisticaDashboardView />} />
+                    </>
+                )}
+                <Route path="app">
+                    <Route index element={<Apps />} />
+                    <Route path="form">
+                        <Route index element={<AppForm />} />
+                        <Route path=":id" element={<AppForm />} />
+                    </Route>
                 </Route>
-            </Route>
-            <Route path="entorn">
-                <Route index element={<Entorns />} />
-            </Route>
-            <Route path="versionsEntorn">
-                <Route index element={<VersionsEntorns />} />
-            </Route>
-            <Route path="monitor">
-                <Route index element={<Monitors />} />
-            </Route>
-            <Route path="cache">
-                <Route index element={<Caches />} />
-            </Route>
-            <Route path="integracio">
-                <Route index element={<Integracions />} />
-            </Route>
-            <Route path="dimensio">
-                <Route index element={<Dimensions />} />
-                <Route path="valor/:id" element={<DimensioValor />} />
-            </Route>
-            <Route path="indicador">
-                <Route index element={<Indicadors />} />
-            </Route>
-            <Route path="estadisticaWidget">
-                <Route index element={<EstadisticaWidget />} />
-            </Route>
-            <Route path="calendari">
-                <Route index element={<CalendariEstadistiques />} />
-            </Route>
-            <Route path="tasca">
-                <Route index element={<Tasca />} />
-            </Route>
-            <Route path="avis">
-                <Route index element={<Avis />} />
-            </Route>
-            <Route path="alarma">
-                <Route index element={<AlarmaConfig />} />
-                <Route path="form">
-                    <Route index element={<AlarmaConfigForm />} />
-                    <Route path=":id" element={<AlarmaConfigForm />} />
+                <Route path="entorn">
+                    <Route index element={<Entorns />} />
                 </Route>
-            </Route>
-            <Route path="alarmes">
-                <Route index element={<ProtectedRoute resourceName="alarma"><Alarmes /></ProtectedRoute>} />
-            </Route>
-            <Route path="broker">
-                <Route index element={<Broker />} />
-                <Route path="queue/:queueName" element={<QueueMessages />} />
-            </Route>
-            <Route path="parametre">
-                <Route index element={<Parametres />} />
-            </Route>
-            <Route path="sitemap" element={<Sitemap />} />
-            <Route path="accessibilitat" element={<Accessibilitat />} />
-            <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+                <Route path="versionsEntorn">
+                    <Route index element={<VersionsEntorns />} />
+                </Route>
+                <Route path="monitor">
+                    <Route index element={<Monitors />} />
+                </Route>
+                <Route path="cache">
+                    <Route index element={<Caches />} />
+                </Route>
+                <Route path="integracio">
+                    <Route index element={<Integracions />} />
+                </Route>
+                {statsEnabled && (
+                    <>
+                        <Route path="dimensio">
+                            <Route index element={<Dimensions />} />
+                            <Route path="valor/:id" element={<DimensioValor />} />
+                        </Route>
+                        <Route path="indicador">
+                            <Route index element={<Indicadors />} />
+                        </Route>
+                        <Route path="estadisticaWidget">
+                            <Route index element={<EstadisticaWidget />} />
+                        </Route>
+                        <Route path="calendari">
+                            <Route index element={<CalendariEstadistiques />} />
+                        </Route>
+                    </>
+                )}
+                <Route path="tasca">
+                    <Route index element={<Tasca />} />
+                </Route>
+                <Route path="avis">
+                    <Route index element={<Avis />} />
+                </Route>
+                <Route path="alarma">
+                    <Route index element={<AlarmaConfig />} />
+                    <Route path="form">
+                        <Route index element={<AlarmaConfigForm />} />
+                        <Route path=":id" element={<AlarmaConfigForm />} />
+                    </Route>
+                </Route>
+                <Route path="alarmes">
+                    <Route index element={<ProtectedRoute resourceName="alarma"><Alarmes /></ProtectedRoute>} />
+                </Route>
+                <Route path="broker">
+                    <Route index element={<Broker />} />
+                    <Route path="queue/:queueName" element={<QueueMessages />} />
+                </Route>
+                <Route path="parametre">
+                    <Route index element={<Parametres />} />
+                </Route>
+                <Route path="sitemap" element={<Sitemap />} />
+                <Route path="accessibilitat" element={<Accessibilitat />} />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+        </UserRoleRouteGuard>
     );
 };
 

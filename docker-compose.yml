@@ -1,4 +1,4 @@
-version: "3.8"
+# version: "3.8"
 
 volumes:
   comanda_files:
@@ -16,6 +16,7 @@ services:
 #      - comanda
   comanda:
     image: comanda:0.1.1
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: jboss-comanda
     ports:
       - ${APP_PORT:-8080}:8080

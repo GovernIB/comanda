@@ -1,0 +1,33 @@
+databaseChangeLog:
+- changeSet:
+    id: conf-stats-enabled-1
+    author: limit
+    comment: Afegir paràmetre per activar o ocultar les funcionalitats d'estadístiques
+    changes:
+      - insert:
+          tableName: COM_PARAMETRE
+          columns:
+            - column:
+                name: GRUP
+                value: "Estadístiques"
+            - column:
+                name: SUBGRUP
+                value: "General"
+            - column:
+                name: TIPUS
+                value: "BOOLEAN"
+            - column:
+                name: CODI
+                value: "es.caib.comanda.stats.enabled"
+            - column:
+                name: NOM
+                value: "Estadístiques actives"
+            - column:
+                name: DESCRIPCIO
+                value: "Les funcionalitats relacionades amb les estadístiques seran visibles."
+            - column:
+                name: VALOR
+                value: "false"
+            - column:
+                name: EDITABLE
+                valueNumeric: 1

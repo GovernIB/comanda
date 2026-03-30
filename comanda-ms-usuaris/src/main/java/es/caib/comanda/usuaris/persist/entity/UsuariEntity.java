@@ -1,6 +1,8 @@
 package es.caib.comanda.usuaris.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.usuaris.logic.intf.model.MenuEstilEnum;
+import es.caib.comanda.usuaris.logic.intf.model.TemaAplicacioEnum;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.usuaris.logic.intf.model.LanguageEnum;
 import es.caib.comanda.usuaris.logic.intf.model.NumOfElementsPerPageENum;
@@ -51,8 +53,14 @@ public class UsuariEntity extends BaseAuditableEntity<Usuari> {
     @Column(name="idioma", length = 2, nullable = false, columnDefinition = "VARCHAR(2) DEFAULT 'CA'")
     @Comment("Idioma del usuario")
     private LanguageEnum idioma;
-    @Column(name="tema_obscur")
-    private Boolean temaObscur;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tema_aplicacio", length = 16)
+    @Comment("Tema visual de la aplicación")
+    private TemaAplicacioEnum temaAplicacio;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estil_menu", length = 16, nullable = false, columnDefinition = "VARCHAR(16) DEFAULT 'TEMA'")
+    @Comment("Estilo del menú del usuario")
+    private MenuEstilEnum estilMenu;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "num_elements_pagina", length = 12, nullable = false, columnDefinition = "VARCHAR(12) DEFAULT 'AUTOMATIC'")

@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.configuracio.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
@@ -14,6 +15,8 @@ import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
@@ -44,8 +47,19 @@ public class AppImportExportTest {
                                       AppExportMapper appExportMapper,
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
-                                      EntornAppRepository entornAppRepository) {
-            super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository);
+                                      EntornAppRepository entornAppRepository,
+                                      AuthenticationHelper authenticationHelper,
+                                      HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
+                                      AclServiceClient aclServiceClient) {
+            super(cacheHelper,
+                    objectMapper,
+                    appExportMapper,
+                    appRepository,
+                    entornRepository,
+                    entornAppRepository,
+                    authenticationHelper,
+                    httpAuthorizationHeaderHelper,
+                    aclServiceClient);
         }
         // Simplify mapping to avoid needing ObjectMappingHelper in unit tests
         @Override
@@ -64,6 +78,9 @@ public class AppImportExportTest {
     @Mock private AppRepository appRepository;
     @Mock private EntornRepository entornRepository;
     @Mock private EntornAppRepository entornAppRepository;
+    @Mock private AuthenticationHelper authenticationHelper;
+    @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    @Mock private AclServiceClient aclServiceClient;
 
     private ObjectMapper realObjectMapper;
     private TestableAppServiceImpl service;
@@ -77,7 +94,10 @@ public class AppImportExportTest {
                 appExportMapper,
                 appRepository,
                 entornRepository,
-                entornAppRepository);
+                entornAppRepository,
+                authenticationHelper,
+                httpAuthorizationHeaderHelper,
+                aclServiceClient);
     }
 
     // ---------- EXPORT TESTS ----------

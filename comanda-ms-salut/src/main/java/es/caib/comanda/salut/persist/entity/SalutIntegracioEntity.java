@@ -56,7 +56,8 @@ public class SalutIntegracioEntity extends BaseEntity<SalutIntegracio> {
     @Setter(NONE) @Column(name = "count_error")   	        private int countError = 0;
     @Setter(NONE) @Column(name = "count_maintenance")	    private int countMaintenance = 0;
     @Setter(NONE) @Column(name = "count_unknown") 	        private int countUnknown = 0;
-    @Setter(NONE) @Column(name = "estat_num_elements")      private int estatNumElements = 0;
+//    @Setter(NONE)
+    @Column(name = "estat_num_elements")      private int estatNumElements = 0;
 
     @Column(name = "latencia_mitjana")                      private Integer latenciaMitjana;
     @Setter(NONE) @Column(name = "latencia_num_elements")   private int latenciaNumElements = 0;
@@ -125,24 +126,26 @@ public class SalutIntegracioEntity extends BaseEntity<SalutIntegracio> {
         return BigDecimal.valueOf((part * 100.0) / total).setScale(2, RoundingMode.HALF_UP);
     }
 
-	public void addPeticionsOkUltimPeriode(Long numOk) {
-		if (numOk == null) return;
-		if (this.peticionsOkUltimPeriode == null) this.peticionsOkUltimPeriode = 0L;
-		this.peticionsOkUltimPeriode += numOk;
-	}
-
 	public void addPeticionsErrorUltimPeriode(Long numError) {
 		if (numError == null) return;
 		if (this.peticionsErrorUltimPeriode == null) this.peticionsErrorUltimPeriode = 0L;
 		this.peticionsErrorUltimPeriode += numError;
 	}
 
-    public void addTempsMigUltimPeriode(Integer nouTempsMig, Long peticionsNouPeriode) {
-        if (nouTempsMig == null || peticionsNouPeriode == null || peticionsNouPeriode == 0) return;
+    public void addPeticionsOkUltimPeriode(Integer nouTempsMig, Long peticionsNouPeriode) {
 
-        long tempsTotal = ((long)this.tempsMigUltimPeriode * this.peticionsOkUltimPeriode) + (nouTempsMig * peticionsNouPeriode);
-        long numPeticions = Math.max(this.peticionsOkUltimPeriode + peticionsNouPeriode, 1L);
+        Long peticionsUltimPeriode = this.peticionsOkUltimPeriode;
+
+        if (peticionsNouPeriode == null || peticionsNouPeriode == 0) return;
+        if (this.peticionsOkUltimPeriode == null) this.peticionsOkUltimPeriode = 0L;
+        this.peticionsOkUltimPeriode += peticionsNouPeriode;
+
+        if (nouTempsMig == null) return;
+
+        long tempsTotal = ((long)this.tempsMigUltimPeriode * peticionsUltimPeriode) + (nouTempsMig * peticionsNouPeriode);
+        long numPeticions = Math.max(this.peticionsOkUltimPeriode, 1L);
         this.tempsMigUltimPeriode = Math.toIntExact(tempsTotal / numPeticions);
+
     }
 
 }

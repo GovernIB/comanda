@@ -6,6 +6,7 @@ import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.avisos.logic.intf.model.Avis.AvisMarcarLlegitsAction;
 import es.caib.comanda.avisos.logic.intf.model.AvisLlegit;
 import es.caib.comanda.avisos.logic.intf.service.AvisService;
+import es.caib.comanda.avisos.logic.mapper.AvisMapper;
 import es.caib.comanda.avisos.persist.entity.AvisEntity;
 import es.caib.comanda.avisos.persist.entity.AvisLlegitEntity;
 import es.caib.comanda.avisos.persist.repository.AvisLlegitRepository;
@@ -48,6 +49,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
 
     private final AuthenticationHelper authenticationHelper;
     private final AvisClientHelper avisClientHelper;
+    private final AvisMapper avisMapper;
     private final AvisRepository avisRepository;
     private final AvisLlegitRepository avisLlegitRepository;
 
@@ -92,35 +94,13 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
 
             if (avisExistent.isEmpty()) {
                 monitorAvisos.setCreateActionMessatge();
-                Avis avis = new Avis();
-                avis.setEntornAppId(entornApp.get().getId());
-                avis.setEntornId(entornApp.get().getEntorn().getId());
-                avis.setAppId(entornApp.get().getApp().getId());
-                avis.setIdentificador(avisBroker.getIdentificador());
-                avis.setTipus(avisBroker.getTipus());
-                avis.setNom(avisBroker.getNom());
-                avis.setDescripcio(avisBroker.getDescripcio());
-                avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
-                avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
-                avis.setUrl(avisBroker.getRedireccio());
-                avis.setResponsable(avisBroker.getResponsable());
-                avis.setGrup(avisBroker.getGrup());
-                avis.setUsuarisAmbPermis(avisBroker.getUsuarisAmbPermis());
-                avis.setGrupsAmbPermis(avisBroker.getGrupsAmbPermis());
-                entityRepository.save(AvisEntity.builder().avis(avis).build());
+                Avis avis = avisMapper.toAvis(avisBroker, entornApp.get());
+                AvisEntity avisEntity = avisMapper.toAvisEntity(avis);
+                entityRepository.save(avisEntity);
             } else {
                 monitorAvisos.setUpdateActionMessatge();
                 AvisEntity avis = avisExistent.get();
-                avis.setTipus(avisBroker.getTipus());
-                avis.setNom(avisBroker.getNom());
-                avis.setDescripcio(avisBroker.getDescripcio());
-                avis.setDataInici(avisBroker.getDataInici() != null ? avisBroker.getDataInici().toLocalDateTime() : null);
-                avis.setDataFi(avisBroker.getDataFi() != null ? avisBroker.getDataFi().toLocalDateTime() : null);
-                avis.setUrl(avisBroker.getRedireccio());
-                avis.setResponsable(avisBroker.getResponsable());
-                avis.setGrup(avisBroker.getGrup());
-                avis.setUsuarisAmbPermis(avisBroker.getUsuarisAmbPermis());
-                avis.setGrupsAmbPermis(avisBroker.getGrupsAmbPermis());
+                avisMapper.updateAvis(avisBroker, avis);
                 entityRepository.save(avis);
             }
             monitorAvisos.endAction();
@@ -157,7 +137,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     @Override
     protected Specification<AvisEntity> additionalSpecification(String[] namedQueries) {
         String userName = authenticationHelper.getCurrentUserName();
-        String[] roles = authenticationHelper.getCurrentUserRoles();
+        String[] roles = authenticationHelper.getCurrentUserRealmRoles();
 
         // Els usuaris amb rol admin poden visualitzar tots els avisos.
         // Per a aquest motiu, l'usuari de httpauth.username ha de tenir el rol ROLE_ADMIN,

@@ -651,8 +651,7 @@ public class SalutInfoHelper {
                         integracio.setTotalOk(si.getTotalOk());
                         integracio.setTotalError(si.getTotalError());
                         integracio.setTotalTempsMig(si.getTotalTempsMig());
-                        integracio.addTempsMigUltimPeriode(si.getTempsMigUltimPeriode(), si.getPeticionsOkUltimPeriode());
-                        integracio.addPeticionsOkUltimPeriode(si.getPeticionsOkUltimPeriode());
+                        integracio.addPeticionsOkUltimPeriode(si.getTempsMigUltimPeriode(), si.getPeticionsOkUltimPeriode());
                         integracio.addPeticionsErrorUltimPeriode(si.getPeticionsErrorUltimPeriode());
                         if (si.getLatencia() != null) {
                             integracio.setLatencia(si.getLatencia());
@@ -709,8 +708,7 @@ public class SalutInfoHelper {
                         subsistema.setTotalOk(ss.getTotalOk());
                         subsistema.setTotalError(ss.getTotalError());
                         subsistema.setTotalTempsMig(ss.getTotalTempsMig());
-                        subsistema.addTempsMigUltimPeriode(ss.getTempsMigUltimPeriode(), ss.getPeticionsOkUltimPeriode());
-                        subsistema.addPeticionsOkUltimPeriode(ss.getPeticionsOkUltimPeriode());
+                        subsistema.addPeticionsOkUltimPeriode(ss.getTempsMigUltimPeriode(), ss.getPeticionsOkUltimPeriode());
                         subsistema.addPeticionsErrorUltimPeriode(ss.getPeticionsErrorUltimPeriode());
                         if (ss.getLatencia() != null) {
                             subsistema.setLatencia(ss.getLatencia());

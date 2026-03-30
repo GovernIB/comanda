@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: usu-change-51-02
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}usuari
+            columns:
+              - column:
+                  name: estil_menu
+                  type: VARCHAR(16 ${varcharUnit})
+                  defaultValue: TEMA
+                  remarks: Estil visual del menú del frontal
+                  constraints:
+                    nullable: false

@@ -8,7 +8,6 @@ import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,6 +30,10 @@ import java.time.LocalDateTime;
 		descriptionField = "nom",
 		accessConstraints = {
 				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
+				),
+				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
 						roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
 						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
@@ -38,7 +41,7 @@ import java.time.LocalDateTime;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_ACTION, requiresId = true),
-				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_TOTES_ACTION),
+//				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_TOTES_ACTION),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.REACTIVAR_ACTION, requiresId = true),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Alarma.FIND_ACTIVES_REPORT),
 		}
@@ -47,7 +50,7 @@ import java.time.LocalDateTime;
 public class Alarma extends BaseResource<Long> {
 
 	public static final String ESBORRAR_ACTION = "ALARMA_ESBORRAR";
-	public static final String ESBORRAR_TOTES_ACTION = "ALARMA_ESBORRAR_TOTES";
+//	public static final String ESBORRAR_TOTES_ACTION = "ALARMA_ESBORRAR_TOTES";
     public static final String REACTIVAR_ACTION = "ALARMA_REACTIVAR";
     public static final String FIND_ACTIVES_REPORT = "ALARMA_FIND_ACTIVES";
 
@@ -68,8 +71,13 @@ public class Alarma extends BaseResource<Long> {
     @Getter
     @Setter
     @NoArgsConstructor
-    @AllArgsConstructor
     public static class AlarmaReduidaResource implements Serializable {
         private Long id;
+        private Long entornAppId;
+
+        public AlarmaReduidaResource(Long id, Long entornAppId) {
+            this.id = id;
+            this.entornAppId = entornAppId;
+        }
     }
 }

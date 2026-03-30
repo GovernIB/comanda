@@ -32,12 +32,16 @@ export const useAclPermissionManager = (resourceType: string) => {
                 toolbarHideQuickFilter: true,
                 staticFilter: "resourceType:'" + resourceType + "' and resourceId:" + id,
                 staticSortModel: [{ field: 'subjectType', sort: 'asc' }, { field: 'subjectValue', sort: 'asc' }],
-                formAdditionalData: {
+                formAdditionalData: (_row: any, action: string) => ({
                     resourceType,
                     resourceId: id,
-                    subjectType: 'ROLE',
-                    readAllowed: true,
-                },
+                    ...(action === 'create'
+                        ? {
+                            subjectType: 'ROLE',
+                            readAllowed: true,
+                        }
+                        : {}),
+                }),
                 popupEditActive: true,
                 popupEditFormContent: <AclEntryForm />,
                 popupEditFormDialogResourceTitle: t($ => $.components.permisos.resourceTitle)

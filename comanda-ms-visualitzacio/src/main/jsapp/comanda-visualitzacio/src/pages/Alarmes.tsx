@@ -2,13 +2,13 @@ import { Button, Icon } from '@mui/material';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    GridPage,
     MuiDataGrid,
     useMuiDataGridApiRef,
     useMuiActionReportLogic,
+    springFilterBuilder,
 } from 'reactlib';
 
-const Alarmes = () => {
+const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ filterBy }) => {
     const { t } = useTranslation();
     const [showOnlyActive, setShowOnlyActive] = React.useState<boolean>(true);
     const gridApiRef = useMuiDataGridApiRef();
@@ -117,8 +117,13 @@ const Alarmes = () => {
         [t]
     );
 
-    return (
-        <GridPage>
+    const filter = springFilterBuilder.and(
+        showOnlyActive ? "estat:'ACTIVA'" : "estat in('ACTIVA', 'ESBORRADA')",
+        filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : "",
+    )
+
+    return (<>
+        {/*<GridPage>*/}
             {actionEsborrarInitialized && actionReactivarInitialized && <>
                 <MuiDataGrid
                     title={t($ => $.menu.alarmes)}
@@ -129,14 +134,14 @@ const Alarmes = () => {
                     apiRef={gridApiRef}
                     toolbarType="upper"
                     toolbarElementsWithPositions={toolbarElementsWithPositions}
-                    filter={showOnlyActive ? "estat:'ACTIVA'" : "estat in('ACTIVA', 'ESBORRADA')"}
+                    filter={filter}
                     sortModel={[{ field: 'dataActivacio', sort: 'desc' }]}
                     rowAdditionalActions={rowAdditionalActions} />
                 {formEsborrarDialogComponent}
                 {formReactivarDialogComponent}
             </>}
-        </GridPage>
-    );
+        {/*</GridPage>*/}
+    </>);
 }
 
 export default Alarmes;

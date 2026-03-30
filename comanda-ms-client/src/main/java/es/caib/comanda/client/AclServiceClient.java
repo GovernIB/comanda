@@ -25,12 +25,16 @@ public interface AclServiceClient {
 			@RequestParam("resourceType") ResourceType resourceType,
 			@RequestParam("resourceId") Serializable resourceId,
 			@RequestParam("permissions") List<PermissionEnum> permissions, // Ha de ser una llista de PermissionEnum
+			@RequestParam("user") String user,
+			@RequestParam("roles") List<String> roles,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
 	@GetMapping("/findIdsWithAnyPermission")
 	ResponseEntity<Set<Serializable>> findIdsWithAnyPermission(
 			@RequestParam("resourceType") ResourceType resourceType,
 			@RequestParam("permissions") List<PermissionEnum> permissions, // Ha de ser una llista de PermissionEnum
+			@RequestParam("user") String user,
+			@RequestParam("roles") List<String> roles,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
 }

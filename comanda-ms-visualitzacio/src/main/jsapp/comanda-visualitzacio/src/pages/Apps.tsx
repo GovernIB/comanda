@@ -14,7 +14,9 @@ import {
     MuiFormTabs,
     springFilterBuilder,
     useBaseAppContext,
+    useCloseDialogButtons,
     useFormContext,
+    useMuiContentDialog,
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
@@ -28,9 +30,11 @@ import UrlPingAdornment from '../components/UrlPingAdornment';
 import { useAclPermissionManager } from '../components/AclPermissionManager';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
-import {Cancel, CheckCircle} from '@mui/icons-material';
+import Cancel from '@mui/icons-material/Cancel';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
+import { StacktraceBlock } from '../components/RickTextDetail.tsx';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -38,12 +42,32 @@ const useActions = (refresh?: () => void) => {
     const { temporalMessageShow } = useBaseAppContext();
     const { t } = useTranslation();
 
-    const pingUrl = React.useCallback(async (additionalData: any): Promise<boolean> => {
+    const pingUrl = React.useCallback(async (
+        additionalData: any, 
+        expectedResponseTypeEnum: string,
+    ): Promise<any> => {
         try {
-            const data = await apiAction(null, { code: 'pingUrl', data: additionalData });
+            const data = await apiAction(null, { code: 'pingUrl', data: {...additionalData, expectedResponseTypeEnum} });
             refresh?.();
-            temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
-            return data.success;
+            if (data?.validationError) {
+                const elementsDetail = [
+                    {
+                        contentValue: (
+                            <StacktraceBlock
+                                title={t($ => $.page.apps.ping.validationTrace)}
+                                value={data?.message}
+                            />
+                        ),
+                    },
+                ];
+                return {
+                    status: 'warning',
+                    elements: elementsDetail,
+                };
+            } else {
+                temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
+            }
+            return {status :data.success ? 'success' : 'error'};
         } catch (error: any) {
             temporalMessageShow(null, error.message, 'error');
             return false;
@@ -88,9 +112,11 @@ const AppEntornForm: React.FC = () => {
     const { id: appId } = useParams();
     const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
     const { pingUrl } = useActions();
+    const closeDialogButton = useCloseDialogButtons();
+    const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
 
     return (
-        <Grid container spacing={2}>
+        <><Grid container spacing={2}>
             <Grid size={9}>
                 <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter}/>
             </Grid>
@@ -98,13 +124,13 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="activa" />
             </Grid>
             <Grid size={12}>
-                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={(formData) => pingUrl(formData, 'SALUT')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={(formData) => pingUrl(formData, 'LOGS')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
@@ -115,10 +141,10 @@ const AppEntornForm: React.FC = () => {
                 </FormControl>
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={pingUrl}/>}}}} />
+                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={6} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
@@ -159,6 +185,7 @@ const AppEntornForm: React.FC = () => {
                 </>
             )}
         </Grid>
+        {detailDialogComponent}</>
     );
 };
 
@@ -428,7 +455,16 @@ const Apps: React.FC = () => {
     const { temporalMessageShow } = useBaseAppContext();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
+    const {
+        show: appPermissionShow,
+        component: appPermissionComponent
+    } = useAclPermissionManager('APP');
     const appActions: DataCommonAdditionalAction[] = [
+        {
+            label: t($ => $.components.permisos.title),
+            icon: 'lock',
+            onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
+        },
         {
             label: t($ => $.page.apps.action.export),
             icon: 'download',
@@ -476,6 +512,7 @@ const Apps: React.FC = () => {
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 {...dataGridProps}
             />
+            {appPermissionComponent}
         </GridPage>
     );
 };

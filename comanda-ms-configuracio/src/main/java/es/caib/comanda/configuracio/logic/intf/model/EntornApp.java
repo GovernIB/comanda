@@ -48,6 +48,10 @@ import java.util.List;
         },
 		accessConstraints = {
 				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+						grantedPermissions = { PermissionEnum.READ }
+				),
+				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
 						roles = { BaseConfig.ROLE_ADMIN },
 						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
@@ -170,6 +174,7 @@ public class EntornApp extends BaseResource<Long> {
 		@NotNull
 		private String endpoint;
 		private EntornApp formData;
+        private ExpectedResponseTypeEnum expectedResponseTypeEnum;
 	}
 
 	@Getter
@@ -216,6 +221,7 @@ public class EntornApp extends BaseResource<Long> {
 	@FieldNameConstants
 	public static class PingUrlResponse implements Serializable {
 		private Boolean success;
+        private Boolean validationError;
 		private String message;
 	}
 

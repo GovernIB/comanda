@@ -204,7 +204,7 @@ public class MonitorHelper {
                 .carregaSistema(loadAverage)
                 .cpuSistema(systemCpuLoad)
                 .memoriaTotal(totalMemory)
-                .memoriaDisponible(freeSpace)
+                .memoriaDisponible(freeMemory)
                 .espaiDiscTotal(totalSpace)
                 .espaiDiscLliure(freeSpace)
                 .sistemaOperatiu(os)
@@ -356,18 +356,6 @@ public class MonitorHelper {
             } catch (Throwable ignored) { }
             return null;
         }
-        public String getPctFreeMemory() {
-            try {
-                return pctFormat(freeMemory);
-            } catch (Throwable ignored) { }
-            return null;
-        }
-        public String getPctUsedMemory() {
-            try {
-                return pctFormat(usedMemory);
-            } catch (Throwable ignored) { }
-            return null;
-        }
     }
 
     @Builder
@@ -499,16 +487,6 @@ public class MonitorHelper {
             int exp = (int) (Math.log(bytes) / Math.log(unit));
             String pre = ("KMGTPE").charAt(exp-1) + "";
             return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-        } catch (Throwable ignored) { }
-        return null;
-    }
-
-    private static String pctFormat(Long value) {
-        try {
-            Long total = getPhisicalMemory().getTotalMemory();
-            if (total == null || total == 0) return null;
-            double pct = (value * 100.0) / total;
-            return String.format("%.2f %%", pct);
         } catch (Throwable ignored) { }
         return null;
     }

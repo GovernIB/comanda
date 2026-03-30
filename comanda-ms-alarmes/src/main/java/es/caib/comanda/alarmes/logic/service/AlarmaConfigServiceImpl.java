@@ -1,5 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
@@ -33,6 +35,7 @@ import java.util.Map;
 public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaConfig, Long, AlarmaConfigEntity> implements AlarmaConfigService {
     private final AuthenticationHelper authenticationHelper;
     private final AlarmaRepository alarmaRepository;
+    private final ComandaSseEventPublisher comandaSseEventPublisher;
 
     @PostConstruct
     public void init() {
@@ -50,14 +53,14 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 
     @Override
     protected void beforeCreateEntity(AlarmaConfigEntity entity, AlarmaConfig resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
-        if (resource.isAdmin() && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)){
+        if ((resource.isAdmin() || resource.isCorreuGeneric()) && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)){
             throw new ResourceNotCreatedException(resource.getClass(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeCreateEntity.not.admin"));
         }
     }
 
     @Override
     protected void beforeUpdateEntity(AlarmaConfigEntity entity, AlarmaConfig resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
-        if (entity.isAdmin() && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+        if ((entity.isAdmin() || entity.isCorreuGeneric()) && !authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
             throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.not.admin"));
         }
     }
@@ -70,6 +73,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 
             alarmaRepository.deleteByAlarmaConfigAndEstat(entity, AlarmaEstat.ESBORRANY);
             alarmaRepository.finalizeByAlarmaConfig(entity, LocalDateTime.now());
+            comandaSseEventPublisher.publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
 
             return null;
         }
