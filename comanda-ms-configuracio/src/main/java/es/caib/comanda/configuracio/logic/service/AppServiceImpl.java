@@ -332,14 +332,18 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 			target.setInfoUrl(e.getInfoUrl());
 			target.setActiva(e.isActiva());
 			target.setSalutUrl(e.getSalutUrl());
+            target.setLogsUrl(e.getLogsUrl());
+            target.setSalutAuth(e.getSalutAuth());
 			target.setEstadisticaInfoUrl(e.getEstadisticaInfoUrl());
 			target.setEstadisticaUrl(e.getEstadisticaUrl());
 			target.setEstadisticaCron(e.getEstadisticaCron());
+            target.setEstadisticaAuth(e.getEstadisticaAuth());
 			// Compactació
 			if (e.getCompactable() != null) target.setCompactable(e.getCompactable());
 			target.setCompactacioSetmanalMesos(e.getCompactacioSetmanalMesos());
 			target.setCompactacioMensualMesos(e.getCompactacioMensualMesos());
 			target.setEliminacioMesos(e.getEliminacioMesos());
+            target.setAlarmesEmail(e.getAlarmesEmail());
 		}
 
 		@Override
