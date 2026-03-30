@@ -259,7 +259,7 @@ class AlarmaMailHelperTest {
         when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any()))
                 .thenReturn(alarmesAdmin);
         
-        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfter(any()))
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any()))
                 .thenReturn(Collections.singletonList("user1"));
         Usuari u2 = Usuari.builder().codi("user1").nom("U1").email("u1@caib.es").alarmaMail(true).alarmaMailAgrupar(true).build();
         when(userInformationHelper.usuariFindByUsername("user1")).thenReturn(u2);
@@ -283,6 +283,26 @@ class AlarmaMailHelperTest {
         // Assert
         assertThat(count).isEqualTo(2);
         verify(mailHelper, times(2)).sendSimple(anyString(), anyString(), anyString(), anyString(), contains("Resum diari"), anyString());
+    }
+
+    @Test
+    @DisplayName("No envia correus agrupats si no hi ha alarmes pendents")
+    void sendAlarmesAgrupades_quanNoHiHaPendents_noEnvia() throws MessagingException, UnsupportedEncodingException {
+        // Arrange
+        when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any()))
+                .thenReturn(Collections.emptyList());
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any()))
+                .thenReturn(Collections.singletonList("user1"));
+        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(eq("user1"), any()))
+                .thenReturn(Collections.emptyList());
+
+        // Act
+        long count = alarmaMailHelper.sendAlarmesAgrupades();
+
+        // Assert
+        assertThat(count).isZero();
+        verify(mailHelper, never()).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(userInformationHelper, never()).findByRole(BaseConfig.ROLE_ADMIN);
     }
 
     @Test

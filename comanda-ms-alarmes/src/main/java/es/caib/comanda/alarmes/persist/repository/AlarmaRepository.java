@@ -37,8 +37,9 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 			"FROM " +
 			"    AlarmaEntity a " +
 			"WHERE " +
-			"    a.dataActivacio >= ?1")
-	List<String> findDistinctAlarmaConfigCreatedByDataActivacioAfter(LocalDateTime data);
+			"    a.dataActivacio >= ?1 " +
+			"    AND a.dataEnviament IS NULL")
+	List<String> findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(LocalDateTime data);
 
 	List<AlarmaEntity> findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(LocalDateTime data);
 

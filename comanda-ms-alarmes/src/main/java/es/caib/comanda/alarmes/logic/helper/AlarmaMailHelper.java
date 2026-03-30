@@ -83,16 +83,22 @@ public class AlarmaMailHelper {
 
 	public void sendAlarmaUser(AlarmaEntity alarma) {
 		if (alarma.getAlarmaConfig().isAdmin()) {
+			log.debug("Enviat correu d'alarma per administrador.");
 			String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
 			Arrays.stream(adminUsers).forEach(adminUser -> {
 				if (isUserProfileAlarmaActivaAndUngrouped(adminUser)) {
 					sendAlarmaMailForUser(alarma, adminUser);
+				} else {
+					log.debug("[EML] No s'ha enviat el correu a l'administrador {} degut a que no té actiu l'enviament de correu, o el té configurat com a agrupat.");
 				}
 			});
 		} else {
+			log.debug("Enviat correu d'alarma per usuari.");
 			String username = alarma.getAlarmaConfig().getCreatedBy();
 			if (isUserProfileAlarmaActivaAndUngrouped(username)) {
 				sendAlarmaMailForUser(alarma, username);
+			} else {
+				log.debug("[EML] No s'ha enviat el correu a l'usuari {} degut a que no té actiu l'enviament de correu, o el té configurat com a agrupat.");
 			}
 		}
 	}
@@ -103,20 +109,23 @@ public class AlarmaMailHelper {
 		List<AlarmaEntity> alarmesPendentsAdmin = alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(
 				dataDesde);
         long adminMailCount = 0;
-        try {
-            String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
-            adminMailCount = Arrays.stream(adminUsers).filter(adminUser -> {
-                if (isUserProfileAlarmaActivaAndGrouped(adminUser)) {
-                    return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, adminUser);
-                } else {
-                    return false;
-                }
-            }).count();
-        } catch (UserInformationHelper.UserInformationException e) {
-            log.error("Error recuperant usuaris administradors. No s'enviaran els correus de les alarmes agrupades pels administradors.");
+        if (!alarmesPendentsAdmin.isEmpty()) {
+            try {
+                String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
+                adminMailCount = Arrays.stream(adminUsers).filter(adminUser -> {
+                    if (isUserProfileAlarmaActivaAndGrouped(adminUser)) {
+                        return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, adminUser);
+                    } else {
+                        return false;
+                    }
+                }).count();
+            } catch (UserInformationHelper.UserInformationException e) {
+                log.error("[EML] Error recuperant usuaris administradors. No s'enviaran els correus de les alarmes agrupades pels administradors.");
+            }
         }
+
         // Envia les alarmes dels usuaris no administradors
-		List<String> usuaris = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfter(dataDesde);
+		List<String> usuaris = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(dataDesde);
 		long userMailCount = usuaris.stream().filter(u -> {
 			List<AlarmaEntity> alarmesPendentsUser = alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
 					u,
@@ -131,15 +140,17 @@ public class AlarmaMailHelper {
 			String username) {
 		try {
 			Usuari usuari = userInformationHelper.usuariFindByUsername(username);
+			String email = getMailFromUsuari(usuari);
 
 			sendAlarmaMail(
-					getMailFromUsuari(usuari),
+					email,
 					usuari.getNom(),
 					generateIndividualAlarmaSubject(alarma),
 					generateAlarmaBodyMessage(alarma)
 			);
+			log.debug("[EML] Alarma per usuari: Enviat correu a {} amb email {}, amb alarma activada: {}", usuari.getNom(), email, alarma.getAlarmaConfig().getMissatge());
 		} catch (Exception ex) {
-			log.error("No s'ha pogut enviar missatge d'alarma", ex);
+			log.error("[EML] No s'ha pogut enviar missatge d'alarma", ex);
 		}
 	}
 
@@ -147,16 +158,23 @@ public class AlarmaMailHelper {
 			List<AlarmaEntity> alarmes,
 			String username) {
 		try {
+			if (alarmes == null || alarmes.isEmpty()) {
+				return false;
+			}
 			if (isUserProfileAlarmaActivaAndGrouped(username)) {
 				Usuari usuari = userInformationHelper.usuariFindByUsername(username);
-				return sendAlarmaMail(
-						getMailFromUsuari(usuari),
+				String email = getMailFromUsuari(usuari);
+
+				boolean sended = sendAlarmaMail(
+						email,
 						usuari.getNom(),
 						"[COMANDA] Resum diari d'alarmes activades",
 						getAlarmesGroupedText(alarmes));
+				log.debug("[EML] Alarma agrupada: Enviat correu a {} amb email {}, amb {} alarmes activades", usuari.getNom(), email, alarmes.size());
+				return sended;
 			}
 		} catch (Exception ex) {
-			log.error("No s'ha pogut enviar missatge d'alarma", ex);
+			log.error("[EML] No s'ha pogut enviar missatge d'alarma", ex);
 		}
 		return false;
 	}
