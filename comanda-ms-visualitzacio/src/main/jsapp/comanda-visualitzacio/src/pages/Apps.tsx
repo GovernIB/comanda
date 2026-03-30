@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
     FormField,
@@ -35,6 +35,8 @@ import CheckCircle from '@mui/icons-material/CheckCircle';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
 import { StacktraceBlock } from '../components/RickTextDetail.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
+import notNull from '../util/arrayUtils.ts';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -43,7 +45,7 @@ const useActions = (refresh?: () => void) => {
     const { t } = useTranslation();
 
     const pingUrl = React.useCallback(async (
-        additionalData: any, 
+        additionalData: any,
         expectedResponseTypeEnum: string,
     ): Promise<any> => {
         try {
@@ -223,6 +225,7 @@ const AppsEntorns: React.FC = () => {
         show: permissionShow,
         component: permissionComponent
     } = useAclPermissionManager('ENTORN_APP');
+    const gestorReadOnly = useReadOnlyGestor();
     const actions = [
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
@@ -236,14 +239,19 @@ const AppsEntorns: React.FC = () => {
             onClick: toogleActiva,
             hidden: (row:any) => row?.activa,
         },
+        gestorReadOnly ? {
+            label: t($ => $.components.permisos.title),
+            icon: 'visibility',
+            clickShowUpdateDialog: true,
+        } : null,
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.desactivar),
             icon: "cancel",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => !row?.activa,
+            hidden: (row:any) => !row?.activa || gestorReadOnly,
         },
-    ]
+    ].filter(notNull);
     return (
         <>
             <MuiDataGrid
@@ -261,6 +269,8 @@ const AppsEntorns: React.FC = () => {
                 }}
                 rowAdditionalActions={actions}
                 rowActionsColumnProps={{ flex: .3 }}
+                rowHideUpdateButton={gestorReadOnly}
+                rowHideDeleteButton={gestorReadOnly}
             />
             {permissionComponent}
         </>
@@ -452,25 +462,32 @@ const AppImportFormContent = () => {
 const Apps: React.FC = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
+    const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
     const {
         show: appPermissionShow,
         component: appPermissionComponent
     } = useAclPermissionManager('APP');
+    const gestorReadOnly = useReadOnlyGestor();
     const appActions: DataCommonAdditionalAction[] = [
         {
             label: t($ => $.components.permisos.title),
             icon: 'lock',
             onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
         },
+        gestorReadOnly ? {
+            label: t($ => $.components.permisos.title),
+            icon: 'visibility',
+            onClick: (id: any) => navigate(`form/${id}`),
+        } : null,
         {
             label: t($ => $.page.apps.action.export),
             icon: 'download',
             showInMenu: true,
             onClick: appExport,
         },
-    ];
+    ].filter(notNull);
     const { dataGridProps, loadingElement } = useReordering("app");
     const toolbarElementsWithPositions: ReactElementWithPosition[] = [
         {
@@ -509,6 +526,8 @@ const Apps: React.FC = () => {
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
+                rowHideUpdateButton={gestorReadOnly}
+                rowHideDeleteButton={gestorReadOnly}
                 {...dataGridProps}
             />
             {appPermissionComponent}
