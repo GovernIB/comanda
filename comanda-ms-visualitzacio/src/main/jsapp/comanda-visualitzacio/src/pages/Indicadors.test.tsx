@@ -4,6 +4,7 @@ import Indicadors from './Indicadors';
 
 const mocks = vi.hoisted(() => ({
     clearMock: vi.fn(),
+    useReadOnlyGestorMock: vi.fn(() => false),
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -37,17 +38,20 @@ vi.mock('reactlib', () => ({
         toolbarAdditionalRow,
         popupEditFormContent,
         columns,
+        rowHideDeleteButton,
     }: {
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
         popupEditFormContent?: React.ReactNode;
         columns: Array<{ field: string }>;
+        rowHideDeleteButton?: boolean;
     }) => (
         <section>
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
+            <div data-testid="hide-delete">{String(rowHideDeleteButton)}</div>
             <div>{toolbarAdditionalRow}</div>
             <div>{popupEditFormContent}</div>
         </section>
@@ -98,6 +102,10 @@ vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
+vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
+    default: () => mocks.useReadOnlyGestorMock(),
+}));
+
 describe('Indicadors', () => {
     beforeEach(() => {
         vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -109,6 +117,7 @@ describe('Indicadors', () => {
     afterEach(() => {
         vi.clearAllMocks();
         document.body.removeAttribute('data-options');
+        mocks.useReadOnlyGestorMock.mockReturnValue(false);
     });
 
     it('Indicadors_quanEsRenderitza_mostraLaGraellaElFiltreIElFormulariCondicional', async () => {
@@ -126,6 +135,18 @@ describe('Indicadors', () => {
             'codi,nom,descripcio,format,compactable,tipusCompactacio,indicadorComptadorPerMitjana.description'
         );
         expect(screen.getByTestId('advanced-indicadorComptadorPerMitjana')).toBeInTheDocument();
+        expect(screen.getByTestId('hide-delete')).toHaveTextContent('false');
+    });
+
+    it('Indicadors_quanGestorEsReadOnly_ocultaLaccioDesborrar', async () => {
+        mocks.useReadOnlyGestorMock.mockReturnValue(true);
+        render(<Indicadors />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        expect(screen.getByTestId('hide-delete')).toHaveTextContent('true');
     });
 
     it('Indicadors_quanEsCarreguenOpcionsDelFiltre_retornaElsEntornsDisponibles', async () => {

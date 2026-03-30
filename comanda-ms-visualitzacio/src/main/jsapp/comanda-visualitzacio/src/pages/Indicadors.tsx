@@ -20,6 +20,7 @@ import {
 import { columnesIndicador } from '../components/sharedAdvancedSearch/advancedSearchColumns';
 import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvancedSearch';
 import PageTitle from '../components/PageTitle.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
 const IndicadorsFilter = (props: any) => {
     const { onSpringFilterChange } = props;
@@ -105,6 +106,7 @@ const IndicadorsFilter = (props: any) => {
 
 const Indicadors: React.FC = () => {
     const { t } = useTranslation();
+    const gestorReadOnly = useReadOnlyGestor();
     const [filter, setFilter] = React.useState<string | undefined>(springFilterBuilder.eq('entornAppId', 0));
 
     const columns: MuiDataGridColDef[] = [
@@ -161,6 +163,7 @@ const Indicadors: React.FC = () => {
                 filter={filter}
                 popupEditActive
                 toolbarHideCreate
+                rowHideDeleteButton={gestorReadOnly}
                 popupEditFormContent={<IndicadorForm />}
             />
         </GridPage>

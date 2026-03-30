@@ -237,10 +237,10 @@ const AppsEntorns: React.FC = () => {
             icon: "check_circle",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => row?.activa,
+            hidden: (row:any) => row?.activa || gestorReadOnly,
         },
         gestorReadOnly ? {
-            label: t($ => $.components.permisos.title),
+            label: t($ => $.components.details),
             icon: 'visibility',
             clickShowUpdateDialog: true,
         } : null,
@@ -281,6 +281,7 @@ export const AppForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
     const { setMarginsDisabled } = useBaseAppContext();
+    const gestorReadOnly = useReadOnlyGestor();
     React.useEffect(() => {
         setMarginsDisabled(true);
         return () => setMarginsDisabled(false);
@@ -324,6 +325,7 @@ export const AppForm: React.FC = () => {
                             <Grid size={12}>
                                 <LogoUpload
                                     name="logo"
+                                    editable={!gestorReadOnly}
                                     // label="Logo"
                                 />
                             </Grid>

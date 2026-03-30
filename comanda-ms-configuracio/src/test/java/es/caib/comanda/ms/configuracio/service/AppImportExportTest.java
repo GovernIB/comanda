@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -164,11 +165,28 @@ public class AppImportExportTest {
         assertDoesNotThrow(() -> realObjectMapper.readTree(file.getContent()));
     }
 
+    @Test
+    void export_generateFile_multipleApps_usesDefaultFileNameAndWritesOutput() {
+        AppServiceImpl.AppExportReportGenerator generator = service.new AppExportReportGenerator();
+        List<AppExport> data = Arrays.asList(
+                AppExport.builder().codi("APP1").nom("App 1").build(),
+                AppExport.builder().codi("APP2").nom("App 2").build()
+        );
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        DownloadableFile file = generator.generateFile(App.APP_EXPORT, data, ReportFileType.JSON, out);
+
+        assertNotNull(file);
+        assertEquals("aplicacions.json", file.getName());
+        assertArrayEquals(file.getContent(), out.toByteArray());
+        assertDoesNotThrow(() -> realObjectMapper.readTree(file.getContent()));
+    }
+
     // ---------- IMPORT TESTS ----------
 
     @Test
     void import_newApp_createsEntitiesAndSchedulesTasks() {
-        String json = "[{\"codi\":\"APP1\",\"nom\":\"App 1\",\"activa\":true,\"entornApps\":[{\"entornCodi\":\"DEV\",\"entornNom\":\"Desenvolupament\",\"infoUrl\":\"http://info\",\"activa\":true,\"salutUrl\":\"http://health\"}]}]";
+        String json = asJsonArray(appJson("APP1", "App 1", entornJson("DEV", "Desenvolupament", "http://info", "http://health")));
 
         // App doesn't exist
         when(appRepository.findByCodi("APP1")).thenReturn(null);
@@ -214,6 +232,11 @@ public class AppImportExportTest {
         assertNotNull(result.getApps());
         assertEquals(1, result.getApps().size());
         assertEquals(100L, result.getApps().get(0).getId());
+        verify(entornAppRepository).save(argThat(entornApp ->
+                "http://info".equals(entornApp.getInfoUrl())
+                        && "http://health".equals(entornApp.getSalutUrl())
+                        && entornApp.isSalutAuth()
+                        && !entornApp.isEstadisticaAuth()));
 
         // Verify side effects
         verify(cacheHelper, times(1)).evictCacheItem(anyString(), eq("100"));
@@ -237,7 +260,7 @@ public class AppImportExportTest {
 
     @Test
     void import_existingApp_overwrite_deletesMissingAndSavesPresent() {
-        String json = "{\"codi\":\"APP1\",\"nom\":\"App 1\",\"activa\":true,\"entornApps\":[{\"entornCodi\":\"E1\",\"infoUrl\":\"http://i1\",\"activa\":true,\"salutUrl\":\"http://h1\"}]}";
+        String json = appJson("APP1", "App 1", entornJson("E1", "E1", "http://i1", "http://h1"));
 
         // Existing app with two entorns (E1, E2)
         AppEntity existing = new AppEntity(); existing.setId(7L); existing.setCodi("APP1"); existing.setNom("App 1");
@@ -261,12 +284,18 @@ public class AppImportExportTest {
 
         assertNotNull(result);
         verify(entornAppRepository, times(1)).delete(eae2);
-        verify(entornAppRepository, atLeastOnce()).save(any(EntornAppEntity.class));
+        verify(entornAppRepository).save(argThat(entornApp ->
+                "E1".equals(entornApp.getEntorn().getCodi())
+                        && "http://i1".equals(entornApp.getInfoUrl())
+                        && "http://h1".equals(entornApp.getSalutUrl())
+                        && entornApp.isSalutAuth()));
     }
 
     @Test
     void import_existingApp_combine_addsOnlyNewAssociations() {
-        String json = "{\"codi\":\"APP1\",\"nom\":\"App 1\",\"activa\":true,\"entornApps\":[{\"entornCodi\":\"E1\",\"infoUrl\":\"http://i1\",\"activa\":true,\"salutUrl\":\"http://h1\"},{\"entornCodi\":\"E2\",\"infoUrl\":\"http://i2\",\"activa\":true,\"salutUrl\":\"http://h2\"}]}";
+        String json = appJson("APP1", "App 1",
+                entornJson("E1", "E1", "http://i1", "http://h1"),
+                entornJson("E2", "E2", "http://i2", "http://h2"));
 
         AppEntity existing = new AppEntity(); existing.setId(7L); existing.setCodi("APP1");
         EntornEntity ent1 = new EntornEntity(); ent1.setId(11L); ent1.setCodi("E1"); ent1.setNom("E1");
@@ -290,14 +319,18 @@ public class AppImportExportTest {
 
         assertNotNull(result);
         // Only one new save for E2
-        verify(entornAppRepository, times(1)).save(argThat(e -> ((EntornAppEntity)e).getEntorn().getCodi().equals("E2")));
+        verify(entornAppRepository, times(1)).save(argThat(e ->
+                "E2".equals(e.getEntorn().getCodi())
+                        && "http://i2".equals(e.getInfoUrl())
+                        && "http://h2".equals(e.getSalutUrl())
+                        && e.isSalutAuth()));
         // No delete called
         verify(entornAppRepository, never()).delete(any(EntornAppEntity.class));
     }
 
     @Test
     void import_existingApp_skip_doesNotModifyAssociations() {
-        String json = "{\"codi\":\"APP1\",\"nom\":\"App 1\",\"activa\":true,\"entornApps\":[{\"entornCodi\":\"E1\",\"infoUrl\":\"http://i1\",\"activa\":true,\"salutUrl\":\"http://h1\"}]}";
+        String json = appJson("APP1", "App 1", entornJson("E1", "E1", "http://i1", "http://h1"));
 
         AppEntity existing = new AppEntity(); existing.setId(7L); existing.setCodi("APP1");
         EntornEntity ent1 = new EntornEntity(); ent1.setId(11L); ent1.setCodi("E1"); ent1.setNom("E1");
@@ -313,12 +346,119 @@ public class AppImportExportTest {
         AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
+        verify(appRepository).saveAndFlush(existing);
+        verify(appRepository).refresh(existing);
+        verify(cacheHelper).evictCacheItem(anyString(), eq("7"));
         verify(entornAppRepository, never()).save(any());
         // Also ensure no delete took place
         verify(entornAppRepository, never()).delete(any());
     }
 
+    @Test
+    void import_existingApp_invalidDecision_throwsWrappedRuntimeException() {
+        String json = appJson("APP1", "App 1", entornJson("E1", "E1", "http://i1", "http://h1"));
+        AppEntity existing = new AppEntity(); existing.setId(7L); existing.setCodi("APP1");
+        when(appRepository.findByCodi("APP1")).thenReturn(existing);
+        when(appRepository.saveAndFlush(existing)).thenReturn(existing);
+        doAnswer(inv -> null).when(appRepository).refresh(existing);
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm(json, "BAD_VALUE");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> executor.exec(App.APP_IMPORT, null, params));
+        assertTrue(ex.getMessage().contains("Valor de 'decision' desconegut"));
+    }
+
+    @Test
+    void import_missingCode_throwsWrappedRuntimeException() {
+        String json = "{\"nom\":\"Sense codi\",\"activa\":true}";
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm(json, null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> executor.exec(App.APP_IMPORT, null, params));
+        assertTrue(ex.getMessage().contains("camp 'codi'"));
+    }
+
+    @Test
+    void import_multipleApps_returnsBothImportedResources() {
+        String json = asJsonArray(
+                appJson("APP1", "App 1", entornJson("DEV", "DEV", "http://info1", "http://health1")),
+                appJson("APP2", "App 2", entornJson("PRE", "PRE", "http://info2", "http://health2")));
+
+        when(appRepository.findByCodi("APP1")).thenReturn(null);
+        when(appRepository.findByCodi("APP2")).thenReturn(null);
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
+            AppEntity ae = inv.getArgument(0);
+            if (ae.getId() == null) {
+                ae.setId("APP1".equals(ae.getCodi()) ? 101L : 102L);
+            }
+            if (ae.getEntornApps() == null) {
+                ae.setEntornApps(new ArrayList<>());
+            }
+            return ae;
+        });
+        doAnswer(inv -> null).when(appRepository).refresh(any(AppEntity.class));
+        when(entornRepository.findByCodi(anyString())).thenReturn(null);
+        when(entornRepository.saveAndFlush(any(EntornEntity.class))).thenAnswer(inv -> {
+            EntornEntity ent = inv.getArgument(0);
+            if (ent.getId() == null) {
+                ent.setId("DEV".equals(ent.getCodi()) ? 11L : 12L);
+            }
+            return ent;
+        });
+        when(entornAppRepository.findByEntornIdAndAppId(anyLong(), anyLong())).thenReturn(Optional.empty());
+        when(entornAppRepository.save(any(EntornAppEntity.class))).thenAnswer(inv -> {
+            EntornAppEntity saved = inv.getArgument(0);
+            if (saved.getApp().getEntornApps() == null) {
+                saved.getApp().setEntornApps(new ArrayList<>());
+            }
+            if (!saved.getApp().getEntornApps().contains(saved)) {
+                saved.getApp().getEntornApps().add(saved);
+            }
+            return saved;
+        });
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, new AppImportForm(json, null));
+
+        assertNotNull(result);
+        assertEquals(2, result.getApps().size());
+        assertEquals(Arrays.asList(101L, 102L), result.getApps().stream().map(App::getId).collect(Collectors.toList()));
+        verify(cacheHelper).evictCacheItem(anyString(), eq("101"));
+        verify(cacheHelper).evictCacheItem(anyString(), eq("102"));
+    }
+
     // --- helpers ---
+    private String appJson(String codi, String nom, String... entornsJson) {
+        return "{\"codi\":\"" + codi + "\",\"nom\":\"" + nom + "\",\"activa\":true,\"entornApps\":["
+                + String.join(",", entornsJson) + "]}";
+    }
+
+    private String entornJson(String entornCodi, String entornNom, String infoUrl, String salutUrl) {
+        return "{\"entornCodi\":\"" + entornCodi + "\","
+                + "\"entornNom\":\"" + entornNom + "\","
+                + "\"infoUrl\":\"" + infoUrl + "\","
+                + "\"activa\":true,"
+                + "\"salutUrl\":\"" + salutUrl + "\","
+                + "\"logsUrl\":\"http://logs/" + entornCodi + "\","
+                + "\"salutAuth\":true,"
+                + "\"estadisticaInfoUrl\":\"http://stats-info/" + entornCodi + "\","
+                + "\"estadisticaUrl\":\"http://stats/" + entornCodi + "\","
+                + "\"estadisticaCron\":\"0 0 * * * *\","
+                + "\"estadisticaAuth\":false,"
+                + "\"compactable\":true,"
+                + "\"compactacioSetmanalMesos\":3,"
+                + "\"compactacioMensualMesos\":6,"
+                + "\"eliminacioMesos\":12,"
+                + "\"alarmesEmail\":\"" + entornCodi.toLowerCase() + "@example.org\""
+                + "}";
+    }
+
+    private String asJsonArray(String... appJson) {
+        return "[" + String.join(",", appJson) + "]";
+    }
+
     private void injectEntityRepositoryMock(AppServiceImpl target, List<AppEntity> entities) throws Exception {
         // Create a simple BaseRepository mock that returns the provided list on findAll()
         es.caib.comanda.ms.persist.repository.BaseRepository<AppEntity, Long> baseRepo = mock(es.caib.comanda.ms.persist.repository.BaseRepository.class);
