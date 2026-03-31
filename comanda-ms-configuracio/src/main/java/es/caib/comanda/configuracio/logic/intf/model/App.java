@@ -5,19 +5,21 @@ import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig.ResourceSort;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.AllArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.hateoas.InputType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.List;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Informació d'una aplicació a monitoritzar.
@@ -77,9 +79,13 @@ public class App extends BaseResource<Long> {
 	@Setter
 	@NoArgsConstructor
 	@AllArgsConstructor
+	@FieldNameConstants
 	public static class AppImportForm implements Serializable {
 		@NotNull
+		@ResourceField(onChangeActive = true)
         private String jsonContent;
 		private String decision; // OVERWRITE | COMBINE | SKIP (opcional)
+		private Boolean importedAppExists; // Informa si el contingut del JSON coincideix amb una aplicació ja creada
+		private String[] importedAppCodes; // Informa dels codis detectats al JSON
 	}
 }

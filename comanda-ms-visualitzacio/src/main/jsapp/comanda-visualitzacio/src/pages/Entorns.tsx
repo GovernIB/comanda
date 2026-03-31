@@ -20,7 +20,7 @@ const columns = [
 const Entorns: React.FC = () => {
     const { t } = useTranslation();
     const { dataGridProps, loadingElement } = useReordering('entorn');
-    const hideDelete = useReadOnlyGestor();
+    const gestorReadOnly = useReadOnlyGestor();
 
     return (
         <GridPage>
@@ -49,8 +49,8 @@ const Entorns: React.FC = () => {
                         element: loadingElement,
                     },
                 ]}
-                rowHideDeleteButton={hideDelete}
-                {...dataGridProps}
+                rowHideDeleteButton={gestorReadOnly}
+                {...(!gestorReadOnly ? dataGridProps : {})}
             />
         </GridPage>
     );

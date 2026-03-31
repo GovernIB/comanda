@@ -23,7 +23,6 @@ import {
 import { FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
-import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
@@ -378,40 +377,17 @@ const columns = [
     },
 ];
 
-const parseCodesFromJson = (jsonContent: string) => {
-    let parsedJson = JSON.parse(jsonContent);
-    if (!Array.isArray(parsedJson)) parsedJson = [parsedJson];
-    const parsedCodes = (parsedJson || [])
-        .map((a: any) => a?.codi)
-        .filter((c: any) => typeof c === 'string');
-    return parsedCodes;
-};
-
-const existsAnyInParsedCodes = (parsedCodes: any[], existingCodes: Set<any>) => {
-    return parsedCodes.some((c: any) => existingCodes.has(c));
-}
-
 const AppImportFormContent = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
     const { data, apiRef, fieldErrors } = useFormContext();
     const jsonContentValidationError = fieldErrors?.find((err) => err.field === 'jsonContent');
-    const gridContext = useOptionalDataGridContext();
-    const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
-    const parsedCodes = React.useMemo(() => data?.jsonContent ? parseCodesFromJson(data?.jsonContent) : [], [data?.jsonContent]);
-    const existsAny = React.useMemo(() => existsAnyInParsedCodes(parsedCodes, existingCodes), [existingCodes, parsedCodes]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
             const text = await file.text();
-
-            // Preselect default decision if conflicts
-            // Doing existsAnyInJson before setting jsonContent ensures that the json is valid, as JSON.parse has already been called
-            if (existsAnyInParsedCodes(parseCodesFromJson(text), existingCodes))
-                apiRef.current?.setFieldValue('decision', 'COMBINE');
-
             apiRef.current?.setFieldValue('jsonContent', text);
         } catch (err: any) {
             temporalMessageShow("", t($ => $.page.apps.import.parseError), 'error');
@@ -435,12 +411,12 @@ const AppImportFormContent = () => {
 
     return <>
         <input type="file" accept="application/json" onChange={handleFileChange} />
-        {parsedCodes.length > 0 && (
+        {data?.importedAppCodes?.length && (
             <>
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    {t($ => $.page.apps.import.detectedCodes)} {parsedCodes.join(', ')}
+                    {t($ => $.page.apps.import.detectedCodes)} {data.importedAppCodes.join(', ')}
                 </Typography>
-                {existsAny && (
+                {data?.importedAppExists && (
                     <FormControl sx={{ mt: 2 }}>
                         <Typography variant="body2" sx={{ mb: 1 }}>
                             {t($ => $.page.apps.import.conflict)}
@@ -530,7 +506,7 @@ const Apps: React.FC = () => {
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 rowHideUpdateButton={gestorReadOnly}
                 rowHideDeleteButton={gestorReadOnly}
-                {...dataGridProps}
+                {...(!gestorReadOnly ? dataGridProps : {})}
             />
             {appPermissionComponent}
         </GridPage>
