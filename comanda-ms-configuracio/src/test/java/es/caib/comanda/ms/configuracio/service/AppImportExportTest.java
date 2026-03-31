@@ -225,7 +225,9 @@ public class AppImportExportTest {
         });
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppImportForm params = new AppImportForm(json, null);
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision(null);
         AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
@@ -249,7 +251,9 @@ public class AppImportExportTest {
         when(appRepository.findByCodi("APP1")).thenReturn(existing);
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppImportForm params = new AppImportForm(json, null);
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision(null);
 
         AnswerRequiredException ex = assertThrows(AnswerRequiredException.class,
                 () -> executor.exec(App.APP_IMPORT, null, params));
@@ -279,7 +283,9 @@ public class AppImportExportTest {
         when(entornAppRepository.save(any(EntornAppEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppImportForm params = new AppImportForm(json, "OVERWRITE");
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision("OVERWRITE");
         AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
@@ -314,7 +320,9 @@ public class AppImportExportTest {
         when(entornAppRepository.save(any(EntornAppEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppImportForm params = new AppImportForm(json, "COMBINE");
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision("COMBINE");
         AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
@@ -342,7 +350,9 @@ public class AppImportExportTest {
         doAnswer(inv -> null).when(appRepository).refresh(existing);
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppImportForm params = new AppImportForm(json, "SKIP");
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision("SKIP");
         AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
@@ -363,7 +373,9 @@ public class AppImportExportTest {
         doAnswer(inv -> null).when(appRepository).refresh(existing);
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppImportForm params = new AppImportForm(json, "BAD_VALUE");
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision("BAD_VALUE");
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> executor.exec(App.APP_IMPORT, null, params));
         assertTrue(ex.getMessage().contains("Valor de 'decision' desconegut"));
@@ -374,7 +386,9 @@ public class AppImportExportTest {
         String json = "{\"nom\":\"Sense codi\",\"activa\":true}";
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppImportForm params = new AppImportForm(json, null);
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision(null);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> executor.exec(App.APP_IMPORT, null, params));
         assertTrue(ex.getMessage().contains("camp 'codi'"));
@@ -420,13 +434,77 @@ public class AppImportExportTest {
         });
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
-        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, new AppImportForm(json, null));
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision(null);
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
         assertEquals(2, result.getApps().size());
         assertEquals(Arrays.asList(101L, 102L), result.getApps().stream().map(App::getId).collect(Collectors.toList()));
         verify(cacheHelper).evictCacheItem(anyString(), eq("101"));
         verify(cacheHelper).evictCacheItem(anyString(), eq("102"));
+    }
+
+    @Test
+    void onChange_singleApp_notExisting_populatesCodesAndExistsFalse() {
+        String json = "{\"codi\":\"NEWAPP\",\"nom\":\"New App\"}";
+        when(appRepository.findByCodi("NEWAPP")).thenReturn(null);
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm target = new AppImportForm();
+        executor.onChange(null, null, AppImportForm.Fields.jsonContent, json, null, null, target);
+
+        assertNotNull(target.getImportedAppCodes());
+        assertEquals(1, target.getImportedAppCodes().length);
+        assertEquals("NEWAPP", target.getImportedAppCodes()[0]);
+        assertEquals(Boolean.FALSE, target.getImportedAppExists());
+        assertNull(target.getDecision());
+    }
+
+    @Test
+    void onChange_singleApp_existing_populatesCodesAndExistsTrueAndSetsCombine() {
+        String json = "{\"codi\":\"EXISTING\",\"nom\":\"Existing App\"}";
+        when(appRepository.findByCodi("EXISTING")).thenReturn(new AppEntity());
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm target = new AppImportForm();
+        executor.onChange(null, null, AppImportForm.Fields.jsonContent, json, null, null, target);
+
+        assertNotNull(target.getImportedAppCodes());
+        assertEquals(1, target.getImportedAppCodes().length);
+        assertEquals("EXISTING", target.getImportedAppCodes()[0]);
+        assertEquals(Boolean.TRUE, target.getImportedAppExists());
+        assertEquals("COMBINE", target.getDecision());
+    }
+
+    @Test
+    void onChange_multipleApps_someExisting_populatesCodesAndExistsTrueAndSetsCombine() {
+        String json = "[{\"codi\":\"APP1\"},{\"codi\":\"APP2\"}]";
+        when(appRepository.findByCodi("APP1")).thenReturn(null);
+        when(appRepository.findByCodi("APP2")).thenReturn(new AppEntity());
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm target = new AppImportForm();
+        executor.onChange(null, null, AppImportForm.Fields.jsonContent, json, null, null, target);
+
+        assertNotNull(target.getImportedAppCodes());
+        assertEquals(2, target.getImportedAppCodes().length);
+        assertEquals(Boolean.TRUE, target.getImportedAppExists());
+        assertEquals("COMBINE", target.getDecision());
+    }
+
+    @Test
+    void onChange_invalidJson_doesNotThrowAndLogsWarning() {
+        String json = "invalid json";
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm target = new AppImportForm();
+        // Should not throw exception
+        executor.onChange(null, null, AppImportForm.Fields.jsonContent, json, null, null, target);
+
+        assertNull(target.getImportedAppCodes());
+        assertNull(target.getImportedAppExists());
     }
 
     // --- helpers ---
