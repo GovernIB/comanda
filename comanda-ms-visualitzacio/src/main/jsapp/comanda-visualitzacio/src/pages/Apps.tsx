@@ -530,7 +530,7 @@ const Apps: React.FC = () => {
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 rowHideUpdateButton={gestorReadOnly}
                 rowHideDeleteButton={gestorReadOnly}
-                {...dataGridProps}
+                {...(!gestorReadOnly ? dataGridProps : {})}
             />
             {appPermissionComponent}
         </GridPage>
