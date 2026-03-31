@@ -236,6 +236,20 @@ public class AppInfoHelperTest {
         verify(appIntegracioRepository, never()).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository, never()).findByEntornApp(entornAppEntity);
     }
+
+    @Test
+    void testRefreshAppInfoWithEmptySalutUrlStillUsesInfoUrl() {
+        when(entornAppRepository.findById(1L)).thenReturn(Optional.of(entornAppEntity));
+        when(restTemplate.exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class)))
+                .thenReturn(new ResponseEntity<>(appInfo, HttpStatus.OK));
+
+        entornAppEntity.setSalutUrl("   ");
+
+        appInfoHelper.refreshAppInfo(1L);
+
+        verify(restTemplate).exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class));
+        assertEquals(appInfo.getVersio(), entornAppEntity.getVersio());
+    }
 //    private void mockRestTemplate() {
 //        // Use ReflectionTestUtils to set the restTemplate field
 //        ReflectionTestUtils.setField(appInfoHelper, "restTemplate", restTemplate);

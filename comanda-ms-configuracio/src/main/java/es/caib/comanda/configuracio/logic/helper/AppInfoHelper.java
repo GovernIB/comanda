@@ -131,9 +131,9 @@ public class AppInfoHelper {
 			// Obtenim informació de l'app
 			monitorApp.startAction();
 
-            URI uri = buildUriOrNull(entornApp.getSalutUrl());
+            URI uri = buildUriOrNull(entornApp.getInfoUrl());
             if (!isValidUri(uri)) {
-                throw new MalformedURLException("URL de salut invàlida o no absoluta");
+                throw new MalformedURLException("URL d'info invàlida o no absoluta");
             }
 			HttpEntity<Void> httpEntity = buildAuthEntityIfNeeded(entornApp);
 			AppInfo appInfo = restTemplate.exchange(
