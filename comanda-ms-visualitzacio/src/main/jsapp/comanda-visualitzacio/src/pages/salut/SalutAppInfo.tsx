@@ -206,7 +206,11 @@ const EstatsBarCard: React.FC<{
 
 const PeticionsOkError: React.FC<{ ok?: number; error?: number }> = props => {
     const { ok, error } = props;
+    const { t } = useTranslation();
     const theme = useTheme();
+    if (ok == null && error == null) {
+        return <>{t($ => $.page.salut.nd)}</>;
+    }
     return (
         <>
             <span style={{ color: theme.palette.success.main }}>{ok ?? 0}</span>

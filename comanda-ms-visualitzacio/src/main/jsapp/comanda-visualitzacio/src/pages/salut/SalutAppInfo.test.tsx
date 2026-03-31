@@ -416,6 +416,52 @@ describe('SalutAppInfo', () => {
         expect(screen.getByText('Sense missatges')).toBeInTheDocument();
     });
 
+    it('SalutAppInfo_quanHiHaComponentsSensePeticions_mostraNDEnllocDeZeroZero', () => {
+        render(
+            <SalutAppInfo
+                ready
+                appInfoData={createAppInfoData({
+                    salutCurrentApp: {
+                        ...createAppInfoData().salutCurrentApp,
+                        subsistemes: [
+                            {
+                                codi: 'SUB-1',
+                                nom: 'Subsistema principal',
+                                estat: 'UP',
+                                totalOk: null,
+                                totalError: null,
+                                totalTempsMig: null,
+                                peticionsOkUltimPeriode: null,
+                                peticionsErrorUltimPeriode: null,
+                                tempsMigUltimPeriode: null,
+                            },
+                        ],
+                        integracions: [
+                            {
+                                id: 10,
+                                codi: 'PARENT',
+                                nom: 'Integració pare',
+                                estat: 'UP',
+                                totalOk: null,
+                                totalError: null,
+                                totalTempsMig: null,
+                                peticionsOkUltimPeriode: null,
+                                peticionsErrorUltimPeriode: null,
+                                tempsMigUltimPeriode: null,
+                            },
+                        ],
+                    },
+                }) as any}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('tab', { name: /Estat actual/i }));
+        expect(screen.getAllByText('N/D').length).toBeGreaterThanOrEqual(3);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Integracions/i }));
+        expect(screen.getAllByText('N/D').length).toBeGreaterThanOrEqual(3);
+    });
+
     it('SalutAppInfo_quanEsConsultaLHistoric_mostraElsGraficsPreparats', () => {
         // Verifica que el tab històric renderitza les visualitzacions quan hi ha agrupació, estats i latències.
         render(

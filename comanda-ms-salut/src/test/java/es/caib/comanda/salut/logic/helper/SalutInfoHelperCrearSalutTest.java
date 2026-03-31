@@ -165,6 +165,56 @@ class SalutInfoHelperCrearSalutTest {
     }
 
     @Test
+    void crearSalut_quanNoArribenMetriquesNoLesEmplenaAmbZero() throws Exception {
+        Long entornAppId = 7L;
+        LocalDateTime now = LocalDateTime.now().withSecond(0).withNano(0);
+
+        SalutInfo info = SalutInfo.builder()
+                .codi("C")
+                .data(OffsetDateTime.now())
+                .estatGlobal(EstatSalut.builder().estat(EstatSalutEnum.UP).latencia(10).build())
+                .estatBaseDeDades(EstatSalut.builder().estat(EstatSalutEnum.UP).latencia(5).build())
+                .integracions(Collections.singletonList(IntegracioSalut.builder()
+                        .codi("INT1")
+                        .estat(EstatSalutEnum.UP)
+                        .latencia(10)
+                        .peticions(IntegracioPeticions.builder().build())
+                        .build()))
+                .subsistemes(Collections.singletonList(SubsistemaSalut.builder()
+                        .codi("SUB1")
+                        .estat(EstatSalutEnum.UP)
+                        .latencia(5)
+                        .build()))
+                .build();
+
+        when(salutRepository.save(any(SalutEntity.class))).thenAnswer(inv -> {
+            SalutEntity e = inv.getArgument(0);
+            if (e.getId() == null) e.setId(1L);
+            return e;
+        });
+        when(salutIntegracioRepository.save(any(SalutIntegracioEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(salutSubsistemaRepository.save(any(SalutSubsistemaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        crearSalutMethod.invoke(helper, info, entornAppId, now);
+
+        verify(salutIntegracioRepository).save(integracioCaptor.capture());
+        assertThat(integracioCaptor.getValue().getTotalOk()).isNull();
+        assertThat(integracioCaptor.getValue().getTotalError()).isNull();
+        assertThat(integracioCaptor.getValue().getTotalTempsMig()).isNull();
+        assertThat(integracioCaptor.getValue().getPeticionsOkUltimPeriode()).isNull();
+        assertThat(integracioCaptor.getValue().getPeticionsErrorUltimPeriode()).isNull();
+        assertThat(integracioCaptor.getValue().getTempsMigUltimPeriode()).isNull();
+
+        verify(salutSubsistemaRepository).save(subsistemaCaptor.capture());
+        assertThat(subsistemaCaptor.getValue().getTotalOk()).isNull();
+        assertThat(subsistemaCaptor.getValue().getTotalError()).isNull();
+        assertThat(subsistemaCaptor.getValue().getTotalTempsMig()).isNull();
+        assertThat(subsistemaCaptor.getValue().getPeticionsOkUltimPeriode()).isNull();
+        assertThat(subsistemaCaptor.getValue().getPeticionsErrorUltimPeriode()).isNull();
+        assertThat(subsistemaCaptor.getValue().getTempsMigUltimPeriode()).isNull();
+    }
+
+    @Test
     void creaAgregatSalutIAfegirSalut_quanRebenValorsNull_retornenNull() {
         assertThat(helper.creaAgregatSalut(1L, es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut.DIA, null)).isNull();
         SalutEntity agg = new SalutEntity();

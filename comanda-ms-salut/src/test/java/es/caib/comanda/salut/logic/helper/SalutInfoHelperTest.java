@@ -38,14 +38,17 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -101,9 +104,16 @@ public class SalutInfoHelperTest {
     private EntornApp entornApp;
     private SalutInfo salutInfo;
     private SalutEntity salutEntity;
+    private Method afegirIntegracionsMethod;
 
     @BeforeEach
     void setUp() {
+        try {
+            afegirIntegracionsMethod = SalutInfoHelper.class.getDeclaredMethod("afegirIntegracions", SalutEntity.class, SalutEntity.class);
+            afegirIntegracionsMethod.setAccessible(true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         // Setup EntornApp
         entornApp = EntornApp.builder()
                 .id(1L)
@@ -185,7 +195,7 @@ public class SalutInfoHelperTest {
         salutEntity.setBdLatencia(50);
 
 		// Setup MetricsHelper
-		when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
+		lenient().when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
 				.thenReturn(new NoopTimer(new Meter.Id("", Tags.empty(), null, null, Meter.Type.TIMER)));
     }
 
@@ -257,5 +267,33 @@ public class SalutInfoHelperTest {
         assertThat(salutMissatgeEntityCaptor.getAllValues()).hasSize(1);
         verify(salutDetallRepository).save(salutDetallEntityCaptor.capture());
         assertThat(salutDetallEntityCaptor.getAllValues()).hasSize(1);
+    }
+
+    @Test
+    void afegirIntegracions_quanNoArribenMetriquesNoSobreescriuNiOmpleZeros() throws Exception {
+        SalutEntity agregat = new SalutEntity();
+        SalutIntegracioEntity existent = new SalutIntegracioEntity();
+        existent.setCodi("TEST");
+        existent.setTotalOk(10L);
+        existent.setTotalError(2L);
+        existent.setTotalTempsMig(48);
+        existent.setPeticionsOkUltimPeriode(2L);
+        existent.setPeticionsErrorUltimPeriode(1L);
+        existent.setTempsMigUltimPeriode(50);
+        agregat.setSalutIntegracions(new LinkedHashSet<>(java.util.List.of(existent)));
+
+        SalutEntity minut = new SalutEntity();
+        SalutIntegracioEntity senseMetriques = new SalutIntegracioEntity();
+        senseMetriques.setCodi("TEST");
+        minut.setSalutIntegracions(new LinkedHashSet<>(java.util.List.of(senseMetriques)));
+
+        afegirIntegracionsMethod.invoke(salutInfoHelper, agregat, minut);
+
+        assertThat(existent.getTotalOk()).isEqualTo(10L);
+        assertThat(existent.getTotalError()).isEqualTo(2L);
+        assertThat(existent.getTotalTempsMig()).isEqualTo(48);
+        assertThat(existent.getPeticionsOkUltimPeriode()).isEqualTo(2L);
+        assertThat(existent.getPeticionsErrorUltimPeriode()).isEqualTo(1L);
+        assertThat(existent.getTempsMigUltimPeriode()).isEqualTo(50);
     }
 }
