@@ -9,10 +9,12 @@ import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.Salut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
@@ -21,7 +23,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Comprovacions i creació d'alarmes.
@@ -33,11 +37,16 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AlarmaComprovacioHelper {
 
+	private static final long DEFAULT_SALUT_FRESHNESS_SECONDS = 120;
+	private static final long DEFAULT_RECOVERY_STABILITY_SECONDS = 180;
+
 	private final AlarmaRepository alarmaRepository;
 	private final SalutServiceClient salutServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 	private final AlarmaMailEventPublisher alarmaMailEventPublisher;
     private final ComandaSseEventPublisher comandaSseEventPublisher;
+	private final ParametresHelper parametresHelper;
+	private final Map<Long, LocalDateTime> recoveryStableSinceByConfigId = new ConcurrentHashMap<>();
 
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
 		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_CAIGUDA) {
@@ -52,10 +61,12 @@ public class AlarmaComprovacioHelper {
 
 	private boolean comprovarAppCaiguda(AlarmaConfigEntity alarmaConfig) {
 		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
-		boolean condicioAlarma = false;
-		if (salut != null) {
-			condicioAlarma = salut.getAppEstat().equals(EstatSalutEnum.DOWN.name()) || salut.getAppEstat().equals(EstatSalutEnum.ERROR.name());
+		if (!isFreshSalut(salut)) {
+			processarCondicioIndeterminada(alarmaConfig, salut);
+			return false;
 		}
+		boolean condicioAlarma = false;
+		condicioAlarma = salut.getAppEstat().equals(EstatSalutEnum.DOWN.name()) || salut.getAppEstat().equals(EstatSalutEnum.ERROR.name());
 		if (condicioAlarma) {
 			processarCondicioAfirmativa(alarmaConfig);
 			return true;
@@ -67,26 +78,28 @@ public class AlarmaComprovacioHelper {
 
 	private boolean comprovarAppLatencia(AlarmaConfigEntity alarmaConfig) {
 		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
-		boolean alarma = false;
-		if (salut != null) {
-			Integer latencia = salut.getAppLatencia();
-			if (latencia != null && alarmaConfig.getCondicio() != null) {
-				switch (alarmaConfig.getCondicio()) {
-					case MAJOR:
-						alarma = latencia > alarmaConfig.getValor().intValue();
-						break;
-					case MAJOR_IGUAL:
-						alarma = latencia >= alarmaConfig.getValor().intValue();
-						break;
-					case MENOR:
-						alarma = latencia < alarmaConfig.getValor().intValue();
-						break;
-					case MENOR_IGUAL:
-						alarma = latencia <= alarmaConfig.getValor().intValue();
-						break;
-				}
-			 }
+		if (!isFreshSalut(salut)) {
+			processarCondicioIndeterminada(alarmaConfig, salut);
+			return false;
 		}
+		boolean alarma = false;
+		Integer latencia = salut.getAppLatencia();
+		if (latencia != null && alarmaConfig.getCondicio() != null) {
+			switch (alarmaConfig.getCondicio()) {
+				case MAJOR:
+					alarma = latencia > alarmaConfig.getValor().intValue();
+					break;
+				case MAJOR_IGUAL:
+					alarma = latencia >= alarmaConfig.getValor().intValue();
+					break;
+				case MENOR:
+					alarma = latencia < alarmaConfig.getValor().intValue();
+					break;
+				case MENOR_IGUAL:
+					alarma = latencia <= alarmaConfig.getValor().intValue();
+					break;
+			}
+		 }
 		if (alarma) {
 			processarCondicioAfirmativa(alarmaConfig);
 			return true;
@@ -104,6 +117,7 @@ public class AlarmaComprovacioHelper {
 	 * @param alarmaConfig Entitat de configuració de l'alarma
 	 */
 	private void processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
+		clearRecoveryTracking(alarmaConfig);
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		AlarmaEntity alarmaActivada = null;
 
@@ -198,15 +212,43 @@ public class AlarmaComprovacioHelper {
 	 */
 	private void processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
-		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) return;
+		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) {
+			clearRecoveryTracking(alarmaConfig);
+			return;
+		}
 		AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
 		if (alarmaAnteriorNoFinalitzada.getEstat() == AlarmaEstat.ESBORRANY) {
+			clearRecoveryTracking(alarmaConfig);
 			alarmaRepository.delete(alarmaAnteriorNoFinalitzada);
 		} else {
-			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(LocalDateTime.now());
+			LocalDateTime now = LocalDateTime.now();
+			LocalDateTime stableSince = recoveryStableSinceByConfigId.computeIfAbsent(alarmaConfig.getId(), ignored -> now);
+			long recoveryStabilitySeconds = getRecoveryStabilitySeconds();
+			if (Duration.between(stableSince, now).getSeconds() < recoveryStabilitySeconds) {
+				log.debug("Recuperació detectada però encara no estable (configId={}, estableDesDe={}, estabilitzacioSegons={})",
+						alarmaConfig.getId(),
+						stableSince,
+						recoveryStabilitySeconds);
+				return;
+			}
+			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(now);
+			clearRecoveryTracking(alarmaConfig);
             publishActiveAlarmsChangedEvent();
 		}
+	}
+
+	private void processarCondicioIndeterminada(AlarmaConfigEntity alarmaConfig, Salut salut) {
+		clearRecoveryTracking(alarmaConfig);
+		if (salut == null) {
+			log.debug("No es modifica l'alarma perquè no hi ha dades de salut recents per l'entornApp {}", alarmaConfig.getEntornAppId());
+			return;
+		}
+		log.debug("No es modifica l'alarma perquè la darrera salut no és prou recent (configId={}, entornAppId={}, salutData={}, frescorMaxSegons={})",
+				alarmaConfig.getId(),
+				alarmaConfig.getEntornAppId(),
+				salut.getData(),
+				getSalutFreshnessSeconds());
 	}
 
     private void publishActiveAlarmsChangedEvent() {
@@ -220,6 +262,33 @@ public class AlarmaComprovacioHelper {
     private void publishAlarmaMailEvent(AlarmaEntity alarma) {
         alarmaMailEventPublisher.publish(alarma);
     }
+
+	private boolean isFreshSalut(Salut salut) {
+		if (salut == null || salut.getData() == null) {
+			return false;
+		}
+		long salutFreshnessSeconds = getSalutFreshnessSeconds();
+		long ageSeconds = Math.abs(Duration.between(salut.getData(), LocalDateTime.now()).getSeconds());
+		return ageSeconds <= salutFreshnessSeconds;
+	}
+
+	private long getSalutFreshnessSeconds() {
+		return parametresHelper.getParametreEnter(
+				BaseConfig.PROP_ALARMA_SALUT_FRESHNESS_SECONDS,
+				(int) DEFAULT_SALUT_FRESHNESS_SECONDS);
+	}
+
+	private long getRecoveryStabilitySeconds() {
+		return parametresHelper.getParametreEnter(
+				BaseConfig.PROP_ALARMA_RECOVERY_STABILITY_SECONDS,
+				(int) DEFAULT_RECOVERY_STABILITY_SECONDS);
+	}
+
+	private void clearRecoveryTracking(AlarmaConfigEntity alarmaConfig) {
+		if (alarmaConfig != null && alarmaConfig.getId() != null) {
+			recoveryStableSinceByConfigId.remove(alarmaConfig.getId());
+		}
+	}
 
 	private Salut findSalutLast(Long entornAppId) {
 		PagedModel<EntityModel<Salut>> saluts = salutServiceClient.find(

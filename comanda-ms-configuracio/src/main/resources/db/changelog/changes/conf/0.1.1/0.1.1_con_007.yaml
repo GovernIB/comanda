@@ -1,0 +1,60 @@
+databaseChangeLog:
+- changeSet:
+    id: conf-alarma-recovery-control-1
+    author: limit
+    comment: Afegir paràmetres de frescor i estabilització per al tancament d'alarmes
+    changes:
+      - insert:
+          tableName: COM_PARAMETRE
+          columns:
+            - column:
+                name: GRUP
+                value: "Alarmes"
+            - column:
+                name: SUBGRUP
+                value: "Recuperació"
+            - column:
+                name: TIPUS
+                value: "NUMERIC"
+            - column:
+                name: CODI
+                value: "es.caib.comanda.alarma.salut.freshness.seconds"
+            - column:
+                name: NOM
+                value: "Màxim d'antiguitat del darrer registre de salut"
+            - column:
+                name: DESCRIPCIO
+                value: "Nombre màxim de segons que pot tenir el darrer registre de salut per considerar-lo vigent. Si és més antic, no s'activa ni es finalitza cap alarma a partir d'aquesta mostra."
+            - column:
+                name: VALOR
+                value: "120"
+            - column:
+                name: EDITABLE
+                valueNumeric: 1
+      - insert:
+          tableName: COM_PARAMETRE
+          columns:
+            - column:
+                name: GRUP
+                value: "Alarmes"
+            - column:
+                name: SUBGRUP
+                value: "Recuperació"
+            - column:
+                name: TIPUS
+                value: "NUMERIC"
+            - column:
+                name: CODI
+                value: "es.caib.comanda.alarma.recovery.stability.seconds"
+            - column:
+                name: NOM
+                value: "Temps d'estabilitat per finalitzar l'alarma"
+            - column:
+                name: DESCRIPCIO
+                value: "Nombre de segons durant els quals la recuperació s'ha de mantenir estable abans de finalitzar una alarma activa. Evita tancaments per recuperacions puntuals o mostres transitòries."
+            - column:
+                name: VALOR
+                value: "180"
+            - column:
+                name: EDITABLE
+                valueNumeric: 1
