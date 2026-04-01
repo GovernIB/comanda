@@ -13,3 +13,14 @@ CREATE TABLE com_salut_hist
 CREATE INDEX com_saluthist_entdat_i ON com_salut_hist(entorn_app_id, data);
 
 GRANT SELECT, UPDATE, INSERT, DELETE ON com_salut_hist TO WWW_COMANDA;
+
+-- Changeset db/changelog/changes/conf/0.1.1/0.1.1_con_009.yaml::conf-change-codi-100-1::Limit
+-- Ampliar mida de codis
+ALTER TABLE com_integracio MODIFY codi VARCHAR2(100 CHAR);
+ALTER TABLE com_app_subsistema MODIFY codi VARCHAR2(100 CHAR);
+ALTER TABLE com_app_context MODIFY codi VARCHAR2(100 CHAR);
+
+-- Changeset db/changelog/changes/salut/0.1.2/0.1.2_salut_003.yaml::salut-change-codi-100-1::Limit
+-- Modificacio mida de codis
+ALTER TABLE com_salut_integracio MODIFY codi VARCHAR2(100 CHAR);
+ALTER TABLE com_salut_subsistema MODIFY codi VARCHAR2(100 CHAR);
