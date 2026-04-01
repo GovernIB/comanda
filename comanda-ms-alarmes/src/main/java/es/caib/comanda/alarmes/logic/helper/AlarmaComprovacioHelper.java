@@ -65,8 +65,7 @@ public class AlarmaComprovacioHelper {
 			processarCondicioIndeterminada(alarmaConfig, salut);
 			return false;
 		}
-		boolean condicioAlarma = false;
-		condicioAlarma = salut.getAppEstat().equals(EstatSalutEnum.DOWN.name()) || salut.getAppEstat().equals(EstatSalutEnum.ERROR.name());
+        boolean condicioAlarma = salut.getAppEstat().equals(EstatSalutEnum.DOWN.name());
 		if (condicioAlarma) {
 			processarCondicioAfirmativa(alarmaConfig);
 			return true;
