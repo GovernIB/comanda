@@ -20,7 +20,7 @@ import java.util.List;
 @Schema(name = "ContextInfo", description = "Context o 'namespace' funcional exposat per l'aplicació")
 public class ContextInfo {
     @Schema(description = "Codi del context", example = "API_INT")
-    @NotNull @Size(min = 1, max = 64)
+    @NotNull @Size(min = 1, max = 100)
     private String codi;
     @Schema(description = "Nom descriptiu del context", example = "Api interna")
     @NotNull @Size(min = 1, max = 255)

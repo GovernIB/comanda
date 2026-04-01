@@ -35,7 +35,7 @@ import static lombok.AccessLevel.NONE;
 @NoArgsConstructor
 public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
 
-	@Column(name = "codi", nullable = false)        	    private String codi;
+	@Column(name = "codi", length = 100, nullable = false)        	    private String codi;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "estat", nullable = false)               private SalutEstat estat;
 	@Column(name = "latencia")                      	    private Integer latencia;

@@ -18,7 +18,7 @@ import javax.validation.constraints.Size;
 @Schema(name = "SubsistemaInfo", description = "Informació d'un subsistema intern de l'aplicació")
 public class SubsistemaInfo {
     @Schema(description = "Codi del subsistema", example = "ALTA_REST")
-    @NotNull @Size(min = 1, max = 64)
+    @NotNull @Size(min = 1, max = 100)
     private String codi;
     @Schema(description = "Nom del subsistema", example = "Alta de elements via REST")
     @NotNull @Size(min = 1, max = 255)

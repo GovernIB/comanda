@@ -34,7 +34,7 @@ import static lombok.AccessLevel.NONE;
 @Setter
 @NoArgsConstructor
 public class SalutIntegracioEntity extends BaseEntity<SalutIntegracio> {
-    public static final int CODI_MAX_LENGTH = 32;
+    public static final int CODI_MAX_LENGTH = 100;
 
 	@Column(name = "codi", length = CODI_MAX_LENGTH, nullable = false)	private String codi;
 	@Enumerated(EnumType.STRING)
