@@ -1,0 +1,33 @@
+databaseChangeLog:
+- changeSet:
+    id: conf-salut-hist-retencio-1
+    author: Limit
+    comment: Afegir paràmetre de retenció de l'històric d'estat de salut
+    changes:
+      - insert:
+          tableName: COM_PARAMETRE
+          columns:
+            - column:
+                name: GRUP
+                value: "Salut"
+            - column:
+                name: SUBGRUP
+                value: "Històric"
+            - column:
+                name: TIPUS
+                value: "NUMERIC"
+            - column:
+                name: CODI
+                value: "es.caib.comanda.salut.hist.retencio.dies"
+            - column:
+                name: NOM
+                value: "Dies de retenció de l'històric d'estat"
+            - column:
+                name: DESCRIPCIO
+                value: "Nombre de dies que s'ha de conservar l'històric de canvis d'estat de salut per entorn d'aplicació abans d'eliminar-lo automàticament."
+            - column:
+                name: VALOR
+                value: "30"
+            - column:
+                name: EDITABLE
+                valueNumeric: 1

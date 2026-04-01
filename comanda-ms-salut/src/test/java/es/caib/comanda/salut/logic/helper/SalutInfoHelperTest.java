@@ -3,6 +3,7 @@ package es.caib.comanda.salut.logic.helper;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.model.v1.salut.EstatSalut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.model.v1.salut.InformacioSistema;
@@ -19,6 +20,7 @@ import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
 import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
 import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
@@ -70,6 +72,12 @@ public class SalutInfoHelperTest {
 
     @Mock
     private SalutDetallRepository salutDetallRepository;
+
+    @Mock
+    private SalutHistRepository salutHistRepository;
+
+    @Mock
+    private ParametresHelper parametresHelper;
 
     @Mock
     private SalutClientHelper salutClientHelper;
@@ -197,6 +205,7 @@ public class SalutInfoHelperTest {
 		// Setup MetricsHelper
 		lenient().when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
 				.thenReturn(new NoopTimer(new Meter.Id("", Tags.empty(), null, null, Meter.Type.TIMER)));
+        lenient().when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(any())).thenReturn(null);
     }
 
     @Test

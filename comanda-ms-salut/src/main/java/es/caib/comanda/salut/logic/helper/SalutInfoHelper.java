@@ -1,6 +1,8 @@
 package es.caib.comanda.salut.logic.helper;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.model.v1.salut.DetallSalut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.model.v1.salut.InformacioSistema;
@@ -15,10 +17,12 @@ import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
+import es.caib.comanda.salut.persist.entity.SalutHistEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
 import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
 import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
@@ -70,12 +74,14 @@ public class SalutInfoHelper {
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
+	private final SalutHistRepository salutHistRepository;
 
 	private final SalutClientHelper salutClientHelper;
 	private final RestTemplate restTemplate;
     private final ApplicationEventPublisher eventPublisher;
     private final MetricsHelper metricsHelper;
     private final SalutPurgeHelper salutPurgeService;
+    private final ParametresHelper parametresHelper;
 
 	// Locks per assegurar compactació "synchronized" per entornAppId
 	private static final ConcurrentHashMap<Long, Object> ENTORN_LOCKS = new ConcurrentHashMap<>();
@@ -165,6 +171,7 @@ public class SalutInfoHelper {
         salut.setPeticioError(true);
         salut.setNumElements(1);
         SalutEntity saved = salutRepository.save(salut);
+        registrarCanviEstat(saved);
         if (!monitorSalut.isFinishedAction()) {
             monitorSalut.endAction(ex, null);
         }
@@ -208,6 +215,7 @@ public class SalutInfoHelper {
 			salut.setBdLatenciaMitjana(info.getEstatBaseDeDades().getLatencia());
 			salut.setNumElements(1);
 			SalutEntity saved = salutRepository.save(salut);
+			registrarCanviEstat(saved);
 			crearSalutIntegracions(saved, info.getIntegracions());
 			crearSalutSubsistemes(saved, info.getSubsistemes());
             crearSalutMissatges(saved, info.getMissatges());
@@ -215,6 +223,26 @@ public class SalutInfoHelper {
             return saved.getId();
         }
         return null;
+    }
+
+    private void registrarCanviEstat(SalutEntity salut) {
+        if (salut == null || salut.getEntornAppId() == null || salut.getData() == null || salut.getAppEstat() == null) {
+            return;
+        }
+
+        SalutHistEntity darrerHistoric = salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(salut.getEntornAppId());
+        if (darrerHistoric != null
+                && darrerHistoric.getAppEstat() == salut.getAppEstat()
+                && darrerHistoric.isPeticioError() == salut.isPeticioError()) {
+            return;
+        }
+
+        SalutHistEntity historic = new SalutHistEntity();
+        historic.setEntornAppId(salut.getEntornAppId());
+        historic.setData(salut.getData());
+        historic.setAppEstat(salut.getAppEstat());
+        historic.setPeticioError(salut.isPeticioError());
+        salutHistRepository.save(historic);
     }
 
     private Set<ConstraintViolation<Object>> validateObject(Object object) {
@@ -451,6 +479,12 @@ public class SalutInfoHelper {
             // Eliminar rgistres de dies més antics que 1 mes
             LocalDateTime menys1M = dadesSalut.getData().minusMonths(1).minusHours(23).minusMinutes(59);
             eliminarAntigues(entornAppId, TipusRegistreSalut.DIA, menys1M);
+
+            Integer retencioDiesHistoric = parametresHelper.getParametreEnter(BaseConfig.PROP_SALUT_HIST_RETENCIO_DIES, 30);
+            if (retencioDiesHistoric != null && retencioDiesHistoric > 0) {
+                LocalDateTime menysRetencioHistoric = dadesSalut.getData().minusDays(retencioDiesHistoric.longValue());
+                eliminarHistoricAntic(entornAppId, menysRetencioHistoric);
+            }
         } catch (Exception e) {
             log.error("Error durant el procés de buidat de salut. EntornAppId: {}, salutId: {}", entornAppId, salutId, e);
             throw e;
@@ -462,6 +496,14 @@ public class SalutInfoHelper {
             salutPurgeService.eliminarDadesSalutAntigues(entornAppId, tipus, dataLlindar);
         } catch (Exception ex) {
             log.warn("Error eliminant dades antigues ({}). Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", tipus.name(), entornAppId, dataLlindar, ex.getMessage(), ex);
+        }
+    }
+
+    private void eliminarHistoricAntic(Long entornAppId, LocalDateTime dataLlindar) {
+        try {
+            salutPurgeService.eliminarHistoricSalutAntic(entornAppId, dataLlindar);
+        } catch (Exception ex) {
+            log.warn("Error eliminant històric de salut antic. Es continuarà sense rollback del buidat/compactat. entornAppId={}, data={} -> {}", entornAppId, dataLlindar, ex.getMessage(), ex);
         }
     }
 
@@ -798,4 +840,3 @@ public class SalutInfoHelper {
 
 
 }
-

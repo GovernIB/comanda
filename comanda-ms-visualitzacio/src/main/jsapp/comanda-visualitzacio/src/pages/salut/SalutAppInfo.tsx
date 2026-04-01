@@ -51,6 +51,7 @@ import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import LogsViewer from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
+import { useIsUserAdmin } from '../../components/UserContext.ts';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -865,6 +866,52 @@ const TabHistoric: React.FC<SalutAppInfoTabProps & { otherProps: TabHistoricOthe
     );
 };
 
+const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
+    const { t } = useTranslation();
+    const historics = salutCurrentApp.historics ?? [];
+
+    return (
+        <Card variant="outlined">
+            <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.historicEstat.title)}
+                </Typography>
+                {historics.length === 0 ? (
+                    <Typography>{t($ => $.page.salut.historicEstat.noInfo)}</Typography>
+                ) : (
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>{t($ => $.page.salut.historicEstat.column.data)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.historicEstat.column.appEstat)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.historicEstat.column.peticio)}</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {historics.map(historic => (
+                                <TableRow key={historic.id ?? `${historic.data}-${historic.appEstat}`}>
+                                    <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
+                                    <TableCell>
+                                        <ItemStateChip
+                                            salutField={SalutField.APP_ESTAT}
+                                            salutStatEnum={historic.appEstat}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        {historic.peticioError
+                                            ? t($ => $.page.salut.historicEstat.peticioError)
+                                            : t($ => $.page.salut.historicEstat.peticioOk)}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
 const TabLogs = ({ entornApp }: { entornApp: EntornAppModel | null }) => {
     if (entornApp == null)
         return (
@@ -934,6 +981,7 @@ const SalutAppInfo: React.FC<{
     grupsDates?: string[];
 }> = ({ appInfoData, grupsDates, ready }) => {
     const { t } = useTranslation();
+    const isUserAdmin = useIsUserAdmin();
     const getColorBySubsistema = useGetColorBySubsistema();
     const getColorByIntegracio = useGetColorByIntegracio();
     const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
@@ -993,6 +1041,15 @@ const SalutAppInfo: React.FC<{
             label: t($ => $.page.salut.tabs.historic),
             icon: <Icon>timeline</Icon>,
         },
+        ...(isUserAdmin
+            ? [
+                  {
+                      id: 'historicEstat',
+                      label: t($ => $.page.salut.tabs.historicEstat),
+                      icon: <Icon>history_toggle_off</Icon>,
+                  },
+              ]
+            : []),
         {
             id: 'logs',
             label: t($ => $.page.salut.tabs.logs),
@@ -1000,6 +1057,8 @@ const SalutAppInfo: React.FC<{
             disabled: !entornApp?.logsUrl,
         },
     ];
+
+    const selectedTab = tabs[tabValue]?.id;
 
     return (
         <>
@@ -1029,7 +1088,7 @@ const SalutAppInfo: React.FC<{
                     height: '100%',
                 }}
             >
-                {tabValue === 0 && (
+                {selectedTab === 'entorn' && (
                     <TabSalutCurrentApp
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
@@ -1038,7 +1097,7 @@ const SalutAppInfo: React.FC<{
                         childrenTabOtherProps={{}}
                     />
                 )}
-                {tabValue === 1 && (
+                {selectedTab === 'estatActual' && (
                     <TabSalutCurrentApp
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
@@ -1047,7 +1106,7 @@ const SalutAppInfo: React.FC<{
                         childrenTabOtherProps={{}}
                     />
                 )}
-                {tabValue === 2 && (
+                {selectedTab === 'integracions' && (
                     <TabSalutCurrentApp<TabIntegracionsOtherProps>
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
@@ -1059,7 +1118,7 @@ const SalutAppInfo: React.FC<{
                         }}
                     />
                 )}
-                {tabValue === 3 && (
+                {selectedTab === 'historic' && (
                     <TabSalutCurrentApp<TabHistoricOtherProps>
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
@@ -1073,7 +1132,16 @@ const SalutAppInfo: React.FC<{
                         }}
                     />
                 )}
-                {tabValue === 4 && <TabLogs entornApp={entornApp} />}
+                {selectedTab === 'historicEstat' && (
+                    <TabSalutCurrentApp
+                        salutCurrentApp={salutCurrentApp}
+                        entornApp={entornApp}
+                        dataLoaded={dataLoaded}
+                        childrenTabComponent={TabHistoricEstat}
+                        childrenTabOtherProps={{}}
+                    />
+                )}
+                {selectedTab === 'logs' && <TabLogs entornApp={entornApp} />}
             </Box>
         </>
     );

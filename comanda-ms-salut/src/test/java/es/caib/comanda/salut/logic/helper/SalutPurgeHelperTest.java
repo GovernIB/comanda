@@ -2,11 +2,7 @@ package es.caib.comanda.salut.logic.helper;
 
 import es.caib.comanda.salut.logic.helper.tx.SalutPurgeTxHelper;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
-import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
-import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
-import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
-import es.caib.comanda.salut.persist.repository.SalutRepository;
-import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import es.caib.comanda.salut.persist.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +41,9 @@ class SalutPurgeHelperTest {
     private SalutDetallRepository salutDetallRepository;
 
     @Mock
+    private SalutHistRepository salutHistRepository;
+
+    @Mock
     private SalutPurgeTxHelper purgeTxHelper;
 
     private SalutPurgeHelper helper;
@@ -57,6 +56,7 @@ class SalutPurgeHelperTest {
                 salutSubsistemaRepository,
                 salutMissatgeRepository,
                 salutDetallRepository,
+                salutHistRepository,
                 purgeTxHelper);
     }
 

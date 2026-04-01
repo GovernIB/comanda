@@ -26,11 +26,7 @@ import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
 import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
-import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
-import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
-import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
-import es.caib.comanda.salut.persist.repository.SalutRepository;
-import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import es.caib.comanda.salut.persist.repository.*;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.noop.NoopTimer;
@@ -64,13 +60,22 @@ class SalutServiceImplTest {
                                         SalutSubsistemaRepository salutSubsistemaRepository,
                                         SalutMissatgeRepository salutMissatgeRepository,
                                         SalutDetallRepository salutDetallRepository,
+                                        SalutHistRepository salutHistRepository,
                                         SalutClientHelper salutClientHelper,
                                         MetricsHelper metricsHelper,
                                         AuthenticationHelper authenticationHelper,
                                         HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                         AclServiceClient aclServiceClient) {
-            super(salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, salutDetallRepository,
-                    salutClientHelper, metricsHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient);
+            super(salutIntegracioRepository,
+                    salutSubsistemaRepository,
+                    salutMissatgeRepository,
+                    salutDetallRepository,
+                    salutHistRepository,
+                    salutClientHelper,
+                    metricsHelper,
+                    authenticationHelper,
+                    httpAuthorizationHeaderHelper,
+                    aclServiceClient);
         }
 
         public String exposedAdditionalSpringFilter() {
@@ -92,6 +97,9 @@ class SalutServiceImplTest {
 
     @Mock
     private SalutDetallRepository salutDetallRepository;
+
+    @Mock
+    private SalutHistRepository salutHistRepository;
 
     @Mock
     private SalutClientHelper salutClientHelper;
@@ -120,6 +128,7 @@ class SalutServiceImplTest {
                 salutSubsistemaRepository,
                 salutMissatgeRepository,
                 salutDetallRepository,
+                salutHistRepository,
                 salutClientHelper,
                 metricsHelper,
                 authenticationHelper,

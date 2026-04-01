@@ -4,6 +4,7 @@ import { useAppInfoData } from './dataFetching';
 
 const mocks = vi.hoisted(() => ({
     useResourceApiServiceMock: vi.fn(),
+    useIsUserAdminMock: vi.fn(),
     entornAppGetOneMock: vi.fn(),
     salutFindMock: vi.fn(),
     salutReportMock: vi.fn(),
@@ -24,12 +25,17 @@ vi.mock('../../components/salut/SalutToolbar', () => ({
     agrupacioFromMinutes: (minutes: number) => mocks.agrupacioFromMinutesMock(minutes),
 }));
 
+vi.mock('../../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => mocks.useIsUserAdminMock(),
+}));
+
 vi.mock('../../util/dateUtils', () => ({
     ISO_DATE_FORMAT: 'YYYY-MM-DD',
 }));
 
 describe('useAppInfoData', () => {
     beforeEach(() => {
+        mocks.useIsUserAdminMock.mockReturnValue(false);
         mocks.agrupacioFromMinutesMock.mockReturnValue('HORA');
         mocks.entornAppGetOneMock.mockResolvedValue({ id: 77, nom: 'App prova' });
         mocks.salutReportMock.mockImplementation((_unused: unknown, request: { code: string }) => {
@@ -94,7 +100,37 @@ describe('useAppInfoData', () => {
         expect(result.current.latencies).toEqual([{ data: '2026-03-13', latenciaMitja: 120 }]);
         expect(mocks.salutFindMock).toHaveBeenCalledWith(
             expect.objectContaining({
+                perspectives: [
+                    'SAL_INTEGRACIONS',
+                    'SAL_SUBSISTEMES',
+                    'SAL_CONTEXTS',
+                    'SAL_MISSATGES',
+                    'SAL_DETALLS',
+                ],
                 filter: "tipusRegistre='MINUT' && entornAppId='77'",
+            })
+        );
+    });
+
+    it('useAppInfoData_quanLusuariEsAdmin_demanaTambeLaPerspectivaDhistoric', async () => {
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+
+        const { result } = renderHook(() => useAppInfoData(77, 60));
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        expect(mocks.salutFindMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                perspectives: [
+                    'SAL_INTEGRACIONS',
+                    'SAL_SUBSISTEMES',
+                    'SAL_CONTEXTS',
+                    'SAL_MISSATGES',
+                    'SAL_DETALLS',
+                    'SAL_HISTORICS',
+                ],
             })
         );
     });

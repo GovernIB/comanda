@@ -186,6 +186,7 @@ const translationCa = {
                 integracions: "Integracions",
                 subsistemes: "Subsistemes",
                 historic: "Històric",
+                historicEstat: "Històric d'estat",
                 logs: "Logs",
             },
             info: {
@@ -208,6 +209,17 @@ const translationCa = {
             latencia: {
                 title: "Latència",
                 error: "Hi ha hagut un error al mostrar el gràfic",
+            },
+            historicEstat: {
+                title: "Històric d'estat",
+                noInfo: "No hi ha canvis d'estat registrats",
+                peticioOk: "Correcta",
+                peticioError: "Amb error",
+                column: {
+                    data: "Data",
+                    appEstat: "Estat app",
+                    peticio: "Petició",
+                },
             },
             estatLatencia: {
                 title: "Estat i latència",

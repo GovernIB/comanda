@@ -17,10 +17,12 @@ import es.caib.comanda.salut.logic.intf.model.*;
 import es.caib.comanda.salut.logic.intf.service.SalutService;
 import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
+import es.caib.comanda.salut.persist.entity.SalutHistEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
 import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
 import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
@@ -65,6 +67,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
+	private final SalutHistRepository salutHistRepository;
 	private final SalutClientHelper salutClientHelper;
 	private final MetricsHelper metricsHelper;
     private final AuthenticationHelper authenticationHelper;
@@ -83,6 +86,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
+		register(Salut.PERSP_HISTORICS, new PerspectiveHistorics());
 	}
 
 	@Override
@@ -222,6 +226,24 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						SalutDetall.class,
 						"salut")).
 					collect(Collectors.toList()));
+		}
+	}
+
+	public class PerspectiveHistorics implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+			if (!authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+				resource.setHistorics(List.of());
+				return;
+			}
+
+			List<SalutHistEntity> salutHistorics = salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(entity.getEntornAppId());
+			resource.setHistorics(
+				salutHistorics.stream()
+					.map(s -> objectMappingHelper.newInstanceMap(
+						s,
+						SalutHist.class))
+					.collect(Collectors.toList()));
 		}
 	}
 

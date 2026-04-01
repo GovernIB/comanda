@@ -1,5 +1,6 @@
 package es.caib.comanda.salut.logic.helper;
 
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.model.v1.salut.EstatSalut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.model.v1.salut.InformacioSistema;
@@ -16,6 +17,7 @@ import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
 import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
 import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
@@ -51,6 +53,8 @@ class SalutInfoHelperCrearSalutTest {
     @Mock private SalutSubsistemaRepository salutSubsistemaRepository;
     @Mock private SalutMissatgeRepository salutMissatgeRepository;
     @Mock private SalutDetallRepository salutDetallRepository;
+    @Mock private SalutHistRepository salutHistRepository;
+    @Mock private ParametresHelper parametresHelper;
     @Mock private es.caib.comanda.salut.logic.helper.SalutClientHelper salutClientHelper;
     @Mock private RestTemplate restTemplate;
     @Mock private ApplicationEventPublisher eventPublisher;
@@ -69,6 +73,7 @@ class SalutInfoHelperCrearSalutTest {
     void setUp() throws Exception {
         crearSalutMethod = SalutInfoHelper.class.getDeclaredMethod("crearSalut", SalutInfo.class, Long.class, LocalDateTime.class);
         crearSalutMethod.setAccessible(true);
+//        when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(any())).thenReturn(null);
     }
 
     @Test

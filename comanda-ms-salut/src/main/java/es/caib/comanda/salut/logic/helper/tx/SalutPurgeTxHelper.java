@@ -1,6 +1,7 @@
 package es.caib.comanda.salut.logic.helper.tx;
 
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
@@ -25,6 +26,7 @@ public class SalutPurgeTxHelper {
     private final SalutSubsistemaRepository salutSubsistemaRepository;
     private final SalutMissatgeRepository salutMissatgeRepository;
     private final SalutDetallRepository salutDetallRepository;
+    private final SalutHistRepository salutHistRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void eliminarBatchEnNovaTransaccio(List<Long> salutIds) {
@@ -35,5 +37,10 @@ public class SalutPurgeTxHelper {
         salutDetallRepository.deleteAllBySalutIdIn(salutIds);
         // Eliminació en batch dels registres principals
         salutRepository.deleteAllByIdInBatch(salutIds);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void eliminarHistoricEnNovaTransaccio(Long entornAppId, java.time.LocalDateTime dataLlindar) {
+        salutHistRepository.deleteByEntornAppIdAndDataBefore(entornAppId, dataLlindar);
     }
 }

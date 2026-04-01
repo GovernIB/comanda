@@ -55,6 +55,7 @@ import java.util.List;
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_CONTEXTS),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_MISSATGES),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_DETALLS),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_HISTORICS),
 		}
 )
 public class Salut extends BaseResource<Long> {
@@ -69,6 +70,7 @@ public class Salut extends BaseResource<Long> {
 	public static final String PERSP_CONTEXTS = "SAL_CONTEXTS";
 	public static final String PERSP_MISSATGES = "SAL_MISSATGES";
 	public static final String PERSP_DETALLS = "SAL_DETALLS";
+	public static final String PERSP_HISTORICS = "SAL_HISTORICS";
 
 	@NotNull
 	private Long entornAppId;
@@ -110,5 +112,6 @@ public class Salut extends BaseResource<Long> {
 	private List<AppContext> contexts;
 	private List<SalutMissatge> missatges;
 	private List<SalutDetall> detalls;
+	private List<SalutHist> historics;
 
 }

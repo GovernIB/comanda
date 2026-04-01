@@ -186,6 +186,7 @@ const translationEn: translationResourcesType = {
                 integracions: "Integrations",
                 subsistemes: "Subsystems",
                 historic: "Historic",
+                historicEstat: "State history",
                 logs: "Logs",
             },
             info: {
@@ -208,6 +209,17 @@ const translationEn: translationResourcesType = {
             latencia: {
                 title: "Latency",
                 error: "There was an error displaying the chart",
+            },
+            historicEstat: {
+                title: "State history",
+                noInfo: "No state changes recorded",
+                peticioOk: "Successful",
+                peticioError: "With error",
+                column: {
+                    data: "Date",
+                    appEstat: "App state",
+                    peticio: "Request",
+                },
             },
             estatLatencia: {
                 title: "State and latency",

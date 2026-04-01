@@ -143,6 +143,7 @@ export interface ISalut extends IBaseEntity {
     contexts?       : IAppContext[];
     missatges?      : ISalutMissatge[];
     detalls?        : ISalutDetall[];
+    historics?      : ISalutHist[];
 }
 
 export class SalutModel extends BaseEntity implements Partial<ISalut> {
@@ -198,6 +199,7 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     contexts?: IAppContext[];
     missatges?: SalutMissatge[];
     detalls?: SalutDetall[];
+    historics?: SalutHistModel[];
 
     /**
      * Constructor
@@ -210,6 +212,28 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
         this.appEstat = salut.appEstat;
         this.bdEstat = salut.bdEstat;
         Object.assign(this, salut);
+    }
+}
+
+export interface ISalutHist extends IBaseEntity {
+    entornAppId: number;
+    data: string;
+    appEstat: SalutEstatEnum;
+    peticioError?: boolean;
+}
+
+export class SalutHistModel extends BaseEntity implements Partial<ISalutHist> {
+    entornAppId: number;
+    data: string;
+    appEstat: SalutEstatEnum;
+    peticioError?: boolean;
+
+    constructor(salutHist: ISalutHist) {
+        super(salutHist);
+        this.entornAppId = salutHist.entornAppId;
+        this.data = salutHist.data;
+        this.appEstat = salutHist.appEstat;
+        Object.assign(this, salutHist);
     }
 }
 
