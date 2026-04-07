@@ -92,8 +92,8 @@ describe('salutEntornAppFilterBuilder', () => {
         // Verifica que el constructor composa el filtre amb l'app i l'entorn seleccionats.
         expect(
             salutEntornAppFilterBuilder({
-                app: { id: '1', description: 'APP' },
-                entorn: { id: '2', description: 'PRO' },
+                app: [{ id: '1', description: 'APP' }],
+                entorn: [{ id: '2', description: 'PRO' }],
             })
         ).toBe('AND(EQ(app.id,1),EQ(entorn.id,2))');
     });

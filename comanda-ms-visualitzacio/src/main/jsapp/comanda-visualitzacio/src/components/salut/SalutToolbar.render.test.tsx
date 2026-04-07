@@ -75,6 +75,7 @@ vi.mock('reactlib', () => ({
         and: (...parts: string[]) => parts.filter(Boolean).join(' and '),
         eq: (field: string, value: unknown) => `${field}:${String(value)}`,
         exists: (value: string) => `exists(${value})`,
+        inn: (field: string, values: any[]) => `${field} in (${values.join(',')})`,
     },
     useBaseAppContext: () => ({ goBack: mocks.goBackMock }),
     useFilterApiRef: () => ({ current: { filter: vi.fn(), clear: vi.fn() } }),
@@ -175,8 +176,8 @@ describe('SalutToolbar render', () => {
                 refreshDuration="PT5M"
                 setRefreshDuration={() => undefined}
                 filterData={{
-                    app: { id: '1', description: 'App Demo' },
-                    entorn: { id: '2', description: 'PRO' },
+                    app: [{ id: '1', description: 'App Demo' }],
+                    entorn: [{ id: '2', description: 'PRO' }],
                 }}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -198,7 +199,7 @@ describe('SalutToolbar render', () => {
                 setDataRangeDuration={() => undefined}
                 refreshDuration="PT5M"
                 setRefreshDuration={() => undefined}
-                filterData={{ app: { id: '1', description: 'App Demo' } }}
+                filterData={{ app: [{ id: '1', description: 'App Demo' }] }}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
                 setGrouping={() => undefined}

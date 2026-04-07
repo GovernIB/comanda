@@ -52,42 +52,6 @@ const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
     }, [apiIsReady, apiIndex]);
 }
 
-
-const filterEntriesByResources = (menuEntries: MenuEntryWithResource[], resourceNames?:string[]): MenuEntryWithResource[] => {
-    if (!resourceNames) return menuEntries;
-    return menuEntries
-        ?.filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName))
-        ?.map(e => {
-            if (e?.children && e?.children?.length > 0) {
-                return {
-                    ...e,
-                    children: filterEntriesByResources(e?.children, resourceNames)
-                }
-            }
-            return e
-        })
-        ?.filter(e => e?.children == null || e?.children?.length > 0 )
-}
-
-const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
-    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
-    return React.useMemo(() => {
-        if (apiIsReady) {
-            if (!menuEntries) return [];
-            const apiLinks = apiIndex?.links.getAll();
-            const resourceNames = apiLinks?.map((l: any) => l.rel);
-
-            return filterEntriesByResources(menuEntries, resourceNames)
-                .map(e => {
-                    const { resourceName, ...otherProps } = e;
-                    return otherProps;
-                });
-        } else {
-            return [];
-        }
-    }, [apiIsReady, apiIndex]);
-}
-
 export const useAppEntries = () => {
     const { t } = useTranslation();
     const isUserAdmin = useIsUserAdmin();

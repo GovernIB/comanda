@@ -1,3 +1,4 @@
+import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Apps, { AppForm } from './Apps';
@@ -14,7 +15,7 @@ const mocks = vi.hoisted(() => ({
     appPermissionShowMock: vi.fn(),
     iniciaDescargaJSONMock: vi.fn(),
     dialogShowMock: vi.fn(),
-    dialogComponentMock: vi.fn(),
+    dialogComponentMock: 'dialog-component',
     useFormContextValue: {
         data: {},
         apiRef: { current: { setFieldValue: vi.fn() } },
@@ -160,16 +161,23 @@ vi.mock('reactlib', () => ({
         title,
         children,
         goBackLink,
+        onDataChange,
     }: {
         title: string;
         children: React.ReactNode;
         goBackLink: string;
-    }) => (
-        <form data-back-link={goBackLink}>
-            <h1>{title}</h1>
-            {children}
-        </form>
-    ),
+        onDataChange?: (data: any) => void;
+    }) => {
+        React.useEffect(() => {
+            onDataChange?.({ nom: 'Comanda' });
+        }, [onDataChange]);
+        return (
+            <form data-back-link={goBackLink}>
+                <h1>{title}</h1>
+                {children}
+            </form>
+        );
+    },
     MuiFormTabContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiFormTabs: ({
         tabs,
@@ -280,8 +288,8 @@ describe('AppForm', () => {
 
         render(<AppForm />);
 
-        expect(screen.getByRole('heading', { name: 'Editar aplicació' })).toBeInTheDocument();
-        expect(screen.getByTestId('page-title')).toHaveTextContent('Editar aplicació');
+        expect(screen.getByRole('heading', { name: 'Editar aplicació (Comanda)' })).toBeInTheDocument();
+        expect(screen.getByTestId('page-title')).toHaveTextContent('Editar aplicació (Comanda)');
         expect(screen.getByText('General')).toBeInTheDocument();
         expect(screen.getByText('Entorns')).toBeInTheDocument();
         expect(mocks.setMarginsDisabledMock).toHaveBeenCalledWith(true);

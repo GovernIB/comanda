@@ -7,6 +7,10 @@ const mocks = vi.hoisted(() => ({
     clearMoreMock: vi.fn(),
     filterApiRefCallMock: vi.fn(),
     setFieldValueMock: vi.fn(),
+    useResourceApiServiceMock: vi.fn(() => ({
+        isReady: true,
+        find: vi.fn().mockResolvedValue({ rows: [] }),
+    })),
     getColorByTascaEstatMock: vi.fn((estat: string) => `estat-${estat}`),
     getColorByTascaPrioritatMock: vi.fn((prioritat: string) => `prioritat-${prioritat}`),
     tMock: vi.fn((selector: any) =>
@@ -153,6 +157,7 @@ vi.mock('reactlib', () => ({
     useBaseAppContext: () => ({
         t: mocks.tLibMock,
     }),
+    useResourceApiService: (resourceName: string) => mocks.useResourceApiServiceMock(resourceName),
 }));
 
 vi.mock('../hooks/treeData', () => ({
@@ -229,9 +234,9 @@ describe('Tasca', () => {
         expect(screen.getByRole('heading', { name: 'Tasques' })).toBeInTheDocument();
         expect(screen.getByTestId('find-disabled')).toHaveTextContent('true');
         expect(screen.getByTestId('columns')).toHaveTextContent(
-            'nom,treePath,descripcio,numeroExpedient,estat,tipus,responsable,prioritat,dataInici,dataCaducitat,dataFi'
+            'logo,app,entorn,nom,descripcio,numeroExpedient,estat,tipus,responsable,prioritat,dataInici,dataCaducitat,dataFi'
         );
-        expect(screen.getByTestId('treepath-value')).toHaveTextContent('Entorn no vàlid [ID: 44]');
+        expect(screen.getByTestId('treepath-value')).toHaveTextContent('');
         expect(screen.getByTestId('estat-chip')).toHaveTextContent('Error');
         expect(screen.getByTestId('prioritat-chip')).toHaveTextContent('Alta');
         expect(screen.getByTestId('caducitat-chip')).toHaveTextContent('14/03/2026');
