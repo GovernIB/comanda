@@ -16,38 +16,42 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class OpenApiContractSmokeTest {
 
+    private Path generatedOpenApi(String filename) {
+        return Path.of("target", "classes", "openapi", filename);
+    }
+
     private String loadComandaAvisYaml() throws IOException {
-        Path yaml = Path.of("src", "main", "resources", "openapi", "openapi-comanda-management.yml");
+        Path yaml = generatedOpenApi("openapi-comanda-management.yml");
         assertTrue(Files.exists(yaml), "No s'ha generat el fitxer OpenAPI: " + yaml.toAbsolutePath());
         return Files.readString(yaml, StandardCharsets.UTF_8);
     }
 
     private String loadComandaEstadisticaYaml() throws IOException {
-        Path yaml = Path.of("src", "main", "resources", "openapi", "openapi-comanda-monitoring.yml");
+        Path yaml = generatedOpenApi("openapi-comanda-monitoring.yml");
         assertTrue(Files.exists(yaml), "No s'ha generat el fitxer OpenAPI: " + yaml.toAbsolutePath());
         return Files.readString(yaml, StandardCharsets.UTF_8);
     }
 
     private String loadComandaLogYaml() throws IOException {
-        Path yaml = Path.of("src", "main", "resources", "openapi", "openapi-comanda-monitoring.yml");
+        Path yaml = generatedOpenApi("openapi-comanda-monitoring.yml");
         assertTrue(Files.exists(yaml), "No s'ha generat el fitxer OpenAPI: " + yaml.toAbsolutePath());
         return Files.readString(yaml, StandardCharsets.UTF_8);
     }
 
     private String loadComandaPermisYaml() throws IOException {
-        Path yaml = Path.of("src", "main", "resources", "openapi", "openapi-comanda-management.yml");
+        Path yaml = generatedOpenApi("openapi-comanda-management.yml");
         assertTrue(Files.exists(yaml), "No s'ha generat el fitxer OpenAPI: " + yaml.toAbsolutePath());
         return Files.readString(yaml, StandardCharsets.UTF_8);
     }
 
     private String loadComandaSalutYaml() throws IOException {
-        Path yaml = Path.of("src", "main", "resources", "openapi", "openapi-comanda-monitoring.yml");
+        Path yaml = generatedOpenApi("openapi-comanda-monitoring.yml");
         assertTrue(Files.exists(yaml), "No s'ha generat el fitxer OpenAPI: " + yaml.toAbsolutePath());
         return Files.readString(yaml, StandardCharsets.UTF_8);
     }
 
     private String loadComandaTascaYaml() throws IOException {
-        Path yaml = Path.of("src", "main", "resources", "openapi", "openapi-comanda-management.yml");
+        Path yaml = generatedOpenApi("openapi-comanda-management.yml");
         assertTrue(Files.exists(yaml), "No s'ha generat el fitxer OpenAPI: " + yaml.toAbsolutePath());
         return Files.readString(yaml, StandardCharsets.UTF_8);
     }

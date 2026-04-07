@@ -35,21 +35,9 @@ public class SubsistemaSalut   {
 
   @JsonCreator
   public SubsistemaSalut(
-    @JsonProperty(required = true, value = "codi") String codi,
-    @JsonProperty(required = true, value = "totalOk") Long totalOk,
-    @JsonProperty(required = true, value = "totalError") Long totalError,
-    @JsonProperty(required = true, value = "totalTempsMig") Integer totalTempsMig,
-    @JsonProperty(required = true, value = "peticionsOkUltimPeriode") Long peticionsOkUltimPeriode,
-    @JsonProperty(required = true, value = "peticionsErrorUltimPeriode") Long peticionsErrorUltimPeriode,
-    @JsonProperty(required = true, value = "tempsMigUltimPeriode") Integer tempsMigUltimPeriode
+    @JsonProperty(required = true, value = "codi") String codi
   ) {
     this.codi = codi;
-    this.totalOk = totalOk;
-    this.totalError = totalError;
-    this.totalTempsMig = totalTempsMig;
-    this.peticionsOkUltimPeriode = peticionsOkUltimPeriode;
-    this.peticionsErrorUltimPeriode = peticionsErrorUltimPeriode;
-    this.tempsMigUltimPeriode = tempsMigUltimPeriode;
   }
 
   /**
@@ -119,13 +107,13 @@ public class SubsistemaSalut   {
   }
 
   
-  @ApiModelProperty(required = true, value = "Total de peticions amb resultat correcte")
-  @JsonProperty(required = true, value = "totalOk")
-  @NotNull public Long getTotalOk() {
+  @ApiModelProperty(value = "Total de peticions amb resultat correcte")
+  @JsonProperty("totalOk")
+  public Long getTotalOk() {
     return totalOk;
   }
 
-  @JsonProperty(required = true, value = "totalOk")
+  @JsonProperty("totalOk")
   public void setTotalOk(Long totalOk) {
     this.totalOk = totalOk;
   }
@@ -139,13 +127,13 @@ public class SubsistemaSalut   {
   }
 
   
-  @ApiModelProperty(required = true, value = "Total de peticions amb error")
-  @JsonProperty(required = true, value = "totalError")
-  @NotNull public Long getTotalError() {
+  @ApiModelProperty(value = "Total de peticions amb error")
+  @JsonProperty("totalError")
+  public Long getTotalError() {
     return totalError;
   }
 
-  @JsonProperty(required = true, value = "totalError")
+  @JsonProperty("totalError")
   public void setTotalError(Long totalError) {
     this.totalError = totalError;
   }
@@ -159,13 +147,13 @@ public class SubsistemaSalut   {
   }
 
   
-  @ApiModelProperty(required = true, value = "Temps mig total de resposta (ms)")
-  @JsonProperty(required = true, value = "totalTempsMig")
-  @NotNull public Integer getTotalTempsMig() {
+  @ApiModelProperty(value = "Temps mig total de resposta (ms)")
+  @JsonProperty("totalTempsMig")
+  public Integer getTotalTempsMig() {
     return totalTempsMig;
   }
 
-  @JsonProperty(required = true, value = "totalTempsMig")
+  @JsonProperty("totalTempsMig")
   public void setTotalTempsMig(Integer totalTempsMig) {
     this.totalTempsMig = totalTempsMig;
   }
@@ -179,13 +167,13 @@ public class SubsistemaSalut   {
   }
 
   
-  @ApiModelProperty(required = true, value = "Peticions OK en el darrer període")
-  @JsonProperty(required = true, value = "peticionsOkUltimPeriode")
-  @NotNull public Long getPeticionsOkUltimPeriode() {
+  @ApiModelProperty(value = "Peticions OK en el darrer període")
+  @JsonProperty("peticionsOkUltimPeriode")
+  public Long getPeticionsOkUltimPeriode() {
     return peticionsOkUltimPeriode;
   }
 
-  @JsonProperty(required = true, value = "peticionsOkUltimPeriode")
+  @JsonProperty("peticionsOkUltimPeriode")
   public void setPeticionsOkUltimPeriode(Long peticionsOkUltimPeriode) {
     this.peticionsOkUltimPeriode = peticionsOkUltimPeriode;
   }
@@ -199,13 +187,13 @@ public class SubsistemaSalut   {
   }
 
   
-  @ApiModelProperty(required = true, value = "Peticions en error en el darrer període")
-  @JsonProperty(required = true, value = "peticionsErrorUltimPeriode")
-  @NotNull public Long getPeticionsErrorUltimPeriode() {
+  @ApiModelProperty(value = "Peticions en error en el darrer període")
+  @JsonProperty("peticionsErrorUltimPeriode")
+  public Long getPeticionsErrorUltimPeriode() {
     return peticionsErrorUltimPeriode;
   }
 
-  @JsonProperty(required = true, value = "peticionsErrorUltimPeriode")
+  @JsonProperty("peticionsErrorUltimPeriode")
   public void setPeticionsErrorUltimPeriode(Long peticionsErrorUltimPeriode) {
     this.peticionsErrorUltimPeriode = peticionsErrorUltimPeriode;
   }
@@ -219,13 +207,13 @@ public class SubsistemaSalut   {
   }
 
   
-  @ApiModelProperty(required = true, value = "Temps mig de resposta en el darrer període (ms)")
-  @JsonProperty(required = true, value = "tempsMigUltimPeriode")
-  @NotNull public Integer getTempsMigUltimPeriode() {
+  @ApiModelProperty(value = "Temps mig de resposta en el darrer període (ms)")
+  @JsonProperty("tempsMigUltimPeriode")
+  public Integer getTempsMigUltimPeriode() {
     return tempsMigUltimPeriode;
   }
 
-  @JsonProperty(required = true, value = "tempsMigUltimPeriode")
+  @JsonProperty("tempsMigUltimPeriode")
   public void setTempsMigUltimPeriode(Integer tempsMigUltimPeriode) {
     this.tempsMigUltimPeriode = tempsMigUltimPeriode;
   }
