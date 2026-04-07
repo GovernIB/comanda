@@ -12,6 +12,7 @@ const translations = {
                 estatActual: 'Estat actual',
                 integracions: 'Integracions',
                 historic: 'Històric',
+                historicEstat: "Històric d'estat",
                 logs: 'Logs',
             },
             info: {
@@ -84,6 +85,17 @@ const translations = {
             },
             latencia: {
                 title: 'Latència',
+            },
+            historicEstat: {
+                title: "Històric d'estat",
+                noInfo: 'Sense canvis',
+                peticioOk: 'Correcta',
+                peticioError: 'Amb error',
+                column: {
+                    data: 'Data',
+                    appEstat: 'Estat app',
+                    peticio: 'Petició',
+                },
             },
         },
     },
@@ -169,6 +181,10 @@ vi.mock('../../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
+vi.mock('../../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => true,
+}));
+
 vi.mock('../../types/salut.model.tsx', () => ({
     NivellEnum: {
         INFO: 'INFO',
@@ -236,6 +252,14 @@ const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
                 data: '2026-03-13T10:00:00',
                 nivell: 'INFO',
                 missatge: 'Tot correcte',
+            },
+        ],
+        historics: [
+            {
+                id: 1,
+                data: '2026-03-13T09:00:00',
+                appEstat: 'DOWN',
+                peticioError: true,
             },
         ],
         subsistemes: [
@@ -416,6 +440,52 @@ describe('SalutAppInfo', () => {
         expect(screen.getByText('Sense missatges')).toBeInTheDocument();
     });
 
+    it('SalutAppInfo_quanHiHaComponentsSensePeticions_mostraNDEnllocDeZeroZero', () => {
+        render(
+            <SalutAppInfo
+                ready
+                appInfoData={createAppInfoData({
+                    salutCurrentApp: {
+                        ...createAppInfoData().salutCurrentApp,
+                        subsistemes: [
+                            {
+                                codi: 'SUB-1',
+                                nom: 'Subsistema principal',
+                                estat: 'UP',
+                                totalOk: null,
+                                totalError: null,
+                                totalTempsMig: null,
+                                peticionsOkUltimPeriode: null,
+                                peticionsErrorUltimPeriode: null,
+                                tempsMigUltimPeriode: null,
+                            },
+                        ],
+                        integracions: [
+                            {
+                                id: 10,
+                                codi: 'PARENT',
+                                nom: 'Integració pare',
+                                estat: 'UP',
+                                totalOk: null,
+                                totalError: null,
+                                totalTempsMig: null,
+                                peticionsOkUltimPeriode: null,
+                                peticionsErrorUltimPeriode: null,
+                                tempsMigUltimPeriode: null,
+                            },
+                        ],
+                    },
+                }) as any}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('tab', { name: /Estat actual/i }));
+        expect(screen.getAllByText('N/D').length).toBeGreaterThanOrEqual(3);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Integracions/i }));
+        expect(screen.getAllByText('N/D').length).toBeGreaterThanOrEqual(3);
+    });
+
     it('SalutAppInfo_quanEsConsultaLHistoric_mostraElsGraficsPreparats', () => {
         // Verifica que el tab històric renderitza les visualitzacions quan hi ha agrupació, estats i latències.
         render(
@@ -426,12 +496,22 @@ describe('SalutAppInfo', () => {
             />
         );
 
-        fireEvent.click(screen.getByRole('tab', { name: /Històric/i }));
+        fireEvent.click(screen.getByRole('tab', { name: /^Històric$/i }));
 
         expect(screen.getByText('Estats')).toBeInTheDocument();
         expect(screen.getByText('Latència')).toBeInTheDocument();
         expect(screen.getByTestId('updown-bar-chart')).toBeInTheDocument();
         expect(screen.getByTestId('chart-container')).toBeInTheDocument();
+    });
+
+    it("SalutAppInfo_quanLusuariEsAdmin_iObreHistoricEstat_mostraLhistorial", () => {
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric d'estat/i }));
+
+        expect(screen.getByRole('tab', { name: /Històric d'estat/i })).toHaveAttribute('aria-selected', 'true');
+        expect(screen.getByText('format:2026-03-13T09:00:00')).toBeInTheDocument();
+        expect(screen.getByText('Amb error')).toBeInTheDocument();
     });
 
     it('SalutAppInfo_quanHiHaLogsDisponibles_permetObrirElTabDeLogs', () => {
@@ -493,7 +573,7 @@ describe('SalutAppInfo', () => {
             />
         );
 
-        fireEvent.click(screen.getByRole('tab', { name: /Històric/i }));
+        fireEvent.click(screen.getByRole('tab', { name: /^Històric$/i }));
 
         expect(screen.getAllByText('Sense històric').length).toBeGreaterThan(0);
     });

@@ -60,15 +60,24 @@ class SalutServiceImplTest {
                                         SalutSubsistemaRepository salutSubsistemaRepository,
                                         SalutMissatgeRepository salutMissatgeRepository,
                                         SalutDetallRepository salutDetallRepository,
+                                        SalutHistRepository salutHistRepository,
                                         SalutEntornAppEstatsRepository salutEntornAppEstatsRepository,
                                         SalutClientHelper salutClientHelper,
                                         MetricsHelper metricsHelper,
                                         AuthenticationHelper authenticationHelper,
                                         HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                         AclServiceClient aclServiceClient) {
-            super(salutIntegracioRepository, salutSubsistemaRepository, salutMissatgeRepository, salutDetallRepository,
-                    salutEntornAppEstatsRepository, salutClientHelper, metricsHelper, authenticationHelper,
-                    httpAuthorizationHeaderHelper, aclServiceClient);
+            super(salutIntegracioRepository,
+                    salutSubsistemaRepository,
+                    salutMissatgeRepository,
+                    salutDetallRepository,
+                    salutHistRepository,
+                    salutEntornAppEstatsRepository,
+                    salutClientHelper,
+                    metricsHelper,
+                    authenticationHelper,
+                    httpAuthorizationHeaderHelper,
+                    aclServiceClient);
         }
 
         public String exposedAdditionalSpringFilter() {
@@ -90,6 +99,9 @@ class SalutServiceImplTest {
 
     @Mock
     private SalutDetallRepository salutDetallRepository;
+
+    @Mock
+    private SalutHistRepository salutHistRepository;
 
     @Mock
     private SalutEntornAppEstatsRepository salutEntornAppEstatsRepository;
@@ -121,6 +133,7 @@ class SalutServiceImplTest {
                 salutSubsistemaRepository,
                 salutMissatgeRepository,
                 salutDetallRepository,
+                salutHistRepository,
                 salutEntornAppEstatsRepository,
                 salutClientHelper,
                 metricsHelper,

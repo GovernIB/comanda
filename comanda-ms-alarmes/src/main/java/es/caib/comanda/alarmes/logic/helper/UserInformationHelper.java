@@ -6,7 +6,6 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.Getter;
 import org.fundaciobit.pluginsib.userinformation.ldap.LdapUserInformationPlugin;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -30,19 +29,10 @@ public class UserInformationHelper {
 	}
 
 	public Usuari usuariFindByUsername(String username) {
-		PagedModel<EntityModel<Usuari>> usuaris = usuariServiceClient.find(
-				null,
-				"codi:'" + username + "'",
-				null,
-				null,
-				"0",
-				1,
+		EntityModel<Usuari> usuari = usuariServiceClient.getOneByCodiInternal(
+				username,
 				httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		if (usuaris == null) return null;
-		return usuaris.getContent().stream().
-				findFirst().
-				map(EntityModel::getContent).
-				orElse(null);
+		return usuari != null ? usuari.getContent() : null;
 	}
 
 	public String[] findByRole(String role) {

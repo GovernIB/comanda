@@ -188,6 +188,7 @@ const translationEn: translationResourcesType = {
                 integracions: "Integrations",
                 subsistemes: "Subsystems",
                 historic: "Historic",
+                historicEstat: "State history",
                 logs: "Logs",
             },
             info: {
@@ -211,6 +212,17 @@ const translationEn: translationResourcesType = {
             latencia: {
                 title: "Latency",
                 error: "There was an error displaying the chart",
+            },
+            historicEstat: {
+                title: "State history",
+                noInfo: "No state changes recorded",
+                peticioOk: "Successful",
+                peticioError: "With error",
+                column: {
+                    data: "Date",
+                    appEstat: "App state",
+                    peticio: "Request",
+                },
             },
             estatLatencia: {
                 title: "State and latency",
@@ -598,6 +610,9 @@ const translationEn: translationResourcesType = {
         },
         monitors: {
             title: "Monitors",
+            column: {
+                mailAddress: "Email address",
+            },
             detail: {
                 title: "Communication details with the integration",
                 data: "Date",
@@ -623,8 +638,12 @@ const translationEn: translationResourcesType = {
                 salut: "Health",
                 estadistica: "Statistics",
                 configuracio: "Configuration",
+                alarmes: "Alarms",
                 tasca: "Task",
                 avis: "Notice",
+            },
+            tab: {
+                email: "EMAIL",
             },
         },
         widget: {
@@ -901,6 +920,7 @@ const translationEn: translationResourcesType = {
     components: {
         clear: "Clear",
         search: "Search",
+        details: "Details",
         copiarContingut: "Copy content",
         copiarContingutTitle: "Copy the content",
         copiarContingutSuccess: "Content copied to clipboard",

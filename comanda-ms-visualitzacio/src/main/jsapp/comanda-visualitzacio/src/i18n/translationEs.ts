@@ -188,6 +188,7 @@ const translationEs: translationResourcesType = {
                 integracions: "Integraciones",
                 subsistemes: "Subsistemas",
                 historic: "Histórico",
+                historicEstat: "Histórico de estado",
                 logs: "Logs",
             },
             info: {
@@ -211,6 +212,17 @@ const translationEs: translationResourcesType = {
             latencia: {
                 title: "Latencia",
                 error: "Ha habido un error al mostrar el gráfico",
+            },
+            historicEstat: {
+                title: "Histórico de estado",
+                noInfo: "No hay cambios de estado registrados",
+                peticioOk: "Correcta",
+                peticioError: "Con error",
+                column: {
+                    data: "Fecha",
+                    appEstat: "Estado app",
+                    peticio: "Petición",
+                },
             },
             estatLatencia: {
                 title: "Estado y latencia",
@@ -598,6 +610,9 @@ const translationEs: translationResourcesType = {
         },
         monitors: {
             title: "Monitores",
+            column: {
+                mailAddress: "Dirección de correo",
+            },
             detail: {
                 title: "Detalles de la comunicación con la integración",
                 data: "Fecha",
@@ -623,8 +638,12 @@ const translationEs: translationResourcesType = {
                 salut: "Salud",
                 estadistica: "Estadística",
                 configuracio: "Configuración",
+                alarmes: "Alarmas",
                 tasca: "Tarea",
                 avis: "Aviso",
+            },
+            tab: {
+                email: "EMAIL",
             },
         },
         widget: {
@@ -901,6 +920,7 @@ const translationEs: translationResourcesType = {
     components: {
         clear: "Limpiar",
         search: "Buscar",
+        details: "Detalles",
         copiarContingut: "Copiar contenido",
         copiarContingutTitle: "Copiar el contenido",
         copiarContingutSuccess: "Contenido copiado al portapapeles",

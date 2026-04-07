@@ -9,4 +9,7 @@
 		<version>0.1.1</version>
 	</parent>
 	<artifactId>comanda-base</artifactId>
+	<properties>
+		<maven.site.skip>true</maven.site.skip>
+	</properties>
 </project>

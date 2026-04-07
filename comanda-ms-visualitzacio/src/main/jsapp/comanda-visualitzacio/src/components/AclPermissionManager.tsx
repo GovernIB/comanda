@@ -6,6 +6,7 @@ import {
     MuiDataGridDialog,
     MuiDataGridDialogApi,
 } from 'reactlib';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
 const AclEntryForm: React.FC = () => {
     return <Grid container spacing={2}>
@@ -23,6 +24,7 @@ const AclEntryForm: React.FC = () => {
 
 export const useAclPermissionManager = (resourceType: string) => {
     const { t } = useTranslation();
+    const gestorReadOnly = useReadOnlyGestor();
     const dataGridDialogApiRef = React.useRef<MuiDataGridDialogApi | any>({});
     const show = (id: any, description: string) => {
         dataGridDialogApiRef.current.show({
@@ -44,7 +46,8 @@ export const useAclPermissionManager = (resourceType: string) => {
                 }),
                 popupEditActive: true,
                 popupEditFormContent: <AclEntryForm />,
-                popupEditFormDialogResourceTitle: t($ => $.components.permisos.resourceTitle)
+                popupEditFormDialogResourceTitle: t($ => $.components.permisos.resourceTitle),
+                rowHideDeleteButton: gestorReadOnly,
             }
         });
     }

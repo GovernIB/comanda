@@ -188,6 +188,7 @@ const translationCa = {
                 integracions: "Integracions",
                 subsistemes: "Subsistemes",
                 historic: "Històric",
+                historicEstat: "Històric d'estat",
                 logs: "Logs",
             },
             info: {
@@ -211,6 +212,17 @@ const translationCa = {
             latencia: {
                 title: "Latència",
                 error: "Hi ha hagut un error al mostrar el gràfic",
+            },
+            historicEstat: {
+                title: "Històric d'estat",
+                noInfo: "No hi ha canvis d'estat registrats",
+                peticioOk: "Correcta",
+                peticioError: "Amb error",
+                column: {
+                    data: "Data",
+                    appEstat: "Estat app",
+                    peticio: "Petició",
+                },
             },
             estatLatencia: {
                 title: "Estat i latència",
@@ -598,6 +610,9 @@ const translationCa = {
         },
         monitors: {
             title: "Monitors",
+            column: {
+                mailAddress: "Adreça de correu",
+            },
             detail: {
                 title: "Detalls de la comunicació amb la integració",
                 data: "Data",
@@ -623,8 +638,12 @@ const translationCa = {
                 salut: "Salut",
                 estadistica: "Estadística",
                 configuracio: "Configuració",
+                alarmes: "Alarmes",
                 tasca: "Tasca",
                 avis: "Avís",
+            },
+            tab: {
+                email: "EMAIL",
             },
         },
         widget: {
@@ -901,6 +920,7 @@ const translationCa = {
     components: {
         clear: "Netejar",
         search: "Cercar",
+        details: "Detalls",
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",

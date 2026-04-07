@@ -251,6 +251,8 @@ export const useDataCommonEditable = (
     refresh: () => void
 ) => {
     const { t, temporalMessageShow, messageDialogShow } = useBaseAppContext();
+    const hasSaveAction = (row?: any) =>
+        row?._actions?.save != null || row?._actions?.update != null;
     const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>(undefined);
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
@@ -341,9 +343,10 @@ export const useDataCommonEditable = (
     const updateLinkConfigError = !readOnly && !isPopupEditUpdate && rowUpdateLink == null;
     !readOnly &&
         rowEditActions.push({
-            label: t('datacommon.update.label'),
+            label: (row: any) =>
+                t(hasSaveAction(row) ? 'datacommon.update.label' : 'datacommon.details.label'),
             rowLink: 'update',
-            icon: 'edit',
+            icon: (row: any) => (hasSaveAction(row) ? 'edit' : 'visibility'),
             linkTo: rowUpdateLink,
             linkState:
                 rowUpdateLink != null && formAdditionalData != null

@@ -151,9 +151,10 @@ const ImageField: React.FC<ImageFieldProps> = ({
 type LogoUploadProps = {
     name: string;
     label?: string;
+    editable?: boolean;
 };
 
-const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
+const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label, editable = true }) => {
     const { data, apiRef } = useFormContext();
     const previewUrl = data[name] ? `data:image/png;base64,${data[name]}` : null;
 
@@ -215,7 +216,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ name = 'logo', label }) => {
                     document.body.removeChild(link);
                 }
             }}
-            editable={true}
+            editable={editable}
             hideDownloadButton={previewUrl == null}
             sx={{
                 borderRadius: '10px',

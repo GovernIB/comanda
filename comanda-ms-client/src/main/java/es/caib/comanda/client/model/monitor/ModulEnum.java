@@ -12,6 +12,7 @@ public enum ModulEnum {
     SALUT,
     ESTADISTICA,
     CONFIGURACIO,
+    ALARMES,
     TASCA,
     AVIS
 }

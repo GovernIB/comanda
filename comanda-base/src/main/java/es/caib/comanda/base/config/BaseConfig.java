@@ -43,6 +43,8 @@ public class BaseConfig {
 	public static final String PROP_SCHEDULER_BACK = PROPERTY_PREFIX + "scheduler.back";
 	public static final String PROP_SCHEDULER_ALARMES_CRON = PROPERTY_PREFIX + "scheduler.alarmes.cron";
 	public static final String PROP_SCHEDULER_ALARMES_MAILS_AGRUPATS_CRON = PROPERTY_PREFIX + "scheduler.alarmes.mails.agrupats.cron";
+	public static final String PROP_ALARMA_SALUT_FRESHNESS_SECONDS = PROPERTY_PREFIX + "alarma.salut.freshness.seconds";
+	public static final String PROP_ALARMA_RECOVERY_STABILITY_SECONDS = PROPERTY_PREFIX + "alarma.recovery.stability.seconds";
 	public static final String PROP_SCHEDULER_POOL_SIZE = PROPERTY_PREFIX + "scheduler.pool.size";
 	public static final String PROP_WORKER_POOL_SIZE = PROPERTY_PREFIX + "worker.pool.size";
 	public static final String PROP_WORKER_QUEUE_SIZE = PROPERTY_PREFIX + "worker.queue.size";
@@ -69,6 +71,7 @@ public class BaseConfig {
     // Propietats de SALUT
     public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";
 	public static final String PROP_SALUT_LOG_REPORT = PROP_SALUT_PREFIX + "log.report";
+    public static final String PROP_SALUT_HIST_RETENCIO_DIES = PROP_SALUT_PREFIX + "hist.retencio.dies";
 
     // Propietats de tasques
     public static final String PROP_TASCA_PREFIX = PROPERTY_PREFIX + "tasca.";

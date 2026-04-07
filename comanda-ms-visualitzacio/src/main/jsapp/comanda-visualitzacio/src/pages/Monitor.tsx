@@ -22,6 +22,7 @@ const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
     { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' },
     { value: 'CONFIGURACIO', labelKey: 'page.monitors.modulEnum.configuracio' },
+    { value: 'ALARMES', labelKey: 'page.monitors.tab.email' },
     { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
     { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
 ];
@@ -81,20 +82,6 @@ const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, ch
   const label = children ?? translateEnumValue(value, estatTranslationMap, t);
   return <Chip label={label} color={color} size="small" />;
 };
-
-const columns = [
-    { field: 'data', flex: 1, },
-    { field: 'operacio', flex: 2, },
-    { field: 'tipus', flex: 1, },
-    { field: 'url', flex: 2, },
-    { field: 'modul', flex: 1, },
-    { field: 'tempsResposta', flex: 1, },
-    {
-        field: 'estat',
-        flex: 0.5,
-        renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
-    },
-];
 
 const MonitorDetails: React.FC<any> = (props) => {
     const { data } = props;
@@ -191,6 +178,25 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
+    const columns = [
+        { field: 'data', flex: 1, },
+        { field: 'operacio', flex: 2, },
+        { field: 'tipus', flex: 1, },
+        {
+            field: 'url',
+            flex: 2,
+            headerName: selectedModule === 'ALARMES'
+                ? t($ => $.page.monitors.column.mailAddress)
+                : 'URL',
+        },
+        { field: 'modul', flex: 1, },
+        { field: 'tempsResposta', flex: 1, },
+        {
+            field: 'estat',
+            flex: 0.5,
+            renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
+        },
+    ];
     const columnsMonitor = React.useMemo(() => {
         if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
             return columns.filter(col => col.field !== 'url');

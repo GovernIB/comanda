@@ -57,6 +57,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
+	private final SalutHistRepository salutHistRepository;
     private final SalutEntornAppEstatsRepository salutEntornAppEstatsRepository;
 	private final SalutClientHelper salutClientHelper;
 	private final MetricsHelper metricsHelper;
@@ -76,6 +77,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
+		register(Salut.PERSP_HISTORICS, new PerspectiveHistorics());
         register(Salut.PERSP_ENTORN_APP_ESTATS, new PerspectiveSalutEntornAppEstats());
 	}
 
@@ -244,6 +246,24 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             );
         }
     }
+
+	public class PerspectiveHistorics implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+			if (!authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+				resource.setHistorics(List.of());
+				return;
+			}
+
+			List<SalutHistEntity> salutHistorics = salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(entity.getEntornAppId());
+			resource.setHistorics(
+				salutHistorics.stream()
+					.map(s -> objectMappingHelper.newInstanceMap(
+						s,
+						SalutHist.class))
+					.collect(Collectors.toList()));
+		}
+	}
 
 	/**
 	 * Darrera informació de salut de cada aplicació/entorn.

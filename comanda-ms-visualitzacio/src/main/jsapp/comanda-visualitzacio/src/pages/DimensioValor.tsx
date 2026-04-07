@@ -18,6 +18,7 @@ import {
     useBaseAppContext,
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
 // const DimensioValorForm: React.FC = () => {
 //     const { data } = useFormContext();
@@ -75,6 +76,7 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
 
 const DimensioValor: React.FC = () => {
     const { t } = useTranslation();
+    const gestorReadOnly = useReadOnlyGestor();
     const { id } = useParams();
     const { goBack, anyHistoryEntryExist } = useBaseAppContext();
     const { isReady, getOne: getDimensio } = useResourceApiService('dimensio');
@@ -134,6 +136,7 @@ const DimensioValor: React.FC = () => {
                 staticFilter={staticFilter}
                 filter={filter}
                 popupEditActive={false}
+                rowHideDeleteButton={gestorReadOnly}
                 // popupEditFormContent={<DimensioValorForm />}
             />
         </GridPage>

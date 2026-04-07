@@ -26,9 +26,15 @@ export default defineConfig(({ mode }) => {
             restoreMocks: true,
             unstubGlobals: true,
             pool: 'forks',
+            reporters: ['default', 'junit', 'html'],
+            outputFile: {
+                junit: './test-reports/junit.xml',
+                html: './test-reports/index.html',
+            },
             coverage: {
                 provider: 'v8',
-                reporter: ['text', 'json', 'html'],
+                reportsDirectory: './coverage',
+                reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
                 exclude: ['lib/**'],
             },
         },

@@ -27,6 +27,7 @@
 		<maven.compiler.source>11</maven.compiler.source>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jacoco.version>0.8.11</jacoco.version>
+		<surefire-report.version>3.2.5</surefire-report.version>
 		<testcontainers.version>1.20.6</testcontainers.version>
 	</properties>
 	<dependencyManagement>
@@ -297,6 +298,23 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<!-- aggregate recull tots els mòduls -->
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -330,6 +348,21 @@
 					<artifactId>jacoco-maven-plugin</artifactId>
 					<version>${jacoco.version}</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-report-plugin</artifactId>
+					<version>${surefire-report.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.12.1</version>
+					<configuration>
+						<stagingDirectory>
+							${project.build.directory}/staging
+						</stagingDirectory>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -339,6 +372,10 @@
 			<name>GitHub GovernIB Maven Repository</name>
 			<url>file://${project.build.directory}/mvn-repo</url>
 		</repository>
+		<site>
+			<id>local-site</id>
+			<url>file://${project.build.directory}/staging</url>
+		</site>
 	</distributionManagement>
 	<repositories>
 		<repository>
@@ -362,4 +399,51 @@
 			</releases>
 		</pluginRepository>
 	</pluginRepositories>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>${surefire-report.version}</version>
+				<inherited>false</inherited>
+				<configuration>
+					<reportsDirectories>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-common/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-configuracio/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-salut/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-estadistica/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-monitor/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-visualitzacio/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-tasques/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-avisos/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-alarmes/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-permisos/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-usuaris/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-acl/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-api-utils/target/surefire-reports</reportsDirectory>
+					</reportsDirectories>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
+	</reporting>
 </project>

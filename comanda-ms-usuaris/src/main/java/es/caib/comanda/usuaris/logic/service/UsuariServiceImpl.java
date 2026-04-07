@@ -5,6 +5,7 @@ import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.ms.back.config.WebSecurityConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.usuaris.logic.intf.model.LanguageEnum;
 import es.caib.comanda.usuaris.logic.intf.model.MenuEstilEnum;
@@ -15,6 +16,7 @@ import es.caib.comanda.usuaris.logic.intf.service.UsuariService;
 import es.caib.comanda.usuaris.persist.entity.UsuariEntity;
 import es.caib.comanda.usuaris.persist.repository.UsuariRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +29,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, UsuariEntity> implements UsuariService {
@@ -85,6 +88,13 @@ public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, 
 		usuariEntity.setEmail(usuariAuth.getEmail());
 		entityRepository.save(usuariEntity);
 	}
+
+    @Override
+    public Usuari findOneInternalByCodi(String codi) {
+        UsuariEntity usuariEntity = ((UsuariRepository) entityRepository).findByCodi(codi)
+                .orElseThrow(() -> new ResourceNotFoundException(Usuari.class, "codi:" + codi));
+        return entityToResource(usuariEntity);
+    }
 
 	private Usuari getUsuariFromAuth() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -1,5 +1,6 @@
 package es.caib.comanda.salut.logic.helper;
 
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.model.v1.salut.SalutNivell;
@@ -9,6 +10,7 @@ import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
 import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
 import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
@@ -41,8 +43,10 @@ class SalutInfoHelperParameterizedTest {
     @Mock private SalutSubsistemaRepository salutSubsistemaRepository;
     @Mock private SalutMissatgeRepository salutMissatgeRepository;
     @Mock private SalutDetallRepository salutDetallRepository;
+    @Mock private SalutHistRepository salutHistRepository;
     @Mock private RestTemplate restTemplate;
     @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private ParametresHelper parametresHelper;
 
     @InjectMocks private SalutInfoHelper helper;
 

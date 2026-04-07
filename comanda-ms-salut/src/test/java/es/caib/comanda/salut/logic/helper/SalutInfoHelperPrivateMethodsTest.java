@@ -1,12 +1,22 @@
 package es.caib.comanda.salut.logic.helper;
 
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
+import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
+import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
+import es.caib.comanda.salut.persist.repository.SalutRepository;
+import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -17,6 +27,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class SalutInfoHelperPrivateMethodsTest {
+
+    @Mock private SalutRepository salutRepository;
+    @Mock private SalutIntegracioRepository salutIntegracioRepository;
+    @Mock private SalutSubsistemaRepository salutSubsistemaRepository;
+    @Mock private SalutMissatgeRepository salutMissatgeRepository;
+    @Mock private SalutDetallRepository salutDetallRepository;
+    @Mock private SalutHistRepository salutHistRepository;
+    @Mock private SalutClientHelper salutClientHelper;
+    @Mock private RestTemplate restTemplate;
+    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private MetricsHelper metricsHelper;
+    @Mock private SalutPurgeHelper salutPurgeService;
+    @Mock private ParametresHelper parametresHelper;
 
     @InjectMocks
     private SalutInfoHelper helper;

@@ -39,7 +39,7 @@ import javax.validation.constraints.Size;
 public class Integracio extends BaseResource<Long> {
 
 	@NotNull
-	@Size(max = 32)
+	@Size(max = 100)
 	private String codi;
 	@NotNull
 	@Size(max = 100)

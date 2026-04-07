@@ -7,6 +7,7 @@ import { useAclPermissionManager } from './AclPermissionManager';
 const mocks = vi.hoisted(() => ({
     showMock: vi.fn(),
     closeMock: vi.fn(),
+    useReadOnlyGestorMock: vi.fn(() => false),
     tMock: vi.fn((selector: (input: { components: { permisos: { title: string; resourceTitle: string } } }) => string) =>
         selector({ components: { permisos: { title: 'Permisos', resourceTitle: 'Permís del recurs' } } })
     ),
@@ -29,9 +30,14 @@ vi.mock('reactlib', () => ({
     },
 }));
 
+vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
+    default: () => mocks.useReadOnlyGestorMock(),
+}));
+
 describe('useAclPermissionManager', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.useReadOnlyGestorMock.mockReturnValue(false);
     });
 
     it('useAclPermissionManager_quanEsRenderitza_exposaElComponentDelDialeg', () => {
@@ -59,6 +65,7 @@ describe('useAclPermissionManager', () => {
                 staticFilter: "resourceType:'widget' and resourceId:25",
                 formAdditionalData: expect.any(Function),
                 popupEditFormDialogResourceTitle: 'Permís del recurs',
+                rowHideDeleteButton: false,
             }),
         });
         const formAdditionalData = mocks.showMock.mock.calls[0][0].dataGridComponentProps.formAdditionalData;
@@ -84,5 +91,23 @@ describe('useAclPermissionManager', () => {
         });
 
         expect(mocks.closeMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('useAclPermissionManager_quanGestorEsReadOnly_ocultaEsborrarAlLlistat', () => {
+        mocks.useReadOnlyGestorMock.mockReturnValue(true);
+        const { result } = renderHook(() => useAclPermissionManager('widget'));
+        render(result.current.component);
+
+        act(() => {
+            result.current.show(25, 'Widget principal');
+        });
+
+        expect(mocks.showMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                dataGridComponentProps: expect.objectContaining({
+                    rowHideDeleteButton: true,
+                }),
+            })
+        );
     });
 });

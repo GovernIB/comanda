@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
     anyHistoryEntryExistMock: vi.fn(),
     goBackMock: vi.fn(),
     getOneMock: vi.fn(),
+    useReadOnlyGestorMock: vi.fn(() => false),
     tMock: vi.fn((selector: any) =>
         selector({
             components: {
@@ -35,17 +36,20 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
         columns,
+        rowHideDeleteButton,
     }: {
         title: string;
         staticFilter?: string;
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         toolbarAdditionalRow?: React.ReactNode;
         columns: Array<{ field: string }>;
+        rowHideDeleteButton?: boolean;
     }) => (
         <section>
             <h2>{title}</h2>
             <div data-testid="static-filter">{staticFilter}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
+            <div data-testid="hide-delete">{String(rowHideDeleteButton)}</div>
             {toolbarElementsWithPositions?.map((entry, index) => (
                 <div key={index}>{entry.element}</div>
             ))}
@@ -79,6 +83,10 @@ vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
+vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
+    default: () => mocks.useReadOnlyGestorMock(),
+}));
+
 describe('DimensioValor', () => {
     beforeEach(() => {
         mocks.getOneMock.mockResolvedValue({ nom: 'Dimensió prova' });
@@ -87,6 +95,7 @@ describe('DimensioValor', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.useReadOnlyGestorMock.mockReturnValue(false);
     });
 
     it('DimensioValor_quanEsCarregaLaDimensio_mostraElTitolIElFiltreStatic', async () => {
@@ -100,6 +109,7 @@ describe('DimensioValor', () => {
         expect(screen.getByTestId('page-title')).toHaveTextContent('Valors dimensió Dimensió prova');
         expect(screen.getByTestId('static-filter')).toHaveTextContent('dimensio.id=15');
         expect(screen.getByTestId('columns')).toHaveTextContent('valor');
+        expect(screen.getByTestId('hide-delete')).toHaveTextContent('false');
         expect(mocks.getOneMock).toHaveBeenCalledWith('15');
         expect(screen.getAllByRole('button')[0]).toBeEnabled();
     });
@@ -113,5 +123,17 @@ describe('DimensioValor', () => {
         await waitFor(() => {
             expect(screen.getAllByRole('button')[0]).toBeDisabled();
         });
+    });
+
+    it('DimensioValor_quanGestorEsReadOnly_ocultaLaccioDesborrar', async () => {
+        mocks.useReadOnlyGestorMock.mockReturnValue(true);
+
+        render(<DimensioValor />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Valors dimensió Dimensió prova' })).toBeInTheDocument();
+        });
+
+        expect(screen.getByTestId('hide-delete')).toHaveTextContent('true');
     });
 });

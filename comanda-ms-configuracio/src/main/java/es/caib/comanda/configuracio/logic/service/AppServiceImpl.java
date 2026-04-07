@@ -332,19 +332,59 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 			target.setInfoUrl(e.getInfoUrl());
 			target.setActiva(e.isActiva());
 			target.setSalutUrl(e.getSalutUrl());
+            target.setLogsUrl(e.getLogsUrl());
+            target.setSalutAuth(e.getSalutAuth());
 			target.setEstadisticaInfoUrl(e.getEstadisticaInfoUrl());
 			target.setEstadisticaUrl(e.getEstadisticaUrl());
 			target.setEstadisticaCron(e.getEstadisticaCron());
+            target.setEstadisticaAuth(e.getEstadisticaAuth());
 			// Compactació
 			if (e.getCompactable() != null) target.setCompactable(e.getCompactable());
 			target.setCompactacioSetmanalMesos(e.getCompactacioSetmanalMesos());
 			target.setCompactacioMensualMesos(e.getCompactacioMensualMesos());
 			target.setEliminacioMesos(e.getEliminacioMesos());
+            target.setAlarmesEmail(e.getAlarmesEmail());
 		}
 
 		@Override
 		public void onChange(Serializable id, AppImportForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, AppImportForm target) {
-			// No es necessari implementar aquest mètode
+			if (fieldName.equals(AppImportForm.Fields.jsonContent)) {
+				String jsonContent = (String) fieldValue;
+				if (jsonContent != null && !jsonContent.isEmpty()) {
+					try {
+						List<AppExport> exports;
+						try {
+							exports = objectMapper.readValue(
+									jsonContent,
+									objectMapper.getTypeFactory().constructCollectionType(List.class, AppExport.class));
+						} catch (Exception exList) {
+							AppExport single = objectMapper.readValue(jsonContent, AppExport.class);
+							exports = Collections.singletonList(single);
+						}
+
+						List<String> codes = exports.stream()
+								.map(AppExport::getCodi)
+								.filter(c -> c != null && !c.isEmpty())
+								.collect(Collectors.toList());
+
+						target.setImportedAppCodes(codes.toArray(new String[0]));
+
+						boolean exists = false;
+						for (String code : codes) {
+							if (appRepository.findByCodi(code) != null) {
+								exists = true;
+								break;
+							}
+						}
+						target.setImportedAppExists(exists);
+						if (exists) {
+							target.setDecision("COMBINE");
+						}
+					} catch (Exception e) {
+						log.warn("Error parsing JSON content in onChange", e);
+					}
+				}
+			}
 		}
 
 		@Override

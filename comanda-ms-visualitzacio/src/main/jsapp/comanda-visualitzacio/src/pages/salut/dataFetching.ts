@@ -6,6 +6,7 @@ import { ISO_DATE_FORMAT } from '../../util/dateUtils';
 import { agrupacioFromMinutes } from '../../components/salut/SalutToolbar';
 import { SalutModel } from '../../types/salut.model';
 import { EntornAppModel } from '../../types/app.model';
+import { useIsUserAdmin } from '../../components/UserContext.ts';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem
 export type SalutInformeLatenciaItem = {
@@ -33,6 +34,7 @@ const appDataStateInitialValue: AppDataState = {
 };
 
 export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
+    const isUserAdmin = useIsUserAdmin();
     const { isReady: entornAppApiIsReady, getOne: entornAppGetOne } =
         useResourceApiService('entornApp');
     const {
@@ -90,6 +92,7 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
                         'SAL_CONTEXTS',
                         'SAL_MISSATGES',
                         'SAL_DETALLS',
+                        ...(isUserAdmin ? ['SAL_HISTORICS'] : []),
                         'SAL_ENTORN_APP_ESTATS',
                     ],
                     filter: springFilterBuilder.and(
@@ -118,7 +121,7 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
                 });
             }
         }
-    }, [dataRangeMinutes, ready, entornAppGetOne, id, salutApiReport, salutApiFind]);
+    }, [dataRangeMinutes, ready, entornAppGetOne, id, isUserAdmin, salutApiReport, salutApiFind]);
 
     useEffect(() => {
         if (!ready) {

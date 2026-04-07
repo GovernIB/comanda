@@ -3,9 +3,11 @@ package es.caib.comanda.alarmes.logic.helper;
 import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
 import es.caib.comanda.client.EntornServiceClient;
+import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class AlarmaClientHelper {
     private final EntornAppServiceClient entornAppServiceClient;
     private final EntornServiceClient entornServiceClient;
     private final AppServiceClient appServiceClient;
+    private final MonitorServiceClient monitorServiceClient;
 
     // Client App
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,5 +70,16 @@ public class AlarmaClientHelper {
             return entorn.getContent();
         }
         return null;
+    }
+
+    // Client Monitor
+    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void monitorCreate(Monitor monitor) {
+        try {
+            monitorServiceClient.create(monitor, httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        } catch (Exception e) {
+            log.error("Error al guardar el monitor: " + monitor, e);
+        }
     }
 }

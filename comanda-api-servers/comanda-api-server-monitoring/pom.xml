@@ -7,7 +7,6 @@
     <name>comanda-api-server-monitoring</name>
     <version>1.0.0</version>
     <description>Comanda - API Rest Server stub - monitoring v1</description>
-
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
         <plugins>
@@ -217,6 +216,7 @@
         </pluginRepository>
     </pluginRepositories>
     <properties>
+        <maven.site.skip>true</maven.site.skip>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

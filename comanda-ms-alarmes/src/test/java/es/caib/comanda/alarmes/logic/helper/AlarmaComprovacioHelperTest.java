@@ -1,6 +1,7 @@
 package es.caib.comanda.alarmes.logic.helper;
 
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.event.AlarmaMailEventPublisher;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigCondicio;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
@@ -9,6 +10,7 @@ import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.Salut;
 import es.caib.comanda.model.v1.salut.EstatSalutEnum;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigPeriodeUnitat;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
@@ -23,6 +25,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -40,9 +43,11 @@ class AlarmaComprovacioHelperTest {
     @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock
-    private AlarmaMailHelper alarmaMailHelper;
+    private AlarmaMailEventPublisher alarmaMailEventPublisher;
     @Mock
     private ComandaSseEventPublisher comandaSseEventPublisher;
+    @Mock
+    private ParametresHelper parametresHelper;
 
     @InjectMocks
     private AlarmaComprovacioHelper alarmaComprovacioHelper;
@@ -57,6 +62,8 @@ class AlarmaComprovacioHelperTest {
         config.setEntornAppId(10L);
         config.setNom("Test Config");
         config.setMissatge("Missatge d'alarma");
+        lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.salut.freshness.seconds", 120)).thenReturn(120);
+        lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(180);
     }
 
     @Test
@@ -64,9 +71,7 @@ class AlarmaComprovacioHelperTest {
     void comprovar_quanAppCaigudaDown_retornaTrueIProcessaAfirmativa() {
         // Arrange
         config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.DOWN.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.DOWN.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), eq("entornAppId:10"), any(), any(), eq("0"), eq(1), any(), eq(AUTH_HEADER)))
@@ -87,9 +92,7 @@ class AlarmaComprovacioHelperTest {
     void comprovar_quanAppUp_retornaFalseIProcessaNegativa() {
         // Arrange
         config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -110,10 +113,8 @@ class AlarmaComprovacioHelperTest {
         config.setTipus(AlarmaConfigTipus.APP_LATENCIA);
         config.setCondicio(AlarmaConfigCondicio.MAJOR);
         config.setValor(new BigDecimal(500));
-        
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).appLatencia(600).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).appLatencia(600).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -136,10 +137,8 @@ class AlarmaComprovacioHelperTest {
         config.setTipus(AlarmaConfigTipus.APP_LATENCIA);
         config.setCondicio(AlarmaConfigCondicio.MAJOR);
         config.setValor(new BigDecimal(500));
-        
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).appLatencia(400).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).appLatencia(400).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -160,10 +159,8 @@ class AlarmaComprovacioHelperTest {
         config.setTipus(AlarmaConfigTipus.APP_LATENCIA);
         config.setCondicio(AlarmaConfigCondicio.MENOR);
         config.setValor(new BigDecimal(100));
-        
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).appLatencia(50).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).appLatencia(50).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -186,10 +183,8 @@ class AlarmaComprovacioHelperTest {
         config.setTipus(AlarmaConfigTipus.APP_LATENCIA);
         config.setCondicio(AlarmaConfigCondicio.MENOR_IGUAL);
         config.setValor(new BigDecimal(100));
-        
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).appLatencia(100).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).appLatencia(100).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -205,13 +200,11 @@ class AlarmaComprovacioHelperTest {
     }
 
     @Test
-    @DisplayName("Finalitza una alarma quan la condició ja no es compleix")
-    void comprovar_quanCondicioJaNoEsCompleix_finalitzaAlarma() {
+    @DisplayName("No finalitza una alarma fins que la recuperació és estable")
+    void comprovar_quanCondicioJaNoEsCompleixPeroRecuperacioNoEstable_noFinalitzaAlarma() {
         // Arrange
         config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -231,6 +224,35 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         assertThat(result).isFalse();
+        assertThat(alarmaActiva.getDataFinalitzacio()).isNull();
+    }
+
+    @Test
+    @DisplayName("Finalitza una alarma quan la recuperació ja és estable")
+    void comprovar_quanCondicioJaNoEsCompleixIRecuperacioEstable_finalitzaAlarma() {
+        config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
+        when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(1);
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).build());
+
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+        when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+                .thenReturn(pagedModel);
+
+        AlarmaEntity alarmaActiva = new AlarmaEntity();
+        alarmaActiva.setId(100L);
+        alarmaActiva.setAlarmaConfig(config);
+        alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
+        alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+
+        when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+                .thenReturn(Optional.of(alarmaActiva));
+
+        alarmaComprovacioHelper.comprovar(config);
+        sleepSilently(1100);
+
+        boolean result = alarmaComprovacioHelper.comprovar(config);
+
+        assertThat(result).isFalse();
         assertThat(alarmaActiva.getDataFinalitzacio()).isNotNull();
     }
 
@@ -239,9 +261,7 @@ class AlarmaComprovacioHelperTest {
     void comprovar_quanCondicioJaNoEsCompleixIEstatEsborrany_esborraAlarma() {
         // Arrange
         config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -267,10 +287,8 @@ class AlarmaComprovacioHelperTest {
         config.setTipus(AlarmaConfigTipus.APP_LATENCIA);
         config.setCondicio(AlarmaConfigCondicio.MAJOR_IGUAL);
         config.setValor(new BigDecimal(100));
-        
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.UP.name()).appLatencia(100).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).appLatencia(100).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -290,9 +308,7 @@ class AlarmaComprovacioHelperTest {
     void processarCondicioAfirmativa_quanJaOberta_noCreaNova() {
         // Arrange
         config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.DOWN.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.DOWN.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -319,9 +335,7 @@ class AlarmaComprovacioHelperTest {
         config.setPeriodeValor(new BigDecimal(60));
         config.setPeriodeUnitat(AlarmaConfigPeriodeUnitat.SEGONS);
 
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.DOWN.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.DOWN.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -344,9 +358,7 @@ class AlarmaComprovacioHelperTest {
         config.setPeriodeValor(new BigDecimal(1));
         config.setPeriodeUnitat(AlarmaConfigPeriodeUnitat.MINUTS);
 
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.DOWN.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.DOWN.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -367,7 +379,7 @@ class AlarmaComprovacioHelperTest {
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
         assertThat(alarmaEsborrany.getDataActivacio()).isNotNull();
-        verify(alarmaMailHelper).sendAlarmaUser(alarmaEsborrany);
+        verify(alarmaMailEventPublisher).publish(alarmaEsborrany);
     }
 
     @Test
@@ -377,9 +389,7 @@ class AlarmaComprovacioHelperTest {
         config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
         config.setPeriodeValor(null); // Sense període
 
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.DOWN.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.DOWN.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -396,7 +406,7 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
-        verify(alarmaMailHelper, never()).sendAlarmaUser(any()); // No s'assigna a alarmaActivada a la línia 157, només es canvia l'estat
+        verify(alarmaMailEventPublisher, never()).publish(any()); // No s'assigna a alarmaActivada a la línia 157, només es canvia l'estat
     }
 
     @Test
@@ -406,9 +416,7 @@ class AlarmaComprovacioHelperTest {
         config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
         config.setPeriodeValor(null);
 
-        Salut salut = Salut.builder().appEstat(EstatSalutEnum.DOWN.name()).build();
-        EntityModel<Salut> entityModel = EntityModel.of(salut);
-        PagedModel<EntityModel<Salut>> pagedModel = PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.DOWN.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
@@ -426,6 +434,53 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         verify(alarmaRepository).save(argThat(entity -> entity.getEstat() == AlarmaEstat.ACTIVA));
-        verify(alarmaMailHelper).sendAlarmaUser(novaAlarma);
+        verify(alarmaMailEventPublisher).publish(novaAlarma);
+    }
+
+    @Test
+    @DisplayName("Quan la salut és antiga no activa ni finalitza alarmes")
+    void comprovar_quanSalutNoEsRecent_noModificaAlarmes() {
+        config.setTipus(AlarmaConfigTipus.APP_CAIGUDA);
+        PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+                .appEstat(EstatSalutEnum.UP.name())
+                .data(LocalDateTime.now().minusMinutes(10))
+                .build());
+
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+        when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+                .thenReturn(pagedModel);
+
+        AlarmaEntity alarmaActiva = new AlarmaEntity();
+        alarmaActiva.setId(100L);
+        alarmaActiva.setAlarmaConfig(config);
+        alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+
+//        when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+//                .thenReturn(Optional.of(alarmaActiva));
+
+        boolean result = alarmaComprovacioHelper.comprovar(config);
+
+        assertThat(result).isFalse();
+        assertThat(alarmaActiva.getDataFinalitzacio()).isNull();
+        verify(alarmaRepository, never()).save(any());
+        verify(alarmaRepository, never()).delete(any());
+    }
+
+    private Salut.SalutBuilder freshSalut() {
+        return Salut.builder().data(LocalDateTime.now());
+    }
+
+    private PagedModel<EntityModel<Salut>> pagedModelFor(Salut salut) {
+        EntityModel<Salut> entityModel = EntityModel.of(salut);
+        return PagedModel.of(Collections.singletonList(entityModel), new PagedModel.PageMetadata(1, 0, 1));
+    }
+
+    private void sleepSilently(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupció inesperada durant el test", ex);
+        }
     }
 }

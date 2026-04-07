@@ -22,7 +22,7 @@ import java.util.List;
 public class AppContext extends BaseResource<Long> {
 
 	@NotNull
-	@Size(max = 16)
+	@Size(max = 100)
 	private String codi;
 	@NotNull
 	@Size(max = 100)

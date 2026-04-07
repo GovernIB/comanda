@@ -7,10 +7,10 @@ import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.Usuari;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.mail.MessagingException;
@@ -30,18 +30,19 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class AlarmaMailHelper {
-	private static final DateTimeFormatter ALARMA_DIA_FORMATTER =
-			DateTimeFormatter.ofPattern("dd/MM/yyyy 'a les' HH:mm");
+	private static final DateTimeFormatter ALARMA_DIA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy 'a les' HH:mm");
 
-	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS + ":#{null}}")
-	private String alarmaMailFromAddress;
-	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_NAME + ":#{null}}")
-	private String alarmaMailFromName;
+//	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS + ":#{null}}")
+//	private String alarmaMailFromAddress;
+//	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_NAME + ":#{null}}")
+//	private String alarmaMailFromName;
 
 	private final AlarmaClientHelper alarmaClientHelper;
 	private final MailHelper mailHelper;
 	private final UserInformationHelper userInformationHelper;
 	private final AlarmaRepository alarmaRepository;
+	private final ParametresHelper parametresHelper;
+
 
 	private String generateIndividualAlarmaSubject(AlarmaEntity alarma) {
 		return "[COMANDA] Alarma activada" + (Strings.isNotBlank(alarma.getAlarmaConfig().getNom()) ? ": " + alarma.getAlarmaConfig().getNom() : "");
@@ -69,30 +70,51 @@ public class AlarmaMailHelper {
 			return;
 		}
 
+		MonitorAlarmes monitor = new MonitorAlarmes(
+				alarma.getEntornAppId(),
+				MonitorAlarmes.ENVIAMENT_CORREU_GENERIC,
+				alarmaEntornApp.getAlarmesEmail(),
+				alarma.getAlarmaConfig().getCreatedBy(),
+				alarmaClientHelper);
+		monitor.startAction();
+
 		try {
-			sendAlarmaMail(
+			boolean sent = sendAlarmaMail(
 					alarmaEntornApp.getAlarmesEmail(),
 					"Correu genèric (" + alarmaEntornApp.getApp().getNom() + " - " + alarmaEntornApp.getEntorn().getNom() + ")",
 					generateIndividualAlarmaSubject(alarma),
 					generateAlarmaBodyMessage(alarma)
 			);
+			if (sent) {
+				monitor.endAction();
+			} else {
+				monitor.endAction(new IllegalStateException("No s'ha pogut enviar el correu generic d'alarma"),
+						"No s'ha pogut enviar el correu generic d'alarma");
+			}
 		} catch (Exception ex) {
+			monitor.endAction(ex, "Error enviant correu generic d'alarma");
 			log.error("Error enviant correu d'alarma genèrica", ex);
 		}
 	}
 
 	public void sendAlarmaUser(AlarmaEntity alarma) {
 		if (alarma.getAlarmaConfig().isAdmin()) {
+			log.debug("Enviat correu d'alarma per administrador.");
 			String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
 			Arrays.stream(adminUsers).forEach(adminUser -> {
 				if (isUserProfileAlarmaActivaAndUngrouped(adminUser)) {
 					sendAlarmaMailForUser(alarma, adminUser);
+				} else {
+					log.debug("[EML] No s'ha enviat el correu a l'administrador {} degut a que no té actiu l'enviament de correu, o el té configurat com a agrupat.");
 				}
 			});
 		} else {
+			log.debug("Enviat correu d'alarma per usuari.");
 			String username = alarma.getAlarmaConfig().getCreatedBy();
 			if (isUserProfileAlarmaActivaAndUngrouped(username)) {
 				sendAlarmaMailForUser(alarma, username);
+			} else {
+				log.debug("[EML] No s'ha enviat el correu a l'usuari {} degut a que no té actiu l'enviament de correu, o el té configurat com a agrupat.");
 			}
 		}
 	}
@@ -103,20 +125,23 @@ public class AlarmaMailHelper {
 		List<AlarmaEntity> alarmesPendentsAdmin = alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(
 				dataDesde);
         long adminMailCount = 0;
-        try {
-            String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
-            adminMailCount = Arrays.stream(adminUsers).filter(adminUser -> {
-                if (isUserProfileAlarmaActivaAndGrouped(adminUser)) {
-                    return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, adminUser);
-                } else {
-                    return false;
-                }
-            }).count();
-        } catch (UserInformationHelper.UserInformationException e) {
-            log.error("Error recuperant usuaris administradors. No s'enviaran els correus de les alarmes agrupades pels administradors.");
+        if (!alarmesPendentsAdmin.isEmpty()) {
+            try {
+                String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
+                adminMailCount = Arrays.stream(adminUsers).filter(adminUser -> {
+                    if (isUserProfileAlarmaActivaAndGrouped(adminUser)) {
+                        return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, adminUser);
+                    } else {
+                        return false;
+                    }
+                }).count();
+            } catch (UserInformationHelper.UserInformationException e) {
+                log.error("[EML] Error recuperant usuaris administradors. No s'enviaran els correus de les alarmes agrupades pels administradors.");
+            }
         }
+
         // Envia les alarmes dels usuaris no administradors
-		List<String> usuaris = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfter(dataDesde);
+		List<String> usuaris = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(dataDesde);
 		long userMailCount = usuaris.stream().filter(u -> {
 			List<AlarmaEntity> alarmesPendentsUser = alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
 					u,
@@ -129,34 +154,74 @@ public class AlarmaMailHelper {
 	private void sendAlarmaMailForUser(
 			AlarmaEntity alarma,
 			String username) {
+		MonitorAlarmes monitor = new MonitorAlarmes(
+				alarma.getEntornAppId(),
+				MonitorAlarmes.ENVIAMENT_CORREU_USUARI,
+				null,
+				username,
+				alarmaClientHelper);
+		monitor.startAction();
+
 		try {
 			Usuari usuari = userInformationHelper.usuariFindByUsername(username);
+			String email = getMailFromUsuari(usuari);
+			monitor.getMonitor().setUrl(email);
 
-			sendAlarmaMail(
-					getMailFromUsuari(usuari),
+			boolean sent = sendAlarmaMail(
+					email,
 					usuari.getNom(),
 					generateIndividualAlarmaSubject(alarma),
 					generateAlarmaBodyMessage(alarma)
 			);
+			if (sent) {
+				monitor.endAction();
+			} else {
+				monitor.endAction(new IllegalStateException("No s'ha pogut enviar el correu d'alarma"),
+						"No s'ha pogut enviar el correu d'alarma");
+			}
+			log.debug("[EML] Alarma per usuari: Enviat correu a {} amb email {}, amb alarma activada: {}", usuari.getNom(), email, alarma.getAlarmaConfig().getMissatge());
 		} catch (Exception ex) {
-			log.error("No s'ha pogut enviar missatge d'alarma", ex);
+			monitor.endAction(ex, "Error enviant correu d'alarma a usuari");
+			log.error("[EML] No s'ha pogut enviar missatge d'alarma", ex);
 		}
 	}
 
 	private boolean sendAlarmaGroupedMailForUser(
 			List<AlarmaEntity> alarmes,
 			String username) {
+		MonitorAlarmes monitor = new MonitorAlarmes(
+				alarmes != null && !alarmes.isEmpty() ? alarmes.get(0).getEntornAppId() : null,
+				MonitorAlarmes.ENVIAMENT_CORREU_AGRUPAT,
+				null,
+				username,
+				alarmaClientHelper);
 		try {
+			if (alarmes == null || alarmes.isEmpty()) {
+				return false;
+			}
+			monitor.startAction();
 			if (isUserProfileAlarmaActivaAndGrouped(username)) {
 				Usuari usuari = userInformationHelper.usuariFindByUsername(username);
-				return sendAlarmaMail(
-						getMailFromUsuari(usuari),
+				String email = getMailFromUsuari(usuari);
+				monitor.getMonitor().setUrl(email);
+
+				boolean sended = sendAlarmaMail(
+						email,
 						usuari.getNom(),
 						"[COMANDA] Resum diari d'alarmes activades",
 						getAlarmesGroupedText(alarmes));
+				if (sended) {
+					monitor.endAction();
+				} else {
+					monitor.endAction(new IllegalStateException("No s'ha pogut enviar el resum d'alarmes"),
+							"No s'ha pogut enviar el resum d'alarmes");
+				}
+				log.debug("[EML] Alarma agrupada: Enviat correu a {} amb email {}, amb {} alarmes activades", usuari.getNom(), email, alarmes.size());
+				return sended;
 			}
 		} catch (Exception ex) {
-			log.error("No s'ha pogut enviar missatge d'alarma", ex);
+			monitor.endAction(ex, "Error enviant resum d'alarmes");
+			log.error("[EML] No s'ha pogut enviar missatge d'alarma", ex);
 		}
 		return false;
 	}
@@ -188,12 +253,19 @@ public class AlarmaMailHelper {
 
 	private boolean sendAlarmaMail(String toMail, String toName, String subject, String text) throws MessagingException, UnsupportedEncodingException {
 		return mailHelper.sendSimple(
-				alarmaMailFromAddress != null ? alarmaMailFromAddress : "comanda@caib.es",
-				alarmaMailFromName != null ? alarmaMailFromName : "Comanda",
+				getAlarmaMailFromAddress(),
+				getAlarmaMailFromName(),
 				toMail,
 				toName,
 				subject,
 				text);
+	}
+
+	private String getAlarmaMailFromAddress() {
+		return parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS, "comanda@caib.es");
+	}
+	private String getAlarmaMailFromName() {
+		return parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_NAME, "Comanda");
 	}
 
 }

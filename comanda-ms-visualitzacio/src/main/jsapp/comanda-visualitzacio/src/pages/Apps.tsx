@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
     FormField,
@@ -23,7 +23,6 @@ import {
 import { FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
-import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
@@ -35,6 +34,8 @@ import CheckCircle from '@mui/icons-material/CheckCircle';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
 import { StacktraceBlock } from '../components/RickTextDetail.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
+import notNull from '../util/arrayUtils.ts';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -43,7 +44,7 @@ const useActions = (refresh?: () => void) => {
     const { t } = useTranslation();
 
     const pingUrl = React.useCallback(async (
-        additionalData: any, 
+        additionalData: any,
         expectedResponseTypeEnum: string,
     ): Promise<any> => {
         try {
@@ -223,6 +224,7 @@ const AppsEntorns: React.FC = () => {
         show: permissionShow,
         component: permissionComponent
     } = useAclPermissionManager('ENTORN_APP');
+    const gestorReadOnly = useReadOnlyGestor();
     const actions = [
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
@@ -234,16 +236,21 @@ const AppsEntorns: React.FC = () => {
             icon: "check_circle",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => row?.activa,
+            hidden: (row:any) => row?.activa || gestorReadOnly,
         },
+        gestorReadOnly ? {
+            label: t($ => $.components.details),
+            icon: 'visibility',
+            clickShowUpdateDialog: true,
+        } : null,
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.desactivar),
             icon: "cancel",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => !row?.activa,
+            hidden: (row:any) => !row?.activa || gestorReadOnly,
         },
-    ]
+    ].filter(notNull);
     return (
         <>
             <MuiDataGrid
@@ -261,6 +268,8 @@ const AppsEntorns: React.FC = () => {
                 }}
                 rowAdditionalActions={actions}
                 rowActionsColumnProps={{ flex: .3 }}
+                rowHideUpdateButton={gestorReadOnly}
+                rowHideDeleteButton={gestorReadOnly}
             />
             {permissionComponent}
         </>
@@ -272,6 +281,7 @@ export const AppForm: React.FC = () => {
     const { id } = useParams();
     const [appNom, setAppNom] = React.useState<string>()
     const { setMarginsDisabled } = useBaseAppContext();
+    const gestorReadOnly = useReadOnlyGestor();
     React.useEffect(() => {
         setMarginsDisabled(true);
         return () => setMarginsDisabled(false);
@@ -315,6 +325,7 @@ export const AppForm: React.FC = () => {
                             <Grid size={12}>
                                 <LogoUpload
                                     name="logo"
+                                    editable={!gestorReadOnly}
                                     // label="Logo"
                                 />
                             </Grid>
@@ -367,40 +378,17 @@ const columns = [
     },
 ];
 
-const parseCodesFromJson = (jsonContent: string) => {
-    let parsedJson = JSON.parse(jsonContent);
-    if (!Array.isArray(parsedJson)) parsedJson = [parsedJson];
-    const parsedCodes = (parsedJson || [])
-        .map((a: any) => a?.codi)
-        .filter((c: any) => typeof c === 'string');
-    return parsedCodes;
-};
-
-const existsAnyInParsedCodes = (parsedCodes: any[], existingCodes: Set<any>) => {
-    return parsedCodes.some((c: any) => existingCodes.has(c));
-}
-
 const AppImportFormContent = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
     const { data, apiRef, fieldErrors } = useFormContext();
     const jsonContentValidationError = fieldErrors?.find((err) => err.field === 'jsonContent');
-    const gridContext = useOptionalDataGridContext();
-    const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
-    const parsedCodes = React.useMemo(() => data?.jsonContent ? parseCodesFromJson(data?.jsonContent) : [], [data?.jsonContent]);
-    const existsAny = React.useMemo(() => existsAnyInParsedCodes(parsedCodes, existingCodes), [existingCodes, parsedCodes]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
             const text = await file.text();
-
-            // Preselect default decision if conflicts
-            // Doing existsAnyInJson before setting jsonContent ensures that the json is valid, as JSON.parse has already been called
-            if (existsAnyInParsedCodes(parseCodesFromJson(text), existingCodes))
-                apiRef.current?.setFieldValue('decision', 'COMBINE');
-
             apiRef.current?.setFieldValue('jsonContent', text);
         } catch (err: any) {
             temporalMessageShow("", t($ => $.page.apps.import.parseError), 'error');
@@ -424,12 +412,12 @@ const AppImportFormContent = () => {
 
     return <>
         <input type="file" accept="application/json" onChange={handleFileChange} />
-        {parsedCodes.length > 0 && (
+        {data?.importedAppCodes?.length && (
             <>
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    {t($ => $.page.apps.import.detectedCodes)} {parsedCodes.join(', ')}
+                    {t($ => $.page.apps.import.detectedCodes)} {data.importedAppCodes.join(', ')}
                 </Typography>
-                {existsAny && (
+                {data?.importedAppExists && (
                     <FormControl sx={{ mt: 2 }}>
                         <Typography variant="body2" sx={{ mb: 1 }}>
                             {t($ => $.page.apps.import.conflict)}
@@ -453,25 +441,32 @@ const AppImportFormContent = () => {
 const Apps: React.FC = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
+    const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
     const {
         show: appPermissionShow,
         component: appPermissionComponent
     } = useAclPermissionManager('APP');
+    const gestorReadOnly = useReadOnlyGestor();
     const appActions: DataCommonAdditionalAction[] = [
         {
             label: t($ => $.components.permisos.title),
             icon: 'lock',
             onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
         },
+        gestorReadOnly ? {
+            label: t($ => $.components.permisos.title),
+            icon: 'visibility',
+            onClick: (id: any) => navigate(`form/${id}`),
+        } : null,
         {
             label: t($ => $.page.apps.action.export),
             icon: 'download',
             showInMenu: true,
             onClick: appExport,
         },
-    ];
+    ].filter(notNull);
     const { dataGridProps, loadingElement } = useReordering("app");
     const toolbarElementsWithPositions: ReactElementWithPosition[] = [
         {
@@ -510,7 +505,9 @@ const Apps: React.FC = () => {
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
-                {...dataGridProps}
+                rowHideUpdateButton={gestorReadOnly}
+                rowHideDeleteButton={gestorReadOnly}
+                {...(!gestorReadOnly ? dataGridProps : {})}
             />
             {appPermissionComponent}
         </GridPage>

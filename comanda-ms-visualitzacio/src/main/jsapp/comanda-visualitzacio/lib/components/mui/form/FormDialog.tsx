@@ -1,7 +1,7 @@
 import React from 'react';
 import { DialogButton } from '../../BaseAppContext';
 import { ResourceType } from '../../ResourceApiContext';
-import { useFormDialogButtons } from '../../AppButtons';
+import { useCloseDialogButtons, useFormDialogButtons } from '../../AppButtons';
 import { FormI18nKeys } from '../../form/Form';
 import { FormApi } from '../../form/FormContext';
 import Dialog, { DialogProps } from '../Dialog';
@@ -19,6 +19,7 @@ type FormDialogProps = DialogProps & {
     formComponentProps?: any;
     formI18nKeys?: FormI18nKeys;
     noForm?: boolean;
+    onSaveActionPresentChange?: (isPresent: boolean) => void;
 };
 
 export type FormDialogSubmitFn = (id: any, data?: any) => Promise<React.ReactElement | undefined>;
@@ -61,6 +62,8 @@ export const useFormDialog: UseFormDialogFn = (
 ) => {
     const formApiRef = React.useRef<FormApi | any>({});
     const formDialogButtons = useFormDialogButtons();
+    const closeDialogButtons = useCloseDialogButtons();
+    const hasCustomDialogButtons = dialogButtons != null;
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string | null>();
     const [id, setId] = React.useState<any>();
@@ -82,6 +85,7 @@ export const useFormDialog: UseFormDialogFn = (
     const [submitReturnedContent, setSubmitReturnedContent] = React.useState<
         React.ReactNode | undefined
     >();
+    const [isSaveActionPresent, setIsSaveActionPresent] = React.useState(true);
     const show = (id: any, args?: FormDialogShowArgs) => {
         setId(id);
         setTitle(args?.title);
@@ -100,11 +104,14 @@ export const useFormDialog: UseFormDialogFn = (
         );
         setOpen(true);
         setSubmitReturnedContent(undefined);
+        setIsSaveActionPresent(true);
         return new Promise<any>((resolve, reject) => {
             setResolveFn(() => resolve);
             setRejectFn(() => reject);
         });
     };
+    const resolvedDialogButtons =
+        hasCustomDialogButtons || isSaveActionPresent ? dialogButtons ?? formDialogButtons : closeDialogButtons;
     const buttonCallback = (value: any) => {
         if (value) {
             const isCustomSubmit = customSubmit != null;
@@ -163,11 +170,12 @@ export const useFormDialog: UseFormDialogFn = (
             buttonCallback={buttonCallback}
             closeCallback={closeCallback}
             title={title}
-            buttons={dialogButtons ?? formDialogButtons}
+            buttons={resolvedDialogButtons}
             dialogComponentProps={dialogComponentProps}
             formComponentProps={formComponentProps}
             formI18nKeys={formI18nKeys}
-            noForm={submitReturnedContent != null}>
+            noForm={submitReturnedContent != null}
+            onSaveActionPresentChange={setIsSaveActionPresent}>
             {submitReturnedContent ?? formContent}
         </FormDialog>
     );
@@ -187,6 +195,7 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
         formComponentProps,
         formI18nKeys,
         noForm,
+        onSaveActionPresentChange,
         children,
         ...otherProps
     } = props;
@@ -205,6 +214,7 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
                     initOnChangeRequest={initOnChangeRequest}
                     i18nKeys={formI18nKeys}
                     apiRef={apiRef}
+                    onSaveActionPresentChange={onSaveActionPresentChange}
                     hiddenToolbar>
                     {children}
                 </MuiForm>
