@@ -80,12 +80,42 @@ vi.mock('reactlib', () => ({
             isReady: true,
         };
     },
+    useResourceApiContext: () => ({
+        baseUrl: 'http://localhost:8080',
+        isReady: true,
+        indexState: {
+            links: {
+                getAll: () => [
+                    { rel: 'salut' },
+                    { rel: 'dashboard' },
+                    { rel: 'tasca' },
+                    { rel: 'avis' },
+                    { rel: 'monitor' },
+                    { rel: 'comandaCache' },
+                    { rel: 'broker' },
+                    { rel: 'alarmaConfig' },
+                    { rel: 'app' },
+                    { rel: 'entorn' },
+                    { rel: 'entornApp' },
+                    { rel: 'integracio' },
+                    { rel: 'dimensio' },
+                    { rel: 'indicador' },
+                    { rel: 'fet' },
+                    { rel: 'parametre' },
+                ],
+            },
+        },
+    }),
 }));
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
-        t: mocks.tMock,
+        t: (selector: any) =>
+            typeof selector === 'function' ? mocks.tMock(selector) : selector,
     }),
+    Trans: ({ i18nKey }: { i18nKey: any }) => (
+        <>{typeof i18nKey === 'function' ? mocks.tMock(i18nKey) : i18nKey}</>
+    ),
 }));
 
 vi.mock('@mui/material/styles', () => ({
@@ -197,7 +227,7 @@ describe('App', () => {
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
 
         expect(props.headerMenuEntries).toBeUndefined();
-        expect(props.menuEntries).toBeUndefined();
+        expect(props.menuEntries).toEqual([]);
     });
 
     it('App_quanElTemaEsFosc_usaElLogoFoscISenseColorDeFonsFix', () => {

@@ -157,7 +157,7 @@ vi.mock('reactlib', () => ({
     useBaseAppContext: () => ({
         t: mocks.tLibMock,
     }),
-    useResourceApiService: (resourceName: string) => mocks.useResourceApiServiceMock(resourceName),
+    useResourceApiService: () => mocks.useResourceApiServiceMock(),
 }));
 
 vi.mock('../hooks/treeData', () => ({

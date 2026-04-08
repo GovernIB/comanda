@@ -14,8 +14,14 @@ const mocks = vi.hoisted(() => ({
                 avis: 'Avisos',
             },
             page: {
+                message: {
+                    grid: {
+                        timestamp: 'Data',
+                    },
+                },
                 avisos: {
                     grid: {
+                        groupHeader: 'Grup',
                         column: {
                             appEntorn: 'App/Entorn',
                             global: 'Global',
@@ -30,14 +36,13 @@ const mocks = vi.hoisted(() => ({
                                 },
                             },
                         },
-                        action: {
-                            obrir: 'Obrir',
-                        },
-                        groupHeader: 'Agrupació',
+                    },
+                    action: {
+                        obrir: 'Obrir',
+                        llegit: { label: 'Llegit' },
+                        nollegit: { label: 'No llegit' },
                     },
                     filter: {
-                        unfinishedOnlyEnabled: 'Només no finalitzats',
-                        unfinishedOnlyDisabled: 'Inclou finalitzats',
                         ownAvisOnlyEnabled: 'Només meus',
                         ownAvisOnlyDisabled: 'Tots els avisos',
                         more: 'Més filtres',
@@ -59,8 +64,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
-        t: mocks.tMock,
+        t: (selector: any) =>
+            typeof selector === 'function' ? mocks.tMock(selector) : selector,
     }),
+    Trans: ({ i18nKey }: { i18nKey: any }) => (
+        <>{typeof i18nKey === 'function' ? mocks.tMock(i18nKey) : i18nKey}</>
+    ),
 }));
 
 vi.mock('reactlib', () => ({
@@ -99,7 +108,11 @@ vi.mock('reactlib', () => ({
             <div data-testid="row-action-hidden">{String(rowAdditionalActions?.[0]?.hidden?.({ url: null }))}</div>
         </section>
     ),
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    MuiFilter: ({ children, onSpringFilterChange }: { children: React.ReactNode, onSpringFilterChange?: (filter: string) => void }) => (
+        <div onClick={() => onSpringFilterChange?.('test-filter')}>
+            {children}
+        </div>
+    ),
     FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
     springFilterBuilder: {
         and: (...parts: Array<string | undefined | false | null>) => parts.filter(Boolean).join(' && '),
@@ -122,8 +135,23 @@ vi.mock('reactlib', () => ({
             },
         };
     },
+    useResourceApiContext: () => ({
+        indexState: {
+            links: {
+                has: (rel: string) => rel === 'avis',
+            },
+        },
+    }),
+    useResourceApiService: (resourceName: string) => ({
+        isReady: true,
+        resourceName,
+        find: vi.fn().mockResolvedValue({ rows: [] }),
+    }),
     useBaseAppContext: () => ({
         t: mocks.tLibMock,
+    }),
+    useMuiDataGridApiRef: () => ({
+        current: {},
     }),
 }));
 
@@ -195,7 +223,7 @@ describe('Avis', () => {
         expect(screen.getByTestId('page-title')).toHaveTextContent('Avisos');
         expect(screen.getByRole('heading', { name: 'Avisos' })).toBeInTheDocument();
         expect(screen.getByTestId('find-disabled')).toHaveTextContent('true');
-        expect(screen.getByTestId('columns')).toHaveTextContent('nom,treePath,descripcio,tipus,responsable,dataInici,dataFi');
+        expect(screen.getByTestId('columns')).toHaveTextContent('logo,app,entorn,nom,descripcio,tipus,responsable,dataInici');
         expect(screen.getByTestId('tipus-cell')).toHaveTextContent('Info');
         expect(screen.getByTestId('tipus-cell')).toHaveTextContent('Global');
         expect(screen.getByText('Canvia arbre')).toBeInTheDocument();
@@ -205,11 +233,9 @@ describe('Avis', () => {
         // Verifica que els toggles del filtre canvien d'estat i que el control de neteja continua disponible.
         render(<Avis />);
 
-        fireEvent.click(screen.getByTitle('Només no finalitzats'));
         fireEvent.click(screen.getByTitle('Només meus'));
         fireEvent.click(screen.getByTitle('Netejar'));
 
-        expect(screen.getByTitle('Inclou finalitzats')).toBeInTheDocument();
         expect(screen.getByTitle('Tots els avisos')).toBeInTheDocument();
     });
 
@@ -217,7 +243,7 @@ describe('Avis', () => {
         // Comprova que un administrador veu l'acció addicional d'eliminar al grid.
         render(<Avis />);
 
-        expect(screen.getByTestId('row-action-count')).toHaveTextContent('2');
+        expect(screen.getByTestId('row-action-count')).toHaveTextContent('4');
         expect(screen.getByTestId('row-action-hidden')).toHaveTextContent('true');
     });
 
@@ -230,7 +256,7 @@ describe('Avis', () => {
 
     it('Avis_quanLaFilaEsGlobal_mostraElChipGlobal', () => {
         render(<Avis />);
-        
+
         const tipusCell = screen.getByTestId('tipus-cell');
         expect(tipusCell).toHaveTextContent('Global');
     });

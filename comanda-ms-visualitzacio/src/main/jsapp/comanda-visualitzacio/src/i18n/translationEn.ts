@@ -501,9 +501,6 @@ const translationEn: translationResourcesType = {
                 reactivate: {
                     label: "Reactivate",
                 },
-                reactivate: {
-                    label: "Reactivate",
-                },
             },
             filter: {
                 showOnlyActiveEnabled: "Showing only active alarms (click to include deleted ones)",

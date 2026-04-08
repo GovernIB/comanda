@@ -501,9 +501,6 @@ const translationEs: translationResourcesType = {
                 reactivate: {
                     label: "Reactivar",
                 },
-                reactivate: {
-                    label: "Reactivar",
-                },
             },
             filter: {
                 showOnlyActiveEnabled: "Mostrando solo alarmas activas (clic para incluir eliminadas)",

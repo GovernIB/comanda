@@ -10,41 +10,46 @@ const mocks = vi.hoisted(() => ({
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: (selector: any) =>
-            selector({
-                page: {
-                    salut: {
-                        filtrar: 'Filtrar',
-                        senseFiltres: 'Sense filtres',
-                        goBack: 'Tornar',
-                        refrescar: 'Refrescar',
-                        refresh: { last: 'Darrer', next: 'Següent' },
-                        refreshperiod: {
-                            title: 'Període de refresc',
-                            PT1M: '1m',
-                            PT5M: '5m',
-                            PT10M: '10m',
-                            PT30M: '30m',
-                            PT1H: '1h',
-                        },
-                        timerange: {
-                            title: 'Rang temporal',
-                            PT15M: '15m',
-                            PT1H: '1h',
-                            P1D: '1d',
-                            P7D: '7d',
-                            P1M: '1m',
-                        },
-                        groupingSelect: {
-                            label: 'Agrupació',
-                            BY_APPLICATION: 'Per aplicació',
-                            BY_ENVIRONMENT: 'Per entorn',
-                            NONE: 'Cap',
-                        },
-                    },
-                },
-                components: { clear: 'Netejar', search: 'Cercar' },
-            }),
+            typeof selector === 'function'
+                ? selector({
+                      page: {
+                          salut: {
+                              filtrar: 'Filtrar',
+                              senseFiltres: 'Sense filtres',
+                              goBack: 'Tornar',
+                              refrescar: 'Refrescar',
+                              refresh: { last: 'Darrer', next: 'Següent' },
+                              refreshperiod: {
+                                  title: 'Període de refresc',
+                                  PT1M: '1m',
+                                  PT5M: '5m',
+                                  PT10M: '10m',
+                                  PT30M: '30m',
+                                  PT1H: '1h',
+                              },
+                              timerange: {
+                                  title: 'Rang temporal',
+                                  PT15M: '15m',
+                                  PT1H: '1h',
+                                  P1D: '1d',
+                                  P7D: '7d',
+                                  P1M: '1m',
+                              },
+                              groupingSelect: {
+                                  label: 'Agrupació',
+                                  BY_APPLICATION: 'Per aplicació',
+                                  BY_ENVIRONMENT: 'Per entorn',
+                                  NONE: 'Cap',
+                              },
+                          },
+                      },
+                      components: { clear: 'Netejar', search: 'Cercar' },
+                  })
+                : selector,
     }),
+    Trans: ({ i18nKey }: { i18nKey: any }) => (
+        <>{typeof i18nKey === 'function' ? i18nKey({}) : i18nKey}</>
+    ),
 }));
 
 vi.mock('reactlib', () => ({
@@ -80,6 +85,7 @@ vi.mock('reactlib', () => ({
     useBaseAppContext: () => ({ goBack: mocks.goBackMock }),
     useFilterApiRef: () => ({ current: { filter: vi.fn(), clear: vi.fn() } }),
     useFormContext: () => ({ data: {} }),
+    useResourceApiContext: () => ({ indexState: { links: { has: vi.fn(() => true) } } }),
 }));
 
 describe('SalutToolbar render', () => {

@@ -19,7 +19,7 @@ const SitemapItem = ({id, icon, title, to, children}: MenuEntry) => {
             />
         </ListItem>}
         {children?.map?.((item:MenuEntry) => (
-            <SitemapItem {...item}/>
+            <SitemapItem key={item.id} {...item}/>
         ))}
     </>
 }
@@ -33,9 +33,9 @@ const Sitemap: React.FC = () => {
         return [
             ...caibMenuEntries,
             // additional
-            { title: t($ => $.menu.accessibilitat), icon: 'info', to: '/accessibilitat' }
+            { id: 'accessibilitat', title: t($ => $.menu.accessibilitat), icon: 'info', to: '/accessibilitat' }
         ]
-    },[caibMenuEntries])
+    },[caibMenuEntries, t])
 
     return (
         <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
@@ -52,7 +52,7 @@ const Sitemap: React.FC = () => {
 
             <List>
                 {sitemap.map((site:MenuEntry) => (
-                    <SitemapItem {...site}/>
+                    <SitemapItem key={site.id} {...site}/>
                 ))}
             </List>
         </Box>

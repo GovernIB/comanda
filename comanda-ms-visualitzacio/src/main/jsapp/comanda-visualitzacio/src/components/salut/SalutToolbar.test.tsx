@@ -18,6 +18,7 @@ vi.mock('reactlib', () => ({
         and: (...args: unknown[]) => mocks.andMock(...(args as string[])),
         eq: (...args: unknown[]) => mocks.eqMock(args[0] as string, args[1]),
         exists: (...args: unknown[]) => mocks.existsMock(args[0] as string),
+        inn: vi.fn((field: string, values: unknown[]) => `IN(${field},${values.join(',')})`),
     },
     Toolbar: () => null,
     MuiDialog: () => null,
@@ -31,39 +32,44 @@ vi.mock('reactlib', () => ({
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: (selector: any) =>
-            selector({
-                page: {
-                    salut: {
-                        filtrar: 'Filtrar',
-                        senseFiltres: 'Sense filtres',
-                        refresh: { last: 'Darrer', next: 'Següent' },
-                        refreshperiod: {
-                            title: 'Període de refresc',
-                            PT1M: '1m',
-                            PT5M: '5m',
-                            PT10M: '10m',
-                            PT30M: '30m',
-                            PT1H: '1h',
-                        },
-                        timerange: {
-                            title: 'Rang temporal',
-                            PT15M: '15m',
-                            PT1H: '1h',
-                            P1D: '1d',
-                            P7D: '7d',
-                            P1M: '1m',
-                        },
-                        groupingSelect: {
-                            label: 'Agrupació',
-                            BY_APPLICATION: 'Per aplicació',
-                            BY_ENVIRONMENT: 'Per entorn',
-                            NONE: 'Cap',
-                        },
-                    },
-                },
-                components: { clear: 'Netejar', search: 'Cercar' },
-            }),
+            typeof selector === 'function'
+                ? selector({
+                      page: {
+                          salut: {
+                              filtrar: 'Filtrar',
+                              senseFiltres: 'Sense filtres',
+                              refresh: { last: 'Darrer', next: 'Següent' },
+                              refreshperiod: {
+                                  title: 'Període de refresc',
+                                  PT1M: '1m',
+                                  PT5M: '5m',
+                                  PT10M: '10m',
+                                  PT30M: '30m',
+                                  PT1H: '1h',
+                              },
+                              timerange: {
+                                  title: 'Rang temporal',
+                                  PT15M: '15m',
+                                  PT1H: '1h',
+                                  P1D: '1d',
+                                  P7D: '7d',
+                                  P1M: '1m',
+                              },
+                              groupingSelect: {
+                                  label: 'Agrupació',
+                                  BY_APPLICATION: 'Per aplicació',
+                                  BY_ENVIRONMENT: 'Per entorn',
+                                  NONE: 'Cap',
+                              },
+                          },
+                      },
+                      components: { clear: 'Netejar', search: 'Cercar' },
+                  })
+                : selector,
     }),
+    Trans: ({ i18nKey }: { i18nKey: any }) => (
+        <>{typeof i18nKey === 'function' ? i18nKey({}) : i18nKey}</>
+    ),
 }));
 
 describe('agrupacioFromMinutes', () => {
@@ -95,7 +101,7 @@ describe('salutEntornAppFilterBuilder', () => {
                 app: [{ id: '1', description: 'APP' }],
                 entorn: [{ id: '2', description: 'PRO' }],
             })
-        ).toBe('AND(EQ(app.id,1),EQ(entorn.id,2))');
+        ).toBe('AND(IN(app.id,1),IN(entorn.id,2))');
     });
 });
 

@@ -162,7 +162,7 @@ describe('BaseApp', () => {
         expect(screen.getByTestId('mui-base-app')).toBeInTheDocument();
         expect(screen.getByText('Contingut base')).toBeInTheDocument();
         expect(screen.getByTestId('user-profile-dialog')).toBeInTheDocument();
-        expect(screen.getByTestId('menu-count')).toHaveTextContent('2');
+        expect(screen.getByTestId('menu-count')).toHaveTextContent('3');
         expect(mocks.muiBaseAppMock).toHaveBeenCalledWith(
             expect.objectContaining({
                 code: 'comanda',
@@ -170,7 +170,8 @@ describe('BaseApp', () => {
                 persistentSession: true,
                 persistentLanguage: true,
                 menuEntries: [
-                    { id: 'dashboard', title: 'Dashboard', to: '/dashboard' },
+                    { id: 'dashboard', title: 'Dashboard', to: '/dashboard', resourceName: 'dashboard' },
+                    { id: 'admin', title: 'Admin', to: '/admin', resourceName: 'admin' },
                     { id: 'public', title: 'Public', to: '/public' },
                 ],
                 headerAdditionalComponents: expect.arrayContaining([
@@ -208,11 +209,11 @@ describe('BaseApp', () => {
             </MemoryRouter>
         );
 
-        expect(screen.getByTestId('menu-count')).toHaveTextContent('0');
+        expect(screen.getByTestId('menu-count')).toHaveTextContent('1');
         expect(mocks.muiBaseAppMock).toHaveBeenCalledWith(
             expect.objectContaining({
                 headerAuthBadgeIcon: undefined,
-                menuEntries: [],
+                menuEntries: [{ id: 'a', title: 'A', to: '/a' }],
             })
         );
     });

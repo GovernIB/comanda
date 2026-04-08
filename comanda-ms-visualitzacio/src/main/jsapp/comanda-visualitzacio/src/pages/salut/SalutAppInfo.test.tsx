@@ -63,6 +63,10 @@ const translations = {
                     peticionsPeriode: 'Període',
                     tempsMigPeriode: 'Temps mig període',
                 },
+                filter: {
+                    estat: 'Filtrar per estat',
+                },
+                noResults: 'Cap subsistema coincideix amb els filtres',
             },
             integracions: {
                 title: 'Integracions',
@@ -76,6 +80,10 @@ const translations = {
                     peticionsPeriode: 'Període',
                     tempsMigPeriode: 'Temps mig període',
                 },
+                filter: {
+                    estat: 'Filtrar per estat',
+                },
+                noResults: 'Cap integració coincideix amb els filtres',
             },
             estats: {
                 title: 'Estats',
@@ -97,6 +105,22 @@ const translations = {
                     peticio: 'Petició',
                 },
             },
+            memoria: {
+                title: 'Memòria',
+                espaiMeoria: 'Memòria emprada: {{disp}} / {{total}}',
+                espaiDisc: 'Disc emprat: {{disp}} / {{total}}',
+            },
+        },
+        enum: {
+            appEstat: {
+                UP: { title: 'UP', tooltip: 'UP' },
+                WARN: { title: 'WARN', tooltip: 'WARN' },
+                DEGRADED: { title: 'DEGRADED', tooltip: 'DEGRADED' },
+                DOWN: { title: 'DOWN', tooltip: 'DOWN' },
+                MAINTENANCE: { title: 'MAINTENANCE', tooltip: 'MAINTENANCE' },
+                UNKNOWN: { title: 'UNKNOWN', tooltip: 'UNKNOWN' },
+                ERROR: { title: 'ERROR', tooltip: 'ERROR' },
+            },
         },
     },
 };
@@ -105,6 +129,15 @@ vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: (selector: any) => (typeof selector === 'function' ? selector(translations) : selector),
     }),
+    Trans: ({ i18nKey, values }: { i18nKey: any; values?: any }) => {
+        let text = typeof i18nKey === 'function' ? i18nKey(translations) : i18nKey;
+        if (values) {
+            Object.keys(values).forEach((key) => {
+                text = text.replace(`{{${key}}}`, values[key]);
+            });
+        }
+        return <>{text}</>;
+    },
 }));
 
 vi.mock('reactlib', () => ({
@@ -186,6 +219,14 @@ vi.mock('../../components/UserContext.ts', () => ({
 }));
 
 vi.mock('../../types/salut.model.tsx', () => ({
+    SalutEstatEnum: {
+        UP: 'UP',
+        WARN: 'WARN',
+        DEGRADED: 'DEGRADED',
+        DOWN: 'DOWN',
+        MAINTENANCE: 'MAINTENANCE',
+        UNKNOWN: 'UNKNOWN',
+    },
     NivellEnum: {
         INFO: 'INFO',
         WARN: 'WARN',
@@ -198,6 +239,13 @@ vi.mock('../../types/salut.model.tsx', () => ({
     useGetColorByIntegracio: () => () => '#ff8800',
     useGetColorByNivellEnum: () => () => '#0088ff',
     useGetColorBySubsistema: () => () => '#00aa00',
+    useSalutEstatTranslation: () => {
+        const { t } = (vi.mocked(require('react-i18next')) as any).useTranslation();
+        return {
+            tTitle: (estat: string) => t(($: any) => $.enum.appEstat[estat]?.title ?? estat),
+            tTooltip: (estat: string) => t(($: any) => $.enum.appEstat[estat]?.tooltip ?? estat),
+        };
+    },
 }));
 
 const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
