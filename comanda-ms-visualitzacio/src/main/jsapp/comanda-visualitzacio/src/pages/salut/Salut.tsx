@@ -235,6 +235,9 @@ const useSalutData = ({
         try {
             const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
             const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
+            const appsIds = filterData?.app?.map(({id}) => (id))
+            const entornsIds = filterData?.entorn?.map(({id}) => (id))
+
             const [
                 activeEntornAppsResponse,
                 activeAppsResponse,
@@ -246,29 +249,21 @@ const useSalutData = ({
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
                         springFilterBuilder.eq('app.activa', true),
-                        filterData?.app != null
-                            ? springFilterBuilder.eq('app.id', filterData.app.id)
-                            : null,
-                        filterData?.entorn != null
-                            ? springFilterBuilder.eq('entorn.id', filterData.entorn.id)
-                            : null
+                        springFilterBuilder.inn('app.id', appsIds),
+                        springFilterBuilder.inn('entorn.id', entornsIds),
                     ),
                 }),
                 appFind({
                     unpaged: true,
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
-                        filterData?.app != null
-                            ? springFilterBuilder.eq('id', filterData.app.id)
-                            : null
+                        springFilterBuilder.inn('id', appsIds),
                     ),
                 }),
                 entornFind({
                     unpaged: true,
                     filter: springFilterBuilder.and(
-                        filterData?.entorn != null
-                            ? springFilterBuilder.eq('id', filterData.entorn.id)
-                            : null
+                        springFilterBuilder.inn('id', entornsIds),
                     ),
                 }),
                 salutApiReport(null, {

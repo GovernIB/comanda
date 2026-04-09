@@ -148,13 +148,13 @@ describe('useSalutToolbarState', () => {
             result.current.setDataRangeDuration('P1D');
             result.current.setRefreshDuration('PT10M');
             result.current.setGrouping(GroupingEnum.NONE);
-            result.current.setFilterData({ app: { id: '5', description: 'APP' } });
+            result.current.setFilterData({ app: [{ id: '5', description: 'APP' }] });
         });
 
         expect(localStorage.getItem('appDataRangeSelect')).toBe('P1D');
         expect(localStorage.getItem('refreshTimeoutSelect')).toBe('PT10M');
         expect(localStorage.getItem('groupingForViewSelect')).toBe('NONE');
-        expect(localStorage.getItem('filterDataSalut')).toBe('{"app":{"id":"5","description":"APP"}}');
+        expect(localStorage.getItem('filterDataSalut')).toBe('{"app":[{"id":"5","description":"APP"}]}');
     });
 
     it('useSalutToolbarState_quanHiHaValorsPersistitsInvalits_recuperaElsDefaults', () => {

@@ -153,11 +153,11 @@ vi.mock('./dataFetching', () => ({
     }),
 }));
 
-vi.mock('reactlib', () => ({
-    springFilterBuilder: {
-        and: (...values: unknown[]) => values.filter(Boolean).join(' AND '),
-        eq: (field: string, value: unknown) => `${field}=${String(value)}`,
-    },
+vi.mock('reactlib', async (importOriginal) => {
+    const original = await importOriginal<typeof import('reactlib')>();
+
+    return {
+        ...original,
     useResourceApiService: (resourceName: string) => {
         const readyState =
             (globalThis as any).__salutReadyMock?.[resourceName] ??
@@ -185,7 +185,7 @@ vi.mock('reactlib', () => ({
             find: mocks.findEntornMock,
         };
     },
-}));
+}});
 
 describe('Salut', () => {
     beforeEach(() => {
