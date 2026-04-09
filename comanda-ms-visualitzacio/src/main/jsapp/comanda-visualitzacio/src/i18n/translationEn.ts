@@ -207,7 +207,8 @@ const translationEn: translationResourcesType = {
                 detalls: "Details",
                 noInfo: 'No data available for this environment',
                 downAlert: "The application is crashed. Unable to display all health information.",
-                darreraDataInfo: "The application was last operational on ",
+                darreraDataInfo1: "The application stopped working on ",
+                darreraDataInfo2: "Previous status: ",
             },
             latencia: {
                 title: "Latency",

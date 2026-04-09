@@ -11,7 +11,6 @@ import es.caib.comanda.model.v1.salut.IntegracioSalut;
 import es.caib.comanda.model.v1.salut.MissatgeSalut;
 import es.caib.comanda.model.v1.salut.SalutInfo;
 import es.caib.comanda.model.v1.salut.SubsistemaSalut;
-import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -66,7 +65,6 @@ public class SalutInfoHelper {
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
 	private final SalutHistRepository salutHistRepository;
-    private final SalutEntornAppEstatsRepository salutEntornAppEstatsRepository;
 
 	private final SalutClientHelper salutClientHelper;
 	private final RestTemplate restTemplate;
@@ -164,7 +162,6 @@ public class SalutInfoHelper {
         salut.setNumElements(1);
         SalutEntity saved = salutRepository.save(salut);
         registrarCanviEstat(saved);
-        updateEntornAppEstats(salut, true);
         if (!monitorSalut.isFinishedAction()) {
             monitorSalut.endAction(ex, null);
         }
@@ -213,7 +210,6 @@ public class SalutInfoHelper {
 			crearSalutSubsistemes(saved, info.getSubsistemes());
             crearSalutMissatges(saved, info.getMissatges());
             crearSalutDetalls(saved, toDetallSalutList(info.getInformacioSistema()));
-            updateEntornAppEstats(salut, false);
             return saved.getId();
         }
         return null;
@@ -837,59 +833,6 @@ public class SalutInfoHelper {
 
     private boolean isFirstMinuteOfDay(LocalDateTime dateTime) {
         return dateTime != null && dateTime.getHour() == 0 && dateTime.getMinute() == 0;
-    }
-
-    /**
-     * Actualitza o crea un registre {@link SalutEntornAppEstatsEntity} amb la darrera vegada
-     * que s'ha vist cada {@link SalutEstat estat} per a una {@link EntornApp}.
-     *
-     * @param salut        El registre {@link SalutEntity} que conté l'estat i la data
-     * @param peticioError Si és true, actualitza {@link SalutEntornAppEstatsEntity#darrerPeticioError darrerPeticioError} ignorant l'estat
-     */
-    private void updateEntornAppEstats(SalutEntity salut, boolean peticioError) {
-        SalutEntornAppEstatsEntity salutEntornAppEstats = salutEntornAppEstatsRepository
-                .findByEntornAppId(salut.getEntornAppId())
-                .orElse(new SalutEntornAppEstatsEntity());
-        if (salutEntornAppEstats.getId() == null) {
-            salutEntornAppEstats.setEntornAppId(salut.getEntornAppId());
-        }
-        if (peticioError) {
-            salutEntornAppEstats.setDarrerPeticioError(salut.getData());
-        } else {
-            actualitzarCampPerEstat(salutEntornAppEstats, salut.getAppEstat(), salut.getData());
-        }
-        salutEntornAppEstatsRepository.save(salutEntornAppEstats);
-    }
-
-    /** Mapeja un {@link SalutEstat} al seu camp corresponent a {@link SalutEntornAppEstatsEntity}. */
-    private void actualitzarCampPerEstat(SalutEntornAppEstatsEntity salutEntornAppEstats, SalutEstat estat, LocalDateTime data) {
-        if (data == null) return;
-        switch (estat) {
-            case UP:
-                salutEntornAppEstats.setDarrerActiu(data);
-                break;
-            case WARN:
-                salutEntornAppEstats.setDarrerAdvertencia(data);
-                break;
-            case DEGRADED:
-                salutEntornAppEstats.setDarrerDegradada(data);
-                break;
-            case DOWN:
-                salutEntornAppEstats.setDarrerCaiguda(data);
-                break;
-            case MAINTENANCE:
-                salutEntornAppEstats.setDarrerManteniment(data);
-                break;
-            case UNKNOWN:
-                salutEntornAppEstats.setDarrerDesconegut(data);
-                break;
-            case ERROR:
-                salutEntornAppEstats.setDarrerError(data);
-                break;
-            default:
-                log.debug("Estat no gestionat per actualitzar salutEntornAppEstats: {}", estat);
-        }
-        log.debug("Actualitzat camp per estat {}={} per entornAppId={}", estat, data, salutEntornAppEstats.getEntornAppId());
     }
 
 }

@@ -58,7 +58,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
 	private final SalutHistRepository salutHistRepository;
-    private final SalutEntornAppEstatsRepository salutEntornAppEstatsRepository;
 	private final SalutClientHelper salutClientHelper;
 	private final MetricsHelper metricsHelper;
     private final AuthenticationHelper authenticationHelper;
@@ -78,7 +77,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
 		register(Salut.PERSP_HISTORICS, new PerspectiveHistorics());
-        register(Salut.PERSP_ENTORN_APP_ESTATS, new PerspectiveSalutEntornAppEstats());
+        register(Salut.PERSP_ULTIM_ESTAT_OPERATIU_INFO, new PerspectiveUltimEstatOperatiuInfo());
 	}
 
 	@Override
@@ -232,18 +231,24 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
         }
     }
 
-    public class PerspectiveSalutEntornAppEstats implements PerspectiveApplicator<SalutEntity, Salut> {
+    public class PerspectiveUltimEstatOperatiuInfo implements PerspectiveApplicator<SalutEntity, Salut> {
+        private final List<SalutEstat> ESTATS_ESTABLES = List.of(
+                SalutEstat.UP,
+                SalutEstat.WARN,
+                SalutEstat.DEGRADED
+        );
+
         @Override
         public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-            Optional<SalutEntornAppEstatsEntity> salutEntornAppEstatsEntity =
-                    salutEntornAppEstatsRepository.findByEntornAppId(entity.getEntornAppId());
-            salutEntornAppEstatsEntity.ifPresent(salutEntornAppEstats ->
-                    resource.setEntornAppEstats(
-                            resourceEntityMappingHelper.entityToResource(
-                                    salutEntornAppEstats,
-                                    SalutEntornAppEstats.class)
-                    )
-            );
+            SalutHistEntity darrerHistoric = salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(entity.getEntornAppId());
+            if (darrerHistoric == null || ESTATS_ESTABLES.contains(darrerHistoric.getAppEstat())) {
+                return; //Si no te historic o esta en un estat estable no donarem informació
+            }
+            Optional<SalutHistEntity> salutHistEntity = salutHistRepository.findTopByEntornAppIdAndAppEstatInOrderByDataDesc(entity.getEntornAppId(), ESTATS_ESTABLES);
+            if (salutHistEntity.isEmpty()) { return; } //Si no hi ha cap registre estable, no mostrarem informació
+            resource.setUltimEstatInfo(new Salut.SalutEstatInfo(
+                    salutHistEntity.get().getAppEstat(),
+                    salutHistRepository.findSeguentData(entity.getEntornAppId(), salutHistEntity.get().getData()).orElse(darrerHistoric.getData())));
         }
     }
 

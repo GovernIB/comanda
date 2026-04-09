@@ -144,7 +144,7 @@ export interface ISalut extends IBaseEntity {
     missatges?      : ISalutMissatge[];
     detalls?        : ISalutDetall[];
     historics?      : ISalutHist[];
-    entornAppEstats?: ISalutEntornAppEstats;
+    ultimEstatInfo? : ISalutUltimEstatInfo;
 }
 
 export class SalutModel extends BaseEntity implements Partial<ISalut> {
@@ -201,7 +201,7 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     missatges?: SalutMissatge[];
     detalls?: SalutDetall[];
     historics?: SalutHistModel[];
-    entornAppEstats?: ISalutEntornAppEstats;
+    ultimEstatInfo? : ISalutUltimEstatInfo;
 
     /**
      * Constructor
@@ -403,36 +403,21 @@ export class SalutDetall extends BaseEntity implements Partial<ISalutDetall> {
     }
 }
 
-export interface ISalutEntornAppEstats extends IBaseEntity {
+export interface ISalutUltimEstatInfo extends IBaseEntity {
 
-    entornAppId: number;
-    darrerActiu?: string;
-    darrerAdvertencia?: string;
-    darrerDegradada?: string;
-    darrerError?: string;
-    darrerCaiguda?: string;
-    darrerManteniment?: string;
-    darrerDesconegut?: string;
-    darrerPeticioError?: string;
+    estat?: SalutEstatEnum;
+    data?: string;
 
 }
 
-export class SalutEntornAppEstat extends BaseEntity implements Partial<ISalutEntornAppEstats> {
+export class SalutUltimEstatInfo extends BaseEntity implements Partial<ISalutUltimEstatInfo> {
 
-    entornAppId: number;
-    darrerActiu?: string;
-    darrerAdvertencia?: string;
-    darrerDegradada?: string;
-    darrerError?: string;
-    darrerCaiguda?: string;
-    darrerManteniment?: string;
-    darrerDesconegut?: string;
-    darrerPeticioError?: string;
+    estat?: SalutEstatEnum;
+    data?: string;
 
-    constructor(salutEntornAppEstats: ISalutEntornAppEstats) {
-        super(salutEntornAppEstats);
-        this.entornAppId = salutEntornAppEstats.entornAppId;
-        Object.assign(this, salutEntornAppEstats);
+    constructor(salutUltimEstatInfo: ISalutUltimEstatInfo) {
+        super(salutUltimEstatInfo);
+        Object.assign(this, salutUltimEstatInfo);
     }
 }
 

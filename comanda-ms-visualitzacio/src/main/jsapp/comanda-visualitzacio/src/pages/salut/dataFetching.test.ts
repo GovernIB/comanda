@@ -106,7 +106,7 @@ describe('useAppInfoData', () => {
                     'SAL_CONTEXTS',
                     'SAL_MISSATGES',
                     'SAL_DETALLS',
-                    'SAL_ENTORN_APP_ESTATS',
+                    'SAL_ULTIM_ESTAT_OPERATIU_INFO',
                 ],
                 filter: "tipusRegistre='MINUT' && entornAppId='77'",
             })
@@ -131,7 +131,7 @@ describe('useAppInfoData', () => {
                     'SAL_MISSATGES',
                     'SAL_DETALLS',
                     'SAL_HISTORICS',
-                    'SAL_ENTORN_APP_ESTATS',
+                    'SAL_ULTIM_ESTAT_OPERATIU_INFO',
                 ],
             })
         );

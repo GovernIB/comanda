@@ -207,7 +207,8 @@ const translationCa = {
                 detalls: "Detalls",
                 noInfo: 'No hi ha dades disponibles per a aquest entorn',
                 downAlert: "L'aplicació es troba caiguda. No es pot mostrar tota la informació de salut.",
-                darreraDataInfo: "L'aplicació va estar operativa per última vegada el ",
+                darreraDataInfo1: "L'aplicació va deixar d'estar operativa el ",
+                darreraDataInfo2: "Estat anterior: ",
             },
             latencia: {
                 title: "Latència",

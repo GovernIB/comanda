@@ -625,4 +625,18 @@ describe('SalutAppInfo', () => {
 
         expect(screen.getAllByText('Sense històric').length).toBeGreaterThan(0);
     });
+
+    it('AlertUltimaDataActiva_quanTeDadesCompletes_mostraLAlertAmbLaDataIEstat', () => {
+        const appData = createAppInfoData({
+            salutCurrentApp: {
+            ...createAppInfoData().salutCurrentApp,
+            ultimEstatInfo: { data: '2026-03-15T10:30:00', estat: 'UP' },
+            },
+        });
+
+        render(<SalutAppInfo ready appInfoData={appData as any} />);
+
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+        expect(screen.getByText('format:2026-03-15T10:30:00')).toBeInTheDocument();
+    });
 });

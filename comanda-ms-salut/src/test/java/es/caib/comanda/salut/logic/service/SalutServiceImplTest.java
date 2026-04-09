@@ -24,6 +24,7 @@ import es.caib.comanda.salut.logic.intf.model.SalutIntegracio;
 import es.caib.comanda.salut.logic.intf.model.SalutMissatge;
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.entity.SalutEntity;
+import es.caib.comanda.salut.persist.entity.SalutHistEntity;
 import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
 import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
 import es.caib.comanda.salut.persist.repository.*;
@@ -31,8 +32,12 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.noop.NoopTimer;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -40,11 +45,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,7 +63,6 @@ class SalutServiceImplTest {
                                         SalutMissatgeRepository salutMissatgeRepository,
                                         SalutDetallRepository salutDetallRepository,
                                         SalutHistRepository salutHistRepository,
-                                        SalutEntornAppEstatsRepository salutEntornAppEstatsRepository,
                                         SalutClientHelper salutClientHelper,
                                         MetricsHelper metricsHelper,
                                         AuthenticationHelper authenticationHelper,
@@ -72,7 +73,6 @@ class SalutServiceImplTest {
                     salutMissatgeRepository,
                     salutDetallRepository,
                     salutHistRepository,
-                    salutEntornAppEstatsRepository,
                     salutClientHelper,
                     metricsHelper,
                     authenticationHelper,
@@ -104,9 +104,6 @@ class SalutServiceImplTest {
     private SalutHistRepository salutHistRepository;
 
     @Mock
-    private SalutEntornAppEstatsRepository salutEntornAppEstatsRepository;
-
-    @Mock
     private SalutClientHelper salutClientHelper;
 
     @Mock
@@ -134,7 +131,6 @@ class SalutServiceImplTest {
                 salutMissatgeRepository,
                 salutDetallRepository,
                 salutHistRepository,
-                salutEntornAppEstatsRepository,
                 salutClientHelper,
                 metricsHelper,
                 authenticationHelper,
@@ -569,5 +565,93 @@ class SalutServiceImplTest {
         salut.setAppEstat(SalutEstat.UP);
         salut.setBdEstat(SalutEstat.WARN);
         return salut;
+    }
+
+    @ParameterizedTest
+    @MethodSource("proporcionarCasosUltimEstatOperatiu")
+    @DisplayName("PerspectiveUltimEstatOperatiuInfo: matriz de escenarios")
+    void perspectiveUltimEstatOperatiuInfo_escenarios(String descripcion,
+                                                      Long entornAppId,
+                                                      SalutHistEntity darrerHistoric,
+                                                      Optional<SalutHistEntity> ultimEstable,
+                                                      Optional<LocalDateTime> dataSeguent,
+                                                      boolean esperaInfo,
+                                                      SalutEstat estatEsperat,
+                                                      LocalDateTime dataIniciEsperada) {
+
+        // Arrange
+        SalutEntity entity = sampleSalutEntity(100L, entornAppId, LocalDateTime.now());
+        Salut resource = sampleSalutResource(100L, entornAppId);
+        when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(entornAppId)).thenReturn(darrerHistoric);
+        if (darrerHistoric != null && !List.of(SalutEstat.UP, SalutEstat.WARN, SalutEstat.DEGRADED).contains(darrerHistoric.getAppEstat())) {
+            when(salutHistRepository.findTopByEntornAppIdAndAppEstatInOrderByDataDesc(eq(entornAppId), any())).thenReturn(ultimEstable);
+        }
+        ultimEstable.ifPresent(salutHistEntity -> when(salutHistRepository.findSeguentData(eq(entornAppId), eq(salutHistEntity.getData())))
+                .thenReturn(dataSeguent));
+
+        // Act
+        service.new PerspectiveUltimEstatOperatiuInfo()
+                .applySingle(Salut.PERSP_ULTIM_ESTAT_OPERATIU_INFO, entity, resource);
+
+        // Assert
+        if (esperaInfo) {
+            assertThat(resource.getUltimEstatInfo()).as(descripcion).isNotNull();
+            assertThat(resource.getUltimEstatInfo().getEstat()).as(descripcion).isEqualTo(estatEsperat);
+            assertThat(resource.getUltimEstatInfo().getData()).as(descripcion).isEqualTo(dataIniciEsperada);
+        } else {
+            assertThat(resource.getUltimEstatInfo()).as(descripcion).isNull();
+        }
+    }
+
+    private static Stream<Arguments> proporcionarCasosUltimEstatOperatiu() {
+        return Stream.of(
+                Arguments.of(
+                        "Últim registre estable (UP) → no mostra info",
+                        50L, crearSalutHistEntity(SalutEstat.UP, null, null),
+                        Optional.empty(), Optional.empty(),
+                        false, null, null),
+                Arguments.of(
+                        "Últim DOWN, estable anterior UP → mostra info amb data següent",
+                        51L,
+                        crearSalutHistEntity(SalutEstat.DOWN, null, null),
+                        Optional.of(crearSalutHistEntity(SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 10, 40), null)),
+                        Optional.of(LocalDateTime.of(2026, 4, 8, 10, 18)),
+                        true, SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 10, 18)),
+                Arguments.of(
+                        "No hi ha registre següent → fallback a data del darrerHistoric",
+                        52L,
+                        crearSalutHistEntity(SalutEstat.DOWN, LocalDateTime.of(2026, 4, 8, 9, 0), null),
+                        Optional.of(crearSalutHistEntity(SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 8, 0), null)),
+                        Optional.empty(),
+                        true, SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 9, 0)),
+                Arguments.of(
+                        "Mai ha estat estable → no mostra info",
+                        53L, crearSalutHistEntity(SalutEstat.DOWN, null, null),
+                        Optional.empty(), Optional.empty(),
+                        false, null, null),
+                Arguments.of(
+                        "Sense històric → no mostra info",
+                        54L, null, Optional.empty(), Optional.empty(),
+                        false, null, null),
+                Arguments.of(
+                        "Últim registre WARN (estable) → no mostra info",
+                        55L, crearSalutHistEntity(SalutEstat.WARN, null, null),
+                        Optional.empty(), Optional.empty(),
+                        false, null, null),
+                Arguments.of(
+                        "Últim registre DEGRADED (estable) → no mostra info",
+                        56L, crearSalutHistEntity(SalutEstat.DEGRADED, null, null),
+                        Optional.empty(), Optional.empty(),
+                        false, null, null)
+        );
+    }
+
+    private static SalutHistEntity crearSalutHistEntity(SalutEstat appEstat, LocalDateTime data, Boolean peticcioError) {
+        SalutHistEntity h = new SalutHistEntity();
+        h.setEntornAppId(1L);
+        h.setData(data != null ? data : LocalDateTime.of(2026, 4, 8, 10, 0));
+        h.setAppEstat(appEstat);
+        h.setPeticioError(peticcioError != null ? peticcioError : (appEstat == SalutEstat.DOWN));
+        return h;
     }
 }

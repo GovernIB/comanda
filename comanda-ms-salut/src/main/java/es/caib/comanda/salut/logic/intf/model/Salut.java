@@ -56,7 +56,7 @@ import java.util.List;
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_MISSATGES),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_DETALLS),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_HISTORICS),
-                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_ENTORN_APP_ESTATS),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_ULTIM_ESTAT_OPERATIU_INFO),
 		}
 )
 public class Salut extends BaseResource<Long> {
@@ -72,7 +72,7 @@ public class Salut extends BaseResource<Long> {
 	public static final String PERSP_MISSATGES = "SAL_MISSATGES";
 	public static final String PERSP_DETALLS = "SAL_DETALLS";
 	public static final String PERSP_HISTORICS = "SAL_HISTORICS";
-    public static final String PERSP_ENTORN_APP_ESTATS = "SAL_ENTORN_APP_ESTATS";
+    public static final String PERSP_ULTIM_ESTAT_OPERATIU_INFO = "SAL_ULTIM_ESTAT_OPERATIU_INFO";
 
 	@NotNull
 	private Long entornAppId;
@@ -115,6 +115,14 @@ public class Salut extends BaseResource<Long> {
 	private List<SalutMissatge> missatges;
 	private List<SalutDetall> detalls;
 	private List<SalutHist> historics;
-    private SalutEntornAppEstats entornAppEstats;
+    private SalutEstatInfo ultimEstatInfo;
 
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    @Setter
+    public static class SalutEstatInfo {
+        private SalutEstat estat;
+        private LocalDateTime data;
+    }
 }
