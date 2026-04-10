@@ -206,6 +206,7 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
             ) : (
                 <MuiForm
                     {...formComponentProps}
+                    key={formComponentProps?.key}
                     resourceName={resourceName}
                     resourceType={resourceType}
                     resourceTypeCode={resourceTypeCode}
