@@ -458,31 +458,40 @@ export const useSalutToolbarState = () => {
     const [refreshDuration, setRefreshDuration] = React.useState<RefreshDurationType>(getInitialRefreshDuration);
     const [filterData, setFilterData] = React.useState<SalutFilterDataType>(getInitialFilterData);
     const [grouping, setGrouping] = React.useState<GroupingEnum>(getInitialGrouping());
+
+    const handleSetDataRangeDuration = React.useCallback((duration: DataRangeDurationType) => {
+        localStorage.setItem('appDataRangeSelect', duration);
+        setDataRangeDuration(duration);
+    }, []);
+
+    const handleSetRefreshDuration = React.useCallback((duration: RefreshDurationType) => {
+        localStorage.setItem('refreshTimeoutSelect', duration);
+        setRefreshDuration(duration);
+    }, []);
+
+    const handleSetFilterData = React.useCallback((data: SalutFilterDataType) => {
+        localStorage.setItem(FILTER_DATA_LOCALSTORAGE_KEY, JSON.stringify(data));
+        setFilterData(data);
+    }, []);
+
+    const handleSetGrouping = React.useCallback((grouping: GroupingEnum) => {
+        localStorage.setItem('groupingForViewSelect', grouping);
+        setGrouping(grouping);
+    }, []);
+
     return {
         dataRangeDuration,
-        setDataRangeDuration: (duration: DataRangeDurationType) => {
-            localStorage.setItem('appDataRangeSelect', duration);
-            setDataRangeDuration(duration);
-        },
+        setDataRangeDuration: handleSetDataRangeDuration,
         refreshDuration,
-        setRefreshDuration: (duration: RefreshDurationType) => {
-            localStorage.setItem('refreshTimeoutSelect', duration);
-            setRefreshDuration(duration);
-        },
+        setRefreshDuration: handleSetRefreshDuration,
         filterData,
-        setFilterData: (data: SalutFilterDataType) => {
-            localStorage.setItem(FILTER_DATA_LOCALSTORAGE_KEY, JSON.stringify(data));
-            setFilterData(data);
-        },
+        setFilterData: handleSetFilterData,
         grouping,
-        setGrouping: (grouping: GroupingEnum) => {
-            localStorage.setItem('groupingForViewSelect', grouping);
-            setGrouping(grouping);
-        },
+        setGrouping: handleSetGrouping,
     };
 };
 
-export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
+export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
     const {
         title,
         subtitle,
@@ -678,6 +687,5 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             {dialog}
         </>
     );
-}
-
+})
 export default SalutToolbar;

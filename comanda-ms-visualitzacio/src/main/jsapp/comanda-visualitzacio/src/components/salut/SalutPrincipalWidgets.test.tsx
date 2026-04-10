@@ -195,7 +195,7 @@ describe('SalutWidgetContent', () => {
         expect(screen.getByText('1')).toBeInTheDocument();
         expect(screen.getByText('BarChart:HORA')).toBeInTheDocument();
         fireEvent.click(screen.getByTestId('KeyboardArrowDownIcon').closest('button') as HTMLButtonElement);
-        expect(setExpanded).toHaveBeenCalledWith(true);
+        expect(setExpanded).toHaveBeenCalledWith(true, expect.any(String));
     });
 
     it('SalutWidgetContent_quanEstaExpandit_mostraElDataGrid', () => {

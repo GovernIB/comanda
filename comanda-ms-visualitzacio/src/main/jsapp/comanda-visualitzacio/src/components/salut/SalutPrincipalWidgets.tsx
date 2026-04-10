@@ -47,6 +47,7 @@ import useDataGridLocale from '../../hooks/useDataGridLocale';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { AlarmsButton, AlarmsDialog } from '../Alarms.tsx';
 import { AlarmaConfigDialog } from '../../pages/AlarmaConfig';
+import { getSalutExpansionKey, SalutExpansionStateKey } from '../../pages/salut/salutState.ts';
 
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
@@ -188,6 +189,10 @@ const useTreeDataEntornAppRenderCell = (apps?: AppModel[]) => {
         />;
     }, [apps]);
 }
+
+const dataGridSlots = {
+    noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],
+};
 
 const AppDataTable: React.FC<{
     salutLastItems: SalutModel[];
@@ -402,7 +407,7 @@ const AppDataTable: React.FC<{
                 width: 160,
                 renderCell: params =>
                     params.rowNode.type !== 'group' && (
-                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                             <Button
                                 variant="contained"
                                 size="small"
@@ -422,7 +427,7 @@ const AppDataTable: React.FC<{
                             >
                                 <Icon>tune</Icon>
                             </IconButton>
-                        </Box>
+                        </div>
                     ),
             },
         ];
@@ -460,9 +465,7 @@ const AppDataTable: React.FC<{
                 rows={entornApps}
                 localeText={dataGridLocale}
                 hideFooter
-                slots={{
-                    noRowsOverlay: DataGridNoRowsOverlay as GridSlots['noRowsOverlay'],
-                }}
+                slots={dataGridSlots}
                 {...treeDataGridProps}
             />
         </>
@@ -521,7 +524,7 @@ export const SalutWidgetTitle: React.FC<{
 
 export const SalutWidgetContent: React.FC<{
     expanded: boolean;
-    setExpanded: (expanded: boolean) => void;
+    setExpanded: (expand: boolean, expansionKey: SalutExpansionStateKey) => void;
     parentContainerFullWidth: number | null;
     isGroupingDisabled: boolean;
     salutLastItems: SalutModel[];
@@ -534,148 +537,157 @@ export const SalutWidgetContent: React.FC<{
     entorns?: EntornModel[];
     entornApps: EntornAppModel[];
     grupsDates: string[];
-}> = ({
-    expanded: expandedProp,
-    setExpanded,
-    parentContainerFullWidth,
-    isGroupingDisabled,
-    salutLastItems,
-    agrupacio,
-    estats,
-    loading,
-    groupedApp,
-    groupedEntorn,
-    entornApps,
-    apps,
-    entorns,
-    grupsDates,
-}) => {
-    const theme = useTheme();
-    const isScreenSmall = useMediaQuery(theme.breakpoints.down('lg'));
-    const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
-    const expanded = !isGroupingDisabled ? expandedProp : true;
+}> = React.memo(
+    ({
+        expanded: expandedProp,
+        setExpanded: setExpandedProp,
+        parentContainerFullWidth,
+        isGroupingDisabled,
+        salutLastItems,
+        agrupacio,
+        estats,
+        loading,
+        groupedApp,
+        groupedEntorn,
+        entornApps,
+        apps,
+        entorns,
+        grupsDates,
+    }) => {
+        const theme = useTheme();
+        const isScreenSmall = useMediaQuery(theme.breakpoints.down('lg'));
+        const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
+        const expanded = !isGroupingDisabled ? expandedProp : true;
+        const setExpanded = (expand: boolean) =>
+            setExpandedProp(
+                expand,
+                getSalutExpansionKey({
+                    groupedEntorn,
+                    groupedApp,
+                })
+            );
 
-    if (loading)
+        if (loading)
+            return (
+                <>
+                    <Box sx={{ ...estils.contentText(true), width: '10em' }}>
+                        <Skeleton width="100%" height={80} />
+                    </Box>
+                    <Box sx={{ ...estils.contentText(true), width: '4em' }}>
+                        <Skeleton width="100%" height={20} />
+                    </Box>
+                </>
+            );
+
         return (
-            <>
-                <Box sx={{ ...estils.contentText(true), width: '10em' }}>
-                    <Skeleton width="100%" height={80} />
-                </Box>
-                <Box sx={{ ...estils.contentText(true), width: '4em' }}>
-                    <Skeleton width="100%" height={20} />
-                </Box>
-            </>
-        );
-
-    return (
-        <Paper
-            elevation={1}
-            sx={{
-                height: !expanded ? '230px' : trackedGridSize?.height + 'px',
-                width: !expanded ? '400px' : '100%',
-                transition: 'height 0.3s ease-in-out, width 0.3s ease-in-out',
-                overflow: 'hidden',
-                position: 'relative',
-            }}
-        >
-            <Box
+            <Paper
+                elevation={1}
                 sx={{
-                    width: !expanded ? undefined : parentContainerFullWidth + 'px', // Evita que los gráficos usen el ancho interpolado del transition, saltan directamente a la anchura entera.
-                    px: 2,
-                    pt: 1,
+                    height: !expanded ? '230px' : trackedGridSize?.height + 'px',
+                    width: !expanded ? '400px' : '100%',
+                    transition: 'height 0.3s ease-in-out, width 0.3s ease-in-out',
+                    overflow: 'hidden',
+                    position: 'relative',
                 }}
-                ref={trackedGridRef}
             >
                 <Box
                     sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        width: '100%',
+                        width: !expanded ? undefined : parentContainerFullWidth + 'px', // Evita que los gráficos usen el ancho interpolado del transition, saltan directamente a la anchura entera.
+                        px: 2,
+                        pt: 1,
                     }}
+                    ref={trackedGridRef}
                 >
-                    <SalutWidgetTitle app={groupedApp} entorn={groupedEntorn} />
                     <Box
                         sx={{
                             display: 'flex',
-                            flexDirection: isScreenSmall ? 'column' : 'row',
-                            gap: isScreenSmall ? 2 : 0,
-                            mb: 1,
+                            flexDirection: 'column',
+                            width: '100%',
                         }}
                     >
+                        <SalutWidgetTitle app={groupedApp} entorn={groupedEntorn} />
                         <Box
                             sx={{
-                                minHeight: 0,
                                 display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                height: '170px',
-                                width: !isScreenSmall ? '340px' : '100%',
-                                flexShrink: 0, // Evita que el PieChart "pegue un salto" al expandir el Widget
+                                flexDirection: isScreenSmall ? 'column' : 'row',
+                                gap: isScreenSmall ? 2 : 0,
+                                mb: 1,
                             }}
                         >
-                            <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                                <UpdownPieChart salutLastItems={salutLastItems} />
-                            </ErrorBoundary>
-                        </Box>
-                        <React.Activity mode={expanded ? 'visible' : 'hidden'}>
-                            <Box sx={{ height: '200px', flexGrow: 1 }}>
+                            <Box
+                                sx={{
+                                    minHeight: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '170px',
+                                    width: !isScreenSmall ? '340px' : '100%',
+                                    flexShrink: 0, // Evita que el PieChart "pegue un salto" al expandir el Widget
+                                }}
+                            >
                                 <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
-                                    <UpdownBarChart
-                                        agrupacio={agrupacio}
-                                        estats={estats}
-                                        grupsDates={grupsDates}
-                                    />
+                                    <UpdownPieChart salutLastItems={salutLastItems} />
                                 </ErrorBoundary>
                             </Box>
+                            <React.Activity mode={expanded ? 'visible' : 'hidden'}>
+                                <Box sx={{ height: '200px', flexGrow: 1 }}>
+                                    <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                                        <UpdownBarChart
+                                            agrupacio={agrupacio}
+                                            estats={estats}
+                                            grupsDates={grupsDates}
+                                        />
+                                    </ErrorBoundary>
+                                </Box>
+                            </React.Activity>
+                        </Box>
+                    </Box>
+                    <Box sx={{ width: '100%' }}>
+                        <React.Activity mode={expanded ? 'visible' : 'hidden'}>
+                            <AppDataTable
+                                groupedApp={groupedApp}
+                                groupedEntorn={groupedEntorn}
+                                isGroupingDisabled={isGroupingDisabled}
+                                apps={apps}
+                                entorns={entorns}
+                                entornApps={entornApps}
+                                salutLastItems={salutLastItems}
+                            />
                         </React.Activity>
-
+                    </Box>
+                    {/* Botón de expansión duplicado para ocupar la altura del botón original con position: absolute */}
+                    <Box sx={{ width: '100%', mt: 1 }}>
+                        <IconButton disabled>
+                            <KeyboardArrowUpIcon
+                                sx={{
+                                    visibility: 'hidden',
+                                }}
+                            />
+                        </IconButton>
                     </Box>
                 </Box>
-                <Box sx={{ width: '100%' }}>
-                    <React.Activity mode={expanded ? 'visible' : 'hidden'}>
-                        <AppDataTable
-                            groupedApp={groupedApp}
-                            groupedEntorn={groupedEntorn}
-                            isGroupingDisabled={isGroupingDisabled}
-                            apps={apps}
-                            entorns={entorns}
-                            entornApps={entornApps}
-                            salutLastItems={salutLastItems}
-                        />
-                    </React.Activity>
-                </Box>
-                {/* Botón de expansión duplicado para ocupar la altura del botón original con position: absolute */}
-                <Box sx={{ width: '100%', mt: 1 }}>
-                    <IconButton disabled>
-                        <KeyboardArrowUpIcon
-                            sx={{
-                                visibility: 'hidden',
-                            }}
-                        />
-                    </IconButton>
-                </Box>
-            </Box>
-            {!isGroupingDisabled && (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        position: 'absolute',
-                        bottom: '0px',
-                        width: '100%',
-                    }}
-                >
-                    <Button
-                        sx={{ width: '100%', color: 'grey' }}
-                        onClick={() => setExpanded(!expanded)}
+                {!isGroupingDisabled && (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            position: 'absolute',
+                            bottom: '0px',
+                            width: '100%',
+                        }}
                     >
-                        {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                    </Button>
-                </Box>
-            )}
-        </Paper>
-    );
-};
+                        <Button
+                            sx={{ width: '100%', color: 'grey' }}
+                            onClick={() => setExpanded(!expanded)}
+                        >
+                            {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                        </Button>
+                    </Box>
+                )}
+            </Paper>
+        );
+    }
+);
 
 export const SalutLlistat = ({
     salutGroups,
@@ -692,8 +704,8 @@ export const SalutLlistat = ({
     grupsDates?: string[];
     agrupacio?: string;
     springFilter?: string;
-    setExpanded: (expand: boolean, context: SalutData) => void;
-    isExpanded: (salutGroup: SalutData) => boolean;
+    setExpanded: (expand: boolean, expansionKey: SalutExpansionStateKey) => void;
+    isExpanded: (expansionKey: SalutExpansionStateKey) => boolean;
 }) => {
     const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
     if (!salutGroups.length || grupsDates == null || agrupacio == null) return;
@@ -715,8 +727,8 @@ export const SalutLlistat = ({
                 return (
                         <SalutWidgetContent
                             key={`salutWidgetContent-${salutGroup.groupedApp?.id}-${salutGroup.groupedEntorn?.id}`}
-                            expanded={isExpanded(salutGroup)}
-                            setExpanded={expand => setExpanded(expand, salutGroup)}
+                            expanded={isExpanded(getSalutExpansionKey(salutGroup))}
+                            setExpanded={setExpanded}
                             parentContainerFullWidth={trackedGridSize?.width ?? null}
                             isGroupingDisabled={isGroupingDisabled}
                             salutLastItems={salutGroup.salutLastItems}

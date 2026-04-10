@@ -1,22 +1,27 @@
 import { SalutData } from './Salut.tsx';
 import { useCallback, useState } from 'react';
 
+export type SalutExpansionStateKey = `app${string}-entorn${string}`;
+
+export const getSalutExpansionKey = (salutGroup: Pick<SalutData, "groupedApp" | "groupedEntorn">): SalutExpansionStateKey =>
+    `app${salutGroup.groupedApp?.id}-entorn${salutGroup.groupedEntorn?.id}`;
+
 export const useSalutLlistatExpansionState = () => {
     const [expanded, setExpanded] = useState<string[]>([]);
-    const getExpandKey = (salutGroup: SalutData) => {
-        return `app${salutGroup.groupedApp?.id}-entorn${salutGroup.groupedEntorn?.id}`;
-    };
     const isExpanded = useCallback(
-        (salutGroup: SalutData) => expanded.includes(getExpandKey(salutGroup)),
+        (expansionKey: SalutExpansionStateKey) => expanded.includes(expansionKey),
         [expanded]
     );
-    const setExpandedWithContext = useCallback((expand: boolean, context: SalutData) => {
-        if (expand) {
-            setExpanded((prevState) => [...prevState, getExpandKey(context)]);
-        } else {
-            setExpanded((prevState) => prevState.filter((key) => key !== getExpandKey(context)));
-        }
-    }, []);
+    const setExpandedWithContext = useCallback(
+        (expand: boolean, expansionKey: SalutExpansionStateKey) => {
+            if (expand) {
+                setExpanded(prevState => [...prevState, expansionKey]);
+            } else {
+                setExpanded(prevState => prevState.filter(key => key !== expansionKey));
+            }
+        },
+        []
+    );
     return {
         isExpanded,
         setExpanded: setExpandedWithContext,

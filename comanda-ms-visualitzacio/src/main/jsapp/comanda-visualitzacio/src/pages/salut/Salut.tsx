@@ -387,10 +387,12 @@ const Salut: FunctionComponent = () => {
         );
         setNextRefresh(nextRequestDate);
     };
-    const refreshAll = () => {
-        salutData.refresh();
-        appInfoData.refresh();
-    };
+    const salutDataRefresh = salutData.refresh;
+    const appInfoDataRefresh = appInfoData.refresh;
+    const refreshAll = useCallback(() => {
+        salutDataRefresh();
+        appInfoDataRefresh();
+    }, [salutDataRefresh, appInfoDataRefresh]);
     useInterval({
         tick: () => {
             updateNextRefresh();
@@ -435,7 +437,7 @@ const Salut: FunctionComponent = () => {
             <SalutToolbar
                 title={t($ => $.page.salut.title)}
                 ready={salutData.ready}
-                onRefreshClick={() => refreshAll()}
+                onRefreshClick={refreshAll}
                 appDataLoading={salutData.loading}
                 lastRefresh={salutData.lastRefresh}
                 nextRefresh={nextRefresh}
