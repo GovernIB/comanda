@@ -15,6 +15,7 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.Transient;
+import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -61,6 +62,7 @@ public class AlarmaConfig extends BaseResource<Long> {
 	@NotNull
 	private AlarmaConfigTipus tipus;
 	private AlarmaConfigCondicio condicio;
+    @Digits(integer = 15, fraction = 4)
 	private BigDecimal valor;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	private BigDecimal periodeValor;

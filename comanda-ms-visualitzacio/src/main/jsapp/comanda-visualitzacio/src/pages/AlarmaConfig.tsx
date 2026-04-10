@@ -223,7 +223,7 @@ export const AlarmaConfigForm: React.FC<{
                                         <FormField name="condicio" disabled={condicioValorDisabled} />
                                     </Grid>
                                     <Grid size={3}>
-                                        <FormField name="valor" disabled={condicioValorDisabled} />
+                                        <FormField name="valor" disabled={condicioValorDisabled} decimalScale={4} />
                                     </Grid>
                                 </Grid>
                             </CardContent>
