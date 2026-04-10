@@ -584,7 +584,7 @@ export const SalutWidgetContent: React.FC<{
                 elevation={1}
                 sx={{
                     height: !expanded ? '230px' : trackedGridSize?.height + 'px',
-                    width: !expanded ? '400px' : '100%',
+                    width: !expanded ? '396px' : '100%',
                     transition: 'height 0.3s ease-in-out, width 0.3s ease-in-out',
                     overflow: 'hidden',
                     position: 'relative',

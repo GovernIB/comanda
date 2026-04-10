@@ -69,7 +69,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                         <AlarmsProvider>
                             <UserProvider>
                                 <MuiThemeProvider>
-                                    <CssBaseline />
+                                    <CssBaseline enableColorScheme/>
                                     <BrowserRouter basename={import.meta.env.BASE_URL}>
                                         <App />
                                     </BrowserRouter>

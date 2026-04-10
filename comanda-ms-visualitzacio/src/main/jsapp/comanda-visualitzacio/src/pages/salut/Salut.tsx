@@ -446,7 +446,7 @@ const Salut: FunctionComponent = () => {
                 {...appInfoToolbarProps}
             />
             {!isAppInfoRouteActive && (
-                <Box sx={{ p: 2 }}>
+                <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
                     <PageTitle title={t($ => $.page.salut.title)} />
                     <SalutLlistat
                         apps={salutData.apps}
