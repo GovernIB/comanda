@@ -286,7 +286,7 @@ const translationCa = {
                 missatgeInfoCount: "Informació"
             },
             contexts: {
-                title: "Contexts i manuals",
+                title: "Contexts",
                 noInfo: "No hi ha informació de contexts",
                 column: {
                     codi: "Códi",
@@ -295,6 +295,9 @@ const translationCa = {
                     api: "API",
                     manuals: "Manuals",
                 },
+            },
+            manuals: {
+                title: "Manuals",
             },
             detalls: {
                 title: "Sistema",

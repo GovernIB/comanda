@@ -286,7 +286,7 @@ const translationEn: translationResourcesType = {
                 missatgeInfoCount: "Info"
             },
             contexts: {
-                title: "Contexts and manuals",
+                title: "Contexts",
                 noInfo: "There is no information about contexts",
                 column: {
                     codi: "Code",
@@ -295,6 +295,9 @@ const translationEn: translationResourcesType = {
                     api: "API",
                     manuals: "Manuals",
                 },
+            },
+            manuals: {
+                title: "Manuals",
             },
             detalls: {
                 title: "System",

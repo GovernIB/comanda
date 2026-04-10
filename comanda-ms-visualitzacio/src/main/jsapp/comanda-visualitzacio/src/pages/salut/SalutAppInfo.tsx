@@ -582,8 +582,8 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
 const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
     const contexts = salutCurrentApp.contexts;
-    return (
-        <Card variant="outlined" sx={{ height: '100%' }}>
+    return (<>
+        <Card variant="outlined">
             <CardContent>
                 <Typography gutterBottom variant="h5" component="div">
                     {t($ => $.page.salut.contexts.title)}
@@ -662,32 +662,42 @@ const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }
                                 ))}
                             </TableBody>
                         </Table>
-                        <Box sx={{
-                            mt: 2,
-                            display: 'flex',
-                        }}>
-                            {contexts.map((s, key: number) =>
-                                s.manuals?.map((manual, index: number) => (
-                                    <Button
-                                        key={`manual${key}-${index}`}
-                                        href={manual.path ?? ''}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{
-                                            textTransform: 'none',
-                                            display: 'block',
-                                        }}
-                                    >
-                                        {manual.nom}
-                                    </Button>
-                                ))
-                            )}
-                        </Box>
                     </>
                 )}
             </CardContent>
         </Card>
-    );
+        {contexts?.length && (
+        <Card variant="outlined" sx={{ mt: 1 }}>
+            <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.manuals.title)}
+                </Typography>
+                    <Box sx={{
+                        mt: 2,
+                        display: 'flex',
+                    }}>
+                        {contexts.map((s, key: number) =>
+                            s.manuals?.map((manual, index: number) => (
+                                <Button
+                                    key={`manual${key}-${index}`}
+                                    href={manual.path ?? ''}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    startIcon={<Icon>description</Icon>}
+                                    sx={{
+                                        textTransform: 'none',
+                                        display: 'flex',
+                                    }}
+                                >
+                                    {manual.nom}
+                                </Button>
+                            ))
+                        )}
+                    </Box>
+            </CardContent>
+        </Card>
+        )}
+    </>);
 };
 
 const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
