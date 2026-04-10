@@ -46,6 +46,9 @@ const translations = {
                     missatge: 'Missatge',
                 },
             },
+            manuals: {
+                title: 'Manuals',
+            },
             detalls: {
                 title: 'Detalls',
                 noInfo: 'Sense detalls',
