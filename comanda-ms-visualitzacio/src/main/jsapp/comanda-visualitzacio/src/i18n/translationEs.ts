@@ -302,6 +302,18 @@ const translationEs: translationResourcesType = {
             detalls: {
                 title: "Sistema",
                 noInfo: "No hay información sobre detalles de la aplicación",
+                codis: {
+                    PRC: "Procesadores",
+                    LAVG: "Carga del sistema (LoadAvg)",
+                    SCPU: "CPU sistema",
+                    MET: "Memoria total",
+                    MED: "Memoria disponible",
+                    EDT: "Espacio de disco total",
+                    EDL: "Espacio de disco libre",
+                    SO: "Sistema operativo",
+                    ST: "Fecha arranque",
+                    UT: "Tiempo funcionando",
+                },
             },
             memoria: {
                 title: "Memoria del sistema",

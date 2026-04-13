@@ -249,6 +249,11 @@ vi.mock('../../types/salut.model.tsx', () => ({
             tTooltip: (estat: string) => t(($: any) => $.enum.appEstat[estat]?.tooltip ?? estat),
         };
     },
+    useSalutDetallCodeTranslation: () => {
+        return {
+            tDetallTitle: (codi: String, nom : String) => nom ? nom : codi,
+        };
+    }
 }));
 
 const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({

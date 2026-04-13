@@ -302,6 +302,18 @@ const translationEn: translationResourcesType = {
             detalls: {
                 title: "System",
                 noInfo: "There is no information about application details",
+                codis: {
+                    PRC: "Processors",
+                    LAVG: "System load (LoadAvg)",
+                    SCPU: "System CPU",
+                    MET: "Total memory",
+                    MED: "Available memory",
+                    EDT: "Total disk space",
+                    EDL: "Free disk space",
+                    SO: "Operating system",
+                    ST: "Date torn",
+                    UT: "Working time",
+                },
             },
             memoria: {
                 title: "System Memory",

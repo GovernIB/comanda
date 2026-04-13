@@ -41,6 +41,7 @@ import {
     SalutModel,
     SalutEstatEnum,
     useSalutEstatTranslation,
+    useSalutDetallCodeTranslation,
 } from '../../types/salut.model.tsx';
 import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
@@ -892,6 +893,7 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
 }
 const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
+    const { tDetallTitle } = useSalutDetallCodeTranslation();
     const detalls = salutCurrentApp.detalls;
     const bdEstat = salutCurrentApp && (
         <ItemStateChip salutField={SalutField.BD_ESTAT} salutStatEnum={salutCurrentApp.bdEstat} />
@@ -910,7 +912,7 @@ const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
             .filter(detall => !['MET','MED','EDT','EDL'].includes(detall.codi))
             .map(detall => ({
             id: detall.id,
-            headerName: detall.nom,
+            headerName: tDetallTitle(detall.codi, detall.nom),
             cellContent: detall.valor,
         })),
         {

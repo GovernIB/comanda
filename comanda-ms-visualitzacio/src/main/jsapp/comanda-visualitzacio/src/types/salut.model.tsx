@@ -681,3 +681,37 @@ export function getMaterialIconByState(state: SalutEstatEnum): JSX.Element {
             return <Icon color={"inherit"}>error</Icon>;
     }
 }
+
+export const useSalutDetallCodeTranslation = () => {
+    const { t } = useTranslation();
+    const tDetallTitle = (codi: String, nom : String) => {
+        switch (codi) {
+            case "PRC":
+                return t($ => $.page.salut.detalls.codis.PRC);
+            case "LAVG":
+                return t($ => $.page.salut.detalls.codis.LAVG);
+            case "SCPU":
+                return t($ => $.page.salut.detalls.codis.SCPU);
+            case "MET":
+                return t($ => $.page.salut.detalls.codis.MET);
+            case "MED":
+                return t($ => $.page.salut.detalls.codis.MED);
+            case "EDT":
+                return t($ => $.page.salut.detalls.codis.EDT);
+            case "EDL":
+                return t($ => $.page.salut.detalls.codis.EDL);
+            case "SO":
+                return t($ => $.page.salut.detalls.codis.SO);
+            case "ST":
+                return t($ => $.page.salut.detalls.codis.ST);
+            case "UT":
+                return t($ => $.page.salut.detalls.codis.UT);
+            default:
+                return nom;
+        }
+    };
+    return {
+        tDetallTitle,
+    };
+}
+

@@ -234,6 +234,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
 
         public PingUrlResponse isEndpointReachable(EntornAppPingAction params) {
+            I18nUtil i18nUtil = I18nUtil.getInstance();
             PingUrlResponse pingUrlResponse = new PingUrlResponse();
             pingUrlResponse.setSuccess(false);
             String message = null;
@@ -255,38 +256,38 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                         boolean hasBody = response.getBody() != null;
                         boolean hasCorrectType = hasBody && responseType.getRawType().isInstance(response.getBody());
                         if (!hasBody) {
-                            message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.emptyBody");
+                            message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.emptyBody");
                         } else if (!hasCorrectType) {
-                            message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectBody");
+                            message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectBody");
                         } else {
                             Object body = response.getBody();
                             Set<ConstraintViolation<Object>> violations = validator.validate(body);
                             if (!violations.isEmpty()) {
                                 pingUrlResponse.setValidationError(true);
-                                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectValidate") +
+                                message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectValidate") +
                                         " " + violations.stream()
                                         .map(v -> "[" + v.getPropertyPath() + ": " + v.getMessage() + "]")
                                         .collect(Collectors.joining(",\n "));
                             } else {
                                 pingUrlResponse.setSuccess(true);
-                                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.correctBody");
+                                message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.correctBody");
                             }
                         }
                     } else {
                         pingUrlResponse.setSuccess(true);
-                        message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
+                        message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.success");
                     }
                 }
             } catch (HttpMessageNotReadableException e) {
-                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.deserializationError");
+                message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.deserializationError");
             } catch (IllegalArgumentException e) {
-                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.illegalArgument");
+                message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.illegalArgument");
             } catch (ResourceAccessException e) {
-                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.timeout");
+                message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.timeout");
             } catch (HttpStatusCodeException e) {
                 message = getMessageForStatusCode(e.getRawStatusCode());
             } catch (Exception e) {
-                message = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.unknown", e.getClass().getSimpleName());
+                message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.unknown", e.getClass().getSimpleName());
             }
             pingUrlResponse.setMessage(message);
             return pingUrlResponse;

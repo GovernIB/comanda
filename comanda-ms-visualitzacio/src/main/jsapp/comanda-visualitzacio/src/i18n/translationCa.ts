@@ -302,6 +302,18 @@ const translationCa = {
             detalls: {
                 title: "Sistema",
                 noInfo: "No hi ha informació sobre detalls de l'aplicació",
+                codis: {
+                    PRC: "Processadors",
+                    LAVG: "Càrrega del sistema (LoadAvg)",
+                    SCPU: "CPU sistema",
+                    MET: "Memòria total",
+                    MED: "Memòria disponible",
+                    EDT: "Espai de disc total",
+                    EDL: "Espai de disc lliure",
+                    SO: "Sistema operatiu",
+                    ST: "Data arrancada",
+                    UT: "Temps funcionant",
+                },
             },
             memoria: {
                 title: "Memoria del sistema",
