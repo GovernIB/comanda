@@ -3,6 +3,7 @@ package es.caib.comanda.monitor.logic.service;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
+import es.caib.comanda.monitor.logic.helper.MonitorClientHelper;
 import es.caib.comanda.monitor.logic.intf.model.Monitor;
 import es.caib.comanda.monitor.persist.entity.MonitorEntity;
 import es.caib.comanda.monitor.persist.repository.MonitorRepository;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -44,6 +46,8 @@ public class MonitorServiceImplTest {
     private ResourceReferenceToEntityHelper resourceReferenceToEntityHelper = new ResourceReferenceToEntityHelper();
     @Mock
     private MonitorRepository entityRepository;
+    @Mock
+    private MonitorClientHelper monitorClientHelper;
 
     @InjectMocks
     private MonitorServiceImpl monitorService;
@@ -53,6 +57,11 @@ public class MonitorServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(monitorService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
+        ReflectionTestUtils.setField(monitorService, "resourceReferenceToEntityHelper", resourceReferenceToEntityHelper);
+        ReflectionTestUtils.setField(monitorService, "entityRepository", entityRepository);
+        ReflectionTestUtils.setField(monitorService, "monitorClientHelper", monitorClientHelper);
+
         // Setup test data
         monitorEntity = new MonitorEntity();
         monitorEntity.setId(1L);

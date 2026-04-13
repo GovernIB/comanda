@@ -628,6 +628,8 @@ const translationCa = {
             },
             detail: {
                 title: "Detalls de la comunicació amb la integració",
+                entorn: "Entorn",
+                app: "Aplicació",
                 data: "Data",
                 operacio: "Descripció",
                 tipus: "Tipus",

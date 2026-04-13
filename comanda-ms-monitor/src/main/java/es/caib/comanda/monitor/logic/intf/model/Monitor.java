@@ -1,6 +1,8 @@
 package es.caib.comanda.monitor.logic.intf.model;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
@@ -16,6 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Sort;
 
 import javax.validation.constraints.NotNull;
@@ -69,12 +72,14 @@ import java.time.LocalDateTime;
                 )
         },
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Monitor.FILTER_MONITOR, formClass = Monitor.FrontFilter.class)
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Monitor.FILTER_MONITOR, formClass = Monitor.FrontFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Monitor.PERSPECTIVE_ENTORN_APP),
         }
 )
 public class Monitor extends BaseResource<Long> {
 
     public static final String FILTER_MONITOR = "FILTER";
+    public static final String PERSPECTIVE_ENTORN_APP = "ENTORN_APP";
 
     private Long entornAppId;
     @NotNull
@@ -99,6 +104,9 @@ public class Monitor extends BaseResource<Long> {
     private String excepcioMessage;
     @Size(max = 4000)
     private String excepcioStacktrace;
+
+    @Transient private AppRef app;
+    @Transient private EntornRef entorn;
 
     @Getter
     @Setter

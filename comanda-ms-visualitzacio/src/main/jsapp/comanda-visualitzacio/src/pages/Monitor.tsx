@@ -88,6 +88,8 @@ const MonitorDetails: React.FC<any> = (props) => {
     const { t } = useTranslation();
     const { t: tStringKey } = useTranslationStringKey();
     const elementsDetail = [
+        { label: t($ => $.page.monitors.detail.app), value: data?.app?.description },
+        { label: t($ => $.page.monitors.detail.entorn), value: data?.entorn?.description },
         { label: t($ => $.page.monitors.detail.data), value: dateFormatLocale(data?.data, true) },
         { label: t($ => $.page.monitors.detail.operacio), value: data?.operacio },
         {
@@ -162,6 +164,8 @@ const MonitorFilter: React.FC = () => {
     );
 };
 
+const dataGridPerspectives = ['ENTORN_APP'];
+
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
     const closeDialogButton = useCloseDialogButtons();
@@ -214,6 +218,7 @@ const Monitors: React.FC = () => {
                 }
                 resourceName="monitor"
                 columns={columnsMonitor}
+                perspectives={dataGridPerspectives}
                 toolbarType="upper"
                 paginationActive
                 readOnly

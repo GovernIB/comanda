@@ -628,6 +628,8 @@ const translationEs: translationResourcesType = {
             },
             detail: {
                 title: "Detalles de la comunicación con la integración",
+                entorn: "Entorno",
+                app: "Aplicación",
                 data: "Fecha",
                 operacio: "Descripción",
                 tipus: "Tipo",
