@@ -92,7 +92,7 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
                         'SAL_CONTEXTS',
                         'SAL_MISSATGES',
                         'SAL_DETALLS',
-                        ...(isUserAdmin ? ['SAL_HISTORICS'] : []),
+                        'SAL_HISTORICS',
                         'SAL_ULTIM_ESTAT_OPERATIU_INFO',
                     ],
                     filter: springFilterBuilder.and(

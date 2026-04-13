@@ -106,6 +106,7 @@ describe('useAppInfoData', () => {
                     'SAL_CONTEXTS',
                     'SAL_MISSATGES',
                     'SAL_DETALLS',
+                    'SAL_HISTORICS',
                     'SAL_ULTIM_ESTAT_OPERATIU_INFO',
                 ],
                 filter: "tipusRegistre='MINUT' && entornAppId='77'",

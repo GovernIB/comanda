@@ -235,7 +235,8 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
         private final List<SalutEstat> ESTATS_ESTABLES = List.of(
                 SalutEstat.UP,
                 SalutEstat.WARN,
-                SalutEstat.DEGRADED
+                SalutEstat.DEGRADED,
+		        SalutEstat.ERROR
         );
 
         @Override
@@ -255,11 +256,6 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class PerspectiveHistorics implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-			if (!authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
-				resource.setHistorics(List.of());
-				return;
-			}
-
 			List<SalutHistEntity> salutHistorics = salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(entity.getEntornAppId());
 			resource.setHistorics(
 				salutHistorics.stream()

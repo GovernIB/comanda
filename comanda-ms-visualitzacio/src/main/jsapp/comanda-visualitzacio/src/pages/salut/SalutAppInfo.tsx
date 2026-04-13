@@ -55,7 +55,6 @@ import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import LogsViewer from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
-import { useIsUserAdmin } from '../../components/UserContext.ts';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -362,7 +361,7 @@ const Integracions: React.FC<{
         if (matchingIds.length === 0) return [];
         const ancestorIds = matchingIds.flatMap(id => getAncestorIds(id));
         const allIdsToShow = [...new Set([...matchingIds, ...ancestorIds])];
-        return integracions.filter(i => 
+        return integracions.filter(i =>
             i.pare == null && allIdsToShow.includes(i.id)
         );
     }, [integracions, selectedEstats]);
@@ -1002,6 +1001,7 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
         return (
             <Grid>
                 <DownAlert />
+                <AlertUltimaDataActiva salutCurrentApp={salutCurrentApp} />
             </Grid>
         );
     }
@@ -1036,6 +1036,7 @@ const TabIntegracions: React.FC<
         return (
             <Grid>
                 <DownAlert />
+                <AlertUltimaDataActiva salutCurrentApp={salutCurrentApp} />
             </Grid>
         );
     }
@@ -1202,7 +1203,6 @@ const SalutAppInfo: React.FC<{
     grupsDates?: string[];
 }> = ({ appInfoData, grupsDates, ready }) => {
     const { t } = useTranslation();
-    const isUserAdmin = useIsUserAdmin();
     const getColorBySubsistema = useGetColorBySubsistema();
     const getColorByIntegracio = useGetColorByIntegracio();
     const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
@@ -1262,15 +1262,11 @@ const SalutAppInfo: React.FC<{
             label: t($ => $.page.salut.tabs.historic),
             icon: <Icon>timeline</Icon>,
         },
-        ...(isUserAdmin
-            ? [
-                  {
-                      id: 'historicEstat',
-                      label: t($ => $.page.salut.tabs.historicEstat),
-                      icon: <Icon>history_toggle_off</Icon>,
-                  },
-              ]
-            : []),
+        {
+            id: 'historicEstat',
+            label: t($ => $.page.salut.tabs.historicEstat),
+            icon: <Icon>history_toggle_off</Icon>,
+        },
         {
             id: 'logs',
             label: t($ => $.page.salut.tabs.logs),
