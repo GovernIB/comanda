@@ -176,6 +176,9 @@ const LogList = ({
             }}
             columns={logListColumns}
             rows={rows}
+            // disableColumnSelector
+            // disableColumnFilter
+            showToolbar
             />
         </>
     );
