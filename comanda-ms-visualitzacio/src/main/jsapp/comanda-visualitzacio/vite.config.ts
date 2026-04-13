@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
             restoreMocks: true,
             unstubGlobals: true,
             pool: 'forks',
+            testTimeout: env.LOW_PERFORMANCE_TEST_MODE ? 10000 : undefined,
             reporters: ['default', 'junit', 'html'],
             outputFile: {
                 junit: './test-reports/junit.xml',

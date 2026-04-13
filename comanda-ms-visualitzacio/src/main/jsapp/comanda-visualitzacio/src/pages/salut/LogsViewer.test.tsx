@@ -186,8 +186,8 @@ describe('LogsViewer', () => {
             });
         });
 
-        expect(screen.getByText('app.log')).toBeInTheDocument();
-        expect(screen.getByText('Línia 1')).toBeInTheDocument();
+        expect(await screen.findByText('app.log')).toBeInTheDocument();
+        expect(await screen.findByText('Línia 1')).toBeInTheDocument();
     });
 
     it('LogsViewer_quanEsDescarregaUnFitxer_creaLaUrlTemporalIElDescarrega', async () => {

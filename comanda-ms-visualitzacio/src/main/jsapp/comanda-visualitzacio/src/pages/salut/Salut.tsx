@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { Activity, FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import { BaseEntity } from '../../types/base-entity.model';
@@ -445,7 +445,7 @@ const Salut: FunctionComponent = () => {
                 {...toolbarState}
                 {...appInfoToolbarProps}
             />
-            {!isAppInfoRouteActive && (
+            <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
                 <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
                     <PageTitle title={t($ => $.page.salut.title)} />
                     <SalutLlistat
@@ -458,7 +458,7 @@ const Salut: FunctionComponent = () => {
                         {...salutLlistatState}
                     />
                 </Box>
-            )}
+            </Activity>
             {isAppInfoRouteActive && (
                 <SalutAppInfo
                     appInfoData={appInfoData}

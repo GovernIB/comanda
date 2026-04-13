@@ -684,7 +684,7 @@ export function getMaterialIconByState(state: SalutEstatEnum): JSX.Element {
 
 export const useSalutDetallCodeTranslation = () => {
     const { t } = useTranslation();
-    const tDetallTitle = (codi: String, nom : String) => {
+    const tDetallTitle = (codi: string, nom : string) => {
         switch (codi) {
             case "PRC":
                 return t($ => $.page.salut.detalls.codis.PRC);
