@@ -80,7 +80,9 @@ describe('UserProvider', () => {
             expect(screen.getByTestId('user-id')).toHaveTextContent('9');
         });
 
-        expect(screen.getByTestId('current-role')).toHaveTextContent(ROLE_ADMIN);
+        await waitFor(() => {
+            expect(screen.getByTestId('current-role')).toHaveTextContent(ROLE_ADMIN);
+        });
         expect(mocks.setHttpHeadersMock).toHaveBeenCalledWith([{ 'X-App-Role': ROLE_ADMIN }]);
         expect(mocks.refreshApiIndexMock).toHaveBeenCalled();
     });
