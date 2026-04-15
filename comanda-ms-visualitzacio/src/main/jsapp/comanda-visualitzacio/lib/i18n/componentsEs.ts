@@ -36,6 +36,13 @@ const componentsEs = {
                 success: 'Elemento borrado',
                 error: 'Error borrando elemento',
             },
+            multiple: {
+                label: 'Confirmación',
+                confirm:
+                    '¿Está seguro de que desea borrar los {{count}} elementos seleccionados (esta acción no se puede deshacer)?',
+                success: '{{count}} elementos borrados',
+                error: 'No se han podido borrar {{count}} elementos',
+            },
         },
         export: {
             label: 'Exportar',
@@ -57,8 +64,19 @@ const componentsEs = {
             one: '1 fila seleccionada',
             multiple: '{{count}} filas seleccionadas',
         },
-        pageInfo: '{{from}} a {{to}} de {{count}}',
-        sizeAuto: 'Automático',
+        edit: {
+            save: 'Guardar',
+            cancel: 'Cancelar',
+        },
+        row: {
+            single: 'fila',
+            multiple: 'filas',
+        },
+        footer: {
+            pageInfo: '{{from}} a {{to}} de {{count}}',
+            sizeAuto: 'Automático',
+            pageSizeTitle: 'Número de elementos por página',
+        },
         requestPending: 'Pendiente de consultar',
     },
     form: {
@@ -117,6 +135,8 @@ const componentsEs = {
             error: 'Error de validación',
             saveErrors: 'Hay errores de validación',
         },
+        blocker:
+            'Esta seguro de que desea salir de este formulario? Es posible que se pierdan los cambios que ha hecho.',
     },
     actionreport: {
         action: {

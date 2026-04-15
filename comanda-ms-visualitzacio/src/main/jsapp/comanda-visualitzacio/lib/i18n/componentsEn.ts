@@ -35,6 +35,13 @@ const componentsEn = {
                 success: 'Deleted items',
                 error: 'Error deleting items',
             },
+            multiple: {
+                label: 'Confirmation',
+                confirm:
+                    "Are you sure you want to delete {{count}} selected items (this action can't be undone)?",
+                success: '{{count}} items deleted',
+                error: "{{count}} items couldn't be deleted",
+            },
         },
         export: {
             label: 'Export',
@@ -56,8 +63,19 @@ const componentsEn = {
             one: '1 selected row ',
             multiple: '{{count}} selected rows',
         },
-        pageInfo: '{{from}} to {{to}} of {{count}}',
-        sizeAuto: 'Automatic',
+        edit: {
+            save: 'Save',
+            cancel: 'Cancel',
+        },
+        row: {
+            single: 'row',
+            multiple: 'rows',
+        },
+        footer: {
+            pageInfo: '{{from}} to {{to}} of {{count}}',
+            sizeAuto: 'Automatic',
+            pageSizeTitle: 'Number of items per page',
+        },
         requestPending: 'Searching...',
     },
     form: {
@@ -114,6 +132,7 @@ const componentsEn = {
             error: 'Validation error',
             saveErrors: 'There are validation errors',
         },
+        blocker: "Are you sure you want to exit this form? You may lose the changes you've made.",
     },
     actionreport: {
         action: {

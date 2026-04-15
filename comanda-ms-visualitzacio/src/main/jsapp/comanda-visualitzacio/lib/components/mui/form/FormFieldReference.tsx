@@ -450,26 +450,28 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                                 flexWrap: inline ? 'nowrap' : undefined,
                             },
                         }}
-                        InputProps={{
-                            ...params.InputProps,
-                            startAdornment: params.InputProps.startAdornment ? (
-                                <>
-                                    {startAdornment}
-                                    {params.InputProps.startAdornment}
-                                </>
-                            ) : (
-                                startAdornment
-                            ),
-                            endAdornment: params.InputProps.endAdornment ? (
-                                <>
-                                    {params.InputProps.endAdornment}
-                                    {endAdornment}
-                                </>
-                            ) : (
-                                endAdornment
-                            ),
+                        slotProps={{
+                            input: {
+                                ...params.InputProps,
+                                startAdornment: params.InputProps.startAdornment ? (
+                                    <>
+                                        {startAdornment}
+                                        {params.InputProps.startAdornment}
+                                    </>
+                                ) : (
+                                    startAdornment
+                                ),
+                                endAdornment: params.InputProps.endAdornment ? (
+                                    <>
+                                        {params.InputProps.endAdornment}
+                                        {endAdornment}
+                                    </>
+                                ) : (
+                                    endAdornment
+                                ),
+                            },
+                            htmlInput: params.inputProps,
                         }}
-                        inputProps={params.inputProps}
                     />
                 )}
                 slotProps={{
@@ -478,10 +480,10 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                             minWidth: '300px',
                         },
                     },
+                    // The next prop fixes a bug in Firefox where the focus was put into the Listbox
+                    // container, and then lost focus of the form completely when navigating to the next input
+                    listbox: { tabIndex: '-1' },
                 }}
-                // The next prop fixes a bug in Firefox where the focus was put into the Listbox
-                // container, and then lost focus of the form completely when navigating to the next input
-                ListboxProps={{ tabIndex: '-1' }}
                 openText={t('form.field.reference.open')}
                 closeText={t('form.field.reference.close')}
                 clearText={t('form.field.reference.clear')}

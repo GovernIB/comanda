@@ -25,7 +25,7 @@ export const FormFieldTime: React.FC<FormFieldCustomProps> = (props) => {
         componentProps
     );
     const { dateValue, dateError, handleOnChange, handleOnBlur } = useFormFieldDateCommon(
-        value,
+        value?.includes('T') ? value : value ? '00000000T' + value : value,
         onChange
     );
     const processedInputProps = {

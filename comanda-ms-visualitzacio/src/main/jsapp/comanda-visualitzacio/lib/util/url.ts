@@ -1,5 +1,7 @@
 export const toAbsolutePath = (relativePath: string, envBaseUrl: string = '/') => {
-    return window.location.origin + envBaseUrl + relativePath;
+    const locationRelativePath =
+        envBaseUrl.replace(/\/+$/, '') + '/' + relativePath.replace(/^\/+/, '');
+    return window.location.origin + locationRelativePath;
 };
 
 export const isCurrentPathMatching = (path: string, withParams: boolean | undefined = false) => {

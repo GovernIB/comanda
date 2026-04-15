@@ -1,14 +1,17 @@
 import React from 'react';
-import TextField from '@mui/material/TextField';
+import TextField, { TextFieldProps } from '@mui/material/TextField';
 import Icon from '@mui/material/Icon';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
 import { useDebounce } from '../../../util/useDebounce';
 import { FormFieldCustomProps } from '../../form/FormField';
 import { FormFieldError } from '../../form/FormContext';
-import { TextFieldProps } from '@mui/material/TextField';
 
 type FormFieldTextProps = FormFieldCustomProps & {
-    /** Indica si s'ha de fer debounce amb els valors del camp */
-    debounce?: true;
+    /** Indica si aquest camp és de tipus password */
+    password?: true;
+    /** Indica si s'ha de deshabilitar el debounce amb els valors del camp */
+    debounceDisabled?: true;
 };
 
 export const useFormFieldCommon = (
@@ -18,11 +21,10 @@ export const useFormFieldCommon = (
     componentProps: any,
     startAdornmentIcons?: React.ReactElement[]
 ) => {
-    const helperText = inline ? field?.helperText : (fieldError?.message ?? field?.helperText);
-    const title = field?.title ?? (inline ? helperText : undefined);
+    const title = inline ? (fieldError?.message ?? field?.title) : field?.title;
     const inlineErrorIconElement =
         fieldError && inline ? (
-            <Icon fontSize="small" color="error" title={fieldError.message} sx={{ mr: 1 }}>
+            <Icon fontSize="small" color="error" title={title} sx={{ mr: 1 }}>
                 warning
             </Icon>
         ) : null;
@@ -36,6 +38,7 @@ export const useFormFieldCommon = (
         ) : (
             componentProps?.slotProps?.input?.startAdornment
         );
+    const helperText = inline ? field?.helperText : (fieldError?.message ?? field?.helperText);
     return {
         helperText,
         title,
@@ -62,17 +65,37 @@ const InnerFormFieldText: React.FC<
         onChange,
         componentProps,
         overrideTextFieldProps,
+        password,
     } = props;
+    const [passwordVisible, setPasswordVisible] = React.useState<boolean>(false);
     const { helperText, title, startAdornment } = useFormFieldCommon(
         field,
         fieldError,
         inline,
         componentProps
     );
+    const endAdornment = (
+        <>
+            {componentProps?.slotProps?.input?.endAdornment}
+            {password && (
+                <InputAdornment position="end">
+                    <IconButton
+                        disabled={disabled || readOnly}
+                        onClick={() => setPasswordVisible((v) => !v)}
+                        size="small">
+                        <Icon fontSize="small">
+                            {passwordVisible ? 'visibility_off' : 'visibility'}
+                        </Icon>
+                    </IconButton>
+                </InputAdornment>
+            )}
+        </>
+    );
     const inputProps = {
         readOnly,
         ...componentProps?.slotProps?.input,
         startAdornment,
+        endAdornment,
     };
     const htmlInputProps = {
         maxLength: field?.maxLength,
@@ -87,14 +110,15 @@ const InnerFormFieldText: React.FC<
             value={value ?? ''}
             required={required ?? field?.required}
             disabled={disabled}
+            type={password && !passwordVisible ? 'password' : undefined}
             error={fieldError != null}
             title={title}
-            helperText={helperText}
             onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
             fullWidth
             multiline={isTextAreaType}
             rows={isTextAreaType ? 4 : undefined}
             {...componentProps}
+            helperText={helperText ?? componentProps.helperText}
             slotProps={{
                 input: inputProps,
                 htmlInput: htmlInputProps,
@@ -107,10 +131,8 @@ const InnerFormFieldText: React.FC<
 const useIsUserTypingRef = (delay: number = 250): [React.RefObject<boolean>, () => void] => {
     const isUserTypingRef = React.useRef(false);
     const timeoutIdRef = React.useRef<any>(null);
-
     const onUserInput = () => {
         isUserTypingRef.current = true;
-
         if (timeoutIdRef.current != null) {
             clearTimeout(timeoutIdRef.current);
         }
@@ -149,7 +171,7 @@ const InnerFormFieldTextDebounce: React.FC<FormFieldTextProps> = (props) => {
 };
 
 export const FormFieldText: React.FC<FormFieldTextProps> = (props) => {
-    if (props.debounce) {
+    if (!props.debounceDisabled) {
         return <InnerFormFieldTextDebounce {...props} />;
     } else {
         return <InnerFormFieldText {...props} />;

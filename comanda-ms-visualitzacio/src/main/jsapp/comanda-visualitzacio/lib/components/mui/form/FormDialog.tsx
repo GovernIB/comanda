@@ -1,4 +1,6 @@
 import React from 'react';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import { DialogButton } from '../../BaseAppContext';
 import { ResourceType } from '../../ResourceApiContext';
 import { useCloseDialogButtons, useFormDialogButtons } from '../../AppButtons';
@@ -41,11 +43,22 @@ export type UseFormDialogFn = (
     customSubmit?: FormDialogSubmitFn,
     customSubmitErrorMessage?: string,
     defaultFormContent?: React.ReactNode,
+    loadingComponent?: React.ReactNode,
     defaultDialogComponentProps?: any,
     defaultFormComponentProps?: any,
     formI18nKeys?: FormI18nKeys,
-    closeFn?: (reason?: string) => boolean
+    closeFn?: (reason?: string) => boolean,
+    closeIcon?: boolean,
+    autoSubmit?: boolean
 ) => [FormDialogShowFn, React.ReactElement, FormDialogCloseFn];
+
+const FormDialogLoading: React.FC = () => {
+    return (
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <CircularProgress size={50} sx={{ my: 4 }} />
+        </Box>
+    );
+};
 
 export const useFormDialog: UseFormDialogFn = (
     resourceName: string,
@@ -55,10 +68,13 @@ export const useFormDialog: UseFormDialogFn = (
     customSubmit?: FormDialogSubmitFn,
     customSubmitErrorMessage?: string,
     defaultFormContent?: React.ReactNode,
+    loadingComponent?: React.ReactNode,
     defaultDialogComponentProps?: any,
     defaultFormComponentProps?: any,
     formI18nKeys?: FormI18nKeys,
-    closeFn?: (reason?: string) => boolean
+    closeFn?: (reason?: string) => boolean,
+    closeIcon?: boolean,
+    autoSubmit?: boolean
 ) => {
     const formApiRef = React.useRef<FormApi | any>({});
     const formDialogButtons = useFormDialogButtons();
@@ -86,38 +102,14 @@ export const useFormDialog: UseFormDialogFn = (
         React.ReactNode | undefined
     >();
     const [isSaveActionPresent, setIsSaveActionPresent] = React.useState(true);
-    const show = (id: any, args?: FormDialogShowArgs) => {
-        setId(id);
-        setTitle(args?.title);
-        setFormContent(args?.formContent ?? defaultFormContent);
-        setAdditionalData(args?.additionalData ?? null);
-        setInitOnChangeRequest(args?.initOnChangeRequest ?? initOnChangeRequestProp);
-        setDialogComponentProps(
-            args?.dialogComponentProps != null
-                ? { ...defaultDialogComponentProps, ...args?.dialogComponentProps }
-                : defaultDialogComponentProps
-        );
-        setFormComponentProps(
-            args?.formComponentProps != null
-                ? { ...otherFormComponentProps, ...args?.formComponentProps }
-                : otherFormComponentProps
-        );
-        setOpen(true);
-        setSubmitReturnedContent(undefined);
-        setIsSaveActionPresent(true);
-        return new Promise<any>((resolve, reject) => {
-            setResolveFn(() => resolve);
-            setRejectFn(() => reject);
-        });
-    };
-    const resolvedDialogButtons =
-        hasCustomDialogButtons || isSaveActionPresent ? dialogButtons ?? formDialogButtons : closeDialogButtons;
+    const [loading, setLoading] = React.useState<boolean>();
     const buttonCallback = (value: any) => {
         if (value) {
             const isCustomSubmit = customSubmit != null;
             const result = isCustomSubmit
                 ? customSubmit(formApiRef.current.getId(), formApiRef.current.getData())
                 : formApiRef.current.save();
+            setLoading(true);
             result
                 .then((value: any) => {
                     if (isCustomSubmit) {
@@ -141,7 +133,8 @@ export const useFormDialog: UseFormDialogFn = (
                     if (isCustomSubmit) {
                         formApiRef.current.handleSubmissionErrors(error, customSubmitErrorMessage);
                     }
-                });
+                })
+                .finally(() => setLoading(false));
         } else {
             // S'ha fet clic al botó de cancel·lar
             rejectFn?.(undefined);
@@ -149,13 +142,52 @@ export const useFormDialog: UseFormDialogFn = (
         }
     };
     const closeCallback = (reason: string) => {
-        // S'ha tancat la modal amb la 'x' o s'ha fet click a fora de la finestra
-        const doClose = closeFn != null ? closeFn(reason) : true;
-        if (doClose) {
-            rejectFn?.(undefined);
-            setOpen(false);
+        // S'ha tancat la modal amb la 'x' o s'ha fet click a fora de la finestra.
+        if (!loading) {
+            // Només es pot tancar la modal si no s'està en estat loading.
+            const doClose = closeFn != null ? closeFn(reason) : true;
+            if (doClose) {
+                rejectFn?.(undefined);
+                setOpen(false);
+            }
         }
     };
+    const show = (id: any, args?: FormDialogShowArgs) => {
+        setId(id);
+        setTitle(args?.title);
+        setFormContent(args?.formContent ?? defaultFormContent);
+        setAdditionalData(args?.additionalData ?? null);
+        setInitOnChangeRequest(args?.initOnChangeRequest ?? initOnChangeRequestProp);
+        setDialogComponentProps(
+            args?.dialogComponentProps != null
+                ? { ...defaultDialogComponentProps, ...args?.dialogComponentProps }
+                : defaultDialogComponentProps
+        );
+        setFormComponentProps(
+            args?.formComponentProps != null
+                ? { ...otherFormComponentProps, ...args?.formComponentProps }
+                : otherFormComponentProps
+        );
+        setOpen(true);
+        setSubmitReturnedContent(undefined);
+        setLoading(undefined);
+        return new Promise<any>((resolve, reject) => {
+            setResolveFn(() => resolve);
+            setRejectFn(() => reject);
+        });
+    };
+    // Deshabilita els botons si s'està en estat loading
+    const buttons =
+        hasCustomDialogButtons || isSaveActionPresent ? dialogButtons ?? formDialogButtons : closeDialogButtons;
+    const processedButtons = loading
+        ? buttons.map((b) => ({
+              ...b,
+              componentProps: {
+                  ...b.componentProps,
+                  disabled: true,
+              },
+          }))
+        : buttons;
     const close = () => setOpen(false);
     const dialogComponent = (
         <FormDialog
@@ -170,13 +202,19 @@ export const useFormDialog: UseFormDialogFn = (
             buttonCallback={buttonCallback}
             closeCallback={closeCallback}
             title={title}
-            buttons={resolvedDialogButtons}
+            buttons={processedButtons}
             dialogComponentProps={dialogComponentProps}
-            formComponentProps={formComponentProps}
+            formComponentProps={{
+                ...formComponentProps,
+                ...(autoSubmit && { onReady: () => buttonCallback(true) }),
+            }}
             formI18nKeys={formI18nKeys}
             noForm={submitReturnedContent != null}
-            onSaveActionPresentChange={setIsSaveActionPresent}>
-            {submitReturnedContent ?? formContent}
+            onSaveActionPresentChange={setIsSaveActionPresent}
+            closeIcon={closeIcon}>
+            {loading
+                ? (loadingComponent ?? <FormDialogLoading />)
+                : (submitReturnedContent ?? formContent)}
         </FormDialog>
     );
     return [show, dialogComponent, close];

@@ -122,14 +122,14 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
         <AuthButtonContext.Provider value={{ apiRef }}>
             <IconBadge icon={badgeIcon}>
                 <IconButton
-                    ref={buttonRef}
                     id="auth-button"
+                    ref={buttonRef}
                     size="small"
+                    onClick={handleIconButtonClick}
                     aria-label="auth menu"
                     aria-controls={menuOpened ? id : undefined}
                     aria-haspopup="true"
-                    aria-expanded={menuOpened ? 'true' : undefined}
-                    onClick={handleIconButtonClick}>
+                    aria-expanded={menuOpened ? 'true' : undefined}>
                     <UserAvatar />
                 </IconButton>
             </IconBadge>

@@ -44,6 +44,7 @@ export const DataFormDialog: React.FC<DataFormDialogProps> = (props) => {
         formSubmit,
         t('datacommon.error'),
         children,
+        null,
         dialogComponentProps ?? { fullWidth: true, maxWidth: 'md' },
         formComponentProps,
         formI18nKeys,

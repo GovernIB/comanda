@@ -1,8 +1,6 @@
 import React from 'react';
-import { PersistentStateReturned } from '../util/usePersistentState';
 import { FormFieldCustomProps } from './form/FormField';
 import { DetailFieldCustomProps } from './detail/DetailField';
-import { ResourceApiUserSessionValuePair } from './ResourceApiContext';
 
 export interface RouterNavigateFunction {
     (to: any, options?: any): void;
@@ -38,6 +36,7 @@ export type DialogButton = {
 };
 
 export type BaseAppContextType = {
+    code: string;
     getFormFieldComponent: (type?: string) => React.FC<FormFieldCustomProps> | undefined;
     getDetailFieldComponent: (type?: string) => React.FC<DetailFieldCustomProps> | undefined;
     setMarginsDisabled: (marginsDisabled: boolean) => void;
@@ -46,26 +45,21 @@ export type BaseAppContextType = {
     getLinkComponent: () => any;
     goBack: (fallback?: string) => void;
     navigate: RouterNavigateFunction;
+    useBlocker: ((shouldBlock: boolean | ((args: any) => boolean)) => void) | undefined;
     useLocationPath: () => string;
     anyHistoryEntryExist: () => boolean;
+    topLevelRouteChanged: boolean;
     setMessageDialogShow: (fn: MessageDialogShowFn) => void;
     messageDialogShow: MessageDialogShowFn;
     setTemporalMessageShow: (fn: TemporalMessageShowFn) => void;
     temporalMessageShow: TemporalMessageShowFn;
-    userSession: any | undefined;
-    setUserSessionAttribute: (attribute: string, value: any) => boolean;
-    setUserSessionAttributes: (attributeValuePairs: ResourceApiUserSessionValuePair[]) => boolean;
     currentLanguage: string | undefined;
     setCurrentLanguage: (lang?: string | undefined) => void;
     t: (key: string, params?: any) => any;
-    persistentStateReady: boolean;
-    persistentStateGet: (field?: string) => any;
-    persistentStateSet: (field: string, value: any) => void;
-    persistentStateRemove: (field: string) => void;
     useDrag?: (fn: () => any, deps?: unknown[]) => any;
     useDrop?: (fn: () => any, deps?: unknown[]) => any;
     saveAs?: (data: Blob | string, filename?: string) => void;
-} & PersistentStateReturned;
+};
 
 export const BaseAppContext = React.createContext<BaseAppContextType | undefined>(undefined);
 export const useBaseAppContext = () => {

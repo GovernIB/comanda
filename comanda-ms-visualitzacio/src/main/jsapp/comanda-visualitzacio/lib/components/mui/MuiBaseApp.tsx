@@ -40,6 +40,7 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerAdditionalComponents?: React.ReactElement | React.ReactElement[];
     headerAdditionalAuthComponents?: React.ReactElement | React.ReactElement[];
     headerAuthBadgeIcon?: string;
+    offline?: React.ReactElement;
     footer?: React.ReactElement;
     footerHeight?: number;
     menuTitle?: string;
@@ -196,6 +197,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         headerAdditionalComponents,
         headerAdditionalAuthComponents,
         headerAuthBadgeIcon,
+        offline,
         footer,
         footerHeight,
         menuTitle,
@@ -234,7 +236,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 authBadgeIcon={headerAuthBadgeIcon}
             />
         ) : undefined;
-    const offlineComponent = <OfflineMessage />;
+    const offlineComponent = offline ?? <OfflineMessage />;
     const muiContext: MuiBaseAppContextType = {
         defaultMuiComponentProps: {
             ...defaultMuiComponentProps,

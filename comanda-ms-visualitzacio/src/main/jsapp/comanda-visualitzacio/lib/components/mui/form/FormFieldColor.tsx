@@ -67,12 +67,12 @@ export const FormFieldColor: React.FC<FormFieldCustomProps> = (props) => {
             disabled={disabled}
             error={fieldError != null}
             title={title}
-            helperText={helperText}
             onChange={(e) =>
                 !readOnly && !disabled && onChange(e.target.value === '' ? null : e.target.value)
             }
             fullWidth
             {...componentProps}
+            helperText={helperText ?? componentProps.helperText}
             slotProps={{
                 input: inputProps,
             }}
