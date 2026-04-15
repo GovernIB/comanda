@@ -110,6 +110,7 @@ describe('FormActionDialog', () => {
             undefined,
             undefined,
             undefined,
+            undefined,
             expect.any(Function),
             expect.any(Function),
             expect.any(Function)

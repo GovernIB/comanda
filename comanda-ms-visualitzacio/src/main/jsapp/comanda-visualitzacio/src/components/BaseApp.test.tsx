@@ -167,7 +167,6 @@ describe('BaseApp', () => {
             expect.objectContaining({
                 code: 'comanda',
                 headerAuthBadgeIcon: 'settings',
-                persistentSession: true,
                 persistentLanguage: true,
                 menuEntries: [
                     { id: 'dashboard', title: 'Dashboard', to: '/dashboard', resourceName: 'dashboard' },

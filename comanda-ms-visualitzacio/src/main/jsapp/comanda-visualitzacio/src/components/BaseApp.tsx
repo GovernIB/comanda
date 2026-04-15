@@ -234,7 +234,6 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
         footer={generateFooter()}
         footerHeight={footerHeight}
-        persistentSession
         persistentLanguage
         i18nUseTranslation={i18nUseTranslation}
         i18nCurrentLanguage={i18nCurrentLanguage}

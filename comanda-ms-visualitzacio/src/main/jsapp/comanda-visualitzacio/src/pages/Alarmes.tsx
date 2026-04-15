@@ -28,6 +28,7 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
         undefined,
         undefined,
         undefined,
+        undefined,
         null,
         undefined,
         () => gridApiRef.current.refresh());
@@ -38,6 +39,7 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
     } = useMuiActionReportLogic(
         'alarma',
         'ALARMA_REACTIVAR',
+        undefined,
         undefined,
         undefined,
         undefined,
