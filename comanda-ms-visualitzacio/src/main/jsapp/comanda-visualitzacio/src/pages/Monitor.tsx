@@ -223,7 +223,7 @@ const Monitors: React.FC = () => {
                 paginationActive
                 readOnly
                 onRowClick={(params: any) => showDetail(params.row)}
-                staticFilter={`modul:'${selectedModule}'`}
+                fixedFilter={`modul:'${selectedModule}'`}
             />
             {detailDialogComponent}
         </GridPage>

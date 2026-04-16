@@ -33,7 +33,7 @@ export type UseDataGridDialogFn = (
     resourceType?: ResourceType,
     resourceTypeCode?: string,
     resourceFieldName?: string,
-    onRowClickEnabled?: boolean,
+    onRowClickEnabled?: boolean | ((row: any) => boolean),
     defaultDialogComponentProps?: any,
     defaultDataGridComponentProps?: any
 ) => [DataGridDialogShowFn, React.ReactElement, DataGridDialogCloseFn];
@@ -44,7 +44,7 @@ export const useDataGridDialog: UseDataGridDialogFn = (
     resourceType?: ResourceType,
     resourceTypeCode?: string,
     resourceFieldName?: string,
-    onRowClickEnabled?: boolean,
+    onRowClickEnabled?: boolean | ((row: any) => boolean),
     defaultDialogComponentProps?: any,
     defaultDataGridComponentProps?: any
 ) => {
@@ -84,8 +84,18 @@ export const useDataGridDialog: UseDataGridDialogFn = (
         setOpen(false);
     };
     const handleRowClick = (params: GridRowParams) => {
-        onRowClickEnabled && resolveFn?.(params.row);
-        setOpen(false);
+        if (onRowClickEnabled != null) {
+            if (typeof onRowClickEnabled === 'function') {
+                const enabled = onRowClickEnabled(params.row);
+                enabled && resolveFn?.(params.row);
+                enabled && setOpen(false);
+            } else {
+                onRowClickEnabled && resolveFn?.(params.row);
+                setOpen(false);
+            }
+        } else {
+            setOpen(false);
+        }
     };
     const closeDialog = () => setOpen(false);
     const dialogComponent = (

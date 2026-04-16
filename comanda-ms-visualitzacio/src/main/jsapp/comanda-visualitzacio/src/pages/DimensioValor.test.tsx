@@ -32,14 +32,14 @@ vi.mock('reactlib', () => ({
     GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiDataGrid: ({
         title,
-        staticFilter,
+        fixedFilter,
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
         columns,
         rowHideDeleteButton,
     }: {
         title: string;
-        staticFilter?: string;
+        fixedFilter?: string;
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         toolbarAdditionalRow?: React.ReactNode;
         columns: Array<{ field: string }>;
@@ -47,7 +47,7 @@ vi.mock('reactlib', () => ({
     }) => (
         <section>
             <h2>{title}</h2>
-            <div data-testid="static-filter">{staticFilter}</div>
+            <div data-testid="fixed-filter">{fixedFilter}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
             <div data-testid="hide-delete">{String(rowHideDeleteButton)}</div>
             {toolbarElementsWithPositions?.map((entry, index) => (
@@ -107,7 +107,7 @@ describe('DimensioValor', () => {
         });
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Valors dimensió Dimensió prova');
-        expect(screen.getByTestId('static-filter')).toHaveTextContent('dimensio.id=15');
+        expect(screen.getByTestId('fixed-filter')).toHaveTextContent('dimensio.id=15');
         expect(screen.getByTestId('columns')).toHaveTextContent('valor');
         expect(screen.getByTestId('hide-delete')).toHaveTextContent('false');
         expect(mocks.getOneMock).toHaveBeenCalledWith('15');

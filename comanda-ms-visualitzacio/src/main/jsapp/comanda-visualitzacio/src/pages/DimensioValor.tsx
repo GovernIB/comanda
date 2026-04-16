@@ -48,7 +48,6 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
             apiRef={filterApiRef}
             resourceName="dimensioValor"
             code="dimensioValorFilter"
-            persistentState
             formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
@@ -133,7 +132,7 @@ const DimensioValor: React.FC = () => {
                 toolbarAdditionalRow={filterElement}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 toolbarHideCreate
-                staticFilter={staticFilter}
+                fixedFilter={staticFilter}
                 filter={filter}
                 popupEditActive={false}
                 rowHideDeleteButton={gestorReadOnly}

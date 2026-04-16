@@ -53,7 +53,6 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
             // de manera que no s'hagi de fer la petició manualment del llistat de entornApp
             resourceName="dimensio"
             code="dimensioFilter"
-            persistentState
             formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}

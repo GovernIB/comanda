@@ -1,5 +1,5 @@
 import React, { KeyboardEvent } from 'react';
-import { useSessionComponentPersistentState } from '../../util/useComponentPersistentState';
+import { useBaseAppContext } from '../BaseAppContext';
 import Form from './Form';
 import { FilterApi, FilterApiRef, FilterContext, useFilterContext } from './FilterContext';
 import { FormApiRef, FormApi, FormFieldError } from './FormContext';
@@ -16,8 +16,12 @@ export type FilterProps = React.PropsWithChildren & {
     buttonControlled?: true;
     /** Indica si s'ha de validar el filtre en cada canvi */
     validationActive?: true;
-    /** Activa la persistència dels valors del filtre */
-    persistentState?: true;
+    /** Indica si la persistència de l'estat està activa */
+    persistentStateActive?: true;
+    /** La clau amb la que es desarà l'estat (s'utilitzarà el valor de resourceName si no s'especifica) */
+    persistentStateKey?: string;
+    /** El magatzem del navegador que s'utilitzarà per a persistir l'estat (LocalStorage per defecte) */
+    persistentStateStorage?: 'local' | 'session';
     /** Referència a l'api del component */
     apiRef?: FilterApiRef;
     /** Referència a l'api del component Form */
@@ -42,6 +46,42 @@ export type FilterProps = React.PropsWithChildren & {
     validationErrors?: FormFieldError[];
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
     debug?: true;
+};
+
+const usePersistentState = (
+    active: boolean,
+    initialDataProp: any,
+    key: string,
+    storeInLocalStorage?: boolean
+) => {
+    const { code } = useBaseAppContext();
+    const storageKey = code + '_FLT_' + key.toUpperCase();
+    const loadInitialState = () => {
+        try {
+            const storage = storeInLocalStorage ? localStorage : sessionStorage;
+            const raw = storage.getItem(storageKey);
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    };
+    const saveState = (state: any) => {
+        try {
+            const storage = storeInLocalStorage ? localStorage : sessionStorage;
+            storage.setItem(storageKey, JSON.stringify(state));
+        } catch {}
+    };
+    const initialState = active ? loadInitialState() : undefined;
+    const [initialData, setInitialData] = React.useState<Record<string, number>>(
+        initialState || initialDataProp
+    );
+    React.useEffect(() => {
+        active && saveState(initialData);
+    }, [initialData]);
+    return {
+        initialData,
+        setInitialData,
+    };
 };
 
 /**
@@ -76,9 +116,11 @@ export const Filter: React.FC<FilterProps> = (props) => {
         code,
         buttonControlled,
         validationActive,
-        persistentState,
+        persistentStateActive,
+        persistentStateKey,
+        persistentStateStorage,
         springFilterBuilder,
-        initialData,
+        initialData: initialDataProp,
         additionalData,
         filterOnFieldEnterKeyPressed,
         onDataChange,
@@ -89,23 +131,16 @@ export const Filter: React.FC<FilterProps> = (props) => {
         children,
         ...otherFormProps
     } = props;
-    const [formInitialData, setFormInitialData] = React.useState<any>(initialData);
+    const { initialData, setInitialData } = usePersistentState(
+        persistentStateActive ?? false,
+        initialDataProp,
+        persistentStateKey ?? resourceName,
+        persistentStateStorage === 'local'
+    );
     const [nextDataChangeAsUncontrolled, setNextDataChangeAsUncontrolled] =
         React.useState<boolean>(false);
-    const initialized = persistentState ? formInitialData !== undefined : true;
     const apiRef = React.useRef<FilterApi>(undefined);
     const formApiRef = React.useRef<FormApi | any>({});
-    const { state, isReady: stateIsReady } =
-        !initialData && persistentState
-            ? useSessionComponentPersistentState('filter_state', resourceName, () =>
-                  formApiRef.current?.getData()
-              )
-            : { isReady: false };
-    React.useEffect(() => {
-        if (stateIsReady) {
-            setFormInitialData(state);
-        }
-    }, [state, stateIsReady]);
     if (formApiRefProp != null) {
         formApiRefProp.current = formApiRef.current;
     }
@@ -122,7 +157,7 @@ export const Filter: React.FC<FilterProps> = (props) => {
         }
     };
     const clear = (data?: any) => {
-        setNextDataChangeAsUncontrolled(true);
+        setNextDataChangeAsUncontrolled(!buttonControlled);
         formApiRef.current?.reset(data);
     };
     const handleDataChange = (data: any) => {
@@ -130,8 +165,10 @@ export const Filter: React.FC<FilterProps> = (props) => {
         if (nextDataChangeAsUncontrolled) {
             setNextDataChangeAsUncontrolled(false);
             filter(data);
+            setInitialData(data);
         } else if (!buttonControlled) {
             filter(data);
+            setInitialData(data);
         }
     };
     const fieldTypeMap = new Map<string, string>([
@@ -165,25 +202,24 @@ export const Filter: React.FC<FilterProps> = (props) => {
         apiRef,
     };
     return (
-        initialized && (
-            <FilterContext.Provider value={context}>
-                <div onKeyDown={handleFilterEnterKeyPressed}>
-                    <Form
-                        resourceName={resourceName}
-                        resourceType="FILTER"
-                        resourceTypeCode={code}
-                        initialData={formInitialData}
-                        additionalData={additionalData}
-                        onDataChange={handleDataChange}
-                        fieldTypeMap={fieldTypeMap}
-                        validationErrors={validationErrors}
-                        apiRef={formApiRef}
-                        {...otherFormProps}>
-                        {children}
-                    </Form>
-                </div>
-            </FilterContext.Provider>
-        )
+        <FilterContext.Provider value={context}>
+            <div onKeyDown={handleFilterEnterKeyPressed}>
+                <Form
+                    resourceName={resourceName}
+                    resourceType="FILTER"
+                    resourceTypeCode={code}
+                    initialData={initialData}
+                    additionalData={additionalData}
+                    onDataChange={handleDataChange}
+                    fieldTypeMap={fieldTypeMap}
+                    validationErrors={validationErrors}
+                    apiRef={formApiRef}
+                    formBlockerDisabled
+                    {...otherFormProps}>
+                    {children}
+                </Form>
+            </div>
+        </FilterContext.Provider>
     );
 };
 

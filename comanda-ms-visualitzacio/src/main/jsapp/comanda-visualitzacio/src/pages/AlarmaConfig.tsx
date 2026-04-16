@@ -342,7 +342,6 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
             apiRef={filterApiRef}
             resourceName="alarmaConfig"
             code="alarmaConfig_filter"
-            persistentState
             detached
             formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}

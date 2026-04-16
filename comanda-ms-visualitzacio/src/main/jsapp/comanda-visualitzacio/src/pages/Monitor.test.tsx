@@ -74,18 +74,18 @@ vi.mock('reactlib', () => ({
         title,
         toolbarAdditionalRow,
         onRowClick,
-        staticFilter,
+        fixedFilter,
         columns,
     }: {
         title: string;
         toolbarAdditionalRow?: React.ReactNode;
         onRowClick?: (params: { row: Record<string, unknown> }) => void;
-        staticFilter?: string;
+        fixedFilter?: string;
         columns: Array<{ field: string; headerName?: string; renderCell?: (params: any) => React.ReactNode }>;
     }) => (
         <section>
             <h2>{title}</h2>
-            <div data-testid="static-filter">{staticFilter}</div>
+            <div data-testid="fixed-filter">{fixedFilter}</div>
             <div>{toolbarAdditionalRow}</div>
             <div data-testid="url-header">{columns[3]?.headerName ?? columns[3]?.field}</div>
             <button onClick={() => onRowClick?.({ row: { estat: 'ERROR', tipus: 'SORTIDA', excepcioStacktrace: 'stack' } })}>
@@ -166,7 +166,7 @@ describe('Monitors', () => {
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Monitor');
         expect(screen.getByRole('heading', { name: 'Monitor' })).toBeInTheDocument();
-        expect(screen.getByTestId('static-filter')).toHaveTextContent("modul:'SALUT'");
+        expect(screen.getByTestId('fixed-filter')).toHaveTextContent("modul:'SALUT'");
         expect(screen.getByTestId('field-codi')).toBeInTheDocument();
         expect(screen.getByTestId('field-dataDesde')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Netejar' })).toBeInTheDocument();
@@ -193,7 +193,7 @@ describe('Monitors', () => {
         render(<Monitors />);
 
         fireEvent.click(screen.getByRole('tab', { name: 'Estadística' }));
-        expect(screen.getByTestId('static-filter')).toHaveTextContent("modul:'ESTADISTICA'");
+        expect(screen.getByTestId('fixed-filter')).toHaveTextContent("modul:'ESTADISTICA'");
 
         fireEvent.click(screen.getByRole('button', { name: 'Obre detall' }));
         expect(mocks.showDialogMock).toHaveBeenCalledWith(
@@ -209,7 +209,7 @@ describe('Monitors', () => {
 
         fireEvent.click(screen.getByRole('tab', { name: 'EMAIL' }));
 
-        expect(screen.getByTestId('static-filter')).toHaveTextContent("modul:'ALARMES'");
+        expect(screen.getByTestId('fixed-filter')).toHaveTextContent("modul:'ALARMES'");
         expect(screen.getByTestId('url-header')).toHaveTextContent('Adreça de correu');
     });
 });

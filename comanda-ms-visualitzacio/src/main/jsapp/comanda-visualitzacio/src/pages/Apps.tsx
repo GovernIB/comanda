@@ -257,7 +257,7 @@ const AppsEntorns: React.FC = () => {
                 apiRef={apiRef}
                 title={t($ => $.page.appsEntorns.title)}
                 resourceName="entornApp"
-                staticFilter={`app.id : ${appId}`}
+                fixedFilter={`app.id : ${appId}`}
                 columns={columns}
                 paginationActive
                 popupEditActive
