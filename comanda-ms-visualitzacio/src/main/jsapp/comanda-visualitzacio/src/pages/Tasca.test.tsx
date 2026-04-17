@@ -2,11 +2,18 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Tasca from './Tasca';
 
+let tascaFormData = {
+    finalitzada: true,
+    tascaPropia: true,
+};
+
 const mocks = vi.hoisted(() => ({
     clearAppEntornMock: vi.fn(),
     clearMoreMock: vi.fn(),
     filterApiRefCallMock: vi.fn(),
-    setFieldValueMock: vi.fn(),
+    setFieldValueMock: vi.fn((field, value) => {
+        tascaFormData = { ...tascaFormData, [field]: value };
+    }),
     useResourceApiServiceMock: vi.fn(() => ({
         isReady: true,
         find: vi.fn().mockResolvedValue({ rows: [] }),
@@ -87,7 +94,6 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions,
         rowAdditionalActions,
         filter,
-        findDisabled,
     }: {
         title: string;
         columns: Array<{ field: string; renderCell?: (param: any) => React.ReactNode; valueFormatter?: (value: any) => any }>;
@@ -95,7 +101,6 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         rowAdditionalActions?: Array<{ label: string; hidden?: (row: any) => boolean }>;
         filter?: string;
-        findDisabled?: boolean;
     }) => {
         const treePathColumn = columns.find((column) => column.field === 'treePath');
         const estatColumn = columns.find((column) => column.field === 'estat');
@@ -105,7 +110,6 @@ vi.mock('reactlib', () => ({
             <section>
                 <h2>{title}</h2>
                 <div data-testid="filter-value">{filter ?? ''}</div>
-                <div data-testid="find-disabled">{String(findDisabled)}</div>
                 <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
                 <div data-testid="treepath-value">
                     {treePathColumn?.valueFormatter?.(['INVALID_ENTORNAPP 44', 'X'])}
@@ -144,6 +148,14 @@ vi.mock('reactlib', () => ({
         current: {
             setFieldValue: mocks.setFieldValueMock,
         },
+    }),
+    useFormContext: () => ({
+        apiRef: {
+            current: {
+                setFieldValue: mocks.setFieldValueMock,
+            },
+        },
+        data: tascaFormData,
     }),
     useFilterApiRef: () => {
         const call = mocks.filterApiRefCallMock.mock.calls.length;
@@ -224,6 +236,10 @@ vi.mock('../components/UserProvider.tsx', () => ({ ROLE_ADMIN: 'ADMIN' }));
 describe('Tasca', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        tascaFormData = {
+            finalitzada: true,
+            tascaPropia: true,
+        };
     });
 
     it('Tasca_quanEsRenderitza_mostraLesColumnesElsXipsIElFiltreInicial', () => {
@@ -232,7 +248,6 @@ describe('Tasca', () => {
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Tasques');
         expect(screen.getByRole('heading', { name: 'Tasques' })).toBeInTheDocument();
-        expect(screen.getByTestId('find-disabled')).toHaveTextContent('true');
         expect(screen.getByTestId('columns')).toHaveTextContent(
             'logo,app,entorn,nom,descripcio,numeroExpedient,estat,tipus,responsable,prioritat,dataInici,dataCaducitat,dataFi'
         );
@@ -245,10 +260,12 @@ describe('Tasca', () => {
 
     it('Tasca_quanEsPremenElsToggles_delFiltreCanviaLEstatVisual', () => {
         // Verifica que els toggles del filtre alternen entre només pendents/meves i els estats ampliats.
-        render(<Tasca />);
+        const { rerender } = render(<Tasca />);
 
         fireEvent.click(screen.getByTitle('Només no finalitzades'));
         fireEvent.click(screen.getByTitle('Només meves'));
+
+        rerender(<Tasca />);
 
         expect(screen.getByTitle('Inclou finalitzades')).toBeInTheDocument();
         expect(screen.getByTitle('Totes les tasques')).toBeInTheDocument();
@@ -263,14 +280,16 @@ describe('Tasca', () => {
     });
 
     it('Tasca_quanElToggleDeNoFinalitzadesEstaActiu_elFiltreInclouDataFiIsNull', () => {
-        render(<Tasca />);
+        const { rerender } = render(<Tasca />);
 
         expect(screen.getByTitle('Només no finalitzades')).toBeInTheDocument();
 
         fireEvent.click(screen.getByTitle('Només no finalitzades'));
+        rerender(<Tasca />);
         expect(screen.getByTitle('Inclou finalitzades')).toBeInTheDocument();
 
         fireEvent.click(screen.getByTitle('Inclou finalitzades'));
+        rerender(<Tasca />);
         expect(screen.getByTitle('Només no finalitzades')).toBeInTheDocument();
     });
 

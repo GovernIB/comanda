@@ -2,8 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Avis from './Avis';
 
+let avisFormData = {
+    avisPropi: true,
+};
+
 const mocks = vi.hoisted(() => ({
-    setFieldValueMock: vi.fn(),
+    setFieldValueMock: vi.fn((field, value) => {
+        avisFormData = { ...avisFormData, [field]: value };
+    }),
     clearAppEntornMock: vi.fn(),
     clearMoreMock: vi.fn(),
     filterApiRefCallMock: vi.fn(),
@@ -80,7 +86,6 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions,
         rowAdditionalActions,
         filter,
-        findDisabled,
     }: {
         title: string;
         columns: Array<{ field: string; renderCell?: (param: any) => React.ReactNode }>;
@@ -88,12 +93,10 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         rowAdditionalActions?: Array<{ label: string; hidden?: (row: any) => boolean }>;
         filter?: string;
-        findDisabled?: boolean;
     }) => (
         <section>
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter ?? ''}</div>
-            <div data-testid="find-disabled">{String(findDisabled)}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
             <div data-testid="tipus-cell">
                 {columns.find((column) => column.field === 'tipus')?.renderCell?.({
@@ -125,6 +128,14 @@ vi.mock('reactlib', () => ({
         current: {
             setFieldValue: mocks.setFieldValueMock,
         },
+    }),
+    useFormContext: () => ({
+        apiRef: {
+            current: {
+                setFieldValue: mocks.setFieldValueMock,
+            },
+        },
+        data: avisFormData,
     }),
     useFilterApiRef: () => {
         const call = mocks.filterApiRefCallMock.mock.calls.length;
@@ -214,6 +225,9 @@ vi.mock('../../lib/components/mui/datacommon/MuiDataCommon.tsx', () => ({}));
 describe('Avis', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        avisFormData = {
+            avisPropi: true,
+        };
     });
 
     it('Avis_quanEsRenderitza_mostraLaGraellaElsXipsIElFiltreInicial', () => {
@@ -222,7 +236,6 @@ describe('Avis', () => {
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Avisos');
         expect(screen.getByRole('heading', { name: 'Avisos' })).toBeInTheDocument();
-        expect(screen.getByTestId('find-disabled')).toHaveTextContent('true');
         expect(screen.getByTestId('columns')).toHaveTextContent('logo,app,entorn,nom,descripcio,tipus,responsable,dataInici');
         expect(screen.getByTestId('tipus-cell')).toHaveTextContent('Info');
         expect(screen.getByTestId('tipus-cell')).toHaveTextContent('Global');
@@ -231,11 +244,10 @@ describe('Avis', () => {
 
     it('Avis_quanEsPremenElsTogglesIDeNeteja_actualitzaLEstatDelFiltreVisual', () => {
         // Verifica que els toggles del filtre canvien d'estat i que el control de neteja continua disponible.
-        render(<Avis />);
+        const { rerender } = render(<Avis />);
 
         fireEvent.click(screen.getByTitle('Només meus'));
-        fireEvent.click(screen.getByTitle('Netejar'));
-
+        rerender(<Avis />);
         expect(screen.getByTitle('Tots els avisos')).toBeInTheDocument();
     });
 

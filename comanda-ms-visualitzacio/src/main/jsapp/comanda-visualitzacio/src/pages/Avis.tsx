@@ -5,12 +5,12 @@ import {
     MuiFilter,
     FormField,
     springFilterBuilder,
-    useFormApiRef,
     useFilterApiRef,
     MuiDataGridColDef,
     useResourceApiService,
     useBaseAppContext,
     useMuiDataGridApiRef,
+    useFormContext,
 } from 'reactlib';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -146,90 +146,123 @@ const useActions = (refresh?: () => void) => {
     return {apiIsReady, marcarLlegit, marcarLlegitMassive, marcarNoLlegit, marcarNoLlegitMassive}
 }
 
-const AvisFilter = (props: { onSpringFilterChange: (springFilter: string | undefined) => void, setNoLlegit?: (value:boolean) => void }) => {
-    const { onSpringFilterChange, setNoLlegit } = props;
+const OwnAvisFilterButton: React.FC = () => {
     const { t } = useTranslation();
-    const { user } = useUserContext();
-    const [ownAvisOnly, setOwnAvisOnly] = React.useState<boolean>(true);
+    const { apiRef, data } = useFormContext();
+    const value = data?.avisPropi;
+    return (
+        <Button
+            onClick={() => apiRef.current?.setFieldValue('avisPropi', !value)}
+            variant={value ? 'contained' : 'outlined'}
+            title={
+                value
+                    ? t($ => $.page.avisos.filter.ownAvisOnlyEnabled)
+                    : t($ => $.page.avisos.filter.ownAvisOnlyDisabled)
+            }
+            sx={{ mr: 2 }}
+        >
+            <Icon>person</Icon>
+        </Button>
+    );
+};
+
+// const NoLlegitFilterButton: React.FC = () => {
+//     const { t } = useTranslation();
+//     const { apiRef, data } = useFormContext();
+//     const value = data?.noLlegit;
+//     return (
+//         <Button
+//             onClick={() => apiRef.current?.setFieldValue('noLlegit', !value)}
+//             variant={value ? 'contained' : 'outlined'}
+//             title={
+//                 value
+//                     ? t($ => $.page.avisos.action.nollegit.label)
+//                     : t($ => $.page.avisos.action.llegit.label)
+//             }
+//             sx={{ mr: 2 }}
+//         >
+//             <Icon>{value ? 'mail' : 'drafts'}</Icon>
+//         </Button>
+//     );
+// };
+
+const avisFilterBuilder = (data: any, currentUserCodi: string | null) => springFilterBuilder.and(
+    springFilterBuilder.eq('app', data?.appId?.id),
+    springFilterBuilder.eq('entorn', data?.entornId?.id),
+    springFilterBuilder.like('nom', data?.nom),
+    springFilterBuilder.like('descripcio', data?.descripcio),
+    springFilterBuilder.eq('tipus', data?.tipus),
+    data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
+    data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
+    data?.avisPropi && currentUserCodi && springFilterBuilder.eq('responsable', `'${currentUserCodi}'`),
+)
+
+const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, onExpandedFilterDataChange: (data: any) => void }) => {
+    const { onEntornAppFilterDataChange, onExpandedFilterDataChange } = props;
+    const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
-    const moreFormApiRef = useFormApiRef();
     const netejar = () => {
-        setOwnAvisOnly(false);
         appEntornFilterApiRef?.current?.clear();
         moreFilterApiRef?.current?.clear();
     }
-    React.useEffect(() => {
-        moreFormApiRef.current?.setFieldValue('avisPropi', ownAvisOnly);
-    }, [ownAvisOnly]);
 
-    const currentUsername = user?.codi;
-    const ownAvisOnlyFilterAvailable = currentUsername != null;
 
     return (
         <>
             <MuiFilter
+                initialData={{
+                    avisPropi: true,
+                    noLlegit: true,
+                }}
                 apiRef={appEntornFilterApiRef}
                 resourceName="entornApp"
                 code="optional_entornApp_filter"
                 commonFieldComponentProps={{ size: 'small' }}
-                springFilterBuilder={data => {
-                    moreFormApiRef.current?.setFieldValue('appId', data.app);
-                    moreFormApiRef.current?.setFieldValue('entornId', data.entorn);
-                    return '';
-                }}>
+                onDataChange={onEntornAppFilterDataChange}
+                springFilterBuilder={() => undefined}>
                 <Box sx={{
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    gap: { xs: 1, sm: 0 },
                 }}>
                     <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
                         <Grid size={6}><FormField name="app" /></Grid>
                         <Grid size={6}><FormField name="entorn" /></Grid>
                     </Grid>
-                    <Button
-                        onClick={() => setOwnAvisOnly(value => !value)}
-                        disabled={!ownAvisOnlyFilterAvailable}
-                        variant={ownAvisOnly ? 'contained' : 'outlined'}
-                        title={ownAvisOnly ? t($ => $.page.avisos.filter.ownAvisOnlyEnabled) : t($ => $.page.avisos.filter.ownAvisOnlyDisabled)}
-                        sx={{ mr: 2 }}>
-                        <Icon>person</Icon>
-                    </Button>
-                    <IconButton
-                        onClick={netejar}
-                        title={t($ => $.components.clear)}
-                        sx={{ mr: 1 }}>
-                        <Icon>filter_alt_off</Icon>
-                    </IconButton>
-                    <IconButton
-                        onClick={() => setMoreFields((mf) => !mf)}
-                        title={t($ => $.page.avisos.filter.more)}>
-                        <Icon>filter_list</Icon>
-                    </IconButton>
+                    <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            flexWrap: 'wrap',
+                            width: { xs: '100%', sm: 'auto' },
+                            mt: { xs: 1, sm: 0 },
+                    }}>
+                        {/*<NoLlegitFilterButton />*/}
+                        <OwnAvisFilterButton />
+                        <IconButton
+                            onClick={netejar}
+                            title={t($ => $.components.clear)}
+                            sx={{ mr: 1 }}>
+                            <Icon>filter_alt_off</Icon>
+                        </IconButton>
+                        <IconButton
+                            onClick={() => setMoreFields((mf) => !mf)}
+                            title={t($ => $.page.avisos.filter.more)}>
+                            <Icon>filter_list</Icon>
+                        </IconButton>
+                    </Box>
                 </Box>
             </MuiFilter>
             <MuiFilter
                 apiRef={moreFilterApiRef}
-                formApiRef={moreFormApiRef}
                 resourceName="avis"
                 code="FILTER"
-                initialData={{ avisPropi: ownAvisOnly, noLlegit: true }}
-                springFilterBuilder={(data:any) => {
-                    setNoLlegit?.(data?.noLlegit)
-                    return springFilterBuilder.and(
-                        springFilterBuilder.eq('appId', data?.appId?.id),
-                        springFilterBuilder.eq('entornId', data?.entornId?.id),
-                        springFilterBuilder.like('nom', data?.nom),
-                        springFilterBuilder.like('descripcio', data?.descripcio),
-                        springFilterBuilder.eq('tipus', data?.tipus),
-                        data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
-                        data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
-                        data?.avisPropi && ownAvisOnlyFilterAvailable && springFilterBuilder.eq('responsable', `'${currentUsername}'`),
-                    )
-                }}
-                onSpringFilterChange={onSpringFilterChange}
-                commonFieldComponentProps={{ size: 'small' }}>
+                onDataChange={onExpandedFilterDataChange}
+                commonFieldComponentProps={{ size: 'small' }}
+                springFilterBuilder={() => undefined}>
                 <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
                     <Grid size={{ xs: 12, sm:4}}><FormField name="nom" /></Grid>
                     <Grid size={{ xs: 6, sm:4}}><FormField name="descripcio" /></Grid>
@@ -273,9 +306,15 @@ const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 const Avis = () => {
     const { t } = useTranslation();
     const { t: tLib } = useBaseAppContext();
-    const { currentRole } = useUserContext();
-    const [noLlegit, setNoLlegit] = React.useState<boolean>();
-    const [filter, setFilter] = React.useState<string>();
+    const { currentRole, user } = useUserContext();
+    const currentUserCodi = user?.codi;
+    // Guardamos los datos de los 2 <Filter /> por separado, después al construir el filtro se juntarán
+    const [filterData, setFilterData] = React.useState<{
+        entornAppFilter: any;
+        expandedFilter: any;
+    }>({ entornAppFilter: undefined, expandedFilter: undefined });
+    const noLlegit = filterData?.entornAppFilter?.noLlegit;
+    const filter = avisFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null);
     const [apps, setApps] = React.useState<any[]>();
     const apiRef = useMuiDataGridApiRef();
     const gridApiRef = useGridApiRef();
@@ -434,7 +473,16 @@ const Avis = () => {
         }
         return baseActions;
     }, [t, tLib, marcarLlegit, marcarNoLlegit, isAdmin, actionIsReady]);
-    const filterElement = <AvisFilter onSpringFilterChange={setFilter} setNoLlegit={setNoLlegit}/>;
+    const filterElement = (
+        <AvisFilter
+            onEntornAppFilterDataChange={data =>
+                setFilterData(prevState => ({ ...prevState, entornAppFilter: data }))
+            }
+            onExpandedFilterDataChange={data =>
+                setFilterData(prevState => ({ ...prevState, expandedFilter: data }))
+            }
+        />
+    );
 
     const selectedRows = useRef<string[]>([])
     const toolbarAdditionalActions:any[] = [
@@ -476,7 +524,6 @@ const Avis = () => {
                 perspectives={dataGridPerspectives}
                 datagridApiRef={gridApiRef}
                 sortModel={dataGridSortModel}
-                findDisabled={filter == null}
                 filter={filter}
                 namedQueries={noLlegit?['avis_no_llegit']:[]}
                 readOnly
