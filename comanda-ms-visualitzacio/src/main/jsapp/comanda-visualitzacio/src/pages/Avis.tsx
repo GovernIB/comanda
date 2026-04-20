@@ -203,19 +203,22 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
+    const appEntornFilterInitialData = {
+        avisPropi: true,
+    };
+    const moreFilterInitialData = {
+        noLlegit: true,
+    };
     const netejar = () => {
-        appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear();
+        appEntornFilterApiRef?.current?.clear(appEntornFilterInitialData);
+        moreFilterApiRef?.current?.clear(moreFilterInitialData);
     }
 
 
     return (
         <>
             <MuiFilter
-                initialData={{
-                    avisPropi: true,
-                    noLlegit: true,
-                }}
+                initialData={appEntornFilterInitialData}
                 apiRef={appEntornFilterApiRef}
                 resourceName="entornApp"
                 code="optional_entornApp_filter"
@@ -257,6 +260,7 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
                 </Box>
             </MuiFilter>
             <MuiFilter
+                initialData={moreFilterInitialData}
                 apiRef={moreFilterApiRef}
                 resourceName="avis"
                 code="FILTER"

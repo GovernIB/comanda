@@ -248,18 +248,20 @@ const TascaFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, 
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
+    const appEntornFilterInitialData = {
+        tascaPropia: true,
+        finalitzada: true,
+    };
+    const moreFilterInitialData = {};
     const netejar = () => {
-        appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear();
+        appEntornFilterApiRef?.current?.clear(appEntornFilterInitialData);
+        moreFilterApiRef?.current?.clear(moreFilterInitialData);
     }
 
 
     return <>
         <MuiFilter
-            initialData={{
-                tascaPropia: true,
-                finalitzada: true,
-            }}
+            initialData={appEntornFilterInitialData}
             apiRef={appEntornFilterApiRef}
             resourceName="entornApp"
             code="optional_entornApp_filter"
@@ -302,6 +304,7 @@ const TascaFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, 
             </Box>
         </MuiFilter>
         <MuiFilter
+            initialData={moreFilterInitialData}
             apiRef={moreFilterApiRef}
             resourceName="tasca"
             code="FILTER"
