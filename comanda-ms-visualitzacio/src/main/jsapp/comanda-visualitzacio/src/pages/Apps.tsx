@@ -456,7 +456,7 @@ const Apps: React.FC = () => {
             onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
         },
         gestorReadOnly ? {
-            label: t($ => $.components.permisos.title),
+            label: t($ => $.components.details),
             icon: 'visibility',
             onClick: (id: any) => navigate(`form/${id}`),
         } : null,

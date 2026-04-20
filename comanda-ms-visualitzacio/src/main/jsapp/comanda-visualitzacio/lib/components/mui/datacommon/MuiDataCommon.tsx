@@ -255,8 +255,7 @@ export const useDataCommonEditable = (
     onDelete: ((id: any | any[]) => void) | undefined
 ) => {
     const { t, temporalMessageShow, messageDialogShow } = useBaseAppContext();
-    const hasSaveAction = (row?: any) =>
-        row?._actions?.save != null || row?._actions?.update != null;
+    const hasSaveAction = (row?: any) => row?._actions?.update != null;
     const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>(undefined);
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };

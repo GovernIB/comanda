@@ -23,7 +23,7 @@ export const useFormTabsContext = () => {
 /**
  * Propietats del component MuiFormTabContent.
  */
-interface FormTabContentProps {
+interface FormTabContentProps extends React.HTMLAttributes<HTMLDivElement> {
     /** Índex de la pipella */
     index: number;
     /** Indica si aquesta pipella s'ha de mostrar en els formularis de creació */
@@ -68,7 +68,7 @@ export const MuiFormTabContent: React.FC<FormTabContentProps> = (props) => {
             aria-labelledby={`tab-${index}`}
             style={{ height: '100%' }}
             {...other}>
-            {currentIndex === index && <Box sx={{ pt: 3, pb: 2, height: '100%' }}>{children}</Box>}
+            {currentIndex === index && <Box sx={{ pt: 3, height: '100%' }}>{children}</Box>}
         </div>
     ) : showOnCreate ? (
         children
@@ -85,10 +85,12 @@ export const MuiFormTabs: React.FC<FormTabsProps> = (props) => {
     const { tabs, tabIndexesWithGrids, initialIndex, onIndexChange, children } = props;
     const theme = useTheme();
     const { id } = useFormContext();
+    const tabsRef = React.useRef<HTMLDivElement | null>(null);
     const [index, setIndex] = React.useState<number>(initialIndex ?? 0);
+    const [insideDialog, setInsideDialog] = React.useState<boolean>(false);
     const { setContentExpandsToAvailableHeight } = useBaseAppContext();
     const gridCheck = (index: number) => {
-        if (tabIndexesWithGrids != null) {
+        if (tabIndexesWithGrids != null && !insideDialog) {
             const isGridTab = tabIndexesWithGrids?.includes(index) ?? false;
             setContentExpandsToAvailableHeight(isGridTab);
         }
@@ -101,6 +103,12 @@ export const MuiFormTabs: React.FC<FormTabsProps> = (props) => {
     React.useEffect(() => {
         index && gridCheck(index);
     }, [index]);
+    React.useEffect(() => {
+        if (tabsRef.current) {
+            const dialogParent = tabsRef.current.closest('.MuiDialog-root');
+            setInsideDialog(!!dialogParent);
+        }
+    }, []);
     const tabsHeightFix = { minHeight: '48px' };
     const context = { index };
     return (
@@ -109,6 +117,7 @@ export const MuiFormTabs: React.FC<FormTabsProps> = (props) => {
                 <Tabs
                     value={index}
                     onChange={handleIndexChange}
+                    ref={tabsRef}
                     sx={{ borderBottom: '1px solid ' + theme.palette.divider }}>
                     {tabs.map((t, i) => {
                         if (typeof t === 'string') {

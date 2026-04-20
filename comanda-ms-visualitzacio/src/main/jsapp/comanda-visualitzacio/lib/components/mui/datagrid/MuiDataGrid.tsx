@@ -39,6 +39,7 @@ import {
 } from '../../../util/reactNodePosition';
 import { Form, FormI18nKeys, useFormApiRef } from '../../form/Form';
 import { FormField } from '../../form/FormField';
+import { useAuthContext } from '../../AuthContext';
 import { useBaseAppContext, DialogButton } from '../../BaseAppContext';
 import { useMuiBaseAppContext } from '../MuiBaseAppContext';
 import { useResourceApiService } from '../../ResourceApiProvider';
@@ -242,6 +243,8 @@ export type MuiDataGridProps = {
     persistentStateKey?: string;
     /** El magatzem del navegador que s'utilitzarà per a persistir l'estat (LocalStorage per defecte) */
     persistentStateStorage?: 'local' | 'session';
+    /** Event que es llença quan es fa clic sobre una fila */
+    onRowClick?: GridEventListener<'rowClick'>;
     /** Event que es llença quan hi ha canvis en les files que mostra la graella */
     onRowsChange?: (rows: GridRowsProp, pageInfo: any) => void;
     /** Event que es llença quan hi ha canvis en l'ordenació de la graella */
@@ -257,6 +260,8 @@ export type MuiDataGridProps = {
     onRowUpdate?: (row: any) => void;
     /** Event que es llença quan s'elimina una fila */
     onRowDelete?: (id: any | any[]) => void;
+    /** Event que es llença quan canvia l'estat persistit (només es crida si persistentStateActive és true) */
+    onPersistentStateChange?: (state: any) => void;
     /** Referència a l'api del component */
     apiRef?: MuiDataGridApiRef;
     /** Referència a l'api interna del component DataGrid de MUI */
@@ -543,6 +548,7 @@ const usePersistentState = (
     active: boolean,
     persistentStateClearPageSortPropsOnTopLevelRouteChange: boolean,
     columns: GridColDef[],
+    onPersistentStateChange: ((state: any) => void) | undefined,
     sortModelProp: GridSortModel | undefined,
     defaultSortModel: GridSortModel | undefined,
     paginationModelProp: GridPaginationModel | undefined,
@@ -555,15 +561,17 @@ const usePersistentState = (
     storeInLocalStorage?: boolean
 ) => {
     const { code, topLevelRouteChanged } = useBaseAppContext();
-    const storageKey = code + '_DTG_' + key.toUpperCase();
+    const { isAuthenticated, getUserId } = useAuthContext();
+    const userSuffix = isAuthenticated ? '_' + getUserId().toUpperCase() : '';
+    const storageKey = code + '_DTG_' + key.toUpperCase() + userSuffix;
     const loadInitialState = () => {
         try {
             const storage = storeInLocalStorage ? localStorage : sessionStorage;
             const raw = storage.getItem(storageKey);
-            const state = raw ? JSON.parse(raw) : null;
+            const parsedState = raw ? JSON.parse(raw) : null;
             if (persistentStateClearPageSortPropsOnTopLevelRouteChange && topLevelRouteChanged) {
-                const { sortModel, paginationModel, expandedRowIds, ...otherState } = state;
-                return {
+                const { sortModel, paginationModel, expandedRowIds, ...otherState } = parsedState;
+                const state: any = {
                     paginationModel: {
                         page: 0,
                         pageSize: paginationModel?.pageSize,
@@ -571,8 +579,11 @@ const usePersistentState = (
                     expandedRowIds: [],
                     ...otherState,
                 };
-            } else {
+                onPersistentStateChange?.(state);
                 return state;
+            } else {
+                onPersistentStateChange?.(parsedState);
+                return parsedState;
             }
         } catch {
             return null;
@@ -582,6 +593,7 @@ const usePersistentState = (
         try {
             const storage = storeInLocalStorage ? localStorage : sessionStorage;
             storage.setItem(storageKey, JSON.stringify(state));
+            onPersistentStateChange?.(state);
         } catch {}
     };
     const initialState = active ? loadInitialState() : undefined;
@@ -843,12 +855,14 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         persistentStateClearPageSortPropsOnTopLevelRouteChange,
         persistentStateKey,
         persistentStateStorage,
+        onRowClick,
         onRowsChange,
         onRowOrderChange,
         onRowSelectionModelChange,
         onRowCreate,
         onRowUpdate,
         onRowDelete: onRowDeleteProp,
+        onPersistentStateChange,
         apiRef: apiRefProp,
         datagridApiRef: datagridApiRefProp,
         height,
@@ -1020,6 +1034,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         persistentStateActive ?? false,
         persistentStateClearPageSortPropsOnTopLevelRouteChange ?? false,
         processedColumns,
+        onPersistentStateChange,
         sortModelProp,
         defaultSortModel,
         paginationModelProp,
@@ -1296,7 +1311,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         const requestPending =
             loading === undefined && autoFindDisabled && !isRowsPresentInOtherProps;
         return {
-            row: { linkTo: rowLink, isRowLinkActive },
+            row: { linkTo: rowLink, isRowLinkActive, isRowClickActive: onRowClick != null },
             footer: {
                 paginationActive,
                 selectionActive,
@@ -1304,7 +1319,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                 pageInfo,
                 setRowSelectionModel,
                 pageSizeOptions: otherProps?.pageSizeOptions,
-                enableAutoPageSizeOption: !autoHeight,
+                enableAutoPageSizeOption: true,
                 autoPageSize,
                 setAutoPageSize,
             },
@@ -1370,6 +1385,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
                 {...stripedProps}
                 slots={memoizedSlots}
                 slotProps={memoizedSlotProps}
+                onRowClick={onRowClick}
                 semiBordered={semiBordered}
                 autoHeight={autoHeight}
                 localeText={localeText}
