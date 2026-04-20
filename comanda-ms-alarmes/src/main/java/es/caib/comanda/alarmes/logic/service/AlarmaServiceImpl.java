@@ -167,14 +167,14 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
                             Alarma.class,
                             entity.getId(),
                             code,
-                            "Sense permisos per a esborrar l'alarma");
+                            "Sense permisos per executar l'acció");
                 }
 				if (entity.getEstat() != AlarmaEstat.ACTIVA) {
 					throw new ActionExecutionException(
 							Alarma.class,
 							entity.getId(),
 							code,
-							"Només es poden esborrar alarmes actives");
+							"L'alarma ha d'estar sense llegir");
 				}
                 entity.setEstat(AlarmaEstat.ESBORRADA);
                 entity.setDataEsborrat(LocalDateTime.now());

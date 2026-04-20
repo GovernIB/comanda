@@ -503,12 +503,12 @@ const translationEn: translationResourcesType = {
         alarma: {
             snackbar: {
                 title: "Alarms",
-                existingAlarms: "Has {{count}} alarm active",
-                existingAlarms_one: "Has {{count}} alarm active",
-                existingAlarms_other: "Has {{count}} alarms active",
-                newAlarms: "New alarm active",
-                newAlarms_one: "New alarm active",
-                newAlarms_other: "{{count}} new alarms active",
+                existingAlarms: "Has {{count}} unread alarm",
+                existingAlarms_one: "Has {{count}} unread alarm",
+                existingAlarms_other: "Has {{count}} unread alarms",
+                newAlarms: "New unread alarm",
+                newAlarms_one: "New unread alarm",
+                newAlarms_other: "{{count}} new unread alarms",
             },
             action: {
                 clear: {
@@ -519,8 +519,8 @@ const translationEn: translationResourcesType = {
                 },
             },
             filter: {
-                showOnlyActiveEnabled: "Showing only active alarms (click to include deleted ones)",
-                showOnlyActiveDisabled: "Showing active and deleted alarms (click to show only active ones)",
+                showOnlyActiveEnabled: "Showing only unread alarms (click to include read ones)",
+                showOnlyActiveDisabled: "Showing unread and read alarms (click to show only unread)",
             },
             estats: {
                 finalitzada: "Finalized",

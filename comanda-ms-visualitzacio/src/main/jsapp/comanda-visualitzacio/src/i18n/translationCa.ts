@@ -503,12 +503,12 @@ const translationCa = {
         alarma: {
             snackbar: {
                 title: "Alarmes",
-                existingAlarms: "Té {{count}} alarma activa",
-                existingAlarms_one: "Té {{count}} alarma activa",
-                existingAlarms_other: "Té {{count}} alarmes actives",
-                newAlarms: "Nova alarma activa",
-                newAlarms_one: "Nova alarma activa",
-                newAlarms_other: "{{count}} noves alarmes actives",
+                existingAlarms: "Té {{count}} alarma sense llegir",
+                existingAlarms_one: "Té {{count}} alarma sense llegir",
+                existingAlarms_other: "Té {{count}} alarmes sense llegir",
+                newAlarms: "Nova alarma sense llegir",
+                newAlarms_one: "Nova alarma sense llegir",
+                newAlarms_other: "{{count}} noves alarmes sense llegir",
             },
             action: {
                 clear: {
@@ -519,8 +519,8 @@ const translationCa = {
                 },
             },
             filter: {
-                showOnlyActiveEnabled: "Mostrant només alarmes actives (clic per incloure eliminades)",
-                showOnlyActiveDisabled: "Mostrant alarmes actives i eliminades (clic per mostrar només actives)",
+                showOnlyActiveEnabled: "Mostrant només alarmes sense llegir (clic per incloure llegides)",
+                showOnlyActiveDisabled: "Mostrant alarmes sense llegir i llegides (clic per mostrar només sense llegir)",
             },
             estats: {
                 finalitzada: "Finalitzada",

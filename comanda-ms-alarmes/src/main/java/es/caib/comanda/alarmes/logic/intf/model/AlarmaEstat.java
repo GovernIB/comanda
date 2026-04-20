@@ -8,7 +8,7 @@ package es.caib.comanda.alarmes.logic.intf.model;
 public enum AlarmaEstat {
 
 	ESBORRANY,
-	ACTIVA,
+	ACTIVA, //Sense llegir
 	ESBORRADA
 
 }
