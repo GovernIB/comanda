@@ -314,6 +314,8 @@ const Avis = () => {
         expandedFilter: any;
     }>({ entornAppFilter: undefined, expandedFilter: undefined });
     const noLlegit = filterData?.entornAppFilter?.noLlegit;
+    // Ambos filtros deberían inicializar su estado de alguna manera, si no, consideramos que no se ha inicializado aún
+    const isFilterDataReady = filterData?.entornAppFilter && filterData?.expandedFilter;
     const filter = avisFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null);
     const [apps, setApps] = React.useState<any[]>();
     const apiRef = useMuiDataGridApiRef();
@@ -532,6 +534,7 @@ const Avis = () => {
                 toolbarElementsWithPositions={toolbarAdditionalActions}
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={actions}
+                autoFindDisabled={!isFilterDataReady}
                 {...treeDataGridProps}
                 initialState={{
                     columns: {

@@ -397,6 +397,8 @@ const Tasca = () => {
         entornAppFilter: any;
         expandedFilter: any;
     }>({ entornAppFilter: undefined, expandedFilter: undefined });
+    // Ambos filtros deberían inicializar su estado de alguna manera, si no, consideramos que no se ha inicializado aún
+    const isFilterDataReady = filterData?.entornAppFilter && filterData?.expandedFilter;
     const filter = tascaFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null);
     const [apps, setApps] = React.useState<any[]>();
     const gridApiRef = useGridApiRef();
@@ -550,6 +552,7 @@ const Tasca = () => {
                 toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={rowAdditionalActions}
+                autoFindDisabled={!isFilterDataReady}
                 {...treeDataGridProps}
                 initialState={{
                     columns: {
