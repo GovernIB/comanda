@@ -219,6 +219,7 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
         <>
             <MuiFilter
                 initialData={appEntornFilterInitialData}
+                detached
                 apiRef={appEntornFilterApiRef}
                 resourceName="entornApp"
                 code="optional_entornApp_filter"
@@ -261,6 +262,7 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
             </MuiFilter>
             <MuiFilter
                 initialData={moreFilterInitialData}
+                detached
                 apiRef={moreFilterApiRef}
                 resourceName="avis"
                 code="FILTER"

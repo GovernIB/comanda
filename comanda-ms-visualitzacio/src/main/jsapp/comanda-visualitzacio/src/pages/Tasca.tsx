@@ -262,6 +262,7 @@ const TascaFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, 
     return <>
         <MuiFilter
             initialData={appEntornFilterInitialData}
+            detached
             apiRef={appEntornFilterApiRef}
             resourceName="entornApp"
             code="optional_entornApp_filter"
@@ -305,6 +306,7 @@ const TascaFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, 
         </MuiFilter>
         <MuiFilter
             initialData={moreFilterInitialData}
+            detached
             apiRef={moreFilterApiRef}
             resourceName="tasca"
             code="FILTER"
