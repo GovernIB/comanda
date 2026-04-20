@@ -187,8 +187,8 @@ const OwnAvisFilterButton: React.FC = () => {
 // };
 
 const avisFilterBuilder = (data: any, currentUserCodi: string | null) => springFilterBuilder.and(
-    springFilterBuilder.eq('app', data?.appId?.id),
-    springFilterBuilder.eq('entorn', data?.entornId?.id),
+    springFilterBuilder.eq('appId', data?.app?.id),
+    springFilterBuilder.eq('entornId', data?.entorn?.id),
     springFilterBuilder.like('nom', data?.nom),
     springFilterBuilder.like('descripcio', data?.descripcio),
     springFilterBuilder.eq('tipus', data?.tipus),
