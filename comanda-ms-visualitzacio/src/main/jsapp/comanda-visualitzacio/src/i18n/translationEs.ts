@@ -660,6 +660,9 @@ const translationEs: translationResourcesType = {
             tab: {
                 email: "EMAIL",
             },
+            filter: {
+                more: "Más campos",
+            },
         },
         widget: {
             title: "Widgets estadísticos",

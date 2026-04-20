@@ -660,6 +660,9 @@ const translationCa = {
             tab: {
                 email: "EMAIL",
             },
+            filter: {
+                more: "Més camps",
+            },
         },
         widget: {
             title: "Widgets estadístics",

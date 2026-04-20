@@ -660,6 +660,9 @@ const translationEn: translationResourcesType = {
             tab: {
                 email: "EMAIL",
             },
+            filter: {
+                more: "More fields",
+            },
         },
         widget: {
             title: "Statistic widgets",

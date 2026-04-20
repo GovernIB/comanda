@@ -8,9 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
-
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.*;
 
@@ -36,4 +40,41 @@ public class MonitorClientHelper {
         return null;
     }
 
+    public List<Long> findEntornAppIdsByAppId(long appId) {
+        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                null,
+                "app.id:" + appId,
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        return Optional.ofNullable(entornApps.getContent())
+                .orElse(List.of())
+                .stream()
+                .map(EntityModel::getContent)
+                .filter(Objects::nonNull)
+                .map(EntornApp::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    public List<Long> findEntornAppIdsByEntornId(long entornId) {
+        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                null,
+                "entorn.id:" + entornId,
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader());
+        return Optional.ofNullable(entornApps.getContent())
+                .orElse(List.of())
+                .stream()
+                .map(EntityModel::getContent)
+                .filter(Objects::nonNull)
+                .map(EntornApp::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
 }

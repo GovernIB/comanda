@@ -76,10 +76,13 @@ import java.time.LocalDateTime;
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Monitor.PERSPECTIVE_ENTORN_APP),
         }
 )
+@FieldNameConstants
 public class Monitor extends BaseResource<Long> {
 
     public static final String FILTER_MONITOR = "FILTER";
     public static final String PERSPECTIVE_ENTORN_APP = "ENTORN_APP";
+    public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp:";
+    public static final String FILTER_BY_ENTORN_NAMEDFILTER = "filterByEntorn:";
 
     private Long entornAppId;
     @NotNull

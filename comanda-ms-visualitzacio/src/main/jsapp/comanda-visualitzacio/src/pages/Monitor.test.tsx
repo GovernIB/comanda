@@ -1,11 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Monitors, { translateEnumValue } from './Monitor';
+import React from 'react';
 
 const mocks = vi.hoisted(() => ({
     clearMock: vi.fn(),
     filterMock: vi.fn(),
     showDialogMock: vi.fn(),
+    setFieldValueMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -33,6 +35,9 @@ const mocks = vi.hoisted(() => ({
                     },
                     tab: {
                         email: 'EMAIL',
+                    },
+                    filter: {
+                        more: "Més camps",
                     },
                     detailTipus: 'Tipus',
                 },
@@ -113,6 +118,7 @@ vi.mock('reactlib', () => ({
         between: (field: string, from: unknown, to: unknown) => `${field}[${String(from)},${String(to)}]`,
         eq: (field: string, value: unknown) => `${field}=${String(value)}`,
     },
+    useFormApiRef: () => ({ current: { setFieldValue: mocks.setFieldValueMock, }, }),
 }));
 
 vi.mock('../components/ContentDetail', () => ({
@@ -170,7 +176,7 @@ describe('Monitors', () => {
         expect(screen.getByTestId('field-codi')).toBeInTheDocument();
         expect(screen.getByTestId('field-dataDesde')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Netejar' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Cercar' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Més camps' })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: 'EMAIL' })).toBeInTheDocument();
         expect(screen.getByTestId('url-header')).toHaveTextContent('URL');
@@ -182,10 +188,8 @@ describe('Monitors', () => {
         render(<Monitors />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Netejar' }));
-        fireEvent.click(screen.getByRole('button', { name: 'Cercar' }));
 
-        expect(mocks.clearMock).toHaveBeenCalled();
-        expect(mocks.filterMock).toHaveBeenCalled();
+        expect(mocks.clearMock).toHaveBeenCalled();;
     });
 
     it('Monitors_quanCanviaLaPestanya_actualitzaElFiltreStaticIObreElDetall', () => {

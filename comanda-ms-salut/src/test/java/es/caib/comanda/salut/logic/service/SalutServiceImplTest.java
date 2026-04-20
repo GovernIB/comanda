@@ -569,7 +569,7 @@ class SalutServiceImplTest {
 
     @ParameterizedTest
     @MethodSource("proporcionarCasosUltimEstatOperatiu")
-    @DisplayName("PerspectiveUltimEstatOperatiuInfo: matriz de escenarios")
+    @DisplayName("PerspectiveUltimEstatOperatiuInfo: matriu d'escenaris")
     void perspectiveUltimEstatOperatiuInfo_escenarios(String descripcion,
                                                       Long entornAppId,
                                                       SalutHistEntity darrerHistoric,
