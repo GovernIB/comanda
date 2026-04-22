@@ -122,7 +122,7 @@ const StyledList = styled(List)<{ component?: React.ElementType }>({
 });
 
 const COMPACT_PANEL_WIDTH = 250;
-const SUBMENU_TITLE_HEIGHT = 64;
+const SUBMENU_TITLE_HEIGHT = 48;
 
 const isCurrentMenuEntryOrAnyChildrenSelected = (
     menuEntry: MenuEntry,
@@ -191,7 +191,6 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
         '& span': {
             fontSize: '14px',
             fontWeight: boldPrimary ? 'bold' : undefined,
-            color: level > 0 ? 'text.secondary' : undefined,
         },
     };
     const handleMenuItemClick = () => {
@@ -201,16 +200,12 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
             onMenuItemClick?.(entry);
         }
     };
-    const processedIcon = shrink
-        ? icon
-        : children != null
-          ? expanded
-              ? 'expand_more'
-              : 'chevron_right'
-          : icon;
-    const iconComponent = processedIcon ? (
+    const expandedIconComponent = children != null ? (
+            <Icon fontSize={'small'}>{expanded ? 'expand_less' : 'expand_more'}</Icon>
+    ) : null;
+    const iconComponent = icon ? (
         <ListItemIcon sx={itemIconSx}>
-            <Icon fontSize={'small'}>{processedIcon}</Icon>
+            <Icon fontSize={'small'}>{icon}</Icon>
         </ListItemIcon>
     ) : null;
     return (
@@ -232,6 +227,7 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
                     }}>
                     {iconComponent}
                     <ListItemText primary={primary} sx={itemTextSx} />
+                    {expandedIconComponent}
                 </ListItemButton>
             )}
             {(shrink || expanded) && children}
@@ -435,7 +431,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                     minHeight: submenuTitleHeight,
                                 })}>
                                 <Typography
-                                    variant="subtitle2"
+                                    variant="subtitle1"
                                     sx={() => ({
                                         fontWeight: 700,
                                         color: theme.palette.primary.light,
