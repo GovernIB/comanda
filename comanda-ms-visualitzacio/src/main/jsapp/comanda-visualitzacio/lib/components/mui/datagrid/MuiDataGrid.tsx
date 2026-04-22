@@ -311,12 +311,12 @@ const rowLinkFind = (rowLink: string | undefined, rowLinks: any[] | undefined) =
 };
 const rowLinkShowCheck = (rowLink: string | undefined, rowLinks: any[] | undefined) => {
     if (rowLink != null) {
-        const found = rowLinkFind(rowLink, rowLinks);
+        const found = rowLinkFind(rowLink, rowLinks); //
+        const isNegative = rowLink != null && rowLink.startsWith('!');
         if (found) {
-            const isNegative = rowLink != null && rowLink.startsWith('!');
             return isNegative ? found == null : found != null;
         } else {
-            return false;
+            return isNegative;
         }
     } else {
         return true;

@@ -4,7 +4,7 @@ import { useBaseAppContext, DialogButton } from '../../BaseAppContext';
 import { useFormDialog, FormDialogSubmitFn } from '../form/FormDialog';
 
 export type DataFormDialogApi = {
-    show: (id?: any, additionalData?: any) => Promise<string>;
+    show: (id?: any, additionalData?: any, title?: string) => Promise<string>;
     close: () => void;
 };
 
@@ -50,10 +50,10 @@ export const DataFormDialog: React.FC<DataFormDialogProps> = (props) => {
         formI18nKeys,
         onClose
     );
-    const show = (id?: any, additionalData?: any) =>
+    const show = (id?: any, additionalData?: any, title?: string) =>
         formDialogShow(id, {
             title:
-                titleProp ??
+                title ?? titleProp ??
                 (id != null ? t('datacommon.update.label') : t('datacommon.create.label')) +
                     ' ' +
                     (resourceTitle ?? resourceName),

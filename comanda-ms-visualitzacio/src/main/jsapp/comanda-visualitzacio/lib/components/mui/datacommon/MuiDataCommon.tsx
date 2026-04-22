@@ -255,7 +255,6 @@ export const useDataCommonEditable = (
     onDelete: ((id: any | any[]) => void) | undefined
 ) => {
     const { t, temporalMessageShow, messageDialogShow } = useBaseAppContext();
-    const hasSaveAction = (row?: any) => row?._actions?.update != null;
     const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>(undefined);
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
@@ -292,8 +291,9 @@ export const useDataCommonEditable = (
                     : formAdditionalData),
                 ...additionalData,
             };
+            const noUpdateLinkTitle = !row?._actions['update'] ? t('datacommon.details.label') : undefined;
             dataDialogPopupApiRef.current
-                ?.show(id, processedAdditionalData)
+                ?.show(id, processedAdditionalData, noUpdateLinkTitle)
                 .then((data) => {
                     onUpdate?.(data);
                     refresh?.();
@@ -411,10 +411,9 @@ export const useDataCommonEditable = (
         !readOnly && !isPopupEditUpdate && !isInlineEditUpdate && rowUpdateLink == null;
     !readOnly &&
         rowEditActions.push({
-            label: (row: any) =>
-                t(hasSaveAction(row) ? 'datacommon.update.label' : 'datacommon.details.label'),
+            label: t('datacommon.update.label'),
             rowLink: 'update',
-            icon: (row: any) => (hasSaveAction(row) ? 'edit' : 'visibility'),
+            icon: 'edit',
             linkTo: rowUpdateLink,
             linkState:
                 rowUpdateLink != null && formAdditionalData != null
@@ -433,6 +432,20 @@ export const useDataCommonEditable = (
             showInMenu: true,
             rowLink: 'delete',
             clickTriggerDelete: true,
+        });
+    isPopupEditUpdate && !rowDetailLink &&
+        rowEditActions.push({
+            label: t('datacommon.details.label'),
+            rowLink: '!update',
+            icon: 'info',
+            linkTo: rowUpdateLink,
+            linkState:
+                rowUpdateLink != null && formAdditionalData != null
+                    ? { additionalData: formAdditionalData }
+                    : undefined,
+            disabled: rowDisableUpdateButton || updateLinkConfigError,
+            hidden: rowHideUpdateButton,
+            clickShowUpdateDialog: rowUpdateLink == null,
         });
     rowDetailLink &&
         rowEditActions.push({
