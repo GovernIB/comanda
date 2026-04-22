@@ -89,14 +89,14 @@ const ShrinkableDrawer = styled(Drawer, {
     shouldForwardProp: (prop) => prop !== 'open' && prop !== 'width',
 })(({ theme, open, ...otherProps }) => {
     const width = (otherProps as any)?.['width'];
-    const shrinkableStyles = {
+    const shrinkableStyles: CSSObject = {
         ...(open && {
             ...openedMixin(theme, width),
             '& .MuiDrawer-paper': openedMixin(theme, width),
+            overflowWrap: 'anywhere',
         }),
         ...(!open && {
             ...closedMixin(theme),
-            whiteSpace: 'nowrap',
             '& .MuiDrawer-paper': closedMixin(theme),
         }),
     };
@@ -143,6 +143,8 @@ const isCurrentMenuEntryOrAnyChildrenSelected = (
         return anyChildSelected;
     }
 };
+
+const menuItemIconClassName = 'menu-item-icon';
 
 const MenuItem: React.FC<MenuItemProps> = (props) => {
     const {
@@ -204,7 +206,7 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
             <Icon fontSize={'small'}>{expanded ? 'expand_less' : 'expand_more'}</Icon>
     ) : null;
     const iconComponent = icon ? (
-        <ListItemIcon sx={itemIconSx}>
+        <ListItemIcon className={menuItemIconClassName} sx={itemIconSx}>
             <Icon fontSize={'small'}>{icon}</Icon>
         </ListItemIcon>
     ) : null;
@@ -450,13 +452,20 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                     </Typography>
                                 ) : null}
                             </Box>
-                            <ListMenuContent
-                                entries={compactPanelEntry.children}
-                                level={0}
-                                shrink={false}
-                                boldPrimary={false}
-                                onMenuItemClick={handleMenuItemClick}
-                            />
+                            <Box
+                                sx={{
+                                    [`& .${menuItemIconClassName}`]: { ml: -1 },
+                                    overflowWrap: 'anywhere',
+                                }}
+                            >
+                                <ListMenuContent
+                                    entries={compactPanelEntry.children}
+                                    level={0}
+                                    shrink={false}
+                                    boldPrimary={false}
+                                    onMenuItemClick={handleMenuItemClick}
+                                />
+                            </Box>
                         </Box>
                     ) : null}
                 </div>
