@@ -113,7 +113,8 @@ describe('SideMenu', () => {
                     {
                         id: 'pare',
                         title: 'Pare',
-                        children: [{ id: 'fill', title: 'Fill', to: '/fill' }],
+                        icon: 'info',
+                        children: [{ id: 'fill', title: 'Fill', to: '/fill', icon: 'info' }],
                     },
                 ]}
                 drawerWidth={350}

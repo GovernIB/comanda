@@ -15,7 +15,7 @@ vi.mock('./SideMenu.tsx', () => ({
     default: (props: { onClose: () => void }) => mocks.sideMenuMock(props),
 }));
 
-const menuEntries: MenuEntry[] = [{ id: 'opcio', title: 'Opció', to: '/opcio' }];
+const menuEntries: MenuEntry[] = [{ id: 'opcio', title: 'Opció', to: '/opcio', icon: 'apps' }];
 
 describe('AppMenu', () => {
     it('AppMenu_quanEsPremLaIcona_renderitzaElMenuLateral', () => {

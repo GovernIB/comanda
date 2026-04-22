@@ -18,7 +18,7 @@ export type MenuEntry = {
     title?: string;
     description?: string;
     to?: string;
-    icon?: string;
+    icon: string;
     children?: MenuEntry[];
     divider?: boolean;
 };
@@ -33,26 +33,15 @@ export type MenuProps = {
     drawerWidth?: number;
     footerHeight?: number;
     compactPanelWidth?: number;
-    submenuTitelHeight?: number;
-    appearance?: 'theme' | 'inverse' | 'footer';
-};
-
-type MenuColorSet = {
-    background: string;
-    textPrimary: string;
-    textSecondary: string;
-    divider: string;
-    accent: string;
-    titleBackground: string;
-    selectedBackground: string;
-    hoverBackground: string;
+    submenuTitleHeight?: number;
 };
 
 type ListMenuContentProps = MenuProps & {
-    onMenuItemClick?: () => void;
-    onEntryClick?: (entry: MenuEntry) => void;
+    onMenuItemClick?: (entry: MenuEntry) => void;
+    onMenuItemMouseEnter?: (entry: MenuEntry) => void;
+    onMenuItemMouseLeave?: (entry: MenuEntry) => void;
     boldPrimary?: boolean;
-    colors?: MenuColorSet;
+    hideChildren?: boolean;
 };
 
 type MenuItemProps = React.PropsWithChildren & {
@@ -64,9 +53,9 @@ type MenuItemProps = React.PropsWithChildren & {
     selected?: boolean;
     shrink?: boolean;
     boldPrimary?: boolean;
-    onMenuItemClick?: () => void;
-    onEntryClick?: (entry: MenuEntry) => void;
-    colors?: MenuColorSet;
+    onMenuItemClick?: (entry: MenuEntry) => void;
+    onMenuItemMouseEnter?: (entry: MenuEntry) => void;
+    onMenuItemMouseLeave?: (entry: MenuEntry) => void;
 };
 
 type MenuTitleProps = {
@@ -82,14 +71,17 @@ const openedMixin = (theme: Theme, width: number | string): CSSObject => ({
     }),
 });
 
+const drawerClosedWidthSmall = (theme: Theme) => `calc(${theme.spacing(6)} + 1px)`;
+const drawerClosedWidthStandard = (theme: Theme) => `calc(${theme.spacing(7)} + 1px)`;
+
 const closedMixin = (theme: Theme): CSSObject => ({
     transition: theme.transitions.create('width', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
-    width: `calc(${theme.spacing(6)} + 1px)`,
+    width: drawerClosedWidthSmall(theme),
     [theme.breakpoints.up('sm')]: {
-        width: `calc(${theme.spacing(7)} + 1px)`,
+        width: drawerClosedWidthStandard(theme),
     },
 });
 
@@ -129,60 +121,13 @@ const StyledList = styled(List)<{ component?: React.ElementType }>({
     overflowX: 'hidden',
 });
 
-const DEFAULT_MENU_ICON = 'menu';
 const COMPACT_PANEL_WIDTH = 250;
-const SUBMENU_TITEL_HEIGHT = 64;
-
-const getMenuColorSet = (
-    theme: Theme,
-    appearance: MenuProps['appearance']
-): MenuColorSet | undefined => {
-    // `theme` no sobreescriu colors: el menú reutilitza directament la paleta activa de MUI.
-    if (appearance === 'footer') {
-        return {
-            background: '#5F5D5D',
-            textPrimary: '#F6F6F6',
-            textSecondary: '#E5E5E5',
-            divider: '#807D7D',
-            accent: '#FFFFFF',
-            titleBackground: '#4A4848',
-            selectedBackground: 'rgba(255, 255, 255, 0.12)',
-            hoverBackground: 'rgba(255, 255, 255, 0.08)',
-        };
-    }
-    if (appearance !== 'inverse') {
-        return undefined;
-    }
-    if (theme.palette.mode === 'dark') {
-        return {
-            background: '#FFFFFF',
-            textPrimary: '#1F2937',
-            textSecondary: '#4B5563',
-            divider: '#D1D5DB',
-            accent: '#1976D2',
-            titleBackground: '#F3F4F6',
-            selectedBackground: 'rgba(25, 118, 210, 0.12)',
-            hoverBackground: 'rgba(0, 0, 0, 0.04)',
-        };
-    }
-    return {
-        background: '#1E293B',
-        textPrimary: '#F8FAFC',
-        textSecondary: '#CBD5E1',
-        divider: '#475569',
-        accent: '#60A5FA',
-        titleBackground: '#334155',
-        selectedBackground: 'rgba(96, 165, 250, 0.18)',
-        hoverBackground: 'rgba(255, 255, 255, 0.08)',
-    };
-};
+const SUBMENU_TITLE_HEIGHT = 64;
 
 const isCurrentMenuEntryOrAnyChildrenSelected = (
     menuEntry: MenuEntry,
     locationPath: string
 ): boolean => {
-    // Un pare s'ha de marcar com a seleccionat si apunta a la ruta actual
-    // o si qualsevol descendent coincideix amb la navegació actual.
     const anyChildSelected =
         menuEntry.children?.find((e) => isCurrentMenuEntryOrAnyChildrenSelected(e, locationPath)) !=
         null;
@@ -210,8 +155,8 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
         shrink,
         boldPrimary = level === 0,
         onMenuItemClick,
-        onEntryClick,
-        colors,
+        onMenuItemMouseEnter,
+        onMenuItemMouseLeave,
         children,
     } = props;
     const { getLinkComponent } = useBaseAppContext();
@@ -219,17 +164,6 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
     const itemButtonSx = {
         minHeight: 48,
         justifyContent: !shrink ? 'initial' : 'center',
-        color: colors?.textPrimary,
-        '&.Mui-selected': {
-            backgroundColor: colors?.selectedBackground,
-            color: colors?.textPrimary,
-        },
-        '&.Mui-selected:hover': {
-            backgroundColor: colors?.selectedBackground,
-        },
-        '&:hover': {
-            backgroundColor: colors?.hoverBackground,
-        },
         '& :before':
             level > 0 && !shrink
                 ? {
@@ -242,38 +176,31 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
                       height: '100%',
                       width: '2px',
                       opacity: '1',
-                      background: selected
-                          ? colors?.accent ?? 'hsl(210, 100%, 60%)'
-                          : colors?.divider ?? 'hsl(215, 15%, 92%)',
+                      background: selected ? 'hsl(210, 100%, 60%)' : 'hsl(215, 15%, 92%)',
                   }
                 : undefined,
     };
     const itemIconSx = {
         minWidth: 0,
-        ml: !shrink ? 0 : -1,
+        ml: !shrink ? 1 : -1,
         mr: !shrink ? 1 : 'auto',
         justifyContent: 'center',
-        color: colors?.textPrimary,
     };
     const itemTextSx = {
         opacity: !shrink ? 1 : 0,
         '& span': {
             fontSize: '14px',
             fontWeight: boldPrimary ? 'bold' : undefined,
-            color: level > 0 ? colors?.textSecondary ?? 'text.secondary' : colors?.textPrimary,
+            color: level > 0 ? 'text.secondary' : undefined,
         },
     };
     const handleMenuItemClick = () => {
-        onEntryClick?.(entry);
-        // Les entrades amb fills no naveguen directament: obren o tanquen el seu arbre.
         if (children != null) {
             setExpanded((expanded) => !expanded);
         } else {
-            onMenuItemClick?.();
+            onMenuItemClick?.(entry);
         }
     };
-    // En mode compacte només es mostra la icona pròpia. En mode normal, els pares
-    // passen a mostrar l'estat expandit/col·lapsat.
     const processedIcon = shrink
         ? icon
         : children != null
@@ -297,6 +224,8 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
                         children == null ? (to != null ? getLinkComponent() : undefined) : undefined
                     }
                     onClick={handleMenuItemClick}
+                    onMouseEnter={() => onMenuItemMouseEnter?.(entry)}
+                    onMouseLeave={() => onMenuItemMouseLeave?.(entry)}
                     sx={itemButtonSx}
                     style={{
                         paddingLeft: shrink ? '40px' : 24 + 16 * level + (level > 0 ? 8 : 0) + 'px',
@@ -311,17 +240,24 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
 };
 
 const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
-    const { entries, level, shrink, onMenuItemClick, boldPrimary, colors } = props;
+    const {
+        entries,
+        level,
+        shrink,
+        onMenuItemClick,
+        onMenuItemMouseEnter,
+        onMenuItemMouseLeave,
+        boldPrimary,
+        hideChildren,
+    } = props;
     const { useLocationPath } = useBaseAppContext();
     const locationPath = useLocationPath();
     return (
-        <StyledList sx={{ backgroundColor: colors?.background, color: colors?.textPrimary }}>
+        <StyledList>
             {entries?.map((item, index) => {
-                // Cada nivell recalcula la selecció perquè l'estat visual del pare depèn
-                // també del subtree, no només de la seva pròpia ruta.
                 const selected = isCurrentMenuEntryOrAnyChildrenSelected(item, locationPath);
                 const entryComponent = item.divider ? (
-                    <Divider key={index} sx={{ borderColor: colors?.divider }} />
+                    <Divider key={index} />
                 ) : (
                     <MenuItem
                         key={index}
@@ -333,19 +269,17 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
                         selected={selected}
                         shrink={shrink}
                         boldPrimary={boldPrimary}
-                        colors={colors}
                         onMenuItemClick={onMenuItemClick}
-                        onEntryClick={props.onEntryClick}>
-                        {item.children?.length ? (
+                        onMenuItemMouseEnter={onMenuItemMouseEnter}
+                        onMenuItemMouseLeave={onMenuItemMouseLeave}>
+                        {item.children?.length && !hideChildren ? (
                             <Box>
                                 <ListMenuContent
                                     entries={item.children}
                                     level={(level ?? 0) + 1}
                                     shrink={shrink}
                                     boldPrimary={boldPrimary}
-                                    colors={colors}
                                     onMenuItemClick={onMenuItemClick}
-                                    onEntryClick={props.onEntryClick}
                                 />
                             </Box>
                         ) : null}
@@ -357,31 +291,21 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
     );
 };
 
-const MenuTitle: React.FC<MenuTitleProps & { colors?: MenuColorSet }> = (props) => {
-    const { title, onClose, colors } = props;
+const MenuTitle: React.FC<MenuTitleProps> = (props) => {
+    const { title, onClose } = props;
     const theme = useTheme();
     const handleButtonClick = () => onClose?.();
     return (
         <Box>
-            <ListItemButton
-                sx={{
-                    backgroundColor: colors?.titleBackground ?? theme.palette.grey[200],
-                    color: colors?.textPrimary,
-                    '&:hover': {
-                        backgroundColor: colors?.hoverBackground,
-                    },
-                }}>
+            <ListItemButton sx={{ backgroundColor: theme.palette.grey[200] }}>
                 <ListItemIcon sx={{ minWidth: '40px' }}>
                     <IconButton size="small" onClick={handleButtonClick}>
-                        <Icon fontSize={'small'} sx={{ color: colors?.textPrimary }}>clear</Icon>
+                        <Icon fontSize={'small'}>clear</Icon>
                     </IconButton>
                 </ListItemIcon>
-                <ListItemText
-                    primary={title}
-                    sx={{ '& span': { fontWeight: 'bold', color: colors?.textPrimary } }}
-                />
+                <ListItemText primary={title} sx={{ '& span': { fontWeight: 'bold' } }} />
             </ListItemButton>
-            <Divider sx={{ borderColor: colors?.divider }} />
+            <Divider />
         </Box>
     );
 };
@@ -396,41 +320,29 @@ export const Menu: React.FC<MenuProps> = (props) => {
         drawerWidth = 240,
         footerHeight,
         compactPanelWidth = COMPACT_PANEL_WIDTH,
-        submenuTitelHeight = SUBMENU_TITEL_HEIGHT,
-        appearance = 'theme',
+        submenuTitleHeight = SUBMENU_TITLE_HEIGHT,
     } = props;
     const smallScreen = useSmallScreen();
     const smallHeader = useSmallHeader();
     const theme = useTheme();
-    const colors = getMenuColorSet(theme, appearance);
-    const { getLinkComponent, useLocationPath } = useBaseAppContext();
-    const locationPath = useLocationPath();
     const [open, setOpen] = React.useState<boolean>(false);
-    const [compactPanelEntryId, setCompactPanelEntryId] = React.useState<string>();
+    const [compactPanelEntryId, setCompactPanelEntryId] = React.useState<string | null>(null);
+    const closeTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const compactMenuContainerRef = React.useRef<HTMLDivElement | null>(null);
-    const compactPanelRef = React.useRef<HTMLDivElement | null>(null);
     const compactMode = !smallScreen && !!shrink;
-    const compactMenuWidth = `calc(${theme.spacing(7)} + 1px)`;
-    const compactPanelTop = smallHeader ? theme.spacing(7) : theme.spacing(8);
-    const compactPanelBottom = `${footerHeight ?? 0}px`;
+    // El menú compacte no es mostra quan la mida de pantalla és petita
+    const compactMenuWidth = drawerClosedWidthStandard(theme);
+    const topMargin = smallHeader ? theme.spacing(7) : theme.spacing(8);
     const compactPanelEntry = compactMode
         ? entries?.find((entry) => entry.id === compactPanelEntryId && entry.children?.length)
         : undefined;
 
     React.useEffect(() => {
-        // Al mòbil el menú s'obre i es tanca des de la icona de l'header.
         setOpen((o) => !o);
     }, [iconClicked]);
     React.useEffect(() => {
-        // En passar a mòbil o escriptori es reinicia l'estat del drawer temporal.
         setOpen(false);
     }, [smallScreen]);
-    React.useEffect(() => {
-        // El submenú flotant només existeix en mode compacte d'escriptori.
-        if (!compactMode) {
-            setCompactPanelEntryId(undefined);
-        }
-    }, [compactMode]);
     React.useEffect(() => {
         if (!compactMode || !compactPanelEntry) {
             return;
@@ -439,14 +351,9 @@ export const Menu: React.FC<MenuProps> = (props) => {
         // de la columna d'icones el tanca.
         const handlePointerDownOutside = (event: MouseEvent) => {
             const target = event.target as Node | null;
-            if (
-                target != null &&
-                (compactPanelRef.current?.contains(target) ||
-                    compactMenuContainerRef.current?.contains(target))
-            ) {
-                return;
+            if (target == null || !compactMenuContainerRef.current?.contains(target)) {
+                setCompactPanelEntryId(null);
             }
-            setCompactPanelEntryId(undefined);
         };
         document.addEventListener('mousedown', handlePointerDownOutside);
         return () => {
@@ -454,101 +361,68 @@ export const Menu: React.FC<MenuProps> = (props) => {
         };
     }, [compactMode, compactPanelEntry]);
     const handleMenuItemClick = () => {
-        // En navegar es tanca tant el drawer mòbil com el submenú compacte obert.
         setOpen(false);
-        setCompactPanelEntryId(undefined);
+        setCompactPanelEntryId(null);
     };
     const handleCompactEntryClick = (entry: MenuEntry) => {
-        if (!compactMode) {
+        if (entry.children?.length) {
+            setCompactPanelEntryId((current) => (current === entry.id ? null : entry.id));
+        } else {
+            setCompactPanelEntryId(null);
+        }
+    };
+    const resetCloseTimeout = () => {
+        if (closeTimeoutRef.current) {
+            clearTimeout(closeTimeoutRef.current);
+            closeTimeoutRef.current = null;
+        }
+    }
+    const handleCompactEntryMouseEnter = (entry: MenuEntry) => {
+        if (!compactMode || !window.matchMedia('(hover: hover)').matches) {
             return;
         }
-        // En compacte, els elements amb fills obren un segon panell lateral en lloc
-        // d'expandir-se dins la mateixa columna.
+        resetCloseTimeout();
         if (entry.children?.length) {
-            setCompactPanelEntryId((current) => (current === entry.id ? undefined : entry.id));
+            setCompactPanelEntryId(entry.id);
         } else {
-            setCompactPanelEntryId(undefined);
+            setCompactPanelEntryId(null);
         }
+    };
+    const handleMouseLeave = () => {
+        if (!compactMode || !window.matchMedia('(hover: hover)').matches) {
+            return;
+        }
+        closeTimeoutRef.current = setTimeout(() => {
+            setCompactPanelEntryId(null);
+        }, 150);
     };
     const drawerContent = (
         <>
-            <Box sx={{ mt: smallHeader ? 7 : 8 }} />
-            {title && <MenuTitle title={title} onClose={onTitleClose} colors={colors} />}
+            <Box sx={{ mt: topMargin }} />
+            {title && <MenuTitle title={title} onClose={onTitleClose} />}
             {compactMode ? (
-                <Box ref={compactMenuContainerRef} sx={{ minHeight: 0, height: '100%' }}>
-                    {/* Columna principal del menú compacte: només icones. */}
-                    <StyledList
-                        sx={{
-                            width: compactMenuWidth,
-                            backgroundColor: colors?.background,
-                            color: colors?.textPrimary,
-                        }}>
-                        {entries?.map((item, index) => {
-                            const selected = compactPanelEntryId === item.id;
-                            const routeSelected = isCurrentMenuEntryOrAnyChildrenSelected(item, locationPath);
-                            if (item.divider) {
-                                return <Divider key={index} sx={{ borderColor: colors?.divider }} />;
-                            }
-                            return (
-                                <ListItemButton
-                                    key={index}
-                                    title={item.title}
-                                    selected={selected || routeSelected}
-                                    to={item.children?.length ? undefined : item.to}
-                                    component={
-                                        !item.children?.length && item.to != null
-                                            ? getLinkComponent()
-                                            : undefined
-                                    }
-                                    onClick={() => handleCompactEntryClick(item)}
-                                    sx={{
-                                        minHeight: 48,
-                                        justifyContent: 'center',
-                                        px: 0,
-                                        color: colors?.textPrimary,
-                                        '&.Mui-selected': {
-                                            backgroundColor: colors?.selectedBackground,
-                                        },
-                                        '&.Mui-selected:hover': {
-                                            backgroundColor: colors?.selectedBackground,
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: colors?.hoverBackground,
-                                        },
-                                        '& .MuiListItemIcon-root': {
-                                            marginRight: 0,
-                                        },
-                                    }}>
-                                    <ListItemIcon
-                                        sx={{
-                                            minWidth: 0,
-                                            justifyContent: 'center',
-                                            color: colors?.textPrimary ?? 'action.active',
-                                        }}>
-                                        <Icon fontSize="small">
-                                            {item.icon ?? DEFAULT_MENU_ICON}
-                                        </Icon>
-                                    </ListItemIcon>
-                                </ListItemButton>
-                            );
-                        })}
-                    </StyledList>
+                <div ref={compactMenuContainerRef}>
+                    <ListMenuContent
+                        entries={entries}
+                        hideChildren={true}
+                        shrink={true}
+                        onMenuItemClick={handleCompactEntryClick}
+                        onMenuItemMouseEnter={(entry) => handleCompactEntryMouseEnter(entry)}
+                        onMenuItemMouseLeave={handleMouseLeave}
+                    />
                     {compactPanelEntry ? (
                         <Box
-                            ref={compactPanelRef}
-                            data-testid="compact-floating-panel"
+                            onMouseEnter={resetCloseTimeout}
+                            onMouseLeave={handleMouseLeave}
                             sx={(theme) => ({
-                                // El submenú flota al costat del rail compacte perquè
-                                // no redimensioni el drawer principal.
                                 position: 'fixed',
-                                top: compactPanelTop,
-                                bottom: compactPanelBottom,
+                                top: topMargin,
+                                bottom: footerHeight ? `${footerHeight}px` : null,
                                 left: compactMenuWidth,
                                 width: compactPanelWidth,
-                                borderLeft: `1px solid ${colors?.divider ?? theme.palette.divider}`,
-                                borderRight: `1px solid ${colors?.divider ?? theme.palette.divider}`,
-                                backgroundColor: colors?.background ?? theme.palette.background.paper,
-                                color: colors?.textPrimary ?? theme.palette.text.primary,
+                                borderRight: `1px solid ${theme.palette.divider}`,
+                                backgroundColor: theme.palette.background.paper,
+                                color:  theme.palette.text.primary,
                                 overflowY: 'auto',
                                 zIndex: theme.zIndex.drawer + 1,
                             })}>
@@ -556,15 +430,15 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                 sx={(theme) => ({
                                     px: 2,
                                     py: 1.7,
-                                    backgroundColor: colors?.titleBackground ?? theme.palette.background.paper,
-                                    borderBottom: `1px solid ${colors?.divider ?? theme.palette.divider}`,
-                                    minHeight: submenuTitelHeight,
+                                    backgroundColor: theme.palette.background.paper,
+                                    borderBottom: `1px solid ${theme.palette.divider}`,
+                                    minHeight: submenuTitleHeight,
                                 })}>
                                 <Typography
                                     variant="subtitle2"
                                     sx={() => ({
                                         fontWeight: 700,
-                                        color: colors?.accent ?? theme.palette.primary.light,
+                                        color: theme.palette.primary.light,
                                     })}>
                                     {compactPanelEntry.title}
                                 </Typography>
@@ -573,7 +447,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                         variant="body2"
                                         sx={{
                                             mt: 0.25,
-                                            color: colors?.textSecondary ?? 'text.secondary',
+                                            color: 'text.secondary',
                                             fontSize: '0.6rem',
                                         }}>
                                         {compactPanelEntry.description}
@@ -585,17 +459,15 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                 level={0}
                                 shrink={false}
                                 boldPrimary={false}
-                                colors={colors}
                                 onMenuItemClick={handleMenuItemClick}
                             />
                         </Box>
                     ) : null}
-                </Box>
+                </div>
             ) : (
                 <ListMenuContent
                     entries={entries}
                     shrink={false}
-                    colors={colors}
                     onMenuItemClick={handleMenuItemClick}
                 />
             )}
@@ -603,20 +475,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
         </>
     );
     return !smallScreen ? (
-        <ShrinkableDrawer
-            variant={'permanent'}
-            open={!shrink}
-            {...{ width: drawerWidth }}
-            sx={{
-                overflow: compactMode ? 'visible' : undefined,
-                '& .MuiDrawer-paper': {
-                    backgroundColor: colors?.background,
-                    color: colors?.textPrimary,
-                    borderRightColor: colors?.divider,
-                    overflowX: compactMode ? 'visible' : undefined,
-                    overflowY: compactMode ? 'visible' : undefined,
-                },
-            }}>
+        <ShrinkableDrawer variant={'permanent'} open={!shrink} {...{ width: drawerWidth }}>
             {drawerContent}
         </ShrinkableDrawer>
     ) : (
@@ -629,8 +488,6 @@ export const Menu: React.FC<MenuProps> = (props) => {
                 '& .MuiDrawer-paper': {
                     width: drawerWidth,
                     boxSizing: 'border-box',
-                    backgroundColor: colors?.background,
-                    color: colors?.textPrimary,
                 },
             }}>
             {drawerContent}

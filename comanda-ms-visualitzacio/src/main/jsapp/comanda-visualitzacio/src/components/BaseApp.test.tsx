@@ -146,12 +146,12 @@ describe('BaseApp', () => {
                     title="Comanda"
                     version="1.0.0"
                     menuEntries={[
-                        { id: 'dashboard', title: 'Dashboard', to: '/dashboard', resourceName: 'dashboard' },
-                        { id: 'admin', title: 'Admin', to: '/admin', resourceName: 'admin' },
-                        { id: 'public', title: 'Public', to: '/public' },
+                        { id: 'dashboard', title: 'Dashboard', to: '/dashboard', resourceName: 'dashboard', icon: 'info' },
+                        { id: 'admin', title: 'Admin', to: '/admin', resourceName: 'admin', icon: 'info' },
+                        { id: 'public', title: 'Public', to: '/public', icon: 'info' },
                     ]}
                     headerMenuEntries={[
-                        { id: 'header-dashboard', title: 'Capçalera', to: '/dashboard', resourceName: 'dashboard' },
+                        { id: 'header-dashboard', title: 'Capçalera', to: '/dashboard', resourceName: 'dashboard', icon: 'info' },
                     ]}
                 >
                     <div>Contingut base</div>
@@ -169,9 +169,9 @@ describe('BaseApp', () => {
                 headerAuthBadgeIcon: 'settings',
                 persistentLanguage: true,
                 menuEntries: [
-                    { id: 'dashboard', title: 'Dashboard', to: '/dashboard', resourceName: 'dashboard' },
-                    { id: 'admin', title: 'Admin', to: '/admin', resourceName: 'admin' },
-                    { id: 'public', title: 'Public', to: '/public' },
+                    { id: 'dashboard', title: 'Dashboard', to: '/dashboard', resourceName: 'dashboard', icon: 'info' },
+                    { id: 'admin', title: 'Admin', to: '/admin', resourceName: 'admin', icon: 'info' },
+                    { id: 'public', title: 'Public', to: '/public', icon: 'info' },
                 ],
                 headerAdditionalComponents: expect.arrayContaining([
                     expect.any(Object),
@@ -202,7 +202,7 @@ describe('BaseApp', () => {
 
         render(
             <MemoryRouter initialEntries={['/inici']}>
-                <BaseApp code="comanda" title="Comanda" version="1.0.0" menuEntries={[{ id: 'a', title: 'A', to: '/a' }]}>
+                <BaseApp code="comanda" title="Comanda" version="1.0.0" menuEntries={[{ id: 'a', title: 'A', to: '/a', icon: 'info' }]}>
                     <div>Contingut base</div>
                 </BaseApp>
             </MemoryRouter>
@@ -212,7 +212,7 @@ describe('BaseApp', () => {
         expect(mocks.muiBaseAppMock).toHaveBeenCalledWith(
             expect.objectContaining({
                 headerAuthBadgeIcon: undefined,
-                menuEntries: [{ id: 'a', title: 'A', to: '/a' }],
+                menuEntries: [{ id: 'a', title: 'A', to: '/a', icon: 'info' }],
             })
         );
     });
