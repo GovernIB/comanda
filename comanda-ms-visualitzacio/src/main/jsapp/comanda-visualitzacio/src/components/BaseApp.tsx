@@ -30,7 +30,7 @@ import i18n from '../i18n/i18n';
 import drassana from '../assets/drassana.png';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
-import { useTheme } from '@mui/material/styles';
+import { Theme, useTheme } from '@mui/material/styles';
 import { ROLE_ADMIN } from './UserProvider.tsx';
 
 export type MenuEntryWithResource = MenuEntry & {
@@ -169,6 +169,57 @@ const useI18n = () => {
     }
 }
 
+type MenuColorSet = {
+    background: string;
+    textPrimary: string;
+    textSecondary: string;
+    divider: string;
+    accent: string;
+    selectedBackground: string;
+    hoverBackground: string;
+};
+
+const getMenuColorSet = (
+    theme: Theme,
+    appearance: 'theme' | 'inverse' | 'footer',
+): MenuColorSet | undefined => {
+    // `theme` no sobreescriu colors: el menú reutilitza directament la paleta activa de MUI.
+    if (appearance === 'footer') {
+        return {
+            background: '#5F5D5D',
+            textPrimary: '#F6F6F6',
+            textSecondary: '#E5E5E5',
+            divider: '#807D7D',
+            accent: '#FFFFFF',
+            selectedBackground: 'rgba(255, 255, 255, 0.12)',
+            hoverBackground: 'rgba(255, 255, 255, 0.08)',
+        };
+    }
+    if (appearance !== 'inverse') {
+        return undefined;
+    }
+    if (theme.palette.mode === 'dark') {
+        return {
+            background: '#FFFFFF',
+            textPrimary: '#1F2937',
+            textSecondary: '#4B5563',
+            divider: '#D1D5DB',
+            accent: '#1976D2',
+            selectedBackground: 'rgba(25, 118, 210, 0.12)',
+            hoverBackground: 'rgba(0, 0, 0, 0.04)',
+        };
+    }
+    return {
+        background: '#1E293B',
+        textPrimary: '#F8FAFC',
+        textSecondary: '#CBD5E1',
+        divider: '#475569',
+        accent: '#60A5FA',
+        selectedBackground: 'rgba(96, 165, 250, 0.18)',
+        hoverBackground: 'rgba(255, 255, 255, 0.08)',
+    };
+};
+
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {
         code,
@@ -188,6 +239,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
+    const theme = useTheme();
     const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
@@ -210,7 +262,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         }
     }
     const showAlarms = indexState?.links?.has('alarma');
-    return <MuiBaseApp
+    const baseAppElement = <MuiBaseApp
         code={code}
         headerTitle={title}
         headerVersion={version}
@@ -245,7 +297,6 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
         menuEntries={baseAppMenuEntries}
-        menuAppearance={menuAppearance}
         defaultMuiComponentProps={defaultMuiComponentProps}
         fixedContentExpandsToAvailableHeightEnabled
         marginsDisabled>
@@ -255,6 +306,45 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             {children}
         </CustomLocalizationProvider>
     </MuiBaseApp>;
+    const menuColorSet = getMenuColorSet(theme, menuAppearance ?? 'theme');
+    const menuColorSetSx = {
+        '& nav .MuiDrawer-root': {
+            '& .MuiPaper-root, & .MuiList-root': {
+                backgroundColor: menuColorSet?.background,
+                color: menuColorSet?.textPrimary,
+                '& > div .MuiBox-root': {
+                    backgroundColor: menuColorSet?.background,
+                    borderColor: menuColorSet?.divider,
+                },
+                '& > div > .MuiBox-root': {
+                    borderLeft: `1px solid ${menuColorSet?.divider}`,
+                },
+                '& p': {
+                    color: menuColorSet?.textPrimary,
+                },
+                '& h6': {
+                    color: menuColorSet?.accent,
+                },
+            },
+            '& .menu-item-icon': {
+                color: menuColorSet?.textSecondary,
+            },
+            '& .MuiListItemButton-root': {
+                '&.Mui-selected': {
+                    backgroundColor: menuColorSet?.selectedBackground,
+                },
+                '&.Mui-selected:hover': {
+                    backgroundColor: menuColorSet?.selectedBackground,
+                },
+                '&:hover': {
+                    backgroundColor: menuColorSet?.hoverBackground,
+                },
+            },
+        },
+    };
+    return (
+        <Box sx={menuColorSet ? menuColorSetSx : undefined}>{baseAppElement}</Box>
+    );
 }
 
 export default BaseApp;
