@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { DialogButton } from '../../BaseAppContext';
 import { ResourceType } from '../../ResourceApiContext';
-import { useCloseDialogButtons, useFormDialogButtons } from '../../AppButtons';
+import { useFormDialogButtons } from '../../AppButtons';
 import { FormI18nKeys } from '../../form/Form';
 import { FormApi } from '../../form/FormContext';
 import Dialog, { DialogProps } from '../Dialog';
@@ -21,7 +21,6 @@ type FormDialogProps = DialogProps & {
     formComponentProps?: any;
     formI18nKeys?: FormI18nKeys;
     noForm?: boolean;
-    onSaveActionPresentChange?: (isPresent: boolean) => void;
 };
 
 export type FormDialogSubmitFn = (id: any, data?: any) => Promise<React.ReactElement | undefined>;
@@ -30,6 +29,7 @@ export type FormDialogShowArgs = {
     additionalData?: any;
     initOnChangeRequest?: boolean;
     formContent?: React.ReactNode;
+    dialogButtons?: DialogButton[];
     dialogComponentProps?: any;
     formComponentProps?: any;
 };
@@ -78,8 +78,6 @@ export const useFormDialog: UseFormDialogFn = (
 ) => {
     const formApiRef = React.useRef<FormApi | any>({});
     const formDialogButtons = useFormDialogButtons();
-    const closeDialogButtons = useCloseDialogButtons();
-    const hasCustomDialogButtons = dialogButtons != null;
     const [open, setOpen] = React.useState<boolean>(false);
     const [title, setTitle] = React.useState<string | null>();
     const [id, setId] = React.useState<any>();
@@ -101,7 +99,9 @@ export const useFormDialog: UseFormDialogFn = (
     const [submitReturnedContent, setSubmitReturnedContent] = React.useState<
         React.ReactNode | undefined
     >();
-    const [isSaveActionPresent, setIsSaveActionPresent] = React.useState(true);
+    const [buttons, setButtons] = React.useState<DialogButton[]>(
+        dialogButtons ?? formDialogButtons
+    );
     const [loading, setLoading] = React.useState<boolean>();
     const buttonCallback = (value: any) => {
         if (value) {
@@ -158,6 +158,7 @@ export const useFormDialog: UseFormDialogFn = (
         setFormContent(args?.formContent ?? defaultFormContent);
         setAdditionalData(args?.additionalData ?? null);
         setInitOnChangeRequest(args?.initOnChangeRequest ?? initOnChangeRequestProp);
+        setButtons(args?.dialogButtons ?? dialogButtons ?? formDialogButtons);
         setDialogComponentProps(
             args?.dialogComponentProps != null
                 ? { ...defaultDialogComponentProps, ...args?.dialogComponentProps }
@@ -177,8 +178,6 @@ export const useFormDialog: UseFormDialogFn = (
         });
     };
     // Deshabilita els botons si s'està en estat loading
-    const buttons =
-        hasCustomDialogButtons || isSaveActionPresent ? dialogButtons ?? formDialogButtons : closeDialogButtons;
     const processedButtons = loading
         ? buttons.map((b) => ({
               ...b,
@@ -210,7 +209,6 @@ export const useFormDialog: UseFormDialogFn = (
             }}
             formI18nKeys={formI18nKeys}
             noForm={submitReturnedContent != null}
-            onSaveActionPresentChange={setIsSaveActionPresent}
             closeIcon={closeIcon}>
             {loading
                 ? (loadingComponent ?? <FormDialogLoading />)
@@ -233,7 +231,6 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
         formComponentProps,
         formI18nKeys,
         noForm,
-        onSaveActionPresentChange,
         children,
         ...otherProps
     } = props;
@@ -253,7 +250,6 @@ export const FormDialog: React.FC<FormDialogProps> = (props) => {
                     initOnChangeRequest={initOnChangeRequest}
                     i18nKeys={formI18nKeys}
                     apiRef={apiRef}
-                    onSaveActionPresentChange={onSaveActionPresentChange}
                     hiddenToolbar>
                     {children}
                 </MuiForm>

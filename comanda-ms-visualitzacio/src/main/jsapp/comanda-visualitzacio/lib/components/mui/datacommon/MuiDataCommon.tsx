@@ -3,7 +3,7 @@ import { useResourceApiService, ResourceApiFindCommonArgs } from '../../Resource
 import { ResourceType, ExportFileType } from '../../ResourceApiContext';
 import { FormI18nKeys } from '../../form/Form';
 import { useBaseAppContext, DialogButton } from '../../BaseAppContext';
-import { useConfirmDialogButtons } from '../../AppButtons';
+import { useConfirmDialogButtons, useCloseDialogButtons } from '../../AppButtons';
 import { toToolbarIcon } from '../ToolbarIcon';
 import DataFormDialog, { DataFormDialogApi } from './DataFormDialog';
 
@@ -257,6 +257,7 @@ export const useDataCommonEditable = (
     const { t, temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>(undefined);
     const confirmDialogButtons = useConfirmDialogButtons();
+    const closeDialogButtons = useCloseDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
     const isInlineEditCreate = inlineEditActive || inlineCreateEditActive;
     const isInlineEditUpdate = inlineEditActive || inlineUpdateEditActive;
@@ -291,9 +292,11 @@ export const useDataCommonEditable = (
                     : formAdditionalData),
                 ...additionalData,
             };
-            const noUpdateLinkTitle = !row?._actions['update'] ? t('datacommon.details.label') : undefined;
+            const hasUpdateAction = row?._actions['update'] != null;
+            const noUpdateLinkTitle = !hasUpdateAction ? t('datacommon.details.label') : undefined;
+            const noUpdateDialogButtons = !hasUpdateAction ? closeDialogButtons : undefined;
             dataDialogPopupApiRef.current
-                ?.show(id, processedAdditionalData, noUpdateLinkTitle)
+                ?.show(id, processedAdditionalData, noUpdateLinkTitle, noUpdateDialogButtons)
                 .then((data) => {
                     onUpdate?.(data);
                     refresh?.();
@@ -433,7 +436,8 @@ export const useDataCommonEditable = (
             rowLink: 'delete',
             clickTriggerDelete: true,
         });
-    isPopupEditUpdate && !rowDetailLink &&
+    isPopupEditUpdate &&
+        !rowDetailLink &&
         rowEditActions.push({
             label: t('datacommon.details.label'),
             rowLink: '!update',

@@ -99,8 +99,6 @@ export type FormProps = React.PropsWithChildren & {
     i18nKeys?: FormI18nKeys;
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
     debug?: true;
-    /** Event que es llença quan canvia la disponibilitat de l'acció de guardar */
-    onSaveActionPresentChange?: (isPresent: boolean) => void;
 };
 
 export type FormI18nKeys = {
@@ -242,7 +240,6 @@ export const Form: React.FC<FormProps> = (props) => {
         formBlockerDisabled,
         i18nKeys,
         debug = false,
-        onSaveActionPresentChange,
         children,
     } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
@@ -662,9 +659,6 @@ export const Form: React.FC<FormProps> = (props) => {
               }
           }
         : undefined;
-    React.useEffect(() => {
-        onSaveActionPresentChange?.(isSaveActionPresent);
-    }, [isSaveActionPresent, onSaveActionPresentChange]);
     React.useEffect(() => {
         if (apiCurrentError) {
             setIsLoading(false);

@@ -240,7 +240,7 @@ const AppsEntorns: React.FC = () => {
         },
         gestorReadOnly ? {
             label: t($ => $.components.details),
-            icon: 'visibility',
+            icon: 'info',
             clickShowUpdateDialog: true,
         } : null,
         {
@@ -457,7 +457,7 @@ const Apps: React.FC = () => {
         },
         gestorReadOnly ? {
             label: t($ => $.components.details),
-            icon: 'visibility',
+            icon: 'info',
             onClick: (id: any) => navigate(`form/${id}`),
         } : null,
         {
