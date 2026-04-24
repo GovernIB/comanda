@@ -256,6 +256,17 @@ vi.mock('../../types/salut.model.tsx', () => ({
     }
 }));
 
+const MOCK_SALUT_ESTAT_ENUM = {
+    UP: 'UP',
+    WARN: 'WARN',
+    DEGRADED: 'DEGRADED',
+    DOWN: 'DOWN',
+    MAINTENANCE: 'MAINTENANCE',
+    UNKNOWN: 'UNKNOWN',
+};
+
+const expectedEstats = Object.values(MOCK_SALUT_ESTAT_ENUM);
+
 const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
     loading: false,
     entornApp: {
@@ -647,4 +658,128 @@ describe('SalutAppInfo', () => {
         expect(screen.getByRole('alert')).toBeInTheDocument();
         expect(screen.getByText('format:2026-03-15T10:30:00')).toBeInTheDocument();
     });
+
+    it('Integracions_elFiltreMostraTotsElsValorsDeSalutEstatEnum', () => {
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+        fireEvent.click(screen.getByRole('tab', { name: /Integracions/i }));
+        const filterLabel = screen.getByLabelText('Filtrar per estat');
+        fireEvent.mouseDown(filterLabel);
+        expectedEstats.forEach((estat) => {
+            expect(screen.getByRole('option', { name: estat })).toBeInTheDocument();
+        });
+        fireEvent.keyDown(filterLabel, { key: 'Escape' });
+    });
+
+    it('Subsistemes_elFiltreMostraTotsElsValorsDeSalutEstatEnum', () => {
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+        fireEvent.click(screen.getByRole('tab', { name: /Estat actual/i }));
+        const filterLabel = screen.getByLabelText('Filtrar per estat');
+        fireEvent.mouseDown(filterLabel);
+        expectedEstats.forEach((estat) => {
+            expect(screen.getByRole('option', { name: estat })).toBeInTheDocument();
+        });
+        fireEvent.keyDown(filterLabel, { key: 'Escape' });
+    });
+
+    it('Integracions_seleccionarEstatsFiltraCorrectamentLesFiles', () => {
+        const appData = createAppInfoData({
+            salutCurrentApp: {
+                ...createAppInfoData().salutCurrentApp,
+                integracions: [
+                    {
+                        id: 1,
+                        codi: 'INT-UP',
+                        nom: 'Integració UP',
+                        estat: 'UP',
+                        totalOk: 10,
+                        totalError: 0,
+                        totalTempsMig: 20,
+                        peticionsOkUltimPeriode: 5,
+                        peticionsErrorUltimPeriode: 0,
+                        tempsMigUltimPeriode: 15,
+                    },
+                    {
+                        id: 2,
+                        codi: 'INT-DOWN',
+                        nom: 'Integració DOWN',
+                        estat: 'DOWN',
+                        totalOk: 0,
+                        totalError: 5,
+                        totalTempsMig: 0,
+                        peticionsOkUltimPeriode: 0,
+                        peticionsErrorUltimPeriode: 2,
+                        tempsMigUltimPeriode: 0,
+                    },
+                ],
+            },
+        });
+        render(<SalutAppInfo ready appInfoData={appData as any} />);
+        fireEvent.click(screen.getByRole('tab', { name: /Integracions/i }));
+        expect(screen.getByText('Integració UP')).toBeInTheDocument();
+        expect(screen.getByText('Integració DOWN')).toBeInTheDocument();
+        const filterLabel = screen.getByLabelText('Filtrar per estat');
+        fireEvent.mouseDown(filterLabel);
+        fireEvent.click(screen.getByRole('option', { name: 'UP' }));
+        fireEvent.keyDown(filterLabel, { key: 'Escape' });
+        expect(screen.getByText('Integració UP')).toBeInTheDocument();
+        expect(screen.queryByText('Integració DOWN')).not.toBeInTheDocument();
+    });
+
+    it('Subsistemes_seleccionarEstatsFiltraCorrectamentLesFiles', () => {
+        const appData = createAppInfoData({
+            salutCurrentApp: {
+                ...createAppInfoData().salutCurrentApp,
+                subsistemes: [
+                    {
+                        codi: 'SUB-UP',
+                        nom: 'Subsistema UP',
+                        estat: 'UP',
+                        totalOk: 10,
+                        totalError: 0,
+                        totalTempsMig: 20,
+                        peticionsOkUltimPeriode: 5,
+                        peticionsErrorUltimPeriode: 0,
+                        tempsMigUltimPeriode: 15,
+                    },
+                    {
+                        codi: 'SUB-WARN',
+                        nom: 'Subsistema WARN',
+                        estat: 'WARN',
+                        totalOk: 8,
+                        totalError: 2,
+                        totalTempsMig: 25,
+                        peticionsOkUltimPeriode: 4,
+                        peticionsErrorUltimPeriode: 1,
+                        tempsMigUltimPeriode: 22,
+                    },
+                ],
+            },
+        });
+        render(<SalutAppInfo ready appInfoData={appData as any} />);
+        fireEvent.click(screen.getByRole('tab', { name: /Estat actual/i }));
+        expect(screen.getByText('Subsistema UP')).toBeInTheDocument();
+        expect(screen.getByText('Subsistema WARN')).toBeInTheDocument();
+        const filterLabel = screen.getByLabelText('Filtrar per estat');
+        fireEvent.mouseDown(filterLabel);
+        fireEvent.click(screen.getByRole('option', { name: 'WARN' }));
+        fireEvent.keyDown(filterLabel, { key: 'Escape' });
+        expect(screen.queryByText('Subsistema UP')).not.toBeInTheDocument();
+        expect(screen.getByText('Subsistema WARN')).toBeInTheDocument();
+    });
+
+    it('Integracions_ALL_ESTATS_derivatCorrectamentDeSalutEstatEnum', () => {
+        const { SalutEstatEnum } = require('../../types/salut.model.tsx');
+        const expectedValues = Object.values(SalutEstatEnum) as string[];
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+        fireEvent.click(screen.getByRole('tab', { name: /Integracions/i }));
+        const filterLabel = screen.getByLabelText('Filtrar per estat');
+        fireEvent.mouseDown(filterLabel);
+        const options = screen.getAllByRole('option');
+        expect(options).toHaveLength(expectedValues.length);
+        expectedValues.forEach((value: string) => {
+            expect(screen.getByRole('option', { name: value })).toBeInTheDocument();
+        });
+        fireEvent.keyDown(filterLabel, { key: 'Escape' });
+    });
+
 });

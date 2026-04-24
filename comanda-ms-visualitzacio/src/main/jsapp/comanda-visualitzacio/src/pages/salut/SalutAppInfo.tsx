@@ -326,16 +326,19 @@ const IntegracioRow: React.FC<{
     );
 };
 
-const Integracions: React.FC<{
+type IntegracionsProps = {
     salutCurrentApp: SalutModel;
     integracionsExpandState: string[];
     toggleIntegracioExpand: (id: string) => void;
-}> = props => {
-    const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand } = props;
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
+};
+
+const Integracions: React.FC<IntegracionsProps> = props => {
+    const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand, selectedEstats, onSelectedEstatsChange } = props;
     const { t } = useTranslation();
     const { tTitle } = useSalutEstatTranslation();
     const integracions = salutCurrentApp?.integracions;
-    const [selectedEstats, setSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
     const ALL_ESTATS = Object.values(SalutEstatEnum);//Si no se respeta el orden, hay que crear un array ordenado.
     /** Obtiene los IDs de todos los ancestros (campo padre) */
     const getAncestorIds = (integracioId: number): number[] => {
@@ -376,9 +379,6 @@ const Integracions: React.FC<{
             return matchesFilter || hasMatchingChildren;
         });
     };
-    const handleEstatChange = (event: SelectChangeEvent<SalutEstatEnum[]>) => {
-        setSelectedEstats(event.target.value as SalutEstatEnum[]);
-    };
     const isFiltered = selectedEstats.length > 0;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
@@ -397,7 +397,7 @@ const Integracions: React.FC<{
                                 id="estats-integracions-select"
                                 multiple
                                 value={selectedEstats}
-                                onChange={handleEstatChange}
+                                onChange={onSelectedEstatsChange}
                                 input={<OutlinedInput label={t($ => $.page.salut.integracions.filter.estat)} />}
                                 renderValue={(selected: SalutEstatEnum[]) => selected.map(v => tTitle(v)).join(', ')}
                             >
@@ -461,19 +461,21 @@ const Integracions: React.FC<{
     );
 };
 
-const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+type SubsistemesProps = {
+    salutCurrentApp: SalutModel;
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
+};
+
+const Subsistemes: React.FC<SubsistemesProps> = ({ salutCurrentApp, selectedEstats, onSelectedEstatsChange }) => {
     const { t } = useTranslation();
     const { tTitle } = useSalutEstatTranslation();
     const subsistemes = salutCurrentApp.subsistemes;
-    const [selectedEstats, setSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
     const ALL_ESTATS = Object.values(SalutEstatEnum);//Si no se respeta el orden, hay que crear un array ordenado.
     const filteredSubsistemes = React.useMemo(() => {
         if (selectedEstats.length === 0) return subsistemes || [];
         return (subsistemes || []).filter(s => selectedEstats.includes(s.estat as SalutEstatEnum));
     }, [subsistemes, selectedEstats]);
-    const handleEstatChange = (event: SelectChangeEvent<SalutEstatEnum[]>) => {
-        setSelectedEstats(event.target.value as SalutEstatEnum[]);
-    };
     const isFiltered = selectedEstats.length > 0;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
@@ -492,7 +494,7 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
                                 id="estats-select"
                                 multiple
                                 value={selectedEstats}
-                                onChange={handleEstatChange}
+                                onChange={onSelectedEstatsChange}
                                 input={<OutlinedInput label={t($ => $.page.salut.subsistemes.filter.estat)} />}
                                 renderValue={(selected: SalutEstatEnum[]) => selected.map(v => tTitle(v)).join(', ')}
                             >
@@ -851,7 +853,7 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
     return <Card variant="outlined">
         <CardHeader title={t($ => $.page.salut.memoria.title)} />
         <CardContent>
-            <Grid container sx={{disabled: "flex", alignItems: 'center', justifyContent: 'center'}}>
+            <Grid container sx={{display: "flex", alignItems: 'center', justifyContent: 'center'}}>
                 <Grid size={1} textAlign={'center'}><Icon>desktop_windows</Icon></Grid>
                 <Grid size={9}>
                     <LinearProgress variant="determinate" color={'success'} value={memoriaEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
@@ -869,7 +871,7 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
                     />
                 </Grid>
             </Grid>
-            <Grid container sx={{disabled: "flex", alignItems: 'center', justifyContent: 'center'}}>
+            <Grid container sx={{display: "flex", alignItems: 'center', justifyContent: 'center'}}>
                 <Grid size={1} textAlign={'center'}><Icon>folder</Icon></Grid>
                 <Grid size={9}>
                     <LinearProgress variant="determinate" color={'success'} value={discEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
@@ -996,7 +998,15 @@ const TabEntorn: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp 
     );
 };
 
-const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
+type TabEstatActualOtherProps = {
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
+};
+
+const TabEstatActual: React.FC<SalutAppInfoTabProps & { otherProps: TabEstatActualOtherProps }> = ({ 
+        salutCurrentApp, 
+        otherProps: { selectedEstats, onSelectedEstatsChange } 
+    }) => {
     if (salutCurrentApp.peticioError) {
         return (
             <Grid>
@@ -1015,7 +1025,10 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
                 <MeoriaInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
-                <Subsistemes salutCurrentApp={salutCurrentApp} />
+                <Subsistemes 
+                    salutCurrentApp={salutCurrentApp}
+                    selectedEstats={selectedEstats}
+                    onSelectedEstatsChange={onSelectedEstatsChange} />
             </Grid>
             {/*<Grid size={{ sm: 12, lg: 12 }}>*/}
             {/*    <EstatInfo salutCurrentApp={salutCurrentApp} />*/}
@@ -1027,11 +1040,13 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
 type TabIntegracionsOtherProps = {
     integracionsExpandState: string[];
     toggleIntegracioExpand: (id: string) => void;
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
 };
 
 const TabIntegracions: React.FC<
     SalutAppInfoTabProps & { otherProps: TabIntegracionsOtherProps }
-> = ({ salutCurrentApp, otherProps: { integracionsExpandState, toggleIntegracioExpand } }) => {
+> = ({ salutCurrentApp, otherProps:{ integracionsExpandState, toggleIntegracioExpand, selectedEstats, onSelectedEstatsChange} }) => {
     if (salutCurrentApp.peticioError) {
         return (
             <Grid>
@@ -1050,6 +1065,8 @@ const TabIntegracions: React.FC<
                 salutCurrentApp={salutCurrentApp}
                 toggleIntegracioExpand={toggleIntegracioExpand}
                 integracionsExpandState={integracionsExpandState}
+                selectedEstats={selectedEstats}
+                onSelectedEstatsChange={onSelectedEstatsChange}
             />
         </Box>
     );
@@ -1206,6 +1223,8 @@ const SalutAppInfo: React.FC<{
     const getColorBySubsistema = useGetColorBySubsistema();
     const getColorByIntegracio = useGetColorByIntegracio();
     const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
+    const [integracionsSelectedEstats, setIntegracionsSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
+    const [subsistemesSelectedEstats, setSubsistemesSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
     const [integracionsExpandState, setIntegracionsExpandState] = React.useState<string[]>([]);
     const toggleIntegracioExpand = (id: string) => {
         if (integracionsExpandState.includes(id))
@@ -1324,7 +1343,11 @@ const SalutAppInfo: React.FC<{
                         entornApp={entornApp}
                         dataLoaded={dataLoaded}
                         childrenTabComponent={TabEstatActual}
-                        childrenTabOtherProps={{}}
+                        childrenTabOtherProps={{
+                            selectedEstats: subsistemesSelectedEstats,
+                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) => 
+                                setSubsistemesSelectedEstats(e.target.value as SalutEstatEnum[]),
+                        }}
                     />
                 )}
                 {selectedTab === 'integracions' && (
@@ -1336,6 +1359,9 @@ const SalutAppInfo: React.FC<{
                         childrenTabOtherProps={{
                             integracionsExpandState: integracionsExpandState,
                             toggleIntegracioExpand: toggleIntegracioExpand,
+                            selectedEstats: integracionsSelectedEstats,
+                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) => 
+                                setIntegracionsSelectedEstats(e.target.value as SalutEstatEnum[]),
                         }}
                     />
                 )}
