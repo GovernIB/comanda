@@ -512,10 +512,10 @@ const translationCa = {
             },
             action: {
                 clear: {
-                    label: "Marcar com llegida",
+                    label: "Marcar com a llegida",
                 },
                 reactivate: {
-                    label: "Reactivar",
+                    label: "Marcar com a no llegida",
                 },
             },
             filter: {

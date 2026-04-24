@@ -515,7 +515,7 @@ const translationEn: translationResourcesType = {
                     label: "Mark as read",
                 },
                 reactivate: {
-                    label: "Reactivate",
+                    label: "Mark as unread",
                 },
             },
             filter: {

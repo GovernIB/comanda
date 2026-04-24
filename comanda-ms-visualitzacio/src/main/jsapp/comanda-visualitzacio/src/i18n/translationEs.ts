@@ -515,7 +515,7 @@ const translationEs: translationResourcesType = {
                     label: "Marcar como leída",
                 },
                 reactivate: {
-                    label: "Reactivar",
+                    label: "Marcar como no leída",
                 },
             },
             filter: {
