@@ -1287,6 +1287,7 @@ const SalutAppInfo: React.FC<{
                     mx: 2,
                     borderBottom: 1,
                     borderColor: 'divider',
+                    flexShrink: 0,
                 }}
             >
                 {tabs.map(tab => (
@@ -1296,6 +1297,9 @@ const SalutAppInfo: React.FC<{
                         label={tab.label}
                         icon={tab.icon}
                         disabled={tab.disabled}
+                        sx={{
+                            minHeight: 56,
+                        }}
                     />
                 ))}
             </Tabs>
