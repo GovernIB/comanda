@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Footer from './Footer';
+import { Footer } from './ComandaFooter';
 
 const mocks = vi.hoisted(() => ({
     toolbarBackgroundStyleMock: vi.fn(() => ({ backgroundImage: 'url(test.png)' })),

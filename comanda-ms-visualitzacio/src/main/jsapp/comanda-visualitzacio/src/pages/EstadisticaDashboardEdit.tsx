@@ -57,6 +57,7 @@ import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
 import PageTitle from '../components/PageTitle.tsx';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
+import { FooterHeightPlaceholder } from '../components/ComandaFooter.tsx';
 
 type EntornAppFilterContentProps = {
     initialData?: {
@@ -737,6 +738,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             refresh={forceRefreshDashboardWidgets}
                         />
                     )}
+                    <FooterHeightPlaceholder />
                 </BasePage>
             )}
             <AddWidgetDialog

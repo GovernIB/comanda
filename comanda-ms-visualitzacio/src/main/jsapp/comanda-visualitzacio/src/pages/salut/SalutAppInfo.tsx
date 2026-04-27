@@ -55,6 +55,7 @@ import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import LogsViewer from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
+import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -669,7 +670,7 @@ const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }
             </CardContent>
         </Card>
         {contexts?.length && (
-        <Card variant="outlined" sx={{ mt: 1 }}>
+        <Card variant="outlined" sx={{ mt: 2 }}>
             <CardContent>
                 <Typography gutterBottom variant="h5" component="div">
                     {t($ => $.page.salut.manuals.title)}
@@ -975,7 +976,7 @@ const AlertUltimaDataActiva: React.FC<AlertUltimaDataActivaProps> = ({ salutCurr
 
 const TabEntorn: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp }) => {
     return (
-        <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid container spacing={2}>
             <Grid size={{ sm: 12, lg: 12 }}>
                 <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
             </Grid>
@@ -1003,9 +1004,9 @@ type TabEstatActualOtherProps = {
     onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
 };
 
-const TabEstatActual: React.FC<SalutAppInfoTabProps & { otherProps: TabEstatActualOtherProps }> = ({ 
-        salutCurrentApp, 
-        otherProps: { selectedEstats, onSelectedEstatsChange } 
+const TabEstatActual: React.FC<SalutAppInfoTabProps & { otherProps: TabEstatActualOtherProps }> = ({
+        salutCurrentApp,
+        otherProps: { selectedEstats, onSelectedEstatsChange }
     }) => {
     if (salutCurrentApp.peticioError) {
         return (
@@ -1025,7 +1026,7 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps & { otherProps: TabEstatActu
                 <MeoriaInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
-                <Subsistemes 
+                <Subsistemes
                     salutCurrentApp={salutCurrentApp}
                     selectedEstats={selectedEstats}
                     onSelectedEstatsChange={onSelectedEstatsChange} />
@@ -1170,11 +1171,15 @@ const TabLogs = ({ entornApp }: { entornApp: EntornAppModel | null }) => {
     return <LogsViewer entornAppId={entornApp.id} />;
 };
 
+const tabContentPaddingAmount = 2;
+
 /**
  * Component wrapper per als tabs que depenen del valor de salutCurrentApp
  * Accepta una sèrie de props, gestiona els casos d'error i renderitza el component childrenTabComponent
  * amb les props validades per a la interfície SalutAppInfoTabProps i a més passa sense tractar
  * les props especificades al genèric T.
+ * També accepta overflowingContent per a ajustar la altura a l'espai ocupat pel footer i assegurar
+ * que el padding del tabContent s'aplica correctament.
  */
 function TabSalutCurrentApp<T>({
     salutCurrentApp,
@@ -1182,12 +1187,14 @@ function TabSalutCurrentApp<T>({
     dataLoaded,
     childrenTabComponent: ChildrenTabComponent,
     childrenTabOtherProps,
+    overflowingContent,
 }: {
     salutCurrentApp: SalutModel | null;
     entornApp: EntornAppModel | null;
     dataLoaded: boolean;
     childrenTabComponent: React.FC<SalutAppInfoTabProps & { otherProps: T }>;
     childrenTabOtherProps: T;
+    overflowingContent?: boolean;
 }) {
     if (dataLoaded && salutCurrentApp == null) return <WarningNoInfo />;
     if (salutCurrentApp == null || entornApp == null)
@@ -1205,12 +1212,20 @@ function TabSalutCurrentApp<T>({
             </Box>
         );
     return (
-        <ChildrenTabComponent
-            salutCurrentApp={salutCurrentApp}
-            entornApp={entornApp}
-            dataLoaded={dataLoaded}
-            otherProps={childrenTabOtherProps}
-        />
+        <>
+            <ChildrenTabComponent
+                salutCurrentApp={salutCurrentApp}
+                entornApp={entornApp}
+                dataLoaded={dataLoaded}
+                otherProps={childrenTabOtherProps}
+            />
+            {overflowingContent && (
+                <>
+                    <Box sx={{ pb: tabContentPaddingAmount }} />
+                    <FooterHeightPlaceholder />
+                </>
+            )}
+        </>
     );
 }
 
@@ -1324,7 +1339,7 @@ const SalutAppInfo: React.FC<{
             </Tabs>
             <Box
                 sx={{
-                    p: 2,
+                    p: tabContentPaddingAmount,
                     height: '100%',
                 }}
             >
@@ -1335,6 +1350,7 @@ const SalutAppInfo: React.FC<{
                         dataLoaded={dataLoaded}
                         childrenTabComponent={TabEntorn}
                         childrenTabOtherProps={{}}
+                        overflowingContent
                     />
                 )}
                 {selectedTab === 'estatActual' && (
@@ -1345,9 +1361,10 @@ const SalutAppInfo: React.FC<{
                         childrenTabComponent={TabEstatActual}
                         childrenTabOtherProps={{
                             selectedEstats: subsistemesSelectedEstats,
-                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) => 
+                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) =>
                                 setSubsistemesSelectedEstats(e.target.value as SalutEstatEnum[]),
                         }}
+                        overflowingContent
                     />
                 )}
                 {selectedTab === 'integracions' && (
@@ -1360,9 +1377,10 @@ const SalutAppInfo: React.FC<{
                             integracionsExpandState: integracionsExpandState,
                             toggleIntegracioExpand: toggleIntegracioExpand,
                             selectedEstats: integracionsSelectedEstats,
-                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) => 
+                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) =>
                                 setIntegracionsSelectedEstats(e.target.value as SalutEstatEnum[]),
                         }}
+                        overflowingContent
                     />
                 )}
                 {selectedTab === 'historic' && (
@@ -1377,6 +1395,7 @@ const SalutAppInfo: React.FC<{
                             grupsDates,
                             latencies,
                         }}
+                        overflowingContent
                     />
                 )}
                 {selectedTab === 'historicEstat' && (
@@ -1386,6 +1405,7 @@ const SalutAppInfo: React.FC<{
                         dataLoaded={dataLoaded}
                         childrenTabComponent={TabHistoricEstat}
                         childrenTabOtherProps={{}}
+                        overflowingContent
                     />
                 )}
                 {selectedTab === 'logs' && <TabLogs entornApp={entornApp} />}

@@ -6,7 +6,7 @@ import { toolbarBackgroundStyle } from 'reactlib';
 import { Link } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
+import drassana from '../assets/drassana.png';
 
 type AppFootProps = {
     title?: string;
@@ -127,4 +127,32 @@ export const Footer: React.FC<AppFootProps> = (props) => {
     </Toolbar>;
 }
 
-export default Footer;
+export const comandaFooterHeight = 36;
+
+/**
+ * FooterHeightPlaceholder reserva un espacio vertical equivalente a la altura del footer
+ * para que los elementos del layout se posicionen correctamente.
+ *
+ * Debe usarse en los elementos que provocan overflow en el body para evitar que el footer
+ * oculte parte del contenido.
+ *
+ * No es necesario usarlo en elementos que no provocan overflow en el body, como pantallas que
+ * ocupan el 100% del viewport y no causan overflow.
+ */
+export const FooterHeightPlaceholder = () => {
+    return <div style={{ height: `${comandaFooterHeight}px`, flexShrink: 0, width: '100%' }} />
+}
+
+const ComandaFooter = () => {
+    return (
+        <>
+            <FooterHeightPlaceholder></FooterHeightPlaceholder><Footer
+            title="COMANDA"
+            backgroundColor="#5F5D5D"
+            logos={[drassana]}
+            style={{ position: 'fixed', height: `${comandaFooterHeight}px`, bottom: 0, width: '100%' }}
+        /></>
+    );
+};
+
+export default ComandaFooter;

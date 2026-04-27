@@ -20,18 +20,17 @@ import {
 } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
 import Alarms, { AlarmsDialog } from './Alarms';
-import Footer from './Footer';
 import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
 import HeaderLanguageSelector from './HeaderLanguageSelector';
 import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog';
 import RoleSelector from './RoleSelector';
 import i18n from '../i18n/i18n';
-import drassana from '../assets/drassana.png';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
 import { Theme, useTheme } from '@mui/material/styles';
 import { ROLE_ADMIN } from './UserProvider.tsx';
+import ComandaFooter, { comandaFooterHeight } from './ComandaFooter.tsx';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -130,22 +129,6 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
         ]
         : [];
 }
-
-const footerHeight = 36;
-const generateFooter = () => {
-    return (
-        <>
-            <div style={{ height: `${footerHeight}px`, flexShrink: 0, width: '100%' }} />
-            <Footer
-                title="COMANDA"
-                backgroundColor="#5F5D5D"
-                logos={[drassana]}
-                style={{ position: 'fixed', height: `${footerHeight}px`, bottom: 0, width: '100%' }}
-                // style={{display: 'flex', flexDirection: 'row', flexShrink: 0, position: 'sticky', height: '36px', bottom: 0, width: '100%'}}
-            />
-        </>
-    );
-};
 
 const useI18nUseTranslation = (ns?: string) => {
     // @ts-expect-error baseReact defineix el namespace com a string, però comanda només suporta actualment 'translations'
@@ -284,8 +267,8 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             <RoleSelector key="roleSelector" />
         ]}
         headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
-        footer={generateFooter()}
-        footerHeight={footerHeight}
+        footer={<ComandaFooter />}
+        footerHeight={comandaFooterHeight}
         persistentLanguage
         i18nUseTranslation={i18nUseTranslation}
         i18nCurrentLanguage={i18nCurrentLanguage}
