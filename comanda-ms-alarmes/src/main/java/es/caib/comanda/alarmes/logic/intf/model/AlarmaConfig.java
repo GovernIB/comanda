@@ -70,6 +70,7 @@ public class AlarmaConfig extends BaseResource<Long> {
 	private boolean admin;
     @ValidAdminValue
 	private boolean correuGeneric;
+    private boolean notificacioFinalitzada = true;
     @Transient
     private AlarmaTipusUsuari tipusUsuariAlarma;
 

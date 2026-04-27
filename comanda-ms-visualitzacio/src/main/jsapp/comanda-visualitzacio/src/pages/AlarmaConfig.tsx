@@ -232,13 +232,18 @@ export const AlarmaConfigForm: React.FC<{
                     <Grid size={12}>
                         <FormField name="missatge" />
                     </Grid>
+                    <Grid size={6}>
+                        <FormField name="notificacioFinalitzada" />
+                    </Grid>
                     {isCurrentUserAdmin && (
-                        <><Grid size={6}>
-                            <FormField name="admin" />
-                        </Grid>
-                        <Grid size={6}>
-                            <FormField name="correuGeneric" />
-                        </Grid></>
+                        <>
+                            <Grid size={6}>
+                                <FormField name="correuGeneric" />
+                            </Grid>
+                            <Grid size={6}>
+                                <FormField name="admin" />
+                            </Grid>
+                        </>
                     )}
                     <Grid size={6}>
                         <FormControlLabel

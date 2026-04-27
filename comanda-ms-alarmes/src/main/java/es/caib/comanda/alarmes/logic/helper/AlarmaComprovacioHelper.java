@@ -234,6 +234,9 @@ public class AlarmaComprovacioHelper {
 			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(now);
 			clearRecoveryTracking(alarmaConfig);
             publishActiveAlarmsChangedEvent();
+            if (alarmaConfig.isNotificacioFinalitzada()) {
+                publishAlarmaMailEvent(alarmaAnteriorNoFinalitzada);
+            }
 		}
 	}
 

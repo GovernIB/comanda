@@ -50,6 +50,8 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	@Column(name = "periode_valor")
 	private BigDecimal periodeValor;
+    @Column(name = "notificacio_finalitzada")
+    private boolean notificacioFinalitzada = true;
 
 	@Builder
 	public AlarmaConfigEntity(AlarmaConfig alarmaConfig) {
