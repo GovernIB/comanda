@@ -12,6 +12,8 @@ import { Toolbar } from '../Toolbar';
  * Propietats del component MuiForm (també conté les propietats del component Form).
  */
 export type MuiFormProps = FormProps & {
+    /** Subtítol de la barra d'eines */
+    toolbarSubtitle?: string;
     /** Elements addicionals (amb la seva posició) per a la barra d'eines */
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     /** Indica si la barra d'eines està oculta */
@@ -33,6 +35,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
         id,
         title,
         resourceName,
+        toolbarSubtitle,
         toolbarElementsWithPositions,
         goBackLink,
         hiddenToolbar,
@@ -102,6 +105,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
             {!hiddenToolbar && (
                 <Toolbar
                     title={title ?? resourceName}
+                    subtitle={toolbarSubtitle}
                     elementsWithPositions={toolbarNodes}
                     upperToolbar
                     sx={{
@@ -129,6 +133,7 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
         id,
         title,
         resourceName,
+        toolbarSubtitle,
         toolbarElementsWithPositions,
         goBackLink,
         hiddenToolbar,
@@ -145,6 +150,7 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
                 id={id}
                 title={title}
                 resourceName={resourceName}
+                toolbarSubtitle={toolbarSubtitle}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 goBackLink={goBackLink}
                 hiddenToolbar={hiddenToolbar}

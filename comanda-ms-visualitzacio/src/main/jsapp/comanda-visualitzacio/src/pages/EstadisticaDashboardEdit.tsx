@@ -44,7 +44,6 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
-import CircularProgress from '@mui/material/CircularProgress';
 import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
 import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
 import AddIcon from '@mui/icons-material/Add';
@@ -56,6 +55,9 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
+import PageTitle from '../components/PageTitle.tsx';
+import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
+import { FooterHeightPlaceholder } from '../components/ComandaFooter.tsx';
 
 type EntornAppFilterContentProps = {
     initialData?: {
@@ -600,21 +602,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
     return (
         <>
+            <PageTitle title={t($ => $.page.dashboards.title)} />
             {titolFormDialogComponent}
             {contentDialogComponent}
-            {loading ? (
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 10,
-                    }}
-                >
-                    <CircularProgress />
-                </Box>
-            ) : null}
+            {loading ? <CenteredCircularProgress /> : null}
             {dashboard && (
                 <BasePage
                     toolbar={
@@ -747,6 +738,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             refresh={forceRefreshDashboardWidgets}
                         />
                     )}
+                    <FooterHeightPlaceholder />
                 </BasePage>
             )}
             <AddWidgetDialog

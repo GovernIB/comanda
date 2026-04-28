@@ -8,7 +8,6 @@ import { useOptionalAuthContext } from './AuthContext';
 import ResourceApiContext, {
     useResourceApiContext,
     OpenAnswerRequiredDialogFn,
-    ResourceApiUserSessionValuePair,
     ResourceType,
     ExportFileType,
 } from './ResourceApiContext';
@@ -40,6 +39,9 @@ type ResourceApiMethods = {
     fieldOptionsFields: (args: ResourceApiFieldArgs) => Promise<any[]>;
     fieldOptionsFind: (args: ResourceApiFieldOptionsFindArgs) => Promise<ResourceApiFindResponse>;
     fieldDownload: (id: any, args: ResourceApiFieldArgs) => Promise<ResourceApiBlobResponse>;
+    bulkPatch: (ids: any[], args: ResourceApiRequestArgs) => Promise<ResourceApiBulkResponse>;
+    bulkAction: (ids: any[], args: ResourceApiActionArgs) => Promise<ResourceApiBulkResponse>;
+    bulkDelete: (ids: any[], args?: ResourceApiRequestArgs) => Promise<ResourceApiBulkResponse>;
 };
 
 export type ResourceApiService = {
@@ -103,7 +105,14 @@ export type ResourceApiFindArgs = ResourceApiFindCommonArgs & {
 
 export type ResourceApiFindResponse = {
     rows: any[];
-    page: any;
+    page: ResourceApiFindResponsePage;
+};
+
+export type ResourceApiFindResponsePage = {
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
 };
 
 export type ResourceApiExportArgs = ResourceApiFindCommonArgs & {
@@ -114,6 +123,17 @@ export type ResourceApiExportArgs = ResourceApiFindCommonArgs & {
 export type ResourceApiBlobResponse = {
     blob: Blob;
     fileName: string;
+};
+
+export type ResourceApiBulkResponse = {
+    successCount: number;
+    errorCount: number;
+    items: {
+        id: any;
+        actionResult?: any;
+        error?: boolean;
+        errorMessage?: string;
+    }[];
 };
 
 export type ResourceApiArtifact = {
@@ -997,6 +1017,72 @@ const generateResourceApiMethods = (
         },
         [request]
     );
+    const bulkPatch = React.useCallback(
+        (ids: any[], args: ResourceApiRequestArgs): Promise<ResourceApiBulkResponse> => {
+            const requestArgs = {
+                ...args,
+                data: {
+                    ids,
+                    type: 'PATCH',
+                    params: args.data,
+                },
+            };
+            return new Promise((resolve, reject) => {
+                request('bulk', null, requestArgs)
+                    .then((state: State) => {
+                        resolve(state.data);
+                    })
+                    .catch((problem: Problem) => {
+                        reject(toResourceApiError(problem));
+                    });
+            });
+        },
+        [request]
+    );
+    const bulkAction = React.useCallback(
+        (ids: any[], args: ResourceApiActionArgs): Promise<ResourceApiBulkResponse> => {
+            const requestArgs = {
+                ...args,
+                data: {
+                    ids,
+                    type: 'ACTION',
+                    actionCode: args.code,
+                    params: args.data,
+                },
+            };
+            return new Promise((resolve, reject) => {
+                request('bulk', null, requestArgs)
+                    .then((state: State) => {
+                        resolve(state.data);
+                    })
+                    .catch((problem: Problem) => {
+                        reject(toResourceApiError(problem));
+                    });
+            });
+        },
+        [request]
+    );
+    const bulkDelete = React.useCallback(
+        (ids: any[], args?: ResourceApiRequestArgs): Promise<ResourceApiBulkResponse> => {
+            const requestArgs = {
+                ...args,
+                data: {
+                    ids,
+                    type: 'DELETE',
+                },
+            };
+            return new Promise((resolve, reject) => {
+                request('bulk', null, requestArgs)
+                    .then((state: State) => {
+                        resolve(state.data);
+                    })
+                    .catch((problem: Problem) => {
+                        reject(toResourceApiError(problem));
+                    });
+            });
+        },
+        [request]
+    );
     return {
         getOne,
         find,
@@ -1016,6 +1102,9 @@ const generateResourceApiMethods = (
         fieldOptionsFields,
         fieldOptionsFind,
         fieldDownload,
+        bulkPatch,
+        bulkAction,
+        bulkDelete,
     };
 };
 
@@ -1062,8 +1151,12 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
             }
         });
     const currentRefresh = (args?: ResourceApiRequestArgs) => {
-        indexState != null &&
-            resourceName != null &&
+        if (indexState != null && resourceName != null) {
+            setIsCurrentLoading(true);
+            setIsCurrentLoaded(false);
+            setCurrentState(undefined);
+            setCurrentFields(undefined);
+            setCurrentError(undefined);
             getPromiseFromStateLink(indexState, resourceName, args, true)
                 .then((state: State) => {
                     setCurrentState(state);
@@ -1079,18 +1172,13 @@ export const useResourceApiService = (resourceName?: string): ResourceApiService
                     setIsCurrentLoading(false);
                     !isCurrentLoaded && setIsCurrentLoaded(true);
                 });
+        }
     };
     React.useEffect(() => {
-        if (indexIsReady && indexState && !currentState) {
+        if (indexIsReady && indexState) {
             currentRefresh();
-        } else if (!indexIsReady && isCurrentLoaded) {
-            setIsCurrentLoading(true);
-            setIsCurrentLoaded(false);
-            setCurrentState(undefined);
-            setCurrentFields(undefined);
-            setCurrentError(undefined);
         }
-    }, [indexIsReady]);
+    }, [indexState]);
     React.useEffect(() => {
         if (currentError) {
             logConsole.error("Couldn't get API service '" + resourceName + "'", currentError);
@@ -1177,8 +1265,6 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
         defaultLanguage,
         currentLanguage: currentLanguageProp,
         onCurrentLanguageChange,
-        userSessionActive,
-        defaultUserSession,
         offlineAutoCheck,
         debug,
         debugRequests,
@@ -1193,7 +1279,6 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const getToken = authContext?.getToken;
     const kettingClientRef = React.useRef<Client>(undefined);
     const openAnswerRequiredDialogRef = React.useRef<OpenAnswerRequiredDialogFn>(undefined);
-    const [userSession, setUserSession] = React.useState<any>(defaultUserSession);
     const [httpHeaders, setHttpHeaders] = React.useState<Record<string, string>[]>();
     const [currentLanguage, setCurrentLanguage] = useControlledUncontrolledState<
         string | undefined
@@ -1205,7 +1290,6 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const indexPath = new URL(apiUrl).pathname;
     const indexPathWithoutApi = indexPath.endsWith('/api') ? indexPath.slice(0, -4) : indexPath;
     const refreshKettingClient = (
-        currentUserSession: any,
         currentLanguage: string | undefined,
         currentHttpHeaders: Record<string, string>[] | undefined
     ) => {
@@ -1222,9 +1306,6 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
             }
             if (currentLanguage && currentLanguage.length) {
                 newRequest.headers.set('Accept-Language', currentLanguage);
-            }
-            if (currentUserSession && Object.keys(currentUserSession).length > 0) {
-                newRequest.headers.set('X-App-Session', JSON.stringify(currentUserSession));
             }
             if (currentHttpHeaders && Object.keys(currentHttpHeaders).length > 0) {
                 currentHttpHeaders.forEach((e) => {
@@ -1298,12 +1379,11 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
         }
     }, [isIndexLoading, indexState, indexError, offlineAutoCheck]);
     React.useEffect(() => {
-        const sessionInitialized = userSessionActive ? userSession != null : true;
-        if (sessionInitialized && (authContext == null || isAuthReady)) {
-            refreshKettingClient(userSession, currentLanguage, httpHeaders);
+        if (authContext == null || isAuthReady) {
+            refreshKettingClient(currentLanguage, httpHeaders);
             refreshApiIndex();
         }
-    }, [isAuthReady, currentLanguage, userSession]);
+    }, [isAuthReady, currentLanguage, httpHeaders]);
     React.useEffect(() => {
         if (indexState && debug) {
             debugAvailableServices && logConsole.debug('Resource API services from index:');
@@ -1318,34 +1398,6 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const isDebugRequests = React.useCallback(() => {
         return (debug == null && debugRequests != null && debugRequests) || debug;
     }, []);
-    const setUserSessionAttributes = (
-        attributeValuePairs: ResourceApiUserSessionValuePair[]
-    ): boolean => {
-        const changedPairs = attributeValuePairs?.filter(
-            (p) => p.value !== userSession?.[p.attribute]
-        );
-        if (changedPairs?.length) {
-            const changes: any = {};
-            changedPairs.forEach((c) => (changes[c.attribute] = c.value));
-            setUserSession((s: any) => ({ ...s, ...changes }));
-            refreshKettingClient({ ...userSession, ...changes }, currentLanguage, httpHeaders);
-            return true;
-        } else {
-            return false;
-        }
-    };
-    const setUserSessionForContext = React.useCallback(
-        (userSession: any) => {
-            setUserSession(userSession);
-            refreshKettingClient(userSession, currentLanguage, httpHeaders);
-        },
-        [currentLanguage]
-    );
-    const clearUserSession = React.useCallback(() => {
-        setUserSession({});
-        refreshKettingClient({}, currentLanguage, httpHeaders);
-        refreshApiIndex();
-    }, [currentLanguage, httpHeaders]);
     const setOpenAnswerRequiredDialog = React.useCallback(
         (oarDialog: OpenAnswerRequiredDialogFn) => {
             openAnswerRequiredDialogRef.current = oarDialog;
@@ -1357,11 +1409,15 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     }, []);
     const setCurrentLanguageInternal = (currentLanguage?: string) => {
         setCurrentLanguage(currentLanguage);
-        refreshKettingClient(userSession, currentLanguage, httpHeaders);
     };
     const setHttpHeadersInternal = (currentHttpHeaders?: Record<string, string>[]) => {
+        // Només canviam l'estat si les capçaleres que volem establir son diferents
+        if (JSON.stringify(httpHeaders) === JSON.stringify(currentHttpHeaders)) {
+            return;
+        }
+        // Si no forçam l'estat d'índex carregant, pot ser que es faci alguna petició a l'API REST amb les capçaleres antigues.
+        setIsIndexLoading(true);
         setHttpHeaders(currentHttpHeaders);
-        refreshKettingClient(userSession, currentLanguage, currentHttpHeaders);
     };
     const isReady = !isIndexLoading && !indexError && !offline;
     const context = {
@@ -1371,15 +1427,11 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
         offline,
         indexState,
         indexError,
-        userSession,
         currentLanguage,
         refreshApiIndex,
         getKettingClient,
         requestHref,
         isDebugRequests,
-        setUserSession: setUserSessionForContext,
-        setUserSessionAttributes,
-        clearUserSession,
         setCurrentLanguage: setCurrentLanguageInternal,
         httpHeaders,
         setHttpHeaders: setHttpHeadersInternal,

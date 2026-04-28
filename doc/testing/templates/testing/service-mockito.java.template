@@ -1,0 +1,39 @@
+package ${PACKAGE};
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ${SERVICE_CLASS}Test {
+
+    @Mock
+    private ${REPOSITORY_CLASS} ${REPOSITORY_FIELD};
+
+    @Mock
+    private ${CLIENT_CLASS} ${CLIENT_FIELD};
+
+    @InjectMocks
+    private ${SERVICE_CLASS} sut;
+
+    @Test
+    void ${METHOD_NAME}_quan${CONDITION}_retorn${EXPECTED_RESULT}() {
+        // Arrange
+        ${ENTITY_CLASS} entity = ${ENTITY_FACTORY};
+        when(${REPOSITORY_FIELD}.save(any(${ENTITY_CLASS}.class))).thenReturn(entity);
+
+        // Act
+        ${RETURN_TYPE} result = sut.${METHOD_NAME}(${ARGS});
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(${REPOSITORY_FIELD}).save(any(${ENTITY_CLASS}.class));
+    }
+}

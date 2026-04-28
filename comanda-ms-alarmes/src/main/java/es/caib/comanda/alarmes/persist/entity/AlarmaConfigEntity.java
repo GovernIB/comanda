@@ -25,8 +25,11 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 
 	@Column(name = "entorn_app_id", nullable = false)
 	private Long entornAppId;
+	// Camp intern usat per fer soft-delete de AlarmaConfig
+	@Column(name = "esborrat", nullable = false)
+	private boolean esborrat;
 
-	@Column(name = "nom", length = 200, nullable = false)
+	@Column(name = "nom", length = 200)
 	private String nom;
 	@Column(name = "missatge", length = 1024, nullable = false)
 	private String missatge;
@@ -40,11 +43,15 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	private BigDecimal valor;
 	@Column(name = "admin", nullable = false)
 	private boolean admin;
+	@Column(name = "correu_generic", nullable = false)
+	private boolean correuGeneric;
 	@Column(name = "periode_unitat", length = 10)
     @Enumerated(EnumType.STRING)
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
 	@Column(name = "periode_valor")
 	private BigDecimal periodeValor;
+    @Column(name = "notificacio_finalitzada")
+    private boolean notificacioFinalitzada = true;
 
 	@Builder
 	public AlarmaConfigEntity(AlarmaConfig alarmaConfig) {
@@ -57,6 +64,8 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 		this.periodeUnitat = alarmaConfig.getPeriodeUnitat();
 		this.periodeValor = alarmaConfig.getPeriodeValor();
 		this.admin = alarmaConfig.isAdmin();
+		this.correuGeneric = alarmaConfig.isCorreuGeneric();
+		this.notificacioFinalitzada = alarmaConfig.isNotificacioFinalitzada();
 	}
 
 }

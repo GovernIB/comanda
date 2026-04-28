@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: salut-historic-estat-1
+      author: Limit
+      comment: Crear taula d'històric de canvis d'estat de salut per entorn
+      changes:
+        - createTable:
+            tableName: ${db_prefix}salut_hist
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: ${db_prefix}saluthist_pk
+                    nullable: false
+              - column:
+                  name: entorn_app_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: app_estat
+                  type: VARCHAR(20 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: peticio_error
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: ${db_prefix}salut_hist
+            indexName: ${db_prefix}saluthist_entdat_i
+            columns:
+              - column:
+                  name: entorn_app_id
+              - column:
+                  name: data

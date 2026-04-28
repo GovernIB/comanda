@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
 public class MonitorTasques {
 
     private static final String TASCA_DADES_ACCIO = "Obtenir dades d'una tasca";
+    private static final String TASCA_DADES_CREATE_ACCIO = "Creació d'una tasca";
+    private static final String TASCA_DADES_UPDATE_ACCIO = "Actualitzar dades d'una tasca";
     private static final String TASCA_DADES_ERROR = "S'ha produït un error obtenint les dades de la tasca";
 
     private TasquesClientHelper tasquesClientHelper;
@@ -43,8 +45,8 @@ public class MonitorTasques {
     private Monitor createMonitor(Long entornAppId, String url, String operacio, String codiUsuari) {
         return Monitor.builder()
                 .entornAppId(entornAppId)
-                .modul(ModulEnum.SALUT)
-                .tipus(AccioTipusEnum.SORTIDA)
+                .modul(ModulEnum.TASCA)
+                .tipus(AccioTipusEnum.ENTRADA)
                 .url(url)
                 .operacio(operacio)
                 .codiUsuari(codiUsuari)
@@ -73,6 +75,12 @@ public class MonitorTasques {
         tasquesClientHelper.monitorCreate(monitor);
     }
 
+    public void setCreateActionMessatge() {
+        monitor.setOperacio(TASCA_DADES_CREATE_ACCIO);
+    }
+    public void setUpdateActionMessatge() {
+        monitor.setOperacio(TASCA_DADES_UPDATE_ACCIO);
+    }
 
     /**
      * Obté el codi de l'usuari autenticat o retorna "SCHEDULER" si no hi ha cap usuari autenticat o és anònim

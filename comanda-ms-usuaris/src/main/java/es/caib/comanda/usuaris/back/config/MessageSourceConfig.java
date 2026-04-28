@@ -18,7 +18,7 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 		return new String[] {
 				"comanda.usuaris-messages",
                 "comanda.client-messages",
-				"comanda-messages"
+				getBasename(),
 		};
 	}
 

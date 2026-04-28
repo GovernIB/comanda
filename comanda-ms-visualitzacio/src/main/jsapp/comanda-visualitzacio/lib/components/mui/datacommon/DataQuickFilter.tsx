@@ -3,6 +3,7 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
+import { useBaseAppContext } from '../../BaseAppContext';
 
 type DataQuickFilterProps = {
     value: string;
@@ -10,27 +11,20 @@ type DataQuickFilterProps = {
     onChange: (value: string) => void;
 } & any;
 
-export const useDataQuickFilter = (
-    initialValue?: string,
-    setFocus?: true,
-    otherProps?: any
-): { value: string; component: React.ReactElement } => {
-    const [value, setValue] = React.useState(initialValue ?? '');
-    const component = (
-        <DataQuickFilter value={value} setFocus={setFocus} onChange={setValue} {...otherProps} />
-    );
-    return { value, component };
-};
-
-const DataQuickFilter: React.FC<DataQuickFilterProps> = (props) => {
+export const DataQuickFilter: React.FC<DataQuickFilterProps> = (props) => {
     const { value, setFocus, onChange, ...otherProps } = props;
+    const { t } = useBaseAppContext();
     return (
         <TextField
+            title={t('datacommon.quickfilter.label')}
             size="small"
             value={value}
             inputRef={setFocus ? (input) => input && input.focus() : undefined}
             onChange={(event) => onChange(event.target.value)}
             slotProps={{
+                htmlInput: {
+                    'aria-label': t('datacommon.quickfilter.label'),
+                },
                 input: {
                     endAdornment: (
                         <>

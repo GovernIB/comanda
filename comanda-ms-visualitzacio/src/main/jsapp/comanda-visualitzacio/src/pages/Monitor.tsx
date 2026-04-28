@@ -11,16 +11,21 @@ import {
     useCloseDialogButtons,
     useFilterApiRef,
     springFilterBuilder as builder,
+    useFormApiRef,
 } from 'reactlib';
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
-import { Tabs, Tab, Chip, Box, Button, Icon } from '@mui/material';
+import { Tabs, Tab, Chip, Box, Icon, IconButton } from '@mui/material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
+import PageTitle from '../components/PageTitle.tsx';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
     { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' },
     { value: 'CONFIGURACIO', labelKey: 'page.monitors.modulEnum.configuracio' },
+    { value: 'ALARMES', labelKey: 'page.monitors.tab.email' },
+    { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
+    { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
 ];
 
 type TabMonitorProps = {
@@ -79,25 +84,13 @@ const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, ch
   return <Chip label={label} color={color} size="small" />;
 };
 
-const columns = [
-    { field: 'data', flex: 1, },
-    { field: 'operacio', flex: 2, },
-    { field: 'tipus', flex: 1, },
-    { field: 'url', flex: 2, },
-    { field: 'modul', flex: 1, },
-    { field: 'tempsResposta', flex: 1, },
-    {
-        field: 'estat',
-        flex: 0.5,
-        renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
-    },
-];
-
 const MonitorDetails: React.FC<any> = (props) => {
     const { data } = props;
     const { t } = useTranslation();
     const { t: tStringKey } = useTranslationStringKey();
     const elementsDetail = [
+        { label: t($ => $.page.monitors.detail.app), value: data?.app?.description },
+        { label: t($ => $.page.monitors.detail.entorn), value: data?.entorn?.description },
         { label: t($ => $.page.monitors.detail.data), value: dateFormatLocale(data?.data, true) },
         { label: t($ => $.page.monitors.detail.operacio), value: data?.operacio },
         {
@@ -123,31 +116,94 @@ const MonitorDetails: React.FC<any> = (props) => {
     return <ContentDetail title={""} elements={elementsDetail} />;
 }
 
-const MonitorFilter: React.FC = () => {
+type MonitorFilterProps = {
+    onAppChange?: (appId: number | undefined) => void;
+    onEntornChange?: (entornId: number | undefined) => void;
+}
+
+const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChange }) => {
     const { t } = useTranslation();
-    const filterRef = useFilterApiRef();
-    const clear = () => filterRef.current.clear();
-    const filter = () => filterRef.current.filter();
-    const springFilterBuilder = (data: any): string => {
+    const [moreFields, setMoreFields] = React.useState<boolean>(false);
+    const entornAppFilterApiRef = useFilterApiRef();
+    const monitorFilterApiRef = useFilterApiRef();
+    const monitorFormApiRef = useFormApiRef();
+    const clear = () => {
+        entornAppFilterApiRef.current?.clear();
+        monitorFilterApiRef.current?.clear();
+        setTimeout(() => {
+            onAppChange?.(undefined);
+            onEntornChange?.(undefined);
+        }, 0);
+    };
+    const entornAppSpringFilterBuilder = (data: any): string => {
+        const appId = data?.app?.id;
+        const entornId = data?.entorn?.id;
+        monitorFormApiRef.current?.setFieldValue('appId', appId);
+        monitorFormApiRef.current?.setFieldValue('entornId', entornId);
+        onAppChange?.(appId);
+        onEntornChange?.(entornId);
+        return '';
+    };
+    const monitorSpringFilterBuilder = (data: any): string => {
         return builder.and(
             builder.like("codiUsuari", data?.codi),
             builder.between("data", `'${data?.dataDesde}'`, `'${data?.dataFins}'`),
-            builder.eq("tipus", `'${data?.tipus}'`),
-            builder.eq("estat", `'${data?.estat}'`),
+            data?.tipus && builder.eq("tipus", `'${data?.tipus}'`),
+            data?.estat && builder.eq("estat", `'${data?.estat}'`),
             builder.like("operacio", data?.descripcio),
         );
-    }
+    };
 
     return (
         <><MuiFilter
+            resourceName="entornApp"
+            code="optional_entornApp_filter"
+            springFilterBuilder={entornAppSpringFilterBuilder}
+            apiRef={entornAppFilterApiRef}
+            commonFieldComponentProps={{ size: 'small' }}
+            componentProps={{ sx: { mb: moreFields ? 1 : 2 } }} >
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'stretch', sm: 'center' },
+                gap: { xs: 1, sm: 0 },
+            }}>
+                <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
+                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'app'} /></Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'entorn'} /></Grid>
+                </Grid>
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    flexWrap: 'wrap',
+                    width: { xs: '100%', sm: 'auto' },
+                    mt: { xs: 1, sm: 0 },
+                }}>
+                    <IconButton
+                        onClick={clear}
+                        title={t($ => $.components.clear)}
+                        sx={{ mr: 1 }}>
+                        <Icon>filter_alt_off</Icon>
+                    </IconButton>
+                    <IconButton
+                        onClick={() => setMoreFields((mf) => !mf)}
+                        title={t($ => $.page.monitors.filter.more)}>
+                        <Icon>filter_list</Icon>
+                    </IconButton>
+                </Box>
+            </Box>
+        </MuiFilter>
+        <MuiFilter
             resourceName="monitor"
             code="FILTER"
-            springFilterBuilder={springFilterBuilder}
-            apiRef={filterRef}
-            buttonControlled
+            springFilterBuilder={monitorSpringFilterBuilder}
+            apiRef={monitorFilterApiRef}
+            formApiRef={monitorFormApiRef}
             commonFieldComponentProps={{ size: 'small' }}
-            componentProps={{ sx: { my: 2 } }}
-            >
+            componentProps={{
+                sx: { mb: 1, display: moreFields ? 'block' : 'none' }
+            }} >
             <Grid container columnSpacing={1} rowSpacing={1}>
                 <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="codi" /></Grid>
                 <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="dataDesde" /></Grid>
@@ -155,22 +211,12 @@ const MonitorFilter: React.FC = () => {
                 <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="descripcio" /></Grid>
                 <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="tipus" /></Grid>
                 <Grid size={{xs: 12, sm: 4, lg:2}}><FormField name="estat" /></Grid>
-                <Grid size={12} sx={{ display: 'flex', justifyContent: 'end' }}>
-                    <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }} >
-                        <Button variant="outlined" onClick={clear} sx={{ flexBasis: { xs: 'calc(50% - 0.5rem)', sm: 'auto' }, flexGrow: 0, flex: '1 1 auto', minWidth: 'fit-content', borderRadius: 1 }} >
-                            <Icon sx={{ mr: 1 }}>clear</Icon>
-                            {t($ => $.components.clear)}
-                        </Button>
-                        <Button variant="contained" onClick={filter} sx={{ flexBasis: { xs: 'calc(50% - 0.5rem)', sm: 'auto' }, flexGrow: 0, flex: '1 1 auto', minWidth: 'fit-content', borderRadius: 1 }} >
-                            <Icon sx={{ mr: 1 }}>filter_alt</Icon>
-                            {t($ => $.components.search)}
-                        </Button>
-                    </Box>
-                </Grid>
             </Grid>
         </MuiFilter></>
     );
 };
+
+const dataGridPerspectives = ['ENTORN_APP'];
 
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
@@ -184,25 +230,65 @@ const Monitors: React.FC = () => {
             { maxWidth: 'lg', fullWidth: true, }
         );
     }
+    const [filterAppId, setFilterAppId] = React.useState<number | undefined>();
+    const [filterEntornId, setFilterEntornId] = React.useState<number | undefined>();
+    const namedQueries = React.useMemo(() => {
+        const queries: string[] = [];
+        if (filterAppId) queries.push(`filterByApp:${filterAppId}`);
+        if (filterEntornId) queries.push(`filterByEntorn:${filterEntornId}`);
+        return queries.length > 0 ? queries : undefined;
+    }, [filterAppId, filterEntornId]);
+    const handleFilterAppChange = (appId: number | undefined) => setFilterAppId(appId);
+    const handleFilterEntornChange = (entornId: number | undefined) => setFilterEntornId(entornId);
     const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
+    const columns = [
+        { field: 'data', flex: 1, },
+        { field: 'operacio', flex: 2, },
+        { field: 'tipus', flex: 1, },
+        {
+            field: 'url',
+            flex: 2,
+            headerName: selectedModule === 'ALARMES'
+                ? t($ => $.page.monitors.column.mailAddress)
+                : 'URL',
+        },
+        { field: 'modul', flex: 1, },
+        { field: 'tempsResposta', flex: 1, },
+        {
+            field: 'estat',
+            flex: 0.5,
+            renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
+        },
+    ];
+    const columnsMonitor = React.useMemo(() => {
+        if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
+            return columns.filter(col => col.field !== 'url');
+        }
+        return columns;
+    }, [selectedModule]);
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.monitors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.monitors.title)}
                 toolbarAdditionalRow={
-                    <> <MonitorFilter></MonitorFilter>
+                    <> <MonitorFilter
+                        onAppChange={handleFilterAppChange}
+                        onEntornChange={handleFilterEntornChange} />
                     <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
                 }
                 resourceName="monitor"
-                columns={columns}
+                columns={columnsMonitor}
+                perspectives={dataGridPerspectives}
                 toolbarType="upper"
                 paginationActive
                 readOnly
                 onRowClick={(params: any) => showDetail(params.row)}
-                staticFilter={`modul:'${selectedModule}'`}
+                fixedFilter={`modul:'${selectedModule}'`}
+                namedQueries={namedQueries}
             />
             {detailDialogComponent}
         </GridPage>

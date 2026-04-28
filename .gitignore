@@ -40,3 +40,9 @@ build/
 /comanda-back/liquibase/databasechangelog.csv
 /derby.log
 /application.properties
+/comanda_docker.sh
+/sonar-project.properties
+/doc/testing/reports/
+/doc/testing/serve-test-reports.sh
+/doc/testing/sync-test-reports.sh
+/comanda-ms-visualitzacio/src/main/jsapp/comanda-visualitzacio/test-reports/

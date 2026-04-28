@@ -8,11 +8,6 @@ export type OpenAnswerRequiredDialogFn = (
     availableAnswers: string[]
 ) => Promise<string>;
 
-export type ResourceApiUserSessionValuePair = {
-    attribute: string;
-    value: any;
-};
-
 export type ResourceType = 'ACTION' | 'REPORT' | 'FILTER';
 export type ExportFileType = 'CSV' | 'ODS' | 'ODT' | 'XLSX' | 'DOCX' | 'PDF';
 export type ReportOutputFormat =
@@ -33,15 +28,11 @@ export type ResourceApiContextType = {
     offline: boolean;
     indexState: State | undefined;
     indexError: Error | undefined;
-    userSession: any | undefined;
     currentLanguage: string | undefined;
     refreshApiIndex: () => void;
     getKettingClient: () => Client | undefined;
     requestHref: (href: string, templateData?: any) => Promise<State>;
     isDebugRequests: () => boolean | undefined;
-    setUserSession: (userSession: any) => void;
-    setUserSessionAttributes: (attributeValuePairs: ResourceApiUserSessionValuePair[]) => boolean;
-    clearUserSession: () => void;
     setCurrentLanguage: (currentLanguage?: string) => void;
     httpHeaders?: Record<string, string>[];
     setHttpHeaders: (httpHeaders?: Record<string, string>[]) => void;

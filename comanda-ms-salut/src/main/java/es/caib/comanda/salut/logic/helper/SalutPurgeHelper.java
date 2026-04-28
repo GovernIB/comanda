@@ -2,6 +2,7 @@ package es.caib.comanda.salut.logic.helper;
 
 import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
 import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
 import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
 import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
 import es.caib.comanda.salut.persist.repository.SalutRepository;
@@ -35,6 +36,7 @@ public class SalutPurgeHelper {
     private final SalutSubsistemaRepository salutSubsistemaRepository;
     private final SalutMissatgeRepository salutMissatgeRepository;
     private final SalutDetallRepository salutDetallRepository;
+    private final SalutHistRepository salutHistRepository;
     // Important: separar el mètode transaccional en un altre bean per evitar self-invocation sense proxy
     private final es.caib.comanda.salut.logic.helper.tx.SalutPurgeTxHelper purgeTxHelper;
 
@@ -47,6 +49,11 @@ public class SalutPurgeHelper {
             List<Long> batch = idsAntics.subList(i, end);
             eliminarLlistaAmbRetry(batch);
         }
+    }
+
+    public void eliminarHistoricSalutAntic(Long entornAppId, LocalDateTime data) {
+        log.debug("Eliminant històric de salut antic. EntornAppId: {}, data: {}", entornAppId, data);
+        purgeTxHelper.eliminarHistoricEnNovaTransaccio(entornAppId, data);
     }
 
     private void eliminarLlistaAmbRetry(List<Long> salutIds) {

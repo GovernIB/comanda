@@ -2,16 +2,19 @@ package es.caib.comanda.estadistica.logic.service;
 
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioValorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import java.util.ArrayList;
@@ -36,28 +39,44 @@ import java.util.stream.Collectors;
  * @author Límit Tecnologies
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class DimensioValorServiceImpl extends BaseMutableResourceService<DimensioValor, Long, DimensioValorEntity> implements DimensioValorService {
     private final SpringFilterHelper springFilterHelper;
-
-    public DimensioValorServiceImpl(SpringFilterHelper springFilterHelper) {
-        this.springFilterHelper = springFilterHelper;
-    }
+    private final EstadisticaClientHelper estadisticaClientHelper;
 
     @Override
     protected Specification<DimensioValorEntity> namedFilterToSpecification(String name) {
-        if(DimensioValor.NAMED_FILTER_GROUP_BY_VALOR.equals(name))
-            return uniqueValorByMinDimensioId();
+        if (name != null && name.startsWith(DimensioValor.NAMED_FILTER_BY_APP_GROUP_BY_VALOR)) {
+            List<Long> idsEntornApp = null;
+            String[] parts = name.split(":", 2);
+            if (parts.length == 2 && !parts[1].isBlank()) {
+                idsEntornApp = estadisticaClientHelper.getEntornAppsIdByAppId(Long.valueOf(parts[1]));
+            }
+            return uniqueValorByMinEntornAppId(idsEntornApp);
+        }
         return null;
     }
 
-    private static Specification<DimensioValorEntity> uniqueValorByMinDimensioId() {
+    /** Filtro para solo mostrar un resultado por valor en la aplicación.
+     * Se requiere aplicar un filtro de entornApps, ya que si no se devolvería un resultado erróneo.
+     **/
+    private Specification<DimensioValorEntity> uniqueValorByMinEntornAppId(List<Long> idsEntornApp) {
+        if (idsEntornApp == null || idsEntornApp.isEmpty()) {
+            return (root, query, cb) -> cb.disjunction();
+        }
         return (root, query, cb) -> {
-            Subquery<Long> subquery2 = query.subquery(Long.class);
-            Root<DimensioValorEntity> subRoot2 = subquery2.from(DimensioValorEntity.class);
-            subquery2.select(cb.min(subRoot2.get("dimensioId")));
-            subquery2.where(cb.equal(subRoot2.get("valor"), root.get("valor")));
-            return cb.equal(root.get("dimensioId"), subquery2);
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<DimensioValorEntity> subRoot = subquery.from(DimensioValorEntity.class);
+            subquery.select(cb.min(subRoot.get("dimensio").get("entornAppId")));
+
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(subRoot.get("valor"), root.get("valor")));
+            predicates.add(cb.equal(subRoot.get("dimensio").get("nom"), root.get("dimensio").get("nom")));
+            predicates.add(cb.equal(subRoot.get("dimensio").get("codi"), root.get("dimensio").get("codi")));
+            predicates.add(subRoot.get("dimensio").get("entornAppId").in(idsEntornApp));
+            subquery.where(predicates.toArray(new Predicate[0]));
+            return cb.equal(root.get("dimensio").get("entornAppId"), subquery);
         };
     }
 

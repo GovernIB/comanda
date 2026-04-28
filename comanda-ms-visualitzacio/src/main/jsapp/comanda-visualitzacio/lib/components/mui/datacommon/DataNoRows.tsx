@@ -30,7 +30,8 @@ const DataNoRows: React.FC<DataNoRowsProps> = (props) => {
             <Icon fontSize="large" color="disabled">
                 {icon ?? 'block'}
             </Icon>
-            <Typography variant="h5" color="text.secondary">
+            {/* Se usa component="div" per a evitar error per ARIA [role] incorrecte */}
+            <Typography component="div" variant="h5" color="text.secondary">
                 {message ?? t('datacommon.noRows')}
             </Typography>
         </Box>

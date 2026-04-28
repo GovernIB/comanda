@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.0.013-1
+      author: limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}entorn_app
+            columns:
+              - column:
+                  name: salut_auth
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

@@ -76,7 +76,7 @@ import java.io.Serializable;
 public class Indicador extends BaseResource<Long> {
 
     /** Named Filter para devolver un solo resultado por el atributo nom **/
-    public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
+    public static final String NAMED_FILTER_BY_APP_GROUP_BY_NOM = "filterByAppGroupByNom";
     public static final String INDICADOR_FILTER = "indicadorFilter";
     public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
 

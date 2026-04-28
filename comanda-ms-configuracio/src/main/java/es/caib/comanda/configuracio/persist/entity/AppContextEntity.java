@@ -34,7 +34,7 @@ import java.util.List;
 @NoArgsConstructor
 public class AppContextEntity extends BaseAuditableEntity<AppContext> {
 
-	@Column(name = "codi", length = 64, unique = true, nullable = false)
+	@Column(name = "codi", length = 100, unique = true, nullable = false)
 	private String codi;
 	@Column(name = "nom", length = 100, nullable = false)
 	private String nom;

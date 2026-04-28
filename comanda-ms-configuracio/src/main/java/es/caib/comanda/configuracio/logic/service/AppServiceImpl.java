@@ -1,6 +1,10 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
@@ -15,6 +19,8 @@ import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
@@ -35,9 +41,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
@@ -58,11 +68,51 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	private final AppRepository appRepository;
 	private final EntornRepository entornRepository;
 	private final EntornAppRepository entornAppRepository;
+    private final AuthenticationHelper authenticationHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final AclServiceClient aclServiceClient;
 
 	@PostConstruct
 	public void init() {
 		register(App.APP_EXPORT, new AppExportReportGenerator());
 		register(App.APP_IMPORT, new AppImportActionExecutor());
+	}
+
+	@Override
+	protected String additionalSpringFilter(
+			String currentSpringFilter,
+			String[] namedQueries) {
+		if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+				|| authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+			return null;
+		}
+		Set<Long> allowedAppIds = getAllowedIds(ResourceType.APP).stream()
+				.map(id -> Long.valueOf(String.valueOf(id)))
+				.collect(Collectors.toSet());
+		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
+		if (!entornAppPermissionIds.isEmpty()) {
+			entornAppRepository.findAllById(
+					entornAppPermissionIds.stream()
+							.map(id -> Long.valueOf(String.valueOf(id)))
+							.collect(Collectors.toSet()))
+					.forEach(entornApp -> allowedAppIds.add(entornApp.getApp().getId()));
+		}
+		if (allowedAppIds.isEmpty()) {
+			return "id:0";
+		}
+		return allowedAppIds.stream()
+				.map(id -> "id:" + id)
+				.collect(Collectors.joining(" or "));
+	}
+
+	private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+		return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+				resourceType,
+				Collections.singletonList(PermissionEnum.READ),
+				authenticationHelper.getCurrentUserName(),
+				Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+				httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+				.orElse(Collections.emptySet());
 	}
 
     @Override
@@ -282,19 +332,59 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 			target.setInfoUrl(e.getInfoUrl());
 			target.setActiva(e.isActiva());
 			target.setSalutUrl(e.getSalutUrl());
+            target.setLogsUrl(e.getLogsUrl());
+            target.setSalutAuth(e.getSalutAuth());
 			target.setEstadisticaInfoUrl(e.getEstadisticaInfoUrl());
 			target.setEstadisticaUrl(e.getEstadisticaUrl());
 			target.setEstadisticaCron(e.getEstadisticaCron());
+            target.setEstadisticaAuth(e.getEstadisticaAuth());
 			// Compactació
 			if (e.getCompactable() != null) target.setCompactable(e.getCompactable());
 			target.setCompactacioSetmanalMesos(e.getCompactacioSetmanalMesos());
 			target.setCompactacioMensualMesos(e.getCompactacioMensualMesos());
 			target.setEliminacioMesos(e.getEliminacioMesos());
+            target.setAlarmesEmail(e.getAlarmesEmail());
 		}
 
 		@Override
 		public void onChange(Serializable id, AppImportForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, AppImportForm target) {
-			// No es necessari implementar aquest mètode
+			if (fieldName.equals(AppImportForm.Fields.jsonContent)) {
+				String jsonContent = (String) fieldValue;
+				if (jsonContent != null && !jsonContent.isEmpty()) {
+					try {
+						List<AppExport> exports;
+						try {
+							exports = objectMapper.readValue(
+									jsonContent,
+									objectMapper.getTypeFactory().constructCollectionType(List.class, AppExport.class));
+						} catch (Exception exList) {
+							AppExport single = objectMapper.readValue(jsonContent, AppExport.class);
+							exports = Collections.singletonList(single);
+						}
+
+						List<String> codes = exports.stream()
+								.map(AppExport::getCodi)
+								.filter(c -> c != null && !c.isEmpty())
+								.collect(Collectors.toList());
+
+						target.setImportedAppCodes(codes.toArray(new String[0]));
+
+						boolean exists = false;
+						for (String code : codes) {
+							if (appRepository.findByCodi(code) != null) {
+								exists = true;
+								break;
+							}
+						}
+						target.setImportedAppExists(exists);
+						if (exists) {
+							target.setDecision("COMBINE");
+						}
+					} catch (Exception e) {
+						log.warn("Error parsing JSON content in onChange", e);
+					}
+				}
+			}
 		}
 
 		@Override

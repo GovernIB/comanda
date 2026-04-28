@@ -9,7 +9,9 @@ import es.caib.comanda.monitor.logic.intf.service.MonitorService;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
+import es.caib.comanda.monitor.logic.service.MonitorSchedulerService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,6 +51,8 @@ public class MonitorControllerTest {
 
     @Mock
     private MonitorService monitorService;
+    @Mock
+    private MonitorSchedulerService schedulerService;
     @Mock
     private ResourceApiService resourceApiService;
     @Mock
@@ -245,5 +249,21 @@ public class MonitorControllerTest {
 
         // Verify that monitorService.delete was called
         verify(monitorService).delete(eq(1L), eq(answers));
+    }
+    @Test
+    @DisplayName("programarBorrat crida al schedulerService i retorna OK")
+    void programarBorrat_cridaSchedulerIRetornaOK() {
+        // Arrange - Ja tenim el mock de schedulerService injectat per @InjectMocks si fos el cas, 
+        // però en aquest fitxer sembla que s'usa MockMvc.
+        
+        // Act & Assert
+        try {
+            mockMvc.perform(post(BaseConfig.API_PATH + "/monitors/programarBorrat"))
+                    .andExpect(status().isOk());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        
+        verify(schedulerService).programarBorrat();
     }
 }

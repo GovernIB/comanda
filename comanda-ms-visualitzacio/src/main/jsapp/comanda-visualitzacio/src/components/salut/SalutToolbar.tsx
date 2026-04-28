@@ -19,11 +19,11 @@ import {
     useFilterApiRef,
     useFormContext,
 } from 'reactlib';
-import { Box, InputLabel } from '@mui/material';
+import { Box, Button, ButtonGroup } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import { useId } from 'react';
+import { SalutEstatEnum, useSalutEstatTranslation } from '../../types/salut.model';
 
 export type SalutToolbarProps = {
     title: string;
@@ -81,51 +81,58 @@ const getInitialGrouping = () => {
     return storedValue;
 };
 
+export const getIdList = (a: any[] = []) => {
+    return a?.map((uo: any) => uo.id) ?? [];
+};
+
 
 /**
  * Filtro para mostrar las agrupaciones de gráficos en la vista de Salut. Valores posibles: {@link GroupingEnum}:
  * @param props
  * @constructor
  */
-const GroupForViewSelect = (props: { disabled?: boolean; onChange: (grouping: GroupingEnum) => void; value: GroupingEnum }) => {
+const GroupForViewSelect = (props: {
+    disabled?: boolean;
+    onChange: (grouping: GroupingEnum) => void;
+    value: GroupingEnum;
+}) => {
     const { value, onChange, disabled } = props;
     const { t } = useTranslation();
-    const labelId = useId();
-    const selectId = useId();
-
-    const handleChange = (event: SelectChangeEvent) => {
-        const selectedGrouping = event.target.value;
-        if (isValidGrouping(selectedGrouping))
-            onChange(selectedGrouping);
-        else
-            console.error('Invalid grouping:', selectedGrouping);
-    }
 
     return (
-        <FormControl sx={{ ml: 2, width: '12rem' }}>
-            <InputLabel id={labelId}>{t($ => $.page.salut.groupingSelect.label)}</InputLabel>
-            <Select
-                label={t($ => $.page.salut.groupingSelect.label)}
-                labelId={labelId}
-                id={selectId}
-                value={value}
+        <Box sx={{ ml: 2, display: 'flex', flexDirection: 'column' }}>
+            <ButtonGroup
                 size="small"
                 disabled={disabled}
-                onChange={handleChange}
+                aria-label="grouping selection"
+                sx={{ flexWrap: 'nowrap' }}
+                variant="outlined"
             >
-                <MenuItem value={GroupingEnum.APPLICATION}>
-                    {t($ => $.page.salut.groupingSelect.BY_APPLICATION)}
-                </MenuItem>
-                <MenuItem value={GroupingEnum.ENVIRONMENT}>
-                    {t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}
-                </MenuItem>
-                <MenuItem value={GroupingEnum.NONE}>
-                    {t($ => $.page.salut.groupingSelect.NONE)}
-                </MenuItem>
-            </Select>
-        </FormControl>
+                <Button
+                    variant={value === GroupingEnum.APPLICATION ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.APPLICATION)}
+                    title={t($ => $.page.salut.groupingSelect.BY_APPLICATION)}
+                >
+                    <Icon>apps</Icon>
+                </Button>
+                <Button
+                    variant={value === GroupingEnum.ENVIRONMENT ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.ENVIRONMENT)}
+                    title={t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}
+                >
+                    <Icon>layers</Icon>
+                </Button>
+                <Button
+                    variant={value === GroupingEnum.NONE ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.NONE)}
+                    title={t($ => $.page.salut.groupingSelect.NONE)}
+                >
+                    <Icon>block</Icon>
+                </Button>
+            </ButtonGroup>
+        </Box>
     );
-}
+};
 
 const getInitialRefreshDuration = () => {
     const storedValue = localStorage.getItem('refreshTimeoutSelect');
@@ -158,10 +165,10 @@ const RefreshTimeoutSelect: React.FC<{
     };
 
     return (
-        <FormControl>
+        <FormControl
+            title={t($ => $.page.salut.refreshperiod.title)}
+        >
             <Select
-                labelId="range-select-label"
-                id="range-select"
                 value={value}
                 size="small"
                 disabled={disabled}
@@ -172,6 +179,11 @@ const RefreshTimeoutSelect: React.FC<{
                     </InputAdornment>
                 }
                 sx={{ mr: 1 }}
+                slotProps={{
+                    input: {
+                        'aria-label': t($ => $.page.salut.refreshperiod.title)
+                    }
+                }}
             >
                 <MenuItem value={'PT1M'}>{t($ => $.page.salut.refreshperiod.PT1M)}</MenuItem>
                 <MenuItem value={'PT5M'}>{t($ => $.page.salut.refreshperiod.PT5M)}</MenuItem>
@@ -214,10 +226,10 @@ const AppDataRangeSelect = (props: {
     };
 
     return (
-        <FormControl>
+        <FormControl
+            title={t($ => $.page.salut.timerange.title)}
+        >
             <Select
-                labelId="range-select-label"
-                id="range-select"
                 value={value}
                 size="small"
                 disabled={disabled}
@@ -228,6 +240,11 @@ const AppDataRangeSelect = (props: {
                     </InputAdornment>
                 }
                 sx={{ mr: 1 }}
+                slotProps={{
+                    input: {
+                        'aria-label': t($ => $.page.salut.timerange.title)
+                    }
+                }}
             >
                 <MenuItem value={'PT15M'}>{t($ => $.page.salut.timerange.PT15M)}</MenuItem>
                 <MenuItem value={'PT1H'}>{t($ => $.page.salut.timerange.PT1H)}</MenuItem>
@@ -272,23 +289,40 @@ const SalutEntornAppFilterForm: React.FC = () => {
     const { data } = useFormContext();
 
     return <Grid container spacing={1}>
-        <Grid size={6}>
-            <FormField name="app" componentProps={{ size: 'small', }}
+        <Grid size={12}>
+            <FormField name="app" componentProps={{ size: 'small', }} multiple optionsUnpaged
+                        advancedSearchColumns={[{
+                            field: 'codi',
+                            flex: 0.5,
+                        }, {
+                            field: 'nom',
+                            flex: 2,
+                        }]}
                        filter={
                         springFilterBuilder.and(
                             springFilterBuilder.eq('activa', true),
                             springFilterBuilder.exists(
-                                springFilterBuilder.and(springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id))
+                                springFilterBuilder.and(springFilterBuilder.inn('entornApps.entorn.id', getIdList(data?.entorn)))
                             )
                         )}
             />
         </Grid>
-        <Grid size={6}>
-            <FormField name="entorn" componentProps={{ size: 'small', }}
+        <Grid size={12}>
+            <FormField name="entorn" componentProps={{ size: 'small', }} multiple optionsUnpaged
+                        advancedSearchColumns={[{
+                            field: 'codi',
+                            flex: 0.5,
+                        }, {
+                            field: 'nom',
+                            flex: 2,
+                        }]}
                        filter={springFilterBuilder.exists(
-                           springFilterBuilder.and(springFilterBuilder.eq('entornAppEntities.app.id', data?.app?.id))
+                           springFilterBuilder.and(springFilterBuilder.inn('entornAppEntities.app.id', getIdList(data?.app)))
                        )}
             />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="estatsSalut" componentProps={{ size: 'small', }} multiple/>
         </Grid>
     </Grid>
 }
@@ -296,8 +330,8 @@ const SalutEntornAppFilterForm: React.FC = () => {
 export const salutEntornAppFilterBuilder = (data: SalutFilterDataType) => {
     if (data == null) return '';
     return springFilterBuilder.and(
-        springFilterBuilder.eq('app.id', data.app?.id),
-        springFilterBuilder.eq('entorn.id', data.entorn?.id),
+        springFilterBuilder.inn('app.id', getIdList(data?.app)),
+        springFilterBuilder.inn('entorn.id', getIdList(data?.entorn)),
     )
 }
 
@@ -333,14 +367,15 @@ const getInitialFilterData = () => {
 };
 
 export type SalutFilterDataType = {
-    app?: {
+    app?: [{
         id: string;
         description: string;
-    };
-    entorn?: {
+    }];
+    entorn?: [{
         id: string;
         description: string;
-    };
+    }];
+    estatsSalut?: SalutEstatEnum[];
 };
 
 const useSalutEntornAppFilter = ({
@@ -423,31 +458,40 @@ export const useSalutToolbarState = () => {
     const [refreshDuration, setRefreshDuration] = React.useState<RefreshDurationType>(getInitialRefreshDuration);
     const [filterData, setFilterData] = React.useState<SalutFilterDataType>(getInitialFilterData);
     const [grouping, setGrouping] = React.useState<GroupingEnum>(getInitialGrouping());
+
+    const handleSetDataRangeDuration = React.useCallback((duration: DataRangeDurationType) => {
+        localStorage.setItem('appDataRangeSelect', duration);
+        setDataRangeDuration(duration);
+    }, []);
+
+    const handleSetRefreshDuration = React.useCallback((duration: RefreshDurationType) => {
+        localStorage.setItem('refreshTimeoutSelect', duration);
+        setRefreshDuration(duration);
+    }, []);
+
+    const handleSetFilterData = React.useCallback((data: SalutFilterDataType) => {
+        localStorage.setItem(FILTER_DATA_LOCALSTORAGE_KEY, JSON.stringify(data));
+        setFilterData(data);
+    }, []);
+
+    const handleSetGrouping = React.useCallback((grouping: GroupingEnum) => {
+        localStorage.setItem('groupingForViewSelect', grouping);
+        setGrouping(grouping);
+    }, []);
+
     return {
         dataRangeDuration,
-        setDataRangeDuration: (duration: DataRangeDurationType) => {
-            localStorage.setItem('appDataRangeSelect', duration);
-            setDataRangeDuration(duration);
-        },
+        setDataRangeDuration: handleSetDataRangeDuration,
         refreshDuration,
-        setRefreshDuration: (duration: RefreshDurationType) => {
-            localStorage.setItem('refreshTimeoutSelect', duration);
-            setRefreshDuration(duration);
-        },
+        setRefreshDuration: handleSetRefreshDuration,
         filterData,
-        setFilterData: (data: SalutFilterDataType) => {
-            localStorage.setItem(FILTER_DATA_LOCALSTORAGE_KEY, JSON.stringify(data));
-            setFilterData(data);
-        },
+        setFilterData: handleSetFilterData,
         grouping,
-        setGrouping: (grouping: GroupingEnum) => {
-            localStorage.setItem('groupingForViewSelect', grouping);
-            setGrouping(grouping);
-        },
+        setGrouping: handleSetGrouping,
     };
 };
 
-export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
+export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
     const {
         title,
         subtitle,
@@ -477,15 +521,17 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
     const { handleOpen, dialog } = useSalutEntornAppFilter({ filterData, setFilterData });
     const springFilter = salutEntornAppFilterBuilder(filterData);
 
+    const { tTitle } = useSalutEstatTranslation();
     const computedSubtitle = React.useMemo(() => {
         if (subtitle != null) return subtitle;
-
-        const appName = filterData?.app?.description;
-        const envName = filterData?.entorn?.description;
-        if (!appName && !envName) return t($ => $.page.salut.senseFiltres);
-        if (appName && !envName) return appName as string;
-        if (!appName && envName) return envName as string;
-        return `${appName} - ${envName}`;
+        const apps = filterData?.app?.map(a => a.description).join(", ");
+        const entorns = filterData?.entorn?.map(e => e.description).join(", ");
+        const estats = filterData?.estatsSalut?.map(estat => tTitle(estat)).join(", ");
+        const parts = [apps, entorns, estats].filter(Boolean);
+        if (parts.length === 0) {
+            return t($ => $.page.salut.senseFiltres);
+        }
+        return parts.join(" - ");
     }, [filterData, subtitle, t]);
 
     const toolbarElementsWithPositions = [
@@ -568,7 +614,11 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         toolbarElementsWithPositions.unshift({
             position: 0,
             element: (
-                <IconButton onClick={() => goBack('/')} sx={{ mr: 1 }}>
+                <IconButton
+                    onClick={() => goBack('/')}
+                    sx={{ mr: 1 }}
+                    title={t($ => $.page.salut.goBack)}
+                >
                     <Icon>arrow_back</Icon>
                 </IconButton>
             ),
@@ -579,7 +629,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
         element: (
             <>
                 {!hideFilter &&
-                    <IconButton onClick={() => handleOpen()}>
+                    <IconButton
+                        onClick={() => handleOpen()}
+                        title={t($ => $.page.salut.filtrar)}
+                    >
                         {springFilter ? (
                             <FilterAltIcon fontSize="small" />
                         ) : (
@@ -634,6 +687,5 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = (props) => {
             {dialog}
         </>
     );
-}
-
+})
 export default SalutToolbar;

@@ -81,6 +81,30 @@ export enum SalutEstatEnum {
     ERROR='ERROR'
 }
 
+export enum AvisTipusEnum {
+    NOTICIA = 'NOTICIA',
+    INFO = 'INFO',
+    ALERTA = 'ALERTA',
+    ERROR = 'ERROR',
+    CRITIC = 'CRITIC'
+}
+
+export enum TascaPrioritatEnum {
+    NONE = 'NONE',
+    BAIXA = 'BAIXA',
+    NORMAL = 'NORMAL',
+    ALTA = 'ALTA',
+    MAXIMA = 'MAXIMA'
+}
+
+export enum TascaEstatEnum {
+    PENDENT = 'PENDENT',
+    INICIADA = 'INICIADA',
+    FINALITZADA = 'FINALITZADA',
+    CANCELADA = 'CANCELADA',
+    ERROR = 'ERROR'
+}
+
 export enum NivellEnum {
     INFO='INFO',
     WARN='WARN',
@@ -119,6 +143,8 @@ export interface ISalut extends IBaseEntity {
     contexts?       : IAppContext[];
     missatges?      : ISalutMissatge[];
     detalls?        : ISalutDetall[];
+    historics?      : ISalutHist[];
+    ultimEstatInfo? : ISalutUltimEstatInfo;
 }
 
 export class SalutModel extends BaseEntity implements Partial<ISalut> {
@@ -174,6 +200,8 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
     contexts?: IAppContext[];
     missatges?: SalutMissatge[];
     detalls?: SalutDetall[];
+    historics?: SalutHistModel[];
+    ultimEstatInfo? : ISalutUltimEstatInfo;
 
     /**
      * Constructor
@@ -186,6 +214,28 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
         this.appEstat = salut.appEstat;
         this.bdEstat = salut.bdEstat;
         Object.assign(this, salut);
+    }
+}
+
+export interface ISalutHist extends IBaseEntity {
+    entornAppId: number;
+    data: string;
+    appEstat: SalutEstatEnum;
+    peticioError?: boolean;
+}
+
+export class SalutHistModel extends BaseEntity implements Partial<ISalutHist> {
+    entornAppId: number;
+    data: string;
+    appEstat: SalutEstatEnum;
+    peticioError?: boolean;
+
+    constructor(salutHist: ISalutHist) {
+        super(salutHist);
+        this.entornAppId = salutHist.entornAppId;
+        this.data = salutHist.data;
+        this.appEstat = salutHist.appEstat;
+        Object.assign(this, salutHist);
     }
 }
 
@@ -350,6 +400,24 @@ export class SalutDetall extends BaseEntity implements Partial<ISalutDetall> {
         this.nom = salutDetall.nom;
         this.valor = salutDetall.valor;
         Object.assign(this, salutDetall);
+    }
+}
+
+export interface ISalutUltimEstatInfo extends IBaseEntity {
+
+    estat?: SalutEstatEnum;
+    data?: string;
+
+}
+
+export class SalutUltimEstatInfo extends BaseEntity implements Partial<ISalutUltimEstatInfo> {
+
+    estat?: SalutEstatEnum;
+    data?: string;
+
+    constructor(salutUltimEstatInfo: ISalutUltimEstatInfo) {
+        super(salutUltimEstatInfo);
+        Object.assign(this, salutUltimEstatInfo);
     }
 }
 
@@ -520,6 +588,76 @@ export const useGetColorByMissatge = () => {
     );
 };
 
+export const useGetColorByAvisTipus = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (tipus: AvisTipusEnum | string): string {
+            switch (tipus) {
+                case AvisTipusEnum.NOTICIA:
+                    return currentColorScheme.GREEN;
+                case AvisTipusEnum.INFO:
+                    return currentColorScheme.BLUE;
+                case AvisTipusEnum.ALERTA:
+                    return currentColorScheme.YELLOW;
+                case AvisTipusEnum.ERROR:
+                    return currentColorScheme.RED_LIGHT;
+                case AvisTipusEnum.CRITIC:
+                    return currentColorScheme.RED_DARK;
+                case 'ORANGE':
+                    return currentColorScheme.ORANGE;
+                default:
+                    return currentColorScheme.GRAY;
+            }
+        },
+        [currentColorScheme]
+    );
+};
+
+export const useGetColorByTascaPrioritat = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (prioritat: TascaPrioritatEnum | string): string {
+            switch (prioritat) {
+                case TascaPrioritatEnum.MAXIMA:
+                    return currentColorScheme.RED_DARK;
+                case TascaPrioritatEnum.ALTA:
+                    return currentColorScheme.ORANGE;
+                case TascaPrioritatEnum.NORMAL:
+                    return currentColorScheme.GRAY;
+                case TascaPrioritatEnum.BAIXA:
+                    return currentColorScheme.GREEN;
+                case TascaPrioritatEnum.NONE:
+                default:
+                    return currentColorScheme.GRAY;
+            }
+        },
+        [currentColorScheme]
+    );
+};
+
+export const useGetColorByTascaEstat = () => {
+    const currentColorScheme = useCurrentColorScheme();
+    return useCallback(
+        function (estat: TascaEstatEnum | string): string {
+            switch (estat) {
+                case TascaEstatEnum.PENDENT:
+                    return currentColorScheme.YELLOW;
+                case TascaEstatEnum.INICIADA:
+                    return currentColorScheme.BLUE;
+                case TascaEstatEnum.FINALITZADA:
+                    return currentColorScheme.GREEN;
+                case TascaEstatEnum.CANCELADA:
+                    return currentColorScheme.GRAY;
+                case TascaEstatEnum.ERROR:
+                    return currentColorScheme.RED_LIGHT;
+                default:
+                    return currentColorScheme.GRAY;
+            }
+        },
+        [currentColorScheme]
+    );
+};
+
 /**
  * Devuelve un icono de Material UI para un estado dado
  * @param state El estado de tipo SalutEstatEnum
@@ -543,3 +681,37 @@ export function getMaterialIconByState(state: SalutEstatEnum): JSX.Element {
             return <Icon color={"inherit"}>error</Icon>;
     }
 }
+
+export const useSalutDetallCodeTranslation = () => {
+    const { t } = useTranslation();
+    const tDetallTitle = (codi: string, nom : string) => {
+        switch (codi) {
+            case "PRC":
+                return t($ => $.page.salut.detalls.codis.PRC);
+            case "LAVG":
+                return t($ => $.page.salut.detalls.codis.LAVG);
+            case "SCPU":
+                return t($ => $.page.salut.detalls.codis.SCPU);
+            case "MET":
+                return t($ => $.page.salut.detalls.codis.MET);
+            case "MED":
+                return t($ => $.page.salut.detalls.codis.MED);
+            case "EDT":
+                return t($ => $.page.salut.detalls.codis.EDT);
+            case "EDL":
+                return t($ => $.page.salut.detalls.codis.EDL);
+            case "SO":
+                return t($ => $.page.salut.detalls.codis.SO);
+            case "ST":
+                return t($ => $.page.salut.detalls.codis.ST);
+            case "UT":
+                return t($ => $.page.salut.detalls.codis.UT);
+            default:
+                return nom;
+        }
+    };
+    return {
+        tDetallTitle,
+    };
+}
+

@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.0.014-1
+      author: limit
+      changes:
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "API Interna"
+              - column:
+                  name: SUBGRUP
+                  value: "Logs"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.log.dir"
+              - column:
+                  name: NOM
+                  value: "Directori on es guarden els logs"
+              - column:
+                  name: VALOR
+                  value: ""
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1

@@ -15,7 +15,7 @@ export type DataGridDialogProps = {
     resourceType?: ResourceType;
     resourceTypeCode?: string;
     resourceFieldName?: string;
-    onRowClickEnabled?: boolean;
+    onRowClickEnabled?: boolean | ((row: any) => boolean);
     dialogComponentProps?: any;
     dataGridComponentProps?: any;
     apiRef?: React.RefObject<DataGridDialogApi | undefined>;

@@ -12,19 +12,19 @@ const SalutIntegracionsChips = ({ salutItem }: { salutItem: SalutModel }) => {
                 tooltip={t(($) => $.page.salut.integracions.integracioUpCount)}
                 backgroundColor={getColorByIntegracio(SalutModel.INTEGRACIO_UP_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.integracioWarnCount}
                 tooltip={t(($) => $.page.salut.integracions.integracioWarnCount)}
                 backgroundColor={getColorByIntegracio(SalutModel.INTEGRACIO_WARN_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.integracioDownCount}
                 tooltip={t(($) => $.page.salut.integracions.integracioDownCount)}
                 backgroundColor={getColorByIntegracio(SalutModel.INTEGRACIO_DOWN_COUNT)}
             />
-            &nbsp;/&nbsp;
+            {' '}
             <SalutChip
                 label={salutItem.integracioDesconegutCount}
                 tooltip={t(($) => $.page.salut.integracions.integracioDesconegutCount)}

@@ -22,4 +22,6 @@ public class Avis implements Serializable {
     private URL redireccio;
     private String responsable;
     private String grup;
+    private String appCodi;
+    private String entornCodi;
 }

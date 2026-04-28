@@ -40,6 +40,7 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerAdditionalComponents?: React.ReactElement | React.ReactElement[];
     headerAdditionalAuthComponents?: React.ReactElement | React.ReactElement[];
     headerAuthBadgeIcon?: string;
+    offline?: React.ReactElement;
     footer?: React.ReactElement;
     footerHeight?: number;
     menuTitle?: string;
@@ -47,6 +48,7 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     menuOnTitleClose?: () => void;
     menuShrinkDisabled?: boolean;
     menuWidth?: number;
+    menuPanelWidth?: number;
     defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
@@ -155,7 +157,8 @@ const useMenu = (
     menuEntries: MenuEntry[] | undefined,
     menuOnTitleClose: (() => void) | undefined,
     menuWidth: number | undefined,
-    menuFooterHeight: number | undefined
+    menuFooterHeight: number | undefined,
+    menuPanelWidth: number | undefined,
 ) => {
     const { shrink, iconClicked, buttonComponent: menuButton } = useToolbarMenuIcon();
     const menuComponent =
@@ -168,6 +171,7 @@ const useMenu = (
                 shrink={shrink}
                 iconClicked={iconClicked}
                 footerHeight={menuFooterHeight}
+                compactPanelWidth={menuPanelWidth}
             />
         ) : undefined;
     if (menuComponent && menuFooterHeight == null) {
@@ -193,6 +197,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         headerAdditionalComponents,
         headerAdditionalAuthComponents,
         headerAuthBadgeIcon,
+        offline,
         footer,
         footerHeight,
         menuTitle,
@@ -200,6 +205,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         menuOnTitleClose,
         menuShrinkDisabled,
         menuWidth,
+        menuPanelWidth,
         formFieldComponents,
         children,
         defaultMuiComponentProps,
@@ -211,7 +217,8 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         menuEntries,
         menuOnTitleClose,
         menuWidth,
-        footerHeight
+        footerHeight,
+        menuPanelWidth,
     );
     const appbarComponent =
         headerTitle != null ? (
@@ -229,7 +236,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 authBadgeIcon={headerAuthBadgeIcon}
             />
         ) : undefined;
-    const offlineComponent = <OfflineMessage />;
+    const offlineComponent = offline ?? <OfflineMessage />;
     const muiContext: MuiBaseAppContextType = {
         defaultMuiComponentProps: {
             ...defaultMuiComponentProps,

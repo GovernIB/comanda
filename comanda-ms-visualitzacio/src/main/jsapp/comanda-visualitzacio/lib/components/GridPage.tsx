@@ -7,6 +7,8 @@ import { useBaseAppContext } from './BaseAppContext';
 type GridPageProps = React.PropsWithChildren & {
     /** Indica que s'han de desactivar els marges */
     disableMargins?: boolean;
+    /** Indica que la taula de la pàgina tendrà autoHeight activat */
+    autoHeight?: boolean;
     /** Estils addicionals per l'element contenidor */
     style?: React.CSSProperties;
 };
@@ -18,17 +20,15 @@ type GridPageProps = React.PropsWithChildren & {
  * @returns Element JSX de la pàgina.
  */
 export const GridPage: React.FC<GridPageProps> = (props) => {
-    const { disableMargins = true, style, children } = props;
+    const { disableMargins = true, autoHeight, style, children } = props;
     const {
         setMarginsDisabled,
         contentExpandsToAvailableHeight,
         setContentExpandsToAvailableHeight,
     } = useBaseAppContext();
-    const [proceed, setProceed] = React.useState<boolean>(
-        contentExpandsToAvailableHeight
-    );
+    const [proceed, setProceed] = React.useState<boolean>(contentExpandsToAvailableHeight);
     React.useEffect(() => {
-        if (!proceed && contentExpandsToAvailableHeight) {
+        if (!proceed && contentExpandsToAvailableHeight === !autoHeight) {
             setProceed(true);
         }
     }, [contentExpandsToAvailableHeight]);
@@ -37,15 +37,19 @@ export const GridPage: React.FC<GridPageProps> = (props) => {
         return () => setMarginsDisabled(false);
     }, [disableMargins]);
     React.useEffect(() => {
-        setContentExpandsToAvailableHeight(true);
-        return () => setContentExpandsToAvailableHeight(false);
-    }, []);
+        if (!autoHeight) {
+            setContentExpandsToAvailableHeight(true);
+            return () => setContentExpandsToAvailableHeight(false);
+        } else {
+            setContentExpandsToAvailableHeight(false);
+        }
+    }, [autoHeight]);
     return (
         <div
             style={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
+                ...(!autoHeight
+                    ? { display: 'flex', flexDirection: 'column', height: '100%' }
+                    : {}),
                 ...style,
             }}>
             {proceed && children}

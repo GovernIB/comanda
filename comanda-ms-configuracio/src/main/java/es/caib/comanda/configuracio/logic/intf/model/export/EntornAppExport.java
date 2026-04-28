@@ -27,15 +27,19 @@ public class EntornAppExport implements Serializable {
 
 	// Informació de salut
 	private String salutUrl;
+    private String logsUrl;
+    private Boolean salutAuth;
 
 	// Informació d'estadístiques
 	private String estadisticaInfoUrl;
 	private String estadisticaUrl;
 	private String estadisticaCron;
+    private Boolean estadisticaAuth;
 
     private Boolean compactable;
     private Integer compactacioSetmanalMesos;
     private Integer compactacioMensualMesos;
     private Integer eliminacioMesos;
+    private String alarmesEmail;
 
 }

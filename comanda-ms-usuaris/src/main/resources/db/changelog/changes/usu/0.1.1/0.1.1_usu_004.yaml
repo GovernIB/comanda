@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: usu-change-51-04
+      author: limit
+      changes:
+        - dropColumn:
+            tableName: ${db_prefix}usuari
+            columnName: tema_obscur

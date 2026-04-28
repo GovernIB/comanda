@@ -19,6 +19,7 @@ import {
 } from '../datacommon/MuiDataCommon';
 import { useDataToolbar } from '../datacommon/DataToolbar';
 import DataNoRows from '../datacommon/DataNoRows';
+import DataQuickFilter from '../datacommon/DataQuickFilter';
 import {
     ReactElementWithPosition,
     joinReactElementsWithPositionWithReactElementsWithPositions,
@@ -47,6 +48,7 @@ export type MuiDataListProps = {
     primaryFieldRenderer?: (args: MuiDataListFieldRendererArgs) => React.ReactElement;
     secondaryFieldRenderer?: (args: MuiDataListFieldRendererArgs) => React.ReactElement;
     readOnly?: boolean;
+    loading?: true;
     findDisabled?: boolean;
     quickFilterInitialValue?: string;
     filter?: string;
@@ -178,6 +180,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         primaryFieldRenderer,
         secondaryFieldRenderer,
         readOnly,
+        loading: loadingProp,
         findDisabled,
         quickFilterInitialValue,
         filter,
@@ -215,19 +218,22 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         popupEditFormI18nKeys,
     } = { ...defaultMuiComponentProps.dataList, ...props };
     const theme = useTheme();
+    const [quickFilter, setQuickFilter] = React.useState<string>(quickFilterInitialValue ?? '');
     const {
         currentActions: apiCurrentActions,
         currentError: apiCurrentError,
         delete: apiDelete,
+        bulkDelete: apiBulkDelete,
     } = useResourceApiService(resourceName);
     const findArgs = React.useMemo(
         () => ({
             filter,
+            quickFilter: quickFilter?.length ? quickFilter : undefined,
             namedQueries,
             perspectives,
             unpaged: true,
         }),
-        [filter, namedQueries, perspectives]
+        [filter, quickFilter, namedQueries, perspectives]
     );
     const {
         loading: _loading,
@@ -235,37 +241,40 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         rows,
         refresh,
         export: exportt,
-        quickFilterComponent,
     } = useApiDataCommon(
         resourceName,
         resourceType,
         resourceTypeCode,
         resourceFieldName,
+        loadingProp,
         findDisabled,
         findArgs,
-        quickFilterInitialValue,
-        undefined,
-        { sx: { ml: 1 } }
     );
     const {
         toolbarAddElement,
         rowEditActions,
         formDialogComponent,
-        showCreateDialog: _showCreateDialog,
-        showUpdateDialog,
+        triggerCreate: _showCreateDialog,
+        triggerUpdate: showUpdateDialog,
     } = useDataCommonEditable(
         resourceName,
         readOnly ?? false,
         formAdditionalData,
         toolbarCreateLink,
-        rowUpdateLink,
+        false,
+        undefined,
+        undefined,
         rowDetailLink,
+        rowUpdateLink,
         rowDisableUpdateButton,
         rowDisableDeleteButton,
         rowDisableDetailsButton,
         rowHideUpdateButton,
         rowHideDeleteButton,
         rowHideDetailsButton,
+        false,
+        false,
+        false,
         popupEditActive,
         popupEditCreateActive,
         popupEditUpdateActive,
@@ -279,7 +288,11 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         popupEditFormI18nKeys,
         apiCurrentActions,
         apiDelete,
-        refresh
+        apiBulkDelete,
+        refresh,
+        undefined,
+        undefined,
+        undefined
     );
     const toolbarNodesPosition = 2;
     const toolbarListElementsWithPositions: ReactElementWithPosition[] = [];
@@ -304,7 +317,10 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         subtitle,
         'default',
         apiCurrentError,
-        quickFilterComponent,
+        <DataQuickFilter
+            value={quickFilter}
+            onChange={setQuickFilter}
+            sx={{ ml: 1 }} />,
         refresh,
         exportt,
         toolbarBackButton,

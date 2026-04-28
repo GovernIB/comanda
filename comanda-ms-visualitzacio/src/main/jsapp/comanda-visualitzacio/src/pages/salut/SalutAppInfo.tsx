@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Table from '@mui/material/Table';
@@ -38,10 +39,13 @@ import {
     NivellEnum,
     SalutIntegracioModel,
     SalutModel,
+    SalutEstatEnum,
+    useSalutEstatTranslation,
+    useSalutDetallCodeTranslation,
 } from '../../types/salut.model.tsx';
 import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
-import { Alert, Tooltip } from '@mui/material';
+import { Alert, Checkbox, FormControl, InputLabel, LinearProgress, ListItemText, MenuItem, OutlinedInput, Select, SelectChangeEvent, Tooltip } from '@mui/material';
 import { SalutData } from './Salut.tsx';
 import { AppDataState, SalutInformeLatenciaItem } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
@@ -50,6 +54,8 @@ import SalutChip from '../../components/salut/SalutChip';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import LogsViewer from './LogsViewer';
+import PageTitle from '../../components/PageTitle.tsx';
+import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
 
 const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
     const { salutCurrentApp: app, entornApp: entornApp } = props;
@@ -156,7 +162,7 @@ const LatenciaLineChart: React.FC<{
                                 agrupacio === 'HORA' ? value.substring(3) : value,
                         },
                     ]}
-                    yAxis={[{ label: ' ms', id: 'latencia-y-axis-id' }]}
+                    yAxis={[{ label: t($ => $.page.salut.latencia.title)+' (ms)', id: 'latencia-y-axis-id' }]}
                 >
                     <LinePlot />
                     <MarkPlot />
@@ -203,9 +209,13 @@ const EstatsBarCard: React.FC<{
     );
 };
 
-const PeticionsOkError: React.FC<{ ok?: number; error?: number }> = props => {
+const PeticionsOkError: React.FC<{ ok?: string|number; error?: string|number }> = props => {
     const { ok, error } = props;
+    const { t } = useTranslation();
     const theme = useTheme();
+    if (ok == null && error == null) {
+        return <>{t($ => $.page.salut.nd)}</>;
+    }
     return (
         <>
             <span style={{ color: theme.palette.success.main }}>{ok ?? 0}</span>
@@ -317,26 +327,97 @@ const IntegracioRow: React.FC<{
     );
 };
 
-const Integracions: React.FC<{
+type IntegracionsProps = {
     salutCurrentApp: SalutModel;
     integracionsExpandState: string[];
     toggleIntegracioExpand: (id: string) => void;
-}> = props => {
-    const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand } = props;
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
+};
+
+const Integracions: React.FC<IntegracionsProps> = props => {
+    const { salutCurrentApp, integracionsExpandState, toggleIntegracioExpand, selectedEstats, onSelectedEstatsChange } = props;
     const { t } = useTranslation();
+    const { tTitle } = useSalutEstatTranslation();
     const integracions = salutCurrentApp?.integracions;
+    const ALL_ESTATS = Object.values(SalutEstatEnum);//Si no se respeta el orden, hay que crear un array ordenado.
+    /** Obtiene los IDs de todos los ancestros (campo padre) */
+    const getAncestorIds = (integracioId: number): number[] => {
+        const integracio = integracions?.find(i => i.id === integracioId);
+        if (!integracio || !integracio.pare?.id) return [];
+        return [integracio.pare.id, ...getAncestorIds(integracio.pare.id)];
+    };
+    /** Verifica si una integración tiene descendientes que cumplen con los estados seleccionados. */
+    const hasMatchingDescendant = (integracioId: number): boolean => {
+        if (!integracions) return false;
+        const directChildren = integracions.filter(i => i.pare?.id === integracioId);
+        const hasDirectMatch = directChildren.some(child => selectedEstats.includes(child.estat as SalutEstatEnum));
+        if (hasDirectMatch) return true;
+        return directChildren.some(child => hasMatchingDescendant(child.id));
+    };
+    const filteredIntegracions = React.useMemo(() => {
+        if (!integracions?.length || selectedEstats.length === 0) {
+            return integracions?.filter(i => i.pare == null) || [];
+        }
+        const matchingIds = integracions
+            .filter(i => selectedEstats.includes(i.estat as SalutEstatEnum))
+            .map(i => i.id);
+        if (matchingIds.length === 0) return [];
+        const ancestorIds = matchingIds.flatMap(id => getAncestorIds(id));
+        const allIdsToShow = [...new Set([...matchingIds, ...ancestorIds])];
+        return integracions.filter(i =>
+            i.pare == null && allIdsToShow.includes(i.id)
+        );
+    }, [integracions, selectedEstats]);
+    /** Devuelve los hijos de que cumplen el filtro. */
+    const filterFills = (parentId: number): typeof integracions => {
+        if (!integracions) return [];
+        const directFills = integracions.filter(i => i.pare?.id === parentId);
+        if (selectedEstats.length === 0) return directFills;
+        return directFills.filter(fill => {
+            const matchesFilter = selectedEstats.includes(fill.estat as SalutEstatEnum);
+            const hasMatchingChildren = hasMatchingDescendant(fill.id);
+            return matchesFilter || hasMatchingChildren;
+        });
+    };
+    const isFiltered = selectedEstats.length > 0;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t($ => $.page.salut.integracions.title)}
-                </Typography>
-                {!integracions?.length && (
-                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                        {t($ => $.page.salut.integracions.noInfo)}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between',alignItems: 'center', flexWrap: 'wrap', mb: 2, gap: 1 }}>
+                    <Typography variant="h5" component="div">
+                        {t($ => $.page.salut.integracions.title)}
+                    </Typography>
+                    <Box sx={{ minWidth: '200px' }}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel id="estats-integracions-label">
+                                {t($ => $.page.salut.integracions.filter.estat)}
+                            </InputLabel>
+                            <Select
+                                labelId="estats-integracions-label"
+                                id="estats-integracions-select"
+                                multiple
+                                value={selectedEstats}
+                                onChange={onSelectedEstatsChange}
+                                input={<OutlinedInput label={t($ => $.page.salut.integracions.filter.estat)} />}
+                                renderValue={(selected: SalutEstatEnum[]) => selected.map(v => tTitle(v)).join(', ')}
+                            >
+                                {ALL_ESTATS.map((estat) => (
+                                    <MenuItem key={estat} value={estat}>
+                                        <Checkbox checked={selectedEstats.includes(estat)} />
+                                        <ListItemText primary={tTitle(estat)} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                </Box>
+                {!filteredIntegracions.length && (
+                    <Typography sx={{display: 'flex', justifyContent: 'center', py: 3, color: isFiltered ? 'text.secondary' : 'text.primary'}}>
+                        {isFiltered ? t($ => $.page.salut.integracions.noResults) : t($ => $.page.salut.integracions.noInfo)}
                     </Typography>
                 )}
-                {!!integracions?.length && (
+                {!!filteredIntegracions.length && (
                     <Table size="small">
                         <TableHead>
                             <TableRow>
@@ -349,12 +430,14 @@ const Integracions: React.FC<{
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsTotals)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigTotal)}
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsPeriode)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigPeriode)}
@@ -362,17 +445,15 @@ const Integracions: React.FC<{
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {integracions
-                                .filter(i => i.pare == null)
-                                .map(i => (
-                                    <IntegracioRow
-                                        open={integracionsExpandState.includes(i.codi)}
-                                        toggleOpen={() => toggleIntegracioExpand(i.codi)}
-                                        integracio={i}
-                                        fills={integracions.filter(i2 => i2.pare?.id === i.id)}
-                                        key={`integracioRow-${i.id}`}
-                                    />
-                                ))}
+                            {filteredIntegracions.map(i => (
+                                <IntegracioRow
+                                    open={integracionsExpandState.includes(i.codi)}
+                                    toggleOpen={() => toggleIntegracioExpand(i.codi)}
+                                    integracio={i}
+                                    fills={filterFills(i.id)}
+                                    key={`integracioRow-${i.id}`}
+                                />
+                            ))}
                         </TableBody>
                     </Table>
                 )}
@@ -381,21 +462,59 @@ const Integracions: React.FC<{
     );
 };
 
-const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+type SubsistemesProps = {
+    salutCurrentApp: SalutModel;
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
+};
+
+const Subsistemes: React.FC<SubsistemesProps> = ({ salutCurrentApp, selectedEstats, onSelectedEstatsChange }) => {
     const { t } = useTranslation();
+    const { tTitle } = useSalutEstatTranslation();
     const subsistemes = salutCurrentApp.subsistemes;
+    const ALL_ESTATS = Object.values(SalutEstatEnum);//Si no se respeta el orden, hay que crear un array ordenado.
+    const filteredSubsistemes = React.useMemo(() => {
+        if (selectedEstats.length === 0) return subsistemes || [];
+        return (subsistemes || []).filter(s => selectedEstats.includes(s.estat as SalutEstatEnum));
+    }, [subsistemes, selectedEstats]);
+    const isFiltered = selectedEstats.length > 0;
     return (
         <Card variant="outlined" sx={{ height: '100%' }}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t($ => $.page.salut.subsistemes.title)}
-                </Typography>
-                {!subsistemes?.length && (
-                    <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
-                        {t($ => $.page.salut.subsistemes.noInfo)}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', mb: 2, gap: 1 }}>
+                    <Typography variant="h5" component="div">
+                        {t($ => $.page.salut.subsistemes.title)}
+                    </Typography>
+                    <Box sx={{ minWidth: '200px' }}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel id="estats-label">
+                                {t($ => $.page.salut.subsistemes.filter.estat)}
+                            </InputLabel>
+                            <Select
+                                labelId="estats-label"
+                                id="estats-select"
+                                multiple
+                                value={selectedEstats}
+                                onChange={onSelectedEstatsChange}
+                                input={<OutlinedInput label={t($ => $.page.salut.subsistemes.filter.estat)} />}
+                                renderValue={(selected: SalutEstatEnum[]) => selected.map(v => tTitle(v)).join(', ')}
+                            >
+                                {ALL_ESTATS.map((estat) => (
+                                    <MenuItem key={estat} value={estat}>
+                                        <Checkbox checked={selectedEstats.includes(estat)} />
+                                        <ListItemText primary={tTitle(estat)} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                </Box>
+                {!filteredSubsistemes.length && (
+                    <Typography sx={{ display: 'flex', justifyContent: 'center', py: 3, color: isFiltered ? 'text.secondary' : 'text.primary'}}>
+                        {isFiltered ? t($ => $.page.salut.subsistemes.noResults) : t($ => $.page.salut.subsistemes.noInfo)}
                     </Typography>
                 )}
-                {!!subsistemes?.length && (
+                {!!filteredSubsistemes?.length && (
                     <Table size="small">
                         <TableHead>
                             <TableRow>
@@ -408,12 +527,14 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsTotals)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigTotal)}
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsPeriode)}
+                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigPeriode)}
@@ -421,7 +542,7 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {subsistemes.map((s, key: number) => (
+                            {filteredSubsistemes.map((s, key: number) => (
                                 <TableRow key={key}>
                                     <TableCell>{s.codi}</TableCell>
                                     <TableCell>{s.nom}</TableCell>
@@ -464,8 +585,8 @@ const Subsistemes: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentAp
 const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
     const contexts = salutCurrentApp.contexts;
-    return (
-        <Card variant="outlined" sx={{ height: '100%' }}>
+    return (<>
+        <Card variant="outlined">
             <CardContent>
                 <Typography gutterBottom variant="h5" component="div">
                     {t($ => $.page.salut.contexts.title)}
@@ -544,32 +665,42 @@ const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }
                                 ))}
                             </TableBody>
                         </Table>
-                        <Box sx={{
-                            mt: 2,
-                            display: 'flex',
-                        }}>
-                            {contexts.map((s, key: number) =>
-                                s.manuals?.map((manual, index: number) => (
-                                    <Button
-                                        key={`manual${key}-${index}`}
-                                        href={manual.path ?? ''}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{
-                                            textTransform: 'none',
-                                            display: 'block',
-                                        }}
-                                    >
-                                        {manual.nom}
-                                    </Button>
-                                ))
-                            )}
-                        </Box>
                     </>
                 )}
             </CardContent>
         </Card>
-    );
+        {contexts?.length && (
+        <Card variant="outlined" sx={{ mt: 2 }}>
+            <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.manuals.title)}
+                </Typography>
+                    <Box sx={{
+                        mt: 2,
+                        display: 'flex',
+                    }}>
+                        {contexts.map((s, key: number) =>
+                            s.manuals?.map((manual, index: number) => (
+                                <Button
+                                    key={`manual${key}-${index}`}
+                                    href={manual.path ?? ''}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    startIcon={<Icon>description</Icon>}
+                                    sx={{
+                                        textTransform: 'none',
+                                        display: 'flex',
+                                    }}
+                                >
+                                    {manual.nom}
+                                </Button>
+                            ))
+                        )}
+                    </Box>
+            </CardContent>
+        </Card>
+        )}
+    </>);
 };
 
 const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
@@ -693,8 +824,78 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
 //     );
 // };
 
+function convertirAMegas(valor:string|undefined) {
+    if (!valor) return 0;
+
+    const texto = valor.replace(',', '.').toUpperCase();
+
+    if (texto.includes('GB')) {
+        return parseFloat(texto) * 1024;
+    }
+
+    if (texto.includes('MB')) {
+        return parseFloat(texto);
+    }
+
+    return 0;
+}
+
+const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+    const { t } = useTranslation();
+
+    const memoriaTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MET')?.valor
+    const memoriaDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MED')?.valor
+    const memoriaEmprada = 100 - convertirAMegas(memoriaDisponible) * 100 / convertirAMegas(memoriaTotal);
+
+    const discTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDT')?.valor
+    const discDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDL')?.valor
+    const discEmprada = 100 - convertirAMegas(discDisponible) * 100 / convertirAMegas(discTotal);
+
+    return <Card variant="outlined">
+        <CardHeader title={t($ => $.page.salut.memoria.title)} />
+        <CardContent>
+            <Grid container sx={{display: "flex", alignItems: 'center', justifyContent: 'center'}}>
+                <Grid size={1} textAlign={'center'}><Icon>desktop_windows</Icon></Grid>
+                <Grid size={9}>
+                    <LinearProgress variant="determinate" color={'success'} value={memoriaEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
+                </Grid>
+                <Grid size={10} sx={{ textAlign: 'end'}} >
+                    <Trans
+                        i18nKey={$ => $.page.salut.memoria.espaiMeoria}
+                        values={{
+                            disp: memoriaDisponible,
+                            total: memoriaTotal,
+                        }}
+                        components={{
+                            strong: <Box component="span" fontWeight="bold" />
+                        }}
+                    />
+                </Grid>
+            </Grid>
+            <Grid container sx={{display: "flex", alignItems: 'center', justifyContent: 'center'}}>
+                <Grid size={1} textAlign={'center'}><Icon>folder</Icon></Grid>
+                <Grid size={9}>
+                    <LinearProgress variant="determinate" color={'success'} value={discEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
+                </Grid>
+                <Grid size={10} sx={{ textAlign: 'end'}} >
+                    <Trans
+                        i18nKey={$ => $.page.salut.memoria.espaiDisc}
+                        values={{
+                            disp: discDisponible,
+                            total: discTotal,
+                        }}
+                        components={{
+                            strong: <strong />
+                        }}
+                    />
+                </Grid>
+            </Grid>
+        </CardContent>
+    </Card>
+}
 const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
+    const { tDetallTitle } = useSalutDetallCodeTranslation();
     const detalls = salutCurrentApp.detalls;
     const bdEstat = salutCurrentApp && (
         <ItemStateChip salutField={SalutField.BD_ESTAT} salutStatEnum={salutCurrentApp.bdEstat} />
@@ -709,9 +910,11 @@ const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
     );
 
     const tableSections = [
-        ...(detalls ?? []).map(detall => ({
+        ...(detalls ?? [])
+            .filter(detall => !['MET','MED','EDT','EDL'].includes(detall.codi))
+            .map(detall => ({
             id: detall.id,
-            headerName: detall.nom,
+            headerName: tDetallTitle(detall.codi, detall.nom),
             cellContent: detall.valor,
         })),
         {
@@ -750,9 +953,30 @@ const DownAlert = () => {
     return <Alert severity="error">{t($ => $.page.salut.info.downAlert)}</Alert>;
 };
 
+interface AlertUltimaDataActivaProps {
+    salutCurrentApp: SalutModel;
+}
+const AlertUltimaDataActiva: React.FC<AlertUltimaDataActivaProps> = ({ salutCurrentApp }) => {
+    const { t } = useTranslation();
+    const { tTitle } = useSalutEstatTranslation();
+    const ultimEstatInfo = salutCurrentApp?.ultimEstatInfo;
+    if (!ultimEstatInfo?.data || !ultimEstatInfo?.estat) {
+        return null;
+    }
+    return (
+        <Grid size={{ sm: 12, lg: 12 }}>
+            <Alert severity="info">
+                {t($ => $.page.salut.info.darreraDataInfo1)}
+                <strong>{dateFormatLocale(ultimEstatInfo.data, true)}</strong>{' '}
+                ({t($ => $.page.salut.info.darreraDataInfo2)}<strong>{tTitle(ultimEstatInfo.estat)}</strong>)
+            </Alert>
+        </Grid>
+    );
+};
+
 const TabEntorn: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp }) => {
     return (
-        <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid container spacing={2}>
             <Grid size={{ sm: 12, lg: 12 }}>
                 <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
             </Grid>
@@ -770,25 +994,42 @@ const TabEntorn: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp 
                     </Grid>
                 </>
             )}
+            <AlertUltimaDataActiva salutCurrentApp={salutCurrentApp} />
         </Grid>
     );
 };
 
-const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
+type TabEstatActualOtherProps = {
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
+};
+
+const TabEstatActual: React.FC<SalutAppInfoTabProps & { otherProps: TabEstatActualOtherProps }> = ({
+        salutCurrentApp,
+        otherProps: { selectedEstats, onSelectedEstatsChange }
+    }) => {
     if (salutCurrentApp.peticioError) {
         return (
             <Grid>
                 <DownAlert />
+                <AlertUltimaDataActiva salutCurrentApp={salutCurrentApp} />
             </Grid>
         );
     }
     return (
         <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid size={{ sm: 12, lg: 12 }}>
+            <Grid size={{ sm: 12, lg: 6 }}>
                 <DetallInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
+            {/* Sense el breakpoint xs: 12 el contenidor no pareix ocupar el tamany que toca quan es fa la pantalla petita */}
+            <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
+                <MeoriaInfo salutCurrentApp={salutCurrentApp} />
+            </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
-                <Subsistemes salutCurrentApp={salutCurrentApp} />
+                <Subsistemes
+                    salutCurrentApp={salutCurrentApp}
+                    selectedEstats={selectedEstats}
+                    onSelectedEstatsChange={onSelectedEstatsChange} />
             </Grid>
             {/*<Grid size={{ sm: 12, lg: 12 }}>*/}
             {/*    <EstatInfo salutCurrentApp={salutCurrentApp} />*/}
@@ -800,15 +1041,18 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => 
 type TabIntegracionsOtherProps = {
     integracionsExpandState: string[];
     toggleIntegracioExpand: (id: string) => void;
+    selectedEstats: SalutEstatEnum[];
+    onSelectedEstatsChange: (event: SelectChangeEvent<SalutEstatEnum[]>) => void;
 };
 
 const TabIntegracions: React.FC<
     SalutAppInfoTabProps & { otherProps: TabIntegracionsOtherProps }
-> = ({ salutCurrentApp, otherProps: { integracionsExpandState, toggleIntegracioExpand } }) => {
+> = ({ salutCurrentApp, otherProps:{ integracionsExpandState, toggleIntegracioExpand, selectedEstats, onSelectedEstatsChange} }) => {
     if (salutCurrentApp.peticioError) {
         return (
             <Grid>
                 <DownAlert />
+                <AlertUltimaDataActiva salutCurrentApp={salutCurrentApp} />
             </Grid>
         );
     }
@@ -822,6 +1066,8 @@ const TabIntegracions: React.FC<
                 salutCurrentApp={salutCurrentApp}
                 toggleIntegracioExpand={toggleIntegracioExpand}
                 integracionsExpandState={integracionsExpandState}
+                selectedEstats={selectedEstats}
+                onSelectedEstatsChange={onSelectedEstatsChange}
             />
         </Box>
     );
@@ -860,6 +1106,52 @@ const TabHistoric: React.FC<SalutAppInfoTabProps & { otherProps: TabHistoricOthe
     );
 };
 
+const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
+    const { t } = useTranslation();
+    const historics = salutCurrentApp.historics ?? [];
+
+    return (
+        <Card variant="outlined">
+            <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.historicEstat.title)}
+                </Typography>
+                {historics.length === 0 ? (
+                    <Typography>{t($ => $.page.salut.historicEstat.noInfo)}</Typography>
+                ) : (
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>{t($ => $.page.salut.historicEstat.column.data)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.historicEstat.column.appEstat)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.historicEstat.column.peticio)}</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {historics.map(historic => (
+                                <TableRow key={historic.id ?? `${historic.data}-${historic.appEstat}`}>
+                                    <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
+                                    <TableCell>
+                                        <ItemStateChip
+                                            salutField={SalutField.APP_ESTAT}
+                                            salutStatEnum={historic.appEstat}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        {historic.peticioError
+                                            ? t($ => $.page.salut.historicEstat.peticioError)
+                                            : t($ => $.page.salut.historicEstat.peticioOk)}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
 const TabLogs = ({ entornApp }: { entornApp: EntornAppModel | null }) => {
     if (entornApp == null)
         return (
@@ -879,11 +1171,15 @@ const TabLogs = ({ entornApp }: { entornApp: EntornAppModel | null }) => {
     return <LogsViewer entornAppId={entornApp.id} />;
 };
 
+const tabContentPaddingAmount = 2;
+
 /**
  * Component wrapper per als tabs que depenen del valor de salutCurrentApp
  * Accepta una sèrie de props, gestiona els casos d'error i renderitza el component childrenTabComponent
  * amb les props validades per a la interfície SalutAppInfoTabProps i a més passa sense tractar
  * les props especificades al genèric T.
+ * També accepta overflowingContent per a ajustar la altura a l'espai ocupat pel footer i assegurar
+ * que el padding del tabContent s'aplica correctament.
  */
 function TabSalutCurrentApp<T>({
     salutCurrentApp,
@@ -891,12 +1187,14 @@ function TabSalutCurrentApp<T>({
     dataLoaded,
     childrenTabComponent: ChildrenTabComponent,
     childrenTabOtherProps,
+    overflowingContent,
 }: {
     salutCurrentApp: SalutModel | null;
     entornApp: EntornAppModel | null;
     dataLoaded: boolean;
     childrenTabComponent: React.FC<SalutAppInfoTabProps & { otherProps: T }>;
     childrenTabOtherProps: T;
+    overflowingContent?: boolean;
 }) {
     if (dataLoaded && salutCurrentApp == null) return <WarningNoInfo />;
     if (salutCurrentApp == null || entornApp == null)
@@ -914,12 +1212,20 @@ function TabSalutCurrentApp<T>({
             </Box>
         );
     return (
-        <ChildrenTabComponent
-            salutCurrentApp={salutCurrentApp}
-            entornApp={entornApp}
-            dataLoaded={dataLoaded}
-            otherProps={childrenTabOtherProps}
-        />
+        <>
+            <ChildrenTabComponent
+                salutCurrentApp={salutCurrentApp}
+                entornApp={entornApp}
+                dataLoaded={dataLoaded}
+                otherProps={childrenTabOtherProps}
+            />
+            {overflowingContent && (
+                <>
+                    <Box sx={{ pb: tabContentPaddingAmount }} />
+                    <FooterHeightPlaceholder />
+                </>
+            )}
+        </>
     );
 }
 
@@ -932,6 +1238,8 @@ const SalutAppInfo: React.FC<{
     const getColorBySubsistema = useGetColorBySubsistema();
     const getColorByIntegracio = useGetColorByIntegracio();
     const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
+    const [integracionsSelectedEstats, setIntegracionsSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
+    const [subsistemesSelectedEstats, setSubsistemesSelectedEstats] = React.useState<SalutEstatEnum[]>([]);
     const [integracionsExpandState, setIntegracionsExpandState] = React.useState<string[]>([]);
     const toggleIntegracioExpand = (id: string) => {
         if (integracionsExpandState.includes(id))
@@ -989,15 +1297,23 @@ const SalutAppInfo: React.FC<{
             icon: <Icon>timeline</Icon>,
         },
         {
+            id: 'historicEstat',
+            label: t($ => $.page.salut.tabs.historicEstat),
+            icon: <Icon>history_toggle_off</Icon>,
+        },
+        {
             id: 'logs',
             label: t($ => $.page.salut.tabs.logs),
             icon: <Icon>notes</Icon>,
-            disabled: true,
+            disabled: !entornApp?.logsUrl,
         },
     ];
 
+    const selectedTab = tabs[tabValue]?.id;
+
     return (
         <>
+            <PageTitle title={t($ => $.page.salut.appInfoTitle)} />
             <Tabs
                 value={tabValue}
                 onChange={handleChange}
@@ -1005,6 +1321,7 @@ const SalutAppInfo: React.FC<{
                     mx: 2,
                     borderBottom: 1,
                     borderColor: 'divider',
+                    flexShrink: 0,
                 }}
             >
                 {tabs.map(tab => (
@@ -1013,34 +1330,44 @@ const SalutAppInfo: React.FC<{
                         iconPosition="start"
                         label={tab.label}
                         icon={tab.icon}
+                        disabled={tab.disabled}
+                        sx={{
+                            minHeight: 56,
+                        }}
                     />
                 ))}
             </Tabs>
             <Box
                 sx={{
-                    p: 2,
+                    p: tabContentPaddingAmount,
                     height: '100%',
                 }}
             >
-                {tabValue === 0 && (
+                {selectedTab === 'entorn' && (
                     <TabSalutCurrentApp
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
                         dataLoaded={dataLoaded}
                         childrenTabComponent={TabEntorn}
                         childrenTabOtherProps={{}}
+                        overflowingContent
                     />
                 )}
-                {tabValue === 1 && (
+                {selectedTab === 'estatActual' && (
                     <TabSalutCurrentApp
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
                         dataLoaded={dataLoaded}
                         childrenTabComponent={TabEstatActual}
-                        childrenTabOtherProps={{}}
+                        childrenTabOtherProps={{
+                            selectedEstats: subsistemesSelectedEstats,
+                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) =>
+                                setSubsistemesSelectedEstats(e.target.value as SalutEstatEnum[]),
+                        }}
+                        overflowingContent
                     />
                 )}
-                {tabValue === 2 && (
+                {selectedTab === 'integracions' && (
                     <TabSalutCurrentApp<TabIntegracionsOtherProps>
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
@@ -1049,10 +1376,14 @@ const SalutAppInfo: React.FC<{
                         childrenTabOtherProps={{
                             integracionsExpandState: integracionsExpandState,
                             toggleIntegracioExpand: toggleIntegracioExpand,
+                            selectedEstats: integracionsSelectedEstats,
+                            onSelectedEstatsChange: (e: SelectChangeEvent<SalutEstatEnum[]>) =>
+                                setIntegracionsSelectedEstats(e.target.value as SalutEstatEnum[]),
                         }}
+                        overflowingContent
                     />
                 )}
-                {tabValue === 3 && (
+                {selectedTab === 'historic' && (
                     <TabSalutCurrentApp<TabHistoricOtherProps>
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
@@ -1064,9 +1395,20 @@ const SalutAppInfo: React.FC<{
                             grupsDates,
                             latencies,
                         }}
+                        overflowingContent
                     />
                 )}
-                {tabValue === 4 && <TabLogs entornApp={entornApp} />}
+                {selectedTab === 'historicEstat' && (
+                    <TabSalutCurrentApp
+                        salutCurrentApp={salutCurrentApp}
+                        entornApp={entornApp}
+                        dataLoaded={dataLoaded}
+                        childrenTabComponent={TabHistoricEstat}
+                        childrenTabOtherProps={{}}
+                        overflowingContent
+                    />
+                )}
+                {selectedTab === 'logs' && <TabLogs entornApp={entornApp} />}
             </Box>
         </>
     );

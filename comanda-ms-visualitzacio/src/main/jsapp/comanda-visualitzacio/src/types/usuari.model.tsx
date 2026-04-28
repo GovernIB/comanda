@@ -9,8 +9,11 @@ export interface IUsuari extends IBaseEntity {
     email: string | undefined;
     emailAlternatiu: string | undefined;
     idioma: LanguageEnum;
-    temaObscur: boolean | undefined;
+    temaAplicacio: TemaAplicacio | undefined;
+    estilMenu: MenuEstil;
     rols: string[] | undefined;
+    alarmaMail: boolean | undefined;
+    alarmaMailAgrupar: boolean | undefined;
 
     numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
 }
@@ -24,9 +27,12 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     static readonly EMAIL: keyof UsuariModel = "email";
     static readonly EMAIL_ALTERNATIU: keyof UsuariModel = "emailAlternatiu";
     static readonly IDIOMA: keyof UsuariModel = "idioma";
-    static readonly TEMA_OBSCUR: keyof UsuariModel = "temaObscur";
+    static readonly TEMA_APLICACIO: keyof UsuariModel = "temaAplicacio";
+    static readonly ESTIL_MENU: keyof UsuariModel = "estilMenu";
     static readonly ROLS: keyof UsuariModel = "rols";
     static readonly NUM_ELEMENTS_PAGINA: keyof UsuariModel = "numElementsPagina";
+    static readonly ALARMA_MAIL: keyof UsuariModel = "alarmaMail";
+    static readonly ALARMA_MAIL_AGRUPAT: keyof UsuariModel = "alarmaMailAgrupar";
 
     codi: string;
     nom: string;
@@ -34,9 +40,12 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     email: string | undefined;
     emailAlternatiu: string | undefined;
     idioma: LanguageEnum;
-    temaObscur: boolean | undefined;
+    temaAplicacio: TemaAplicacio | undefined;
+    estilMenu!: MenuEstil;
     rols: string[] | undefined;
     numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
+    alarmaMail: boolean | undefined;
+    alarmaMailAgrupar: boolean | undefined;
 
     constructor(usuari: IUsuari) {
         super(usuari);
@@ -44,6 +53,8 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
         this.nom = usuari.nom;
         this.idioma = usuari.idioma;
         this.numElementsPagina = usuari.numElementsPagina;
+        this.alarmaMail = usuari.alarmaMail;
+        this.alarmaMailAgrupar = usuari.alarmaMailAgrupar;
         Object.assign(this, usuari);
     }
 }
@@ -51,4 +62,17 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
 export enum LanguageEnum {
     CA = "CA",
     ES = "ES"
+}
+
+export enum TemaAplicacio {
+    CLAR = "CLAR",
+    OBSCUR = "OBSCUR",
+    DRACULA = "DRACULA",
+    SISTEMA = "SISTEMA",
+}
+
+export enum MenuEstil {
+    TEMA = "TEMA",
+    TEMA_INVERTIT = "TEMA_INVERTIT",
+    PEU = "PEU",
 }

@@ -8,9 +8,12 @@ import {
 } from 'reactlib';
 import BlockIcon from '@mui/icons-material/Block';
 import LogoUpload from "../components/LogoUpload.tsx";
+import PageTitle from '../components/PageTitle.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
 const Integracions: React.FC = () => {
     const { t } = useTranslation();
+    const readOnlyGestor = useReadOnlyGestor();
     const columns = [
         {
             field: 'logo',
@@ -42,6 +45,7 @@ const Integracions: React.FC = () => {
     ];
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.integracions.title)} />
             <MuiDataGrid
                 title={t($ => $.page.integracions.title)}
                 resourceName="integracio"
@@ -51,6 +55,7 @@ const Integracions: React.FC = () => {
                 popupEditActive
                 toolbarHideCreate
                 rowHideDeleteButton
+                rowHideUpdateButton={readOnlyGestor}
                 popupEditFormContent={
                     <Grid container spacing={2}>
                         <Grid size={12}><FormField name="codi" disabled={true} /></Grid>

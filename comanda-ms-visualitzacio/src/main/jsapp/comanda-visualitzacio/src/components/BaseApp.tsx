@@ -19,18 +19,18 @@ import {
     useResourceApiContext,
 } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
-import Alarms from './Alarms';
-import Footer from './Footer';
+import Alarms, { AlarmsDialog } from './Alarms';
 import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
 import HeaderLanguageSelector from './HeaderLanguageSelector';
 import { UserProfileFormDialog, UserProfileFormDialogButton } from './UserProfileFormDialog';
 import RoleSelector from './RoleSelector';
 import i18n from '../i18n/i18n';
-import drassana from '../assets/drassana.png';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
-import { useTheme } from '@mui/material/styles';
+import { Theme, useTheme } from '@mui/material/styles';
+import { ROLE_ADMIN } from './UserProvider.tsx';
+import ComandaFooter, { comandaFooterHeight } from './ComandaFooter.tsx';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -54,11 +54,13 @@ export type BaseAppProps = React.PropsWithChildren & {
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
     appbarStyle?: any;
+    menuAppearance?: 'theme' | 'inverse' | 'footer';
     defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
+// Antes se aplicaba role={undefined} por encima de itemProps, pero esto impedia configurar un Link como role="menuitem"
 const Link = React.forwardRef<HTMLAnchorElement, RouterLinkProps>((itemProps, ref) => {
-    return <RouterLink ref={ref} {...itemProps} role={undefined} />;
+    return <RouterLink ref={ref} role={undefined} {...itemProps} />;
 });
 
 const useLocationPath = () => {
@@ -128,40 +130,6 @@ const generateLanguageItems = (availableLanguages: string[] | undefined) => {
         : [];
 }
 
-const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
-    const { isReady: apiIsReady, indexState: apiIndex } = useResourceApiContext();
-    return React.useMemo(() => {
-        if (apiIsReady) {
-            const apiLinks = apiIndex?.links.getAll();
-            const resourceNames = apiLinks?.map((l: any) => l.rel);
-            return menuEntries?.
-                filter(e => e?.resourceName == null || resourceNames?.includes(e.resourceName)).
-                map(e => {
-                    const { resourceName, ...otherProps } = e;
-                    return otherProps;
-                });
-        } else {
-            return [];
-        }
-    }, [apiIsReady, apiIndex]);
-}
-
-const footerHeight = 36;
-const generateFooter = () => {
-    return (
-        <>
-            <div style={{ height: `${footerHeight}px`, flexShrink: 0, width: '100%' }} />
-            <Footer
-                title="COMANDA"
-                backgroundColor="#5F5D5D"
-                logos={[drassana]}
-                style={{ position: 'fixed', height: `${footerHeight}px`, bottom: 0, width: '100%' }}
-                // style={{display: 'flex', flexDirection: 'row', flexShrink: 0, position: 'sticky', height: '36px', bottom: 0, width: '100%'}}
-            />
-        </>
-    );
-};
-
 const useI18nUseTranslation = (ns?: string) => {
     // @ts-expect-error baseReact defineix el namespace com a string, però comanda només suporta actualment 'translations'
     return useTranslation(ns);
@@ -184,6 +152,57 @@ const useI18n = () => {
     }
 }
 
+type MenuColorSet = {
+    background: string;
+    textPrimary: string;
+    textSecondary: string;
+    divider: string;
+    accent: string;
+    selectedBackground: string;
+    hoverBackground: string;
+};
+
+const getMenuColorSet = (
+    theme: Theme,
+    appearance: 'theme' | 'inverse' | 'footer',
+): MenuColorSet | undefined => {
+    // `theme` no sobreescriu colors: el menú reutilitza directament la paleta activa de MUI.
+    if (appearance === 'footer') {
+        return {
+            background: '#5F5D5D',
+            textPrimary: '#F6F6F6',
+            textSecondary: '#E5E5E5',
+            divider: '#807D7D',
+            accent: '#FFFFFF',
+            selectedBackground: 'rgba(255, 255, 255, 0.12)',
+            hoverBackground: 'rgba(255, 255, 255, 0.08)',
+        };
+    }
+    if (appearance !== 'inverse') {
+        return undefined;
+    }
+    if (theme.palette.mode === 'dark') {
+        return {
+            background: '#FFFFFF',
+            textPrimary: '#1F2937',
+            textSecondary: '#4B5563',
+            divider: '#D1D5DB',
+            accent: '#1976D2',
+            selectedBackground: 'rgba(25, 118, 210, 0.12)',
+            hoverBackground: 'rgba(0, 0, 0, 0.04)',
+        };
+    }
+    return {
+        background: '#1E293B',
+        textPrimary: '#F8FAFC',
+        textSecondary: '#CBD5E1',
+        divider: '#475569',
+        accent: '#60A5FA',
+        selectedBackground: 'rgba(96, 165, 250, 0.18)',
+        hoverBackground: 'rgba(255, 255, 255, 0.08)',
+    };
+};
+
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {
         code,
@@ -197,14 +216,17 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         appbarBackgroundColor,
         appbarBackgroundImg,
         appbarStyle,
+        menuAppearance,
         defaultMuiComponentProps,
         children
     } = props;
     const navigate = useNavigate();
     const location = useLocation();
-    const baseAppMenuEntries = useBaseAppMenuEntries(menuEntries);
+    const theme = useTheme();
+    const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
     const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
+    const [alarmsDialogOpen, setAlarmsDialogOpen] = React.useState(false);
     const { indexState } = useResourceApiContext();
     const {
         i18nUseTranslation,
@@ -223,7 +245,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         }
     }
     const showAlarms = indexState?.links?.has('alarma');
-    return <MuiBaseApp
+    const baseAppElement = <MuiBaseApp
         code={code}
         headerTitle={title}
         headerVersion={version}
@@ -235,19 +257,18 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         headerAdditionalComponents={[
             <MenuItems key="menuItems" appMenuEntries={headerMenuEntries} />, // Menú
             <SystemTimeDisplay key="system_time" />, // Hora del sistema
-            ...(showAlarms ? [<Alarms key="alarms" />] : []), // Alarmes actives
+            ...(showAlarms ? [<Alarms key="alarms" onButtonClick={() => setAlarmsDialogOpen(true)} />] : []), // Alarmes actives
             ...generateLanguageItems(availableLanguages), // Idioma
         ]}
         headerAdditionalAuthComponents={[
-            <UserProfileFormDialogButton onClick={() => userDialogApiRef.current?.show(
+            <UserProfileFormDialogButton key="userProfile" onClick={() => userDialogApiRef.current?.show(
                 user?.id,
             )} />,
-            <RoleSelector />
+            <RoleSelector key="roleSelector" />
         ]}
-        headerAuthBadgeIcon={currentRole === 'COM_ADMIN' ? 'settings' : undefined}
-        footer={generateFooter()}
-        footerHeight={footerHeight}
-        persistentSession
+        headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
+        footer={<ComandaFooter />}
+        footerHeight={comandaFooterHeight}
         persistentLanguage
         i18nUseTranslation={i18nUseTranslation}
         i18nCurrentLanguage={i18nCurrentLanguage}
@@ -262,11 +283,51 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         defaultMuiComponentProps={defaultMuiComponentProps}
         fixedContentExpandsToAvailableHeightEnabled
         marginsDisabled>
+        <AlarmsDialog open={alarmsDialogOpen} setOpen={setAlarmsDialogOpen} />
         <UserProfileFormDialog dialogApiRef={userDialogApiRef} />
         <CustomLocalizationProvider>
             {children}
         </CustomLocalizationProvider>
     </MuiBaseApp>;
+    const menuColorSet = getMenuColorSet(theme, menuAppearance ?? 'theme');
+    const menuColorSetSx = {
+        '& nav .MuiDrawer-root': {
+            '& .MuiPaper-root, & .MuiList-root': {
+                backgroundColor: menuColorSet?.background,
+                color: menuColorSet?.textPrimary,
+                '& > div .MuiBox-root': {
+                    backgroundColor: menuColorSet?.background,
+                    borderColor: menuColorSet?.divider,
+                },
+                '& > div > .MuiBox-root': {
+                    borderLeft: `1px solid ${menuColorSet?.divider}`,
+                },
+                '& p': {
+                    color: menuColorSet?.textPrimary,
+                },
+                '& h6': {
+                    color: menuColorSet?.accent,
+                },
+            },
+            '& .menu-item-icon': {
+                color: menuColorSet?.textSecondary,
+            },
+            '& .MuiListItemButton-root': {
+                '&.Mui-selected': {
+                    backgroundColor: menuColorSet?.selectedBackground,
+                },
+                '&.Mui-selected:hover': {
+                    backgroundColor: menuColorSet?.selectedBackground,
+                },
+                '&:hover': {
+                    backgroundColor: menuColorSet?.hoverBackground,
+                },
+            },
+        },
+    };
+    return (
+        <Box sx={menuColorSet ? menuColorSetSx : undefined}>{baseAppElement}</Box>
+    );
 }
 
 export default BaseApp;

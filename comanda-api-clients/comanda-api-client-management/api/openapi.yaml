@@ -1,0 +1,1487 @@
+openapi: 3.0.3
+info:
+  title: comanda-api-interna
+  version: 0.1.0
+servers:
+- url: ""
+tags:
+- description: "Contracte per a la gestió CRUD d'avisos a Comanda. Les peticions rebudes\
+    \ per aquest servei es processaran asíncronament, de manera que en cap cas es\
+    \ rebrà una resposta amb el resultat de l'operació com a resposta de les peticions."
+  name: APP → COMANDA / Avisos
+- description: "Contracte per a la gestió CRUD de permisos a Comanda (informació dels\
+    \ permisos configurats a les aplicacions). Les peticions rebudes per aquest servei\
+    \ es processaran asíncronament, de manera que en cap cas es rebrà una resposta\
+    \ amb el resultat de l'operació com a resposta de les peticions."
+  name: APP → COMANDA / Permisos
+- description: "Contracte per a la gestió CRUD de tasques a Comanda. Les peticions\
+    \ rebudes per aquest servei es processaran asíncronament, de manera que en cap\
+    \ cas es rebrà una resposta amb el resultat de l'operació com a resposta de les\
+    \ peticions."
+  name: APP → COMANDA / Tasques
+paths:
+  /v1/avisos:
+    get:
+      description: Obté un llistat paginat d'avisos amb la possibilitat d'aplicar
+        filtres de cerca.
+      operationId: obtenirLlistatAvisos
+      parameters:
+      - description: Filtre ràpid
+        explode: true
+        in: query
+        name: quickFilter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filtre avançat en format JSON o expressió del MS
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Consultes predefinides
+        explode: true
+        in: query
+        name: namedQueries
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Perspectives de camp
+        explode: true
+        in: query
+        name: perspectives
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Número de pàgina
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Mida de pàgina
+        explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          format: int32
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvisPage"
+          description: successful operation
+      summary: Llistat d'avisos
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: obtenirLlistatAvisos
+      x-accepts:
+      - application/json
+    post:
+      description: Afegeix un missatge d'alta d'avís a una cua de events per a que
+        es crei aquest de forma asíncrona a Comanda.
+      operationId: crearAvis
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Avis"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació d'un avís
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: crearAvis
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/avisos/multiple:
+    post:
+      description: Afegeix múltiples missatges d'alta d'avisos a una cua de events
+        per a que es creïn aquests de forma asíncrona a Comanda.
+      operationId: crearMultiplesAvisos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Avis"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació de múltiples avisos
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: crearMultiplesAvisos
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+    put:
+      description: "Es comprova si els avisos existeixen, i en cas afirmatiu, s'afegeixen\
+        \ missatges de modificació d'avisos a una cua de events per a que es modifiquin\
+        \ aquests de forma asíncrona a Comanda."
+      operationId: modificarMultiplesAvisos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Avis"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació de múltiples avisos
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: modificarMultiplesAvisos
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/avisos/{identificador}:
+    get:
+      description: "Obté les dades d'un avís a partir del seu identificador, codi\
+        \ d'aplicació i codi d'entorn."
+      operationId: consultarAvis
+      parameters:
+      - description: Identificador de l'avís
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Codi de l'aplicació
+        explode: true
+        in: query
+        name: appCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Codi de l'entorn
+        explode: true
+        in: query
+        name: entornCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Avis"
+          description: successful operation
+      summary: Consulta d'un avís
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: consultarAvis
+      x-accepts:
+      - application/json
+    put:
+      description: "Es comprova si l'avís existeix, i en cas afirmatiu, s'afegeix\
+        \ un missatge de modificació d'avís a una cua de events per a que es modifiqui\
+        \ aquest de forma asíncrona a Comanda."
+      operationId: modificarAvis
+      parameters:
+      - description: Identificador de l'avís
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Avis"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació d'un avís existent
+      tags:
+      - APP → COMANDA / Avisos
+      x-operation-name: modificarAvis
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/permisos:
+    delete:
+      description: Afegeix múltiples missatges d'eliminació de permisos a una cua
+        de events per a que s'eliminin aquests de forma asíncrona a Comanda.
+      operationId: eliminarPermisos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Permis"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Eliminació de permisos
+      tags:
+      - APP → COMANDA / Permisos
+      x-operation-name: eliminarPermisos
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+    post:
+      description: Afegeix un missatge d'alta de permís a una cua de events per a
+        que es crei aquest de forma asíncrona a Comanda.
+      operationId: crearPermis
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Permis"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació d'un permís
+      tags:
+      - APP → COMANDA / Permisos
+      x-operation-name: crearPermis
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/permisos/multiple:
+    post:
+      description: Afegeix múltiples missatges d'alta de permisos a una cua de events
+        per a que es creïn aquests de forma asíncrona a Comanda.
+      operationId: crearMultiplesPermisos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Permis"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació de múltiples permisos
+      tags:
+      - APP → COMANDA / Permisos
+      x-operation-name: crearMultiplesPermisos
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+    put:
+      description: "Es comprova si els permisos existeixen, i en cas afirmatiu, s'afegeixen\
+        \ múltiples missatges de modificació de permisos a una cua de events per a\
+        \ que es modifiquin aquests de forma asíncrona a Comanda. Els permisos no\
+        \ existents s'ignoren."
+      operationId: modificarMultiplesPermisos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Permis"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació de múltiples permisos
+      tags:
+      - APP → COMANDA / Permisos
+      x-operation-name: modificarMultiplesPermisos
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/permisos/{identificador}:
+    get:
+      description: "Obté les dades d'un permís identificat pel seu identificador,\
+        \ codi d'aplicació i codi d'entorn."
+      operationId: consultarPermis
+      parameters:
+      - description: Identificador del permís
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Codi de l'aplicació
+        explode: true
+        in: query
+        name: appCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Codi de l'entorn
+        explode: true
+        in: query
+        name: entornCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Permis"
+          description: successful operation
+      summary: Consulta d'un permís
+      tags:
+      - APP → COMANDA / Permisos
+      x-operation-name: consultarPermis
+      x-accepts:
+      - application/json
+    put:
+      description: "Es comprova si el permís existeix, i en cas afirmatiu, s'afegeix\
+        \ un missatge de modificació de permís a una cua de events per a que es modifiqui\
+        \ aquest de forma asíncrona a Comanda."
+      operationId: modificarPermis
+      parameters:
+      - description: Identificador funcional (objecte.identificador)
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Permis"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació d'un permís existent
+      tags:
+      - APP → COMANDA / Permisos
+      x-operation-name: modificarPermis
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/tasques:
+    get:
+      description: "Obté un llistat paginat de tasques amb possibilitat d'aplicar\
+        \ filtres ràpids, filtres avançats, consultes predefinides i perspectives."
+      operationId: obtenirLlistatTasques
+      parameters:
+      - description: Filtre ràpid
+        explode: true
+        in: query
+        name: quickFilter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filtre avançat en format JSON o expressió del MS
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Consultes predefinides
+        explode: true
+        in: query
+        name: namedQueries
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Perspectives de camp
+        explode: true
+        in: query
+        name: perspectives
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Número de pàgina
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Mida de pàgina
+        explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          format: int32
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TascaPage"
+          description: successful operation
+      summary: Consulta de tasques
+      tags:
+      - APP → COMANDA / Tasques
+      x-operation-name: obtenirLlistatTasques
+      x-accepts:
+      - application/json
+    post:
+      description: Afegeix un missatge d'alta de tasca a una cua de events per a que
+        es crei aquesta de forma asíncrona a Comanda.
+      operationId: crearTasca
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tasca"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació s'una tasca
+      tags:
+      - APP → COMANDA / Tasques
+      x-operation-name: crearTasca
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/tasques/multiple:
+    post:
+      description: Afegeix múltiples missatges d'alta de tasques a una cua de events
+        per a que es creïn aquestes de forma asíncrona a Comanda.
+      operationId: crearMultiplesTasques
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Tasca"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Creació de múltiples tasques
+      tags:
+      - APP → COMANDA / Tasques
+      x-operation-name: crearMultiplesTasques
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+    put:
+      description: "Es comprova si les tasques existeixen, i en cas afirmatiu, s'afegeixen\
+        \ múltiples missatges de modificació de tasques a una cua de events per a\
+        \ que es modifiquin aquestes de forma asíncrona a Comanda. Les tasques no\
+        \ existents s'ignoren."
+      operationId: modificarMultiplesTasques
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Tasca"
+              type: array
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació de múltiples tasques
+      tags:
+      - APP → COMANDA / Tasques
+      x-operation-name: modificarMultiplesTasques
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+  /v1/tasques/{identificador}:
+    get:
+      description: "Obté les dades d'una tasca identificada pel seu identificador,\
+        \ codi d'aplicació i codi d'entorn."
+      operationId: consultarTasca
+      parameters:
+      - description: Identificador de la tasca
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Codi de l'aplicació
+        explode: true
+        in: query
+        name: appCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: Codi de l'entorn
+        explode: true
+        in: query
+        name: entornCodi
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tasca"
+          description: successful operation
+      summary: Consulta d'una tasca
+      tags:
+      - APP → COMANDA / Tasques
+      x-operation-name: consultarTasca
+      x-accepts:
+      - application/json
+    put:
+      description: "Es comprova si la tasca existeix, i en cas afirmatiu, s'afegeix\
+        \ un missatge de modificació de tasca a una cua de events per a que es modifiqui\
+        \ aquesta de forma asíncrona a Comanda."
+      operationId: modificarTasca
+      parameters:
+      - description: Identificador de la tasca
+        explode: false
+        in: path
+        name: identificador
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tasca"
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: successful operation
+      summary: Modificació una tasca
+      tags:
+      - APP → COMANDA / Tasques
+      x-operation-name: modificarTasca
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+components:
+  schemas:
+    Avis:
+      description: Representa un avís o notificació publicada a COMANDA
+      example:
+        responsable: usr1234
+        entornCodi: DEV
+        descripcio: Aturada de manteniment el diumenge a les 8:00
+        tipus: NOTICIA
+        nom: Interrupció programada
+        redireccio:
+          userInfo: userInfo
+          handler: "{}"
+          query: query
+          path: path
+          protocol: protocol
+          ref: ref
+          file: file
+          port: 6
+          hashCode: 5
+          authority: authority
+          host: host
+          hostAddress:
+            canonicalHostName: canonicalHostName
+            holder:
+              originalHostName: originalHostName
+              hostName: hostName
+              address: 1
+              family: 5
+          tempState:
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 2
+            hashCode: 7
+            authority: authority
+            host: host
+        usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+        grup: SUPORT
+        appCodi: PFI
+        dataFi:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        dataInici:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        grupsAmbPermis: "[\"USUARIS\"]"
+        identificador: AV-2025-0001
+      properties:
+        appCodi:
+          description: Codi de l'aplicació que publica l'avís
+          example: PFI
+          type: string
+        entornCodi:
+          description: Codi de l'entorn de l'aplicació
+          example: DEV
+          type: string
+        identificador:
+          description: Identificador únic de l'avís
+          example: AV-2025-0001
+          type: string
+        tipus:
+          $ref: "#/components/schemas/AvisTipus"
+        nom:
+          description: Títol de l'avís
+          example: Interrupció programada
+          type: string
+        descripcio:
+          description: Descripció de l'avís
+          example: Aturada de manteniment el diumenge a les 8:00
+          type: string
+        dataInici:
+          $ref: "#/components/schemas/OffsetDateTime"
+        dataFi:
+          $ref: "#/components/schemas/OffsetDateTime"
+        redireccio:
+          $ref: "#/components/schemas/URL"
+        responsable:
+          description: Usuari responsable
+          example: usr1234
+          type: string
+        grup:
+          description: Grup responsable
+          example: SUPORT
+          type: string
+        usuarisAmbPermis:
+          description: Usuaris amb permís de visualització
+          example: "[\"usr1\", \"usr2\"]"
+          items:
+            type: string
+          type: array
+        grupsAmbPermis:
+          description: Grups amb permís de visualització
+          example: "[\"USUARIS\"]"
+          items:
+            type: string
+          type: array
+      type: object
+    AvisPage:
+      example:
+        links:
+        - rel: self
+          href: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
+        - rel: self
+          href: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
+        page:
+          number: 0
+          size: 20
+          totalPages: 1
+          totalElements: 1
+        content:
+        - responsable: usr1234
+          entornCodi: DEV
+          descripcio: Aturada de manteniment el diumenge a les 8:00
+          tipus: NOTICIA
+          nom: Interrupció programada
+          redireccio:
+            userInfo: userInfo
+            handler: "{}"
+            query: query
+            path: path
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 6
+            hashCode: 5
+            authority: authority
+            host: host
+            hostAddress:
+              canonicalHostName: canonicalHostName
+              holder:
+                originalHostName: originalHostName
+                hostName: hostName
+                address: 1
+                family: 5
+            tempState:
+              protocol: protocol
+              ref: ref
+              file: file
+              port: 2
+              hashCode: 7
+              authority: authority
+              host: host
+          usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+          grup: SUPORT
+          appCodi: PFI
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          grupsAmbPermis: "[\"USUARIS\"]"
+          identificador: AV-2025-0001
+        - responsable: usr1234
+          entornCodi: DEV
+          descripcio: Aturada de manteniment el diumenge a les 8:00
+          tipus: NOTICIA
+          nom: Interrupció programada
+          redireccio:
+            userInfo: userInfo
+            handler: "{}"
+            query: query
+            path: path
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 6
+            hashCode: 5
+            authority: authority
+            host: host
+            hostAddress:
+              canonicalHostName: canonicalHostName
+              holder:
+                originalHostName: originalHostName
+                hostName: hostName
+                address: 1
+                family: 5
+            tempState:
+              protocol: protocol
+              ref: ref
+              file: file
+              port: 2
+              hashCode: 7
+              authority: authority
+              host: host
+          usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+          grup: SUPORT
+          appCodi: PFI
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          grupsAmbPermis: "[\"USUARIS\"]"
+          identificador: AV-2025-0001
+      properties:
+        content:
+          description: Contingut de la pàgina
+          items:
+            $ref: "#/components/schemas/Avis"
+          type: array
+        page:
+          $ref: "#/components/schemas/PageMetadata"
+        links:
+          description: Enllaços HATEOAS
+          items:
+            $ref: "#/components/schemas/AvisPageLink"
+          type: array
+      type: object
+    AvisPageLink:
+      example:
+        rel: self
+        href: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
+      properties:
+        rel:
+          description: Relació de l'enllaç
+          example: self
+          type: string
+        href:
+          description: URL de l'enllaç
+          example: https://dev.caib.es/comanda/api/v1/avis?page=0&size=20
+          type: string
+      type: object
+    AvisTipus:
+      description: Tipus d'avís publicat a COMANDA
+      enum:
+      - NOTICIA
+      - INFO
+      - ALERTA
+      - ERROR
+      - CRITIC
+      type: string
+    InetAddress:
+      example:
+        canonicalHostName: canonicalHostName
+        holder:
+          originalHostName: originalHostName
+          hostName: hostName
+          address: 1
+          family: 5
+      properties:
+        holder:
+          $ref: "#/components/schemas/InetAddressHolder"
+        canonicalHostName:
+          type: string
+      type: object
+    InetAddressHolder:
+      example:
+        originalHostName: originalHostName
+        hostName: hostName
+        address: 1
+        family: 5
+      properties:
+        originalHostName:
+          type: string
+        hostName:
+          type: string
+        address:
+          format: int32
+          type: integer
+        family:
+          format: int32
+          type: integer
+      type: object
+    Objecte:
+      description: Objecte funcional sobre el qual s'apliquen permisos
+      example:
+        tipus: EXPEDIENT
+        nom: EXP-12345/2025
+        identificador: "12345"
+      properties:
+        tipus:
+          description: Tipus d'objecte
+          example: EXPEDIENT
+          type: string
+        nom:
+          description: Nom o títol de l'objecte
+          example: EXP-12345/2025
+          type: string
+        identificador:
+          description: Identificador únic de l'objecte
+          example: "12345"
+          type: string
+      type: object
+    OffsetDateTime:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        offset:
+          totalSeconds: 0
+          id: id
+      properties:
+        dateTime:
+          format: date-time
+          type: string
+        offset:
+          $ref: "#/components/schemas/ZoneOffset"
+      type: object
+    PageMetadata:
+      example:
+        number: 0
+        size: 20
+        totalPages: 1
+        totalElements: 1
+      properties:
+        number:
+          description: Número de pàgina
+          example: 0
+          format: int64
+          type: integer
+        size:
+          description: Mida de pàgina
+          example: 20
+          format: int64
+          type: integer
+        totalElements:
+          description: Total d'elements
+          example: 1
+          format: int64
+          type: integer
+        totalPages:
+          description: Total de pàgines
+          example: 1
+          format: int64
+          type: integer
+      type: object
+    PageMetadata_1:
+      example:
+        number: 0
+        size: 20
+        totalPages: 1
+        totalElements: 1
+      properties:
+        number:
+          description: Número de pàgina
+          example: 0
+          format: int64
+          type: integer
+        size:
+          description: Mida de pàgina
+          example: 20
+          format: int64
+          type: integer
+        totalElements:
+          description: Total d'elements
+          example: 1
+          format: int64
+          type: integer
+        totalPages:
+          description: Total de pàgines
+          example: 1
+          format: int64
+          type: integer
+      type: object
+    Permis:
+      description: Sol·licitud de permisos per a un usuari o grup sobre un objecte
+      example:
+        objectesHereus:
+        - tipus: EXPEDIENT
+          nom: EXP-12345/2025
+          identificador: "12345"
+        - tipus: EXPEDIENT
+          nom: EXP-12345/2025
+          identificador: "12345"
+        usuari:
+          nif: 12345678Z
+          nom: Anna Serra
+          email: anna.serra@example.org
+          codi: usr1234
+        entornCodi: DEV
+        objecte:
+          tipus: EXPEDIENT
+          nom: EXP-12345/2025
+          identificador: "12345"
+        grup: GESTORS
+        appCodi: PORTAFIB
+        permisos: "[\"LECTURA\", \"ESCRIPTURA\"]"
+      properties:
+        appCodi:
+          description: Codi de l'aplicació que sol·licita el permís
+          example: PORTAFIB
+          type: string
+        entornCodi:
+          description: Codi de l'entorn de l'aplicació
+          example: DEV
+          type: string
+        usuari:
+          $ref: "#/components/schemas/Usuari"
+        grup:
+          description: Grup al qual s'aplica el permís
+          example: GESTORS
+          type: string
+        permisos:
+          description: Llista de permisos sol·licitats
+          example: "[\"LECTURA\", \"ESCRIPTURA\"]"
+          items:
+            type: string
+          type: array
+        objecte:
+          $ref: "#/components/schemas/Objecte"
+        objectesHereus:
+          description: Objectes hereus als quals també s'apliquen els permisos
+          items:
+            $ref: "#/components/schemas/Objecte"
+          type: array
+      type: object
+    Prioritat:
+      description: Nivell de prioritat d'una tasca
+      enum:
+      - NONE
+      - BAIXA
+      - NORMAL
+      - ALTA
+      - MAXIMA
+      type: string
+    Tasca:
+      description: Representa una tasca publicada a COMANDA perquè sigui processada
+        asíncronament
+      example:
+        dataCaducitat:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        estatDescripcio: En cua
+        responsable: usr1234
+        entornCodi: DEV
+        descripcio: Generar l'informe mensual de consums per unitat
+        tipus: GENERAR_INFORME
+        nom: Generar informe mensual
+        prioritat: NONE
+        redireccio:
+          userInfo: userInfo
+          handler: "{}"
+          query: query
+          path: path
+          protocol: protocol
+          ref: ref
+          file: file
+          port: 6
+          hashCode: 5
+          authority: authority
+          host: host
+          hostAddress:
+            canonicalHostName: canonicalHostName
+            holder:
+              originalHostName: originalHostName
+              hostName: hostName
+              address: 1
+              family: 5
+          tempState:
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 2
+            hashCode: 7
+            authority: authority
+            host: host
+        usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+        grup: GESTORS
+        appCodi: PORTAFIB
+        numeroExpedient: EXP-12345/2025
+        estat: PENDENT
+        dataFi:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        dataInici:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          offset:
+            totalSeconds: 0
+            id: id
+        grupsAmbPermis: "[\"GESTORS\", \"SUPORT\"]"
+        identificador: TAS-2025-0001
+      properties:
+        appCodi:
+          description: Codi de l'aplicació que publica la tasca
+          example: PORTAFIB
+          type: string
+        entornCodi:
+          description: Codi de l'entorn de l'aplicació
+          example: DEV
+          type: string
+        identificador:
+          description: Identificador únic de la tasca en l'àmbit de l'APP
+          example: TAS-2025-0001
+          type: string
+        tipus:
+          description: Tipus funcional de la tasca
+          example: GENERAR_INFORME
+          type: string
+        nom:
+          description: Nom curt de la tasca
+          example: Generar informe mensual
+          type: string
+        descripcio:
+          description: Descripció detallada de la tasca
+          example: Generar l'informe mensual de consums per unitat
+          type: string
+        estat:
+          $ref: "#/components/schemas/TascaEstat"
+        estatDescripcio:
+          description: Descripció de l'estat actual
+          example: En cua
+          type: string
+        numeroExpedient:
+          description: Número d'expedient relacionat (si aplica)
+          example: EXP-12345/2025
+          type: string
+        prioritat:
+          $ref: "#/components/schemas/Prioritat"
+        dataInici:
+          $ref: "#/components/schemas/OffsetDateTime"
+        dataFi:
+          $ref: "#/components/schemas/OffsetDateTime"
+        dataCaducitat:
+          $ref: "#/components/schemas/OffsetDateTime"
+        redireccio:
+          $ref: "#/components/schemas/URL"
+        responsable:
+          description: Usuari responsable
+          example: usr1234
+          type: string
+        grup:
+          description: Grup responsable
+          example: GESTORS
+          type: string
+        usuarisAmbPermis:
+          description: Llista d'usuaris amb permís
+          example: "[\"usr1\", \"usr2\"]"
+          items:
+            type: string
+          type: array
+        grupsAmbPermis:
+          description: Llista de grups amb permís
+          example: "[\"GESTORS\", \"SUPORT\"]"
+          items:
+            type: string
+          type: array
+      type: object
+    TascaEstat:
+      description: Estat de processament d'una tasca
+      enum:
+      - PENDENT
+      - INICIADA
+      - FINALITZADA
+      - CANCELADA
+      - ERROR
+      type: string
+    TascaPage:
+      example:
+        links:
+        - rel: self
+          href: https://dev.caib.es/comanda/api/v1/tasca?page=0&size=20
+        - rel: self
+          href: https://dev.caib.es/comanda/api/v1/tasca?page=0&size=20
+        page:
+          number: 0
+          size: 20
+          totalPages: 1
+          totalElements: 1
+        content:
+        - dataCaducitat:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          estatDescripcio: En cua
+          responsable: usr1234
+          entornCodi: DEV
+          descripcio: Generar l'informe mensual de consums per unitat
+          tipus: GENERAR_INFORME
+          nom: Generar informe mensual
+          prioritat: NONE
+          redireccio:
+            userInfo: userInfo
+            handler: "{}"
+            query: query
+            path: path
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 6
+            hashCode: 5
+            authority: authority
+            host: host
+            hostAddress:
+              canonicalHostName: canonicalHostName
+              holder:
+                originalHostName: originalHostName
+                hostName: hostName
+                address: 1
+                family: 5
+            tempState:
+              protocol: protocol
+              ref: ref
+              file: file
+              port: 2
+              hashCode: 7
+              authority: authority
+              host: host
+          usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+          grup: GESTORS
+          appCodi: PORTAFIB
+          numeroExpedient: EXP-12345/2025
+          estat: PENDENT
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          grupsAmbPermis: "[\"GESTORS\", \"SUPORT\"]"
+          identificador: TAS-2025-0001
+        - dataCaducitat:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          estatDescripcio: En cua
+          responsable: usr1234
+          entornCodi: DEV
+          descripcio: Generar l'informe mensual de consums per unitat
+          tipus: GENERAR_INFORME
+          nom: Generar informe mensual
+          prioritat: NONE
+          redireccio:
+            userInfo: userInfo
+            handler: "{}"
+            query: query
+            path: path
+            protocol: protocol
+            ref: ref
+            file: file
+            port: 6
+            hashCode: 5
+            authority: authority
+            host: host
+            hostAddress:
+              canonicalHostName: canonicalHostName
+              holder:
+                originalHostName: originalHostName
+                hostName: hostName
+                address: 1
+                family: 5
+            tempState:
+              protocol: protocol
+              ref: ref
+              file: file
+              port: 2
+              hashCode: 7
+              authority: authority
+              host: host
+          usuarisAmbPermis: "[\"usr1\", \"usr2\"]"
+          grup: GESTORS
+          appCodi: PORTAFIB
+          numeroExpedient: EXP-12345/2025
+          estat: PENDENT
+          dataFi:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          dataInici:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            offset:
+              totalSeconds: 0
+              id: id
+          grupsAmbPermis: "[\"GESTORS\", \"SUPORT\"]"
+          identificador: TAS-2025-0001
+      properties:
+        content:
+          description: Contingut de la pàgina
+          items:
+            $ref: "#/components/schemas/Tasca"
+          type: array
+        page:
+          $ref: "#/components/schemas/PageMetadata_1"
+        links:
+          description: Enllaços HATEOAS
+          items:
+            $ref: "#/components/schemas/TascaPageLink"
+          type: array
+      type: object
+    TascaPageLink:
+      example:
+        rel: self
+        href: https://dev.caib.es/comanda/api/v1/tasca?page=0&size=20
+      properties:
+        rel:
+          description: Relació de l'enllaç
+          example: self
+          type: string
+        href:
+          description: URL de l'enllaç
+          example: https://dev.caib.es/comanda/api/v1/tasca?page=0&size=20
+          type: string
+      type: object
+    URL:
+      example:
+        userInfo: userInfo
+        handler: "{}"
+        query: query
+        path: path
+        protocol: protocol
+        ref: ref
+        file: file
+        port: 6
+        hashCode: 5
+        authority: authority
+        host: host
+        hostAddress:
+          canonicalHostName: canonicalHostName
+          holder:
+            originalHostName: originalHostName
+            hostName: hostName
+            address: 1
+            family: 5
+        tempState:
+          protocol: protocol
+          ref: ref
+          file: file
+          port: 2
+          hashCode: 7
+          authority: authority
+          host: host
+      properties:
+        protocol:
+          type: string
+        host:
+          type: string
+        port:
+          format: int32
+          type: integer
+        file:
+          type: string
+        query:
+          type: string
+        authority:
+          type: string
+        path:
+          type: string
+        userInfo:
+          type: string
+        ref:
+          type: string
+        hostAddress:
+          $ref: "#/components/schemas/InetAddress"
+        handler:
+          type: object
+        hashCode:
+          format: int32
+          type: integer
+        tempState:
+          $ref: "#/components/schemas/UrlDeserializedState"
+      type: object
+    URLStreamHandler:
+      type: object
+    UrlDeserializedState:
+      example:
+        protocol: protocol
+        ref: ref
+        file: file
+        port: 2
+        hashCode: 7
+        authority: authority
+        host: host
+      properties:
+        protocol:
+          type: string
+        host:
+          type: string
+        port:
+          format: int32
+          type: integer
+        authority:
+          type: string
+        file:
+          type: string
+        ref:
+          type: string
+        hashCode:
+          format: int32
+          type: integer
+      type: object
+    Usuari:
+      description: Dades bàsiques d'un usuari
+      example:
+        nif: 12345678Z
+        nom: Anna Serra
+        email: anna.serra@example.org
+        codi: usr1234
+      properties:
+        codi:
+          description: Codi únic de l'usuari
+          example: usr1234
+          type: string
+        nom:
+          description: Nom complet de l'usuari
+          example: Anna Serra
+          type: string
+        nif:
+          description: NIF/NIE de l'usuari
+          example: 12345678Z
+          type: string
+        email:
+          description: Correu electrònic
+          example: anna.serra@example.org
+          type: string
+      type: object
+    ZoneOffset:
+      example:
+        totalSeconds: 0
+        id: id
+      properties:
+        totalSeconds:
+          format: int32
+          type: integer
+        id:
+          type: string
+      type: object
+

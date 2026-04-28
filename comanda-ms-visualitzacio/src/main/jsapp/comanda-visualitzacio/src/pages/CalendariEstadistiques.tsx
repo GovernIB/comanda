@@ -3,7 +3,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import {useBaseAppContext, GridPage, useResourceApiService, Toolbar, springFilterBuilder as builder} from 'reactlib';
 import {useState, useEffect, useCallback} from "react";
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import '../fullcalendar-custom.css';
 import {
     Button,
@@ -23,7 +23,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import DialogContent from "@mui/material/DialogContent";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import ErrorIcon from '@mui/icons-material/Error';
 import {useTranslation} from "react-i18next";
@@ -34,6 +33,7 @@ import { useCalendarEvents } from '../components/calendari/UseCalendarEventsProp
 import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps } from '../components/calendari/CalendariTypes.ts';
 import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.tsx';
 import { EntornAppModel } from '../types/app.model';
+import PageTitle from '../components/PageTitle.tsx';
 
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   hasError,
@@ -106,8 +106,8 @@ export function useEntornAppData(apiReady: boolean, getAll: any) {
 const CalendariEstadistiques: React.FC = () => {
     const { t } = useTranslation();
     const { currentLanguage } = useBaseAppContext();
-    const [dataInici, setDataInici] = useState<Date | null>(null);
-    const [dataFi, setDataFi] = useState<Date | null>(null);
+    const [dataInici, setDataInici] = useState<Dayjs | null>(null);
+    const [dataFi, setDataFi] = useState<Dayjs | null>(null);
     const [obrirDialog, setObrirDialog] = useState(false);
     const [entornAppId, setEntornAppId] = useState<number | ''>('');
     const [datesAmbDades, setDatesAmbDades] = useState<string[]>([]);
@@ -154,7 +154,6 @@ const CalendariEstadistiques: React.FC = () => {
             if (data.diesAmbDades) {
                 const dataFormatada = additionalData.dataInici;
                 if (data.diesAmbDades[dataFormatada] === false) {
-                    console.log('No hi ha dades per a aquest dia', dataFormatada);
                     setEmptyDates(prev => [...prev, additionalData.dataInici]);
                 } else {
                     setEmptyDates(prev => prev.filter(date => date !== additionalData.dataInici));
@@ -162,7 +161,6 @@ const CalendariEstadistiques: React.FC = () => {
             } else {
                 setEmptyDates(prev => [...prev, additionalData.dataInici]);
             }
-            console.log('Dades buides:', emptyDates);
 
             // Remove the date from loading dates array
             setLoadingDates(prev => prev.filter(date => date !== additionalData.dataInici));
@@ -203,7 +201,6 @@ const CalendariEstadistiques: React.FC = () => {
 
     // Obtenir els dies en que es disposa de dades estadístiques
     const obtenirDatesDisponibles = React.useCallback(async (entornAppId: any): Promise<boolean> => {
-        console.log('Obtenir dates disponibles per entornApp:', entornAppId);
         setEmptyDates([]);
         setLoadingDates([]);
         setErrors([]);
@@ -212,24 +209,20 @@ const CalendariEstadistiques: React.FC = () => {
                 null,
                 {code: 'dates_disponibles', data: entornAppId}
             )) as any[];
-            console.log('Consulta de dates correcta:', data);
             const dates = data.map((date: Temps) => dayjs(date.data).format('YYYY-MM-DD'));
             setDatesAmbDades(dates);
             setDatesDisponiblesError(false);
-            console.log('Dates disponibles:', dates);
         } catch (error: any) {
             console.error('Error en obtenir dates disponibles:', error);
             temporalMessageShow(null, t($ => $.calendari.error_dades_disponibles) + ": " + error.message, 'error');
             setDatesAmbDades([]);
             setDatesDisponiblesError(true);
-            console.log('Dates disponibles:', []);
         }
         return true;
     }, [apiReport, temporalMessageShow, t, setDatesDisponiblesError]);
 
     // Carregar les dades estadístiques de que disposem per un dia concret
     const obtenirDadesDia = React.useCallback(async (entornAppId: number, dataFormatada: string): Promise<boolean> => {
-        console.log('Obtenir dades del dia per entornApp:', entornAppId, 'data:', dataFormatada);
         try {
             const additionalData: PerData = {
                 entornAppId: entornAppId as number,
@@ -239,8 +232,6 @@ const CalendariEstadistiques: React.FC = () => {
                 null,
                 {code: 'dades_dia', data: additionalData}
             )) as DadesDia[];
-
-            console.log('Consulta de dades correcta:', data);
 
             // Store the fetched data and open the modal
             setCurrentDadesDia(data);
@@ -326,13 +317,11 @@ const CalendariEstadistiques: React.FC = () => {
     // Obtenir el primer i darrer dia del mes actual del calendari
     const getFirstAndLastDayOfMonth = useCallback(() => {
         // Use currentViewMonth and currentViewYear directly
-        console.log('Using currentViewMonth and currentViewYear for date calculation');
 
         // Calculate first and last day of month
         const firstDay = dayjs(new Date(currentViewYear, currentViewMonth, 1)).format('YYYY-MM-DD');
         const lastDay = dayjs(new Date(currentViewYear, currentViewMonth + 1, 0)).format('YYYY-MM-DD');
 
-        console.log('First day:', firstDay, 'Last day:', lastDay);
         return {
             firstDay,
             lastDay
@@ -371,13 +360,11 @@ const CalendariEstadistiques: React.FC = () => {
 
         // Si la cel·la ja està carregant, no fem res
         if (info.event.extendedProps.isLoading) {
-            console.log('La cel·la ja està carregant, no fem res');
             return;
         }
 
         // Si ja hi ha una càrrega global en curs, no fem res
         if (globalLoading) {
-            console.log('Hi ha una càrrega global en curs, no fem res');
             return;
         }
 
@@ -419,6 +406,7 @@ const CalendariEstadistiques: React.FC = () => {
 
     return (
         <GridPage disableMargins>
+            <PageTitle title={t($ => $.menu.calendari)} />
             {/* Global loading overlay */}
             {globalLoading && (
                 <Box className="global-loading-overlay">
@@ -540,12 +528,9 @@ const CalendariEstadistiques: React.FC = () => {
                     }}
                     datesSet={(dateInfo) => {
                         // When month changes, update the current view month and year
-                        const startDate = dayjs(dateInfo.start);
-                        setCurrentViewMonth(startDate.date() == 1 ? startDate.month() : startDate.month() + 1);
-                        setCurrentViewYear(startDate.month() == 11 && startDate.date() > 1 ? startDate.year() + 1 : startDate.year());
-                        console.log('Current view month:', currentViewMonth, 'Current view year:', currentViewYear);
-                        console.log('Start date:', startDate);
-                        console.log(dateInfo);
+                        const startDate = dayjs(dateInfo.view.currentStart);
+                        setCurrentViewMonth(startDate.month());
+                        setCurrentViewYear(startDate.year());
                     }}
                     customButtons={{
                         intervalButton: {
@@ -591,14 +576,12 @@ const CalendariEstadistiques: React.FC = () => {
                         <DatePicker
                             label={t($ => $.calendari.data_inici)}
                             value={dataInici}
-                            onChange={(newValue:any) => setDataInici(newValue)}
-                            renderInput={(params:any) => <TextField {...params} fullWidth />}
+                            onChange={(newValue) => setDataInici(newValue)}
                         />
                         <DatePicker
                             label={t($ => $.calendari.data_fi)}
                             value={dataFi}
-                            onChange={(newValue:any) => setDataFi(newValue)}
-                            renderInput={(params:any) => <TextField {...params} fullWidth />}
+                            onChange={(newValue) => setDataFi(newValue)}
                         />
                     </Box>
                 </DialogContent>

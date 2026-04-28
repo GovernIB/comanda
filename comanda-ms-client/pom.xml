@@ -11,6 +11,9 @@
 	<artifactId>comanda-ms-client</artifactId>
 	<version>0.1.1</version>
 	<description>Clients per accedir als serveis amb OpenFeign</description>
+	<properties>
+		<maven.site.skip>true</maven.site.skip>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

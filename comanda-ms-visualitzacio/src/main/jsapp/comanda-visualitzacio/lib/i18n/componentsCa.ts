@@ -36,12 +36,22 @@ const componentsCa = {
                 success: 'Element esborrat',
                 error: 'Error esborrant element',
             },
+            multiple: {
+                label: 'Confirmació',
+                confirm:
+                    'Estau segur que voleu esborrar els {{count}} elements seleccionats (aquesta acció no es pot desfer)?',
+                success: '{{count}} elements esborrats',
+                error: "No s'han pogut esborrar {{count}} elements",
+            },
         },
         export: {
             label: 'Exportar',
         },
         refresh: {
             label: 'Refrescar',
+        },
+        quickfilter: {
+            label: 'Filtre ràpid',
         },
         toolbar: {
             error: "S'ha produit un error",
@@ -54,8 +64,19 @@ const componentsCa = {
             one: '1 fila seleccionada',
             multiple: '{{count}} files seleccionades',
         },
-        pageInfo: '{{from}} a {{to}} de {{count}}',
-        sizeAuto: 'Automàtic',
+        edit: {
+            save: 'Desar',
+            cancel: 'Cancel·lar',
+        },
+        row: {
+            single: 'fila',
+            multiple: 'files',
+        },
+        footer: {
+            pageInfo: '{{from}} a {{to}} de {{count}}',
+            sizeAuto: 'Automàtic',
+            pageSizeTitle: "Nombre d'elements per pàgina",
+        },
         requestPending: 'Pendent de consultar',
     },
     form: {
@@ -114,6 +135,8 @@ const componentsCa = {
             error: 'Error de validació',
             saveErrors: 'Hi ha errors de validació',
         },
+        blocker:
+            "Està segur de que vol sortir d'aquest formulari? És possible que es perdin els canvis que heu fet.",
     },
     actionreport: {
         action: {

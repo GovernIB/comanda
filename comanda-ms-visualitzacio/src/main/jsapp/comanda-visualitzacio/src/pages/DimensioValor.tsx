@@ -17,6 +17,8 @@ import {
     useResourceApiService,
     useBaseAppContext,
 } from 'reactlib';
+import PageTitle from '../components/PageTitle.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
 // const DimensioValorForm: React.FC = () => {
 //     const { data } = useFormContext();
@@ -46,7 +48,6 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
             apiRef={filterApiRef}
             resourceName="dimensioValor"
             code="dimensioValorFilter"
-            persistentState
             formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
@@ -74,18 +75,19 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
 
 const DimensioValor: React.FC = () => {
     const { t } = useTranslation();
+    const gestorReadOnly = useReadOnlyGestor();
     const { id } = useParams();
     const { goBack, anyHistoryEntryExist } = useBaseAppContext();
-    const { getOne: getDimensio } = useResourceApiService('dimensio');
+    const { isReady, getOne: getDimensio } = useResourceApiService('dimensio');
 
     const [dimensionName, setDimensionName] = React.useState<string>('');
     const [filter, setFilter] = React.useState<string | undefined>(undefined);
 
     React.useEffect(() => {
-        if (id) {
+        if (id && isReady) {
             getDimensio(id as string).then((d: { nom?: string; description?: string } | null) => setDimensionName(d?.nom ?? d?.description ?? ''));
         }
-    }, [id, getDimensio]);
+    }, [id, isReady, getDimensio]);
 
     const columns: MuiDataGridColDef[] = [
         { field: 'valor', flex: 2 },
@@ -115,10 +117,13 @@ const DimensioValor: React.FC = () => {
 
     const filterElement = <DimensioValorFilter onSpringFilterChange={setFilter} />;
 
+    const gridTitle = `Valors dimensió ${dimensionName ?? ''}`;
+
     return (
         <GridPage>
+            <PageTitle title={gridTitle} />
             <MuiDataGrid
-                title={`Valors dimensió ${dimensionName ?? ''}`}
+                title={gridTitle}
                 resourceName="dimensioValor"
                 columns={columns}
                 toolbarType="upper"
@@ -127,9 +132,10 @@ const DimensioValor: React.FC = () => {
                 toolbarAdditionalRow={filterElement}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 toolbarHideCreate
-                staticFilter={staticFilter}
+                fixedFilter={staticFilter}
                 filter={filter}
                 popupEditActive={false}
+                rowHideDeleteButton={gestorReadOnly}
                 // popupEditFormContent={<DimensioValorForm />}
             />
         </GridPage>

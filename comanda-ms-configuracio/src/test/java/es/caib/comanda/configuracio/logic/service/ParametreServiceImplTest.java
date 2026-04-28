@@ -85,7 +85,7 @@ class ParametreServiceImplTest {
         ParametreEntity e = entity(12L, "other.code");
         service.afterUpdateSave(e, (Parametre) null, Map.of(), false);
 
-        verify(cacheHelper).evictCacheItem(PARAMETRE_CACHE, "12");
+        verify(cacheHelper).evictCacheItem(PARAMETRE_CACHE, "other.code");
         verify(eventPublisher).publishEvent(
                 ArgumentMatchers.eq(new ParametreServiceImpl.ParametreInfoUpdatedEvent(e))
         );

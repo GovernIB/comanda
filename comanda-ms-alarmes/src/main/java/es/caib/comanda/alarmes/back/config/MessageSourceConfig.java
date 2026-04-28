@@ -16,9 +16,9 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 	@Override
 	protected String[] getBasenames() {
 		return new String[] {
+				getBasename(),
 				"comanda.alarmes-messages",
                 "comanda.client-messages",
-				"comanda-messages"
 		};
 	}
 

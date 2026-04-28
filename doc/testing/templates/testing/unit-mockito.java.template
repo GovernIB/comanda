@@ -1,0 +1,20 @@
+package ${PACKAGE};
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class ${CLASS_UNDER_TEST}Test {
+
+    @Test
+    void ${METHOD_NAME}_quan${CONDITION}_retorn${EXPECTED_RESULT}() {
+        // Arrange
+        ${CLASS_UNDER_TEST} sut = new ${CLASS_UNDER_TEST}();
+
+        // Act
+        ${RETURN_TYPE} result = sut.${METHOD_NAME}(${ARGS});
+
+        // Assert
+        assertThat(result).isEqualTo(${EXPECTED_VALUE});
+    }
+}

@@ -21,10 +21,10 @@ import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo;
 import es.caib.comanda.model.v1.estadistica.IndicadorDesc;
 import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
 import es.caib.comanda.model.v1.estadistica.RegistresEstadistics;
-import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -36,6 +36,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -57,6 +58,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EstadisticaHelper {
 
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_USER + ":}")
+    private String statsAuthUser;
+    @Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + ":}")
+    private String statsAuthPassword;
+
     @Lazy
     private final EstadisticaHelper self = this;
 
@@ -67,7 +73,6 @@ public class EstadisticaHelper {
     private final FetRepository fetRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
-    private final ParametresHelper parametresHelper;
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
@@ -184,7 +189,7 @@ public class EstadisticaHelper {
                 // Guardar les dades estadístiques
                 registresEstadistics.forEach(r -> {
                     crearEstadistiques(r, entornApp.getId());
-                    result.put(r.getTemps().getData().format(formatter), getRegistreEstadisticMessage(r));
+                    result.put(r.getTemps().format(formatter), getRegistreEstadisticMessage(r));
                 });
             } else {
                 RegistresEstadistics registresEstadistics;
@@ -200,7 +205,7 @@ public class EstadisticaHelper {
                 monitorEstadistica.endDadesAction();
                 // Guardar les dades estadístiques
                 crearEstadistiques(registresEstadistics, entornApp.getId());
-                result.put(registresEstadistics.getTemps().getData().format(formatter), getRegistreEstadisticMessage(registresEstadistics));
+                result.put(registresEstadistics.getTemps().format(formatter), getRegistreEstadisticMessage(registresEstadistics));
             }
         }
         return result;
@@ -210,13 +215,11 @@ public class EstadisticaHelper {
         if (!entornApp.isEstadisticaAuth()) {
             return null;
         }
-        String user = parametresHelper.getParametreText(BaseConfig.PROP_STATS_AUTH_USER);
-        String password = parametresHelper.getParametreText(BaseConfig.PROP_STATS_AUTH_PASSWORD);
-        if (user == null || password == null) {
+        if (statsAuthUser == null || statsAuthPassword == null) {
             return null;
         }
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.set("Authorization", basicAuthHeader(user, password));
+        headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
         return new org.springframework.http.HttpEntity<>(headers);
     }
 
@@ -381,11 +384,11 @@ public class EstadisticaHelper {
      */
     private static final ConcurrentHashMap<LocalDate, Object> TIME_LOCKS = new ConcurrentHashMap<>();
 
-    private TempsEntity crearTemps(es.caib.comanda.model.v1.estadistica.Temps temps) {
+    private TempsEntity crearTemps(OffsetDateTime temps) {
         if (temps == null)
             return null;
 
-        LocalDate data = LocalDate.from(temps.getData().toInstant().atZone(ZoneId.systemDefault()));
+        LocalDate data = LocalDate.from(temps.toInstant().atZone(ZoneId.systemDefault()));
         Object lock = TIME_LOCKS.computeIfAbsent(data, k -> new Object());
 
         synchronized (lock) {

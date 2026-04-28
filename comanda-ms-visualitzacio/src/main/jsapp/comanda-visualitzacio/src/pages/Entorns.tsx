@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import { GridPage, FormField, MuiDataGrid } from 'reactlib';
 import useReordering from '../hooks/reordering.tsx';
+import PageTitle from '../components/PageTitle.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
 const columns = [
     {
@@ -18,8 +20,11 @@ const columns = [
 const Entorns: React.FC = () => {
     const { t } = useTranslation();
     const { dataGridProps, loadingElement } = useReordering('entorn');
+    const gestorReadOnly = useReadOnlyGestor();
+
     return (
         <GridPage>
+            <PageTitle title={t(($) => $.page.entorns.title)} />
             <MuiDataGrid
                 title={t(($) => $.page.entorns.title)}
                 resourceName="entorn"
@@ -44,7 +49,8 @@ const Entorns: React.FC = () => {
                         element: loadingElement,
                     },
                 ]}
-                {...dataGridProps}
+                rowHideDeleteButton={gestorReadOnly}
+                {...(!gestorReadOnly ? dataGridProps : {})}
             />
         </GridPage>
     );

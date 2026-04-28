@@ -1,6 +1,12 @@
 package es.caib.comanda.salut.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
@@ -9,16 +15,8 @@ import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.intf.model.*;
 import es.caib.comanda.salut.logic.intf.service.SalutService;
-import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
-import es.caib.comanda.salut.persist.entity.SalutEntity;
-import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
-import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
-import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
-import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
-import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
-import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
-import es.caib.comanda.salut.persist.repository.SalutRepository;
-import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import es.caib.comanda.salut.persist.entity.*;
+import es.caib.comanda.salut.persist.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,11 +29,16 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
@@ -54,8 +57,12 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private final SalutSubsistemaRepository salutSubsistemaRepository;
 	private final SalutMissatgeRepository salutMissatgeRepository;
 	private final SalutDetallRepository salutDetallRepository;
+	private final SalutHistRepository salutHistRepository;
 	private final SalutClientHelper salutClientHelper;
 	private final MetricsHelper metricsHelper;
+    private final AuthenticationHelper authenticationHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final AclServiceClient aclServiceClient;
 
 	@PostConstruct
 	public void init() {
@@ -69,6 +76,57 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
 		register(Salut.PERSP_MISSATGES, new PerspectiveMissatges());
 		register(Salut.PERSP_DETALLS, new PerspectiveDetalls());
+		register(Salut.PERSP_HISTORICS, new PerspectiveHistorics());
+        register(Salut.PERSP_ULTIM_ESTAT_OPERATIU_INFO, new PerspectiveUltimEstatOperatiuInfo());
+	}
+
+	@Override
+	protected String additionalSpringFilter(
+			String currentSpringFilter,
+			String[] namedQueries) {
+		if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+				|| authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+			return null;
+		}
+		Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
+		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
+		Set<Long> allowedEntornAppIds = Collections.emptySet();
+		LinkedHashSet<Long> mergedIds = new LinkedHashSet<>();
+		if (!appPermissionIds.isEmpty()) {
+			String appFilter = appPermissionIds.stream()
+					.sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
+					.map(String::valueOf)
+					.map(id -> "app.id:" + id)
+					.collect(Collectors.joining(" or "));
+			salutClientHelper.entornAppFindByActivaTrue(appFilter)
+					.forEach(entornApp -> mergedIds.add(entornApp.getId()));
+		}
+		if (!entornAppPermissionIds.isEmpty()) {
+			String entornAppFilter = entornAppPermissionIds.stream()
+					.sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
+					.map(String::valueOf)
+					.map(id -> "id:" + id)
+					.collect(Collectors.joining(" or "));
+			salutClientHelper.entornAppFindByActivaTrue(entornAppFilter)
+					.forEach(entornApp -> mergedIds.add(entornApp.getId()));
+		}
+		allowedEntornAppIds = mergedIds;
+		if (allowedEntornAppIds.isEmpty()) {
+			return "entornAppId:0";
+		}
+		return allowedEntornAppIds.stream()
+				.map(id -> "entornAppId:" + id)
+				.collect(Collectors.joining(" or "));
+	}
+
+	private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+		return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+				resourceType,
+				Collections.singletonList(PermissionEnum.READ),
+				authenticationHelper.getCurrentUserName(),
+				Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+				httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+				.orElse(Collections.emptySet());
 	}
 
 	public class PerspectiveIntegracions implements PerspectiveApplicator<SalutEntity, Salut> {
@@ -160,6 +218,52 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 						"salut")).
 					collect(Collectors.toList()));
 		}
+
+        @Override
+        public boolean applyMultiple(String code, List<SalutEntity> entities, List<Salut> resources) throws PerspectiveApplicationException {
+            for (SalutEntity salutEntity : entities) {
+                Salut salut = resources.stream().filter(s-> salutEntity.getId().equals(s.getId())).findFirst().orElse(null);
+                if (salut != null) {
+                    this.applySingle(code, salutEntity, salut);
+                }
+            }
+            return true;
+        }
+    }
+
+    public class PerspectiveUltimEstatOperatiuInfo implements PerspectiveApplicator<SalutEntity, Salut> {
+        private final List<SalutEstat> ESTATS_ESTABLES = List.of(
+                SalutEstat.UP,
+                SalutEstat.WARN,
+                SalutEstat.DEGRADED,
+		        SalutEstat.ERROR
+        );
+
+        @Override
+        public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+            SalutHistEntity darrerHistoric = salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(entity.getEntornAppId());
+            if (darrerHistoric == null || ESTATS_ESTABLES.contains(darrerHistoric.getAppEstat())) {
+                return; //Si no te historic o esta en un estat estable no donarem informació
+            }
+            Optional<SalutHistEntity> salutHistEntity = salutHistRepository.findTopByEntornAppIdAndAppEstatInOrderByDataDesc(entity.getEntornAppId(), ESTATS_ESTABLES);
+            if (salutHistEntity.isEmpty()) { return; } //Si no hi ha cap registre estable, no mostrarem informació
+            resource.setUltimEstatInfo(new Salut.SalutEstatInfo(
+                    salutHistEntity.get().getAppEstat(),
+                    salutHistRepository.findSeguentData(entity.getEntornAppId(), salutHistEntity.get().getData()).orElse(darrerHistoric.getData())));
+        }
+    }
+
+	public class PerspectiveHistorics implements PerspectiveApplicator<SalutEntity, Salut> {
+		@Override
+		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
+			List<SalutHistEntity> salutHistorics = salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(entity.getEntornAppId());
+			resource.setHistorics(
+				salutHistorics.stream()
+					.map(s -> objectMappingHelper.newInstanceMap(
+						s,
+						SalutHist.class))
+					.collect(Collectors.toList()));
+		}
 	}
 
 	/**
@@ -185,7 +289,9 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			metricsHelper.getSalutLastGlobalTimer().record(
 					Duration.between(t0, Instant.now()));
 			if (saluts != null) {
-				return entitiesToResources(saluts);
+				List<Salut> salutsResource = entitiesToResources(saluts);
+                new PerspectiveDetalls().applyMultiple(null, saluts, salutsResource);
+                return salutsResource;
 			} else {
 				return List.of();
 			}
@@ -379,6 +485,29 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
         return result;
     }
 
+    private LocalDateTime plusTime(LocalDateTime dataInici, long time, TipusRegistreSalut tipus) {
+        switch (tipus) {
+            case HORA:
+                return dataInici.plusHours(time);
+            case DIA:
+                return dataInici.plusDays(time);
+            default:
+                return dataInici.plusMinutes(time);
+        }
+    }
+    private List<LocalDateTime> generarFechas(LocalDateTime dataInici, TipusRegistreSalut tipus) {
+        List<LocalDateTime> resultado = new ArrayList<>();
+        LocalDateTime actual = plusTime(dataInici, -1, tipus);
+        LocalDateTime ahora = LocalDateTime.now();
+
+        while (!actual.isAfter(ahora)) {
+            resultado.add(actual);
+            actual = plusTime(actual, 1, tipus);
+        }
+
+        return resultado;
+    }
+
     /**
      * Genera una llista d'objectes SalutInformeEstatItem basats en els paràmetres proporcionats.
      *
@@ -392,7 +521,31 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
                 entornAppId,
                 dataInici,
                 tipus);
-        return salutEntityList.stream().map(SalutInformeEstatItem::new).collect(Collectors.toList());
+        List<SalutInformeEstatItem> result = salutEntityList.stream().map(SalutInformeEstatItem::new).collect(Collectors.toList());
+        List<LocalDateTime> dates = result.stream().map(SalutInformeEstatItem::getData).collect(Collectors.toList());
+        for (LocalDateTime data :generarFechas(dataInici, tipus)) {
+            if (!dates.contains(data)) {
+                result.add(new SalutInformeEstatItem(
+                        data,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        100
+                ));
+            }
+        }
+        return result;
     }
 
     /**

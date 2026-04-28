@@ -1,24 +1,15 @@
 package es.caib.comanda.tasques.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.model.v1.tasca.Prioritat;
 import es.caib.comanda.model.v1.tasca.TascaEstat;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -85,27 +76,5 @@ public class TascaEntity extends BaseAuditableEntity<Tasca> {
             joinColumns = @JoinColumn(name = "tasca_id"))
     @Column(name = "grup")
     private List<String> grupsAmbPermis;
-
-    @Builder
-    public TascaEntity(Tasca tasca) {
-        this.entornAppId = tasca.getEntornAppId();
-        this.entornId = tasca.getEntornId();
-        this.appId = tasca.getAppId();
-        this.identificador = tasca.getIdentificador();
-        this.tipus = tasca.getTipus();
-        this.nom = tasca.getNom();
-        this.descripcio = tasca.getDescripcio();
-        this.estat = tasca.getEstat();
-        this.estatDescripcio = tasca.getEstatDescripcio();
-        this.prioritat = tasca.getPrioritat();
-        this.dataInici = tasca.getDataInici();
-        this.dataFi = tasca.getDataFi();
-        this.dataCaducitat = tasca.getDataCaducitat();
-        this.url = tasca.getUrl();
-        this.responsable = tasca.getResponsable();
-        this.grup = tasca.getGrup();
-        this.usuarisAmbPermis = tasca.getUsuarisAmbPermis();
-        this.grupsAmbPermis = tasca.getGrupsAmbPermis();
-    }
 
 }

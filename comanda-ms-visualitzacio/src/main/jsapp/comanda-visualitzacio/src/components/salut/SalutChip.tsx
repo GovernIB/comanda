@@ -12,8 +12,9 @@ const SalutChip: React.FC<{
 }> = ({ tooltip, backgroundColor, textColor = ChipColor.WHITE, label, icon }) => {
     const chipElement = (
         <Chip
-            sx={{
-                bgcolor: backgroundColor,
+            // Se usa style en lugar de sx por motivos de rendimiento
+            style={{
+                backgroundColor: backgroundColor,
                 color: textColor,
             }}
             label={label}

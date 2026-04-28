@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public class Tasca implements Serializable {
 
     private Long id;
+    private String appCodi;
+    private String entornCodi;
 
     private String identificador;
     private String tipus;

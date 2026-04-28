@@ -16,6 +16,7 @@ import {
     useFormApiRef,
     useResourceApiService
 } from 'reactlib';
+import PageTitle from '../components/PageTitle.tsx';
 
 type DimensionsFilterProps = { onSpringFilterChange: (springFilter?: string) => void };
 const DimensionsFilter = (props: DimensionsFilterProps) => {
@@ -52,7 +53,6 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
             // de manera que no s'hagi de fer la petició manualment del llistat de entornApp
             resourceName="dimensio"
             code="dimensioFilter"
-            persistentState
             formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
@@ -118,6 +118,7 @@ const Dimensions: React.FC = () => {
 
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.dimensions.title)} />
             <MuiDataGrid
                 title={t($ => $.page.dimensions.title)}
                 resourceName="dimensio"

@@ -23,6 +23,11 @@ public interface UsuariServiceClient {
 			@RequestParam("perspectives") final String[] perspectives,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
+	@GetMapping(value = "/internal/by-codi/{codi}")
+	EntityModel<Usuari> getOneByCodiInternal(
+			@PathVariable("codi") final String codi,
+			@RequestHeader("Authorization") final String authorizationHeader);
+
 	@GetMapping
 	PagedModel<EntityModel<Usuari>> find(
 			@RequestParam("quickFilter") final String quickFilter,

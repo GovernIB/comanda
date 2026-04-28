@@ -35,16 +35,16 @@ import static lombok.AccessLevel.NONE;
 @NoArgsConstructor
 public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
 
-	@Column(name = "codi", nullable = false)        	    private String codi;
+	@Column(name = "codi", length = 100, nullable = false)        	    private String codi;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "estat", nullable = false)               private SalutEstat estat;
 	@Column(name = "latencia")                      	    private Integer latencia;
-	@Column(name = "total_ok", nullable = false)    	    private Long totalOk;
-	@Column(name = "total_error", nullable = false) 	    private Long totalError;
-	@Column(name = "total_tempsmig", nullable = false) 	    private Integer totalTempsMig;
-	@Column(name = "pet_ok_ultperiode", nullable = false) 	private Long peticionsOkUltimPeriode;
-	@Column(name = "pet_error_ultperiode", nullable = false) private Long peticionsErrorUltimPeriode;
-	@Column(name = "temps_mig_ultperiode", nullable = false) private Integer tempsMigUltimPeriode;
+	@Column(name = "total_ok")    	    private Long totalOk;
+	@Column(name = "total_error") 	    private Long totalError;
+	@Column(name = "total_tempsmig") 	private Integer totalTempsMig;
+	@Column(name = "pet_ok_ultperiode") private Long peticionsOkUltimPeriode;
+	@Column(name = "pet_error_ultperiode") private Long peticionsErrorUltimPeriode;
+	@Column(name = "temps_mig_ultperiode") private Integer tempsMigUltimPeriode;
 
     // Comptadors d'estat agregats per període
     @Setter(NONE) @Column(name = "count_up")  	            private int countUp = 0;
@@ -54,7 +54,8 @@ public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
     @Setter(NONE) @Column(name = "count_error")   	        private int countError = 0;
     @Setter(NONE) @Column(name = "count_maintenance")       private int countMaintenance = 0;
     @Setter(NONE) @Column(name = "count_unknown") 	        private int countUnknown = 0;
-    @Setter(NONE) @Column(name = "estat_num_elements")      private int estatNumElements = 0;
+//    @Setter(NONE)
+    @Column(name = "estat_num_elements")      private int estatNumElements = 0;
 
 	@Setter(NONE) @Column(name = "latencia_mitjana")        private Integer latenciaMitjana;
     @Setter(NONE) @Column(name = "latencia_num_elements")   private int latenciaNumElements = 0;
@@ -117,24 +118,28 @@ public class SalutSubsistemaEntity extends BaseEntity<SalutSubsistema> {
         return BigDecimal.valueOf((part * 100.0) / total).setScale(2, RoundingMode.HALF_UP);
     }
 
-	public void addPeticionsOkUltimPeriode(Long numOk) {
-		if (numOk == null) return;
-		if (this.peticionsOkUltimPeriode == null) this.peticionsOkUltimPeriode = 0L;
-		this.peticionsOkUltimPeriode += numOk;
-	}
-
 	public void addPeticionsErrorUltimPeriode(Long numError) {
 		if (numError == null) return;
 		if (this.peticionsErrorUltimPeriode == null) this.peticionsErrorUltimPeriode = 0L;
 		this.peticionsErrorUltimPeriode += numError;
 	}
 
-    public void addTempsMigUltimPeriode(Integer nouTempsMig, Long peticionsNouPeriode) {
-        if (nouTempsMig == null || peticionsNouPeriode == null || peticionsNouPeriode == 0) return;
+    public void addPeticionsOkUltimPeriode(Integer nouTempsMig, Long peticionsNouPeriode) {
+        if (peticionsNouPeriode == null || peticionsNouPeriode == 0) return;
+        long peticionsUltimPeriode = this.peticionsOkUltimPeriode != null ? this.peticionsOkUltimPeriode : 0L;
+        if (this.peticionsOkUltimPeriode == null) this.peticionsOkUltimPeriode = 0L;
+        this.peticionsOkUltimPeriode += peticionsNouPeriode;
 
-        long tempsTotal = ((long)this.tempsMigUltimPeriode * this.peticionsOkUltimPeriode) + (nouTempsMig * peticionsNouPeriode);
-        long numPeticions = Math.max(this.peticionsOkUltimPeriode + peticionsNouPeriode, 1L);
-        this.tempsMigUltimPeriode = Math.toIntExact(tempsTotal / numPeticions);
+        if (nouTempsMig == null) return;
+        if (this.tempsMigUltimPeriode == null || peticionsUltimPeriode == 0L) {
+            this.tempsMigUltimPeriode = nouTempsMig;
+            return;
+        }
+
+        long tempsTotal = ((long) this.tempsMigUltimPeriode * peticionsUltimPeriode)
+                + ((long) nouTempsMig * peticionsNouPeriode);
+        this.tempsMigUltimPeriode = Math.toIntExact(tempsTotal / this.peticionsOkUltimPeriode);
+
     }
 
 }

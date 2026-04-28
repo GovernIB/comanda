@@ -125,7 +125,6 @@ export const FormFieldFile: React.FC<FormFieldFileProps> = (props) => {
                 disabled={disabled}
                 error={fieldError != null}
                 title={title}
-                helperText={helperText}
                 onClick={(event) => {
                     if (readOnly || disabled) {
                         return;
@@ -137,6 +136,7 @@ export const FormFieldFile: React.FC<FormFieldFileProps> = (props) => {
                 }}
                 fullWidth
                 {...componentProps}
+                helperText={helperText ?? componentProps.helperText}
                 slotProps={{
                     input: inputProps,
                     htmlInput: htmlInputProps,

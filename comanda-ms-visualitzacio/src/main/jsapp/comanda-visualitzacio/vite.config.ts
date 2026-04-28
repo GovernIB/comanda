@@ -18,6 +18,26 @@ export default defineConfig(({ mode }) => {
             open: env.DISABLE_OPEN_ON_START !== 'true',
         },
         plugins: [react(), tsconfigPaths(), svgr()],
-        test: {},
+        test: {
+            globals: true,
+            environment: 'jsdom',
+            setupFiles: './vitest.setup.ts',
+            clearMocks: true,
+            restoreMocks: true,
+            unstubGlobals: true,
+            pool: 'forks',
+            testTimeout: env.LOW_PERFORMANCE_TEST_MODE ? 10000 : undefined,
+            reporters: ['default', 'junit', 'html'],
+            outputFile: {
+                junit: './test-reports/junit.xml',
+                html: './test-reports/index.html',
+            },
+            coverage: {
+                provider: 'v8',
+                reportsDirectory: './coverage',
+                reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
+                exclude: ['lib/**'],
+            },
+        },
     };
 });

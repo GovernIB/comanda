@@ -40,7 +40,9 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 	public boolean anyPermissionGranted(
 			ResourceType resourceType,
 			Serializable resourceId,
-			List<PermissionEnum> permissions) {
+			List<PermissionEnum> permissions,
+			String user,
+			List<String> roles) {
 		List<Permission> aclPermissions = Optional.ofNullable(permissions).
 				orElseGet(List::of).stream().
 				map(PermissionEnum::toPermission).
@@ -48,20 +50,37 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		return aclHelper.anyPermissionGranted(
 				getClassFromResourceType(resourceType),
 				resourceId,
-				aclPermissions);
+				aclPermissions,
+				toSids(user, roles).toArray(new Sid[0]));
 	}
 
 	@Override
 	public Set<Serializable> findIdsWithAnyPermission(
 			ResourceType resourceType,
-			List<PermissionEnum> permissions) {
+			List<PermissionEnum> permissions,
+			String user,
+			List<String> roles) {
 		List<Permission> aclPermissions = Optional.ofNullable(permissions).
 				orElseGet(List::of).stream().
 				map(PermissionEnum::toPermission).
 				collect(Collectors.toList());
 		return aclHelper.findIdsWithAnyPermission(
 				getClassFromResourceType(resourceType),
-				aclPermissions);
+				aclPermissions,
+				toSids(user, roles).toArray(new Sid[0]));
+	}
+
+	private List<Sid> toSids(String user, List<String> roles) {
+		List<Sid> sids = new ArrayList<>();
+		if (user != null && !user.isBlank()) {
+			sids.add(new PrincipalSid(user));
+		}
+		Optional.ofNullable(roles).orElseGet(List::of).stream()
+				.filter(Objects::nonNull)
+				.filter(role -> !role.isBlank())
+				.map(GrantedAuthoritySid::new)
+				.forEach(sids::add);
+		return sids;
 	}
 
 	@Override
@@ -138,6 +157,16 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 	@Override
 	protected AclEntryEntity entitySaveFlushAndRefresh(AclEntryEntity entity) {
 		AclEntry resource = entity.getResource();
+		String newId = buildAclEntryPk(resource).serializeToString();
+		String previousId = entity.getId();
+		if (previousId != null && !previousId.equals(newId)) {
+			AclEntry.AclEntryPk previousPk = AclEntry.AclEntryPk.deserializeFromString(previousId);
+			aclHelper.delete(
+					getClassFromResourceType(previousPk.getResourceType()),
+					previousPk.getResourceId(),
+					previousPk.getSidName(),
+					!previousPk.isSidPrincipal());
+		}
 		List<PermissionEnum> permissionsGranted = new ArrayList<>();
 		if (resource.isReadAllowed()) permissionsGranted.add(PermissionEnum.READ);
 		if (resource.isWriteAllowed()) permissionsGranted.add(PermissionEnum.WRITE);
@@ -160,6 +189,8 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 				resource.getSubjectValue(),
 				resource.getSubjectType().equals(SubjectType.ROLE),
 				permissionsGranted);
+		entity.setId(newId);
+		resource.setId(newId);
 		return entity;
 	}
 
@@ -245,11 +276,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		ResourceType resourceType = getResourceTypeFromClassName(resourceClassName);
 		aclEntry.setResourceType(resourceType);
 		aclEntry.setResourceId(resourceId);
-		AclEntry.AclEntryPk pk = new AclEntry.AclEntryPk(
-				resourceType,
-				resourceId,
-				aclEntry.getSubjectType().equals(SubjectType.ROLE),
-				aclEntry.getSubjectValue());
+		AclEntry.AclEntryPk pk = buildAclEntryPk(aclEntry);
 		aclEntry.setId(pk.serializeToString());
 		aces.forEach(a -> {
 			int mask = a.getPermission().getMask();
@@ -273,6 +300,14 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 				aclEntry,
 				pk.serializeToString(),
 				null);
+	}
+
+	private AclEntry.AclEntryPk buildAclEntryPk(AclEntry aclEntry) {
+		return new AclEntry.AclEntryPk(
+				aclEntry.getResourceType(),
+				aclEntry.getResourceId(),
+				aclEntry.getSubjectType().equals(SubjectType.USER),
+				aclEntry.getSubjectValue());
 	}
 
 	private static final Pattern TRIPLET_PATTERN = Pattern.compile(
@@ -302,6 +337,8 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		if (resourceType != null) {
 			try {
 				switch (resourceType) {
+					case APP:
+						return Class.forName("es.caib.comanda.client.model.App");
 					case ENTORN_APP:
 						return Class.forName("es.caib.comanda.client.model.EntornApp");
 					case DASHBOARD:
@@ -316,7 +353,9 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 
 	private ResourceType getResourceTypeFromClassName(String className) {
 		if (className != null) {
-			if (className.equals("es.caib.comanda.client.model.EntornApp")) {
+			if (className.equals("es.caib.comanda.client.model.App")) {
+				return ResourceType.APP;
+			} else if (className.equals("es.caib.comanda.client.model.EntornApp")) {
 				return ResourceType.ENTORN_APP;
 			} else if (className.equals("es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard")) {
 				return ResourceType.DASHBOARD;

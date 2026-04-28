@@ -1,0 +1,60 @@
+databaseChangeLog:
+- changeSet:
+    id: conf-alarma-mail-from-1
+    author: limit
+    comment: Afegir paràmetres de remitent per als correus d'alarmes
+    changes:
+      - insert:
+          tableName: COM_PARAMETRE
+          columns:
+            - column:
+                name: GRUP
+                value: "Alarmes"
+            - column:
+                name: SUBGRUP
+                value: "Correu"
+            - column:
+                name: TIPUS
+                value: "TEXT"
+            - column:
+                name: CODI
+                value: "es.caib.comanda.alarma.mail.from.address"
+            - column:
+                name: NOM
+                value: "Adreça del remitent dels correus d'alarma"
+            - column:
+                name: DESCRIPCIO
+                value: "Adreça de correu electrònic usada com a remitent als correus d'alarma."
+            - column:
+                name: VALOR
+                value: "comanda@caib.es"
+            - column:
+                name: EDITABLE
+                valueNumeric: 1
+      - insert:
+          tableName: COM_PARAMETRE
+          columns:
+            - column:
+                name: GRUP
+                value: "Alarmes"
+            - column:
+                name: SUBGRUP
+                value: "Correu"
+            - column:
+                name: TIPUS
+                value: "TEXT"
+            - column:
+                name: CODI
+                value: "es.caib.comanda.alarma.mail.from.name"
+            - column:
+                name: NOM
+                value: "Nom del remitent dels correus d'alarma"
+            - column:
+                name: DESCRIPCIO
+                value: "Nom visible del remitent als correus d'alarma."
+            - column:
+                name: VALOR
+                value: "Comanda"
+            - column:
+                name: EDITABLE
+                valueNumeric: 1

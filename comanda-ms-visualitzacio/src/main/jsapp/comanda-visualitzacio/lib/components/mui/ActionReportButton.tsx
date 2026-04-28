@@ -22,7 +22,8 @@ export type ActionReportCustomButtonProps = {
 };
 
 type IconCustomButtonProps = ActionReportCustomButtonProps & React.PropsWithChildren;
-type TextCustomButtonProps = ActionReportCustomButtonProps & React.PropsWithChildren;
+type TextCustomButtonProps = ActionReportCustomButtonProps &
+    React.PropsWithChildren & { icon?: string };
 
 /**
  * Propietats del component ActionReportButton.
@@ -40,6 +41,8 @@ export type ActionReportButtonProps = {
     id?: any;
     /** Icona pel botó (si no s'especifica es mostrarà un botó de text) */
     icon?: any;
+    /** Icona per a mostrar a dins el botó */
+    buttonIcon?: any;
     /** Títol pel botó */
     title?: string;
     /** Indica que l'execució de l'artefacte requereix confirmació de l'usuari (només per a artefactes de tipus acció) */
@@ -58,14 +61,18 @@ export type ActionReportButtonProps = {
     formI18nKeys?: FormI18nKeys;
     /** Indica que el formulari ha de fer una petició onChange inicial */
     formInitOnChangeRequest?: true;
+    /** Títol del diàleg amb el formulari */
+    formDialogTitle?: string;
     /** Component amb el contingut (camps) del formulari */
     formDialogContent?: React.ReactElement;
+    /** Component que mostra que l'acció/informe s'està executant */
+    formDialogLoading?: React.ReactElement;
     /** Botons pel component de diàleg */
     formDialogButtons?: DialogButton[];
     /** Propietats pel component de diàleg */
     formDialogComponentProps?: any;
     /** Funció que processa els resultats d'executar l'artefacte i retorna un element per a mostrar al diàleg com a resultat (només per a artefactes de tipus acció) */
-    formDialogResultProcessor?: (result?: any) => React.ReactElement;
+    formDialogResultProcessor?: (result?: any) => React.ReactElement | undefined;
     /** Event que es llença quan l'execució de l'artefacte finalitza sense errors */
     onSuccess?: (result?: any) => void;
     /** Event que es llença quan l'execució de l'artefacte finalitza amb errors */
@@ -76,6 +83,8 @@ export type ActionReportButtonProps = {
     buttonComponentProps?: any;
     /** Propietats pel component de l'icona (només per a botons de tipus icona) */
     iconComponentProps?: any;
+    /** Indica si s'ha d'executar l'acció automàticament al obrir el diàleg */
+    dialogAutoSubmit?: boolean;
 };
 
 export type ActionReportLogicExecFn = (
@@ -120,9 +129,13 @@ const IconCustomButton: React.FC<IconCustomButtonProps> = (props) => {
 };
 
 const TextCustomButton: React.FC<TextCustomButtonProps> = (props) => {
-    const { disabled, onClick, title, ...otherProps } = props;
+    const { disabled, onClick, title, icon, ...otherProps } = props;
     return (
-        <Button disabled={disabled} onClick={onClick} {...otherProps}>
+        <Button
+            disabled={disabled}
+            onClick={onClick}
+            startIcon={icon != null ? <Icon>{icon}</Icon> : undefined}
+            {...otherProps}>
             {title}
         </Button>
     );
@@ -141,6 +154,7 @@ const TextCustomButton: React.FC<TextCustomButtonProps> = (props) => {
  * @param formI18nKeys - Claus de traducció personalitzades pel component Form.
  * @param formInitOnChangeRequest - Indica si el formulari ha de fer una petició onChange inicial.
  * @param formDialogContent - Contingut (camps) pel formulari del diàleg.
+ * @param formDialogLoading - Component que mostra que l'acció/informe s'està executant.
  * @param formDialogButtons - Botons pel component de diàleg.
  * @param formDialogComponentPropsArg - Propietats pel component del diàleg.
  * @param formDialogResultProcessor - Funció que processa els resultats d'executar l'artefacte i retorna un element per a mostrar al diàleg com a resultat (només per a artefactes de tipus acció).
@@ -148,6 +162,7 @@ const TextCustomButton: React.FC<TextCustomButtonProps> = (props) => {
  * @param onError - Event que es llença quan l'execució de l'artefacte finalitza amb errors.
  * @param onClose - Event que es llença quan es tanca la modal del formulari de l'artefacte.
  * @param dialogCloseCallback - Callback que es crida quan es tanca el diàleg.
+ * @param dialogAutoSubmit - Indica si s'ha d'executar l'acció automàticament al obrir el diàleg.
  * @returns un objecte amb el resultat d'executar la lògica.
  */
 export const useActionReportLogic = (
@@ -161,13 +176,15 @@ export const useActionReportLogic = (
     formI18nKeys?: FormI18nKeys,
     formInitOnChangeRequest?: boolean,
     formDialogContent?: React.ReactElement,
+    formDialogLoading?: React.ReactElement,
     formDialogButtons?: DialogButton[],
     formDialogComponentPropsArg?: any,
-    formDialogResultProcessor?: (result?: any) => React.ReactElement,
+    formDialogResultProcessor?: (result?: any) => React.ReactElement | undefined,
     onSuccess?: (result?: any) => void,
     onError?: (error?: any) => void,
     onClose?: () => void,
-    dialogCloseCallback?: (reason?: string) => boolean
+    dialogCloseCallback?: (reason?: string) => boolean,
+    dialogAutoSubmit?: boolean
 ): ActionReportLogicResult => {
     const { t, messageDialogShow, temporalMessageShow, saveAs } = useBaseAppContext();
     const actionDialogButtons = useActionDialogButtons();
@@ -179,10 +196,14 @@ export const useActionReportLogic = (
         artifactAction: apiArtifactAction,
         artifactReport: apiArtifactReport,
     } = useResourceApiService(resourceName);
-    const execAction: FormDialogSubmitFn = (id: any, data?: any) =>
+    const execAction: FormDialogSubmitFn = (id: any, data: any) =>
         new Promise((resolve, reject) => {
             if (action != null) {
-                const requestArgs = { id, code: action, data };
+                const requestArgs = {
+                    id,
+                    code: action,
+                    data: { ...formAdditionalDataArg, ...data },
+                };
                 apiArtifactAction(id, requestArgs)
                     .then((result: any) => {
                         if (onSuccess) {
@@ -200,7 +221,7 @@ export const useActionReportLogic = (
                 console.error("Couldn't exec action without code");
             }
         });
-    const generateReport: FormDialogSubmitFn = (id: any, data?: any) =>
+    const generateReport: FormDialogSubmitFn = (id: any, data: any) =>
         new Promise((resolve, reject) => {
             if (report != null) {
                 const requestArgs = {
@@ -236,13 +257,16 @@ export const useActionReportLogic = (
         action ? execAction : generateReport,
         action ? t('actionreport.action.error') : t('actionreport.report.error'),
         null,
+        formDialogLoading,
         null,
         {
             resourceType: action ? 'action' : 'report',
             resourceTypeCode: action ?? report,
         },
         formI18nKeys,
-        dialogCloseCallback
+        dialogCloseCallback,
+        false,
+        dialogAutoSubmit
     );
     const exec = (
         id: any,
@@ -255,7 +279,7 @@ export const useActionReportLogic = (
                 apiLink?.title ?? (action != null ? 'Exec ' + action : 'Generate ' + report);
             formDialogShow(id, {
                 title: dialogTitle ?? formDialogTitle,
-                additionalData: formAdditionalData ?? formAdditionalDataArg,
+                additionalData: formAdditionalData,
                 initOnChangeRequest: formInitOnChangeRequest,
                 formContent: formDialogContent,
                 dialogComponentProps: formDialogComponentProps ??
@@ -282,14 +306,14 @@ export const useActionReportLogic = (
                     confirmDialogComponentProps
                 ).then((value: any) => {
                     if (value) {
-                        execAction(id, formAdditionalDataArg);
+                        execAction(id);
                     }
                 });
             } else {
-                execAction(id, formAdditionalDataArg);
+                execAction(id);
             }
         } else if (report != null) {
-            generateReport(null, formAdditionalDataArg);
+            generateReport(null);
         }
     };
     const [artifact, setArtifact] = React.useState<any>();
@@ -350,6 +374,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         reportFileType = 'PDF',
         id,
         icon,
+        buttonIcon,
         title,
         confirm,
         confirmMessage,
@@ -359,7 +384,9 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formAdditionalData,
         formI18nKeys,
         formInitOnChangeRequest,
+        formDialogTitle,
         formDialogContent,
+        formDialogLoading,
         formDialogButtons,
         formDialogComponentProps,
         formDialogResultProcessor,
@@ -368,6 +395,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         onClose,
         buttonComponentProps,
         iconComponentProps,
+        dialogAutoSubmit,
     } = props;
     const {
         available,
@@ -385,12 +413,15 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formI18nKeys,
         formInitOnChangeRequest,
         formDialogContent,
+        formDialogLoading,
         formDialogButtons,
         formDialogComponentProps,
         formDialogResultProcessor,
         onSuccess,
         onError,
-        onClose
+        onClose,
+        undefined,
+        dialogAutoSubmit
     );
     const buttonTitle = title ?? apiLink?.title ?? action ?? report;
     const ButtonComponent =
@@ -401,10 +432,11 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         <ButtonComponent
             disabled={disabled}
             onClick={() => {
-                handleButtonClick(id);
+                handleButtonClick(id, formDialogTitle);
                 onClickFromComponentProps?.();
             }}
             title={buttonTitle}
+            icon={icon == null ? buttonIcon : undefined}
             {...otherButtonComponentProps}>
             {icon != null && <Icon {...iconComponentProps}>{icon}</Icon>}
         </ButtonComponent>

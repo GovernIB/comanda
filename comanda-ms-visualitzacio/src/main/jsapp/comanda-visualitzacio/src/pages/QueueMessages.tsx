@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
+import useDataGridLocale from '../hooks/useDataGridLocale';
 import {
     GridPage,
     useMuiContentDialog,
@@ -25,6 +26,7 @@ import {
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
 import { DataGridPro } from '@mui/x-data-grid-pro';
+import PageTitle from '../components/PageTitle.tsx';
 
 // Types for queue and message data
 interface QueueInfo {
@@ -199,6 +201,7 @@ const MessageDetails: React.FC<{ data: MessageInfo }> = ({ data }) => {
 // Main queue messages page component
 const QueueMessages: React.FC = () => {
     const { t } = useTranslation();
+    const dataGridLocale = useDataGridLocale();
     const { queueName } = useParams<{ queueName: string }>();
     const navigate = useNavigate();
     const closeDialogButton = useCloseDialogButtons();
@@ -368,8 +371,11 @@ const QueueMessages: React.FC = () => {
         },
     ];
 
+    const pageTitle = t($ => $.page.queue.title, { name: queueName });
+
     return (
         <GridPage>
+            <PageTitle title={pageTitle} />
             <Box sx={{ p: 2 }}>
                 {/* Breadcrumbs navigation */}
                 <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
@@ -380,9 +386,7 @@ const QueueMessages: React.FC = () => {
                 </Breadcrumbs>
 
                 <Typography variant="h4" component="h1" gutterBottom>
-                    {t($ => $.page.queue.title, {
-                        name: queueName
-                    })}
+                    {pageTitle}
                 </Typography>
 
                 {/* Queue details */}
@@ -413,6 +417,7 @@ const QueueMessages: React.FC = () => {
                 <DataGridPro
                     rows={messages}
                     columns={columns}
+                    localeText={dataGridLocale}
                     getRowId={(row) => row.messageID}
                     onRowClick={(params) => handleShowMessageDetails(params.row)}
                     autoHeight

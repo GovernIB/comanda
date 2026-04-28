@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: alarmes-change-24-1
+      author: limit
+      comment: Eliminar la constraint NotNull de la columna 'nom', ja que no es considera imprescindible
+      changes:
+        - dropNotNullConstraint:
+            tableName: ${db_prefix}alarma_config
+            columnName: nom

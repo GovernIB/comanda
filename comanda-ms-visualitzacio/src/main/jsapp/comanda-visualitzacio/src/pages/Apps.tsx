@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
     FormField,
@@ -14,22 +14,28 @@ import {
     MuiFormTabs,
     springFilterBuilder,
     useBaseAppContext,
+    useCloseDialogButtons,
     useFormContext,
+    useMuiContentDialog,
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
-import { FormControl, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
+import { FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
-import { useOptionalDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
 import { useAclPermissionManager } from '../components/AclPermissionManager';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
-import {Cancel, CheckCircle} from '@mui/icons-material';
+import Cancel from '@mui/icons-material/Cancel';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 import useReordering from '../hooks/reordering.tsx';
+import PageTitle from '../components/PageTitle.tsx';
+import { StacktraceBlock } from '../components/RickTextDetail.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
+import notNull from '../util/arrayUtils.ts';
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -37,12 +43,32 @@ const useActions = (refresh?: () => void) => {
     const { temporalMessageShow } = useBaseAppContext();
     const { t } = useTranslation();
 
-    const pingUrl = React.useCallback(async (additionalData: any): Promise<boolean> => {
+    const pingUrl = React.useCallback(async (
+        additionalData: any,
+        expectedResponseTypeEnum: string,
+    ): Promise<any> => {
         try {
-            const data = await apiAction(null, { code: 'pingUrl', data: additionalData });
+            const data = await apiAction(null, { code: 'pingUrl', data: {...additionalData, expectedResponseTypeEnum} });
             refresh?.();
-            temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
-            return data.success;
+            if (data?.validationError) {
+                const elementsDetail = [
+                    {
+                        contentValue: (
+                            <StacktraceBlock
+                                title={t($ => $.page.apps.ping.validationTrace)}
+                                value={data?.message}
+                            />
+                        ),
+                    },
+                ];
+                return {
+                    status: 'warning',
+                    elements: elementsDetail,
+                };
+            } else {
+                temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
+            }
+            return {status :data.success ? 'success' : 'error'};
         } catch (error: any) {
             temporalMessageShow(null, error.message, 'error');
             return false;
@@ -87,29 +113,53 @@ const AppEntornForm: React.FC = () => {
     const { id: appId } = useParams();
     const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
     const { pingUrl } = useActions();
+    const closeDialogButton = useCloseDialogButtons();
+    const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
 
     return (
-        <Grid container spacing={2}>
-            <Grid size={12}>
+        <><Grid container spacing={2}>
+            <Grid size={9}>
                 <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter}/>
             </Grid>
-            <Grid size={12}>
-                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} onClick={pingUrl}/>}}}} />
+            <Grid size={3}>
+                <FormField name="activa" />
             </Grid>
             <Grid size={12}>
-                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} onClick={pingUrl}/>}}}} />
+                <FormField name="infoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} onClick={pingUrl}/>}}}} />
+                <FormField name="salutUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.salutUrl} formData={data} onClick={(formData) => pingUrl(formData, 'SALUT')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
-                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} onClick={pingUrl}/>}}}} />
+                <FormField name="logsUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.logsUrl} formData={data} onClick={(formData) => pingUrl(formData, 'LOGS')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
-            <Grid size={8}>
+            <Grid size={12} sx={{ p: 1, pt: 0 }}>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">{t($ => $.page.apps.fields.salutAuthLegend)}</FormLabel>
+                    <FormGroup aria-label="position" row>
+                        <FormField name="salutAuth" type="checkbox" label={t($ => $.page.apps.fields.auth)} />
+                    </FormGroup>
+                </FormControl>
+            </Grid>
+            <Grid size={12}>
+                <FormField name="estadisticaInfoUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO')} dialogShow={detailDialogShow} />}}}} />
+            </Grid>
+            <Grid size={12}>
+                <FormField name="estadisticaUrl" componentProps={{slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA')} dialogShow={detailDialogShow} />}}}} />
+            </Grid>
+            <Grid size={6} sx={{ p: 1, pt: 0 }}>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">{t($ => $.page.apps.fields.estadisticaAuthLegend)}</FormLabel>
+                    <FormGroup aria-label="position" row>
+                        <FormField name="estadisticaAuth" type="checkbox" label={t($ => $.page.apps.fields.auth)} />
+                    </FormGroup>
+                </FormControl>
+            </Grid>
+            <Grid size={6}>
                 <FormField name="estadisticaCron" />
             </Grid>
-            <Grid size={4}>
-                <FormField name="estadisticaAuth" type="checkbox" label={t('page.apps.fields.estadistica.auth')} />
+            <Grid size={12}>
+                <FormField name="alarmesEmail" />
             </Grid>
             <Grid size={12}>
                 <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />
@@ -135,10 +185,8 @@ const AppEntornForm: React.FC = () => {
                     </Grid>
                 </>
             )}
-            <Grid size={12}>
-                <FormField name="activa" />
-            </Grid>
         </Grid>
+        {detailDialogComponent}</>
     );
 };
 
@@ -176,6 +224,7 @@ const AppsEntorns: React.FC = () => {
         show: permissionShow,
         component: permissionComponent
     } = useAclPermissionManager('ENTORN_APP');
+    const gestorReadOnly = useReadOnlyGestor();
     const actions = [
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
@@ -187,23 +236,28 @@ const AppsEntorns: React.FC = () => {
             icon: "check_circle",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => row?.activa,
+            hidden: (row:any) => row?.activa || gestorReadOnly,
         },
+        gestorReadOnly ? {
+            label: t($ => $.components.details),
+            icon: 'info',
+            clickShowUpdateDialog: true,
+        } : null,
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.desactivar),
             icon: "cancel",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => !row?.activa,
+            hidden: (row:any) => !row?.activa || gestorReadOnly,
         },
-    ]
+    ].filter(notNull);
     return (
         <>
             <MuiDataGrid
                 apiRef={apiRef}
                 title={t($ => $.page.appsEntorns.title)}
                 resourceName="entornApp"
-                staticFilter={`app.id : ${appId}`}
+                fixedFilter={`app.id : ${appId}`}
                 columns={columns}
                 paginationActive
                 popupEditActive
@@ -214,6 +268,8 @@ const AppsEntorns: React.FC = () => {
                 }}
                 rowAdditionalActions={actions}
                 rowActionsColumnProps={{ flex: .3 }}
+                rowHideUpdateButton={gestorReadOnly}
+                rowHideDeleteButton={gestorReadOnly}
             />
             {permissionComponent}
         </>
@@ -223,12 +279,13 @@ const AppsEntorns: React.FC = () => {
 export const AppForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
+    const [appNom, setAppNom] = React.useState<string>()
     const { setMarginsDisabled } = useBaseAppContext();
+    const gestorReadOnly = useReadOnlyGestor();
     React.useEffect(() => {
         setMarginsDisabled(true);
         return () => setMarginsDisabled(false);
     }, []);
-
     const formTabs: FormTabsValue[] = [
         {
             label: t($ => $.page.apps.general),
@@ -238,15 +295,19 @@ export const AppForm: React.FC = () => {
         },
     ];
 
+    const formTitle = id ? (t($ => $.page.apps.update)+` (${appNom})`) : t($ => $.page.apps.create);
+
     return (
         <MuiForm
             key={id} // TODO No debería ser necesario, parece un bug de la librería
             id={id}
-            title={id ? t($ => $.page.apps.update) : t($ => $.page.apps.create)}
+            title={formTitle}
             resourceName="app"
             goBackLink="/app"
             createLink="form/{{id}}"
+            onDataChange={(data) => setAppNom(data?.nom)}
         >
+            <PageTitle title={formTitle} />
             <MuiFormTabs tabs={formTabs} tabIndexesWithGrids={[1]}>
                 <MuiFormTabContent index={0} showOnCreate>
                     <FormPage>
@@ -264,6 +325,7 @@ export const AppForm: React.FC = () => {
                             <Grid size={12}>
                                 <LogoUpload
                                     name="logo"
+                                    editable={!gestorReadOnly}
                                     // label="Logo"
                                 />
                             </Grid>
@@ -316,40 +378,17 @@ const columns = [
     },
 ];
 
-const parseCodesFromJson = (jsonContent: string) => {
-    let parsedJson = JSON.parse(jsonContent);
-    if (!Array.isArray(parsedJson)) parsedJson = [parsedJson];
-    const parsedCodes = (parsedJson || [])
-        .map((a: any) => a?.codi)
-        .filter((c: any) => typeof c === 'string');
-    return parsedCodes;
-};
-
-const existsAnyInParsedCodes = (parsedCodes: any[], existingCodes: Set<any>) => {
-    return parsedCodes.some((c: any) => existingCodes.has(c));
-}
-
 const AppImportFormContent = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
     const { data, apiRef, fieldErrors } = useFormContext();
     const jsonContentValidationError = fieldErrors?.find((err) => err.field === 'jsonContent');
-    const gridContext = useOptionalDataGridContext();
-    const existingCodes = React.useMemo(() => new Set((gridContext?.rows ?? []).map((r: any) => r?.codi).filter(Boolean)), [gridContext?.rows]);
-    const parsedCodes = React.useMemo(() => data?.jsonContent ? parseCodesFromJson(data?.jsonContent) : [], [data?.jsonContent]);
-    const existsAny = React.useMemo(() => existsAnyInParsedCodes(parsedCodes, existingCodes), [existingCodes, parsedCodes]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
             const text = await file.text();
-
-            // Preselect default decision if conflicts
-            // Doing existsAnyInJson before setting jsonContent ensures that the json is valid, as JSON.parse has already been called
-            if (existsAnyInParsedCodes(parseCodesFromJson(text), existingCodes))
-                apiRef.current?.setFieldValue('decision', 'COMBINE');
-
             apiRef.current?.setFieldValue('jsonContent', text);
         } catch (err: any) {
             temporalMessageShow("", t($ => $.page.apps.import.parseError), 'error');
@@ -373,12 +412,12 @@ const AppImportFormContent = () => {
 
     return <>
         <input type="file" accept="application/json" onChange={handleFileChange} />
-        {parsedCodes.length > 0 && (
+        {data?.importedAppCodes?.length && (
             <>
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    {t($ => $.page.apps.import.detectedCodes)} {parsedCodes.join(', ')}
+                    {t($ => $.page.apps.import.detectedCodes)} {data.importedAppCodes.join(', ')}
                 </Typography>
-                {existsAny && (
+                {data?.importedAppExists && (
                     <FormControl sx={{ mt: 2 }}>
                         <Typography variant="body2" sx={{ mb: 1 }}>
                             {t($ => $.page.apps.import.conflict)}
@@ -402,16 +441,32 @@ const AppImportFormContent = () => {
 const Apps: React.FC = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
+    const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
+    const {
+        show: appPermissionShow,
+        component: appPermissionComponent
+    } = useAclPermissionManager('APP');
+    const gestorReadOnly = useReadOnlyGestor();
     const appActions: DataCommonAdditionalAction[] = [
+        {
+            label: t($ => $.components.permisos.title),
+            icon: 'lock',
+            onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
+        },
+        gestorReadOnly ? {
+            label: t($ => $.components.details),
+            icon: 'info',
+            onClick: (id: any) => navigate(`form/${id}`),
+        } : null,
         {
             label: t($ => $.page.apps.action.export),
             icon: 'download',
             showInMenu: true,
             onClick: appExport,
         },
-    ];
+    ].filter(notNull);
     const { dataGridProps, loadingElement } = useReordering("app");
     const toolbarElementsWithPositions: ReactElementWithPosition[] = [
         {
@@ -437,6 +492,7 @@ const Apps: React.FC = () => {
     ];
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.apps.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
                 title={t($ => $.page.apps.title)}
@@ -445,13 +501,15 @@ const Apps: React.FC = () => {
                 toolbarType="upper"
                 paginationActive
                 //readOnly
-                rowDetailLink="/dd"
                 toolbarCreateLink="form"
                 rowUpdateLink="form/{{id}}"
                 rowAdditionalActions={appActions}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
-                {...dataGridProps}
+                rowHideUpdateButton={gestorReadOnly}
+                rowHideDeleteButton={gestorReadOnly}
+                {...(!gestorReadOnly ? dataGridProps : {})}
             />
+            {appPermissionComponent}
         </GridPage>
     );
 };

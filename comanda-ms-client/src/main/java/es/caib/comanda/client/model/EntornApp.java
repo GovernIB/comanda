@@ -1,9 +1,6 @@
 package es.caib.comanda.client.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -11,6 +8,7 @@ import java.util.List;
 
 @Builder
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class EntornApp implements Serializable {
@@ -38,10 +36,13 @@ public class EntornApp implements Serializable {
     private String estadisticaCron;
 
     private boolean estadisticaAuth;
+    private boolean salutAuth;
 
     @Builder.Default
     private Boolean compactable = false;
     private Integer compactacioSetmanalMesos;
     private Integer compactacioMensualMesos;
     private Integer eliminacioMesos;
+
+    private String alarmesEmail;
 }

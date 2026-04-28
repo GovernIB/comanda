@@ -5,10 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import es.caib.comanda.model.v1.estadistica.GenericDimensio;
-import es.caib.comanda.model.v1.estadistica.GenericFet;
 import es.caib.comanda.model.v1.estadistica.Dimensio;
 import es.caib.comanda.model.v1.estadistica.Fet;
+import es.caib.comanda.model.v1.estadistica.GenericDimensio;
+import es.caib.comanda.model.v1.estadistica.GenericFet;
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,9 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 
 @Configuration
 public class RestTemplateConfig {
@@ -46,6 +50,7 @@ public class RestTemplateConfig {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         SimpleModule module = new SimpleModule();
         module.addAbstractTypeMapping(Dimensio.class, GenericDimensio.class);
@@ -54,6 +59,15 @@ public class RestTemplateConfig {
 
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
         return converter;
+    }
+
+    @Bean
+    Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
+        return builder -> {
+            builder.modules(new JavaTimeModule());
+            builder.featuresToDisable(WRITE_DATES_AS_TIMESTAMPS);
+            builder.featuresToDisable(ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
+        };
     }
 
 }

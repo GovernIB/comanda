@@ -8,7 +8,8 @@ import {
     Box,
     Typography,
 } from "@mui/material";
-import * as Icons from "@mui/icons-material";
+// eslint-disable-next-line no-restricted-imports
+import * as Icons from "@mui/icons-material"; // S'ha fet un mock d'aquest import als tests, per lo evitam els errors "too many open files"
 import { FixedSizeList } from "react-window";
 import { useFormContext } from '../../lib/components/form/FormContext';
 

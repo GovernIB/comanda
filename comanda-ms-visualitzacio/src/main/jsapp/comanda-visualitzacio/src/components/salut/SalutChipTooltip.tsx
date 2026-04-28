@@ -97,8 +97,8 @@ export const SalutChipTooltip: React.FC<SalutTooltipProps> = ({ stateEnum, salut
 export const SalutGenericTooltip: React.FC<SalutGenericTooltipProps> = ({ children, ...props }) => {
 
     return (
-        <StyledTooltip {...props}>
+        <Tooltip {...props}>
             {children}
-        </StyledTooltip>
+        </Tooltip>
     );
 };

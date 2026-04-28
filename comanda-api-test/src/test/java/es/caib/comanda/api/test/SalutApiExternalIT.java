@@ -1,5 +1,9 @@
 package es.caib.comanda.api.test;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.caib.comanda.api.v1.salut.ComandaAppSalutApi;
 import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.model.v1.salut.SalutInfo;
@@ -12,6 +16,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SalutApiExternalIT {
 
     private static ComandaAppSalutApi api;
+    private static ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false)
+            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @BeforeAll
     static void setup() {
@@ -28,12 +37,14 @@ public class SalutApiExternalIT {
     @Test
     void salut_ok() throws Exception {
         SalutInfo salut = api.salut();
+        System.out.println(objectMapper.writeValueAsString(salut));
         assertThat(salut).isNotNull();
     }
 
     @Test
     void salutInfo_ok() throws Exception {
         AppInfo info = api.salutInfo();
+        System.out.println(objectMapper.writeValueAsString(info));
         assertThat(info).isNotNull();
     }
 }

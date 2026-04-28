@@ -1,0 +1,308 @@
+package es.caib.comanda.salut.logic.helper;
+
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.EntornRef;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.model.v1.salut.EstatSalut;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.InformacioSistema;
+import es.caib.comanda.model.v1.salut.IntegracioPeticions;
+import es.caib.comanda.model.v1.salut.IntegracioSalut;
+import es.caib.comanda.model.v1.salut.MissatgeSalut;
+import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.model.v1.salut.SalutNivell;
+import es.caib.comanda.model.v1.salut.SubsistemaSalut;
+import es.caib.comanda.salut.logic.intf.model.SalutEstat;
+import es.caib.comanda.salut.persist.entity.SalutDetallEntity;
+import es.caib.comanda.salut.persist.entity.SalutEntity;
+import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
+import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
+import es.caib.comanda.salut.persist.entity.SalutSubsistemaEntity;
+import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
+import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
+import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
+import es.caib.comanda.salut.persist.repository.SalutRepository;
+import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.noop.NoopTimer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class SalutInfoHelperTest {
+
+    @Mock
+    private SalutRepository salutRepository;
+
+    @Mock
+    private SalutIntegracioRepository salutIntegracioRepository;
+
+    @Mock
+    private SalutSubsistemaRepository salutSubsistemaRepository;
+
+    @Mock
+    private SalutMissatgeRepository salutMissatgeRepository;
+
+    @Mock
+    private SalutDetallRepository salutDetallRepository;
+
+    @Mock
+    private SalutHistRepository salutHistRepository;
+
+    @Mock
+    private ParametresHelper parametresHelper;
+
+    @Mock
+    private SalutClientHelper salutClientHelper;
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+	@Mock
+	private MetricsHelper metricsHelper;
+
+    @InjectMocks
+    private SalutInfoHelper salutInfoHelper;
+
+    @Captor
+    private ArgumentCaptor<SalutEntity> salutEntityCaptor;
+
+    @Captor
+    private ArgumentCaptor<SalutIntegracioEntity> salutIntegracioEntityCaptor;
+
+    @Captor
+    private ArgumentCaptor<SalutSubsistemaEntity> salutSubsistemaEntityCaptor;
+
+    @Captor
+    private ArgumentCaptor<SalutMissatgeEntity> salutMissatgeEntityCaptor;
+
+    @Captor
+    private ArgumentCaptor<SalutDetallEntity> salutDetallEntityCaptor;
+
+    private EntornApp entornApp;
+    private SalutInfo salutInfo;
+    private SalutEntity salutEntity;
+    private Method afegirIntegracionsMethod;
+
+    @BeforeEach
+    void setUp() {
+        try {
+            afegirIntegracionsMethod = SalutInfoHelper.class.getDeclaredMethod("afegirIntegracions", SalutEntity.class, SalutEntity.class);
+            afegirIntegracionsMethod.setAccessible(true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        // Setup EntornApp
+        entornApp = EntornApp.builder()
+                .id(1L)
+                .app(new AppRef(1L, "Test App"))
+                .entorn(new EntornRef(1L, "Test Entorn"))
+                .salutUrl("http://test.com/health")
+                .activa(true)
+                .build();
+
+        // Setup SalutInfo
+        EstatSalut appEstat = EstatSalut.builder()
+                .estat(EstatSalutEnum.UP)
+                .latencia(100)
+                .build();
+
+        EstatSalut bdEstat = EstatSalut.builder()
+                .estat(EstatSalutEnum.UP)
+                .latencia(50)
+                .build();
+
+        IntegracioPeticions peticions = IntegracioPeticions.builder()
+                .totalOk(10L)
+                .totalError(2L)
+                .totalTempsMig(48)
+                .peticionsOkUltimPeriode(2L)
+                .peticionsErrorUltimPeriode(0L)
+                .tempsMigUltimPeriode(50)
+                .build();
+
+        IntegracioSalut integracioSalut = IntegracioSalut.builder()
+                .codi("TEST_INTEGRACIO")
+                .estat(EstatSalutEnum.UP)
+                .latencia(75)
+                .peticions(peticions)
+                .build();
+
+        SubsistemaSalut subsistemaSalut = SubsistemaSalut.builder()
+                .codi("TEST_SUBSISTEMA")
+                .estat(EstatSalutEnum.UP)
+                .latencia(60)
+                .totalOk(20L)
+                .totalError(5L)
+                .totalTempsMig(60)
+                .peticionsOkUltimPeriode(4L)
+                .peticionsErrorUltimPeriode(1L)
+                .tempsMigUltimPeriode(62)
+                .build();
+
+        MissatgeSalut missatgeSalut = MissatgeSalut.builder()
+                .data(OffsetDateTime.now())
+                .nivell(SalutNivell.INFO)
+                .missatge("Test message")
+                .build();
+
+        InformacioSistema informacioSistema = InformacioSistema.builder()
+                .memoriaTotal("Test Value")
+                .build();
+
+        salutInfo = SalutInfo.builder()
+                .codi("TEST")
+                .data(OffsetDateTime.now())
+                .estatGlobal(appEstat)
+                .estatBaseDeDades(bdEstat)
+                .integracions(Arrays.asList(integracioSalut))
+                .subsistemes(Arrays.asList(subsistemaSalut))
+                .missatges(Arrays.asList(missatgeSalut))
+                .informacioSistema(informacioSistema)
+                .versio("1.0.0")
+                .build();
+
+        // Setup SalutEntity
+        salutEntity = new SalutEntity();
+        salutEntity.setId(1L);
+        salutEntity.setEntornAppId(1L);
+        salutEntity.setData(LocalDateTime.now());
+        salutEntity.setAppEstat(SalutEstat.UP);
+        salutEntity.setAppLatencia(100);
+        salutEntity.setBdEstat(SalutEstat.UP);
+        salutEntity.setBdLatencia(50);
+
+		// Setup MetricsHelper
+		lenient().when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
+				.thenReturn(new NoopTimer(new Meter.Id("", Tags.empty(), null, null, Meter.Type.TIMER)));
+        lenient().when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(any())).thenReturn(null);
+    }
+
+    @Test
+    void getSalutInfo_quanLaRespostaEsValida_persistixSalutIFillsRelacionats() {
+        when(salutRepository.save(any(SalutEntity.class))).thenReturn(salutEntity);
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenReturn(salutInfo);
+
+        salutInfoHelper.getSalutInfo(entornApp);
+
+        verify(salutRepository).save(salutEntityCaptor.capture());
+        SalutEntity capturedSalutEntity = salutEntityCaptor.getValue();
+
+        assertThat(capturedSalutEntity.getEntornAppId()).isEqualTo(1L);
+        assertThat(capturedSalutEntity.getAppEstat()).isEqualTo(SalutEstat.UP);
+        assertThat(capturedSalutEntity.getAppLatencia()).isEqualTo(100);
+        assertThat(capturedSalutEntity.getBdEstat()).isEqualTo(SalutEstat.UP);
+        assertThat(capturedSalutEntity.getBdLatencia()).isEqualTo(50);
+
+        verify(salutIntegracioRepository).save(any(SalutIntegracioEntity.class));
+        verify(salutSubsistemaRepository).save(any(SalutSubsistemaEntity.class));
+        verify(salutMissatgeRepository).save(any(SalutMissatgeEntity.class));
+        verify(salutDetallRepository).save(any(SalutDetallEntity.class));
+    }
+
+    @Test
+    void getSalutInfo_quanElClientLlanzaExcepcio_persistixSalutDownSenseFills() {
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenThrow(new RestClientException("Test exception"));
+        when(salutRepository.save(any(SalutEntity.class))).thenReturn(salutEntity);
+
+        salutInfoHelper.getSalutInfo(entornApp);
+
+        verify(salutRepository).save(salutEntityCaptor.capture());
+        SalutEntity capturedSalutEntity = salutEntityCaptor.getValue();
+
+        assertThat(capturedSalutEntity.getEntornAppId()).isEqualTo(1L);
+        assertThat(capturedSalutEntity.getAppEstat()).isEqualTo(SalutEstat.DOWN);
+
+        verify(salutIntegracioRepository, never()).save(any(SalutIntegracioEntity.class));
+        verify(salutSubsistemaRepository, never()).save(any(SalutSubsistemaEntity.class));
+        verify(salutMissatgeRepository, never()).save(any(SalutMissatgeEntity.class));
+        verify(salutDetallRepository, never()).save(any(SalutDetallEntity.class));
+    }
+
+    @Test
+    void getSalutInfo_quanHiHaElementsInvalids_ignoraLesValidacionsNoBloquejants() {
+        salutInfo = new SalutInfo(
+                salutInfo.getCodi(),
+                salutInfo.getData(),
+                salutInfo.getEstatGlobal(),
+                salutInfo.getEstatBaseDeDades(),
+                Arrays.asList(salutInfo.getIntegracions().get(0), new IntegracioSalut("", null)),
+                salutInfo.getInformacioSistema(),
+                Arrays.asList(salutInfo.getMissatges().get(0), new MissatgeSalut(null, null, "Missatge invalid")),
+                salutInfo.getVersio(),
+                Arrays.asList(salutInfo.getSubsistemes().get(0), new SubsistemaSalut("", null, null, 0, 0L, 0L, 0))
+        );
+
+        when(salutRepository.save(any(SalutEntity.class))).thenReturn(salutEntity);
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenReturn(salutInfo);
+
+        salutInfoHelper.getSalutInfo(entornApp);
+
+        verify(salutIntegracioRepository).save(salutIntegracioEntityCaptor.capture());
+        assertThat(salutIntegracioEntityCaptor.getAllValues()).hasSize(1);
+        verify(salutSubsistemaRepository).save(salutSubsistemaEntityCaptor.capture());
+        assertThat(salutSubsistemaEntityCaptor.getAllValues()).hasSize(1);
+        verify(salutMissatgeRepository).save(salutMissatgeEntityCaptor.capture());
+        assertThat(salutMissatgeEntityCaptor.getAllValues()).hasSize(1);
+        verify(salutDetallRepository).save(salutDetallEntityCaptor.capture());
+        assertThat(salutDetallEntityCaptor.getAllValues()).hasSize(1);
+    }
+
+    @Test
+    void afegirIntegracions_quanNoArribenMetriquesNoSobreescriuNiOmpleZeros() throws Exception {
+        SalutEntity agregat = new SalutEntity();
+        SalutIntegracioEntity existent = new SalutIntegracioEntity();
+        existent.setCodi("TEST");
+        existent.setTotalOk(10L);
+        existent.setTotalError(2L);
+        existent.setTotalTempsMig(48);
+        existent.setPeticionsOkUltimPeriode(2L);
+        existent.setPeticionsErrorUltimPeriode(1L);
+        existent.setTempsMigUltimPeriode(50);
+        agregat.setSalutIntegracions(new LinkedHashSet<>(java.util.List.of(existent)));
+
+        SalutEntity minut = new SalutEntity();
+        SalutIntegracioEntity senseMetriques = new SalutIntegracioEntity();
+        senseMetriques.setCodi("TEST");
+        minut.setSalutIntegracions(new LinkedHashSet<>(java.util.List.of(senseMetriques)));
+
+        afegirIntegracionsMethod.invoke(salutInfoHelper, agregat, minut);
+
+        assertThat(existent.getTotalOk()).isEqualTo(10L);
+        assertThat(existent.getTotalError()).isEqualTo(2L);
+        assertThat(existent.getTotalTempsMig()).isEqualTo(48);
+        assertThat(existent.getPeticionsOkUltimPeriode()).isEqualTo(2L);
+        assertThat(existent.getPeticionsErrorUltimPeriode()).isEqualTo(1L);
+        assertThat(existent.getTempsMigUltimPeriode()).isEqualTo(50);
+    }
+}

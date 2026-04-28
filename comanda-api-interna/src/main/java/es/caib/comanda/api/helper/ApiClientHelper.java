@@ -1,12 +1,17 @@
 package es.caib.comanda.api.helper;
 
+import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.AvisServiceClient;
+import es.caib.comanda.client.EntornServiceClient;
 import es.caib.comanda.client.TascaServiceClient;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.Avis;
 import es.caib.comanda.client.model.Tasca;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
@@ -21,14 +26,42 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ApiClientHelper {
 
+    private final AppServiceClient appServiceClient;
+    private final EntornServiceClient entornServiceClient;
     private final TascaServiceClient tascaServiceClient;
     private final AvisServiceClient avisServiceClient;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
-    public Optional<Tasca> getTasca(String identificador, String appCodi, String entornCodi) {
+    @Cacheable(value = "appByCodiCache", key = "#appCodi")
+    public Optional<App> getAppByCodi(String appCodi) {
+        return appServiceClient.find(
+                "",
+                "codi:'" + appCodi + "'",
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()
+        ).getContent().stream().map(EntityModel::getContent).findFirst();
+    }
+
+    @Cacheable(value = "entornByCodiCache", key = "#entornCodi")
+    public Optional<Entorn> getEntornByCodi(String entornCodi) {
+        return entornServiceClient.find(
+                "",
+                "codi:'" + entornCodi + "'",
+                null,
+                null,
+                "UNPAGED",
+                null,
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()
+        ).getContent().stream().map(EntityModel::getContent).findFirst();
+    }
+
+    public Optional<Tasca> getTasca(String identificador, Long appId, Long entornId) {
         PagedModel<EntityModel<Tasca>> tasques = tascaServiceClient.find(
                 "",
-                "app.codi:'" + appCodi + "' and entorn.codi:'" + entornCodi + "' and identificador:'" + identificador + "'",
+                "appId:'" + appId + "' and entornId:'" + entornId + "' and identificador:'" + identificador + "'",
                 null,
                 null,
                 "UNPAGED",
@@ -39,14 +72,10 @@ public class ApiClientHelper {
                 .findFirst();
     }
 
-    public Boolean existTasca(String identificador, String appCodi, String entornCodi) {
-        return getTasca(identificador, appCodi, entornCodi).isPresent();
-    }
-
-    public List<Tasca> getTasques(Set<String> identificadors, String appCodi, String entornCodi) {
+    public List<Tasca> getTasques(Set<String> identificadors, Long appId, Long entornId) {
         PagedModel<EntityModel<Tasca>> tasques = tascaServiceClient.find(
                 "",
-                "app.codi:'" + appCodi + "' and entorn.codi:'" + entornCodi + "' and identificador in [" + identificadors.stream().collect(Collectors.joining(", ")) + "]",
+                "appId:'" + appId + "' and entornId:'" + entornId + "' and identificador in [" + identificadors.stream().collect(Collectors.joining(", ")) + "]",
                 null,
                 null,
                 "UNPAGED",
@@ -71,10 +100,10 @@ public class ApiClientHelper {
 //                .collect(Collectors.toUnmodifiableList());
     }
 
-    public Optional<Avis> getAvis(String identificador, String appCodi, String entornCodi) {
+    public Optional<Avis> getAvis(String identificador, Long appId, Long entornId) {
         PagedModel<EntityModel<Avis>> avisos = avisServiceClient.find(
                 "",
-                "app.codi:'" + appCodi + "' and entorn.codi:'" + entornCodi + "' and identificador:'" + identificador + "'",
+                "appId:'" + appId + "' and entornId:'" + entornId + "' and identificador:'" + identificador + "'",
                 null,
                 null,
                 "UNPAGED",
@@ -85,14 +114,10 @@ public class ApiClientHelper {
                 .findFirst();
     }
 
-    public Boolean existAvis(String identificador, String appCodi, String entornCodi) {
-        return getAvis(identificador, appCodi, entornCodi).isPresent();
-    }
-
-    public List<Avis> getAvisos(Set<String> identificadors, String appCodi, String entornCodi) {
+    public List<Avis> getAvisos(Set<String> identificadors, Long appId, Long entornId) {
         PagedModel<EntityModel<Avis>> avisos = avisServiceClient.find(
                 "",
-                "app.codi:'" + appCodi + "' and entorn.codi:'" + entornCodi + "' and identificador in [" + identificadors.stream().collect(Collectors.joining(", ")) + "]",
+                "appId:'" + appId + "' and entornId:'" + entornId + "' and identificador in [" + identificadors.stream().collect(Collectors.joining(", ")) + "]",
                 null,
                 null,
                 "UNPAGED",

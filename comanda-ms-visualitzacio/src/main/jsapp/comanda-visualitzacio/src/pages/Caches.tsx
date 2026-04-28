@@ -12,6 +12,7 @@ import {ResourceApiError} from "../../lib/components/ResourceApiProvider.tsx";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
 import {ReactElementWithPosition} from "../../lib/util/reactNodePosition.ts";
+import PageTitle from '../components/PageTitle.tsx';
 
 const Caches: React.FC = () => {
     const { t } = useTranslation();
@@ -100,6 +101,7 @@ const Caches: React.FC = () => {
     ];
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.caches.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
                 title={t($ => $.page.caches.title)}

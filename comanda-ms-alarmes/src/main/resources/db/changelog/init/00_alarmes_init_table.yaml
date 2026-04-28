@@ -163,3 +163,39 @@ databaseChangeLog:
             name: llegida
             type: BOOLEAN
         tableName: ${db_prefix}alarma_usuari
+- changeSet:
+      id: alarmes-init-table-4
+      author: limit
+      changes:
+          - addColumn:
+                tableName: ${db_prefix}alarma
+                columns:
+                    - column:
+                          name: data_finalitzacio
+                          type: TIMESTAMP
+- changeSet:
+      id: alarmes-init-table-5
+      author: limit
+      changes:
+          - addColumn:
+                tableName: ${db_prefix}alarma_config
+                columns:
+                    - column:
+                          constraints:
+                              nullable: false
+                          defaultValueBoolean: false
+                          name: correu_generic
+                          type: BOOLEAN
+- changeSet:
+      id: alarmes-init-table-6
+      author: limit
+      changes:
+          - addColumn:
+                tableName: ${db_prefix}alarma_config
+                columns:
+                    - column:
+                          constraints:
+                              nullable: false
+                          defaultValueBoolean: false
+                          name: esborrat
+                          type: BOOLEAN

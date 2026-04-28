@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-2922-01
+      author: limit
+      comment: Afegir camp per a configurar correu electrònic genèric per a notificar alarmes
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}entorn_app
+            columns:
+              - column:
+                  name: alarmes_email
+                  type: VARCHAR(255 ${varcharUnit})
+                  remarks: Dirección de correo electrónico genérico para la notificación de alarmas

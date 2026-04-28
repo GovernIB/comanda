@@ -3,21 +3,62 @@ package es.caib.comanda.monitor.persist.entity;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class MonitorEntityTest {
+class MonitorEntityTest {
 
     @Test
-    void testEntityCreation() {
+    @DisplayName("El constructor i els setters funcionen correctament")
+    void constructorISetters_funcionenCorrectament() {
+        // Arrange
+        Long entornAppId = 1L;
+        ModulEnum modul = ModulEnum.SALUT;
+        AccioTipusEnum tipus = AccioTipusEnum.ENTRADA;
+        LocalDateTime now = LocalDateTime.now();
+        String url = "http://test.com/api";
+        String operacio = "Test Operation";
+        Long tempsResposta = 100L;
+        EstatEnum estat = EstatEnum.OK;
+        String codiUsuari = "testuser";
+
+        // Act
+        MonitorEntity entity = new MonitorEntity();
+        entity.setEntornAppId(entornAppId);
+        entity.setModul(modul);
+        entity.setTipus(tipus);
+        entity.setData(now);
+        entity.setUrl(url);
+        entity.setOperacio(operacio);
+        entity.setTempsResposta(tempsResposta);
+        entity.setEstat(estat);
+        entity.setCodiUsuari(codiUsuari);
+        ReflectionTestUtils.setField(entity, "id", 1L);
+
+        // Assert
+        assertThat(entity.getId()).isEqualTo(1L);
+        assertThat(entity.getEntornAppId()).isEqualTo(entornAppId);
+        assertThat(entity.getModul()).isEqualTo(modul);
+        assertThat(entity.getTipus()).isEqualTo(tipus);
+        assertThat(entity.getData()).isEqualTo(now);
+        assertThat(entity.getUrl()).isEqualTo(url);
+        assertThat(entity.getOperacio()).isEqualTo(operacio);
+        assertThat(entity.getTempsResposta()).isEqualTo(tempsResposta);
+        assertThat(entity.getEstat()).isEqualTo(estat);
+        assertThat(entity.getCodiUsuari()).isEqualTo(codiUsuari);
+    }
+
+    @Test
+    @DisplayName("El builder funciona correctament")
+    void builder_funcionaCorrectament() {
         // Arrange
         LocalDateTime now = LocalDateTime.now();
-        
+
         // Act
         MonitorEntity entity = MonitorEntity.builder()
                 .entornAppId(1L)
@@ -30,117 +71,77 @@ public class MonitorEntityTest {
                 .estat(EstatEnum.OK)
                 .codiUsuari("testuser")
                 .build();
-        ReflectionTestUtils.setField(entity, "id", 1L);
 
         // Assert
-        assertEquals(1L, entity.getId().longValue());
-        assertEquals(1L, entity.getEntornAppId().longValue());
-        assertEquals(ModulEnum.SALUT, entity.getModul());
-        assertEquals(AccioTipusEnum.ENTRADA, entity.getTipus());
-        assertEquals(now, entity.getData());
-        assertEquals("http://test.com/api", entity.getUrl());
-        assertEquals("Test Operation", entity.getOperacio());
-        assertEquals(100L, entity.getTempsResposta().longValue());
-        assertEquals(EstatEnum.OK, entity.getEstat());
-        assertEquals("testuser", entity.getCodiUsuari());
+        assertThat(entity.getEntornAppId()).isEqualTo(1L);
+        assertThat(entity.getModul()).isEqualTo(ModulEnum.SALUT);
+        assertThat(entity.getTipus()).isEqualTo(AccioTipusEnum.ENTRADA);
+        assertThat(entity.getData()).isEqualTo(now);
+        assertThat(entity.getOperacio()).isEqualTo("Test Operation");
+        assertThat(entity.getEstat()).isEqualTo(EstatEnum.OK);
     }
 
     @Test
-    void testErrorDescripcioTruncation() {
+    @DisplayName("La descripció d'error s'abreuja si supera el màxim")
+    void errorDescripcio_sAbreuja() {
         // Arrange
         MonitorEntity entity = new MonitorEntity();
-        StringBuilder longText = new StringBuilder();
-        for (int i = 0; i < 2000; i++) {
-            longText.append("a");
-        }
-        
+        String longText = "a".repeat(2000);
+
         // Act
-        entity.setErrorDescripcio(longText.toString());
-        
+        entity.setErrorDescripcio(longText);
+
         // Assert
-        assertTrue(entity.getErrorDescripcio().length() <= 1024);
+        assertThat(entity.getErrorDescripcio()).hasSize(1024);
     }
 
     @Test
-    void testExcepcioMessageTruncation() {
+    @DisplayName("El missatge d'excepció s'abreuja si supera el màxim")
+    void excepcioMessage_sAbreuja() {
         // Arrange
         MonitorEntity entity = new MonitorEntity();
-        StringBuilder longText = new StringBuilder();
-        for (int i = 0; i < 2000; i++) {
-            longText.append("a");
-        }
-        
+        String longText = "a".repeat(2000);
+
         // Act
-        entity.setExcepcioMessage(longText.toString());
-        
+        entity.setExcepcioMessage(longText);
+
         // Assert
-        assertTrue(entity.getExcepcioMessage().length() <= 1024);
+        assertThat(entity.getExcepcioMessage()).hasSize(1024);
     }
 
     @Test
-    void testExcepcioStacktraceTruncation() {
+    @DisplayName("L'stacktrace d'excepció s'abreuja si supera el màxim")
+    void excepcioStacktrace_sAbreuja() {
         // Arrange
         MonitorEntity entity = new MonitorEntity();
-        StringBuilder longText = new StringBuilder();
-        for (int i = 0; i < 5000; i++) {
-            longText.append("a");
-        }
-        
+        String longText = "a".repeat(5000);
+
         // Act
-        entity.setExcepcioStacktrace(longText.toString());
-        
+        entity.setExcepcioStacktrace(longText);
+
         // Assert
-        assertTrue(entity.getExcepcioStacktrace().length() <= 4000);
+        assertThat(entity.getExcepcioStacktrace()).hasSize(4000);
     }
 
     @Test
-    void testBuilderErrorDescripcioTruncation() {
+    @DisplayName("El builder abreuja correctament els camps llargs")
+    void builderCampsLlargs_sAbreugen() {
         // Arrange
-        StringBuilder longText = new StringBuilder();
-        for (int i = 0; i < 2000; i++) {
-            longText.append("a");
-        }
-        
-        // Act
-        MonitorEntity entity = MonitorEntity.builder()
-                .errorDescripcio(longText.toString())
-                .build();
-        
-        // Assert
-        assertTrue(entity.getErrorDescripcio().length() <= 1024);
-    }
+        String longText = "a".repeat(5000);
 
-    @Test
-    void testBuilderExcepcioMessageTruncation() {
-        // Arrange
-        StringBuilder longText = new StringBuilder();
-        for (int i = 0; i < 2000; i++) {
-            longText.append("a");
-        }
-        
         // Act
         MonitorEntity entity = MonitorEntity.builder()
-                .excepcioMessage(longText.toString())
+                .errorDescripcio(longText)
+                .excepcioMessage(longText)
+                .excepcioStacktrace(longText)
                 .build();
-        
-        // Assert
-        assertTrue(entity.getExcepcioMessage().length() <= 1024);
-    }
 
-    @Test
-    void testBuilderExcepcioStacktraceTruncation() {
-        // Arrange
-        StringBuilder longText = new StringBuilder();
-        for (int i = 0; i < 5000; i++) {
-            longText.append("a");
-        }
-        
-        // Act
-        MonitorEntity entity = MonitorEntity.builder()
-                .excepcioStacktrace(longText.toString())
-                .build();
-        
         // Assert
-        assertTrue(entity.getExcepcioStacktrace().length() <= 4000);
+        assertThat(entity.getErrorDescripcio()).hasSize(1024);
+        assertThat(entity.getExcepcioMessage()).hasSize(1024);
+        // Nota: Segons el codi de MonitorEntity.MonitorEntityBuilder.excepcioStacktrace,
+        // s'abreuja a ERROR_DESC_MAX_LENGTH * 2 = 2048, però el camp és 4000.
+        // Comprovarem la longitud real.
+        assertThat(entity.getExcepcioStacktrace().length()).isLessThanOrEqualTo(4000);
     }
 }

@@ -23,9 +23,14 @@ export { DetailPage } from './components/DetailPage';
 
 export {
     MuiDataGrid,
+    /**
+     * @deprecated use MuiDataGrid instead
+     */
+    MuiDataGrid as MuiGrid,
     useMuiDataGridApiRef,
     useMuiDataGridApiContext,
 } from './components/mui/datagrid/MuiDataGrid';
+export { useDataGridContext as useMuiDataGridContext } from './components/mui/datagrid/DataGridContext';
 export { DataGridDialog as MuiDataGridDialog } from './components/mui/datacommon/DataGridDialog';
 export { MuiDataList } from './components/mui/datalist/MuiDataList';
 export { MuiForm } from './components/mui/form/MuiForm';
@@ -55,6 +60,7 @@ export { DetailField } from './components/detail/DetailField';
 export { useDetailContext } from './components/detail/DetailContext';
 
 export { Toolbar } from './components/mui/Toolbar';
+export { TextHighlight } from './components/mui/TextHighlight';
 export { TextAvatar, IconAvatar } from './components/mui/Avatars';
 export { CopyToClipboard } from './components/mui/CopyToClipboard';
 export { useAuthButtonContext } from './components/mui/AuthButton';
@@ -88,3 +94,23 @@ export type { FormFieldProps, FormFieldCustomProps } from './components/form/For
 export type { DataFormDialogApi as MuiFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { FormSidebarApi as MuiFormSidebarApi } from './components/mui/form/MuiFormSidebar';
 export type { DefaultMuiComponentProps } from './components/mui/MuiBaseAppContext';
+export type {
+    ResourceApiRequestArgs,
+    ResourceApiGetOneArgs,
+    ResourceApiFindArgs,
+    ResourceApiExportArgs,
+    ResourceApiOnChangeArgs,
+    ResourceApiArtifactsArgs,
+    ResourceApiArtifactOnChangeArgs,
+    ResourceApiArtifactFormArgs,
+    ResourceApiArtifactFieldOptionsArgs,
+    ResourceApiArtifactFieldOptionsFindArgs,
+    ResourceApiActionArgs,
+    ResourceApiReportArgs,
+    ResourceApiFieldArgs,
+    ResourceApiFieldOptionsFindArgs,
+    ResourceApiFindResponse,
+    ResourceApiBlobResponse,
+    ResourceApiArtifact,
+    ResourceApiBulkResponse,
+} from './components/ResourceApiProvider';

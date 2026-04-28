@@ -17,8 +17,10 @@ import {
     useResourceApiService,
     useFormContext
 } from 'reactlib';
-import FormFieldAdvancedSearchFilters from '../components/FormFieldAdvancedSearchFilters.tsx';
 import { columnesIndicador } from '../components/sharedAdvancedSearch/advancedSearchColumns';
+import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvancedSearch';
+import PageTitle from '../components/PageTitle.tsx';
+import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
 const IndicadorsFilter = (props: any) => {
     const { onSpringFilterChange } = props;
@@ -104,6 +106,7 @@ const IndicadorsFilter = (props: any) => {
 
 const Indicadors: React.FC = () => {
     const { t } = useTranslation();
+    const gestorReadOnly = useReadOnlyGestor();
     const [filter, setFilter] = React.useState<string | undefined>(springFilterBuilder.eq('entornAppId', 0));
 
     const columns: MuiDataGridColDef[] = [
@@ -131,9 +134,9 @@ const Indicadors: React.FC = () => {
                     <Grid size={6}><FormField name="tipusCompactacio" /></Grid>
                     {data?.tipusCompactacio === "MITJANA" && (
                         <Grid size={12}>
-                            <FormFieldAdvancedSearchFilters
+                            <FormFieldCustomAdvancedSearch
                                 name="indicadorComptadorPerMitjana"
-                                namedQueries={["groupByNom"]}
+                                // namedQueries={[`filterByAppGroupByNom:${data?.aplicacio?.id}`]} TODO S'ha de filtrar per tots els indicadors de la mateixa app?
                                 advancedSearchColumns={columnesIndicador}
                                 advancedSearchDataGridProps={{ rowHeight: 30 }}
                                 advancedSearchDialogHeight={500}
@@ -148,6 +151,7 @@ const Indicadors: React.FC = () => {
 
     return (
         <GridPage>
+            <PageTitle title={t($ => $.page.indicadors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.indicadors.title)}
                 resourceName="indicador"
@@ -159,6 +163,7 @@ const Indicadors: React.FC = () => {
                 filter={filter}
                 popupEditActive
                 toolbarHideCreate
+                rowHideDeleteButton={gestorReadOnly}
                 popupEditFormContent={<IndicadorForm />}
             />
         </GridPage>

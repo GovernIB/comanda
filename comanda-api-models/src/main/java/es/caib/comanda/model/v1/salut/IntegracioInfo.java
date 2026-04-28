@@ -18,20 +18,10 @@ import javax.validation.constraints.Size;
 @Schema(name = "IntegracioInfo", description = "Informació d'una integració exposada per l'aplicació")
 public class IntegracioInfo {
     @Schema(description = "Codi identificador de la integració", example = "REG")
-    @NotNull @Size(min = 1, max = 32)
+    @NotNull @Size(min = 1, max = 100)
     private String codi;
     @Schema(description = "Nom descriptiu de la integració", example = "Registre")
     @NotNull @Size(min = 1, max = 255)
     private String nom;
 
-    // Custom builder
-    public static class IntegracioInfoBuilder {
-
-        public IntegracioInfoBuilder integracioApp(IntegracioApp app) {
-            this.codi = app.name();
-            this.nom = app.getNom();
-            return this;
-        }
-
-    }
 }

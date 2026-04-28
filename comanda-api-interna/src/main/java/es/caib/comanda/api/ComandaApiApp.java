@@ -24,9 +24,12 @@ import java.util.jar.Manifest;
         basePackages = {
                 "es.caib.comanda.ms",
                 "es.caib.comanda.configuracio",
+                "es.caib.comanda.usuaris",
                 "es.caib.comanda.salut",
                 "es.caib.comanda.estadistica",
                 "es.caib.comanda.monitor",
+		        "es.caib.comanda.tasques",
+		        "es.caib.comanda.avisos",
                 "es.caib.comanda.api",
                 "es.caib.comanda.acl"
         },
@@ -35,12 +38,18 @@ import java.util.jar.Manifest;
                 pattern = {
                         "es\\.caib\\.comanda\\.configuracio\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.configuracio\\.persist\\.config\\..*",
+		                "es\\.caib\\.comanda\\.usuaris\\.back\\.config\\..*",
+		                "es\\.caib\\.comanda\\.usuaris\\.persist\\.config\\..*",
                         "es\\.caib\\.comanda\\.salut\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.salut\\.persist\\.config\\..*",
                         "es\\.caib\\.comanda\\.estadistica\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.estadistica\\.persist\\.config\\..*",
                         "es\\.caib\\.comanda\\.monitor\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.monitor\\.persist\\.config\\..*",
+                        "es\\.caib\\.comanda\\.tasques\\.back\\.config\\..*",
+		                "es\\.caib\\.comanda\\.tasques\\.persist\\.config\\..*",
+		                "es\\.caib\\.comanda\\.avisos\\.back\\.config\\..*",
+		                "es\\.caib\\.comanda\\.avisos\\.persist\\.config\\..*",
                         "es\\.caib\\.comanda\\.acl\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.acl\\.persist\\.config\\..*",
                 })

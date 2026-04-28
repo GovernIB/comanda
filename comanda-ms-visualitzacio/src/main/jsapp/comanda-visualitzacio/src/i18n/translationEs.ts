@@ -65,6 +65,7 @@ const translationEs: translationResourcesType = {
             },
         },
         userRole: {
+            COM_USER: 'Usuario',
             COM_ADMIN: 'Administrador',
             COM_CONSULTA: 'Consultor'
         }
@@ -76,14 +77,17 @@ const translationEs: translationResourcesType = {
         avis: "Avisos",
         alarmes: "Alarmas activas",
         monitoritzacio: "Monitorización",
+        monitoritzacioDescription: "Monitorización de integraciones, caches y colas.",
         monitor: "Monitor",
         cache: "Gestión de cachés",
         broker: "Gestor de colas",
         configuracio: "Configuración",
+        configuracioDescription: "Opciones de administración de la aplicación.",
         app: "Aplicaciones",
         entorn: "Entornos",
         versionsEntorn: "Versiones por entorno",
         alarmaConfig: "Alarmas",
+        alarmaConfigConsultor: "Configurar alarmas",
         integracio: "Integraciones",
         widget: "Widgets estadísticos",
         dashboard: "Cuadros de control",
@@ -91,6 +95,8 @@ const translationEs: translationResourcesType = {
         parametre: "Parámetros",
         dimensio: "Dimensiones",
         indicador: "Indicadores",
+        accessibilitat: "Accesibilidad",
+        sitemap: "Mapa del sitio web",
         user: {
             options: {
                 profile: {
@@ -98,11 +104,19 @@ const translationEs: translationResourcesType = {
                     form: {
                         userData: "Datos del usuario",
                         genericConfig: "Configuración genérica",
+                        applicationTheme: "Tema de la aplicación",
+                        menuTheme: "Tema del menú",
                     },
                     tema: {
                         clar: "Claro",
                         obscur: "Oscuro",
+                        dracula: "Dracula",
                         sistema: "Sistema",
+                    },
+                    estilMenu: {
+                        tema: "Igual que el tema",
+                        temaInvertit: "Tema invertido",
+                        peu: "Colores del pie",
                     },
                 }
             }
@@ -110,8 +124,10 @@ const translationEs: translationResourcesType = {
     },
     page: {
         salut: {
-            title: "Salut",
+            title: "Salud",
+            appInfoTitle: "Salud de la aplicación",
             refrescar: "Refrescar",
+            goBack: "Ir atrás",
             filtrar: "Filtrar por aplicación/entorno",
             senseFiltres: "Sin filtros",
             nd: "N/D",
@@ -119,12 +135,18 @@ const translationEs: translationResourcesType = {
                 last: "Último refresco",
                 next: "Próximo refresco en",
             },
+            alarmes: {
+                configAlarmes: "Config. alarmas",
+                configAlarmesTitle: "Configurar alarmas del entorno",
+            },
             apps: {
                 column: {
                     group: "Aplicación / entorno",
                     estat: "Estado",
                     infoData: "Última consulta",
                     infoDataDescription: "Fecha última consulta de información",
+                    upData: "Fecha de arranque",
+                    upDataDescription: "Fecha de arranque",
                     codi: "Código",
                     nom: "Nombre",
                     versio: "Versión",
@@ -139,12 +161,13 @@ const translationEs: translationResourcesType = {
             },
             groupingSelect: {
                 label: "Agrupación",
-                BY_APPLICATION: "Por aplicación",
-                BY_ENVIRONMENT: "Por entorno",
+                BY_APPLICATION: "Agrupar por aplicación",
+                BY_ENVIRONMENT: "Agrupar por entorno",
                 NONE: "Sin agrupación",
                 titleNoGrouping: "Todas las aplicaciones y entornos",
             },
             refreshperiod: {
+                title: "Periodicidad del refresco",
                 PT1M: "1 minuto",
                 PT5M: "5 minutos",
                 PT10M: "10 minutos",
@@ -152,6 +175,7 @@ const translationEs: translationResourcesType = {
                 PT1H: "1 hora",
             },
             timerange: {
+                title: "Intervalo de tiempo de los datos",
                 PT15M: "Últimos 15 minutos",
                 PT1H: "Última hora",
                 P1D: "Último día",
@@ -159,11 +183,12 @@ const translationEs: translationResourcesType = {
                 P1M: "Último mes",
             },
             tabs: {
-                entorn: "Entorno",
+                entorn: "Detalles",
                 estatActual: "Estado actual",
                 integracions: "Integraciones",
                 subsistemes: "Subsistemas",
                 historic: "Histórico",
+                historicEstat: "Histórico de estado",
                 logs: "Logs",
             },
             info: {
@@ -182,10 +207,23 @@ const translationEs: translationResourcesType = {
                 detalls: "Detalles",
                 noInfo: 'No hay datos disponibles para este entorno',
                 downAlert: "La aplicación se encuentra caída. No se puede mostrar toda la información de salud.",
+                darreraDataInfo1: "La aplicación dejó de estar operativa el ",
+                darreraDataInfo2: "Estado anterior: ",
             },
             latencia: {
                 title: "Latencia",
                 error: "Ha habido un error al mostrar el gráfico",
+            },
+            historicEstat: {
+                title: "Histórico de estado",
+                noInfo: "No hay cambios de estado registrados",
+                peticioOk: "Correcta",
+                peticioError: "Con error",
+                column: {
+                    data: "Fecha",
+                    appEstat: "Estado app",
+                    peticio: "Petición",
+                },
             },
             estatLatencia: {
                 title: "Estado y latencia",
@@ -198,6 +236,7 @@ const translationEs: translationResourcesType = {
                 integracioDownCount: "Inactivas",
                 integracioDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de integraciones",
+                noResults: "No hay información de integraciones con los estados seleccionados",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -207,6 +246,9 @@ const translationEs: translationResourcesType = {
                     peticionsPeriode: "Peticiones periodo",
                     tempsMigPeriode: "Tiempo medio periodo",
                 },
+                filter: {
+                    estat: "Estats",
+                },
             },
             subsistemes: {
                 title: "Subsistemas",
@@ -215,6 +257,7 @@ const translationEs: translationResourcesType = {
                 subsistemaDownCount: "Inactivos",
                 subsistemaDesconegutCount: "Estado desconocido",
                 noInfo: "No hay información de subsistemas",
+                noResults: "No hay información de subsistemas con los estados seleccionados",
                 column: {
                     codi: "Código",
                     nom: "Nombre",
@@ -223,6 +266,9 @@ const translationEs: translationResourcesType = {
                     tempsMigTotal: "Tiempo medio total",
                     peticionsPeriode: "Peticiones periodo",
                     tempsMigPeriode: "Tiempo medio periodo",
+                },
+                filter: {
+                    estat: "Estats",
                 },
             },
             missatges: {
@@ -240,7 +286,7 @@ const translationEs: translationResourcesType = {
                 missatgeInfoCount: "Información"
             },
             contexts: {
-                title: "Contextos y manuales",
+                title: "Contextos",
                 noInfo: "No hay información de contextos",
                 column: {
                     codi: "Código",
@@ -250,12 +296,49 @@ const translationEs: translationResourcesType = {
                     manuals: "Manuales",
                 },
             },
+            manuals: {
+                title: "Manuales",
+            },
             detalls: {
                 title: "Sistema",
                 noInfo: "No hay información sobre detalles de la aplicación",
+                codis: {
+                    PRC: "Procesadores",
+                    LAVG: "Carga del sistema (LoadAvg)",
+                    SCPU: "CPU sistema",
+                    MET: "Memoria total",
+                    MED: "Memoria disponible",
+                    EDT: "Espacio de disco total",
+                    EDL: "Espacio de disco libre",
+                    SO: "Sistema operativo",
+                    ST: "Fecha arranque",
+                    UT: "Tiempo funcionando",
+                },
+            },
+            memoria: {
+                title: "Memoria del sistema",
+                espaiMeoria: "Espacio en memoria disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
+                espaiDisc: "Espacio en disco disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
             },
             estats: {
                 title: "Estados",
+            },
+            logs: {
+                preview: "Previsualizar",
+                download: "Descargar",
+                refresh: "Refrescar",
+                noSelected: "Seleccionar un archivo",
+                noPreview: "No hay previsualización",
+                softWrap: "Ajustar texto",
+                scrollToBottom: "Ir al final",
+                logsList: {
+                    title: "Logs",
+                    nom: "Nombre",
+                    dataCreacio: "Fecha de creación",
+                    dataModificacio: "Fecha de modificación",
+                    mida: "Tamaño",
+                    showPreview: "Previsualizable",
+                }
             },
         },
         dashboards: {
@@ -323,6 +406,36 @@ const translationEs: translationResourcesType = {
                 },
                 column: {
                     appEntorn: "Aplicación - Entorno",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Tarea de tipo noticia",
+                            INFO: "Tarea de tipo informativo",
+                            ALERTA: "Tarea de tipo alerta",
+                            ERROR: "Tarea de tipo error",
+                            CRITIC: "Tarea de tipo crítico",
+                        }
+                    },
+                    prioritat: {
+                        tooltip: {
+                            NONE: "Prioridad no definida",
+                            BAIXA: "Prioridad baja",
+                            NORMAL: "Prioridad normal",
+                            ALTA: "Prioridad alta",
+                            MAXIMA: "Prioridad máxima",
+                        }
+                    },
+                    estat: {
+                        tooltip: {
+                            PENDENT: "Tarea pendiente de iniciar",
+                            INICIADA: "Tarea en curso",
+                            FINALITZADA: "Tarea finalizada",
+                            CANCELADA: "Tarea cancelada",
+                            ERROR: "Tarea con error",
+                        }
+                    },
+                    dataCaducitat: {
+                        tooltip: "Fecha límite para la realización de la tarea",
+                    },
                 },
                 entornAppInvalid: "Entorno de la aplicación eliminado",
             }
@@ -341,16 +454,36 @@ const translationEs: translationResourcesType = {
                 groupHeader: "Nombre",
                 column: {
                     appEntorn: "Aplicación - Entorno",
+                    global: "Global",
+                    globalTooltip: "Este es un aviso global",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Aviso de tipo noticia",
+                            INFO: "Aviso de tipo informativo",
+                            ALERTA: "Aviso de tipo alerta",
+                            ERROR: "Aviso de tipo error",
+                            CRITIC: "Aviso de tipo crítico",
+                        }
+                    }
                 },
-                action: {
-                    obrir: "Abrir aviso",
+            },
+            action: {
+                obrir: "Abrir aviso",
+                nollegit: {
+                    label: "Marcar como no leído",
+                    ok: "El aviso se ha marcado como no leído",
                 },
-            }
+                llegit: {
+                    label: "Marcar como leído",
+                    ok: "El aviso se ha marcado como leído",
+                },
+            },
         },
         alarmaConfig: {
             title: "Configuración de alarmas",
             create: "Crear configuración de alarma",
             update: "Modificar configuración de alarma",
+            nomHelperText: "Al realizarse una notificación por correo de la alarma, el nombre se utiliza para indicar la alarma en el asunto del correo.",
             condicio: {
                 title: "Condición",
                 subtitle: "Condición que se debe cumplir para generar la alarma",
@@ -359,6 +492,39 @@ const translationEs: translationResourcesType = {
                 title: "Periodo",
                 subtitle: "Periodo de tiempo durante el cual se debe cumplir la condición para generar la alarma",
                 switch: "Con periodo de activación"
+            },
+            filter: {
+                showOnlyOwnEnabled: "Mostrar solo mis alarmas",
+                showOnlyOwnDisabled: "Mostrar todas las alarmas",
+                more: "Más campos",
+                entornApp: "Entorno de aplicación",
+            },
+        },
+        alarma: {
+            snackbar: {
+                title: "Alarmas",
+                existingAlarms: "Tiene {{count}} alarma sin leer",
+                existingAlarms_one: "Tiene {{count}} alarma sin leer",
+                existingAlarms_other: "Tiene {{count}} alarmas sin leer",
+                newAlarms: "Nueva alarma sin leer",
+                newAlarms_one: "Nueva alarma sin leer",
+                newAlarms_other: "{{count}} nuevas alarmas sin leer",
+            },
+            action: {
+                clear: {
+                    label: "Marcar como leída",
+                },
+                reactivate: {
+                    label: "Marcar como no leída",
+                },
+            },
+            filter: {
+                showOnlyActiveEnabled: "Mostrando sólo alarmas sin leer (clic para incluir leídas)",
+                showOnlyActiveDisabled: "Mostrando alarmas sin leer y leídas (clic para mostrar sólo sin leer)",
+            },
+            estats: {
+                finalitzada: "Finalizada",
+                finalitzadaEsborrada: "Finalizada (leída)",
             },
         },
         apps: {
@@ -372,9 +538,9 @@ const translationEs: translationResourcesType = {
                 compactacioSetmanalMesos: "Compactación semanal (meses)",
                 compactacioMensualMesos: "Compactación mensual (meses)",
                 eliminacioMesos: "Borrado (meses)",
-                estadistica: {
-                    auth: "Servicio autenticado",
-                },
+                auth: "Servicio autenticado",
+                salutAuthLegend: "Autenticar las consultas de salud",
+                estadisticaAuthLegend: "Autenticar las consultas de estadísticas",
             },
             tooltips: {
                 compactacioSetmanes: "Cuántos meses completos se mantendrán las estadísticas antes de compactarlas por semana.\nSi los campos se dejan sin valor o con valor 0, no se realizará la compactación por semana.",
@@ -400,6 +566,10 @@ const translationEs: translationResourcesType = {
                 success: "Importación ejecutada correctamente",
                 noFile: "No se ha seleccionado ningún fichero",
                 parseError: "Error al analizar el fichero",
+            },
+            ping: {
+                validationError: "Respuesta recibida con errores de validaciones",
+                validationTrace: "Errores de validaciones",
             },
         },
         entorns: {
@@ -453,8 +623,13 @@ const translationEs: translationResourcesType = {
         },
         monitors: {
             title: "Monitores",
+            column: {
+                mailAddress: "Dirección de correo",
+            },
             detail: {
                 title: "Detalles de la comunicación con la integración",
+                entorn: "Entorno",
+                app: "Aplicación",
                 data: "Fecha",
                 operacio: "Descripción",
                 tipus: "Tipo",
@@ -478,6 +653,15 @@ const translationEs: translationResourcesType = {
                 salut: "Salud",
                 estadistica: "Estadística",
                 configuracio: "Configuración",
+                alarmes: "Alarmas",
+                tasca: "Tarea",
+                avis: "Aviso",
+            },
+            tab: {
+                email: "EMAIL",
+            },
+            filter: {
+                more: "Más campos",
             },
         },
         widget: {
@@ -732,6 +916,13 @@ const translationEs: translationResourcesType = {
                 },
             },
         },
+        sitemap: {
+            title: "Mapa del sitio web",
+            subtitle: "Acceso directo a todas las secciones principales de la aplicación.",
+        },
+        accessibilitat: {
+            title: "Accessibilidad",
+        },
         notFound: "No encontrado",
         noPermissions: "Sin permisos",
     },
@@ -747,13 +938,14 @@ const translationEs: translationResourcesType = {
     components: {
         clear: "Limpiar",
         search: "Buscar",
+        details: "Detalles",
         copiarContingut: "Copiar contenido",
         copiarContingutTitle: "Copiar el contenido",
         copiarContingutSuccess: "Contenido copiado al portapapeles",
         permisos: {
             title: "Permisos",
             resourceTitle: "permiso"
-        }
+        },
     },
     form: {
         field: {
@@ -761,6 +953,7 @@ const translationEs: translationResourcesType = {
                 edit: 'Editar',
                 download: 'Descargar',
                 clear: 'Borrar',
+                avatarAlt: 'Imagen subida por el usuario',
             },
         },
     },
@@ -802,7 +995,9 @@ const translationEs: translationResourcesType = {
         indicadors: "Indicadores",
     },
     treeData: {
-        treeView: "Vista en árbol"
+        treeView: "Vista en árbol",
+        expandAll: "Expandir todas las filas",
+        collapseAll: "Contraer todas las filas",
     },
     reordering: {
         errorMessage: "Error al reordenar",

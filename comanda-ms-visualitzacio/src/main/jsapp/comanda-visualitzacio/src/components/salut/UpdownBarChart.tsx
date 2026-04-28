@@ -7,7 +7,7 @@ import {
     SalutEstatEnum,
     TITLE,
 } from '../../types/salut.model.tsx';
-import { XAxis } from '@mui/x-charts';
+import { XAxis, YAxis } from '@mui/x-charts';
 import { SalutData } from '../../pages/salut/Salut.tsx';
 import { numericObjectKeys } from '../../util/objectUtils.ts';
 import useTranslationStringKey from '../../hooks/useTranslationStringKey';
@@ -37,6 +37,8 @@ export const calculateEstatsSeries = (
         return estatPercent / estatApps.length;
     });
 };
+
+const yAxis: ReadonlyArray<YAxis> = [{ max: 100, valueFormatter: (v: number) => `${v}%`, }];
 
 const UpdownBarChart: React.FC<{
     agrupacio: string;
@@ -72,52 +74,61 @@ const UpdownBarChart: React.FC<{
 
     const dataGroups = toXAxisDataGroups(baseDataGroups, agrupacio);
 
+    const valueFormatter = (value: number | null) => value != null ? `${Math.round(value * 100) / 100}%` : value;
+
     const series = [
         {
             data: seriesUp,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UP + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.UP),
+            valueFormatter,
         },
         {
             data: seriesWarn,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.WARN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.WARN),
+            valueFormatter,
         },
         {
             data: seriesDegraded,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DEGRADED + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.DEGRADED),
+            valueFormatter,
         },
         {
             data: seriesError,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.ERROR + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.ERROR),
+            valueFormatter,
         },
         {
             data: seriesDown,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.DOWN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.DOWN),
+            valueFormatter,
         },
         {
             data: seriesMaintenance,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.MAINTENANCE + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.MAINTENANCE),
+            valueFormatter,
         },
         {
             data: seriesUnknown,
             label: t(ENUM_APP_ESTAT_PREFIX + SalutEstatEnum.UNKNOWN + TITLE),
             stack: 'total',
             color: getColorByStatEnum(SalutEstatEnum.UNKNOWN),
+            valueFormatter,
         },
     ];
 
-    const xAxis: ReadonlyArray<XAxis<'band'>> = [
+    const xAxis = React.useMemo<ReadonlyArray<XAxis<'band'>>>(() => ([
         {
             scaleType: 'band',
             data: dataGroups,
@@ -125,14 +136,16 @@ const UpdownBarChart: React.FC<{
             // TODO Fer un formatter generic per a totes les agrupacions
             valueFormatter: (value: string) => (agrupacio === 'HORA' ? value.substring(3) : value),
         },
-    ];
+    ]), [agrupacio, dataGroups]);
 
     return (
         estats != null && (
             <BarChart
+                renderer="svg-batch"
                 xAxis={xAxis}
-                yAxis={[{ max: 100 }]}
+                yAxis={yAxis}
                 series={series}
+                hideLegend
                 // borderRadius={6}
                 grid={{
                     horizontal: true,

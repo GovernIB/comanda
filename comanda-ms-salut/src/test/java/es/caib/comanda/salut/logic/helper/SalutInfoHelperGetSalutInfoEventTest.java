@@ -1,0 +1,126 @@
+package es.caib.comanda.salut.logic.helper;
+
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.EntornRef;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.model.v1.salut.EstatSalut;
+import es.caib.comanda.model.v1.salut.EstatSalutEnum;
+import es.caib.comanda.model.v1.salut.SalutInfo;
+import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
+import es.caib.comanda.salut.logic.helper.MetricsHelper;
+import es.caib.comanda.salut.logic.helper.SalutClientHelper;
+import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
+import es.caib.comanda.salut.persist.entity.SalutEntity;
+import es.caib.comanda.salut.persist.repository.SalutDetallRepository;
+import es.caib.comanda.salut.persist.repository.SalutHistRepository;
+import es.caib.comanda.salut.persist.repository.SalutIntegracioRepository;
+import es.caib.comanda.salut.persist.repository.SalutMissatgeRepository;
+import es.caib.comanda.salut.persist.repository.SalutRepository;
+import es.caib.comanda.salut.persist.repository.SalutSubsistemaRepository;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.noop.NoopTimer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import java.net.URI;
+import java.time.OffsetDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class SalutInfoHelperGetSalutInfoEventTest {
+
+    @Mock private SalutRepository salutRepository;
+    @Mock private SalutIntegracioRepository salutIntegracioRepository;
+    @Mock private SalutSubsistemaRepository salutSubsistemaRepository;
+    @Mock private SalutMissatgeRepository salutMissatgeRepository;
+    @Mock private SalutDetallRepository salutDetallRepository;
+    @Mock private SalutHistRepository salutHistRepository;
+    @Mock private ParametresHelper parametresHelper;
+    @Mock private SalutClientHelper salutClientHelper;
+	@Mock private MetricsHelper metricsHelper;
+    @Mock private RestTemplate restTemplate;
+    @Mock private ApplicationEventPublisher eventPublisher;
+
+    @InjectMocks private SalutInfoHelper helper;
+
+    private EntornApp entornApp;
+
+    @Captor private ArgumentCaptor<SalutInfoUpdatedEvent> eventCaptor;
+
+    @BeforeEach
+    void setUp() {
+        entornApp = EntornApp.builder()
+                .id(42L)
+                .app(new AppRef(1L, "App"))
+                .entorn(new EntornRef(2L, "Entorn"))
+                .salutUrl("http://x/health")
+                .activa(true)
+                .build();
+
+		when(metricsHelper.getSalutInfoGlobalTimer(any(), any()))
+				.thenReturn(new NoopTimer(new Meter.Id("", Tags.empty(), null, null, Meter.Type.TIMER)));
+        when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(any())).thenReturn(null);
+    }
+
+    private SalutInfo sampleInfo() {
+        EstatSalut app = EstatSalut.builder().estat(EstatSalutEnum.UP).latencia(10).build();
+        EstatSalut bd = EstatSalut.builder().estat(EstatSalutEnum.UP).latencia(5).build();
+        return SalutInfo.builder()
+                .codi("C")
+                .data(OffsetDateTime.now())
+                .estatGlobal(app)
+                .estatBaseDeDades(bd)
+                .build();
+    }
+
+    @Test
+    void getSalutInfo_quanLaRespostaEsCorrecta_publicaEventsAmbEntornISalutId() {
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenReturn(sampleInfo());
+        when(salutRepository.save(any(SalutEntity.class))).thenAnswer(inv -> {
+            SalutEntity e = inv.getArgument(0);
+            if (e.getId() == null) e.setId(100L);
+            return e;
+        });
+
+        helper.getSalutInfo(entornApp); // first -> numeroDiesAgrupacio 1
+        helper.getSalutInfo(entornApp); // second -> 2
+
+        verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getAllValues().get(0).getEntornAppId()).isEqualTo(entornApp.getId());
+        assertThat(eventCaptor.getAllValues().get(0).getSalutId()).isNotNull();
+    }
+
+    @Test
+    void getSalutInfo_quanElClientFalla_publicaEventAmbElSalutPersistit() {
+        when(restTemplate.getForObject(any(URI.class), eq(SalutInfo.class))).thenThrow(new RestClientException("x"));
+        when(salutRepository.save(any(SalutEntity.class))).thenAnswer(inv -> {
+            SalutEntity e = inv.getArgument(0);
+            e.setId(777L);
+            return e;
+        });
+
+        helper.getSalutInfo(entornApp);
+
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        SalutInfoUpdatedEvent ev = eventCaptor.getValue();
+        assertThat(ev.getEntornAppId()).isEqualTo(entornApp.getId());
+        assertThat(ev.getSalutId()).isEqualTo(777L);
+    }
+}

@@ -3,7 +3,6 @@ package es.caib.comanda.api.config;
 import es.caib.comanda.ms.persist.config.BasePersistenceConfig;
 import es.caib.comanda.ms.persist.repository.BaseRepositoryImpl;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
@@ -16,10 +15,13 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 		basePackages = {
 				"es.caib.comanda.ms.persist",
 				"es.caib.comanda.configuracio.persist",
+				"es.caib.comanda.usuaris.persist",
 				"es.caib.comanda.salut.persist",
 				"es.caib.comanda.estadistica.persist",
 				"es.caib.comanda.monitor.persist",
-				"es.caib.comanda.acl.persist"
+				"es.caib.comanda.tasques.persist",
+				"es.caib.comanda.avisos.persist",
+				"es.caib.comanda.acl.persist",
 		},
 		entityManagerFactoryRef = "mainEntityManager",
 		transactionManagerRef = "mainTransactionManager",
@@ -31,10 +33,13 @@ public class ApiPersistenceConfig extends BasePersistenceConfig {
 		return new String [] {
 				"es.caib.comanda.ms.persist",
 				"es.caib.comanda.configuracio.persist",
+				"es.caib.comanda.usuaris.persist",
 				"es.caib.comanda.salut.persist",
 				"es.caib.comanda.estadistica.persist",
 				"es.caib.comanda.monitor.persist",
-				"es.caib.comanda.acl.persist"
+				"es.caib.comanda.tasques.persist",
+				"es.caib.comanda.avisos.persist",
+				"es.caib.comanda.acl.persist",
 		};
 	}
 

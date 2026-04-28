@@ -11,10 +11,11 @@ import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -29,6 +30,10 @@ import java.time.LocalDateTime;
 		descriptionField = "nom",
 		accessConstraints = {
 				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
+				),
+				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
 						roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA },
 						grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE }
@@ -36,13 +41,18 @@ import java.time.LocalDateTime;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_ACTION, requiresId = true),
-				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_TOTES_ACTION),
+//				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.ESBORRAR_TOTES_ACTION),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Alarma.REACTIVAR_ACTION, requiresId = true),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Alarma.FIND_ACTIVES_REPORT),
 		}
 )
+@FieldNameConstants
 public class Alarma extends BaseResource<Long> {
 
 	public static final String ESBORRAR_ACTION = "ALARMA_ESBORRAR";
-	public static final String ESBORRAR_TOTES_ACTION = "ALARMA_ESBORRAR_TOTES";
+//	public static final String ESBORRAR_TOTES_ACTION = "ALARMA_ESBORRAR_TOTES";
+    public static final String REACTIVAR_ACTION = "ALARMA_REACTIVAR";
+    public static final String FIND_ACTIVES_REPORT = "ALARMA_FIND_ACTIVES";
 
 	@NotNull
 	private Long entornAppId;
@@ -51,10 +61,25 @@ public class Alarma extends BaseResource<Long> {
 	private String missatge;
 	private AlarmaEstat estat;
 	private LocalDateTime dataActivacio;
+	// TODO actualment, aquest camp no té cap ús, possiblement s'hauria d'esborrar
+	@Deprecated
 	private LocalDateTime dataEnviament;
 	private LocalDateTime dataEsborrat;
+	private LocalDateTime dataFinalitzacio;
 
 	@NotNull
 	private ResourceReference<AlarmaConfig, Long> alarmaConfig;
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class AlarmaReduidaResource implements Serializable {
+        private Long id;
+        private Long entornAppId;
+
+        public AlarmaReduidaResource(Long id, Long entornAppId) {
+            this.id = id;
+            this.entornAppId = entornAppId;
+        }
+    }
 }

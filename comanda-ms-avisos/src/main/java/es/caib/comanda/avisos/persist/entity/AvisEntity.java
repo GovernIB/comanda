@@ -1,24 +1,15 @@
 package es.caib.comanda.avisos.persist.entity;
 
-import es.caib.comanda.model.v1.avis.AvisTipus;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.model.v1.avis.AvisTipus;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +24,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 public class AvisEntity extends BaseAuditableEntity<Avis> {
 
     @Column(name = "entorn_app_id", nullable = false)
@@ -78,24 +70,6 @@ public class AvisEntity extends BaseAuditableEntity<Avis> {
     @Column(name = "grup")
     private List<String> grupsAmbPermis;
 
-
-    @Builder
-    public AvisEntity(Avis avis) {
-        this.entornAppId = avis.getEntornAppId();
-        this.entornId = avis.getEntornId();
-        this.appId = avis.getAppId();
-        this.identificador = avis.getIdentificador();
-        this.tipus = avis.getTipus();
-        this.nom = avis.getNom();
-        this.descripcio = avis.getDescripcio();
-        this.dataInici = avis.getDataInici();
-        this.dataFi = avis.getDataFi();
-
-        this.url = avis.getUrl();
-        this.responsable = avis.getResponsable();
-        this.grup = avis.getGrup();
-        this.usuarisAmbPermis = avis.getUsuarisAmbPermis();
-        this.grupsAmbPermis = avis.getGrupsAmbPermis();
-    }
-
+    @OneToMany(mappedBy= "avis", cascade = CascadeType.ALL)
+    private List<AvisLlegitEntity> avisLlegits;
 }

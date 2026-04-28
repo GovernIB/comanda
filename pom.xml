@@ -7,6 +7,11 @@
 	<version>0.1.1</version>
 	<packaging>pom</packaging>
 	<properties>
+		<!-- Versió de l'aplicació COMANDA -->
+		<comanda.version>0.1.0</comanda.version>
+		<!-- Versió de les APIs (versionat independent) -->
+		<comanda.api.version>1.0.0</comanda.api.version>
+
 		<spring-boot.version>2.7.18</spring-boot.version>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>
 		<spring.filter.version>2.1.6</spring.filter.version>
@@ -21,6 +26,9 @@
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.source>11</maven.compiler.source>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<jacoco.version>0.8.11</jacoco.version>
+		<surefire-report.version>3.2.5</surefire-report.version>
+		<testcontainers.version>1.20.6</testcontainers.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -58,6 +66,39 @@
 				<artifactId>mapstruct-processor</artifactId>
 				<version>${mapstruct.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>commons-beanutils</groupId>
+				<artifactId>commons-beanutils</artifactId>
+				<version>1.9.4</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>2.11.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-text</artifactId>
+				<version>1.11.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.jboss.logmanager</groupId>
+				<artifactId>jboss-logmanager</artifactId>
+				<version>2.1.10.Final</version>
+			</dependency>
+			<dependency>
+				<groupId>com.h2database</groupId>
+				<artifactId>h2</artifactId>
+				<version>2.2.224</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>
@@ -73,7 +114,6 @@
 		<module>comanda-bom</module>
 		<module>comanda-bom-ms</module>
 		<module>comanda-api-models</module>
-		<module>comanda-lib</module>
 		<module>comanda-ms-common</module>
 		<module>comanda-ms-configuracio</module>
 		<module>comanda-ms-salut</module>
@@ -92,17 +132,40 @@
 		<module>comanda-back</module>
 		<module>comanda-api-utils</module>
 		<module>comanda-api-interna</module>
-		<module>comanda-api-clients/comanda-api-client-salut-v1</module>
-		<module>comanda-api-clients/comanda-api-client-estadistica-v1</module>
-		<module>comanda-api-clients/comanda-api-client-log-v1</module>
-		<module>comanda-api-clients/comanda-api-client-tasca-v1</module>
-		<module>comanda-api-clients/comanda-api-client-avis-v1</module>
-		<module>comanda-api-clients/comanda-api-client-permis-v1</module>
+		<!-- APIs Clients -->
+		<module>comanda-api-clients/comanda-api-client-monitoring</module>
+		<module>comanda-api-clients/comanda-api-client-management</module>
+		<!-- APIs Servers -->
+		<module>comanda-api-servers/comanda-api-server-monitoring</module>
+
 		<module>comanda-ear</module>
 		<module>comanda-base</module>
 	</modules>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>io.github.git-commit-id</groupId>
+				<artifactId>git-commit-id-maven-plugin</artifactId>
+				<version>7.0.0</version>
+				<executions>
+					<execution>
+						<id>get-the-git-infos</id>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<generateGitPropertiesFile>true</generateGitPropertiesFile>
+					<gitPropertiesPath>${project.build.outputDirectory}</gitPropertiesPath>
+					<!-- Opcional: només incloure propietats que necessites -->
+					<includeOnlyProperties>
+						<includeOnlyProperty>git.commit.id</includeOnlyProperty>
+						<includeOnlyProperty>git.build.time</includeOnlyProperty>
+						<includeOnlyProperty>git.build.version</includeOnlyProperty>
+					</includeOnlyProperties>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
@@ -179,7 +242,129 @@
 				</configuration>
 				<version>4.9.10</version>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.6.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>es.caib.maven</groupId>
+						<artifactId>caib-artifacts-enforcer-rules</artifactId>
+						<version>1.0.1-SNAPSHOT</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>enforce-strict-rules</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>[3.6.1,)</version>
+								</requireMavenVersion>
+								<requireJavaVersion>
+									<version>11</version>
+								</requireJavaVersion>
+								<banDuplicatePomDependencyVersions />
+								<dependencyConvergence />
+								<enforcePluginVersionConsistencyRule
+										implementation="es.caib.maven.artifacts.enforcer.rules.EnforcePluginVersionConsistencyRule" />
+								<enforceDependencyVersionConsistencyRule
+										implementation="es.caib.maven.artifacts.enforcer.rules.EnforceDependencyVersionConsistencyRule" />
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<!-- aggregate recull tots els mòduls -->
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>3.6.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>3.1.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.openapitools</groupId>
+					<artifactId>openapi-generator-maven-plugin</artifactId>
+					<version>7.17.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.11.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>3.3.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-report-plugin</artifactId>
+					<version>${surefire-report.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.12.1</version>
+					<configuration>
+						<stagingDirectory>
+							${project.build.directory}/staging
+						</stagingDirectory>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<distributionManagement>
 		<repository>
@@ -187,12 +372,78 @@
 			<name>GitHub GovernIB Maven Repository</name>
 			<url>file://${project.build.directory}/mvn-repo</url>
 		</repository>
+		<site>
+			<id>local-site</id>
+			<url>file://${project.build.directory}/staging</url>
+		</site>
 	</distributionManagement>
-    <repositories>
-        <repository>
-            <id>github-governib-maven-repos</id>
-            <name>GitHub GovernIB Maven Repository</name>
-            <url>https://governib.github.io/maven/maven/</url>
-        </repository>
-    </repositories>
+	<repositories>
+		<repository>
+			<id>github-governib-maven-repos</id>
+			<name>GitHub GovernIB Maven Repository</name>
+			<url>https://GovernIB.github.io/maven/maven/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>github-governib-maven-repos</id>
+			<name>GitHub GovernIB Maven Repository</name>
+			<url>https://GovernIB.github.io/maven/maven/</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>${surefire-report.version}</version>
+				<inherited>false</inherited>
+				<configuration>
+					<reportsDirectories>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-common/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-configuracio/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-salut/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-estadistica/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-monitor/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-visualitzacio/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-tasques/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-avisos/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-alarmes/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-permisos/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-usuaris/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-ms-acl/target/surefire-reports</reportsDirectory>
+						<reportsDirectory>${maven.multiModuleProjectDirectory}/comanda-api-utils/target/surefire-reports</reportsDirectory>
+					</reportsDirectories>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
+	</reporting>
 </project>

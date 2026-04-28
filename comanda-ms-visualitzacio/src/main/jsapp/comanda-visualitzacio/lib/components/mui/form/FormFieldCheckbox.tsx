@@ -27,7 +27,13 @@ export const FormFieldCheckbox: React.FC<FormFieldCheckboxProps> = (props) => {
         typeSwitch,
         componentProps,
     } = props;
-    const { helperText, title } = useFormFieldCommon(field, fieldError, inline, componentProps);
+    const { helperText, title, startAdornment } = useFormFieldCommon(
+        field,
+        fieldError,
+        inline,
+        componentProps
+    );
+    const { helperText: componentPropsHelperText, ...otherComponentProps } = componentProps;
     const control = typeSwitch ? (
         <Switch
             checked={value ? true : false}
@@ -36,7 +42,7 @@ export const FormFieldCheckbox: React.FC<FormFieldCheckboxProps> = (props) => {
             onChange={!readOnly ? (e) => onChange(e.target.checked) : undefined}
             disabled={disabled}
             sx={{ ml: 1 }}
-            {...componentProps}
+            {...otherComponentProps}
         />
     ) : (
         <Checkbox
@@ -47,18 +53,25 @@ export const FormFieldCheckbox: React.FC<FormFieldCheckboxProps> = (props) => {
             disableRipple={readOnly}
             disabled={disabled}
             sx={{ ml: 1 }}
-            {...componentProps}
+            {...otherComponentProps}
         />
     );
     const formControlSx = !inline
         ? { top: typeSwitch ? '12px' : '4px', ml: typeSwitch ? 2 : 1.4 }
         : undefined;
+    const formHelperText = helperText ?? componentPropsHelperText;
     return (
         <FormControl error={!!fieldError} sx={formControlSx}>
             <FormControlLabel
                 name={name}
                 required={required}
-                label={!inline ? label : undefined}
+                label={
+                    !inline ? (
+                        label
+                    ) : (
+                        <div style={{ position: 'relative', top: '4px' }}>{startAdornment}</div>
+                    )
+                }
                 slotProps={{
                     typography: {
                         color: fieldError != null ? 'error' : undefined,
@@ -67,7 +80,7 @@ export const FormFieldCheckbox: React.FC<FormFieldCheckboxProps> = (props) => {
                 }}
                 control={control}
             />
-            {helperText && <FormHelperText>{helperText}</FormHelperText>}
+            {formHelperText && <FormHelperText>{formHelperText}</FormHelperText>}
         </FormControl>
     );
 };

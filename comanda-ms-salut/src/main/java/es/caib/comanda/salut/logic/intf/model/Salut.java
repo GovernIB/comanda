@@ -8,6 +8,7 @@ import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,8 +26,13 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @ResourceConfig(
 		accessConstraints = {
+				@ResourceAccessConstraint(
+						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+						grantedPermissions = { PermissionEnum.READ }
+				),
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
 						roles = { BaseConfig.ROLE_ADMIN },
@@ -49,6 +55,8 @@ import java.util.List;
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_CONTEXTS),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_MISSATGES),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_DETALLS),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_HISTORICS),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Salut.PERSP_ULTIM_ESTAT_OPERATIU_INFO),
 		}
 )
 public class Salut extends BaseResource<Long> {
@@ -63,6 +71,8 @@ public class Salut extends BaseResource<Long> {
 	public static final String PERSP_CONTEXTS = "SAL_CONTEXTS";
 	public static final String PERSP_MISSATGES = "SAL_MISSATGES";
 	public static final String PERSP_DETALLS = "SAL_DETALLS";
+	public static final String PERSP_HISTORICS = "SAL_HISTORICS";
+    public static final String PERSP_ULTIM_ESTAT_OPERATIU_INFO = "SAL_ULTIM_ESTAT_OPERATIU_INFO";
 
 	@NotNull
 	private Long entornAppId;
@@ -104,5 +114,15 @@ public class Salut extends BaseResource<Long> {
 	private List<AppContext> contexts;
 	private List<SalutMissatge> missatges;
 	private List<SalutDetall> detalls;
+	private List<SalutHist> historics;
+    private SalutEstatInfo ultimEstatInfo;
 
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    @Setter
+    public static class SalutEstatInfo {
+        private SalutEstat estat;
+        private LocalDateTime data;
+    }
 }

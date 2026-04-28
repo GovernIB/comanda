@@ -1,7 +1,6 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import MuiToolbar from '@mui/material/Toolbar';
 import { Alert, Box, Button, Typography } from '@mui/material';
-import CircularProgress from '@mui/material/CircularProgress';
 import {
     DashboardReactGridLayout,
     useMapDashboardItems,
@@ -13,6 +12,9 @@ import { useEffect, useState } from 'react';
 import Dialog from '../../lib/components/mui/Dialog.tsx';
 import { ESTADISTIQUES_PATH } from '../AppRoutes.tsx';
 import {useTranslation} from "react-i18next";
+import PageTitle from '../components/PageTitle.tsx';
+import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
+import { FooterHeightPlaceholder } from '../components/ComandaFooter.tsx';
 
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
@@ -142,20 +144,9 @@ const EstadisticaDashboardView = () => {
 
     return (
         <>
+            <PageTitle title={t($ => $.page.dashboards.title)} />
             {dashboardSelectDialog}
-            {loading ? (
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 10,
-                    }}
-                >
-                    <CircularProgress />
-                </Box>
-            ) : null}
+            {loading ? <CenteredCircularProgress /> : null}
             <BasePage
                 toolbar={
                     <MuiToolbar
@@ -203,6 +194,7 @@ const EstadisticaDashboardView = () => {
                         gridLayoutItems={mappedDashboardItems}
                     />
                 )}
+                <FooterHeightPlaceholder />
             </BasePage>
         </>
     );

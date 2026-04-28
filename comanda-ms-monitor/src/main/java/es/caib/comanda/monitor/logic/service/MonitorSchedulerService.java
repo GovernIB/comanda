@@ -101,7 +101,7 @@ public class MonitorSchedulerService {
         ScheduledFuture<?> tasca = tasquesActives.get(0L);
         if (tasca != null) {
             tasca.cancel(false);
-            tasquesActives.remove(0);
+            tasquesActives.remove(0L);
             log.info("Tasca de borrat de monitor cancel·lada");
         }
     }

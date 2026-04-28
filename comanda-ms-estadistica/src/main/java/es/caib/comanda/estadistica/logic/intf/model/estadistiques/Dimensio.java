@@ -4,6 +4,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -71,7 +72,7 @@ import java.util.List;
 public class Dimensio extends BaseResource<Long> {
 
     /** Named Filter para devolver un solo resultado por el atributo nom **/
-    public static final String NAMED_FILTER_GROUP_BY_NOM = "groupByNom";
+    public static final String NAMED_FILTER_BY_APP_GROUP_BY_NOM = "filterByAppGroupByNom";
     public final static String DIMENSIO_FILTER = "dimensioFilter";
     public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
     public final static String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
@@ -107,6 +108,7 @@ public class Dimensio extends BaseResource<Long> {
     @AllArgsConstructor
     @FieldNameConstants
     public static class FilterByDimensio implements Serializable {
+        @ResourceField(descriptionField = Dimensio.Fields.nom) // El description field es força a usar el nom, ja que al frontal s'aprofita per a generar els filtres del DataGrid
         protected ResourceReference<Dimensio, Long> dimensio;
     }
 }

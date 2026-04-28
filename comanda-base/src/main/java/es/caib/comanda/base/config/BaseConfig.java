@@ -23,13 +23,14 @@ public class BaseConfig {
 
 	public static final String ROLE_ADMIN = "COM_ADMIN";
 	public static final String ROLE_CONSULTA = "COM_CONSULTA";
+	public static final String ROLE_WEBSERVICE = "COM_WS";
 
 	public static final String API_PATH = "/api";
 	public static final String PING_PATH = "/ping";
 	public static final String AUTH_TOKEN_PATH = "/authToken";
 	public static final String SYSENV_PATH = "/sysenv";
 	public static final String MANIFEST_PATH = "/manifest";
-	public static final String API_SALUT_V1 = "/v1/salut";
+	public static final String API_SALUT_V1 = "/salut/v1";
 
 	public static final String DEFAULT_LOCALE = "ca";
 
@@ -42,6 +43,8 @@ public class BaseConfig {
 	public static final String PROP_SCHEDULER_BACK = PROPERTY_PREFIX + "scheduler.back";
 	public static final String PROP_SCHEDULER_ALARMES_CRON = PROPERTY_PREFIX + "scheduler.alarmes.cron";
 	public static final String PROP_SCHEDULER_ALARMES_MAILS_AGRUPATS_CRON = PROPERTY_PREFIX + "scheduler.alarmes.mails.agrupats.cron";
+	public static final String PROP_ALARMA_SALUT_FRESHNESS_SECONDS = PROPERTY_PREFIX + "alarma.salut.freshness.seconds";
+	public static final String PROP_ALARMA_RECOVERY_STABILITY_SECONDS = PROPERTY_PREFIX + "alarma.recovery.stability.seconds";
 	public static final String PROP_SCHEDULER_POOL_SIZE = PROPERTY_PREFIX + "scheduler.pool.size";
 	public static final String PROP_WORKER_POOL_SIZE = PROPERTY_PREFIX + "worker.pool.size";
 	public static final String PROP_WORKER_QUEUE_SIZE = PROPERTY_PREFIX + "worker.queue.size";
@@ -55,12 +58,12 @@ public class BaseConfig {
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
 	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
 	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
-	public static final String PROP_ALARMA_MAIL_ADMIN = PROPERTY_PREFIX + "alarma.mail.admin";
-	public static final String PROP_ALARMA_MAIL_ADMIN_AGRUPAR = PROPERTY_PREFIX + "alarma.mail.admin.agrupar";
 
 	public static final String PROP_BROKER_PORT = PROPERTY_PREFIX + "broker.port";
 	public static final String PROP_BROKER_USERNAME = PROPERTY_PREFIX + "broker.username";
 	public static final String PROP_BROKER_PASSWORD = PROPERTY_PREFIX + "broker.password";
+
+	public static final String PROP_LOG_DIR = PROPERTY_PREFIX + "log.dir";
 
     // Propietats de CONFIGURACIO
     public static final String PROP_CONFIG_PREFIX = PROPERTY_PREFIX + "config.";
@@ -68,6 +71,7 @@ public class BaseConfig {
     // Propietats de SALUT
     public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";
 	public static final String PROP_SALUT_LOG_REPORT = PROP_SALUT_PREFIX + "log.report";
+    public static final String PROP_SALUT_HIST_RETENCIO_DIES = PROP_SALUT_PREFIX + "hist.retencio.dies";
 
     // Propietats de tasques
     public static final String PROP_TASCA_PREFIX = PROPERTY_PREFIX + "tasca.";
@@ -80,6 +84,7 @@ public class BaseConfig {
 
     // Propietats de ESTADISTIQUES
     public static final String PROP_STATS_PREFIX = PROPERTY_PREFIX + "stats.";
+    public static final String PROP_STATS_ENABLED = PROP_STATS_PREFIX + "enabled";
     public static final String PROP_STATS_COMPACTAR_ACTIU = PROP_STATS_PREFIX + "compactar.actiu";
     public static final String PROP_STATS_COMPACTAR_CRON = PROP_STATS_PREFIX + "compactar.cron";
     public static final String PROP_STATS_AUTH_USER = PROP_STATS_PREFIX + "auth.usuari";

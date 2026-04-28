@@ -4,7 +4,12 @@ import { useBaseAppContext, DialogButton } from '../../BaseAppContext';
 import { useFormDialog, FormDialogSubmitFn } from '../form/FormDialog';
 
 export type DataFormDialogApi = {
-    show: (id?: any, additionalData?: any) => Promise<string>;
+    show: (
+        id?: any,
+        additionalData?: any,
+        title?: string,
+        dialogButtons?: DialogButton[]
+    ) => Promise<string>;
     close: () => void;
 };
 
@@ -44,19 +49,22 @@ export const DataFormDialog: React.FC<DataFormDialogProps> = (props) => {
         formSubmit,
         t('datacommon.error'),
         children,
+        null,
         dialogComponentProps ?? { fullWidth: true, maxWidth: 'md' },
         formComponentProps,
         formI18nKeys,
         onClose
     );
-    const show = (id?: any, additionalData?: any) =>
+    const show = (id?: any, additionalData?: any, title?: string, dialogButtons?: DialogButton[]) =>
         formDialogShow(id, {
             title:
+                title ??
                 titleProp ??
                 (id != null ? t('datacommon.update.label') : t('datacommon.create.label')) +
                     ' ' +
                     (resourceTitle ?? resourceName),
             additionalData,
+            dialogButtons,
         });
     const close = () => formDialogClose();
     if (apiRef != null) {

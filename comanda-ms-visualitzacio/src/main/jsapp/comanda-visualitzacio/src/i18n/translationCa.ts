@@ -43,19 +43,19 @@ const translationCa = {
         },
         integracioEstat: {
             UP: {
-                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les últimes peticions"
+                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les darreres peticions"
             },
             WARN: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les últimes peticions"
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les darreres peticions"
             },
             DEGRADED: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les últimes peticions",
+                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les darreres peticions",
             },
             ERROR: {
-                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les últimes peticions"
+                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les darreres peticions"
             },
             DOWN: {
-                tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les últimes peticions",
+                tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les darreres peticions",
             },
             MAINTENANCE: {
                 tooltip: "Sense informació del servei degut a tasques de <bold>manteniment</bold>",
@@ -65,6 +65,7 @@ const translationCa = {
             },
         },
         userRole: {
+            COM_USER: 'Usuari',
             COM_ADMIN: 'Administrador',
             COM_CONSULTA: 'Consultor'
         }
@@ -76,14 +77,17 @@ const translationCa = {
         avis: "Avisos",
         alarmes: "Alarmes actives",
         monitoritzacio: "Monitorització",
+        monitoritzacioDescription: "Monitorització de integracions, caches i cues.",
         monitor: "Monitor",
         cache: "Gestió de cachés",
         broker: "Gestor de cues",
         configuracio: "Configuració",
+        configuracioDescription: "Opcions de d'administració de l'aplicació.",
         app: "Aplicacions",
         entorn: "Entorns",
         versionsEntorn: "Versions per entorn",
         alarmaConfig: "Alarmes",
+        alarmaConfigConsultor: "Configurar alarmes",
         integracio: "Integracions",
         widget: "Widgets estadístics",
         dashboard: "Taulers de control",
@@ -91,6 +95,8 @@ const translationCa = {
         parametre: "Paràmetres",
         dimensio: "Dimensions",
         indicador: "Indicadors",
+        accessibilitat: "Accessibilitat",
+        sitemap: "Mapa del lloc web",
         user: {
             options: {
                 profile: {
@@ -98,11 +104,19 @@ const translationCa = {
                     form: {
                         userData: "Dades de l'usuari",
                         genericConfig: "Configuració genèrica",
+                        applicationTheme: "Tema de l'aplicació",
+                        menuTheme: "Tema del menú",
                     },
                     tema: {
                         clar: "Clar",
                         obscur: "Obscur",
+                        dracula: "Dracula",
                         sistema: "Sistema",
+                    },
+                    estilMenu: {
+                        tema: "Mateix que el tema",
+                        temaInvertit: "Tema invertit",
+                        peu: "Colors del peu",
                     },
                 },
             },
@@ -111,7 +125,9 @@ const translationCa = {
     page: {
         salut: {
             title: "Salut",
+            appInfoTitle: "Salut de l'aplicació",
             refrescar: "Refrescar",
+            goBack: "Tornar enrere",
             filtrar: "Filtrar per aplicació/entorn",
             senseFiltres: "Sense filtres",
             nd: "N/D",
@@ -119,12 +135,18 @@ const translationCa = {
                 last: "Darrer refresc",
                 next: "Proper refresc en",
             },
+            alarmes: {
+                configAlarmes: "Config. alarmes",
+                configAlarmesTitle: "Configurar alarmes de l'entorn",
+            },
             apps: {
                 column: {
                     group: "Aplicació / entorn",
                     estat: "Estat",
                     infoData: "Darrera consulta",
                     infoDataDescription: "Data darrera consulta d'informació",
+                    upData: "Data arrancada",
+                    upDataDescription: "Data d'arrancada",
                     codi: "Codi",
                     nom: "Nom",
                     versio: "Versió",
@@ -139,12 +161,13 @@ const translationCa = {
             },
             groupingSelect: {
                 label: "Agrupació",
-                BY_APPLICATION: "Per aplicació",
-                BY_ENVIRONMENT: "Per entorn",
+                BY_APPLICATION: "Agrupar per aplicació",
+                BY_ENVIRONMENT: "Agrupar per entorn",
                 NONE: "Sense agrupació",
                 titleNoGrouping: "Totes les aplicacions i entorns",
             },
             refreshperiod: {
+                title: "Periodicitat del refresc",
                 PT1M: "1 minut",
                 PT5M: "5 minuts",
                 PT10M: "10 minuts",
@@ -152,6 +175,7 @@ const translationCa = {
                 PT1H: "1 hora",
             },
             timerange: {
+                title: "Interval de temps de les dades",
                 PT15M: "Darrers 15 minuts",
                 PT1H: "Darrera hora",
                 P1D: "Darrer dia",
@@ -159,11 +183,12 @@ const translationCa = {
                 P1M: "Darrer mes",
             },
             tabs: {
-                entorn: "Entorn",
+                entorn: "Detalls",
                 estatActual: "Estat actual",
                 integracions: "Integracions",
                 subsistemes: "Subsistemes",
                 historic: "Històric",
+                historicEstat: "Històric d'estat",
                 logs: "Logs",
             },
             info: {
@@ -182,10 +207,23 @@ const translationCa = {
                 detalls: "Detalls",
                 noInfo: 'No hi ha dades disponibles per a aquest entorn',
                 downAlert: "L'aplicació es troba caiguda. No es pot mostrar tota la informació de salut.",
+                darreraDataInfo1: "L'aplicació va deixar d'estar operativa el ",
+                darreraDataInfo2: "Estat anterior: ",
             },
             latencia: {
                 title: "Latència",
                 error: "Hi ha hagut un error al mostrar el gràfic",
+            },
+            historicEstat: {
+                title: "Històric d'estat",
+                noInfo: "No hi ha canvis d'estat registrats",
+                peticioOk: "Correcta",
+                peticioError: "Amb error",
+                column: {
+                    data: "Data",
+                    appEstat: "Estat app",
+                    peticio: "Petició",
+                },
             },
             estatLatencia: {
                 title: "Estat i latència",
@@ -198,6 +236,7 @@ const translationCa = {
                 integracioDownCount: "Inactives",
                 integracioDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació d'integracions",
+                noResults: "No hi ha informació d'integracions amb els estats seleccionats",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
@@ -207,6 +246,9 @@ const translationCa = {
                     peticionsPeriode: "Peticions període",
                     tempsMigPeriode: "Temps mig període",
                 },
+                filter: {
+                    estat: "Estats",
+                },
             },
             subsistemes: {
                 title: "Subsistemes",
@@ -215,6 +257,7 @@ const translationCa = {
                 subsistemaDownCount: "Inactives",
                 subsistemaDesconegutCount: "Estat desconegut",
                 noInfo: "No hi ha informació de subsistemes",
+                noResults: "No hi ha informació de subsistemes amb els estats seleccionats",
                 column: {
                     codi: "Codi",
                     nom: "Nom",
@@ -223,6 +266,9 @@ const translationCa = {
                     tempsMigTotal: "Temps mig total",
                     peticionsPeriode: "Peticions període",
                     tempsMigPeriode: "Temps mig període",
+                },
+                filter: {
+                    estat: "Estats",
                 },
             },
             missatges: {
@@ -240,7 +286,7 @@ const translationCa = {
                 missatgeInfoCount: "Informació"
             },
             contexts: {
-                title: "Contexts i manuals",
+                title: "Contexts",
                 noInfo: "No hi ha informació de contexts",
                 column: {
                     codi: "Códi",
@@ -250,12 +296,49 @@ const translationCa = {
                     manuals: "Manuals",
                 },
             },
+            manuals: {
+                title: "Manuals",
+            },
             detalls: {
                 title: "Sistema",
                 noInfo: "No hi ha informació sobre detalls de l'aplicació",
+                codis: {
+                    PRC: "Processadors",
+                    LAVG: "Càrrega del sistema (LoadAvg)",
+                    SCPU: "CPU sistema",
+                    MET: "Memòria total",
+                    MED: "Memòria disponible",
+                    EDT: "Espai de disc total",
+                    EDL: "Espai de disc lliure",
+                    SO: "Sistema operatiu",
+                    ST: "Data arrancada",
+                    UT: "Temps funcionant",
+                },
+            },
+            memoria: {
+                title: "Memoria del sistema",
+                espaiMeoria: "Espai en memòria disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
+                espaiDisc: "Espai en disc disponible: <strong>{{disp}}</strong> de <strong>{{total}}</strong>",
             },
             estats: {
                 title: "Estats",
+            },
+            logs: {
+                preview: "Previsualitzar",
+                download: "Descarregar",
+                refresh: "Refrescar",
+                noSelected: "Seleccionar un fitxer",
+                noPreview: "No hi ha previsualització",
+                softWrap: "Ajustar text",
+                scrollToBottom: "Anar al final",
+                logsList: {
+                    title: "Logs",
+                    nom: "Nom",
+                    dataCreacio: "Data de creació",
+                    dataModificacio: "Data de modificació",
+                    mida: "Mida",
+                    showPreview: "Previsualitzable",
+                }
             },
         },
         dashboards: {
@@ -323,6 +406,36 @@ const translationCa = {
                 },
                 column: {
                     appEntorn: "Aplicació - Entorn",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Tasca de tipus notícia",
+                            INFO: "Tasca de tipus informatiu",
+                            ALERTA: "Tasca de tipus alerta",
+                            ERROR: "Tasca de tipus error",
+                            CRITIC: "Tasca de tipus crític",
+                        }
+                    },
+                    prioritat: {
+                        tooltip: {
+                            NONE: "Prioritat no definida",
+                            BAIXA: "Prioritat baixa",
+                            NORMAL: "Prioritat normal",
+                            ALTA: "Prioritat alta",
+                            MAXIMA: "Prioritat màxima",
+                        }
+                    },
+                    estat: {
+                        tooltip: {
+                            PENDENT: "Tasca pendent d'iniciar",
+                            INICIADA: "Tasca en curs",
+                            FINALITZADA: "Tasca finalitzada",
+                            CANCELADA: "Tasca cancel·lada",
+                            ERROR: "Tasca amb error",
+                        }
+                    },
+                    dataCaducitat: {
+                        tooltip: "Data límit per a la realització de la tasca",
+                    },
                 },
                 entornAppInvalid: "Entorn de l'aplicació esborrat",
             }
@@ -341,16 +454,36 @@ const translationCa = {
                 groupHeader: "Nom",
                 column: {
                     appEntorn: "Aplicació - Entorn",
+                    global: "Global",
+                    globalTooltip: "Aquest és un avís global",
+                    tipus: {
+                        tooltip: {
+                            NOTICIA: "Avís de tipus notícia",
+                            INFO: "Avís de tipus informatiu",
+                            ALERTA: "Avís de tipus alerta",
+                            ERROR: "Avís de tipus error",
+                            CRITIC: "Avís de tipus crític",
+                        }
+                    }
                 },
-                action: {
-                    obrir: "Obrir avís",
+            },
+            action: {
+                obrir: "Obrir avís",
+                nollegit: {
+                    label: "Marcar com a no llegit",
+                    ok: "L'avis s'ha marcar com a no llegit",
                 },
-            }
+                llegit: {
+                    label: "Marcar com a llegit",
+                    ok: "L'avis s'ha marcar com a llegit",
+                },
+            },
         },
         alarmaConfig: {
             title: "Configuració d'alarmes",
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
+            nomHelperText: "En fer-se una notificació per correu de l'alarma, el nom s'usa per a indicar l'alarma a l'assumpte del correu.",
             condicio: {
                 title: "Condició",
                 subtitle: "Condició que s'ha de complir per a generar l'alarma",
@@ -359,6 +492,39 @@ const translationCa = {
                 title: "Període",
                 subtitle: "Període de temps durant el qual s'ha de complir la condició per a generar l'alarma",
                 switch: "Amb període d'activació"
+            },
+            filter: {
+                showOnlyOwnEnabled: "Mostrar només les meves alarmes",
+                showOnlyOwnDisabled: "Mostra totes les alarmes",
+                more: "Més camps",
+                entornApp: "Entorn d'aplicació",
+            },
+        },
+        alarma: {
+            snackbar: {
+                title: "Alarmes",
+                existingAlarms: "Té {{count}} alarma sense llegir",
+                existingAlarms_one: "Té {{count}} alarma sense llegir",
+                existingAlarms_other: "Té {{count}} alarmes sense llegir",
+                newAlarms: "Nova alarma sense llegir",
+                newAlarms_one: "Nova alarma sense llegir",
+                newAlarms_other: "{{count}} noves alarmes sense llegir",
+            },
+            action: {
+                clear: {
+                    label: "Marcar com a llegida",
+                },
+                reactivate: {
+                    label: "Marcar com a no llegida",
+                },
+            },
+            filter: {
+                showOnlyActiveEnabled: "Mostrant només alarmes sense llegir (clic per incloure llegides)",
+                showOnlyActiveDisabled: "Mostrant alarmes sense llegir i llegides (clic per mostrar només sense llegir)",
+            },
+            estats: {
+                finalitzada: "Finalitzada",
+                finalitzadaEsborrada: "Finalitzada (Llegida)",
             },
         },
         apps: {
@@ -372,9 +538,9 @@ const translationCa = {
                 compactacioSetmanalMesos: "Compactació setmanal (mesos)",
                 compactacioMensualMesos: "Compactacio mensual (mesos)",
                 eliminacioMesos: "Esborrat (mesos)",
-                estadistica: {
-                    auth: "Servei autenticat",
-                },
+                auth: "Servei autenticat",
+                salutAuthLegend: "Autenticació a les consultes de salut",
+                estadisticaAuthLegend: "Autenticació a les consultes d'estadístiques",
             },
             tooltips: {
                 compactacioSetmanes: "Quans mesos complerts es mantindran les estadístiques abans de compactar-les per setmana.\nSi es deixen els camps sense valor, o amb valor 0, no es realitzarà compactació per setmana.",
@@ -400,6 +566,10 @@ const translationCa = {
                 success: "Importació executada correctament",
                 noFile: "No s'ha seleccionat cap fitxer",
                 parseError: "Error en analitzar el fitxer",
+            },
+            ping: {
+                validationError: "Resposta rebuda amb errors de validacions",
+                validationTrace: "Errors de validacions",
             },
         },
         entorns: {
@@ -453,8 +623,13 @@ const translationCa = {
         },
         monitors: {
             title: "Monitors",
+            column: {
+                mailAddress: "Adreça de correu",
+            },
             detail: {
                 title: "Detalls de la comunicació amb la integració",
+                entorn: "Entorn",
+                app: "Aplicació",
                 data: "Data",
                 operacio: "Descripció",
                 tipus: "Tipus",
@@ -478,6 +653,15 @@ const translationCa = {
                 salut: "Salut",
                 estadistica: "Estadística",
                 configuracio: "Configuració",
+                alarmes: "Alarmes",
+                tasca: "Tasca",
+                avis: "Avís",
+            },
+            tab: {
+                email: "EMAIL",
+            },
+            filter: {
+                more: "Més camps",
             },
         },
         widget: {
@@ -732,6 +916,13 @@ const translationCa = {
                 },
             },
         },
+        sitemap: {
+            title: "Mapa del lloc web",
+            subtitle: "Accés directe a totes les seccions principals de l’aplicació.",
+        },
+        accessibilitat: {
+            title: "Accessibilitat",
+        },
         notFound: "No trobat",
         noPermissions: "Sense permisos",
     },
@@ -747,13 +938,14 @@ const translationCa = {
     components: {
         clear: "Netejar",
         search: "Cercar",
+        details: "Detalls",
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
         permisos: {
             title: "Permisos",
             resourceTitle: "permís"
-        }
+        },
     },
     form: {
         field: {
@@ -761,6 +953,7 @@ const translationCa = {
                 edit: 'Editar',
                 download: 'Descarregar',
                 clear: 'Esborrar',
+                avatarAlt: "Imatge pujada per l'usuari",
             },
         },
     },
@@ -802,7 +995,9 @@ const translationCa = {
         indicadors: "Indicadors",
     },
     treeData: {
-        treeView: "Vista en arbre"
+        treeView: "Vista en arbre",
+        expandAll: "Expandir totes les files",
+        collapseAll: "Contreure totes les files",
     },
     reordering: {
         errorMessage: "Error al reordenar",

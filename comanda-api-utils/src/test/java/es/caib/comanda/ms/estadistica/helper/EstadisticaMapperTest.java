@@ -1,14 +1,17 @@
 package es.caib.comanda.ms.estadistica.helper;
 
-import es.caib.comanda.model.v1.estadistica.Dimensio;
-import es.caib.comanda.model.v1.estadistica.Fet;
-import es.caib.comanda.model.v1.estadistica.GenericDimensio;
-import es.caib.comanda.model.v1.estadistica.GenericFet;
-import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
+import es.caib.comanda.model.server.monitoring.Dimensio;
+import es.caib.comanda.model.server.monitoring.Fet;
+import es.caib.comanda.model.server.monitoring.RegistreEstadistic;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,14 +82,15 @@ class EstadisticaMapperTest {
 
     @Test
     void toRegistreEstadistic_fromCollections_handlesNullCollectionsAndElements() {
-        List<Dimensio> dims = new ArrayList<>(Arrays.asList(
-                GenericDimensio.builder().codi("x").valor("X").build(),
-                null
-        ));
-        List<Fet> fets = new ArrayList<>(Arrays.asList(
-                null,
-                GenericFet.builder().codi("y").valor(7.0).build()
-        ));
+        Dimensio d = new Dimensio();
+        d.setCodi("x");
+        d.setValor("X");
+        List<Dimensio> dims = new ArrayList<>(Arrays.asList(d, null));
+
+        Fet f = new Fet();
+        f.setCodi("y");
+        f.setValor(7.0);
+        List<Fet> fets = new ArrayList<>(Arrays.asList(f));
 
         RegistreEstadistic re1 = EstadisticaHelper.toRegistreEstadistic(dims, fets);
         assertThat(re1.getDimensions()).hasSize(1);
