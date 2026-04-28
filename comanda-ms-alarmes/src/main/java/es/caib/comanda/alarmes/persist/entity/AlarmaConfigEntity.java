@@ -65,6 +65,7 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 		this.periodeValor = alarmaConfig.getPeriodeValor();
 		this.admin = alarmaConfig.isAdmin();
 		this.correuGeneric = alarmaConfig.isCorreuGeneric();
+		this.notificacioFinalitzada = alarmaConfig.isNotificacioFinalitzada();
 	}
 
 }

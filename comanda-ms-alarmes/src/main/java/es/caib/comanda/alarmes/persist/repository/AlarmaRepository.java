@@ -47,6 +47,21 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 			String createdBy,
 			LocalDateTime data);
 
+	List<AlarmaEntity> findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(LocalDateTime data);
+
+	@Query("SELECT " +
+			"    DISTINCT a.alarmaConfig.createdBy " +
+			"FROM " +
+			"    AlarmaEntity a " +
+			"WHERE " +
+			"    a.alarmaConfig.notificacioFinalitzada = true " +
+			"    AND a.dataFinalitzacio >= ?1")
+	List<String> findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(LocalDateTime data);
+
+	List<AlarmaEntity> findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(
+			String createdBy,
+			LocalDateTime data);
+
 	@Modifying
 	@Query("DELETE FROM AlarmaEntity a WHERE a.alarmaConfig = ?1 AND a.estat = ?2")
 	void deleteByAlarmaConfigAndEstat(AlarmaConfigEntity alarmaConfig, AlarmaEstat estat);

@@ -17,9 +17,9 @@ import javax.mail.MessagingException;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Enviament de correus d'alarmes.
@@ -45,7 +45,8 @@ public class AlarmaMailHelper {
 
 
 	private String generateIndividualAlarmaSubject(AlarmaEntity alarma) {
-		return "[COMANDA] Alarma activada" + (Strings.isNotBlank(alarma.getAlarmaConfig().getNom()) ? ": " + alarma.getAlarmaConfig().getNom() : "");
+		boolean alarmaFinalitzada = Objects.nonNull(alarma.getDataFinalitzacio());
+		return "[COMANDA] Alarma "+ (alarmaFinalitzada ? "finalitzada" : "activada") + (Strings.isNotBlank(alarma.getAlarmaConfig().getNom()) ? ": " + alarma.getAlarmaConfig().getNom() : "");
 	}
 
 	private String generateAlarmaBodyMessage(AlarmaEntity alarma) {
@@ -120,17 +121,21 @@ public class AlarmaMailHelper {
 	}
 
 	public long sendAlarmesAgrupades() {
-		// Envia les alarmes dels administradors
 		LocalDateTime dataDesde = LocalDateTime.now().minusHours(24);
+
+		// Envia les alarmes dels administradors (activades + finalitzades)
 		List<AlarmaEntity> alarmesPendentsAdmin = alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(
 				dataDesde);
+		List<AlarmaEntity> alarmesFinalitzadesAdmin = alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(
+				dataDesde);
+		List<AlarmaEntity> totesAlarmesAdmin = mergeAlarmes(alarmesPendentsAdmin, alarmesFinalitzadesAdmin);
         long adminMailCount = 0;
-        if (!alarmesPendentsAdmin.isEmpty()) {
+        if (!totesAlarmesAdmin.isEmpty()) {
             try {
                 String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
                 adminMailCount = Arrays.stream(adminUsers).filter(adminUser -> {
                     if (isUserProfileAlarmaActivaAndGrouped(adminUser)) {
-                        return sendAlarmaGroupedMailForUser(alarmesPendentsAdmin, adminUser);
+                        return sendAlarmaGroupedMailForUser(totesAlarmesAdmin, adminUser);
                     } else {
                         return false;
                     }
@@ -140,13 +145,18 @@ public class AlarmaMailHelper {
             }
         }
 
-        // Envia les alarmes dels usuaris no administradors
-		List<String> usuaris = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(dataDesde);
+        // Envia les alarmes dels usuaris no administradors (activades + finalitzades)
+		List<String> usuarisActivades = alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(dataDesde);
+		List<String> usuarisFinalitzades = alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(dataDesde);
+		List<String> usuaris = mergeUsuaris(usuarisActivades, usuarisFinalitzades);
 		long userMailCount = usuaris.stream().filter(u -> {
 			List<AlarmaEntity> alarmesPendentsUser = alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(
 					u,
 					dataDesde);
-			return sendAlarmaGroupedMailForUser(alarmesPendentsUser, u);
+			List<AlarmaEntity> alarmesFinalitzadesUser = alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(
+					u,
+					dataDesde);
+			return sendAlarmaGroupedMailForUser(mergeAlarmes(alarmesPendentsUser, alarmesFinalitzadesUser), u);
 		}).count();
 		return adminMailCount + userMailCount;
 	}
@@ -208,7 +218,7 @@ public class AlarmaMailHelper {
 				boolean sended = sendAlarmaMail(
 						email,
 						usuari.getNom(),
-						"[COMANDA] Resum diari d'alarmes activades",
+						"[COMANDA] Resum diari d'alarmes",
 						getAlarmesGroupedText(alarmes));
 				if (sended) {
 					monitor.endAction();
@@ -224,6 +234,23 @@ public class AlarmaMailHelper {
 			log.error("[EML] No s'ha pogut enviar missatge d'alarma", ex);
 		}
 		return false;
+	}
+
+	private List<AlarmaEntity> mergeAlarmes(List<AlarmaEntity> activades, List<AlarmaEntity> finalitzades) {
+		Set<Long> ids = new LinkedHashSet<>();
+		List<AlarmaEntity> result = new ArrayList<>();
+		Stream.concat(activades.stream(), finalitzades.stream()).forEach(a -> {
+			if (ids.add(a.getId())) {
+				result.add(a);
+			}
+		});
+		return result;
+	}
+
+	private List<String> mergeUsuaris(List<String> usuaris1, List<String> usuaris2) {
+		Set<String> set = new LinkedHashSet<>(usuaris1);
+		set.addAll(usuaris2);
+		return new ArrayList<>(set);
 	}
 
 	private String getAlarmesGroupedText(List<AlarmaEntity> alarmes) {
