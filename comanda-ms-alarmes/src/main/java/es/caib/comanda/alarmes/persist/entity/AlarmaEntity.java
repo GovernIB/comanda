@@ -34,6 +34,8 @@ public class AlarmaEntity extends BaseAuditableEntity<Alarma> {
 	private AlarmaEstat estat;
 	@Column(name = "data_activacio")
 	private LocalDateTime dataActivacio;
+	// TODO actualment, aquest camp no té cap ús, possiblement s'hauria d'esborrar
+	@Deprecated
 	@Column(name = "data_enviament")
 	private LocalDateTime dataEnviament;
 	@Column(name = "data_esborrat")

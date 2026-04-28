@@ -61,6 +61,8 @@ public class Alarma extends BaseResource<Long> {
 	private String missatge;
 	private AlarmaEstat estat;
 	private LocalDateTime dataActivacio;
+	// TODO actualment, aquest camp no té cap ús, possiblement s'hauria d'esborrar
+	@Deprecated
 	private LocalDateTime dataEnviament;
 	private LocalDateTime dataEsborrat;
 	private LocalDateTime dataFinalitzacio;
