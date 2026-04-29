@@ -1,7 +1,7 @@
 import React from 'react';
 import { useResourceApiService, useResourceApiContext } from 'reactlib';
 import { UserContext } from './UserContext';
-import { IUsuari, UsuariModel } from '../types/usuari.model';
+import { isIUsuari, IUsuari, UsuariModel } from '../types/usuari.model';
 
 export const ROLE_USER = 'COM_USER';
 export const ROLE_ADMIN = 'COM_ADMIN';
@@ -20,7 +20,6 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     } = useResourceApiService('usuari');
     const {
         setHttpHeaders: apiSetHttpHeaders,
-        refreshApiIndex: apiRefreshIndex
     } = useResourceApiContext();
     const [persistedUser, setPersistedUser] = React.useState<UsuariModel>();
     const [previewOverrides, setPreviewOverrides] = React.useState<Partial<IUsuari>>();
@@ -36,12 +35,20 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             ...previewOverrides,
         });
     }, [persistedUser, previewOverrides]);
-    const [currentRole, setCurrentRole] = React.useState<string | undefined>();
+    const [currentRole, setCurrentRoleState] = React.useState<string | undefined>();
+    const setCurrentRole = (role?: string) => {
+        setCurrentRoleState(role);
+        if (role != null) {
+            apiSetHttpHeaders([{ 'X-App-Role': role }]);
+        }
+    }
     const refresh = () => {
         if (apiIsReady) {
             apiFind({ page: 0, size: 1 }).
             then((response) => {
                 const user = response.rows[0];
+                if (!isIUsuari(user))
+                    console.error(user, ' is not a valid IUsuari');
                 setPersistedUser(user);
                 setPreviewOverrides(undefined);
                 const userRoles = user?.rols as string[];
@@ -59,12 +66,6 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     React.useEffect(() => {
         refresh();
     }, [apiIsReady]);
-    React.useEffect(() => {
-        if (currentRole != null) {
-            apiSetHttpHeaders([{ 'X-App-Role': currentRole }]);
-            apiRefreshIndex();
-        }
-    }, [currentRole]);
     const contextValue = {
         user,
         refresh,
@@ -91,6 +92,12 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             localStorage.setItem(USER_ROLE_LOCAL_STORAGE_KEY, newRole ?? "");
         },
     };
+
+    if (persistedUser == null)
+    {
+        return null;
+    }
+
     return <UserContext.Provider value={contextValue}>
         {children}
     </UserContext.Provider>;
