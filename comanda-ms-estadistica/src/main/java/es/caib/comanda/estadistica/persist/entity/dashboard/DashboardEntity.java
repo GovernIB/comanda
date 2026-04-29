@@ -2,17 +2,13 @@ package es.caib.comanda.estadistica.persist.entity.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.util.List;
 
 /**
@@ -46,6 +42,12 @@ public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
     protected Long appId;
     @Column(name = "entorn_id")
     protected Long entornId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "plantilla_id",
+            referencedColumnName = "id")
+    private PlantillaEntity plantilla;
 
     @OneToMany(mappedBy = "dashboard", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
     private List<DashboardItemEntity> items;

@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
 import es.caib.comanda.estadistica.logic.intf.model.widget.AppResource;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EntornResource;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
@@ -14,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
@@ -77,4 +79,5 @@ public class Dashboard extends BaseResource<Long> {
     private List<DashboardItem> items;
     private List<DashboardTitol> titols;
 
+    protected ResourceReference<Plantilla, Long> plantilla;
 }

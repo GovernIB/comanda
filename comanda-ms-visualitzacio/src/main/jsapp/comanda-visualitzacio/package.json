@@ -29,6 +29,7 @@
         "@mui/x-charts": "^8.28.0",
         "@mui/x-data-grid-pro": "^8.28.0",
         "@mui/x-date-pickers": "^8.27.2",
+        "@mui/x-tree-view": "^9.0.2",
         "@tanstack/react-virtual": "^3.13.12",
         "dayjs": "^1.11.18",
         "ketting": "7.5.2",
