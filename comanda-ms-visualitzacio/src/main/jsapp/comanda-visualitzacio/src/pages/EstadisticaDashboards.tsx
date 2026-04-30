@@ -21,12 +21,13 @@ const EstadisticaDashboardForm: React.FC = () => {
     const { data } = useFormContext();
     const { isReady: appIsReady, find: appFind } = useResourceApiService("app");
     const { isReady: entornIsReady, find: entornFind } = useResourceApiService("entorn");
+    const { isReady: plantillaIsReady, find: plantillaFind } = useResourceApiService("plantilla");
     const filterAplicacio = springFilterBuilder.and(
         springFilterBuilder.eq('activa', true),
         springFilterBuilder.exists(springFilterBuilder.and(springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id))));
     const filterEntorn = springFilterBuilder.exists(springFilterBuilder.and(springFilterBuilder.eq('entornAppEntities.app.id', data?.aplicacio?.id)));
 
-    if (!appIsReady || !entornIsReady)
+    if (!appIsReady || !entornIsReady || !plantillaIsReady)
         return;
     return (
         <Grid container spacing={2}>
@@ -46,6 +47,12 @@ const EstadisticaDashboardForm: React.FC = () => {
                 <FormField
                     name="entorn"
                     optionsRequest={(quickFilter: string) => findOptions(entornFind, 'nom', quickFilter, filterEntorn)}
+                />
+            </Grid>
+            <Grid size={12}>
+                <FormField
+                    name="plantilla"
+                    optionsRequest={(quickFilter: string) => findOptions(plantillaFind, 'nom', quickFilter, '')}
                 />
             </Grid>
         </Grid>

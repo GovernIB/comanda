@@ -62,20 +62,17 @@ describe('Models', () => {
             codi: 'APP',
             nom: 'Aplicació',
             activa: true,
-            links: [],
         });
         const entorn = new EntornModel({
             id: 2,
             codi: 'PRO',
             nom: 'Producció',
-            links: [],
         });
         const entornApp = new EntornAppModel({
             id: 3,
             app: { id: 1, description: 'Aplicació' },
             entorn: { id: 2, description: 'Producció' },
             versio: '1.0.0',
-            links: [],
         });
         const usuari = new UsuariModel({
             id: 4,
@@ -91,7 +88,6 @@ describe('Models', () => {
             alarmaMail: true,
             alarmaMailAgrupar: false,
             numElementsPagina: NUM_ELEMENT_PAGE_OPTIONS[1],
-            links: [],
         });
 
         expect(app.nom).toBe('Aplicació');
@@ -105,7 +101,6 @@ describe('Models', () => {
         // Verifica que els models de salut reutilitzables conserven els camps de negoci principals.
         const salut = new SalutModel({
             id: 1,
-            links: [],
             entornAppId: 7,
             data: '2026-03-13',
             versio: '1.2.3',
@@ -114,7 +109,6 @@ describe('Models', () => {
         });
         const integracio = new SalutIntegracioModel({
             id: 2,
-            links: [],
             codi: 'REST',
             estat: SalutEstatEnum.DOWN,
             totalOk: 1,
@@ -122,7 +116,6 @@ describe('Models', () => {
         });
         const subsistema = new SalutSubsistema({
             id: 3,
-            links: [],
             codi: 'SUB',
             estat: SalutEstatEnum.UNKNOWN,
             totalOk: 0,
@@ -130,14 +123,12 @@ describe('Models', () => {
         });
         const missatge = new SalutMissatge({
             id: 4,
-            links: [],
             data: '2026-03-13',
             nivell: NivellEnum.ERROR,
             missatge: 'Error',
         });
         const detall = new SalutDetall({
             id: 5,
-            links: [],
             codi: 'versio',
             nom: 'Versió',
             valor: '1.2.3',

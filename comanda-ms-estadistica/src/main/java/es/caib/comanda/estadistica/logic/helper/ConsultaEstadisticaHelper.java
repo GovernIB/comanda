@@ -178,6 +178,7 @@ public class ConsultaEstadisticaHelper {
 
         return InformeWidgetSimpleItem.builder()
                 .dashboardItemId(dashboardItem.getId())
+                .widgetId(dashboardItem.getWidget().getId())
                 .tipus(WidgetTipus.SIMPLE)
                 .entornCodi(dadesComunsConsulta.getEntornCodi())
                 .titol(widget.getTitol())
@@ -295,6 +296,7 @@ public class ConsultaEstadisticaHelper {
         String columnaAgrupacio = "agrupacio";
         return InformeWidgetGraficItem.builder()
                 .dashboardItemId(dashboardItem.getId())
+                .widgetId(dashboardItem.getWidget().getId())
                 .tipus(WidgetTipus.GRAFIC)
                 .entornCodi(dadesComunsConsulta.getEntornCodi())
                 .titol(widget.getTitol())
@@ -504,6 +506,7 @@ public class ConsultaEstadisticaHelper {
 
         return InformeWidgetTaulaItem.builder()
                 .dashboardItemId(dashboardItem.getId())
+                .widgetId(dashboardItem.getWidget().getId())
                 .tipus(WidgetTipus.TAULA)
                 .entornCodi(dadesComunsConsulta.getEntornCodi())
                 .titol(widget.getTitol())

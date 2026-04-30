@@ -13,7 +13,11 @@ import './react-resizable-custom.css';
 import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
 import {MuiFormDialog, MuiFormDialogApi, useBaseAppContext, useConfirmDialogButtons, useResourceApiService} from "reactlib";
 import {useTranslation} from "react-i18next";
-import {AfegirTitolFormContent} from "../../pages/EstadisticaDashboardEdit.tsx";
+import {
+    AfegirTitolFormContent,
+    useGraficWidgetFormDialog,
+    useSimpleWidgetFormDialog, useTaulaWidgetFormDialog
+} from "../../pages/EstadisticaDashboardEdit.tsx";
 import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback';
 
 const CustomGridLayout = WidthProvider(Responsive);
@@ -132,6 +136,10 @@ const useCustomGridItemActions = (refresh?: () => void) => {
         });
     }
 
+    const {handleOpen: handleSimpleOpen, dialog: dialogSimple} = useSimpleWidgetFormDialog();
+    const {handleOpen: handleGraficOpen, dialog: dialogGrafic} = useGraficWidgetFormDialog();
+    const {handleOpen: handleTaulaOpen, dialog: dialogTaula} = useTaulaWidgetFormDialog();
+
     const actions = [
         {
             label: "Editar",
@@ -140,7 +148,37 @@ const useCustomGridItemActions = (refresh?: () => void) => {
             onClick: (id:any, row:any) => {
                 if (row.tipus === 'TITOL') { formApiRef.current?.show(id).then(()=>refresh?.()) }
             },
-            hidden: (row:any) => row.tipus !== 'TITOL', // TODO: implementar formulario para otros tipos
+            hidden: (row:any) => row.tipus !== 'TITOL',
+        },
+        {
+            label: "Editar",
+            icon: 'edit',
+            showInMenu: true,
+            onClick: (_id:any, row:any) => {
+                handleSimpleOpen(row?.widgetId)
+                    ?.then(()=>refresh?.())
+            },
+            hidden: (row:any) => row.tipus !== 'SIMPLE',
+        },
+        {
+            label: "Editar",
+            icon: 'edit',
+            showInMenu: true,
+            onClick: (_id:any, row:any) => {
+                handleGraficOpen(row?.widgetId)
+                    ?.then(()=>refresh?.())
+            },
+            hidden: (row:any) => row.tipus !== 'GRAFIC',
+        },
+        {
+            label: "Editar",
+            icon: 'edit',
+            showInMenu: true,
+            onClick: (_id:any, row:any) => {
+                handleTaulaOpen(row?.widgetId)
+                    ?.then(()=>refresh?.())
+            },
+            hidden: (row:any) => row.tipus !== 'TAULA',
         },
         {
             label: "Borrar",
@@ -161,6 +199,9 @@ const useCustomGridItemActions = (refresh?: () => void) => {
         >
             <AfegirTitolFormContent/>
         </MuiFormDialog>
+        {dialogSimple}
+        {dialogGrafic}
+        {dialogTaula}
     </>
 
     return { actions, content }

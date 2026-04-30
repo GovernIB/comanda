@@ -1,7 +1,6 @@
 import * as React from 'react';
 import MuiToolbar from '@mui/material/Toolbar';
 import {
-    BasePage,
     MuiDataGrid,
     useBaseAppContext,
     useResourceApiService,
@@ -12,10 +11,10 @@ import {
     useMessageDialogButtons,
     useConfirmDialogButtons,
     useMuiDataGridApiRef,
-    MuiDataGridColDef,
+    MuiDataGridColDef, useFilterApiRef, MuiFormDialogApi, MuiFormDialog,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import {
     DashboardReactGridLayout,
     GridLayoutItem,
@@ -57,7 +56,13 @@ import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVisualization.tsx";
 import PageTitle from '../components/PageTitle.tsx';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
-import { FooterHeightPlaceholder } from '../components/ComandaFooter.tsx';
+import {SimpleTreeView, TreeItem} from "@mui/x-tree-view";
+import Divider from "@mui/material/Divider";
+import EstadisticaSimpleWidgetForm from "../components/estadistiques/EstadisticaSimpleWidgetForm.tsx";
+import EstadisticaGraficWidgetForm from "../components/estadistiques/EstadisticaGraficWidgetForm.tsx";
+import EstadisticaTaulaWidgetForm from "../components/estadistiques/EstadisticaTaulaWidgetForm.tsx";
+import {FooterHeightPlaceholder} from "../components/ComandaFooter.tsx";
+import Menu from "@mui/material/Menu";
 
 type EntornAppFilterContentProps = {
     initialData?: {
@@ -601,146 +606,158 @@ const EstadisticaDashboardEdit: React.FC = () => {
     }
 
     return (
-        <>
+        <Box sx={{
+            flex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+        }}>
             <PageTitle title={t($ => $.page.dashboards.title)} />
             {titolFormDialogComponent}
             {contentDialogComponent}
             {loading ? <CenteredCircularProgress /> : null}
-            {dashboard && (
-                <BasePage
-                    toolbar={
-                        <MuiToolbar
-                            disableGutters
+            {dashboard && (<>
+                <MuiToolbar
+                    disableGutters
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        px: 2,
+                        ml: 0,
+                        mr: 0,
+                        mt: 0,
+                        backgroundColor: (theme) => theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900],
+                    }}
+                >
+                    <Box>
+                        <IconButton
+                            title={tLib('form.goBack.title')}
+                            onClick={() => goBack(`/${DASHBOARDS_PATH}`)}
+                        >
+                            <Icon>arrow_back</Icon>
+                        </IconButton>
+                        <Typography
                             sx={{
-                                width: '100%',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                px: 2,
-                                ml: 0,
-                                mr: 0,
-                                mt: 0,
-                                backgroundColor: (theme) => theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900],
+                                display: 'inline',
+                                mx: 2,
                             }}
                         >
-                            <Box>
-                                <IconButton
-                                    title={tLib('form.goBack.title')}
-                                    onClick={() => goBack(`/${DASHBOARDS_PATH}`)}
-                                >
-                                    <Icon>arrow_back</Icon>
-                                </IconButton>
-                                <Typography
-                                    sx={{
-                                        display: 'inline',
-                                        mx: 2,
-                                    }}
-                                >
-                                    {dashboard.titol}
-                                </Typography>
-                            </Box>
-                            <Box>
-                                {errorDashboardWidgets?.length ? (
-                                    <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
-                                ) : undefined}
-                                <ButtonMenu title={t($ => $.page.dashboards.components.llistar)}>
-                                    {[
+                            {dashboard.titol}
+                        </Typography>
+                    </Box>
+                    <Box>
+                        {errorDashboardWidgets?.length ? (
+                            <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
+                        ) : undefined}
+                        <ButtonMenu title={t($ => $.page.dashboards.components.llistar)}>
+                            {[
+                                {
+                                    icon: 'widgets',
+                                    title: t($ => $.page.dashboards.action.llistarWidget.label),
+                                    resourceName: 'dashboardItem',
+                                    baseColumns: [
                                         {
-                                            icon: 'widgets',
-                                            title: t($ => $.page.dashboards.action.llistarWidget.label),
-                                            resourceName: 'dashboardItem',
-                                            baseColumns: [
-                                                {
-                                                    field: 'widget',
-                                                    flex: 1,
-                                                },
-                                                {
-                                                    field: 'entornId',
-                                                    flex: 1,
-                                                },
-                                            ],
+                                            field: 'widget',
+                                            flex: 1,
                                         },
                                         {
-                                            icon: 'title',
-                                            title: t($ => $.page.dashboards.action.llistarTitle.label),
-                                            resourceName: 'dashboardTitol',
-                                            form: <AfegirTitolFormContent />,
-                                            baseColumns: [
-                                                {
-                                                    field: 'titol',
-                                                    flex: 1,
-                                                },
-                                            ],
+                                            field: 'entornId',
+                                            flex: 1,
                                         },
-                                    ].map((item, index) => (
-                                        <MenuItem
-                                            key={'llistarComponents-' + index}
-                                            onClick={() =>
-                                                showContentDialog(
-                                                    '',
-                                                    <ListWidgetDialogContent
-                                                        title={item.title}
-                                                        baseColumns={item.baseColumns}
-                                                        resourceName={item.resourceName}
-                                                        form={item.form}
-                                                        dashboardId={dashboardId}
-                                                        onDelete={forceRefreshDashboardWidgets}
-                                                        onUpdate={forceRefreshDashboardWidgets}
-                                                    />,
-                                                    messageDialogButtons,
-                                                    {
-                                                        maxWidth: 'lg',
-                                                    }
-                                                )
+                                    ],
+                                },
+                                {
+                                    icon: 'title',
+                                    title: t($ => $.page.dashboards.action.llistarTitle.label),
+                                    resourceName: 'dashboardTitol',
+                                    form: <AfegirTitolFormContent />,
+                                    baseColumns: [
+                                        {
+                                            field: 'titol',
+                                            flex: 1,
+                                        },
+                                    ],
+                                },
+                            ].map((item, index) => (
+                                <MenuItem
+                                    key={'llistarComponents-' + index}
+                                    onClick={() =>
+                                        showContentDialog(
+                                            '',
+                                            <ListWidgetDialogContent
+                                                title={item.title}
+                                                baseColumns={item.baseColumns}
+                                                resourceName={item.resourceName}
+                                                form={item.form}
+                                                dashboardId={dashboardId}
+                                                onDelete={forceRefreshDashboardWidgets}
+                                                onUpdate={forceRefreshDashboardWidgets}
+                                            />,
+                                            messageDialogButtons,
+                                            {
+                                                maxWidth: 'lg',
                                             }
-                                        >
-                                            <ListItemIcon>
-                                                <Icon fontSize="small">{item.icon}</Icon>
-                                            </ListItemIcon>
-                                            <ListItemText>{item.title}</ListItemText>
-                                        </MenuItem>
-                                    ))}
-                                </ButtonMenu>
-                                <ButtonMenu
-                                    title={t($ => $.page.dashboards.components.afegir)}
-                                    disabled={!apiDashboardItemIsReady || !dashboard}
-                                    buttonIcon={<AddIcon />}
+                                        )
+                                    }
                                 >
-                                    <MenuItem onClick={openAddWidgetDialog}>
-                                        <ListItemIcon>
-                                            <Icon fontSize="small">widgets</Icon>
-                                        </ListItemIcon>
-                                        <ListItemText>
-                                            {t($ => $.page.dashboards.action.addWidget.label)}
-                                        </ListItemText>
-                                    </MenuItem>
-                                    <MenuItem onClick={openCreateTitolForm}>
-                                        <ListItemIcon>
-                                            <Icon fontSize="small">title</Icon>
-                                        </ListItemIcon>
-                                        <ListItemText>
-                                            {t($ => $.page.dashboards.action.afegirTitle.label)}
-                                        </ListItemText>
-                                    </MenuItem>
-                                </ButtonMenu>
-                                {/*<DashboardSideMenu dashboard={dashboard} addAction={addWidget}/>*/}
-                            </Box>
-                        </MuiToolbar>
-                    }
-                >
-                    {/* Se espera a tener los datos a mostrar y a todas las APIs que puedan ser llamadas por onGridLayoutItemsChange */}
-                    {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
-                        <DashboardReactGridLayout
-                            dashboardId={dashboard.id}
-                            dashboardWidgets={dashboardWidgets}
-                            gridLayoutItems={mappedDashboardItems}
-                            onGridLayoutItemsChange={onGridLayoutItemsChange}
-                            editable
-                            refresh={forceRefreshDashboardWidgets}
-                        />
-                    )}
-                    <FooterHeightPlaceholder />
-                </BasePage>
-            )}
+                                    <ListItemIcon>
+                                        <Icon fontSize="small">{item.icon}</Icon>
+                                    </ListItemIcon>
+                                    <ListItemText>{item.title}</ListItemText>
+                                </MenuItem>
+                            ))}
+                        </ButtonMenu>
+                        <ButtonMenu
+                            title={t($ => $.page.dashboards.components.afegir)}
+                            disabled={!apiDashboardItemIsReady || !dashboard}
+                            buttonIcon={<AddIcon />}
+                        >
+                            <MenuItem onClick={openAddWidgetDialog}>
+                                <ListItemIcon>
+                                    <Icon fontSize="small">widgets</Icon>
+                                </ListItemIcon>
+                                <ListItemText>
+                                    {t($ => $.page.dashboards.action.addWidget.label)}
+                                </ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={openCreateTitolForm}>
+                                <ListItemIcon>
+                                    <Icon fontSize="small">title</Icon>
+                                </ListItemIcon>
+                                <ListItemText>
+                                    {t($ => $.page.dashboards.action.afegirTitle.label)}
+                                </ListItemText>
+                            </MenuItem>
+                        </ButtonMenu>
+                        {/*<DashboardSideMenu dashboard={dashboard} addAction={addWidget}/>*/}
+                    </Box>
+                </MuiToolbar>
+                <Grid container sx={{ flex: 1, overflow: 'hidden' }}>
+                    <Grid size={2} sx={{ height: '100%' }}>
+                        <SideMenu dashboard={dashboard} addWidget={addWidget}/>
+                    </Grid>
+                    <Grid size={10} sx={{
+                        overflow: 'auto',
+                        minHeight: 0,
+                        maxHeight: '100%'
+                    }}>
+                        {/* Se espera a tener los datos a mostrar y a todas las APIs que puedan ser llamadas por onGridLayoutItemsChange */}
+                        {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
+                            <DashboardReactGridLayout
+                                dashboardId={dashboard.id}
+                                dashboardWidgets={dashboardWidgets}
+                                gridLayoutItems={mappedDashboardItems}
+                                onGridLayoutItemsChange={onGridLayoutItemsChange}
+                                editable
+                                refresh={forceRefreshDashboardWidgets}
+                            />
+                        )}
+                    </Grid>
+                </Grid>
+                <FooterHeightPlaceholder />
+            </>)}
             <AddWidgetDialog
                 open={addWidgetDialogOpen}
                 onClose={closeAddWidgetDialog}
@@ -750,6 +767,280 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     entorn: dashboard?.entorn
                 }}
             />
+        </Box>
+    );
+};
+
+const SideMenu = ({ dashboard, addWidget }:any) => {
+    // const { t } = useTranslation();
+    const appEntornFilterApiRef = useFilterApiRef();
+    const [springFilter, setSpringFilter] = useState<string>()
+    const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id)
+    const [simpleWidgets, setSimpleWidgets] = useState<any[]>()
+    const [graficWidgets, setGraficWidgets] = useState<any[]>()
+    const [taulaWidgets, setTaulaWidgets] = useState<any[]>()
+
+    const {
+        isReady: apiSimpleIsReady,
+        find: apiSimpleFind,
+    } = useResourceApiService('estadisticaSimpleWidget');
+    const {
+        isReady: apiGraficIsReady,
+        find: apiGraficFind,
+    } = useResourceApiService('estadisticaGraficWidget');
+    const {
+        isReady: apiTaulaIsReady,
+        find: apiTaulaFind,
+    } = useResourceApiService('estadisticaTaulaWidget');
+
+    useEffect(() => {
+        // console.log("springFilter", springFilter)
+        if (apiSimpleIsReady && apiGraficIsReady && apiTaulaIsReady) {
+            apiSimpleFind({filter: springFilter, unpaged:true})
+                .then((response) => setSimpleWidgets(response.rows))
+            apiGraficFind({filter: springFilter, unpaged:true})
+                .then((response) => setGraficWidgets(response.rows))
+            apiTaulaFind({filter: springFilter, unpaged:true})
+                .then((response) => setTaulaWidgets(response.rows))
+        }
+    }, [springFilter, apiSimpleIsReady, apiGraficIsReady, apiTaulaIsReady]);
+
+    const WidgetTreeItem = ({widget}:any) => <TreeItem key={widget?.id} itemId={widget?.id} label={<Box
+        display={'flex'}
+        flexDirection={'row'}
+        justifyContent={'space-between'}
+        alignItems={'center'}
+    >
+        {widget?.titol}
+        {entornId &&
+            <IconButton size={'small'} onClick={() => addWidget(widget?.id, entornId)}>
+                <Icon sx={{ fontSize: '0.875rem' }}>add</Icon>
+            </IconButton>
+        }
+    </Box>} />
+
+    return <Paper elevation={1} sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <MuiFilter
+            initialData={dashboard?.aplicacio && {
+                app: {
+                    id: dashboard?.aplicacio?.id,
+                    description: dashboard?.aplicacio?.description,
+                },
+                entorn: {
+                    id: dashboard?.entorn?.id,
+                    description: dashboard?.entorn?.description,
+                },
+            }}
+            detached
+            apiRef={appEntornFilterApiRef}
+            resourceName="entornApp"
+            code="optional_entornApp_filter"
+            commonFieldComponentProps={{ size: 'small' }}
+            onDataChange={(data) => setEntornId(data?.entorn?.id)}
+            springFilterBuilder={(data:any) => springFilterBuilder.and(
+                springFilterBuilder.eq("appId", data?.app?.id)
+            )}
+            onSpringFilterChange={setSpringFilter}>
+            <Grid container spacing={1}>
+                <Grid size={12}><Typography>Seleccionar aplicació</Typography></Grid>
+                <Grid size={12}><FormField name="entorn" disabled={dashboard?.entorn} /></Grid>
+                <Grid size={12}><FormField name="app" disabled={dashboard?.aplicacio} /></Grid>
+            </Grid>
+        </MuiFilter>
+
+        <Divider sx={{ my: 1 }}/>
+
+        <Box sx={{
+            overflow: 'auto',
+            minHeight: 0,
+            maxHeight: '100%'
+        }}>
+        <SimpleTreeView
+            sx={{
+                overflow: 'hidden',
+                '& .MuiTreeItem-label': {
+                    fontSize: '0.875rem', // 14px
+                    // fontWeight: '500', // opcional
+                }
+            }}>
+            <TreeItem key={'simple'} itemId={'simple'} label={'Simple'}>
+                {simpleWidgets?.map?.((widget) =>
+                    <WidgetTreeItem widget={widget}/>
+                )}
+            </TreeItem>
+            <TreeItem key={'grafic'} itemId={'grafic'} label={'Grafic'}>
+                {graficWidgets?.map?.((widget) =>
+                    <WidgetTreeItem widget={widget}/>
+                )}
+            </TreeItem>
+            <TreeItem key={'taula'} itemId={'taula'} label={'Taula'}>
+                {taulaWidgets?.map?.((widget) =>
+                    <WidgetTreeItem widget={widget}/>
+                )}
+            </TreeItem>
+        </SimpleTreeView>
+        </Box>
+
+        <Box sx={{ mt: 'auto' }}>
+            <Divider sx={{ my: 1, alignSelf: 'end' }}/>
+        </Box>
+
+        <WidgetMenu addWidget={addWidget} entornId={entornId}/>
+    </Paper>
+}
+
+const WidgetMenu = ({addWidget, entornId}:any) => {
+    const {handleOpen: handleSimpleOpen, dialog: dialogSimple} = useSimpleWidgetFormDialog();
+    const {handleOpen: handleGraficOpen, dialog: dialogGrafic} = useGraficWidgetFormDialog();
+    const {handleOpen: handleTaulaOpen, dialog: dialogTaula} = useTaulaWidgetFormDialog();
+
+    return <>
+        <MyButtonMenu
+            title={'Nou Widget'}
+            disabled={!entornId}
+            buttonProps={{
+                variant: 'contained',
+                startIcon: <Icon>add</Icon>,
+                sx: { width: '100%' },
+            }}
+        >
+            {[
+                {
+                    icon: 'description',
+                    title: 'Simple',
+                    onClick: () => {
+                        handleSimpleOpen()
+                            ?.then((response:any) => addWidget(response.id, entornId))
+                    },
+                },
+                {
+                    icon: 'bar_chart_4_bars',
+                    title: 'Gràfic',
+                    onClick: () => {
+                        handleGraficOpen()
+                            ?.then((response:any) => addWidget(response.id, entornId))
+                    },
+                },
+                {
+                    icon: 'table',
+                    title: 'Taula',
+                    onClick: () => {
+                        handleTaulaOpen()
+                            ?.then((response:any) => addWidget(response.id, entornId))
+                    },
+                },
+            ].map((item, index) => (
+                <MenuItem
+                    key={'nowWidget-' + index}
+                    onClick={() => item?.onClick?.()}
+                >
+                    <ListItemIcon>
+                        <Icon fontSize="small">{item.icon}</Icon>
+                    </ListItemIcon>
+                    <ListItemText>{item.title}</ListItemText>
+                </MenuItem>
+            ))}
+        </MyButtonMenu>
+        {dialogSimple}
+        {dialogGrafic}
+        {dialogTaula}
+    </>
+}
+export const useSimpleWidgetFormDialog = () => {
+    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
+
+    const handleOpen = (id?:any) => {
+        return formApiRef?.current?.show(id)
+    }
+
+    const dialog = <>
+        <MuiFormDialog
+            resourceName={'estadisticaSimpleWidget'}
+            dialogComponentProps={{ fullWidth: true, maxWidth: 'xl' }}
+            apiRef={formApiRef}
+        >
+            <EstadisticaSimpleWidgetForm/>
+        </MuiFormDialog>
+    </>
+
+    return {
+        handleOpen,
+        dialog,
+    }
+}
+export const useGraficWidgetFormDialog = () => {
+    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
+
+    const handleOpen = (id?:any) => {
+        return formApiRef?.current?.show(id)
+    }
+
+    const dialog = <>
+        <MuiFormDialog
+            resourceName={'estadisticaGraficWidget'}
+            dialogComponentProps={{ fullWidth: true, maxWidth: 'xl' }}
+            apiRef={formApiRef}
+        >
+            <EstadisticaGraficWidgetForm/>
+        </MuiFormDialog>
+    </>
+
+    return {
+        handleOpen,
+        dialog,
+    }
+}
+export const useTaulaWidgetFormDialog = () => {
+    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
+
+    const handleOpen = (id?:any) => {
+        return formApiRef?.current?.show(id)
+    }
+
+    const dialog = <>
+        <MuiFormDialog
+            resourceName={'estadisticaTaulaWidget'}
+            dialogComponentProps={{ fullWidth: true, maxWidth: 'xl' }}
+            apiRef={formApiRef}
+        >
+            <EstadisticaTaulaWidgetForm/>
+        </MuiFormDialog>
+    </>
+
+    return {
+        handleOpen,
+        dialog,
+    }
+}
+
+
+const MyButtonMenu = ({ buttonProps, title, disabled, children }:any) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+    return (
+        <>
+            <Button
+                onClick={handleClick}
+                disabled={disabled}
+                {...buttonProps}
+            >
+                {title}
+            </Button>
+            <Menu
+                anchorEl={anchorEl}
+                id="account-menu"
+                open={open}
+                onClose={handleClose}
+                onClick={handleClose}
+            >
+                {children}
+            </Menu>
         </>
     );
 };

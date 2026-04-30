@@ -5,16 +5,11 @@ import duration from 'dayjs/plugin/duration';
 import { BrowserRouter } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { LicenseInfo } from '@mui/x-license';
-import "@fontsource/noto-sans/400.css";
-import "@fontsource/noto-sans/500.css";
-import "@fontsource/noto-sans/700.css";
-import App from './App.tsx'
-import {
-    envVar,
-    KeycloakAuthProvider,
-    ContainerAuthProvider,
-    ResourceApiProvider
-} from 'reactlib';
+import '@fontsource/noto-sans/400.css';
+import '@fontsource/noto-sans/500.css';
+import '@fontsource/noto-sans/700.css';
+import App from './App.tsx';
+import { envVar, KeycloakAuthProvider, ContainerAuthProvider, ResourceApiProvider } from 'reactlib';
 import SseProvider from './components/SseProvider.tsx';
 import UserProvider from './components/UserProvider';
 import MuiThemeProvider from './components/MuiThemeProvider.tsx';
@@ -33,7 +28,7 @@ export const envVars = {
     VITE_AUTH_PROVIDER_URL: import.meta.env.VITE_AUTH_PROVIDER_URL,
     VITE_AUTH_PROVIDER_REALM: import.meta.env.VITE_AUTH_PROVIDER_REALM,
     VITE_AUTH_PROVIDER_CLIENTID: import.meta.env.VITE_AUTH_PROVIDER_CLIENTID,
-}
+};
 
 const getAuthConfig = () => ({
     url: envVar('VITE_AUTH_PROVIDER_URL', envVars),
@@ -55,7 +50,7 @@ export const getEnvApiUrl = () => {
             return window.location.protocol + '//' + window.location.host + ':' + window.location.port + envApiSuffix;
         }
     }
-}
+};
 
 const isAuthUrlPresent = envVar('VITE_AUTH_PROVIDER_URL', envVars) != null;
 const AuthProvider = isAuthUrlPresent ? KeycloakAuthProvider : ContainerAuthProvider;
@@ -65,18 +60,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <HelmetProvider>
             <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
                 <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
-                    <SseProvider>
-                        <AlarmsProvider>
-                            <UserProvider>
+                    <UserProvider>
+                        <SseProvider>
+                            <AlarmsProvider>
                                 <MuiThemeProvider>
-                                    <CssBaseline enableColorScheme/>
+                                    <CssBaseline enableColorScheme />
                                     <BrowserRouter basename={import.meta.env.BASE_URL}>
                                         <App />
                                     </BrowserRouter>
                                 </MuiThemeProvider>
-                            </UserProvider>
-                        </AlarmsProvider>
-                    </SseProvider>
+                            </AlarmsProvider>
+                        </SseProvider>
+                    </UserProvider>
                 </ResourceApiProvider>
             </AuthProvider>
         </HelmetProvider>

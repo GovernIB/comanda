@@ -68,6 +68,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-i18next', () => ({
+    initReactI18next: {
+        type: '3rdParty',
+        init: () => undefined,
+    },
     useTranslation: () => ({
         t: mocks.tMock,
     }),
@@ -78,7 +82,11 @@ vi.mock('react-router-dom', () => ({
     useNavigate: () => mocks.navigateMock,
 }));
 
-vi.mock('reactlib', () => ({
+vi.mock('reactlib', async (importOriginal) => {
+    const original = await importOriginal<typeof import('reactlib')>();
+
+    return {
+        ...original,
     BasePage: ({
         toolbar,
         children,
@@ -184,7 +192,7 @@ vi.mock('reactlib', () => ({
             refresh: vi.fn(),
         },
     }),
-}));
+}});
 
 vi.mock('../../lib/components/mui/Dialog.tsx', () => ({
     useContentDialog: () => [mocks.showContentDialogMock, <div key="content-dialog" />],

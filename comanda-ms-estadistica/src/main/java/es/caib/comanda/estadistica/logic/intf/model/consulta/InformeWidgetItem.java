@@ -20,6 +20,7 @@ public class InformeWidgetItem implements Serializable {
     protected Long dashboardItemId;
     protected Long dashboardTitolId;
     protected String entornCodi;
+    protected Long widgetId;
     private String titol;
     private String descripcio;
 

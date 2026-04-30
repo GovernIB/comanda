@@ -14,6 +14,7 @@ type FakeEventSource = {
 const mocks = vi.hoisted(() => ({
     apiUrl: '/api',
     apiIsReady: true,
+    httpHeaders: undefined as Record<string, string>[] | undefined,
     authIsReady: true,
     isAuthenticated: true,
     bearerTokenActive: false,
@@ -26,6 +27,7 @@ vi.mock('reactlib', () => ({
     useResourceApiContext: ((() => ({
         apiUrl: mocks.apiUrl,
         isReady: mocks.apiIsReady,
+        httpHeaders: mocks.httpHeaders,
     })) as unknown) as typeof import('reactlib').useResourceApiContext,
     useAuthContext: ((() => ({
         isLoading: false,
@@ -78,6 +80,7 @@ describe('SseProvider', () => {
     beforeEach(() => {
         mocks.apiUrl = '/api';
         mocks.apiIsReady = true;
+        mocks.httpHeaders = undefined;
         mocks.authIsReady = true;
         mocks.isAuthenticated = true;
         mocks.bearerTokenActive = false;
@@ -178,6 +181,27 @@ describe('SseProvider', () => {
         });
         expect(screen.getByTestId('count')).toHaveTextContent('1');
         expect(mocks.subscribeToNativeSseMock).not.toHaveBeenCalled();
+    });
+
+    it('SseProvider_quanHiHaBearer_propagaCapcaleresPersonalitzades', async () => {
+        mocks.bearerTokenActive = true;
+        mocks.httpHeaders = [{ 'X-App-Role': 'COM_ADMIN' }];
+        mocks.subscribeToSseMock.mockImplementation(async () => undefined);
+
+        render(
+            <SseProvider>
+                <TestConsumer />
+            </SseProvider>
+        );
+
+        await waitFor(() => {
+            expect(mocks.subscribeToSseMock).toHaveBeenCalledWith('/api/events/stream', expect.objectContaining({
+                headers: {
+                    Authorization: 'Bearer test-token',
+                    'X-App-Role': 'COM_ADMIN',
+                },
+            }));
+        });
     });
 
     it('SseProvider_quanLaConnexioCau_programaReconnect', async () => {

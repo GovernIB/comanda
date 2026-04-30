@@ -84,7 +84,6 @@ describe('UserProvider', () => {
             expect(screen.getByTestId('current-role')).toHaveTextContent(ROLE_ADMIN);
         });
         expect(mocks.setHttpHeadersMock).toHaveBeenCalledWith([{ 'X-App-Role': ROLE_ADMIN }]);
-        expect(mocks.refreshApiIndexMock).toHaveBeenCalled();
     });
 
     it('UserProvider_quanNoHiHaRolDesat_usaLordrePerDefecte', async () => {

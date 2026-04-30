@@ -31,6 +31,7 @@ import Sitemap from './pages/Sitemap';
 import Accessibilitat from './pages/accessibilitat/Accessibilitat';
 import { useIsUserAdmin, useIsUserConsulta, useIsUserUsuari, useUserContext } from './components/UserContext';
 import useStatsEnabled from './hooks/useStatsEnabled';
+import {Plantilla} from "./pages/Plantilla.tsx";
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -229,6 +230,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="parametre">
                     <Route index element={<Parametres />} />
                 </Route>
+                <Route path="plantilla" element={<Plantilla />} />
                 <Route path="sitemap" element={<Sitemap />} />
                 <Route path="accessibilitat" element={<Accessibilitat />} />
                 <Route path="*" element={<NotFoundPage />} />

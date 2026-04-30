@@ -35,7 +35,7 @@ export const useSseContext = () => {
 };
 
 export const SseProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { apiUrl, isReady: apiIsReady } = useResourceApiContext();
+    const { apiUrl, isReady: apiIsReady, httpHeaders } = useResourceApiContext();
     const {
         isReady: authIsReady,
         isAuthenticated,
@@ -127,13 +127,24 @@ export const SseProvider: React.FC<React.PropsWithChildren> = ({ children }) => 
 
             abortController = new AbortController();
             const token = getToken?.();
-            void subscribeToSse(buildSseUrl(apiUrl), {
-                signal: abortController.signal,
-                headers: token
+            const customHeaders = (httpHeaders ?? []).reduce<Record<string, string>>(
+                (accumulator, currentHeader) => ({
+                    ...accumulator,
+                    ...currentHeader,
+                }),
+                {}
+            );
+            const headers = {
+                ...customHeaders,
+                ...(token
                     ? {
                         Authorization: `Bearer ${token}`,
                     }
-                    : undefined,
+                    : {}),
+            };
+            void subscribeToSse(buildSseUrl(apiUrl), {
+                signal: abortController.signal,
+                headers: Object.keys(headers).length > 0 ? headers : undefined,
                 onOpen: () => setStatus('connected'),
                 onMessage: handleRawMessage,
             }).then(() => {
@@ -152,7 +163,16 @@ export const SseProvider: React.FC<React.PropsWithChildren> = ({ children }) => 
             }
             cleanupCurrentConnection();
         };
-    }, [apiIsReady, authIsReady, isAuthenticated, bearerTokenActive, getToken, apiUrl, dispatchEvent]);
+    }, [
+        apiIsReady,
+        authIsReady,
+        isAuthenticated,
+        bearerTokenActive,
+        getToken,
+        apiUrl,
+        httpHeaders,
+        dispatchEvent,
+    ]);
 
     return (
         <SseContext.Provider

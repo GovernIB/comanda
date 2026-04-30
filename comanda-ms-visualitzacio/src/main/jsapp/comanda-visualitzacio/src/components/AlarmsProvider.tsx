@@ -1,6 +1,6 @@
 import { AlarmsContext } from './AlarmsContext';
 import { AlarmType } from './Alarms.tsx';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSseContext } from './SseProvider.tsx';
 import { useResourceApiService } from 'reactlib';
@@ -38,32 +38,48 @@ const AlarmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
         }
         setAlarms(response);
     });
-    const fetchAlarms = useEffectEvent(async () => {
-        const response = (await report(undefined, { code: 'ALARMA_FIND_ACTIVES' })) as AlarmType[];
-        applyAlarms(response);
-    });
 
+    const fetchAlarms = useCallback(
+        () => report(undefined, { code: 'ALARMA_FIND_ACTIVES' }) as Promise<AlarmType[]>,
+        [report]
+    );
+
+    // Siempre se inicializan las alarmas haciendo una petición inicial
     useEffect(() => {
         if (apiIsReady) {
-            fetchAlarms();
+            setAlarms(null);
+            // useResourceApiService cambia la instáncia de artifactReport prematuramente al ejecutar apiSetHttpHeaders
+            // (primero se actualiza porque indexState ha cambiado, después porque currentState ha cambiado)
+            // Esto causa dos peticiones seguidas de fetchAlarms, una con el rol antiguo y la última con el rol actual,
+            // por lo que se debe cancelar la petición anterior si se vuelve a ejecutar fetchAlarms
+            let cancelled = false;
+            fetchAlarms().then(response => {
+                if (cancelled) return;
+                applyAlarms(response);
+            });
+            return () => {
+                cancelled = true;
+            }
         }
-    }, [apiIsReady]);
+    }, [apiIsReady, fetchAlarms]);
 
+    // Se intenta suscribir al evento SSE
     useEffect(() => {
         return subscribe(ACTIVE_ALARMS_CHANGED_EVENT_TYPE, event => {
             if (event.payload != null) {
                 applyAlarms(event.payload as AlarmType[]);
             }
         });
-    }, [applyAlarms, subscribe]);
+    }, [subscribe]);
 
+    // Si el evento SSE no está disponible, se refrescan las alarmas periódicamente
     useEffect(() => {
         if (!apiIsReady || sseStatus !== 'disconnected') {
             return;
         }
 
         const interval = setInterval(() => {
-            fetchAlarms();
+            fetchAlarms().then(applyAlarms);
         }, SEGONS_REFRESC * 1000);
 
         return () => {

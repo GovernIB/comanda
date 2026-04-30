@@ -66,19 +66,16 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	public void init() {
 		register(
 				Alarma.ESBORRAR_ACTION,
-				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
+				new EsborrarActionExecutor());
 //		register(
 //				Alarma.ESBORRAR_TOTES_ACTION,
-//				new EsborrarActionExecutor(authenticationHelper, (AlarmaRepository)entityRepository));
+//				new EsborrarActionExecutor());
         register(
                 Alarma.REACTIVAR_ACTION,
-                new ReactivarActionExecutor(authenticationHelper));
-        register(
-                Alarma.REACTIVAR_ACTION,
-                new ReactivarActionExecutor(authenticationHelper));
+                new ReactivarActionExecutor());
         register(
                 Alarma.FIND_ACTIVES_REPORT,
-                new ReportLlistatIdAlarmaActiva(entityManager));
+                new ReportLlistatIdAlarmaActiva());
 	}
 
 	@Override
@@ -152,10 +149,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		}
 	}
 
-	@RequiredArgsConstructor
-	public static class EsborrarActionExecutor implements ActionExecutor<AlarmaEntity, Serializable, Serializable> {
-		private final AuthenticationHelper authenticationHelper;
-		private final AlarmaRepository alarmaRepository;
+	public class EsborrarActionExecutor implements ActionExecutor<AlarmaEntity, Serializable, Serializable> {
 		@Override
 		public Serializable exec(String code, AlarmaEntity entity, Serializable params) {
 			if (Alarma.ESBORRAR_ACTION.equals(code) && entity != null) {
@@ -178,6 +172,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 				}
                 entity.setEstat(AlarmaEstat.ESBORRADA);
                 entity.setDataEsborrat(LocalDateTime.now());
+                publishActiveAlarmsChangedEvent();
             }
 //              else if (Alarma.ESBORRAR_TOTES_ACTION.equals(code)) {
 //				alarmaRepository.updateAllEstatEsborradaNoAdmin(
@@ -197,9 +192,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		}
 	}
 
-    @RequiredArgsConstructor
-    public static class ReactivarActionExecutor implements ActionExecutor<AlarmaEntity, Serializable, Serializable> {
-        private final AuthenticationHelper authenticationHelper;
+    public class ReactivarActionExecutor implements ActionExecutor<AlarmaEntity, Serializable, Serializable> {
         @Override
         public Serializable exec(String code, AlarmaEntity entity, Serializable params) {
             if (Alarma.REACTIVAR_ACTION.equals(code) && entity != null) {
@@ -222,6 +215,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
                 }
                 entity.setEstat(AlarmaEstat.ACTIVA);
                 entity.setDataEsborrat(null);
+                publishActiveAlarmsChangedEvent();
             }
             return null;
         }
@@ -230,7 +224,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
         }
     }
 
-    private static boolean usuariSensePermisosActionEsborrar(AlarmaEntity entity, String currentUser, boolean isCurrentUserAdmin) {
+    private boolean usuariSensePermisosActionEsborrar(AlarmaEntity entity, String currentUser, boolean isCurrentUserAdmin) {
         boolean alarmaIsAdmin = entity.getAlarmaConfig().isAdmin();
         String alarmaCreatedBy = entity.getAlarmaConfig().getCreatedBy();
         return (!alarmaIsAdmin || !isCurrentUserAdmin) && (alarmaIsAdmin || !currentUser.equals(alarmaCreatedBy));
@@ -255,10 +249,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
         comandaSseEventPublisher.publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
     }
 
-    @RequiredArgsConstructor
     private class ReportLlistatIdAlarmaActiva implements ReportGenerator<AlarmaEntity, Serializable, AlarmaReduidaResource> {
-        private final EntityManager entityManager;
-
         @Override
         public List<AlarmaReduidaResource> generateData(String code, AlarmaEntity alarmaEntity, Serializable params) throws ReportGenerationException {
             Specification<AlarmaEntity> spec = toFindProcessedSpecification(

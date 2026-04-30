@@ -1,7 +1,6 @@
 import { Activity, FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
-import { BaseEntity } from '../../types/base-entity.model';
 import dayjs from 'dayjs';
 import SalutToolbar, {
     agrupacioFromMinutes,
@@ -75,7 +74,6 @@ const normalizeAppsFromEntornApps = (
                 id: appId,
                 codi: fallbackName,
                 nom: fallbackName,
-                links: null,
             })
         );
     });
@@ -107,7 +105,6 @@ const normalizeEntornsFromEntornApps = (
                 id: entornId,
                 codi: fallbackName,
                 nom: fallbackName,
-                links: null,
             })
         );
     });
@@ -298,8 +295,8 @@ const useSalutData = ({
             const salutLastItems = (salutLastItemsResponse as SalutModel[])
                 .map(item => new SalutModel(item))
                 .filter(item => visibleEntornAppIds.has(item.entornAppId));
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars
-            const { [BaseEntity.LINKS]: _links, ...rawEstats } = (estatsResponse as any[])[0];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { ...rawEstats } = (estatsResponse as any[])[0];
             const estats = filterNumericObjectKeys(rawEstats, key =>
                 visibleEntornAppIds.has(Number(key))
             );

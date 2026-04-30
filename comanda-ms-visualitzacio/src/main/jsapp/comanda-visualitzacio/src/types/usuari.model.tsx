@@ -1,6 +1,12 @@
 import {BaseEntity, IBaseEntity} from "./base-entity.model.ts";
 
-export const NUM_ELEMENT_PAGE_OPTIONS = ['AUTOMATIC', '_20', '_50', '_100', '_200'] as const;
+export const NUM_ELEMENT_PAGE_OPTIONS = ['AUTOMATIC', '_10', '_20', '_50', '_100', '_200'] as const;
+function isNumElementPageOption(value: unknown): value is typeof NUM_ELEMENT_PAGE_OPTIONS[number] {
+    // Se transforma NUM_ELEMENT_PAGE_OPTIONS a un array de strings para poder usar includes contra
+    // un valor de tipo string cualquiera
+    const optionsAsStringArray: readonly string[] = NUM_ELEMENT_PAGE_OPTIONS;
+    return typeof value === 'string' && (optionsAsStringArray).includes(value);
+}
 
 export interface IUsuari extends IBaseEntity {
     codi: string;
@@ -75,4 +81,24 @@ export enum MenuEstil {
     TEMA = "TEMA",
     TEMA_INVERTIT = "TEMA_INVERTIT",
     PEU = "PEU",
+}
+
+export function isIUsuari(obj: unknown): obj is IUsuari {
+    if (typeof obj !== 'object' || obj === null) return false;
+    const u = obj as Record<string, unknown>;
+    return (
+        typeof u.id === 'number' &&
+        typeof u.codi === 'string' &&
+        typeof u.nom === 'string' &&
+        (u.nif === undefined || typeof u.nif === 'string') &&
+        (u.email === undefined || typeof u.email === 'string') &&
+        (u.emailAlternatiu === undefined || typeof u.emailAlternatiu === 'string') &&
+        Object.values(LanguageEnum).includes(u.idioma as LanguageEnum) &&
+        (u.temaAplicacio === undefined || Object.values(TemaAplicacio).includes(u.temaAplicacio as TemaAplicacio)) &&
+        Object.values(MenuEstil).includes(u.estilMenu as MenuEstil) &&
+        (u.rols === undefined || (Array.isArray(u.rols) && u.rols.every(r => typeof r === 'string'))) &&
+        (u.alarmaMail === undefined || typeof u.alarmaMail === 'boolean') &&
+        (u.alarmaMailAgrupar === undefined || typeof u.alarmaMailAgrupar === 'boolean') &&
+        isNumElementPageOption(u.numElementsPagina)
+    );
 }

@@ -125,6 +125,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         .map(item -> {
                             InformeWidgetItem informeItem = InformeWidgetItem.builder()
                                     .dashboardItemId(item.getId())
+                                    .widgetId(item.getWidget().getId())
                                     .titol(item.getWidget() != null ? item.getWidget().getTitol() : null)
                                     .tipus(consultaEstadisticaHelper.determineWidgetType(item))
                                     .posX(item.getPosX())

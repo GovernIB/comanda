@@ -122,6 +122,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
                 item = InformeWidgetItem.builder()
                         .dashboardItemId(dashboardItem.getId())
+                        .widgetId(dashboardItem.getWidget().getId())
                         .titol(dashboardItem.getWidget() != null ? dashboardItem.getWidget().getTitol() : null)
                         .tipus(consultaEstadisticaHelper.determineWidgetType(dashboardItem))
                         .posX(dashboardItem.getPosX())

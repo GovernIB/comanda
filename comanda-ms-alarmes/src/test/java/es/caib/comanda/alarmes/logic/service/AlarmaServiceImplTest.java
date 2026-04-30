@@ -155,7 +155,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
 
-        AlarmaServiceImpl.EsborrarActionExecutor executor = new AlarmaServiceImpl.EsborrarActionExecutor(authenticationHelper, alarmaRepository);
+        AlarmaServiceImpl.EsborrarActionExecutor executor = alarmaService.new EsborrarActionExecutor();
 
         // Act
         executor.exec(Alarma.ESBORRAR_ACTION, entity, null);
@@ -174,12 +174,12 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
 
-        AlarmaServiceImpl.EsborrarActionExecutor executor = new AlarmaServiceImpl.EsborrarActionExecutor(authenticationHelper, alarmaRepository);
+        AlarmaServiceImpl.EsborrarActionExecutor executor = alarmaService.new EsborrarActionExecutor();
 
         // Act & Assert
         assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_ACTION, entity, null))
                 .isInstanceOf(ActionExecutionException.class)
-                .hasMessageContaining("Només es poden esborrar alarmes actives");
+                .hasMessageContaining("L'alarma ha d'estar sense llegir");
     }
 
     @Test
@@ -191,7 +191,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
 
-        AlarmaServiceImpl.ReactivarActionExecutor executor = new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+        AlarmaServiceImpl.ReactivarActionExecutor executor = alarmaService.new ReactivarActionExecutor();
 
         // Act
         executor.exec(Alarma.REACTIVAR_ACTION, entity, null);
@@ -210,7 +210,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
 
-        AlarmaServiceImpl.ReactivarActionExecutor executor = new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+        AlarmaServiceImpl.ReactivarActionExecutor executor = alarmaService.new ReactivarActionExecutor();
 
         // Act & Assert
         assertThatThrownBy(() -> executor.exec(Alarma.REACTIVAR_ACTION, entity, null))
@@ -227,7 +227,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
 
-        AlarmaServiceImpl.ReactivarActionExecutor executor = new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+        AlarmaServiceImpl.ReactivarActionExecutor executor = alarmaService.new ReactivarActionExecutor();
 
         // Act & Assert
         assertThatThrownBy(() -> executor.exec(Alarma.REACTIVAR_ACTION, entity, null))
@@ -245,7 +245,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         AlarmaServiceImpl.ReactivarActionExecutor executor =
-                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+                alarmaService.new ReactivarActionExecutor();
 
         // Act
         Serializable result = executor.exec(Alarma.REACTIVAR_ACTION, entity, null);
@@ -266,7 +266,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
 
         AlarmaServiceImpl.ReactivarActionExecutor executor =
-                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+                alarmaService.new ReactivarActionExecutor();
 
         // Act
         Serializable result = executor.exec(Alarma.REACTIVAR_ACTION, entity, null);
@@ -281,7 +281,7 @@ class AlarmaServiceImplTest {
     void reactivarActionExecutor_entitatNull_noLlancaExcepcio() {
         // Arrange
         AlarmaServiceImpl.ReactivarActionExecutor executor =
-                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+                alarmaService.new ReactivarActionExecutor();
 
         // Act & Assert
         assertThatCode(() -> executor.exec(Alarma.REACTIVAR_ACTION, null, null))
@@ -298,7 +298,7 @@ class AlarmaServiceImplTest {
         entity.setDataEsborrat(dataOriginal);
 
         AlarmaServiceImpl.ReactivarActionExecutor executor =
-                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+                alarmaService.new ReactivarActionExecutor();
 
         // Act
         executor.exec("CODI_DESCONEGUT", entity, null);
@@ -313,7 +313,7 @@ class AlarmaServiceImplTest {
     void reactivarActionExecutor_onChange() {
         // Arrange
         AlarmaServiceImpl.ReactivarActionExecutor executor =
-                new AlarmaServiceImpl.ReactivarActionExecutor(authenticationHelper);
+                alarmaService.new ReactivarActionExecutor();
 
         // Act & Assert
         assertThatCode(() -> executor.onChange(1L, null, "campo", "valor", Map.of(), new String[0], null))
@@ -381,11 +381,11 @@ class AlarmaServiceImplTest {
                 new Object[] { 2L, 202L }));
 
         Class<?> reportClass = Class.forName("es.caib.comanda.alarmes.logic.service.AlarmaServiceImpl$ReportLlistatIdAlarmaActiva");
-        java.lang.reflect.Constructor<?> constructor = reportClass.getDeclaredConstructor(AlarmaServiceImpl.class, EntityManager.class);
+        java.lang.reflect.Constructor<?> constructor = reportClass.getDeclaredConstructor(AlarmaServiceImpl.class);
         constructor.setAccessible(true);
 
         ReportGenerator<AlarmaEntity, Serializable, AlarmaReduidaResource> reportGenerator =
-                (ReportGenerator<AlarmaEntity, Serializable, AlarmaReduidaResource>) constructor.newInstance(alarmaService, entityManager);
+                (ReportGenerator<AlarmaEntity, Serializable, AlarmaReduidaResource>) constructor.newInstance(alarmaService);
 
         // Act
         List<AlarmaReduidaResource> result = reportGenerator.generateData(null, null, null);
