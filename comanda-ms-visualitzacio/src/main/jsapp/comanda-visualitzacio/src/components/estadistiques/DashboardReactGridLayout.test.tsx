@@ -54,6 +54,9 @@ vi.mock('reactlib', () => ({
     useResourceApiService: () => ({
         delete: vi.fn(() => Promise.resolve()),
     }),
+    envVar: vi.fn(),
+    ContainerAuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    KeycloakAuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -65,6 +68,9 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('../../pages/EstadisticaDashboardEdit.tsx', () => ({
     AfegirTitolFormContent: () => <div>Formulari títol</div>,
+    useSimpleWidgetFormDialog: () => ({ handleOpen: vi.fn(), dialog: null }),
+    useGraficWidgetFormDialog: () => ({ handleOpen: vi.fn(), dialog: null }),
+    useTaulaWidgetFormDialog: () => ({ handleOpen: vi.fn(), dialog: null }),
 }));
 
 vi.mock('../salut/SalutErrorBoundaryFallback', () => ({
