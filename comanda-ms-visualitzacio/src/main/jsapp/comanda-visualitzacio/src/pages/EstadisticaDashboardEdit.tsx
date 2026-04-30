@@ -61,6 +61,8 @@ import Divider from "@mui/material/Divider";
 import EstadisticaSimpleWidgetForm from "../components/estadistiques/EstadisticaSimpleWidgetForm.tsx";
 import EstadisticaGraficWidgetForm from "../components/estadistiques/EstadisticaGraficWidgetForm.tsx";
 import EstadisticaTaulaWidgetForm from "../components/estadistiques/EstadisticaTaulaWidgetForm.tsx";
+import {FooterHeightPlaceholder} from "../components/ComandaFooter.tsx";
+import Menu from "@mui/material/Menu";
 
 type EntornAppFilterContentProps = {
     initialData?: {
@@ -770,7 +772,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
 };
 
 const SideMenu = ({ dashboard, addWidget }:any) => {
-    const { t } = useTranslation();
+    // const { t } = useTranslation();
     const appEntornFilterApiRef = useFilterApiRef();
     const [springFilter, setSpringFilter] = useState<string>()
     const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id)

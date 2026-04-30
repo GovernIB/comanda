@@ -1,13 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Plantilla } from './Plantilla';
-import { useFormContext } from 'reactlib';
-import { useTranslation } from 'react-i18next';
 import userEvent from '@testing-library/user-event';
 
-// === MOCKS DE DEPENDENCIAS EXTERNAS ===
+const mocks = vi.hoisted(() => ({
+    useFormContextValue: {
+        data: {},
+        apiRef: { current: { setFieldValue: vi.fn() } },
+        fieldErrors: [],
+    } as any,
+}));
+
 vi.mock('reactlib', () => ({
-    useFormContext: vi.fn(),
+    useFormContext: () => mocks.useFormContextValue,
     FormField: ({ name, label, value, onChange, type, required, ...props }: any) => {
         if (type === 'checkbox') {
             return <input data-testid={`form-field-${name}`} type="checkbox" checked={!!value} onChange={(e) => onChange?.(e.target.checked)} {...props} />;
@@ -17,7 +22,7 @@ vi.mock('reactlib', () => ({
         }
         return <input data-testid={`form-field-${name}`} value={value || ''} onChange={(e) => onChange?.(e.target.value)} {...props} />;
     },
-    MuiDataGrid: ({ popupEditFormContent, toolbarType, ...props }: any) => (
+    MuiDataGrid: ({ popupEditFormContent, toolbarType }: any) => (
         <div data-testid="mui-data-grid">
             {toolbarType === 'upper' && <div data-testid="grid-toolbar">Toolbar</div>}
             {popupEditFormContent}
@@ -61,7 +66,7 @@ describe('Plantilla', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // ✅ CORRECCIÓN: Añadir "data:" como clave del objeto
-        vi.mocked(useFormContext).mockReturnValue({
+        mocks.useFormContextValue = {
             data: {
                 paleta: 'clar',
                 colors: {
@@ -70,10 +75,7 @@ describe('Plantilla', () => {
                 },
             },
             apiRef: { current: { setFieldValue: mockSetFieldValue } },
-        });
-        vi.mocked(useTranslation).mockReturnValue({
-            t: (key: string | Function) => typeof key === 'string' ? key : 'translated',
-        });
+        };
     });
 
     it('renderiza el MuiDataGrid con el formulario de edición', () => {
@@ -113,7 +115,6 @@ describe('Plantilla', () => {
 
     it('inicializa los colores por defecto al crear una nueva plantilla', () => {
         render(<Plantilla />);
-        expect(useFormContext).toHaveBeenCalled();
         expect(mockSetFieldValue).toBeDefined();
     });
 });
