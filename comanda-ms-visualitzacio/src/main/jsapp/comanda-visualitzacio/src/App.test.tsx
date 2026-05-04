@@ -12,6 +12,34 @@ const mocks = vi.hoisted(() => ({
     useThemeMock: vi.fn(),
     entornAppFindMock: vi.fn(),
     useStatsEnabledMock: vi.fn(),
+    resourceApiContextMock: {
+        baseUrl: 'http://localhost:8080',
+        isReady: true,
+        indexState: {
+            links: {
+                getAll: vi.fn(() => [
+                    { rel: 'salut' },
+                    { rel: 'dashboard' },
+                    { rel: 'tasca' },
+                    { rel: 'avis' },
+                    { rel: 'monitor' },
+                    { rel: 'comandaCache' },
+                    { rel: 'broker' },
+                    { rel: 'alarmaConfig' },
+                    { rel: 'app' },
+                    { rel: 'entorn' },
+                    { rel: 'entornApp' },
+                    { rel: 'integracio' },
+                    { rel: 'dimensio' },
+                    { rel: 'indicador' },
+                    { rel: 'plantilla' },
+                    { rel: 'paleta' },
+                    { rel: 'fet' },
+                    { rel: 'parametre' },
+                ]),
+            },
+        },
+    },
     tMock: vi.fn((selector: any) =>
         selector({
             menu: {
@@ -34,6 +62,8 @@ const mocks = vi.hoisted(() => ({
                 dimensio: 'Dimensions',
                 indicador: 'Indicadors',
                 widget: 'Widgets',
+                plantilla: 'Plantilles',
+                paleta: 'Paletes',
                 dashboard: 'Dashboards',
                 calendari: 'Calendari',
                 parametre: 'Paràmetres',
@@ -80,32 +110,7 @@ vi.mock('reactlib', () => ({
             isReady: true,
         };
     },
-    useResourceApiContext: () => ({
-        baseUrl: 'http://localhost:8080',
-        isReady: true,
-        indexState: {
-            links: {
-                getAll: () => [
-                    { rel: 'salut' },
-                    { rel: 'dashboard' },
-                    { rel: 'tasca' },
-                    { rel: 'avis' },
-                    { rel: 'monitor' },
-                    { rel: 'comandaCache' },
-                    { rel: 'broker' },
-                    { rel: 'alarmaConfig' },
-                    { rel: 'app' },
-                    { rel: 'entorn' },
-                    { rel: 'entornApp' },
-                    { rel: 'integracio' },
-                    { rel: 'dimensio' },
-                    { rel: 'indicador' },
-                    { rel: 'fet' },
-                    { rel: 'parametre' },
-                ],
-            },
-        },
-    }),
+    useResourceApiContext: () => mocks.resourceApiContextMock,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -180,6 +185,7 @@ describe('App', () => {
             pageSize: 20,
         });
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
+        expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(true);
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
         expect(props.menuEntries[4].description).toBe('Descripció monitorització');
         expect(props.menuEntries[5].description).toBe('Descripció configuració');
@@ -269,6 +275,7 @@ describe('App', () => {
 
         expect(props.menuEntries).toHaveLength(6);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
+        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'parametre')).toBe(false);
     });
 
@@ -304,8 +311,46 @@ describe('App', () => {
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'dimensio')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'indicador')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
+        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'calendari')).toBe(false);
+    });
+
+    it('App_quanCanviaLaPropietatDEstadistiques_actualitzaElsMenusRelacionats', () => {
+        mocks.useStatsEnabledMock.mockReturnValue(false);
+
+        const { rerender } = render(<App />);
+        let props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
+
+        expect(props.menuEntries.map((entry: { id: string }) => entry.id)).not.toContain('estadistiques');
+
+        mocks.useStatsEnabledMock.mockReturnValue(true);
+        rerender(<App />);
+
+        props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
+        const configuracioChildrenEnabled = props.menuEntries.find((entry: { id: string }) => entry.id === 'configuracio').children;
+
+        expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toContain('estadistiques');
+        expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'dimensio')).toBe(true);
+        expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'indicador')).toBe(true);
+        expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
+        expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(true);
+        expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(true);
+        expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'calendari')).toBe(true);
+
+        mocks.useStatsEnabledMock.mockReturnValue(false);
+        rerender(<App />);
+
+        props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
+        const configuracioChildrenDisabled = props.menuEntries.find((entry: { id: string }) => entry.id === 'configuracio').children;
+
+        expect(props.menuEntries.map((entry: { id: string }) => entry.id)).not.toContain('estadistiques');
+        expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'dimensio')).toBe(false);
+        expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'indicador')).toBe(false);
+        expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
+        expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
+        expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(false);
+        expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'calendari')).toBe(false);
     });
 
     it('App_quanLusuariDemanaMenuInvertit_passaLaparençaInvertida', () => {

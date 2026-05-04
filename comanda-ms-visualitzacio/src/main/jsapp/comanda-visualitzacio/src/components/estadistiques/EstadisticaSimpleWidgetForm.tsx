@@ -13,7 +13,11 @@ import { useTranslation } from 'react-i18next';
 import IconAutocompleteSelect from '../IconAutocompleteSelect';
 import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
 
-const EstadisticaSimpleWidgetForm: React.FC = () => {
+type EstadisticaSimpleWidgetFormProps = {
+    mode?: 'full' | 'stats' | 'visual';
+};
+
+const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = ({ mode = 'full' }) => {
     const { data } = useFormContext();
     const { t } = useTranslation();
     const previewData: SimpleWidgetVisualizationProps = useMemo(
@@ -45,65 +49,90 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
     const isIcona: boolean = !!data?.icona;
     const indicadorNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
+    if (mode === 'stats') {
+        return renderStatsFields();
+    }
+
+    if (mode === 'visual') {
+        return renderVisualContent();
+    }
+
     return (
         <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 8 }}>
-                <EstadisticaWidgetFormFields>
-                    <Grid size={12}>
-                        <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.simple)}</Divider>
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField name="unitat" />
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField name="compararPeriodeAnterior" />
-                    </Grid>
-                    <Grid size={12}>
-                        <FormFieldCustomAdvancedSearch
-                            name="indicador"
-                            namedQueries={indicadorNamedQueries}
-                            advancedSearchColumns={columnesIndicador}
-                            advancedSearchDataGridProps={{ rowHeight: 30 }}
-                            advancedSearchDialogHeight={500}
-                        />
-                    </Grid>
-                    <Grid size={12}>
-                        <FormField
-                            name="titolIndicador"
-                        />
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField
-                            name="tipusIndicador"
-                        />
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField
-                            name="periodeIndicador"
-                            disabled={data.tipusIndicador !== 'AVERAGE'}
-                        />
-                    </Grid>
-                </EstadisticaWidgetFormFields>
+                {renderStatsFields()}
             </Grid>
-            <Grid id={'cv'} size={{ xs: 12, sm: 4 }} sx={{ backgroundColor: '#f5f5f5' }}>
+            <Grid id={'cv'} size={{ xs: 12, sm: 4 }} sx={{ backgroundColor: 'background.default' }}>
                 <VisualAttributesPanel
                     widgetType="simple"
                     title={t($ => $.page.widget.form.configVisual)}
                 >
-                    {/* Preview inside the panel */}
-                    <Box sx={{ p: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                            {t($ => $.page.widget.form.preview)}
-                        </Typography>
-                        <Box sx={{ height: '190px' }}>
-                            <SimpleWidgetVisualization preview={true} {...previewData} />
-                        </Box>
-                        {renderSimpleFormFields()}
-                    </Box>
+                    {renderVisualContent()}
                 </VisualAttributesPanel>
             </Grid>
         </Grid>
     );
+
+    function renderStatsFields() {
+        return (
+            <EstadisticaWidgetFormFields>
+                <Grid size={12}>
+                    <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.simple)}</Divider>
+                </Grid>
+                <Grid size={12}>
+                    <IconAutocompleteSelect
+                        name="icona"
+                        label={t($ => $.page.widget.atributsVisuals.icona)}
+                    />
+                </Grid>
+                <Grid size={6}>
+                    <FormField name="unitat" />
+                </Grid>
+                <Grid size={6}>
+                    <FormField name="compararPeriodeAnterior" />
+                </Grid>
+                <Grid size={12}>
+                    <FormFieldCustomAdvancedSearch
+                        name="indicador"
+                        namedQueries={indicadorNamedQueries}
+                        advancedSearchColumns={columnesIndicador}
+                        advancedSearchDataGridProps={{ rowHeight: 30 }}
+                        advancedSearchDialogHeight={500}
+                    />
+                </Grid>
+                <Grid size={12}>
+                    <FormField
+                        name="titolIndicador"
+                    />
+                </Grid>
+                <Grid size={6}>
+                    <FormField
+                        name="tipusIndicador"
+                    />
+                </Grid>
+                <Grid size={6}>
+                    <FormField
+                        name="periodeIndicador"
+                        disabled={data.tipusIndicador !== 'AVERAGE'}
+                    />
+                </Grid>
+            </EstadisticaWidgetFormFields>
+        );
+    }
+
+    function renderVisualContent() {
+        return (
+            <Box sx={{ p: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    {t($ => $.page.widget.form.preview)}
+                </Typography>
+                <Box sx={{ height: '190px' }}>
+                    <SimpleWidgetVisualization preview={true} {...previewData} />
+                </Box>
+                {renderSimpleFormFields()}
+            </Box>
+        );
+    }
 
     // Render form fields for simple widget
     function renderSimpleFormFields() {
@@ -114,7 +143,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         {t($ => $.page.widget.form.configGeneral)}
                     </Typography>
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorText"
                         label={t($ => $.page.widget.atributsVisuals.colorText)}
@@ -122,7 +151,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorFons"
                         label={t($ => $.page.widget.atributsVisuals.colorFons)}
@@ -130,15 +159,9 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={12} sx={{ backgroundColor: '#FFFFFF' }}>
-                    <IconAutocompleteSelect
-                        name="icona"
-                        label={t($ => $.page.widget.atributsVisuals.icona)}
-                    />
-                </Grid>
                 {isIcona && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorIcona"
                                 label={t($ => $.page.widget.atributsVisuals.colorIcona)}
@@ -146,7 +169,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                                 required={false}
                             />
                         </Grid>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorFonsIcona"
                                 label={t($ => $.page.widget.atributsVisuals.colorFonsIcona)}
@@ -156,7 +179,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         </Grid>
                     </>
                 )}
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorTextDestacat"
                         label={t($ => $.page.widget.atributsVisuals.colorTextDestacat)}
@@ -174,7 +197,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                 </Grid>
                 {isMostrarVora && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorVora"
                                 label={t($ => $.page.widget.atributsVisuals.colorVora)}
@@ -182,7 +205,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                                 required={false}
                             />
                         </Grid>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="ampleVora"
                                 label={t($ => $.page.widget.atributsVisuals.ampleVora)}
@@ -197,7 +220,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         {t($ => $.page.widget.form.configFont)}
                     </Typography>
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="midaFontTitol"
                         label={t($ => $.page.widget.atributsVisuals.midaFontTitol)}
@@ -205,7 +228,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="midaFontDescripcio"
                         label={t($ => $.page.widget.atributsVisuals.midaFontDescripcio)}
@@ -213,7 +236,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="midaFontValor"
                         label={t($ => $.page.widget.atributsVisuals.midaFontValor)}
@@ -221,7 +244,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="midaFontUnitats"
                         label={t($ => $.page.widget.atributsVisuals.midaFontUnitats)}
@@ -229,7 +252,7 @@ const EstadisticaSimpleWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="midaFontCanviPercentual"
                         label={t($ => $.page.widget.atributsVisuals.midaFontCanviPercentual)}

@@ -68,6 +68,11 @@ const translationEn: translationResourcesType = {
             COM_USER: 'User',
             COM_ADMIN: 'Administrator',
             COM_CONSULTA: 'Consultant'
+        },
+        dashboardTitolTipus: {
+            TIPUS_1: 'Title 1',
+            TIPUS_2: 'Title 2',
+            TIPUS_3: 'Title 3'
         }
     },
     menu: {
@@ -90,6 +95,8 @@ const translationEn: translationResourcesType = {
         alarmaConfigConsultor: "Configure alarms",
         integracio: "Integrations",
         widget: "Statistic widgets",
+        plantilla: "Style templates",
+        paleta: "Palettes",
         dashboard: "Dashboards",
         calendari: "Calendar",
         parametre: "Parameters",

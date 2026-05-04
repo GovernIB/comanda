@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import estils from './WidgetEstils.ts';
-import { createTransparentColor, isWhiteColor } from '../../util/colorUtil.ts';
+import { createTransparentColor, isLightColor } from '../../util/colorUtil.ts';
 import { useTheme } from '@mui/material/styles';
 
 export interface TitolWidgetVisualizationProps {
@@ -32,7 +32,7 @@ const useWidgetColors = (props: TitolWidgetVisualizationProps, theme: any) => {
         textColor: colorTitol,
         backgroundColor: backgroundColor,
         voraColor: colorVora,
-        isWhiteBackground: !colorFons || isWhiteColor(backgroundColor),
+        isWhiteBackground: !colorFons || isLightColor(backgroundColor),
     };
 };
 

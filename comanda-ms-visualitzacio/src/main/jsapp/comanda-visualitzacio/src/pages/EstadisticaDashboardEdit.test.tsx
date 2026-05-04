@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
     createDashboardItemMock: vi.fn(),
     patchDashboardItemMock: vi.fn(),
     patchDashboardTitolMock: vi.fn(),
+    findWidgetsMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -126,19 +127,25 @@ vi.mock('reactlib', async (importOriginal) => {
                 isReady: true,
                 patch: mocks.patchDashboardItemMock,
                 create: mocks.createDashboardItemMock,
+                find: mocks.findWidgetsMock,
             };
         }
         if (resourceName === 'dashboardTitol') {
             return {
                 isReady: true,
                 patch: mocks.patchDashboardTitolMock,
+                find: mocks.findWidgetsMock,
             };
         }
         return {
             isReady: true,
+            find: mocks.findWidgetsMock,
             delete: vi.fn(),
         };
     },
+    useFilterApiRef: () => ({
+        current: {},
+    }),
     MuiFilter: ({
         children,
         onDataChange,
@@ -192,6 +199,15 @@ vi.mock('reactlib', async (importOriginal) => {
             refresh: vi.fn(),
         },
     }),
+    MuiFormDialog: ({ apiRef }: { apiRef?: React.RefObject<any> }) => {
+        if (apiRef != null) {
+            apiRef.current = {
+                show: vi.fn().mockResolvedValue({ id: 5 }),
+                close: vi.fn(),
+            };
+        }
+        return null;
+    },
 }});
 
 vi.mock('../../lib/components/mui/Dialog.tsx', () => ({
@@ -242,6 +258,10 @@ vi.mock('../components/PageTitle.tsx', () => ({
 
 vi.mock('../components/CenteredCircularProgress.tsx', () => ({
     default: () => <div>Carregant dashboard</div>,
+}));
+
+vi.mock('../components/estadistiques/DashboardEditorSidePanel.tsx', () => ({
+    default: () => <div>Editor side panel</div>,
 }));
 
 vi.mock('../components/ButtonMenu.tsx', () => ({
@@ -297,6 +317,7 @@ describe('EstadisticaDashboardEdit', () => {
         mocks.createDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardTitolMock.mockResolvedValue(undefined);
+        mocks.findWidgetsMock.mockResolvedValue({ rows: [{ id: 5, titol: 'Widget test' }] });
         mocks.showContentDialogMock.mockImplementation(() => undefined);
         mocks.showFormDialogMock.mockResolvedValue(undefined);
         vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -363,7 +384,7 @@ describe('EstadisticaDashboardEdit', () => {
     });
 
     it('EstadisticaDashboardEdit_quanSobraElFormulariDeTitol_obriElDialegIRefrescaEnTancar', async () => {
-        // Verifica que l'acció d'afegir títol obri el formulari modal i refresqui els widgets en completar-se.
+        // Verifica que l'acció d'afegir títol obri l'editor lateral de títol sense errors de context extern.
         const forceRefreshMock = vi.fn();
         mocks.useDashboardWidgetsMock.mockReturnValue({
             dashboardWidgets: [{ dashboardItemId: 1 }],
@@ -381,10 +402,10 @@ describe('EstadisticaDashboardEdit', () => {
         fireEvent.click(screen.getByText('Afegir títol'));
 
         await waitFor(() => {
-            expect(mocks.showFormDialogMock).toHaveBeenCalled();
+            expect(screen.getByText('Editor side panel')).toBeInTheDocument();
         });
 
-        expect(forceRefreshMock).toHaveBeenCalled();
+        expect(forceRefreshMock).not.toHaveBeenCalled();
     });
 
     it('EstadisticaDashboardEdit_quanSafaUnWidgetNou_elCreaIMostraExit', async () => {
@@ -403,9 +424,8 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Afegir widget'));
-        fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtre entorn' }));
-        fireEvent.click(await screen.findByRole('button', { name: 'Afegir' }));
+        fireEvent.click(screen.getByText('Simple'));
+        fireEvent.click(await screen.findByRole('button', { name: 'Afegir Widget test' }));
 
         await waitFor(() => {
             expect(mocks.createDashboardItemMock).toHaveBeenCalledWith({
@@ -420,8 +440,10 @@ describe('EstadisticaDashboardEdit', () => {
             });
         });
 
-        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Widget afegit', 'success');
-        expect(forceRefreshMock).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Widget afegit', 'success');
+            expect(forceRefreshMock).toHaveBeenCalled();
+        });
     });
 
     it('EstadisticaDashboardEdit_quanCanviaElLayout_guardaElsCanvisINotificaExit', async () => {
@@ -458,9 +480,12 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Afegir widget'));
-        fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtre entorn' }));
-        fireEvent.click(await screen.findByRole('button', { name: 'Afegir' }));
+        fireEvent.click(screen.getByText('Simple'));
+        fireEvent.click(await screen.findByRole('button', { name: 'Afegir Widget test' }));
+
+        await waitFor(() => {
+            expect(mocks.createDashboardItemMock).toHaveBeenCalled();
+        });
 
         await waitFor(() => {
             expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(

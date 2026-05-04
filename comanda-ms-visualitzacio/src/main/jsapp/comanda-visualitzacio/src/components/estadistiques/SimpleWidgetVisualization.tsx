@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import Icon from '@mui/material/Icon';
 import { useTheme } from '@mui/material/styles';
 import { numberFormat, useBaseAppContext } from 'reactlib';
-import {createTransparentColor, isWhiteColor} from "../../util/colorUtil";
+import {createTransparentColor, isLightColor} from "../../util/colorUtil";
 import estils from "./WidgetEstils.ts";
 import Chip from "@mui/material/Chip";
 import Skeleton from '@mui/material/Skeleton';
@@ -58,7 +58,8 @@ const WidgetTitle: React.FC<{
     entornCodi: string;
     loading?: boolean;
     midaFontTitol?: number;
-}> = ({titol, entornCodi, loading, midaFontTitol}) => {
+    entornChipSx?: any;
+}> = ({titol, entornCodi, loading, midaFontTitol, entornChipSx}) => {
 
     const titleEstils = {
         ...estils.titleText,
@@ -78,7 +79,7 @@ const WidgetTitle: React.FC<{
                 <>
                     <Typography sx={titleEstils}>{titol}</Typography>
                     <Box sx={estils.iconContainer}>
-                        <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
+                        <Chip sx={entornChipSx || estils.entornCodi} label={entornCodi} size={"small"} />
                     </Box>
                 </>
             )}
@@ -180,7 +181,7 @@ const useWidgetColors = (props: SimpleWidgetVisualizationProps, theme: any) => {
         iconBgColor: colors.iconBackground,
         voraColor: colors.border,
         highlightTextColor: colors.highlightText,
-        isWhiteBackground: !colorFons || isWhiteColor(colors.background),
+        isWhiteBackground: !colorFons || isLightColor(colors.background),
     };
 };
 
@@ -216,6 +217,13 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
     const bgColor = isWhiteBackground ? backgroundColor + ' !important' : 'transparent';
     const bg = isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${backgroundColor}, ${createTransparentColor(backgroundColor, 0.75)})`;
     const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
+    const contrastTextColor = isWhiteBackground ? '#000000' : '#FFFFFF';
+    const entornChipSx = {
+        ...estils.entornCodi,
+        color: contrastTextColor,
+        backgroundColor: isWhiteBackground ? theme.palette.grey[200] : createTransparentColor(backgroundColor, 0.35),
+        border: `1px solid ${voraColor}`,
+    };
 
     const camelToSnakeCase = (str: string | undefined) => {
         if (!str) return undefined;
@@ -229,7 +237,7 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
 
     return (
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}>
-            <WidgetTitle titol={titol} entornCodi={entornCodi} loading={loading} midaFontTitol={midaFontTitol}/>
+            <WidgetTitle titol={titol} entornCodi={entornCodi} loading={loading} midaFontTitol={midaFontTitol} entornChipSx={entornChipSx}/>
 
             {error ? (
                 // Error content

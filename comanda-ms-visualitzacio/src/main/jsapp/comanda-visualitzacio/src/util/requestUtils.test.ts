@@ -4,7 +4,7 @@ const { getEnvApiUrlMock } = vi.hoisted(() => ({
     getEnvApiUrlMock: vi.fn(),
 }));
 
-vi.mock('../main.tsx', () => ({
+vi.mock('./envUtils.ts', () => ({
     getEnvApiUrl: getEnvApiUrlMock,
 }));
 

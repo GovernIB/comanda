@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-item-personalitzat-001
+      author: limit
+      comment: Afegir camp personalitzat per items de dashboard
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard_item
+              columnName: personalitzat
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard_item
+            columns:
+              - column:
+                  name: personalitzat
+                  type: boolean
+                  defaultValueBoolean: false
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_item
+            columnName: personalitzat

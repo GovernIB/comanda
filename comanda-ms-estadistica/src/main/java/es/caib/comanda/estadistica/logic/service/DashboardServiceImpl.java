@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardStyleResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTitol;
@@ -11,7 +12,10 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
@@ -20,6 +24,7 @@ import es.caib.comanda.estadistica.logic.intf.service.EstadisticaSimpleWidgetSer
 import es.caib.comanda.estadistica.logic.intf.service.EstadisticaTaulaWidgetService;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
@@ -77,6 +82,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardRepository dashboardRepository;
     private final DashboardTitolRepository dashboardTitolRepository;
     private final DashboardItemRepository dashboardItemRepository;
+    private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
 
     @PostConstruct
     public void init() {
@@ -132,6 +138,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                                     .posY(item.getPosY())
                                     .width(item.getWidth())
                                     .height(item.getHeight())
+                                    .destacat(Boolean.TRUE.equals(item.getDestacat()))
                                     .loading(true)
                                     .build();
                             return informeItem;
@@ -142,6 +149,24 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
             if (dashboard.getTitols() != null) {
                 dashboartTitols = dashboard.getTitols().stream()
                         .map(titol -> {
+                            AtributsVisualsTitol atributsVisuals = AtributsVisualsTitol.builder()
+                                    .colorTitol(titol.getColorTitol())
+                                    .midaFontTitol(titol.getMidaFontTitol())
+                                    .colorSubtitol(titol.getColorSubtitol())
+                                    .midaFontSubtitol(titol.getMidaFontSubtitol())
+                                    .colorFons(titol.getColorFons())
+                                    .mostrarVora(titol.getMostrarVora())
+                                    .colorVora(titol.getColorVora())
+                                    .ampleVora(titol.getAmpleVora())
+                                    .build();
+                            PlantillaEntity plantilla = titol.getPlantilla() != null ? titol.getPlantilla() : dashboard.getPlantilla();
+                            if (plantilla != null) {
+                                dashboardStyleResolverHelper.applyTemplateDefaults(
+                                        atributsVisuals,
+                                        plantilla,
+                                        Boolean.TRUE.equals(titol.getDestacat()) ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT,
+                                        titleStyleScope(titol.getTipusTitol()));
+                            }
                             InformeWidgetTitolItem informeTitol = InformeWidgetTitolItem.builder()
                                     .dashboardTitolId(titol.getId())
                                     .tipus(WidgetTipus.TITOL)
@@ -151,16 +176,8 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                                     .posY(titol.getPosY())
                                     .width(titol.getWidth())
                                     .height(titol.getHeight())
-                                    .atributsVisuals(AtributsVisualsTitol.builder()
-                                            .colorTitol(titol.getColorTitol())
-                                            .midaFontTitol(titol.getMidaFontTitol())
-                                            .colorSubtitol(titol.getColorSubtitol())
-                                            .midaFontSubtitol(titol.getMidaFontSubtitol())
-                                            .colorFons(titol.getColorFons())
-                                            .mostrarVora(titol.getMostrarVora())
-                                            .colorVora(titol.getColorVora())
-                                            .ampleVora(titol.getAmpleVora())
-                                            .build())
+                                    .destacat(Boolean.TRUE.equals(titol.getDestacat()))
+                                    .atributsVisuals(atributsVisuals)
                                     .build();
                             return informeTitol;
                         })
@@ -169,6 +186,16 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
             }
             dashboardItems.addAll(dashboartTitols);
             return dashboardItems;
+        }
+
+        private WidgetStyleScope titleStyleScope(DashboardTitolTipus tipusTitol) {
+            if (DashboardTitolTipus.TIPUS_2.equals(tipusTitol)) {
+                return WidgetStyleScope.TITOL_2;
+            }
+            if (DashboardTitolTipus.TIPUS_3.equals(tipusTitol)) {
+                return WidgetStyleScope.TITOL_3;
+            }
+            return WidgetStyleScope.TITOL_1;
         }
 
         @Override

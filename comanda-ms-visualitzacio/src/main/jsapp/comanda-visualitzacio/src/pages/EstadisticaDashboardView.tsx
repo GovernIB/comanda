@@ -6,6 +6,7 @@ import {
     useMapDashboardItems,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import { BasePage, MuiDataGrid, useCloseDialogButtons, useResourceApiService } from 'reactlib';
+import { useTheme } from '@mui/material/styles';
 import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -72,6 +73,8 @@ function useDashboardSelect(currentDashboardId: any) {
 
 const EstadisticaDashboardView = () => {
     const { t } = useTranslation();
+    const theme = useTheme();
+    const temaFosc = theme.palette.mode === 'dark';
     const routeParams = useParams();
     const [firstDashboard, setFirstDashboard] = useState<any>(null);
     const idFromFirstDashboard: string | null =
@@ -84,7 +87,7 @@ const EstadisticaDashboardView = () => {
         loading: loadingDashboard,
         exception: dashboardException,
     } = useDashboard(dashboardId);
-    const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId);
+    const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId, temaFosc);
     const { isReady: apiDashboardIsReady, find: findDashboard } =
         useResourceApiService('dashboard');
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);

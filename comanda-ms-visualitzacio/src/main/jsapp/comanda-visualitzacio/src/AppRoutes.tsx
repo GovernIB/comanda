@@ -26,6 +26,7 @@ import Avis from './pages/Avis';
 import Alarmes from './pages/Alarmes';
 import AlarmaConfig, { AlarmaConfigForm } from './pages/AlarmaConfig';
 import Parametres from './pages/Parametres';
+import Paletes from './pages/Paletes';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sitemap from './pages/Sitemap';
 import Accessibilitat from './pages/accessibilitat/Accessibilitat';
@@ -35,7 +36,7 @@ import {Plantilla} from "./pages/Plantilla.tsx";
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
-const statsRoutePrefixes = ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/estadisticaWidget', '/calendari'];
+const statsRoutePrefixes = ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/estadisticaWidget', '/plantilla', '/paleta', '/calendari'];
 
 const LoadingRoute: React.FC = () => (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -202,6 +203,12 @@ const AppRoutes: React.FC = () => {
                         <Route path="estadisticaWidget">
                             <Route index element={<EstadisticaWidget />} />
                         </Route>
+                        <Route path="plantilla">
+                            <Route index element={<Plantilla />} />
+                        </Route>
+                        <Route path="paleta">
+                            <Route index element={<Paletes />} />
+                        </Route>
                         <Route path="calendari">
                             <Route index element={<CalendariEstadistiques />} />
                         </Route>
@@ -230,7 +237,6 @@ const AppRoutes: React.FC = () => {
                 <Route path="parametre">
                     <Route index element={<Parametres />} />
                 </Route>
-                <Route path="plantilla" element={<Plantilla />} />
                 <Route path="sitemap" element={<Sitemap />} />
                 <Route path="accessibilitat" element={<Accessibilitat />} />
                 <Route path="*" element={<NotFoundPage />} />

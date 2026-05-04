@@ -18,8 +18,11 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
@@ -65,6 +68,7 @@ public class ConsultaEstadisticaHelper {
     private final FetRepository fetRepository;
 
     private final AtributsVisualsHelper atributsVisualsHelper;
+    private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final DashboardItemRepository dashboardItemRepository;
 
@@ -137,14 +141,14 @@ public class ConsultaEstadisticaHelper {
         return toFets(fets);
     }
 
-    @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + T(java.time.LocalDate).now()")
-    public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem) {
+    @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + #temaFosc + '_' + T(java.time.LocalDate).now()")
+    public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem, boolean temaFosc) {
 
         try {
             // Recarregam l'item, ja que estem en una nova transacció.
             dashboardItem = dashboardItemRepository.findById(dashboardItem.getId()).orElseThrow();
             WidgetTipus tipus = determineWidgetType(dashboardItem);
-            DadesComunsWidgetConsulta dadesComunsConsulta = getDadesComunsConsulta(dashboardItem);
+            DadesComunsWidgetConsulta dadesComunsConsulta = getDadesComunsConsulta(dashboardItem, temaFosc);
 
             switch (tipus) {
                 case SIMPLE:
@@ -191,6 +195,7 @@ public class ConsultaEstadisticaHelper {
                 .posY(dashboardItem.getPosY())
                 .width(dashboardItem.getWidth())
                 .height(dashboardItem.getHeight())
+                .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
                 .build();
     }
 
@@ -314,6 +319,7 @@ public class ConsultaEstadisticaHelper {
                 .posY(dashboardItem.getPosY())
                 .width(dashboardItem.getWidth())
                 .height(dashboardItem.getHeight())
+                .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
                 .build();
     }
 
@@ -518,6 +524,7 @@ public class ConsultaEstadisticaHelper {
                 .posY(dashboardItem.getPosY())
                 .width(dashboardItem.getWidth())
                 .height(dashboardItem.getHeight())
+                .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
                 .build();
     }
 
@@ -598,12 +605,12 @@ public class ConsultaEstadisticaHelper {
         throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de widget incorrecte");
     }
 
-    private DadesComunsWidgetConsulta getDadesComunsConsulta(DashboardItemEntity dashboardItem) {
+    private DadesComunsWidgetConsulta getDadesComunsConsulta(DashboardItemEntity dashboardItem, boolean temaFosc) {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         var entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId());
         var entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
         PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(widget.getPeriode());
-        AtributsVisuals atributsVisuals = resolveAtributsVisuals(dashboardItem);
+        AtributsVisuals atributsVisuals = resolveAtributsVisuals(dashboardItem, temaFosc);
 
         return DadesComunsWidgetConsulta.builder()
                 .entornAppId(entornApp.getId())
@@ -613,13 +620,66 @@ public class ConsultaEstadisticaHelper {
                 .build();
     }
 
-    private AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem) {
+    private AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {
+        if (Boolean.TRUE.equals(dashboardItem.getPersonalitzat())) {
+            // Mode personalitzat: s'apliquen directament els estils del widget
+            AtributsVisuals atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+            return ensureAtributsVisualsType(dashboardItem, atributsVisualsWidget);
+        }
+        // Mode plantilla: s'apliquen els estils de la plantilla seleccionada (o la del dashboard)
         var atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
         var atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+        AtributsVisuals resolved;
         if (atributsVisualsWidget != null && atributsVisualsDash != null) {
-            return atributsVisualsDash.merge(atributsVisualsWidget);
+            resolved = atributsVisualsDash.merge(atributsVisualsWidget);
+        } else {
+            resolved = atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
         }
-        return atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
+        resolved = ensureAtributsVisualsType(dashboardItem, resolved);
+        PlantillaEntity plantilla = dashboardItem.getPlantilla() != null
+                ? dashboardItem.getPlantilla()
+                : dashboardItem.getDashboard() != null ? dashboardItem.getDashboard().getPlantilla() : null;
+        if (plantilla != null) {
+            boolean destacat = Boolean.TRUE.equals(dashboardItem.getDestacat());
+            PaletteGroupType groupType = temaFosc
+                    ? (destacat ? PaletteGroupType.DARK_HIGHLIGHTED : PaletteGroupType.DARK)
+                    : (destacat ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT);
+            dashboardStyleResolverHelper.applyTemplateDefaults(
+                    resolved,
+                    plantilla,
+                    groupType,
+                    widgetStyleScope(dashboardItem));
+        }
+        return resolved;
+    }
+
+    private AtributsVisuals ensureAtributsVisualsType(DashboardItemEntity dashboardItem, AtributsVisuals current) {
+        if (current != null) {
+            return current;
+        }
+        if (dashboardItem.getWidget() instanceof EstadisticaSimpleWidgetEntity) {
+            return new AtributsVisualsSimple();
+        }
+        if (dashboardItem.getWidget() instanceof EstadisticaGraficWidgetEntity) {
+            return new AtributsVisualsGrafic();
+        }
+        if (dashboardItem.getWidget() instanceof EstadisticaTaulaWidgetEntity) {
+            return new AtributsVisualsTaula();
+        }
+        return null;
+    }
+
+    private WidgetStyleScope widgetStyleScope(DashboardItemEntity dashboardItem) {
+        if (dashboardItem.getWidget() instanceof EstadisticaSimpleWidgetEntity) {
+            return WidgetStyleScope.SIMPLE;
+        }
+        if (dashboardItem.getWidget() instanceof EstadisticaGraficWidgetEntity) {
+            return WidgetStyleScope.GRAFIC;
+        }
+        if (dashboardItem.getWidget() instanceof EstadisticaTaulaWidgetEntity) {
+            return WidgetStyleScope.TAULA;
+        }
+        return WidgetStyleScope.COMMON;
     }
 
     private Map<String, List<String>> createDimensionsFiltre(List<DimensioValorEntity> dimensioValors) {

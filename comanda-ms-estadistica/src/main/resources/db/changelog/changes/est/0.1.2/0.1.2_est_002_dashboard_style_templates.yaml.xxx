@@ -1,0 +1,837 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-style-001
+      author: limit
+      comment: Crear paletes de colors independents per a plantilles de dashboard
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_color_palette
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_cpal_pk
+              - column:
+                  name: nom
+                  type: varchar(128 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descripcio
+                  type: varchar(1024 ${varcharUnit})
+              - column:
+                  name: ordre
+                  type: int
+              - column:
+                  name: created_by
+                  type: varchar(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastmod_by
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: lastmod_date
+                  type: timestamp
+              - column:
+                  name: v
+                  type: bigint
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_color_palette
+            columnNames: nom
+            constraintName: ${db_prefix}est_cpal_nom_uk
+        - createIndex:
+            tableName: ${db_prefix}est_color_palette
+            indexName: ${db_prefix}est_cpal_ord_i
+            columns:
+              - column:
+                  name: ordre
+      rollback:
+        - dropTable:
+            tableName: ${db_prefix}est_color_palette
+
+  - changeSet:
+      id: est-dashboard-style-002
+      author: limit
+      comment: Crear colors ordenats dins cada paleta
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_color_palette_color
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_cpalcol_pk
+              - column:
+                  name: palette_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: posicio
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valor
+                  type: varchar(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: varchar(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastmod_by
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: lastmod_date
+                  type: timestamp
+              - column:
+                  name: v
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_color_palette_color
+            baseColumnNames: palette_id
+            referencedTableName: ${db_prefix}est_color_palette
+            referencedColumnNames: id
+            constraintName: ${db_prefix}est_cpalcol_pal_fk
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_color_palette_color
+            columnNames: palette_id, posicio
+            constraintName: ${db_prefix}est_cpalcol_pos_uk
+        - createIndex:
+            tableName: ${db_prefix}est_color_palette_color
+            indexName: ${db_prefix}est_cpalcol_pal_i
+            columns:
+              - column:
+                  name: palette_id
+      rollback:
+        - dropTable:
+            tableName: ${db_prefix}est_color_palette_color
+
+  - changeSet:
+      id: est-dashboard-style-003
+      author: limit
+      comment: Crear plantilles d'estil de dashboard amb prefix del modul estadistica
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_dashboard_style_template
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_dstpl_pk
+              - column:
+                  name: nom
+                  type: varchar(128 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mostrar_vora
+                  type: boolean
+              - column:
+                  name: ample_vora
+                  type: int
+              - column:
+                  name: mida_font_titol
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: mida_font_descripcio
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: icona
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: mida_font_valor
+                  type: int
+              - column:
+                  name: mida_font_unitats
+                  type: int
+              - column:
+                  name: mida_font_canvi_percentual
+                  type: int
+              - column:
+                  name: mostrar_reticula
+                  type: boolean
+              - column:
+                  name: bar_stacked
+                  type: boolean
+              - column:
+                  name: bar_horizontal
+                  type: boolean
+              - column:
+                  name: line_show_points
+                  type: boolean
+              - column:
+                  name: area
+                  type: boolean
+              - column:
+                  name: line_smooth
+                  type: boolean
+              - column:
+                  name: line_width
+                  type: int
+              - column:
+                  name: outer_radius
+                  type: int
+              - column:
+                  name: pie_donut
+                  type: boolean
+              - column:
+                  name: inner_radius
+                  type: int
+              - column:
+                  name: pie_show_labels
+                  type: boolean
+              - column:
+                  name: label_size
+                  type: int
+              - column:
+                  name: gauge_min
+                  type: int
+              - column:
+                  name: gauge_max
+                  type: int
+              - column:
+                  name: gauge_rangs
+                  type: varchar(1000 ${varcharUnit})
+              - column:
+                  name: heatmap_min_value
+                  type: int
+              - column:
+                  name: heatmap_max_value
+                  type: int
+              - column:
+                  name: mostrar_capcalera
+                  type: boolean
+              - column:
+                  name: mostrar_alternancia
+                  type: boolean
+              - column:
+                  name: mostrar_vora_taula
+                  type: boolean
+              - column:
+                  name: ample_vora_taula
+                  type: int
+              - column:
+                  name: mostrar_separador_horitzontal
+                  type: boolean
+              - column:
+                  name: ample_separador_horitzontal
+                  type: int
+              - column:
+                  name: mostrar_separador_vertical
+                  type: boolean
+              - column:
+                  name: ample_separador_vertical
+                  type: int
+              - column:
+                  name: created_by
+                  type: varchar(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastmod_by
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: lastmod_date
+                  type: timestamp
+              - column:
+                  name: v
+                  type: bigint
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_dashboard_style_template
+            columnNames: nom
+            constraintName: ${db_prefix}est_dstpl_nom_uk
+      rollback:
+        - dropTable:
+            tableName: ${db_prefix}est_dashboard_style_template
+
+  - changeSet:
+      id: est-dashboard-style-004
+      author: limit
+      comment: Assignar dues paletes a cada grup de tema de plantilla
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_dashboard_template_palette_group
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_tpalgrp_pk
+              - column:
+                  name: template_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: group_type
+                  type: varchar(32 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: widget_palette_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chart_palette_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ordre
+                  type: int
+              - column:
+                  name: created_by
+                  type: varchar(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastmod_by
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: lastmod_date
+                  type: timestamp
+              - column:
+                  name: v
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard_template_palette_group
+            baseColumnNames: template_id
+            referencedTableName: ${db_prefix}est_dashboard_style_template
+            referencedColumnNames: id
+            constraintName: ${db_prefix}est_tpalgrp_tpl_fk
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard_template_palette_group
+            baseColumnNames: widget_palette_id
+            referencedTableName: ${db_prefix}est_color_palette
+            referencedColumnNames: id
+            constraintName: ${db_prefix}est_tpalgrp_wpal_fk
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard_template_palette_group
+            baseColumnNames: chart_palette_id
+            referencedTableName: ${db_prefix}est_color_palette
+            referencedColumnNames: id
+            constraintName: ${db_prefix}est_tpalgrp_cpal_fk
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_dashboard_template_palette_group
+            columnNames: template_id, group_type
+            constraintName: ${db_prefix}est_tpalgrp_type_uk
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_template_palette_group
+            indexName: ${db_prefix}est_tpalgrp_tpl_i
+            columns:
+              - column:
+                  name: template_id
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_template_palette_group
+            indexName: ${db_prefix}est_tpalgrp_wpal_i
+            columns:
+              - column:
+                  name: widget_palette_id
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_template_palette_group
+            indexName: ${db_prefix}est_tpalgrp_cpal_i
+            columns:
+              - column:
+                  name: chart_palette_id
+      rollback:
+        - dropTable:
+            tableName: ${db_prefix}est_dashboard_template_palette_group
+
+  - changeSet:
+      id: est-dashboard-style-005
+      author: limit
+      comment: Crear propietats visuals de widget basades en posicions de paleta
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_widget_style_property
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_wstprop_pk
+              - column:
+                  name: template_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scope
+                  type: varchar(32 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: property_name
+                  type: varchar(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: label
+                  type: varchar(128 ${varcharUnit})
+              - column:
+                  name: value_type
+                  type: varchar(32 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: palette_role
+                  type: varchar(16 ${varcharUnit})
+              - column:
+                  name: palette_index
+                  type: int
+              - column:
+                  name: scalar_value
+                  type: varchar(1000 ${varcharUnit})
+              - column:
+                  name: default_property
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: ordre
+                  type: int
+              - column:
+                  name: created_by
+                  type: varchar(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastmod_by
+                  type: varchar(64 ${varcharUnit})
+              - column:
+                  name: lastmod_date
+                  type: timestamp
+              - column:
+                  name: v
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_widget_style_property
+            baseColumnNames: template_id
+            referencedTableName: ${db_prefix}est_dashboard_style_template
+            referencedColumnNames: id
+            constraintName: ${db_prefix}est_wstprop_tpl_fk
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_widget_style_property
+            columnNames: template_id, scope, property_name
+            constraintName: ${db_prefix}est_wstprop_name_uk
+        - createIndex:
+            tableName: ${db_prefix}est_widget_style_property
+            indexName: ${db_prefix}est_wstprop_tpl_i
+            columns:
+              - column:
+                  name: template_id
+      rollback:
+        - dropTable:
+            tableName: ${db_prefix}est_widget_style_property
+
+  - changeSet:
+      id: est-dashboard-style-006
+      author: limit
+      comment: Enllacar dashboards amb la nova taula de plantilles d'estil
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard
+              columnName: plantilla_id
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard
+            columns:
+              - column:
+                  name: plantilla_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard
+            baseColumnNames: plantilla_id
+            referencedTableName: ${db_prefix}est_dashboard_style_template
+            referencedColumnNames: id
+            constraintName: ${db_prefix}est_dash_tpl_fk
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard
+            indexName: ${db_prefix}est_dash_tpl_i
+            columns:
+              - column:
+                  name: plantilla_id
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard
+            columnName: plantilla_id
+
+  - changeSet:
+      id: est-dashboard-style-007
+      author: limit
+      comment: Afegir tipus d'estil als titols de dashboard
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard_titol
+              columnName: tipus_titol
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columns:
+              - column:
+                  name: tipus_titol
+                  type: varchar(32 ${varcharUnit})
+                  defaultValue: TIPUS_1
+        - sql:
+            sql: |
+              UPDATE ${db_prefix}est_dashboard_titol
+              SET tipus_titol = 'TIPUS_1'
+              WHERE tipus_titol IS NULL
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columnName: tipus_titol
+
+  - changeSet:
+      id: est-dashboard-style-008
+      author: limit
+      comment: Migracio base dels camps escalars de les plantilles antigues com_plantilla quan existeixen
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: ${db_prefix}plantilla
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              INSERT INTO ${db_prefix}est_dashboard_style_template (
+                  id, nom, mostrar_vora, ample_vora, mida_font_titol, mida_font_descripcio,
+                  icona, mida_font_valor, mida_font_unitats, mida_font_canvi_percentual,
+                  mostrar_reticula, bar_stacked, bar_horizontal, line_show_points, area,
+                  line_smooth, line_width, outer_radius, pie_donut, inner_radius,
+                  pie_show_labels, label_size, gauge_min, gauge_max, gauge_rangs,
+                  heatmap_min_value, heatmap_max_value, mostrar_capcalera,
+                  mostrar_alternancia, mostrar_vora_taula, ample_vora_taula,
+                  mostrar_separador_horitzontal, ample_separador_horitzontal,
+                  mostrar_separador_vertical, ample_separador_vertical,
+                  created_by, created_date, v
+              )
+              SELECT
+                  p.id, p.nom, p.mostrar_vora, p.ample_vora, p.mida_font_titol, p.mida_font_descripcio,
+                  p.icona, p.mida_font_valor, p.mida_font_unitats, p.mida_font_canvi_percentual,
+                  p.mostrar_reticula, p.bar_stacked, p.bar_horizontal, p.line_show_points, p.area,
+                  p.line_smooth, p.line_width, p.outer_radius, p.pie_donut, p.inner_radius,
+                  p.pie_show_labels, p.label_size, p.gauge_min, p.gauge_max, p.gauge_rangs,
+                  p.heatmap_min_value, p.heatmap_max_value, p.mostrar_capcalera,
+                  p.mostrar_alternancia, p.mostrar_vora_taula, p.ample_vora_taula,
+                  p.mostrar_separador_horitzontal, p.ample_separador_horitzontal,
+                  p.mostrar_separador_vertical, p.ample_separador_vertical,
+                  'liquibase', CURRENT_TIMESTAMP, 0
+              FROM ${db_prefix}plantilla p
+              WHERE NOT EXISTS (
+                  SELECT 1
+                  FROM ${db_prefix}est_dashboard_style_template t
+                  WHERE t.id = p.id
+              )
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM ${db_prefix}est_dashboard_style_template
+              WHERE created_by = 'liquibase'
+
+  - changeSet:
+      id: est-dashboard-style-009
+      author: limit
+      comment: Crear plantilles i paletes inicials per als grups de tema de dashboard
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              INSERT INTO ${db_prefix}est_dashboard_style_template (id, nom, created_by, created_date, v) VALUES (930001, 'Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_style_template (id, nom, created_by, created_date, v) VALUES (930002, 'Blau verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_style_template (id, nom, created_by, created_date, v) VALUES (930003, 'Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910001, 'Blau clar widget', 'Paleta widget per al tema clar Blau', 0, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910002, 'Blau clar grafic', 'Paleta de grafic per al tema clar Blau', 1, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910003, 'Blau fosc widget', 'Paleta widget per al tema fosc Blau', 4, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910004, 'Blau fosc grafic', 'Paleta de grafic per al tema fosc Blau', 5, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910005, 'Blau clar destacat widget', 'Paleta widget per al tema clar destacat Blau', 2, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910006, 'Blau clar destacat grafic', 'Paleta de grafic per al tema clar destacat Blau', 3, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910007, 'Blau fosc destacat widget', 'Paleta widget per al tema fosc destacat Blau', 6, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910008, 'Blau fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Blau', 7, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910009, 'Blau-Verd clar widget', 'Paleta widget per al tema clar Blau-Verd', 8, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910010, 'Blau-Verd clar grafic', 'Paleta de grafic per al tema clar Blau-Verd', 9, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910011, 'Blau-Verd fosc widget', 'Paleta widget per al tema fosc Blau-Verd', 12, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910012, 'Blau-Verd fosc grafic', 'Paleta de grafic per al tema fosc Blau-Verd', 13, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910013, 'Blau-Verd clar destacat widget', 'Paleta widget per al tema clar destacat Blau-Verd', 10, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910014, 'Blau-Verd clar destacat grafic', 'Paleta de grafic per al tema clar destacat Blau-Verd', 11, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910015, 'Blau-Verd fosc destacat widget', 'Paleta widget per al tema fosc destacat Blau-Verd', 14, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910016, 'Blau-Verd fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Blau-Verd', 15, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910017, 'Calid clar widget', 'Paleta widget per al tema clar Calid', 16, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910018, 'Calid clar grafic', 'Paleta de grafic per al tema clar Calid', 17, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910019, 'Calid fosc widget', 'Paleta widget per al tema fosc Calid', 20, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910020, 'Calid fosc grafic', 'Paleta de grafic per al tema fosc Calid', 21, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910021, 'Calid clar destacat widget', 'Paleta widget per al tema clar destacat Calid', 18, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910022, 'Calid clar destacat grafic', 'Paleta de grafic per al tema clar destacat Calid', 19, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910023, 'Calid fosc destacat widget', 'Paleta widget per al tema fosc destacat Calid', 22, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910024, 'Calid fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Calid', 23, 'liquibase', CURRENT_TIMESTAMP, 0);
+
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940001, 930001, 'LIGHT', 910001, 910002, 0, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940002, 930001, 'DARK', 910003, 910004, 2, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940003, 930001, 'LIGHT_HIGHLIGHTED', 910005, 910006, 1, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940004, 930001, 'DARK_HIGHLIGHTED', 910007, 910008, 3, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940005, 930002, 'LIGHT', 910009, 910010, 0, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940006, 930002, 'DARK', 910011, 910012, 2, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940007, 930002, 'LIGHT_HIGHLIGHTED', 910013, 910014, 1, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940008, 930002, 'DARK_HIGHLIGHTED', 910015, 910016, 3, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940009, 930003, 'LIGHT', 910017, 910018, 0, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940010, 930003, 'DARK', 910019, 910020, 2, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940011, 930003, 'LIGHT_HIGHLIGHTED', 910021, 910022, 1, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940012, 930003, 'DARK_HIGHLIGHTED', 910023, 910024, 3, 'liquibase', CURRENT_TIMESTAMP, 0);
+
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 0, '#FFFFFF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 1, '#000000', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 2, '#CACACA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 3, '#004B99', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 4, '#2E2E2E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 5, '#F6F6F6', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 6, '#E5EDF5', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910001, 7, '#979797', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 0, '#004B99', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 1, '#336FAD', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 2, '#6693C2', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 3, '#000000', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 4, '#5F5D5D', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 5, '#979797', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 6, '#CACACA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910002, 7, '#2E2E2E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 0, '#000000', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 1, '#FFFFFF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 2, '#5F5D5D', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 3, '#66A5E8', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 4, '#CACACA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 5, '#2E2E2E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 6, '#3F3F3F', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910003, 7, '#979797', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 0, '#66A5E8', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 1, '#99C0EB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 2, '#FFFFFF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 3, '#CACACA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 4, '#979797', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 5, '#5F5D5D', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 6, '#3370AD', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910004, 7, '#F6F6F6', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 0, '#004B99', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 1, '#FFFFFF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 2, '#336FAD', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 3, '#CCDBEB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 4, '#F6F6F6', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 5, '#003B78', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 6, '#99B7D6', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910005, 7, '#2E2E2E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 0, '#004B99', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 1, '#000000', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 2, '#5F5D5D', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 3, '#336FAD', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 4, '#6693C2', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 5, '#979797', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 6, '#CACACA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910006, 7, '#CCDBEB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 0, '#001F3F', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 1, '#FFFFFF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 2, '#336FAD', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 3, '#99C0EB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 4, '#F6F6F6', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 5, '#000000', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 6, '#003B78', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910007, 7, '#CACACA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 0, '#99C0EB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 1, '#66A5E8', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 2, '#FFFFFF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 3, '#CACACA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 4, '#6693C2', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 5, '#336FAD', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 6, '#F6F6F6', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910008, 7, '#979797', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 0, '#FFFFFF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 1, '#102A43', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 2, '#C6D3E1', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 3, '#0F766E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 4, '#2563EB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 5, '#F0FDFA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 6, '#E0F2FE', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910009, 7, '#64748B', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 0, '#0F766E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 1, '#2563EB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 2, '#84CC16', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 3, '#F59E0B', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 4, '#DC2626', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 5, '#7C3AED', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 6, '#0891B2', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910010, 7, '#475569', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 0, '#0B1220', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 1, '#F8FAFC', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 2, '#334155', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 3, '#2DD4BF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 4, '#60A5FA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 5, '#122033', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 6, '#1E293B', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910011, 7, '#94A3B8', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 0, '#2DD4BF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 1, '#60A5FA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 2, '#A3E635', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 3, '#FBBF24', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 4, '#F87171', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 5, '#C084FC', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 6, '#22D3EE', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910012, 7, '#CBD5E1', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 0, '#ECFDF5', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 1, '#064E3B', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 2, '#99F6E4', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 3, '#0F766E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 4, '#065F46', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 5, '#D1FAE5', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 6, '#CCFBF1', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910013, 7, '#115E59', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 0, '#0F766E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 1, '#14B8A6', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 2, '#2563EB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 3, '#84CC16', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 4, '#F59E0B', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 5, '#EF4444', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 6, '#7C3AED', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910014, 7, '#0EA5E9', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 0, '#06251F', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 1, '#ECFDF5', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 2, '#0F766E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 3, '#5EEAD4', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 4, '#A7F3D0', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 5, '#0B3B33', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 6, '#134E4A', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910015, 7, '#99F6E4', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 0, '#5EEAD4', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 1, '#34D399', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 2, '#60A5FA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 3, '#A3E635', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 4, '#FBBF24', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 5, '#FB7185', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 6, '#C084FC', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910016, 7, '#67E8F9', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 0, '#FFFDF7', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 1, '#1F2937', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 2, '#E7DCCB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 3, '#B45309', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 4, '#BE123C', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 5, '#FFFBEB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 6, '#F5EAD8', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910017, 7, '#78716C', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 0, '#B45309', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 1, '#BE123C', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 2, '#4F46E5', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 3, '#059669', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 4, '#D97706', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 5, '#7C2D12', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 6, '#0F766E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910018, 7, '#6D28D9', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 0, '#1C1917', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 1, '#FAFAF9', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 2, '#57534E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 3, '#F59E0B', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 4, '#FB7185', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 5, '#292524', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 6, '#44403C', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910019, 7, '#D6D3D1', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 0, '#F59E0B', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 1, '#FB7185', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 2, '#A78BFA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 3, '#34D399', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 4, '#F97316', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 5, '#FDBA74', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 6, '#2DD4BF', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910020, 7, '#C4B5FD', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 0, '#FEF3C7', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 1, '#451A03', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 2, '#FCD34D', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 3, '#B45309', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 4, '#7C2D12', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 5, '#FFFBEB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 6, '#FDE68A', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910021, 7, '#92400E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 0, '#D97706', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 1, '#B45309', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 2, '#BE123C', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 3, '#4F46E5', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 4, '#059669', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 5, '#EA580C', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 6, '#7C3AED', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910022, 7, '#0F766E', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 0, '#451A03', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 1, '#FFFBEB', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 2, '#B45309', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 3, '#FBBF24', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 4, '#FED7AA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 5, '#1C1917', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 6, '#78350F', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910023, 7, '#FDE68A', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 0, '#FBBF24', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 1, '#FDBA74', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 2, '#FB7185', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 3, '#A78BFA', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 4, '#34D399', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 5, '#F97316', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 6, '#FDE68A', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette_color (palette_id, posicio, valor, created_by, created_date, v) VALUES (910024, 7, '#2DD4BF', 'liquibase', CURRENT_TIMESTAMP, 0);
+      rollback:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              UPDATE ${db_prefix}est_dashboard SET plantilla_id = NULL WHERE plantilla_id BETWEEN 930001 AND 930003;
+              DELETE FROM ${db_prefix}est_widget_style_property WHERE template_id BETWEEN 930001 AND 930003;
+              DELETE FROM ${db_prefix}est_dashboard_template_palette_group WHERE id BETWEEN 940001 AND 940012;
+              DELETE FROM ${db_prefix}est_dashboard_style_template WHERE id BETWEEN 930001 AND 930003;
+              DELETE FROM ${db_prefix}est_color_palette_color WHERE palette_id BETWEEN 910001 AND 910024;
+              DELETE FROM ${db_prefix}est_color_palette WHERE id BETWEEN 910001 AND 910024;

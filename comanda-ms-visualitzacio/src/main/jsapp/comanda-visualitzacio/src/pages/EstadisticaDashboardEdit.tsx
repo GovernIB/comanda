@@ -14,31 +14,30 @@ import {
     MuiDataGridColDef, useFilterApiRef, MuiFormDialogApi, MuiFormDialog,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {
     DashboardReactGridLayout,
     GridLayoutItem,
     useMapDashboardItems,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
+import DashboardEditorSidePanel, {
+    DashboardEditorSelection,
+    DashboardWidgetType,
+} from '../components/estadistiques/DashboardEditorSidePanel.tsx';
 import { isEqual } from 'lodash';
 import {
     Alert,
     Box,
     Button,
-    Dialog,
     ListItemIcon,
     Paper,
-    Tab,
     Table,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
-    Tabs,
     Typography,
 } from '@mui/material';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
@@ -46,7 +45,6 @@ import TableBody from '@mui/material/TableBody';
 import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
 import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
 import AddIcon from '@mui/icons-material/Add';
-import { useFormDialog } from '../../lib/components/mui/form/FormDialog.tsx';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
 import ButtonMenu from '../components/ButtonMenu.tsx';
@@ -63,209 +61,7 @@ import EstadisticaGraficWidgetForm from "../components/estadistiques/Estadistica
 import EstadisticaTaulaWidgetForm from "../components/estadistiques/EstadisticaTaulaWidgetForm.tsx";
 import {FooterHeightPlaceholder} from "../components/ComandaFooter.tsx";
 import Menu from "@mui/material/Menu";
-
-type EntornAppFilterContentProps = {
-    initialData?: {
-        app?: any;
-        entorn?: any;
-    };
-};
-
-const EntornAppFilterContent = (props: EntornAppFilterContentProps) => {
-    const { initialData } = props;
-    const { data } = useFormContext();
-    return (
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid size={6}>
-                <FormField
-                    name="app"
-                    componentProps={{ size: 'small' }}
-                    readOnly={initialData?.app}
-                    disabled={initialData?.app}
-                    filter={springFilterBuilder.exists(
-                        springFilterBuilder.and(
-                            springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id)
-                        )
-                    )}
-                />
-            </Grid>
-            <Grid size={6}>
-                <FormField
-                    name="entorn"
-                    componentProps={{ size: 'small' }}
-                    readOnly={initialData?.entorn}
-                    disabled={initialData?.entorn}
-                    filter={springFilterBuilder.exists(
-                        springFilterBuilder.and(
-                            springFilterBuilder.eq('entornAppEntities.app.id', data?.app?.id)
-                        )
-                    )}
-                />
-            </Grid>
-        </Grid>
-    );
-};
-
-type EntornAppFilterProps = {
-    onDataChange: (data: any) => void;
-    onSpringFilterChange: (filter?: string) => void;
-    initialData?: any;
-};
-
-const EntornAppFilter = ({
-    onDataChange,
-    onSpringFilterChange,
-    initialData,
-}: EntornAppFilterProps) => {
-    return (
-        <MuiFilter
-            resourceName="entornApp"
-            code="entornApp_filter"
-            springFilterBuilder={(data) => {
-                return springFilterBuilder.and(springFilterBuilder.eq('appId', data.app?.id));
-            }}
-            onSpringFilterChange={onSpringFilterChange}
-            onDataChange={onDataChange}
-            // initialData={initialData} TODO Deberia bastar con settear initialData, pero al hacerlo el componente da un error de link no incializado, debuggear componente lib
-            additionalData={initialData}
-        >
-            <EntornAppFilterContent initialData={initialData} />
-        </MuiFilter>
-    );
-};
-
-const addWidgetDialogGridColumns = [
-    {
-        field: 'aplicacio',
-        flex: 1,
-    },
-    {
-        field: 'titol',
-        flex: 2,
-    },
-];
-
-type AddWidgetDialogGridProps = {
-    resourceName: string;
-    onAddClick: (id: any) => void;
-    filter: string | null;
-    title: string;
-};
-
-const AddWidgetDialogGrid = ({ resourceName, onAddClick, filter, title }: AddWidgetDialogGridProps) => {
-    const { t } = useTranslation();
-    return (
-        <MuiDataGrid
-            resourceName={resourceName}
-            title={title}
-            columns={addWidgetDialogGridColumns}
-            rowHeight={26}
-            columnHeaderHeight={30}
-            paginationActive
-            readOnly
-            filter={filter ?? undefined}
-            rowAdditionalActions={[
-                {
-                    label: t($ => $.page.widget.action.add.label),
-                    icon: 'add',
-                    onClick: onAddClick,
-                },
-            ]}
-            rowActionsColumnProps={{ width: 10 }}
-        />
-    );
-};
-
-type AddWidgetDialogProps = {
-    open: boolean;
-    onClose: () => void;
-    onAdd: (widgetId: any, entornId: any) => void;
-    initialData?: any;
-};
-
-const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ open, onClose, onAdd, initialData }) => {
-    const { t } = useTranslation();
-    const [tab, setTab] = React.useState(0);
-    const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-        setTab(newValue);
-    };
-    const [filterData, setFilterData] = useState<any>(null);
-    const [filterString, setFilterString] = useState<string | null>(null);
-
-    const onAddClick = (id: any) => {
-        onAdd(id, filterData.entorn.id);
-    };
-
-    return (
-        <Dialog maxWidth="lg" open={open} onClose={onClose}>
-            <DialogTitle>
-                {t($ => $.page.dashboards.action.addWidget.title)}
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    size="small"
-                    sx={(theme) => ({
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                        color: theme.palette.grey[500],
-                    })}
-                >
-                    <Icon fontSize="small">close</Icon>
-                </IconButton>
-            </DialogTitle>
-            <DialogContent
-                style={{
-                    width: '900px',
-                    height: '500px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                }}
-            >
-                <EntornAppFilter
-                    onDataChange={setFilterData}
-                    onSpringFilterChange={(filter) => setFilterString(filter ?? null)}
-                    initialData={initialData}
-                />
-                {filterData?.app && filterData?.entorn && (
-                    <>
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                            <Tabs value={tab} onChange={handleChange}>
-                                <Tab label={t($ => $.page.widget.simple.tab.title)} />
-                                <Tab label={t($ => $.page.widget.grafic.tab.title)} />
-                                <Tab label={t($ => $.page.widget.taula.tab.title)} />
-                            </Tabs>
-                        </Box>
-                        {tab === 0 && (
-                            <AddWidgetDialogGrid
-                                resourceName="estadisticaSimpleWidget"
-                                title={t($ => $.page.widget.simple.title)}
-                                filter={filterString}
-                                onAddClick={onAddClick}
-                            />
-                        )}
-                        {tab === 1 && (
-                            <AddWidgetDialogGrid
-                                resourceName="estadisticaGraficWidget"
-                                title={t($ => $.page.widget.grafic.title)}
-                                filter={filterString}
-                                onAddClick={onAddClick}
-                            />
-                        )}
-                        {tab === 2 && (
-                            <AddWidgetDialogGrid
-                                resourceName="estadisticaTaulaWidget"
-                                title={t($ => $.page.widget.taula.title)}
-                                filter={filterString}
-                                onAddClick={onAddClick}
-                            />
-                        )}
-                    </>
-                )}{' '}
-            </DialogContent>
-        </Dialog>
-    );
-};
+import { useTheme } from '@mui/material/styles';
 
 type WidgetsErrorAlertProps = {
     errorWidgets: Array<{
@@ -448,6 +244,9 @@ export const AfegirTitolFormContent = () => {
         <Grid size={12}>
             <FormField name="subtitol" />
         </Grid>
+        <Grid size={12}>
+            <FormField name="tipusTitol" />
+        </Grid>
         <Grid size={6}>
             <FormField name="midaFontTitol" />
         </Grid>
@@ -490,6 +289,8 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const { t } = useTranslation();
     const { id: paramsId } = useParams();
     const dashboardId = paramsId as string;
+    const theme = useTheme();
+    const temaFosc = theme.palette.mode === 'dark';
     const {
         isReady: apiDashboardItemIsReady,
         patch: patchDashboardItem,
@@ -510,25 +311,67 @@ const EstadisticaDashboardEdit: React.FC = () => {
         errorDashboardWidgets,
         loadingWidgetPositions,
         forceRefresh: forceRefreshDashboardWidgets,
-    } = useDashboardWidgets(dashboardId);
+    } = useDashboardWidgets(dashboardId, temaFosc);
+    const [panelWidth, setPanelWidth] = useState(340);
+    const [panelCollapsed, setPanelCollapsed] = useState(false);
+    const panelWidthRef = useRef(panelWidth);
+    panelWidthRef.current = panelWidth;
+
+    const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = panelWidthRef.current;
+        const onMouseMove = (ev: MouseEvent) => {
+            const newWidth = Math.max(240, Math.min(700, startWidth + (startX - ev.clientX)));
+            setPanelWidth(newWidth);
+        };
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }, []);
+
+    const [leftPanelWidth, setLeftPanelWidth] = useState(240);
+    const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+    const leftPanelWidthRef = useRef(leftPanelWidth);
+    leftPanelWidthRef.current = leftPanelWidth;
+
+    const handleLeftResizeMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = leftPanelWidthRef.current;
+        const onMouseMove = (ev: MouseEvent) => {
+            const newWidth = Math.max(160, Math.min(600, startWidth + (ev.clientX - startX)));
+            setLeftPanelWidth(newWidth);
+        };
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }, []);
+
     const [showContentDialog, contentDialogComponent] = useContentDialog();
     const messageDialogButtons = useMessageDialogButtons();
-    const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
+    const [editorSelection, setEditorSelection] = useState<DashboardEditorSelection>({ kind: 'none' });
+    useEffect(() => {
+        if (editorSelection.kind !== 'none' && panelCollapsed) {
+            setPanelCollapsed(false);
+        }
+    }, [editorSelection]);
     const navigate = useNavigate();
-    const [titolFormDialogShow, titolFormDialogComponent] = useFormDialog('dashboardTitol');
     const openCreateTitolForm = () => {
-        titolFormDialogShow(null, {
-            title: t($ => $.page.dashboards.action.afegirTitle.title),
-            formContent: <AfegirTitolFormContent />,
-            additionalData: { dashboard: { id: dashboardId }, ...defaultSizeAndPosition },
-            dialogComponentProps: { maxWidth: 'md', fullWidth: true },
-        }).then(() => forceRefreshDashboardWidgets());
+        setEditorSelection({ kind: 'title', mode: 'create' });
     };
 
-    const openAddWidgetDialog = () => setAddWidgetDialogOpen(true);
-    const closeAddWidgetDialog = () => setAddWidgetDialogOpen(false);
+    const openCreateWidgetForm = (widgetType?: DashboardWidgetType, entornId?: any, aplicacio?: any) => {
+        setEditorSelection({ kind: 'widget', mode: 'create', widgetType, entornId, aplicacio });
+    };
 
-    const addWidget = (widgetId: any, entornId: any) => {
+    const addWidget = (widgetId: any, entornId: any, widgetType?: DashboardWidgetType) => {
         createDashboardItem({
             data: {
                 dashboard: { id: dashboardId },
@@ -537,10 +380,18 @@ const EstadisticaDashboardEdit: React.FC = () => {
                 ...defaultSizeAndPosition,
             },
         })
-            .then(async () => {
+            .then(async (createdItem: any) => {
                 temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.success), 'success');
                 forceRefreshDashboardWidgets();
-                closeAddWidgetDialog();
+                if (createdItem?.id && widgetType) {
+                    setEditorSelection({
+                        kind: 'widget',
+                        mode: 'edit',
+                        widgetType,
+                        dashboardItemId: createdItem.id,
+                        widgetId,
+                    });
+                }
             })
             .catch((reason) => {
                 temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.error), 'error');
@@ -549,6 +400,40 @@ const EstadisticaDashboardEdit: React.FC = () => {
     };
 
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
+
+    const selectedGridItemId = React.useMemo(() => {
+        if (editorSelection.kind === 'widget' && editorSelection.mode === 'edit') {
+            return String(editorSelection.dashboardItemId);
+        }
+        if (editorSelection.kind === 'title' && editorSelection.mode === 'edit') {
+            return String(editorSelection.dashboardTitolId);
+        }
+        return null;
+    }, [editorSelection]);
+
+    const selectDashboardElement = (entity: any) => {
+        if (!entity) {
+            setEditorSelection({ kind: 'none' });
+            return;
+        }
+        if (entity.tipus === 'TITOL') {
+            setEditorSelection({
+                kind: 'title',
+                mode: 'edit',
+                dashboardTitolId: entity.dashboardTitolId ?? entity.id,
+            });
+            return;
+        }
+        if (entity.tipus === 'SIMPLE' || entity.tipus === 'GRAFIC' || entity.tipus === 'TAULA') {
+            setEditorSelection({
+                kind: 'widget',
+                mode: 'edit',
+                widgetType: entity.tipus,
+                dashboardItemId: entity.dashboardItemId ?? entity.id,
+                widgetId: entity.widgetId,
+            });
+        }
+    };
 
     const onGridLayoutItemsChange = (newLayoutItems: GridLayoutItem[]) => {
         const promises: Promise<any>[] = [];
@@ -614,7 +499,6 @@ const EstadisticaDashboardEdit: React.FC = () => {
             overflow: 'hidden',
         }}>
             <PageTitle title={t($ => $.page.dashboards.title)} />
-            {titolFormDialogComponent}
             {contentDialogComponent}
             {loading ? <CenteredCircularProgress /> : null}
             {dashboard && (<>
@@ -714,7 +598,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             disabled={!apiDashboardItemIsReady || !dashboard}
                             buttonIcon={<AddIcon />}
                         >
-                            <MenuItem onClick={openAddWidgetDialog}>
+                            <MenuItem onClick={() => openCreateWidgetForm(undefined, dashboard?.entorn?.id, dashboard?.aplicacio)}>
                                 <ListItemIcon>
                                     <Icon fontSize="small">widgets</Icon>
                                 </ListItemIcon>
@@ -734,48 +618,177 @@ const EstadisticaDashboardEdit: React.FC = () => {
                         {/*<DashboardSideMenu dashboard={dashboard} addAction={addWidget}/>*/}
                     </Box>
                 </MuiToolbar>
-                <Grid container sx={{ flex: 1, overflow: 'hidden' }}>
-                    <Grid size={2} sx={{ height: '100%' }}>
-                        <SideMenu dashboard={dashboard} addWidget={addWidget}/>
-                    </Grid>
-                    <Grid size={10} sx={{
-                        overflow: 'auto',
-                        minHeight: 0,
-                        maxHeight: '100%'
-                    }}>
-                        {/* Se espera a tener los datos a mostrar y a todas las APIs que puedan ser llamadas por onGridLayoutItemsChange */}
-                        {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
-                            <DashboardReactGridLayout
-                                dashboardId={dashboard.id}
-                                dashboardWidgets={dashboardWidgets}
-                                gridLayoutItems={mappedDashboardItems}
-                                onGridLayoutItemsChange={onGridLayoutItemsChange}
-                                editable
-                                refresh={forceRefreshDashboardWidgets}
+                <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', minHeight: 0 }}>
+                    {/* Left panel: resizable and collapsible */}
+                    <Box
+                        sx={{
+                            width: leftPanelCollapsed ? '40px' : `${leftPanelWidth}px`,
+                            flexShrink: 0,
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'row',
+                        }}
+                    >
+                        {/* Panel content */}
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                            {/* Collapse/expand toggle */}
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: leftPanelCollapsed ? 'center' : 'flex-end',
+                                    backgroundColor: 'background.paper',
+                                    borderRight: '1px solid',
+                                    borderColor: 'divider',
+                                    borderBottom: '1px solid',
+                                    py: 0.5,
+                                    px: leftPanelCollapsed ? 0 : 0.5,
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <IconButton
+                                    size="small"
+                                    onClick={() => setLeftPanelCollapsed(c => !c)}
+                                    title={leftPanelCollapsed ? 'Expandir panell' : 'Compactar panell'}
+                                >
+                                    <Icon sx={{ fontSize: '1rem' }}>
+                                        {leftPanelCollapsed ? 'chevron_right' : 'chevron_left'}
+                                    </Icon>
+                                </IconButton>
+                            </Box>
+                            <Box sx={{ flex: 1, overflow: 'hidden', borderRight: '1px solid', borderColor: 'divider', display: leftPanelCollapsed ? 'none' : 'flex', flexDirection: 'column' }}>
+                                <SideMenu
+                                    dashboard={dashboard}
+                                    addWidget={addWidget}
+                                    createWidget={openCreateWidgetForm}
+                                    dashboardWidgets={dashboardWidgets}
+                                    onSelectItem={selectDashboardElement}
+                                    selectedItemId={selectedGridItemId}
+                                />
+                            </Box>
+                        </Box>
+                        {/* Resize handle on right edge */}
+                        {!leftPanelCollapsed && (
+                            <Box
+                                onMouseDown={handleLeftResizeMouseDown}
+                                sx={{
+                                    width: '5px',
+                                    flexShrink: 0,
+                                    cursor: 'ew-resize',
+                                    backgroundColor: 'divider',
+                                    '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 },
+                                }}
                             />
                         )}
-                    </Grid>
-                </Grid>
+                    </Box>
+                    {/* Canvas + overlay panel wrapper */}
+                    <Box sx={{ flex: 1, position: 'relative', display: 'flex', minHeight: 0, overflow: 'hidden' }}>
+                        {/* Scrollable canvas area */}
+                        <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                            {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
+                                <DashboardReactGridLayout
+                                    dashboardId={dashboard.id}
+                                    dashboardWidgets={dashboardWidgets}
+                                    gridLayoutItems={mappedDashboardItems}
+                                    onGridLayoutItemsChange={onGridLayoutItemsChange}
+                                    onSelectItem={selectDashboardElement}
+                                    onClearSelection={() => setEditorSelection({ kind: 'none' })}
+                                    selectedItemId={selectedGridItemId}
+                                    editable
+                                />
+                            )}
+                        </Box>
+                        {/* Overlay side panel (non-scrolling, always in view) */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                height: '100%',
+                                width: panelCollapsed ? '40px' : `${panelWidth}px`,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                zIndex: 20,
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {/* Resize handle */}
+                            {!panelCollapsed && (
+                                <Box
+                                    onMouseDown={handleResizeMouseDown}
+                                    sx={{
+                                        width: '5px',
+                                        flexShrink: 0,
+                                        cursor: 'ew-resize',
+                                        backgroundColor: 'divider',
+                                        pointerEvents: 'all',
+                                        '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 },
+                                    }}
+                                />
+                            )}
+                            {/* Panel content */}
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', pointerEvents: 'all', overflow: 'hidden' }}>
+                                {/* Collapse/expand toggle */}
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        justifyContent: panelCollapsed ? 'center' : 'flex-start',
+                                        backgroundColor: 'background.paper',
+                                        borderLeft: '1px solid',
+                                        borderColor: 'divider',
+                                        borderBottom: '1px solid',
+                                        py: 0.5,
+                                        px: panelCollapsed ? 0 : 0.5,
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setPanelCollapsed(c => !c)}
+                                        title={panelCollapsed ? 'Expandir panell' : 'Compactar panell'}
+                                    >
+                                        <Icon sx={{ fontSize: '1rem' }}>
+                                            {panelCollapsed ? 'chevron_left' : 'chevron_right'}
+                                        </Icon>
+                                    </IconButton>
+                                </Box>
+                                {!panelCollapsed && (
+                                    <Box sx={{ flex: 1, overflow: 'hidden', borderLeft: '1px solid', borderColor: 'divider' }}>
+                                        <DashboardEditorSidePanel
+                                            dashboard={dashboard}
+                                            dashboardId={dashboardId}
+                                            selection={editorSelection}
+                                            onSelectionChange={setEditorSelection}
+                                            onSaved={forceRefreshDashboardWidgets}
+                                            onDeleted={() => {
+                                                setEditorSelection({ kind: 'none' });
+                                                forceRefreshDashboardWidgets();
+                                            }}
+                                        />
+                                    </Box>
+                                )}
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
                 <FooterHeightPlaceholder />
             </>)}
-            <AddWidgetDialog
-                open={addWidgetDialogOpen}
-                onClose={closeAddWidgetDialog}
-                onAdd={addWidget}
-                initialData={{
-                    app: dashboard?.aplicacio,
-                    entorn: dashboard?.entorn
-                }}
-            />
         </Box>
     );
 };
 
-const SideMenu = ({ dashboard, addWidget }:any) => {
+const TIPUS_ICON: Record<string, string> = {
+    SIMPLE: 'description',
+    GRAFIC: 'bar_chart_4_bars',
+    TAULA: 'table',
+    TITOL: 'title',
+};
+
+const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSelectItem, selectedItemId }:any) => {
     // const { t } = useTranslation();
     const appEntornFilterApiRef = useFilterApiRef();
     const [springFilter, setSpringFilter] = useState<string>()
     const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id)
+    const [aplicacio, setAplicacio] = useState<any>(dashboard?.aplicacio)
     const [simpleWidgets, setSimpleWidgets] = useState<any[]>()
     const [graficWidgets, setGraficWidgets] = useState<any[]>()
     const [taulaWidgets, setTaulaWidgets] = useState<any[]>()
@@ -805,7 +818,7 @@ const SideMenu = ({ dashboard, addWidget }:any) => {
         }
     }, [springFilter, apiSimpleIsReady, apiGraficIsReady, apiTaulaIsReady]);
 
-    const WidgetTreeItem = ({widget}:any) => <TreeItem key={widget?.id} itemId={widget?.id} label={<Box
+    const WidgetTreeItem = ({widget, widgetType}:any) => <TreeItem key={widget?.id} itemId={widget?.id} label={<Box
         display={'flex'}
         flexDirection={'row'}
         justifyContent={'space-between'}
@@ -813,7 +826,11 @@ const SideMenu = ({ dashboard, addWidget }:any) => {
     >
         {widget?.titol}
         {entornId &&
-            <IconButton size={'small'} onClick={() => addWidget(widget?.id, entornId)}>
+            <IconButton
+                size={'small'}
+                aria-label={`Afegir ${widget?.titol}`}
+                onClick={() => addWidget(widget?.id, entornId, widgetType)}
+            >
                 <Icon sx={{ fontSize: '0.875rem' }}>add</Icon>
             </IconButton>
         }
@@ -836,7 +853,10 @@ const SideMenu = ({ dashboard, addWidget }:any) => {
             resourceName="entornApp"
             code="optional_entornApp_filter"
             commonFieldComponentProps={{ size: 'small' }}
-            onDataChange={(data) => setEntornId(data?.entorn?.id)}
+            onDataChange={(data) => {
+                    setEntornId(data?.entorn?.id);
+                    setAplicacio(data?.app);
+                }}
             springFilterBuilder={(data:any) => springFilterBuilder.and(
                 springFilterBuilder.eq("appId", data?.app?.id)
             )}
@@ -865,39 +885,71 @@ const SideMenu = ({ dashboard, addWidget }:any) => {
             }}>
             <TreeItem key={'simple'} itemId={'simple'} label={'Simple'}>
                 {simpleWidgets?.map?.((widget) =>
-                    <WidgetTreeItem widget={widget}/>
+                    <WidgetTreeItem widget={widget} widgetType="SIMPLE"/>
                 )}
             </TreeItem>
             <TreeItem key={'grafic'} itemId={'grafic'} label={'Grafic'}>
                 {graficWidgets?.map?.((widget) =>
-                    <WidgetTreeItem widget={widget}/>
+                    <WidgetTreeItem widget={widget} widgetType="GRAFIC"/>
                 )}
             </TreeItem>
             <TreeItem key={'taula'} itemId={'taula'} label={'Taula'}>
                 {taulaWidgets?.map?.((widget) =>
-                    <WidgetTreeItem widget={widget}/>
+                    <WidgetTreeItem widget={widget} widgetType="TAULA"/>
                 )}
             </TreeItem>
         </SimpleTreeView>
+
+        {dashboardWidgets?.length > 0 && (
+            <>
+                <Divider sx={{ my: 1 }}/>
+                <Typography variant="caption" sx={{ px: 0.5, fontWeight: 700, color: 'text.secondary', display: 'block' }}>
+                    Elements del dashboard
+                </Typography>
+                {dashboardWidgets.map((widget: any) => {
+                    const itemId = String(widget.dashboardItemId ?? widget.dashboardTitolId);
+                    const isSelected = selectedItemId === itemId;
+                    return (
+                        <Box
+                            key={itemId}
+                            onClick={() => onSelectItem?.(widget)}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                px: 1,
+                                py: 0.25,
+                                cursor: 'pointer',
+                                borderRadius: 1,
+                                fontSize: '0.875rem',
+                                backgroundColor: isSelected ? 'primary.main' : 'transparent',
+                                color: isSelected ? 'primary.contrastText' : 'inherit',
+                                '&:hover': { backgroundColor: isSelected ? 'primary.dark' : 'action.hover' },
+                            }}
+                        >
+                            <Icon sx={{ fontSize: '0.875rem' }}>{TIPUS_ICON[widget.tipus] ?? 'widgets'}</Icon>
+                            <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {widget.titol ?? itemId}
+                            </Box>
+                        </Box>
+                    );
+                })}
+            </>
+        )}
         </Box>
 
         <Box sx={{ mt: 'auto' }}>
             <Divider sx={{ my: 1, alignSelf: 'end' }}/>
         </Box>
 
-        <WidgetMenu addWidget={addWidget} entornId={entornId}/>
+        <WidgetMenu createWidget={createWidget} entornId={entornId} aplicacio={aplicacio}/>
     </Paper>
 }
 
-const WidgetMenu = ({addWidget, entornId}:any) => {
-    const {handleOpen: handleSimpleOpen, dialog: dialogSimple} = useSimpleWidgetFormDialog();
-    const {handleOpen: handleGraficOpen, dialog: dialogGrafic} = useGraficWidgetFormDialog();
-    const {handleOpen: handleTaulaOpen, dialog: dialogTaula} = useTaulaWidgetFormDialog();
-
+const WidgetMenu = ({createWidget, entornId, aplicacio}:any) => {
     return <>
         <MyButtonMenu
             title={'Nou Widget'}
-            disabled={!entornId}
             buttonProps={{
                 variant: 'contained',
                 startIcon: <Icon>add</Icon>,
@@ -908,26 +960,17 @@ const WidgetMenu = ({addWidget, entornId}:any) => {
                 {
                     icon: 'description',
                     title: 'Simple',
-                    onClick: () => {
-                        handleSimpleOpen()
-                            ?.then((response:any) => addWidget(response.id, entornId))
-                    },
+                    onClick: () => createWidget('SIMPLE', entornId, aplicacio),
                 },
                 {
                     icon: 'bar_chart_4_bars',
                     title: 'Gràfic',
-                    onClick: () => {
-                        handleGraficOpen()
-                            ?.then((response:any) => addWidget(response.id, entornId))
-                    },
+                    onClick: () => createWidget('GRAFIC', entornId, aplicacio),
                 },
                 {
                     icon: 'table',
                     title: 'Taula',
-                    onClick: () => {
-                        handleTaulaOpen()
-                            ?.then((response:any) => addWidget(response.id, entornId))
-                    },
+                    onClick: () => createWidget('TAULA', entornId, aplicacio),
                 },
             ].map((item, index) => (
                 <MenuItem
@@ -941,9 +984,6 @@ const WidgetMenu = ({addWidget, entornId}:any) => {
                 </MenuItem>
             ))}
         </MyButtonMenu>
-        {dialogSimple}
-        {dialogGrafic}
-        {dialogTaula}
     </>
 }
 export const useSimpleWidgetFormDialog = () => {

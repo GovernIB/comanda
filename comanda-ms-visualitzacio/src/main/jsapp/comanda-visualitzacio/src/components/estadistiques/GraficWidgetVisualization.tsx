@@ -7,6 +7,7 @@ import {
     BarChart,
     LineChart,
     PieChart,
+    PieArcLabel,
     ChartsTooltip,
     ChartsLegend,
     SparkLineChart,
@@ -17,7 +18,7 @@ import {
     YAxis,
 } from '@mui/x-charts';
 import estils from "./WidgetEstils.ts";
-import {createTransparentColor, isWhiteColor} from "../../util/colorUtil.ts";
+import {createTransparentColor, isLightColor} from "../../util/colorUtil.ts";
 import Chip from "@mui/material/Chip";
 import Skeleton from '@mui/material/Skeleton';
 import Accordion from '@mui/material/Accordion';
@@ -117,7 +118,7 @@ const useWidgetColors = (props: GraficWidgetVisualizationProps, theme: any): Gra
         textColor: colors.text,
         backgroundColor: colors.background,
         voraColor: colors.vora,
-        isWhiteBackground: !colorFons || isWhiteColor(colors.background),
+        isWhiteBackground: !colorFons || isLightColor(colors.background),
     };
 };
 
@@ -191,6 +192,31 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     const bgColor = colors.isWhiteBackground ? colors.backgroundColor + ' !important' : 'transparent';
     const bg = colors.isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colors.backgroundColor}, ${createTransparentColor(colors.backgroundColor, 0.75)})`;
     const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
+    const contrastTextColor = colors.isWhiteBackground ? '#000000' : '#FFFFFF';
+    const entornChipSx = {
+        ...estils.entornCodi,
+        color: contrastTextColor,
+        backgroundColor: colors.isWhiteBackground ? theme.palette.grey[200] : createTransparentColor(colors.backgroundColor, 0.35),
+        border: `1px solid ${colors.voraColor}`,
+    };
+    const chartTextColor = contrastTextColor;
+    const axisStyleProps = {
+        tickLabelStyle: { fill: chartTextColor },
+        labelStyle: { fill: chartTextColor },
+        slotProps: {
+            axisLine: { stroke: chartTextColor, style: { stroke: chartTextColor } },
+            axisTick: { stroke: chartTextColor, style: { stroke: chartTextColor } },
+        },
+    };
+    const chartCommonSx = {
+        '& .MuiChartsAxis-line': { stroke: chartTextColor },
+        '& .MuiChartsAxis-tick': { stroke: chartTextColor },
+        '& .MuiChartsAxis-root line': { stroke: chartTextColor },
+        '& .MuiChartsAxis-root path': { stroke: chartTextColor },
+        '& .MuiChartsAxis-tickLabel': { fill: chartTextColor },
+        '& .MuiChartsAxis-label': { fill: chartTextColor },
+        '& .MuiChartsLegend-label': { fill: chartTextColor },
+    };
 
     // Parse color palette
     const paletaColors = colorsPaleta.split(',');
@@ -247,15 +273,17 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         }));
 
         const xAxis: Array<XAxis> = [];
+        const yAxisLabel = preview ? 'Eix Y' : undefined;
         if (barHorizontal) {
             // Si és horitzontal, l'eix X té valors numèrics
             xAxis.push({
                 scaleType: 'linear',
-                label: llegendaX ? undefined : llegendaX,
+                label: llegendaX || (preview ? 'Eix X' : undefined),
+                ...axisStyleProps,
             });
         } else {
             // Si no és horitzontal, l'eix X té categories
-            xAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]) });
+            xAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]), label: llegendaX || (preview ? 'Eix X' : undefined), ...axisStyleProps });
         }
 
         const yAxis: Array<YAxis> = [];
@@ -265,10 +293,11 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 scaleType: 'band',
                 data: dades.map(item => item[discriminador]),
                 label: llegendaX || undefined,
+                ...axisStyleProps,
             });
         } else {
             // Si no és horitzontal, l'eix Y té valors numèrics
-            yAxis.push({ scaleType: 'linear' });
+            yAxis.push({ scaleType: 'linear', label: yAxisLabel, ...axisStyleProps });
         }
 
         const grid = barHorizontal
@@ -282,6 +311,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         return (
             <Box sx={{ width: '100%', height: chartHeight }}>
                 <BarChart
+                    sx={chartCommonSx}
                     dataset={dataset}
                     series={series}
                     xAxis={xAxis}
@@ -290,6 +320,13 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     grid={grid}
                     height={chartHeight}
                     margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
+                    slotProps={{
+                        legend: {
+                            sx: {
+                                '& .MuiChartsLegend-label': { fill: chartTextColor, color: chartTextColor },
+                            },
+                        },
+                    }}
                 >
                     <ChartsTooltip />
                     <ChartsLegend />
@@ -320,6 +357,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             dataKey: discriminador,
             scaleType: 'band',
             label: llegendaX,
+            ...axisStyleProps,
             // data: dades.map(d => d[datakey]),
         }];
 
@@ -337,17 +375,25 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             <Box sx={{width: '100%', height: chartHeight}}>
                 <LineChart
                     sx={{
+                        ...chartCommonSx,
                         '& .MuiLineElement-root': {
                             strokeWidth: +lineWidth,
                         },
                     }}
                     xAxis={xAxisData}
-                    yAxis={[{scaleType: 'linear'}]}
+                    yAxis={[{scaleType: 'linear', label: preview ? 'Eix Y' : undefined, ...axisStyleProps}]}
                     series={series}
                     dataset={dades}
                     height={chartHeight}
                     grid={grid}
                     margin={{top: 10, bottom: 30, left: 40, right: 10}}
+                    slotProps={{
+                        legend: {
+                            sx: {
+                                '& .MuiChartsLegend-label': { fill: chartTextColor, color: chartTextColor },
+                            },
+                        },
+                    }}
                 >
                     <ChartsTooltip/>
                     <ChartsLegend/>
@@ -381,6 +427,23 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             return pieShowLabels ? (params.label ?? '') : '';
         };
 
+        const ContrastPieArcLabel = ({ color, ...other }: any) => {
+            const labelColor = theme.palette.getContrastText(color);
+
+            return (
+                <PieArcLabel
+                    {...other}
+                    color={color}
+                    fill={labelColor}
+                    style={{
+                        ...(other?.style || {}),
+                        fill: labelColor,
+                        color: labelColor,
+                    }}
+                />
+            );
+        };
+
         const series: Readonly<PieSeries[]> = [
             {
                 data: pieData,
@@ -398,13 +461,24 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             <Box sx={{ width: '100%', height: chartHeight }}>
                 <PieChart
                     sx={{
+                        ...chartCommonSx,
                         '& .MuiPieArcLabel-root': {
                             fontSize: labelSize ? labelSize + 'px' : '1em',
                         },
                     }}
+                    slots={{
+                        pieArcLabel: ContrastPieArcLabel,
+                    }}
                     series={series}
                     height={chartHeight}
                     margin={{top: 10, bottom: 10, left: 10, right: 10}}
+                    slotProps={{
+                        legend: {
+                            sx: {
+                                '& .MuiChartsLegend-label': { fill: chartTextColor, color: chartTextColor },
+                            },
+                        },
+                    }}
                 >
                     <ChartsTooltip/>
                     <ChartsLegend/>
@@ -514,6 +588,14 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     [`& .${gaugeClasses.valueArc}`]: {
                         fill: getColor(valorGauge),
                     },
+                    [`& .${gaugeClasses.valueText}`]: {
+                        fill: `${chartTextColor} !important`,
+                        color: `${chartTextColor} !important`,
+                    },
+                    [`& .${gaugeClasses.valueText} *`]: {
+                        fill: `${chartTextColor} !important`,
+                        color: `${chartTextColor} !important`,
+                    },
                 })}
             />
             </Box>
@@ -597,7 +679,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     <>
                         <Typography sx={titleEstils} >{titol}</Typography>
                         <Box sx={estils.iconContainer}>
-                            <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
+                            <Chip sx={entornChipSx} label={entornCodi} size={"small"} />
                         </Box>
                     </>
                 )}

@@ -10,7 +10,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Icon from '@mui/material/Icon';
 import {useTheme} from '@mui/material/styles';
-import {createTransparentColor, isWhiteColor} from "../../util/colorUtil";
+import {createTransparentColor, isLightColor} from "../../util/colorUtil";
 import estils from './WidgetEstils';
 import Chip from "@mui/material/Chip";
 import Skeleton from '@mui/material/Skeleton';
@@ -159,7 +159,7 @@ const useWidgetColors = (props: TaulaWidgetVisualizationProps, theme: any): Taul
         voraTaulaColor: colors.voraTaula,
         horDividerColor: colors.horDivider,
         verDividerColor: colors.verDivider,
-        isWhiteBackground: !colorFons || isWhiteColor(colors.background),
+        isWhiteBackground: !colorFons || isLightColor(colors.background),
     };
 };
 
@@ -307,6 +307,13 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         ...estils.descText(colors.textColor),
         fontSize: midaFontDescripcio ?`${midaFontDescripcio}px` :estils.descText(colors.textColor).fontSize
     }
+    const contrastTextColor = colors.isWhiteBackground ? '#000000' : '#FFFFFF';
+    const entornChipSx = {
+        ...estils.entornCodi,
+        color: contrastTextColor,
+        backgroundColor: colors.isWhiteBackground ? theme.palette.grey[200] : createTransparentColor(colors.backgroundColor, 0.35),
+        border: `1px solid ${colors.voraColor}`,
+    };
 
     return (
         <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)}>
@@ -323,7 +330,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                     <>
                         <Typography sx={titleEstils} >{titol}</Typography>
                         <Box sx={estils.iconContainer}>
-                            <Chip sx={estils.entornCodi} label={entornCodi} size={"small"} />
+                            <Chip sx={entornChipSx} label={entornCodi} size={"small"} />
                         </Box>
                     </>
                 )}

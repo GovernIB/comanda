@@ -15,7 +15,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import ColumnesTable from './ColumnesTable';
 import Divider from '@mui/material/Divider';
 
-const EstadisticaTaulaWidgetForm: React.FC = () => {
+type EstadisticaTaulaWidgetFormProps = {
+    mode?: 'full' | 'stats' | 'visual';
+};
+
+const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({ mode = 'full' }) => {
     const { data, apiRef } = useFormContext();
     const { t } = useTranslation();
     const previewData: TaulaWidgetVisualizationProps = useMemo(
@@ -81,55 +85,74 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
     }, [data]);
     const dimensioNamedQueries = React.useMemo(() => [`filterByAppGroupByNom:${data?.aplicacio?.id}`], [data?.aplicacio?.id]);
 
+    if (mode === 'stats') {
+        return renderStatsFields();
+    }
+
+    if (mode === 'visual') {
+        return renderVisualContent();
+    }
+
     return (
         <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 8 }}>
-                <EstadisticaWidgetFormFields>
-                    <Grid size={12}>
-                        <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.taula)}</Divider>
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField
-                            name="dimensioAgrupacio"
-                            namedQueries={dimensioNamedQueries}
-                            advancedSearchColumns={columnesDimensio}
-                        />
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField name="titolAgrupament" />
-                    </Grid>
-                    <Grid size={12}>
-                        <ColumnesTable
-                            name="columnes"
-                            label={t($ => $.page.widget.taula.tableCols)}
-                            value={data.columnes}
-                            mostrarUnitat={true}
-                            onChange={value => {
-                                apiRef.current?.setFieldValue('columnes', value);
-                            }}
-                        />
-                    </Grid>
-                </EstadisticaWidgetFormFields>
+                {renderStatsFields()}
             </Grid>
             <Grid id={'cv'} size={{ xs: 12, sm: 4 }}>
                 <VisualAttributesPanel
                     widgetType="taula"
                     title={t($ => $.page.widget.form.configVisual)}
                 >
-                    {/* Preview inside the panel */}
-                    <Box sx={{ p: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                            {t($ => $.page.widget.form.preview)}
-                        </Typography>
-                        <Box sx={{ height: '240px' }}>
-                            <TaulaWidgetVisualization preview={true} {...previewData} />
-                        </Box>
-                        {renderTaulaFormFields()}
-                    </Box>
+                    {renderVisualContent()}
                 </VisualAttributesPanel>
             </Grid>
         </Grid>
     );
+
+    function renderStatsFields() {
+        return (
+            <EstadisticaWidgetFormFields>
+                <Grid size={12}>
+                    <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.taula)}</Divider>
+                </Grid>
+                <Grid size={6}>
+                    <FormField
+                        name="dimensioAgrupacio"
+                        namedQueries={dimensioNamedQueries}
+                        advancedSearchColumns={columnesDimensio}
+                    />
+                </Grid>
+                <Grid size={6}>
+                    <FormField name="titolAgrupament" />
+                </Grid>
+                <Grid size={12}>
+                    <ColumnesTable
+                        name="columnes"
+                        label={t($ => $.page.widget.taula.tableCols)}
+                        value={data.columnes}
+                        mostrarUnitat={true}
+                        onChange={value => {
+                            apiRef.current?.setFieldValue('columnes', value);
+                        }}
+                    />
+                </Grid>
+            </EstadisticaWidgetFormFields>
+        );
+    }
+
+    function renderVisualContent() {
+        return (
+            <Box sx={{ p: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    {t($ => $.page.widget.form.preview)}
+                </Typography>
+                <Box sx={{ height: '240px' }}>
+                    <TaulaWidgetVisualization preview={true} {...previewData} />
+                </Box>
+                {renderTaulaFormFields()}
+            </Box>
+        );
+    }
 
     // Render form fields for taula widget
     function renderTaulaFormFields() {
@@ -140,7 +163,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         {t($ => $.page.widget.form.configGeneral)}
                     </Typography>
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorText"
                         label={t($ => $.page.widget.atributsVisuals.colorText)}
@@ -148,7 +171,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorFons"
                         label={t($ => $.page.widget.atributsVisuals.colorFons)}
@@ -165,7 +188,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                 </Grid>
                 {isMostrarVora && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorVora"
                                 label={t($ => $.page.widget.atributsVisuals.colorVora)}
@@ -173,7 +196,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                                 required={false}
                             />
                         </Grid>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="ampleVora"
                                 label={t($ => $.page.widget.atributsVisuals.ampleVora)}
@@ -188,7 +211,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         {t($ => $.page.widget.form.configTaula)}
                     </Typography>
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorTextTaula"
                         label={t($ => $.page.widget.atributsVisuals.colorTextTaula)}
@@ -196,7 +219,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorFonsTaula"
                         label={t($ => $.page.widget.atributsVisuals.colorFonsTaula)}
@@ -213,7 +236,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                 </Grid>
                 {isMostrarCapcalera && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorCapcalera"
                                 label={t($ => $.page.widget.atributsVisuals.colorCapcalera)}
@@ -221,7 +244,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                                 required={false}
                             />
                         </Grid>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorFonsCapcalera"
                                 label={t($ => $.page.widget.atributsVisuals.colorFonsCapcalera)}
@@ -240,7 +263,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                 </Grid>
                 {isMostrarAlternancia && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorAlternancia"
                                 label={t($ => $.page.widget.atributsVisuals.colorAlternancia)}
@@ -259,7 +282,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                 </Grid>
                 {isMostrarVoraTaula && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorVoraTaula"
                                 label={t($ => $.page.widget.atributsVisuals.colorVoraTaula)}
@@ -267,7 +290,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                                 required={false}
                             />
                         </Grid>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="ampleVoraTaula"
                                 label={t($ => $.page.widget.atributsVisuals.ampleVoraTaula)}
@@ -286,7 +309,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                 </Grid>
                 {isMostrarSeparadorHoritzontal && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorSeparadorHoritzontal"
                                 label={t(
@@ -296,7 +319,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                                 required={false}
                             />
                         </Grid>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="ampleSeparadorHoritzontal"
                                 label={t(
@@ -317,7 +340,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                 </Grid>
                 {isMostrarSeparadorVertical && (
                     <>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="colorSeparadorVertical"
                                 label={t($ => $.page.widget.atributsVisuals.colorSeparadorVertical)}
@@ -325,7 +348,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                                 required={false}
                             />
                         </Grid>
-                        <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                        <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                             <FormField
                                 name="ampleSeparadorVertical"
                                 label={t($ => $.page.widget.atributsVisuals.ampleSeparadorVertical)}
@@ -391,7 +414,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         {t($ => $.page.widget.form.configFont)}
                     </Typography>
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="midaFontTitol"
                         label={t($ => $.page.widget.atributsVisuals.midaFontTitol)}
@@ -399,7 +422,7 @@ const EstadisticaTaulaWidgetForm: React.FC = () => {
                         required={false}
                     />
                 </Grid>
-                <Grid size={6} sx={{ backgroundColor: '#FFFFFF' }}>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="midaFontDescripcio"
                         label={t($ => $.page.widget.atributsVisuals.midaFontDescripcio)}

@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
@@ -76,6 +77,9 @@ public class DashboardItem extends BaseResource<Long> {
     @NotNull
     private int height;
 
+    private Boolean destacat;
+    private ResourceReference<Plantilla, Long> plantilla;
+    private Boolean personalitzat;
     private AtributsVisuals atributsVisuals;
 
 }

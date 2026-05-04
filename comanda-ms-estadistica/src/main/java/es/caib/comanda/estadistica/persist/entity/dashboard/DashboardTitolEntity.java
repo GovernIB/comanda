@@ -2,6 +2,8 @@ package es.caib.comanda.estadistica.persist.entity.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitol;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +11,8 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -43,6 +47,9 @@ public class DashboardTitolEntity extends BaseAuditableEntity<DashboardTitol> {
     @Column(name = "height", nullable = false)
     private int height;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipus_titol", length = 32)
+    private DashboardTitolTipus tipusTitol;
     @Column(name = "color_titol", length = 8)
     private String colorTitol;
     @Column(name = "mida_font_titol")
@@ -59,5 +66,13 @@ public class DashboardTitolEntity extends BaseAuditableEntity<DashboardTitol> {
     private String colorVora;
     @Column(name = "ample_vora")
     private Integer ampleVora;
+    @Column(name = "destacat")
+    private Boolean destacat;
+    @ManyToOne
+    @JoinColumn(
+            name = "plantilla_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dboard_titol_tpl_fk"))
+    private PlantillaEntity plantilla;
 
 }

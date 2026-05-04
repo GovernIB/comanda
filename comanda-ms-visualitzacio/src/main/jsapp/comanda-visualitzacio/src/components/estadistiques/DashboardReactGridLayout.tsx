@@ -7,17 +7,10 @@ import GraficWidgetVisualization from './GraficWidgetVisualization.tsx';
 import TaulaWidgetVisualization from './TaulaWidgetVisualization.tsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Box, Icon, Menu, MenuItem } from '@mui/material';
+import { Box } from '@mui/material';
 import 'react-grid-layout/css/styles.css';
 import './react-resizable-custom.css';
 import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
-import {MuiFormDialog, MuiFormDialogApi, useBaseAppContext, useConfirmDialogButtons, useResourceApiService} from "reactlib";
-import {useTranslation} from "react-i18next";
-import {
-    AfegirTitolFormContent,
-    useGraficWidgetFormDialog,
-    useSimpleWidgetFormDialog, useTaulaWidgetFormDialog
-} from "../../pages/EstadisticaDashboardEdit.tsx";
 import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback';
 
 const CustomGridLayout = WidthProvider(Responsive);
@@ -38,196 +31,28 @@ const TitolChartWrapper = React.memo<{ dashboardTitol: any }>(({ dashboardTitol 
     return <TitolWidgetVisualization {...dashboardTitol} {...dashboardTitol.atributsVisuals} />;
 });
 
-const useMenu = (props:any) => {
-    const { entity, actions } = props;
-
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const content = <Menu
-        id={`menu-button-${entity?.id}`}
-        MenuListProps={{
-            'aria-labelledby': 'demo-customized-button',
-        }}
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-
-        elevation={0}
-        anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-        }}
-        transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-        }}
-    >
-        {actions?.map?.((action:any, index:number) =>
-                !(typeof action.hidden === 'function' ? action.hidden(entity) : action.hidden)
-                && <div key={`action-${index}`} title={ typeof action.title == 'function' ?action.title?.(entity) :action.title}>
-                    <MenuItem onClick={()=>action?.onClick?.(entity?.id, entity)}
-                              disabled={typeof action?.disabled === 'function' ? action?.disabled(entity) : action?.disabled}
-                    >
-                        {action.icon && <Icon>{action.icon}</Icon>}{action.label}
-                    </MenuItem>
-                </div>
-        )}
-    </Menu>
-
-    return {
-        handleOpen,
-        handleClose,
-        content
-    }
-}
-
-const useCustomGridItemActions = (refresh?: () => void) => {
-    const { t } = useTranslation();
-    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
-    const {messageDialogShow, temporalMessageShow} = useBaseAppContext();
-    const confirmDialogButtons = useConfirmDialogButtons();
-    const confirmDialogComponentProps = {maxWidth: 'sm', fullWidth: true};
-
-    const { delete: deleteDashboardItem } = useResourceApiService('dashboardItem');
-    const { delete: deleteDashboardTitol } = useResourceApiService('dashboardTitol');
-
-    const check = (action: () => void) => {
-        messageDialogShow(
-            'Confirmació',
-            'Estau segur que voleu esborrar aquest element (aquesta acció no es pot desfer)?',
-            confirmDialogButtons,
-            confirmDialogComponentProps)
-            .then((value: any) => {
-                if (value) {
-                    action()
-                }
-            });
-    }
-
-    const deleteDashboardItemCheck = (id:any) => {
-        check(() => {
-            deleteDashboardItem(id)
-                .then(() => {
-                    refresh?.()
-                    temporalMessageShow(null, '', 'success');
-                })
-                .catch((error) => {
-                    if (error?.message) temporalMessageShow(null, error?.message, 'error');
-                });
-        });
-    }
-    const deleteDashboardTitolCheck = (id:any) => {
-        check(() => {
-            deleteDashboardTitol(id)
-                .then(() => {
-                    refresh?.();
-                    temporalMessageShow(null, '', 'success');
-                })
-                .catch((error) => {
-                    if (error?.message) temporalMessageShow(null, error?.message, 'error');
-                });
-        });
-    }
-
-    const {handleOpen: handleSimpleOpen, dialog: dialogSimple} = useSimpleWidgetFormDialog();
-    const {handleOpen: handleGraficOpen, dialog: dialogGrafic} = useGraficWidgetFormDialog();
-    const {handleOpen: handleTaulaOpen, dialog: dialogTaula} = useTaulaWidgetFormDialog();
-
-    const actions = [
-        {
-            label: "Editar",
-            icon: 'edit',
-            showInMenu: true,
-            onClick: (id:any, row:any) => {
-                if (row.tipus === 'TITOL') { formApiRef.current?.show(id).then(()=>refresh?.()) }
-            },
-            hidden: (row:any) => row.tipus !== 'TITOL',
-        },
-        {
-            label: "Editar",
-            icon: 'edit',
-            showInMenu: true,
-            onClick: (_id:any, row:any) => {
-                handleSimpleOpen(row?.widgetId)
-                    ?.then(()=>refresh?.())
-            },
-            hidden: (row:any) => row.tipus !== 'SIMPLE',
-        },
-        {
-            label: "Editar",
-            icon: 'edit',
-            showInMenu: true,
-            onClick: (_id:any, row:any) => {
-                handleGraficOpen(row?.widgetId)
-                    ?.then(()=>refresh?.())
-            },
-            hidden: (row:any) => row.tipus !== 'GRAFIC',
-        },
-        {
-            label: "Editar",
-            icon: 'edit',
-            showInMenu: true,
-            onClick: (_id:any, row:any) => {
-                handleTaulaOpen(row?.widgetId)
-                    ?.then(()=>refresh?.())
-            },
-            hidden: (row:any) => row.tipus !== 'TAULA',
-        },
-        {
-            label: "Borrar",
-            icon: 'delete',
-            showInMenu: true,
-            onClick: (id:any, row:any) => {
-                if (row.tipus === 'TITOL') { deleteDashboardTitolCheck(id) }
-                else { deleteDashboardItemCheck(id) }
-            },
-        },
-    ]
-
-    const content = <>
-        <MuiFormDialog
-            resourceName={'dashboardTitol'}
-            title={t($ => $.page.dashboards.action.llistarTitle.label)}
-            apiRef={formApiRef}
-        >
-            <AfegirTitolFormContent/>
-        </MuiFormDialog>
-        {dialogSimple}
-        {dialogGrafic}
-        {dialogTaula}
-    </>
-
-    return { actions, content }
-}
-
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
     (
-        { entity, refresh, style, className, onMouseDown, onMouseUp, onTouchEnd, editable, children },
+        { entity, style, className, onMouseDown, onMouseUp, onTouchEnd, editable, selected, onSelect, children },
         ref
     ) => {
-        const { actions, content: contentActions } = useCustomGridItemActions(()=>refresh?.())
-        const { handleOpen, content } = useMenu({entity, actions})
         return (<>
             <div
                 style={{
                     ...style,
+                    cursor: editable ? 'pointer' : style?.cursor,
+                    outline: selected ? '2px solid #1976d2' : undefined,
+                    outlineOffset: selected ? '-2px' : undefined,
                 }}
                 className={className}
                 ref={ref}
                 onMouseDown={onMouseDown}
                 onMouseUp={onMouseUp}
                 onTouchEnd={onTouchEnd}
-                onContextMenu={(event) => {
-                    if(editable){
-                        event.preventDefault()
-                        handleOpen(event)
+                onClick={(event) => {
+                    if (editable) {
+                        event.stopPropagation();
+                        onSelect?.(entity);
                     }
                 }}
             >
@@ -236,14 +61,13 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
                         padding: '8px',
                         position: 'relative',
                         height: '100%',
-                        pointerEvents: editable ? 'none' : undefined,
                     }}
                 >
-                    {children}
+                    <div style={{ pointerEvents: editable ? 'none' : undefined, height: '100%' }}>
+                        {children}
+                    </div>
                 </div>
             </div>
-            {content}
-            {contentActions}
         </>);
     }
 );
@@ -292,8 +116,10 @@ type DashboardReactGridLayoutProps = {
     dashboardWidgets: any[];
     gridLayoutItems: GridLayoutItem[];
     onGridLayoutItemsChange?: (gridLayoutItems: GridLayoutItem[]) => void;
+    onSelectItem?: (entity: any) => void;
+    onClearSelection?: () => void;
+    selectedItemId?: string | null;
     editable: boolean;
-    refresh?: () => void;
 };
 
 export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
@@ -318,7 +144,9 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     editable,
     gridLayoutItems,
     onGridLayoutItemsChange,
-    refresh,
+    onSelectItem,
+    onClearSelection,
+    selectedItemId,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
@@ -420,6 +248,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                     width: '100%',
                     minHeight: 'calc(100vh - 196px)',
                 }}
+                onClick={() => editable && onClearSelection?.()}
             >
                 {editable && (
                     <canvas
@@ -437,27 +266,16 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                 )}
                 <CustomGridLayout
                     className="layout"
-                    breakpoints={{
-                        // lg: 1200,
-                        md: 996,
-                        sm: 768,
-                        // xs: 480,
-                    }}
+                    breakpoints={{ md: 0 }}
                     layouts={{ md: layout }}
                     onLayoutChange={onLayoutChange}
-                    cols={{
-                        // lg: 12,
-                        md: horizontalSubdivisions,
-                        sm: 1,
-                        // xs: 1,
-                        // xxs: 1,
-                    }}
+                    cols={{ md: horizontalSubdivisions }}
                     margin={[0, 0]}
                     rowHeight={rowHeight}
                     compactType={null}
                     preventCollision
-                    onWidthChange={(_containerWidth, _margin, cols) => {
-                        setSizeLock(cols === 1);
+                    onWidthChange={() => {
+                        setSizeLock(false);
                     }}
                     isDraggable={!isReadonly}
                     isResizable={!isReadonly}
@@ -474,7 +292,13 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         );
                         if(dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
                         return (
-                            <CustomGridItemComponent key={item.id} refresh={refresh} entity={dashboardWidget ?? dashboardTitol} editable={editable}>
+                            <CustomGridItemComponent
+                                key={item.id}
+                                entity={dashboardWidget ?? dashboardTitol}
+                                editable={editable}
+                                selected={selectedItemId === item.id}
+                                onSelect={onSelectItem}
+                            >
                                 <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
                                     {(() => {
                                         switch (item.type) {

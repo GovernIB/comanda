@@ -3,6 +3,19 @@ import { useResourceApiService } from 'reactlib';
 
 const STATS_ENABLED_CODE = 'es.caib.comanda.stats.enabled';
 
+const resolveBooleanParamValue = (param: any) => {
+    if (typeof param?.valorBoolean === 'boolean') {
+        return param.valorBoolean;
+    }
+    if (typeof param?.valor === 'boolean') {
+        return param.valor;
+    }
+    if (typeof param?.valor === 'string') {
+        return param.valor.trim().toLowerCase() === 'true';
+    }
+    return false;
+};
+
 const useStatsEnabled = () => {
     const { isReady, find } = useResourceApiService('parametre');
     const [statsEnabled, setStatsEnabled] = React.useState<boolean>();
@@ -18,8 +31,7 @@ const useStatsEnabled = () => {
             filter: `codi:'${STATS_ENABLED_CODE}'`,
         }).then(response => {
             const param = response.rows?.[0];
-            const enabled = param?.valorBoolean ?? (param?.valor === 'true');
-            setStatsEnabled(enabled ?? false);
+            setStatsEnabled(resolveBooleanParamValue(param));
         }).catch(() => {
             setStatsEnabled(false);
         });

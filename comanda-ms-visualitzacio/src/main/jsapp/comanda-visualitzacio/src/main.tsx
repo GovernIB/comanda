@@ -9,51 +9,19 @@ import '@fontsource/noto-sans/400.css';
 import '@fontsource/noto-sans/500.css';
 import '@fontsource/noto-sans/700.css';
 import App from './App.tsx';
-import { envVar, KeycloakAuthProvider, ContainerAuthProvider, ResourceApiProvider } from 'reactlib';
+import { KeycloakAuthProvider, ContainerAuthProvider, ResourceApiProvider } from 'reactlib';
 import SseProvider from './components/SseProvider.tsx';
 import UserProvider from './components/UserProvider';
 import MuiThemeProvider from './components/MuiThemeProvider.tsx';
 import { HelmetProvider } from '@dr.pogodin/react-helmet';
 import AlarmsProvider from './components/AlarmsProvider.tsx';
+import { getAuthConfig, getEnvApiUrl, isAuthUrlPresent } from './util/envUtils.ts';
 
 dayjs.extend(duration);
 
 LicenseInfo.setLicenseKey('e0bde345c6cb2453171a44e15a0c58f5Tz0xMjQ4NTIsRT0xODAxMDk0Mzk5MDAwLFM9cHJvLExNPXN1YnNjcmlwdGlvbixQVj1pbml0aWFsLEtWPTI=');
 
-export const envVars = {
-    VITE_API_URL: import.meta.env.VITE_API_URL,
-    VITE_API_PUBLIC_URL: import.meta.env.VITE_API_PUBLIC_URL,
-    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-    VITE_API_SUFFIX: import.meta.env.VITE_API_SUFFIX,
-    VITE_AUTH_PROVIDER_URL: import.meta.env.VITE_AUTH_PROVIDER_URL,
-    VITE_AUTH_PROVIDER_REALM: import.meta.env.VITE_AUTH_PROVIDER_REALM,
-    VITE_AUTH_PROVIDER_CLIENTID: import.meta.env.VITE_AUTH_PROVIDER_CLIENTID,
-};
-
-const getAuthConfig = () => ({
-    url: envVar('VITE_AUTH_PROVIDER_URL', envVars),
-    realm: envVar('VITE_AUTH_PROVIDER_REALM', envVars),
-    clientId: envVar('VITE_AUTH_PROVIDER_CLIENTID', envVars),
-});
-
-export const getEnvApiUrl = () => {
-    const envApiPublicUrl = envVar('VITE_API_PUBLIC_URL', envVars);
-    const envApiUrl = envVar('VITE_API_URL', envVars);
-    if (envApiPublicUrl || envApiUrl) {
-        return envApiPublicUrl ?? envApiUrl;
-    } else {
-        const envApiBaseUrl = envVar('VITE_API_BASE_URL', envVars);
-        const envApiSuffix = envVar('VITE_API_SUFFIX', envVars) ?? '/api';
-        if (envApiBaseUrl) {
-            return envApiBaseUrl + envApiSuffix;
-        } else {
-            return window.location.protocol + '//' + window.location.host + ':' + window.location.port + envApiSuffix;
-        }
-    }
-};
-
-const isAuthUrlPresent = envVar('VITE_AUTH_PROVIDER_URL', envVars) != null;
-const AuthProvider = isAuthUrlPresent ? KeycloakAuthProvider : ContainerAuthProvider;
+const AuthProvider = isAuthUrlPresent() ? KeycloakAuthProvider : ContainerAuthProvider;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

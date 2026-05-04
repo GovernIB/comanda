@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model.export;
 
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public class DashboardTitolExport implements Serializable {
     private int posY;
     private int width;
     private int height;
+    private DashboardTitolTipus tipusTitol;
     private String colorTitol;
     private Integer midaFontTitol;
     private String colorSubtitol;

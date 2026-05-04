@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-palette-order-cleanup-001
+      author: limit
+      comment: Eliminar columna ordre de les paletes de color
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: ${db_prefix}est_color_palette
+            columnName: ordre
+      changes:
+        - dropColumn:
+            tableName: ${db_prefix}est_color_palette
+            columnName: ordre
+      rollback:
+        - addColumn:
+            tableName: ${db_prefix}est_color_palette
+            columns:
+              - column:
+                  name: ordre
+                  type: int
+
+  - changeSet:
+      id: est-palette-order-cleanup-002
+      author: limit
+      comment: Eliminar index de l ordre de paletes de color
+      preConditions:
+        - onFail: MARK_RAN
+        - indexExists:
+            tableName: ${db_prefix}est_color_palette
+            indexName: ${db_prefix}est_cpal_ord_i
+      changes:
+        - dropIndex:
+            tableName: ${db_prefix}est_color_palette
+            indexName: ${db_prefix}est_cpal_ord_i
+      rollback:
+        - createIndex:
+            tableName: ${db_prefix}est_color_palette
+            indexName: ${db_prefix}est_cpal_ord_i
+            columns:
+              - column:
+                  name: ordre

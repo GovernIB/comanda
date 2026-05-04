@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
@@ -70,6 +71,7 @@ public class DashboardTitol extends BaseResource<Long> {
     @NotNull
     private int height;
 
+    private DashboardTitolTipus tipusTitol;
     private String colorTitol;
     private Integer midaFontTitol;
     private String colorSubtitol;
@@ -78,5 +80,7 @@ public class DashboardTitol extends BaseResource<Long> {
     private Boolean mostrarVora;
     private String colorVora;
     private Integer ampleVora;
+    private Boolean destacat;
+    private ResourceReference<Plantilla, Long> plantilla;
 
 }

@@ -51,7 +51,7 @@ export const useDashboard = (dashboardId: any) => {
     return requestState;
 };
 
-export const useDashboardWidgets = (dashboardId: any) => {
+export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
     type RequestStateType = {
         loadingWidgetPositions: boolean;
         loadingWidgetData: boolean;
@@ -96,7 +96,7 @@ export const useDashboardWidgets = (dashboardId: any) => {
                     .map(async (widget) => {
                         const dashboardItemData = (await artifactReportDashboardItem(
                             widget.dashboardItemId,
-                            { code: 'widget_data' }
+                            { code: 'widget_data', temaFosc }
                         )) as any[];
                         const firstDashboardItemData = dashboardItemData[0];
                         if (!firstDashboardItemData) return;
@@ -125,7 +125,7 @@ export const useDashboardWidgets = (dashboardId: any) => {
         return () => {
             cancelRequests = true;
         };
-    }, [dashboardId, apiDashboardIsReady, apiDashboardItemIsReady]);
+    }, [dashboardId, temaFosc, apiDashboardIsReady, apiDashboardItemIsReady]);
 
     useEffect(effectFunction, [effectFunction]);
 

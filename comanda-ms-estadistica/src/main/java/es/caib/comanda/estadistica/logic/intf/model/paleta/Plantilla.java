@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -62,4 +63,7 @@ public class Plantilla extends BaseResource<Long> {
 
     @Transient private TipusGraficEnum tipusGrafic;
     @Transient private Map<String, String> colors;
+    @Transient private List<Paleta> paletes;
+    @Transient private List<DashboardTemplatePaletteGroup> paletteGroups;
+    @Transient private List<WidgetStyleProperty> styleProperties;
 }

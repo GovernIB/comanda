@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
@@ -63,6 +64,19 @@ public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
     private int width;
     @Column(name = "height", nullable = false)
     private int height;
+
+    @Column(name = "destacat")
+    private Boolean destacat;
+
+    @Column(name = "personalitzat")
+    private Boolean personalitzat;
+
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(
+            name = "plantilla_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dboard_item_tpl_fk"))
+    private PlantillaEntity plantilla;
 
     // Estils del widget sobreescrits al dashboard (opcionals)
     @Column(name = "atributs_visuals", length = 4000)

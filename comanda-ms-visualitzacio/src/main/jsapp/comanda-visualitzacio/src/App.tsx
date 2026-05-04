@@ -49,7 +49,7 @@ const useBaseAppMenuEntries = (menuEntries?: MenuEntryWithResource[]) => {
         } else {
             return [];
         }
-    }, [apiIsReady, apiIndex]);
+    }, [apiIsReady, apiIndex, menuEntries]);
 }
 
 export const useAppEntries = () => {
@@ -182,6 +182,20 @@ export const useAppEntries = () => {
                 to: '/estadisticaWidget',
                 icon: 'widgets',
                 resourceName: 'dashboard',
+            } : null,
+            statsEnabled && isUserAdmin ? {
+                id: 'plantilla',
+                title: t($ => $.menu.plantilla),
+                to: '/plantilla',
+                icon: 'palette',
+                resourceName: 'plantilla',
+            } : null,
+            statsEnabled && isUserAdmin ? {
+                id: 'paleta',
+                title: t($ => $.menu.paleta),
+                to: '/paleta',
+                icon: 'format_color_fill',
+                resourceName: 'paleta',
             } : null,
             statsEnabled ? {
                 id: 'dashboard',

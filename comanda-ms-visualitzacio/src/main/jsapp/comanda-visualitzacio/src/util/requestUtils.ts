@@ -3,7 +3,7 @@ import {
     ResourceApiFindArgs,
     ResourceApiFindResponse,
 } from '../../lib/components/ResourceApiProvider.tsx';
-import { getEnvApiUrl } from '../main.tsx';
+import { getEnvApiUrl } from './envUtils.ts';
 
 export const findOptions = async (find: (args: ResourceApiFindArgs) => Promise<ResourceApiFindResponse>, descriptionKey: string, quickFilter: string, filter?: string) => {
     const response = await find({ page: 0, size: 5, filter, quickFilter });

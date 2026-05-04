@@ -51,17 +51,17 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
     return (
       <Grid container spacing={2}>
         <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>{t($ => $.page.widget.form.configGeneral)}</Typography></Grid>
-        <Grid size={12} sx={{backgroundColor: '#FFFFFF'}}><IconAutocompleteSelect name="atributsVisuals.icona" label={t($ => $.page.widget.atributsVisuals.icona)}/></Grid>
-        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorText" label={t($ => $.page.widget.atributsVisuals.colorText)} type="color" required={false} /></Grid>
-        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFons" label={t($ => $.page.widget.atributsVisuals.colorFons)} type="color" required={false} /></Grid>
-        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorIcona" label={t($ => $.page.widget.atributsVisuals.colorIcona)} type="color" required={false} /></Grid>
-        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorFonsIcona" label={t($ => $.page.widget.atributsVisuals.colorFonsIcona)} type="color" required={false} /></Grid>
-        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorTextDestacat" label={t($ => $.page.widget.atributsVisuals.colorTextDestacat)} type="color" required={false} /></Grid>
+        <Grid size={12} sx={{backgroundColor: 'background.paper'}}><IconAutocompleteSelect name="atributsVisuals.icona" label={t($ => $.page.widget.atributsVisuals.icona)}/></Grid>
+        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.colorText" label={t($ => $.page.widget.atributsVisuals.colorText)} type="color" required={false} /></Grid>
+        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.colorFons" label={t($ => $.page.widget.atributsVisuals.colorFons)} type="color" required={false} /></Grid>
+        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.colorIcona" label={t($ => $.page.widget.atributsVisuals.colorIcona)} type="color" required={false} /></Grid>
+        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.colorFonsIcona" label={t($ => $.page.widget.atributsVisuals.colorFonsIcona)} type="color" required={false} /></Grid>
+        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.colorTextDestacat" label={t($ => $.page.widget.atributsVisuals.colorTextDestacat)} type="color" required={false} /></Grid>
         <Grid size={6} />
         <Grid size={6}><FormField name="atributsVisuals.vora" label={t($ => $.page.widget.atributsVisuals.mostrarVora)} type="checkbox" /></Grid>
         <Grid size={6} />
-        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.colorVora" label={t($ => $.page.widget.atributsVisuals.colorVora)} type="color" required={false} /></Grid>
-        <Grid size={6} sx={{backgroundColor: '#FFFFFF'}}><FormField name="atributsVisuals.ampleVora" label={t($ => $.page.widget.atributsVisuals.ampleVora)} type="number" required={false} /></Grid>
+        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.colorVora" label={t($ => $.page.widget.atributsVisuals.colorVora)} type="color" required={false} /></Grid>
+        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.ampleVora" label={t($ => $.page.widget.atributsVisuals.ampleVora)} type="number" required={false} /></Grid>
       </Grid>
     );
   };
@@ -140,7 +140,7 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
           position: 'relative', // Ensure proper stacking context
           m: 0, // No margin
           p: 0, // No padding
-          backgroundColor: '#f8f8f8',
+          backgroundColor: theme.palette.background.paper,
         }}
       >
         {/* Header */}
@@ -160,7 +160,9 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
 
         {/* Content - always expanded */}
         <Box sx={{ overflow: 'auto' }}>
-          {children || renderFormFields()}
+          <Box sx={{bgcolor: 'background.default', color: 'text.primary', p: children ? 0 : 1}}>
+            {children || renderFormFields()}
+          </Box>
         </Box>
       </Paper>
     </Box>

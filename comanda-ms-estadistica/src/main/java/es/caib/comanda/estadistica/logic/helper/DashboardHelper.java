@@ -179,6 +179,7 @@ public class DashboardHelper {
                     clone.setPosY(original.getPosY());
                     clone.setWidth(original.getWidth());
                     clone.setHeight(original.getHeight());
+                    clone.setTipusTitol(original.getTipusTitol());
                     clone.setColorTitol(original.getColorTitol());
                     clone.setMidaFontTitol(original.getMidaFontTitol());
                     clone.setColorSubtitol(original.getColorSubtitol());

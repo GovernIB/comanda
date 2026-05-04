@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-item-presentacio-001
+      author: limit
+      comment: Afegir configuracio de presentacio per items de dashboard
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard_item
+              columnName: destacat
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard_item
+            columns:
+              - column:
+                  name: destacat
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: plantilla_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard_item
+            baseColumnNames: plantilla_id
+            referencedTableName: ${db_prefix}est_dashboard_style_template
+            referencedColumnNames: id
+            constraintName: ${db_prefix}dboard_item_tpl_fk
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_item
+            indexName: ${db_prefix}dboard_item_tpl_i
+            columns:
+              - column:
+                  name: plantilla_id
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_item
+            columnName: destacat
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_item
+            columnName: plantilla_id
+
+  - changeSet:
+      id: est-dashboard-item-presentacio-002
+      author: limit
+      comment: Afegir configuracio de presentacio per titols de dashboard
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard_titol
+              columnName: destacat
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columns:
+              - column:
+                  name: destacat
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: plantilla_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard_titol
+            baseColumnNames: plantilla_id
+            referencedTableName: ${db_prefix}est_dashboard_style_template
+            referencedColumnNames: id
+            constraintName: ${db_prefix}dboard_titol_tpl_fk
+        - createIndex:
+            tableName: ${db_prefix}est_dashboard_titol
+            indexName: ${db_prefix}dboard_titol_tpl_i
+            columns:
+              - column:
+                  name: plantilla_id
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columnName: destacat
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columnName: plantilla_id

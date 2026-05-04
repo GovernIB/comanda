@@ -107,6 +107,14 @@ vi.mock('./pages/Parametres', () => ({
     default: () => <div>Parametres page</div>,
 }));
 
+vi.mock('./pages/Plantilla.tsx', () => ({
+    Plantilla: () => <div>Plantilla page</div>,
+}));
+
+vi.mock('./pages/Paletes', () => ({
+    default: () => <div>Paletes page</div>,
+}));
+
 vi.mock('./pages/Sitemap', () => ({
     default: () => <div>Sitemap page</div>,
 }));
@@ -325,6 +333,20 @@ describe('AppRoutes', () => {
         expect(screen.getByText('DimensioValor page')).toBeInTheDocument();
     });
 
+    it('AppRoutes_quanEsCarregaLaRutaDePlantilla_mostraLaConfiguracioDePlantilles', () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+        render(
+            <MemoryRouter initialEntries={['/plantilla']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('Plantilla page')).toBeInTheDocument();
+    });
+
     it('AppRoutes_quanLaRutaNoExisteix_mostraLaPagina404', () => {
         // Verifica que qualsevol ruta desconeguda cau al component de not found.
         mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
@@ -364,6 +386,22 @@ describe('AppRoutes', () => {
 
         render(
             <MemoryRouter initialEntries={['/dashboard']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Salut page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanLesEstadistiquesNoEstanActives_redirigeixLaRutaDePlantilles', async () => {
+        mocks.useStatsEnabledMock.mockReturnValue(false);
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/plantilla']}>
                 <AppRoutes />
             </MemoryRouter>
         );

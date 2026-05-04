@@ -117,7 +117,8 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             DashboardItemEntity dashboardItem = getDashboardItem(code, entity);
             InformeWidgetItem item;
             try {
-                item = consultaEstadisticaHelper.getDadesWidget(dashboardItem);
+                boolean temaFosc = params != null && Boolean.TRUE.equals(params.getTemaFosc());
+                item = consultaEstadisticaHelper.getDadesWidget(dashboardItem, temaFosc);
             } catch (Exception e) {
                 log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
                 item = InformeWidgetItem.builder()
@@ -129,6 +130,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                         .posY(dashboardItem.getPosY())
                         .width(dashboardItem.getWidth())
                         .height(dashboardItem.getHeight())
+                        .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
                         .error(true)
                         .errorMsg("Error processing item " + dashboardItem.getId() + ": " + e.getMessage())
                         .errorTrace(ExceptionUtils.getStackTrace(e))

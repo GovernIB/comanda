@@ -1,9 +1,8 @@
 package es.caib.comanda.estadistica.persist.entity.paleta;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.Paleta;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
-import es.caib.comanda.ms.persist.entity.BaseEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,10 +12,10 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Table(name = BaseConfig.DB_PREFIX + "plantilla")
-public class PlantillaEntity extends BaseEntity<Plantilla> {
+@Table(name = BaseConfig.DB_PREFIX + "est_dashboard_style_template")
+public class PlantillaEntity extends BaseAuditableEntity<Plantilla> {
 
-    @Column(name = "nom")
+    @Column(name = "nom", nullable = false, length = 128)
     private String nom;
     @Column(name = "mostrar_vora")
     private Boolean mostrarVora;
@@ -86,5 +85,10 @@ public class PlantillaEntity extends BaseEntity<Plantilla> {
     private Integer ampleSeparadorVertical;
 
     @OneToMany(mappedBy = "plantilla", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PaletaEntity> paletes;
+    @OrderBy("ordre ASC")
+    private List<PlantillaGrupPaletesEntity> paletteGroups;
+
+    @OneToMany(mappedBy = "plantilla", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("ordre ASC")
+    private List<WidgetStylePropertyEntity> styleProperties;
 }

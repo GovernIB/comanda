@@ -68,6 +68,11 @@ const translationCa = {
             COM_USER: 'Usuari',
             COM_ADMIN: 'Administrador',
             COM_CONSULTA: 'Consultor'
+        },
+        dashboardTitolTipus: {
+            TIPUS_1: 'Titol 1',
+            TIPUS_2: 'Titol 2',
+            TIPUS_3: 'Titol 3'
         }
     },
     menu: {
@@ -90,6 +95,8 @@ const translationCa = {
         alarmaConfigConsultor: "Configurar alarmes",
         integracio: "Integracions",
         widget: "Widgets estadístics",
+        plantilla: "Plantilles d'estils",
+        paleta: "Paletes",
         dashboard: "Taulers de control",
         calendari: "Calendari",
         parametre: "Paràmetres",

@@ -28,6 +28,7 @@ public class InformeWidgetItem implements Serializable {
     protected int posY;
     protected int width;
     protected int height;
+    protected boolean destacat;
 
     protected boolean error;
     protected String errorMsg;
