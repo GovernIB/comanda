@@ -14,7 +14,7 @@ databaseChangeLog:
                   value: "Configuració"
               - column:
                   name: TIPUS
-                  value: "NUMBER"
+                  value: "NUMERIC"
               - column:
                   name: CODI
                   value: "es.caib.comanda.subsistem.num.error"
