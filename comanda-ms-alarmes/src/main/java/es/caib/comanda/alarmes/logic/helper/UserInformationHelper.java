@@ -5,10 +5,14 @@ import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.Getter;
 import org.fundaciobit.pluginsib.userinformation.ldap.LdapUserInformationPlugin;
+import org.springframework.core.env.Environment;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Properties;
+
+import static es.caib.comanda.base.config.BaseConfig.PROPS_LDAP;
 
 /**
  * Helper per a consultar informacio dels usuaris utilitzant PluginsIb.
@@ -22,10 +26,21 @@ public class UserInformationHelper {
 	private final UsuariServiceClient usuariServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
-	public UserInformationHelper(UsuariServiceClient usuariServiceClient, HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper) {
-        this.usuariServiceClient = usuariServiceClient;
-        this.httpAuthorizationHeaderHelper = httpAuthorizationHeaderHelper;
-        this.userInformationPlugin = new LdapUserInformationPlugin("");
+	public UserInformationHelper(
+			UsuariServiceClient usuariServiceClient,
+			HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
+			Environment environment
+	) {
+		this.usuariServiceClient = usuariServiceClient;
+		this.httpAuthorizationHeaderHelper = httpAuthorizationHeaderHelper;
+		var properties = new Properties();
+		for (String property : PROPS_LDAP) {
+			String value = environment.getProperty(property);
+            if (value != null) {
+                properties.put(property, value);
+            }
+        }
+		this.userInformationPlugin = new LdapUserInformationPlugin("es.caib.comanda.", properties);
 	}
 
 	public Usuari usuariFindByUsername(String username) {

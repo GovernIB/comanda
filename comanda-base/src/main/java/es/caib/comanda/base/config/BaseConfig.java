@@ -59,6 +59,29 @@ public class BaseConfig {
 	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
 	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
 
+	// Propietats de LDAP
+	public static final String[] PROPS_LDAP = new String[]{
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.security_authentication",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.prefix_role_match_memberof",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.memberof",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.department",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.telephone",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.surname2",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.surname1",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.surname",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.name",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.administration_id",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.mail",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.attribute.username",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.host_url",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.security_principal",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.security_credentials",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.suffix_role_match_memberof",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.users_context_dn",
+			PROPERTY_PREFIX + "pluginsib.userinformation.ldap.search_scope",
+	};
+
+	// Propietats de BROKER
 	public static final String PROP_BROKER_PORT = PROPERTY_PREFIX + "broker.port";
 	public static final String PROP_BROKER_USERNAME = PROPERTY_PREFIX + "broker.username";
 	public static final String PROP_BROKER_PASSWORD = PROPERTY_PREFIX + "broker.password";

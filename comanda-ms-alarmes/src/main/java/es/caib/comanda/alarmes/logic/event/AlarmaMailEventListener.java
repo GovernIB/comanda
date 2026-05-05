@@ -20,12 +20,15 @@ public class AlarmaMailEventListener {
     public void onPublishRequest(AlarmaMailPublishRequest request) {
         try {
             alarmaMailHelper.sendAlarmaUser(request.getAlarma());
-
+        } catch (Exception ex) {
+            log.error("Error enviant correus d'alarma d'usuari de forma asíncrona", ex);
+        }
+        try {
             if (request.getAlarma().getAlarmaConfig().isCorreuGeneric()) {
                 alarmaMailHelper.sendAlarmaGeneric(request.getAlarma());
             }
         } catch (Exception ex) {
-            log.error("Error enviant correus d'alarma de forma asíncrona", ex);
+            log.error("Error enviant correu d'alarma genèric de forma asíncrona", ex);
         }
     }
 }
