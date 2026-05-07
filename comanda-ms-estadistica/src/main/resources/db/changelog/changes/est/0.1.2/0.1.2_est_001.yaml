@@ -24,9 +24,6 @@ databaseChangeLog:
                   name: descripcio
                   type: varchar(1024 ${varcharUnit})
               - column:
-                  name: ordre
-                  type: int
-              - column:
                   name: created_by
                   type: varchar(64 ${varcharUnit})
                   constraints:
@@ -49,12 +46,6 @@ databaseChangeLog:
             tableName: ${db_prefix}est_color_palette
             columnNames: nom
             constraintName: ${db_prefix}est_cpal_nom_uk
-        - createIndex:
-            tableName: ${db_prefix}est_color_palette
-            indexName: ${db_prefix}est_cpal_ord_i
-            columns:
-              - column:
-                  name: ordre
       rollback:
         - dropTable:
             tableName: ${db_prefix}est_color_palette
@@ -594,30 +585,30 @@ databaseChangeLog:
               INSERT INTO ${db_prefix}est_dashboard_style_template (id, nom, created_by, created_date, v) VALUES (930002, 'Blau verd', 'liquibase', CURRENT_TIMESTAMP, 0);
               INSERT INTO ${db_prefix}est_dashboard_style_template (id, nom, created_by, created_date, v) VALUES (930003, 'Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
 
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910001, 'Blau clar widget', 'Paleta widget per al tema clar Blau', 0, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910002, 'Blau clar grafic', 'Paleta de grafic per al tema clar Blau', 1, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910003, 'Blau fosc widget', 'Paleta widget per al tema fosc Blau', 4, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910004, 'Blau fosc grafic', 'Paleta de grafic per al tema fosc Blau', 5, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910005, 'Blau clar destacat widget', 'Paleta widget per al tema clar destacat Blau', 2, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910006, 'Blau clar destacat grafic', 'Paleta de grafic per al tema clar destacat Blau', 3, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910007, 'Blau fosc destacat widget', 'Paleta widget per al tema fosc destacat Blau', 6, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910008, 'Blau fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Blau', 7, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910009, 'Blau-Verd clar widget', 'Paleta widget per al tema clar Blau-Verd', 8, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910010, 'Blau-Verd clar grafic', 'Paleta de grafic per al tema clar Blau-Verd', 9, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910011, 'Blau-Verd fosc widget', 'Paleta widget per al tema fosc Blau-Verd', 12, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910012, 'Blau-Verd fosc grafic', 'Paleta de grafic per al tema fosc Blau-Verd', 13, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910013, 'Blau-Verd clar destacat widget', 'Paleta widget per al tema clar destacat Blau-Verd', 10, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910014, 'Blau-Verd clar destacat grafic', 'Paleta de grafic per al tema clar destacat Blau-Verd', 11, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910015, 'Blau-Verd fosc destacat widget', 'Paleta widget per al tema fosc destacat Blau-Verd', 14, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910016, 'Blau-Verd fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Blau-Verd', 15, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910017, 'Calid clar widget', 'Paleta widget per al tema clar Calid', 16, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910018, 'Calid clar grafic', 'Paleta de grafic per al tema clar Calid', 17, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910019, 'Calid fosc widget', 'Paleta widget per al tema fosc Calid', 20, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910020, 'Calid fosc grafic', 'Paleta de grafic per al tema fosc Calid', 21, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910021, 'Calid clar destacat widget', 'Paleta widget per al tema clar destacat Calid', 18, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910022, 'Calid clar destacat grafic', 'Paleta de grafic per al tema clar destacat Calid', 19, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910023, 'Calid fosc destacat widget', 'Paleta widget per al tema fosc destacat Calid', 22, 'liquibase', CURRENT_TIMESTAMP, 0);
-              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, ordre, created_by, created_date, v) VALUES (910024, 'Calid fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Calid', 23, 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910001, 'Blau clar widget', 'Paleta widget per al tema clar Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910002, 'Blau clar grafic', 'Paleta de grafic per al tema clar Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910003, 'Blau fosc widget', 'Paleta widget per al tema fosc Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910004, 'Blau fosc grafic', 'Paleta de grafic per al tema fosc Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910005, 'Blau clar destacat widget', 'Paleta widget per al tema clar destacat Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910006, 'Blau clar destacat grafic', 'Paleta de grafic per al tema clar destacat Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910007, 'Blau fosc destacat widget', 'Paleta widget per al tema fosc destacat Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910008, 'Blau fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Blau', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910009, 'Blau-Verd clar widget', 'Paleta widget per al tema clar Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910010, 'Blau-Verd clar grafic', 'Paleta de grafic per al tema clar Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910011, 'Blau-Verd fosc widget', 'Paleta widget per al tema fosc Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910012, 'Blau-Verd fosc grafic', 'Paleta de grafic per al tema fosc Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910013, 'Blau-Verd clar destacat widget', 'Paleta widget per al tema clar destacat Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910014, 'Blau-Verd clar destacat grafic', 'Paleta de grafic per al tema clar destacat Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910015, 'Blau-Verd fosc destacat widget', 'Paleta widget per al tema fosc destacat Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910016, 'Blau-Verd fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Blau-Verd', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910017, 'Calid clar widget', 'Paleta widget per al tema clar Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910018, 'Calid clar grafic', 'Paleta de grafic per al tema clar Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910019, 'Calid fosc widget', 'Paleta widget per al tema fosc Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910020, 'Calid fosc grafic', 'Paleta de grafic per al tema fosc Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910021, 'Calid clar destacat widget', 'Paleta widget per al tema clar destacat Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910022, 'Calid clar destacat grafic', 'Paleta de grafic per al tema clar destacat Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910023, 'Calid fosc destacat widget', 'Paleta widget per al tema fosc destacat Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
+              INSERT INTO ${db_prefix}est_color_palette (id, nom, descripcio, created_by, created_date, v) VALUES (910024, 'Calid fosc destacat grafic', 'Paleta de grafic per al tema fosc destacat Calid', 'liquibase', CURRENT_TIMESTAMP, 0);
 
               INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940001, 930001, 'LIGHT', 910001, 910002, 0, 'liquibase', CURRENT_TIMESTAMP, 0);
               INSERT INTO ${db_prefix}est_dashboard_template_palette_group (id, template_id, group_type, widget_palette_id, chart_palette_id, ordre, created_by, created_date, v) VALUES (940002, 930001, 'DARK', 910003, 910004, 2, 'liquibase', CURRENT_TIMESTAMP, 0);
