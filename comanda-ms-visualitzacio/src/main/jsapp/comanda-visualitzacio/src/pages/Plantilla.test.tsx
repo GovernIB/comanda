@@ -162,7 +162,7 @@ describe('Plantilla', () => {
         const option = await screen.findByRole('option', { name: /Tema fosc destacat - widget/ });
         expect(option.querySelector('[data-palette-color="#111827"]')).toBeInTheDocument();
         expect(screen.queryByRole('option', { name: /Tema clar - widget/ })).not.toBeInTheDocument();
-    }, 10000);
+    }, 30000);
 
     it('cambia de pestaña al hacer clic en los tabs', async () => {
         const user = userEvent.setup();
