@@ -447,10 +447,11 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
     const preview = useCallback((name: string) => {
         setSelected(name);
         setDialogOpen(false);
+        setScrollToBottom(true);
     }, []);
 
     const [softWrap, setSoftWrap] = useState(false);
-    const [scrollToBottom, setScrollToBottom] = useState(false);
+    const [scrollToBottom, setScrollToBottom] = useState(true);
 
     return (
         <Box
