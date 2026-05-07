@@ -47,13 +47,13 @@ import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
 import { Alert, Checkbox, FormControl, InputLabel, LinearProgress, ListItemText, MenuItem, OutlinedInput, Select, SelectChangeEvent, Tooltip } from '@mui/material';
 import { SalutData } from './Salut.tsx';
-import { AppDataState, SalutInformeLatenciaItem } from './dataFetching';
+import { AppDataState, DefaultLogsPerspective, SalutInformeLatenciaItem } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
 import { EntornAppModel } from '../../types/app.model';
 import SalutChip from '../../components/salut/SalutChip';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
-import LogsViewer from './LogsViewer';
+import { PreselectLogsViewer } from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
 import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
 
@@ -1152,7 +1152,7 @@ const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) =
     );
 };
 
-const TabLogs = ({ entornApp }: { entornApp: EntornAppModel | null }) => {
+const TabLogs = ({ entornApp }: { entornApp: (EntornAppModel & DefaultLogsPerspective) | null }) => {
     if (entornApp == null)
         return (
             <Box
@@ -1168,7 +1168,7 @@ const TabLogs = ({ entornApp }: { entornApp: EntornAppModel | null }) => {
             </Box>
         );
 
-    return <LogsViewer entornAppId={entornApp.id} />;
+    return <PreselectLogsViewer entornApp={entornApp} />;
 };
 
 const tabContentPaddingAmount = 2;

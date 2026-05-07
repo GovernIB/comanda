@@ -723,4 +723,43 @@ public class EntornAppServiceImplTest {
         // Assert
         assertTrue(result.getSuccess());
     }
+
+    @Test
+    @DisplayName("DefaultLogsPerspectiveApplicator: aplica els logs per defecte segons el nom de l'aplicació")
+    void defaultLogsPerspectiveApplicator_aplicaLogsPerDefecte() {
+        AppEntity appEntity = new AppEntity();
+        appEntity.setNom("Comanda");
+
+        EntornAppEntity entity = new EntornAppEntity();
+        entity.setApp(appEntity);
+
+        EntornApp resource = new EntornApp();
+
+        EntornAppServiceImpl.DefaultLogsPerspectiveApplicator applicator =
+                new EntornAppServiceImpl.DefaultLogsPerspectiveApplicator();
+
+        applicator.applySingle(EntornApp.PERSPECTIVE_DEFAULT_LOGS, entity, resource);
+
+        assertArrayEquals(
+                new String[]{"es.caib.comanda.log", "server.log"},
+                resource.getDefaultLogs()
+        );
+    }
+
+    @Test
+    @DisplayName("DefaultLogsPerspectiveApplicator: aplica un nom buit quan l'aplicació és null")
+    void defaultLogsPerspectiveApplicator_quanAppEsNull_aplicaLogAmbNomBuit() {
+        EntornAppEntity entity = new EntornAppEntity();
+        EntornApp resource = new EntornApp();
+
+        EntornAppServiceImpl.DefaultLogsPerspectiveApplicator applicator =
+                new EntornAppServiceImpl.DefaultLogsPerspectiveApplicator();
+
+        applicator.applySingle(EntornApp.PERSPECTIVE_DEFAULT_LOGS, entity, resource);
+
+        assertArrayEquals(
+                new String[]{"es.caib..log", "server.log"},
+                resource.getDefaultLogs()
+        );
+    }
 }

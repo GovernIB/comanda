@@ -212,6 +212,7 @@ vi.mock('../../components/salut/SalutErrorBoundaryFallback', () => ({
 
 vi.mock('./LogsViewer', () => ({
     default: ({ entornAppId }: { entornAppId: number }) => <div>Logs viewer {entornAppId}</div>,
+    PreselectLogsViewer: ({ entornApp }: { entornApp: any }) => <div>Logs viewer {entornApp.id}</div>,
 }));
 
 vi.mock('../../components/PageTitle.tsx', () => ({

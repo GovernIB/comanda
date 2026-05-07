@@ -25,6 +25,7 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
@@ -104,6 +105,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository));
         register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
+        register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
     }
 
 	@Override
@@ -462,6 +464,15 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public void onChange(Serializable id, EntornApp.PrevisualitzarLogParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornApp.PrevisualitzarLogParams target) {}
+    }
+
+    public static class DefaultLogsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
+        @Override
+        public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
+            String appName = entity.getApp() != null ? entity.getApp().getNom() : "";
+            String[] defaultLogs = {"es.caib." + appName.toLowerCase() + ".log", "server.log"};
+            resource.setDefaultLogs(defaultLogs);
+        }
     }
 
 }

@@ -20,6 +20,8 @@ import { mergeSequentialStringArrays } from '../../util/stringUtils';
 import { useTranslation } from 'react-i18next';
 import useDataGridLocale from '../../hooks/useDataGridLocale';
 import { useMessage } from '../../components/MessageShow';
+import { EntornAppModel } from '../../types/app.model.tsx';
+import { DefaultLogsPerspective } from './dataFetching.ts';
 
 /**
  * Informació de la llista de fitxers de log.
@@ -62,19 +64,22 @@ const LogList = ({
     const { showTemporal: showMessage, component } = useMessage();
     const dataGridLocale = useDataGridLocale();
     const [logs, setLogs] = useState<FitxerInfo[]>([]);
+    const [logsLoading, setLogsLoading] = useState<boolean>(true);
     useEffect(() => {
         if (!isReady) {
             return;
         }
         async function requests() {
             try {
+                setLogsLoading(true);
                 const list = await artifactReport(entornAppId, {
                     code: 'llistar_logs',
                 });
                 setLogs(list as FitxerInfo[]);
             } catch (e) {
-                // @ts-ignore
-                showMessage("Error", e?.message, 'error');
+                showMessage("Error", (e as any)?.message, 'error');
+            } finally {
+                setLogsLoading(false);
             }
         }
         requests();
@@ -162,7 +167,7 @@ const LogList = ({
         <>
             {component}
             <DataGridPro
-            loading={loading}
+            loading={loading || logsLoading}
             localeText={dataGridLocale}
             initialState={{
                 sorting: {
@@ -352,9 +357,9 @@ const LivePreview = ({
  * Component principal de la pestanya de logs de salut.
  * Gestiona la selecció de fitxers, la càrrega de dades i la previsualització en directe.
  */
-const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
+const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, preselectedLog: string | null }) => {
     const { t } = useTranslation();
-    const [selected, setSelected] = useState<string>();
+    const [selected, setSelected] = useState<string | null>(preselectedLog);
     const [lines, setLines] = useState<string[] | null>(null);
     const [isRefreshLoading, setIsRefreshLoading] = useState<boolean>(false);
     const [isDownloadLoading, setIsDownloadLoading] = useState<boolean>(false);
@@ -588,3 +593,47 @@ const LogsViewer = ({ entornAppId }: { entornAppId: number }) => {
 };
 
 export default LogsViewer;
+
+export const PreselectLogsViewer = ({
+    entornApp,
+}: {
+    entornApp: EntornAppModel & DefaultLogsPerspective;
+}) => {
+    const { isReady, artifactReport } = useResourceApiService('entornApp');
+    const [preselectedLog, setPreselectedLog] = useState<string | null>();
+    useEffect(() => {
+        if (!isReady) return;
+        artifactReport(entornApp.id, {
+            code: 'llistar_logs',
+        })
+            .then(response => response as FitxerInfo[])
+            .then(fitxerList => {
+                for (const defaultLogName of entornApp.defaultLogs) {
+                    if (fitxerList.find(log => log.nom === defaultLogName)) {
+                        setPreselectedLog(defaultLogName);
+                        return;
+                    }
+                }
+                setPreselectedLog(null);
+            })
+            .catch(error => {
+                console.error('Error al procés de selecció automàtica de logs', error);
+                setPreselectedLog(null);
+            });
+    }, [isReady, artifactReport, entornApp]);
+    if (preselectedLog === undefined)
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                }}
+            >
+                <CircularProgress size={50} />
+            </Box>
+        );
+    return <LogsViewer entornAppId={entornApp.id} preselectedLog={preselectedLog} />;
+};

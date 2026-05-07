@@ -8,6 +8,12 @@ import { SalutModel } from '../../types/salut.model';
 import { EntornAppModel } from '../../types/app.model';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
 
+// es.caib.comanda.configuracio.logic.intf.model.EntornApp#PERSPECTIVE_DEFAULT_LOGS
+const PERSPECTIVE_DEFAULT_LOGS_NAME = 'default_logs';
+export type DefaultLogsPerspective = {
+    defaultLogs: string[];
+}
+
 // es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem
 export type SalutInformeLatenciaItem = {
     data: string;
@@ -15,7 +21,7 @@ export type SalutInformeLatenciaItem = {
 };
 export interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
-    entornApp: EntornAppModel | null;
+    entornApp: (EntornAppModel & DefaultLogsPerspective) | null;
     estats: Record<string, any> | null;
     latencies: SalutInformeLatenciaItem[] | null;
     salutCurrentApp: SalutModel | null;
@@ -58,7 +64,9 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
                 error: undefined,
             }));
             try {
-                const entornApp = await entornAppGetOne(id);
+                const entornApp = await entornAppGetOne(id, {
+                    perspectives: [PERSPECTIVE_DEFAULT_LOGS_NAME],
+                });
                 const entornAppId = entornApp.id;
                 const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
                 const agrupacio = agrupacioFromMinutes(dataRangeMinutes);

@@ -70,7 +70,8 @@ import java.util.List;
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_PREVISUALITZAR_LOG, requiresId = true, formClass = EntornApp.PrevisualitzarLogParams.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.OPTIONAL_ENTORN_APP_FILTER, formClass = EntornApp.OptionalEntornAppFilter.class),
-				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class)
+				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class),
+				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_DEFAULT_LOGS),
 		}
 )
 @EntornAppExists
@@ -85,6 +86,7 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String REPORT_LLISTAR_LOGS = "llistar_logs";
 	public final static String REPORT_DESCARREGAR_LOG = "descarregar_log";
 	public final static String REPORT_PREVISUALITZAR_LOG = "previsualitzar_log";
+	public final static String PERSPECTIVE_DEFAULT_LOGS = "default_logs";
 
 	@NotNull
 	@Transient
@@ -117,6 +119,9 @@ public class EntornApp extends BaseResource<Long> {
 	@URL
 	@Size(max = 200)
 	private String logsUrl;
+
+	// Camps calculats de logs
+	private String[] defaultLogs;
 
 	// Informació de salut
 	@URL

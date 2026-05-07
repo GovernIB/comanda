@@ -161,7 +161,7 @@ describe('LogsViewer', () => {
 
     it('LogsViewer_quanNoHiHaCapFitxerSeleccionat_mostraLEstatBuit', () => {
         // Comprova que el component mostra el placeholder de previsualització buida abans de seleccionar cap log.
-        render(<LogsViewer entornAppId={7} />);
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
 
         expect(screen.getByText('Sense fitxer seleccionat')).toBeInTheDocument();
         expect(screen.getByText('Sense previsualització')).toBeInTheDocument();
@@ -169,7 +169,7 @@ describe('LogsViewer', () => {
 
     it('LogsViewer_quanEsSeleccionaUnFitxer_carregaLaPrevisualitzacio', async () => {
         // Verifica que en seleccionar un fitxer des del diàleg es carrega i es mostra el contingut previsualitzat.
-        render(<LogsViewer entornAppId={7} />);
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Sense fitxer seleccionat' }));
         expect(await screen.findByRole('heading', { name: 'Llistat de logs' })).toBeInTheDocument();
@@ -192,7 +192,7 @@ describe('LogsViewer', () => {
 
     it('LogsViewer_quanEsDescarregaUnFitxer_creaLaUrlTemporalIElDescarrega', async () => {
         // Comprova que l'acció de descàrrega genera una object URL i la revoca després de l'ús.
-        render(<LogsViewer entornAppId={7} />);
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Sense fitxer seleccionat' }));
         fireEvent.click(await screen.findByRole('button', { name: 'Previsualitzar' }));
@@ -215,7 +215,7 @@ describe('LogsViewer', () => {
 
     it('LogsViewer_quanEsPremRefrescar_tornaACarregarLaPrevisualitzacio', async () => {
         // Verifica que el botó de refresc torna a consultar la previsualització del fitxer seleccionat.
-        render(<LogsViewer entornAppId={7} />);
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Sense fitxer seleccionat' }));
         fireEvent.click(await screen.findByRole('button', { name: 'Previsualitzar' }));
@@ -260,7 +260,7 @@ describe('LogsViewer', () => {
             });
         });
 
-        render(<LogsViewer entornAppId={7} />);
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Sense fitxer seleccionat' }));
         fireEvent.click(await screen.findByRole('button', { name: 'Previsualitzar' }));
