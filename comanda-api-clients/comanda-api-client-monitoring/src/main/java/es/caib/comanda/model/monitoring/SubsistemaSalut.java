@@ -54,27 +54,27 @@ public class SubsistemaSalut {
   private String codi;
 
   public static final String JSON_PROPERTY_TOTAL_OK = "totalOk";
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
   private Long totalOk;
 
   public static final String JSON_PROPERTY_TOTAL_ERROR = "totalError";
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
   private Long totalError;
 
   public static final String JSON_PROPERTY_TOTAL_TEMPS_MIG = "totalTempsMig";
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
   private Integer totalTempsMig;
 
   public static final String JSON_PROPERTY_PETICIONS_OK_ULTIM_PERIODE = "peticionsOkUltimPeriode";
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
   private Long peticionsOkUltimPeriode;
 
   public static final String JSON_PROPERTY_PETICIONS_ERROR_ULTIM_PERIODE = "peticionsErrorUltimPeriode";
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
   private Long peticionsErrorUltimPeriode;
 
   public static final String JSON_PROPERTY_TEMPS_MIG_ULTIM_PERIODE = "tempsMigUltimPeriode";
-  @javax.annotation.Nonnull
+  @javax.annotation.Nullable
   private Integer tempsMigUltimPeriode;
 
   public SubsistemaSalut() {
@@ -155,7 +155,7 @@ public class SubsistemaSalut {
     this.codi = codi;
   }
 
-  public SubsistemaSalut totalOk(@javax.annotation.Nonnull Long totalOk) {
+  public SubsistemaSalut totalOk(@javax.annotation.Nullable Long totalOk) {
     
     this.totalOk = totalOk;
     return this;
@@ -165,22 +165,22 @@ public class SubsistemaSalut {
    * Total de peticions amb resultat correcte
    * @return totalOk
    */
-  @javax.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TOTAL_OK, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TOTAL_OK, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public Long getTotalOk() {
     return totalOk;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TOTAL_OK, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setTotalOk(@javax.annotation.Nonnull Long totalOk) {
+  @JsonProperty(value = JSON_PROPERTY_TOTAL_OK, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setTotalOk(@javax.annotation.Nullable Long totalOk) {
     this.totalOk = totalOk;
   }
 
-  public SubsistemaSalut totalError(@javax.annotation.Nonnull Long totalError) {
+  public SubsistemaSalut totalError(@javax.annotation.Nullable Long totalError) {
     
     this.totalError = totalError;
     return this;
@@ -190,22 +190,22 @@ public class SubsistemaSalut {
    * Total de peticions amb error
    * @return totalError
    */
-  @javax.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TOTAL_ERROR, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TOTAL_ERROR, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public Long getTotalError() {
     return totalError;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TOTAL_ERROR, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setTotalError(@javax.annotation.Nonnull Long totalError) {
+  @JsonProperty(value = JSON_PROPERTY_TOTAL_ERROR, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setTotalError(@javax.annotation.Nullable Long totalError) {
     this.totalError = totalError;
   }
 
-  public SubsistemaSalut totalTempsMig(@javax.annotation.Nonnull Integer totalTempsMig) {
+  public SubsistemaSalut totalTempsMig(@javax.annotation.Nullable Integer totalTempsMig) {
     
     this.totalTempsMig = totalTempsMig;
     return this;
@@ -215,22 +215,22 @@ public class SubsistemaSalut {
    * Temps mig total de resposta (ms)
    * @return totalTempsMig
    */
-  @javax.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TOTAL_TEMPS_MIG, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TOTAL_TEMPS_MIG, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public Integer getTotalTempsMig() {
     return totalTempsMig;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TOTAL_TEMPS_MIG, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setTotalTempsMig(@javax.annotation.Nonnull Integer totalTempsMig) {
+  @JsonProperty(value = JSON_PROPERTY_TOTAL_TEMPS_MIG, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setTotalTempsMig(@javax.annotation.Nullable Integer totalTempsMig) {
     this.totalTempsMig = totalTempsMig;
   }
 
-  public SubsistemaSalut peticionsOkUltimPeriode(@javax.annotation.Nonnull Long peticionsOkUltimPeriode) {
+  public SubsistemaSalut peticionsOkUltimPeriode(@javax.annotation.Nullable Long peticionsOkUltimPeriode) {
     
     this.peticionsOkUltimPeriode = peticionsOkUltimPeriode;
     return this;
@@ -240,22 +240,22 @@ public class SubsistemaSalut {
    * Peticions OK en el darrer període
    * @return peticionsOkUltimPeriode
    */
-  @javax.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PETICIONS_OK_ULTIM_PERIODE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_PETICIONS_OK_ULTIM_PERIODE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public Long getPeticionsOkUltimPeriode() {
     return peticionsOkUltimPeriode;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PETICIONS_OK_ULTIM_PERIODE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPeticionsOkUltimPeriode(@javax.annotation.Nonnull Long peticionsOkUltimPeriode) {
+  @JsonProperty(value = JSON_PROPERTY_PETICIONS_OK_ULTIM_PERIODE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setPeticionsOkUltimPeriode(@javax.annotation.Nullable Long peticionsOkUltimPeriode) {
     this.peticionsOkUltimPeriode = peticionsOkUltimPeriode;
   }
 
-  public SubsistemaSalut peticionsErrorUltimPeriode(@javax.annotation.Nonnull Long peticionsErrorUltimPeriode) {
+  public SubsistemaSalut peticionsErrorUltimPeriode(@javax.annotation.Nullable Long peticionsErrorUltimPeriode) {
     
     this.peticionsErrorUltimPeriode = peticionsErrorUltimPeriode;
     return this;
@@ -265,22 +265,22 @@ public class SubsistemaSalut {
    * Peticions en error en el darrer període
    * @return peticionsErrorUltimPeriode
    */
-  @javax.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PETICIONS_ERROR_ULTIM_PERIODE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_PETICIONS_ERROR_ULTIM_PERIODE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public Long getPeticionsErrorUltimPeriode() {
     return peticionsErrorUltimPeriode;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PETICIONS_ERROR_ULTIM_PERIODE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPeticionsErrorUltimPeriode(@javax.annotation.Nonnull Long peticionsErrorUltimPeriode) {
+  @JsonProperty(value = JSON_PROPERTY_PETICIONS_ERROR_ULTIM_PERIODE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setPeticionsErrorUltimPeriode(@javax.annotation.Nullable Long peticionsErrorUltimPeriode) {
     this.peticionsErrorUltimPeriode = peticionsErrorUltimPeriode;
   }
 
-  public SubsistemaSalut tempsMigUltimPeriode(@javax.annotation.Nonnull Integer tempsMigUltimPeriode) {
+  public SubsistemaSalut tempsMigUltimPeriode(@javax.annotation.Nullable Integer tempsMigUltimPeriode) {
     
     this.tempsMigUltimPeriode = tempsMigUltimPeriode;
     return this;
@@ -290,18 +290,18 @@ public class SubsistemaSalut {
    * Temps mig de resposta en el darrer període (ms)
    * @return tempsMigUltimPeriode
    */
-  @javax.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TEMPS_MIG_ULTIM_PERIODE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TEMPS_MIG_ULTIM_PERIODE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public Integer getTempsMigUltimPeriode() {
     return tempsMigUltimPeriode;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TEMPS_MIG_ULTIM_PERIODE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setTempsMigUltimPeriode(@javax.annotation.Nonnull Integer tempsMigUltimPeriode) {
+  @JsonProperty(value = JSON_PROPERTY_TEMPS_MIG_ULTIM_PERIODE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setTempsMigUltimPeriode(@javax.annotation.Nullable Integer tempsMigUltimPeriode) {
     this.tempsMigUltimPeriode = tempsMigUltimPeriode;
   }
 

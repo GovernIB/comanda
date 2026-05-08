@@ -20,6 +20,7 @@
         <!-- Valors per defecte per a propietats de manifest (podran ser sobreescrits pel reactor arrel) -->
         <scmBranch>local</scmBranch>
         <buildNumber>0</buildNumber>
+        <generated.openapi.dir>${project.build.outputDirectory}/openapi</generated.openapi.dir>
     </properties>
     <dependencies>
         <dependency>
@@ -134,8 +135,8 @@
                 </executions>
 
                 <configuration>
-                    <!-- On es generaran els fitxers -->
-                    <outputDirectory>${project.basedir}/src/main/resources/openapi</outputDirectory>
+                    <!-- On es generaran els fitxers consumits pel WAR i pels generadors -->
+                    <outputDirectory>${generated.openapi.dir}</outputDirectory>
 
                     <!-- Config general (opcional, però correcte per Spring MVC) -->
                     <apiConfiguration>
@@ -181,10 +182,10 @@
                     <!-- 1) Afegeix x-return-response al monitoring -->
                     <execution>
                         <id>patch-monitoring-yaml</id>
-                        <phase>prepare-package</phase>
+                        <phase>process-classes</phase>
                         <goals><goal>replace</goal></goals>
                         <configuration>
-                            <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-monitoring.yml</file>
+                            <file>${generated.openapi.dir}/openapi-comanda-monitoring.yml</file>
                             <replacements>
                                 <replacement>
                                     <token>x-operation-name: descarregarFitxerDirecte</token>
@@ -198,10 +199,10 @@
                     <!-- 2) Elimina el camp 'esborrar' del management -->
                     <execution>
                         <id>remove-esborrar-from-management-yaml</id>
-                        <phase>prepare-package</phase>
+                        <phase>process-classes</phase>
                         <goals><goal>replace</goal></goals>
                         <configuration>
-                            <file>${project.basedir}/src/main/resources/openapi/openapi-comanda-management.yml</file>
+                            <file>${generated.openapi.dir}/openapi-comanda-management.yml</file>
                             <regex>true</regex>
                             <replacements>
                                 <replacement>
@@ -231,7 +232,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-monitoring.yml</inputSpec>
+                            <inputSpec>${generated.openapi.dir}/openapi-comanda-monitoring.yml</inputSpec>
                             <generatorName>jaxrs-spec</generatorName>
                             <output>${project.basedir}/../comanda-api-servers/comanda-api-server-monitoring</output>
                             <apiPackage>es.caib.comanda.api.server.monitoring</apiPackage>
@@ -277,7 +278,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-monitoring.yml</inputSpec>
+                            <inputSpec>${generated.openapi.dir}/openapi-comanda-monitoring.yml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>resteasy</library>
                             <output>${project.basedir}/../comanda-api-clients/comanda-api-client-monitoring</output>
@@ -331,7 +332,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi-comanda-management.yml</inputSpec>
+                            <inputSpec>${generated.openapi.dir}/openapi-comanda-management.yml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>resteasy</library>
                             <output>${project.basedir}/../comanda-api-clients/comanda-api-client-management</output>

@@ -45,7 +45,7 @@ public class SubsistemaInfo   {
   
   @ApiModelProperty(example = "ALTA_REST", required = true, value = "Codi del subsistema")
   @JsonProperty(required = true, value = "codi")
-  @NotNull  @Size(min=1,max=64)public String getCodi() {
+  @NotNull  @Size(min=1,max=100)public String getCodi() {
     return codi;
   }
 
