@@ -65,6 +65,7 @@ public class AlarmaConfig extends BaseResource<Long> {
     @Digits(integer = 15, fraction = 4)
 	private BigDecimal valor;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
+    @Digits(integer = 15, fraction = 4)
 	private BigDecimal periodeValor;
     @ValidAdminValue
 	private boolean admin;
