@@ -475,7 +475,9 @@ class SalutServiceImplTest {
 
         List<SalutInformeEstatItem> result = service.new InformeEstat().generateData(Salut.SALUT_REPORT_ESTAT, null, params);
 
-        assertThat(result).hasSize(1);
+        assertThat(result).hasSizeGreaterThan(1); // La llista s'ha completat amb els temps que no tenim informació
+        assertThat(result) // El nostre registre existeix
+                .anyMatch(item -> item.getData().equals(LocalDateTime.of(2026, 3, 16, 8, 6)));
         verify(salutRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
                 88L,
                 LocalDateTime.of(2026, 3, 16, 7, 8),

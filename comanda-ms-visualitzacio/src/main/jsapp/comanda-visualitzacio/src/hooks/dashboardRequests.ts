@@ -96,7 +96,7 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
                     .map(async (widget) => {
                         const dashboardItemData = (await artifactReportDashboardItem(
                             widget.dashboardItemId,
-                            { code: 'widget_data', temaFosc }
+                            { code: 'widget_data', data: { temaFosc } }
                         )) as any[];
                         const firstDashboardItemData = dashboardItemData[0];
                         if (!firstDashboardItemData) return;

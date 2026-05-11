@@ -75,9 +75,14 @@ class AvisServiceImplTest {
         when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> avisService.receiveMessage(avisBroker, jmsMessage))
-                .isInstanceOf(ResourceNotFoundException.class);
+        avisService.receiveMessage(avisBroker, jmsMessage);
+
+        // Assert
         verify(jmsMessage).acknowledge();
+        verify(avisRepository, never()).save(any());
+        verify(avisRepository, never()).delete(any());
+        verify(avisMapper, never()).toAvis(any(es.caib.comanda.model.v1.avis.Avis.class), any(EntornApp.class));
+        verify(avisMapper, never()).toAvisEntity(any());
     }
 
     @Test

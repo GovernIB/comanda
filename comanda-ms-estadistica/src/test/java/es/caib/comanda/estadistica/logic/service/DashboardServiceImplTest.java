@@ -16,6 +16,7 @@ import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -147,12 +149,17 @@ class DashboardServiceImplTest {
         DashboardEntity entity = new DashboardEntity();
         entity.setId(dashboardId);
 
+        EstadisticaWidgetEntity widget = Mockito.mock(EstadisticaWidgetEntity.class, CALLS_REAL_METHODS);
+        widget.setId(100L);
+        widget.setTitol("Test Widget Title");
+
         DashboardItemEntity item = new DashboardItemEntity();
         item.setId(10L);
         item.setPosX(0);
         item.setPosY(0);
         item.setWidth(6);
         item.setHeight(4);
+        item.setWidget(widget);
         entity.setItems(Arrays.asList(item));
 
         DashboardTitolEntity titol = new DashboardTitolEntity();

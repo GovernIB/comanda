@@ -65,11 +65,14 @@ class TascaServiceImplTest {
 
         when(tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(ResourceNotFoundException.class, () -> {
-            tascaService.receiveMessage(tascaBroker, jmsMessage);
-        });
+        // Act
+        tascaService.receiveMessage(tascaBroker, jmsMessage);
+
+        // Assert
         verify(jmsMessage).acknowledge();
+        verify(tascaRepository, never()).save(any());
+        verify(tascaRepository, never()).delete(any());
+        verify(tascaMapper, never()).toTascaEntity(any());
     }
 
     @Test

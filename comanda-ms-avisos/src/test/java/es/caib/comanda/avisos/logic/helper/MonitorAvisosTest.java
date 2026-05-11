@@ -49,7 +49,7 @@ class MonitorAvisosTest {
         assertThat(monitor.getEntornAppId()).isEqualTo(10L);
         assertThat(monitor.getUrl()).isEqualTo("http://url");
         assertThat(monitor.getCodiUsuari()).isEqualTo("usuari1");
-        assertThat(monitor.getTipus()).isEqualTo(AccioTipusEnum.SORTIDA);
+        assertThat(monitor.getTipus()).isEqualTo(AccioTipusEnum.ENTRADA);
     }
 
     @Test

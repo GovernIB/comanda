@@ -9,10 +9,7 @@ import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTaulaItem;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
@@ -196,11 +193,11 @@ public class ConsultaEstadisticaHelperTest {
                 .thenReturn("42.0");
 
         // Act
-        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(dashboardItem);
+        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(dashboardItem, false);
 
         // Assert
         assertNotNull(result);
-        assertTrue(result instanceof es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem);
+        assertInstanceOf(InformeWidgetSimpleItem.class, result);
         es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem simpleItem = 
                 (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem) result;
         assertEquals("42.0", simpleItem.getValor());
@@ -688,7 +685,7 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getDadesComunsConsulta", DashboardItemEntity.class);
+                    "getDadesComunsConsulta", DashboardItemEntity.class, boolean.class);
             method.setAccessible(true);
 
             // Arrange
@@ -708,11 +705,11 @@ public class ConsultaEstadisticaHelperTest {
                     .thenReturn(Entorn.builder().codi("DEV").build());
 
             // Act
-            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem);
+            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, false);
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta);
+            assertInstanceOf(DadesComunsWidgetConsulta.class, result);
             es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta dades = 
                     (es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta) result;
             assertEquals(3L, dades.getEntornAppId());
@@ -729,7 +726,7 @@ public class ConsultaEstadisticaHelperTest {
         // Use reflection to access the private method
         java.lang.reflect.Method method;
         try {
-            method = ConsultaEstadisticaHelper.class.getDeclaredMethod("resolveAtributsVisuals", DashboardItemEntity.class);
+            method = ConsultaEstadisticaHelper.class.getDeclaredMethod("resolveAtributsVisuals", DashboardItemEntity.class, boolean.class);
             method.setAccessible(true);
 
             // Arrange
@@ -744,11 +741,11 @@ public class ConsultaEstadisticaHelperTest {
             when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(atributsSimple);
 
             // Act
-            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem);
+            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, false);
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof AtributsVisualsSimple);
+            assertInstanceOf(AtributsVisualsSimple.class, result);
 
             // Test with GraficWidget
             EstadisticaGraficWidgetEntity graficWidget = new EstadisticaGraficWidgetEntity();
@@ -758,11 +755,11 @@ public class ConsultaEstadisticaHelperTest {
             when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(atributsGrafic);
 
             // Act
-            result = method.invoke(consultaEstadisticaHelper, dashboardItem);
+            result = method.invoke(consultaEstadisticaHelper, dashboardItem, false);
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof AtributsVisualsGrafic);
+            assertInstanceOf(AtributsVisualsGrafic.class, result);
 
             // Test with TaulaWidget
             es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity taulaWidget = 
@@ -773,11 +770,11 @@ public class ConsultaEstadisticaHelperTest {
             when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(atributsTaula);
 
             // Act
-            result = method.invoke(consultaEstadisticaHelper, dashboardItem);
+            result = method.invoke(consultaEstadisticaHelper, dashboardItem, false);
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof AtributsVisualsTaula);
+            assertInstanceOf(AtributsVisualsTaula.class, result);
 
         } catch (Exception e) {
             fail("Exception occurred: " + e.getMessage());
@@ -790,7 +787,7 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             ObjectMapper mapper = new ObjectMapper();
-            method = ConsultaEstadisticaHelper.class.getDeclaredMethod("resolveAtributsVisuals", DashboardItemEntity.class);
+            method = ConsultaEstadisticaHelper.class.getDeclaredMethod("resolveAtributsVisuals", DashboardItemEntity.class, boolean.class);
             method.setAccessible(true);
 
             // Arrange
@@ -815,11 +812,11 @@ public class ConsultaEstadisticaHelperTest {
             when(atributsVisualsHelper.getAtributsVisuals(any(DashboardItemEntity.class))).thenReturn(dashboardAtributs);
 
             // Act
-            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem);
+            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, false);
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof AtributsVisualsSimple);
+            assertInstanceOf(AtributsVisualsSimple.class, result);
             AtributsVisualsSimple mergedAtributs = (AtributsVisualsSimple) result;
             assertEquals("#CCCCCC", mergedAtributs.getColorText());
             assertEquals("#FCFCFC", mergedAtributs.getColorFons());
@@ -1013,7 +1010,7 @@ public class ConsultaEstadisticaHelperTest {
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem);
+            assertInstanceOf(InformeWidgetSimpleItem.class, result);
             es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem simpleItem = 
                     (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem) result;
             assertEquals("42.0", simpleItem.getValor());
@@ -1088,7 +1085,7 @@ public class ConsultaEstadisticaHelperTest {
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem);
+            assertInstanceOf(InformeWidgetGraficItem.class, result);
             es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem graficItem = 
                     (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem) result;
             assertNotNull(graficItem.getDades());
@@ -1165,7 +1162,7 @@ public class ConsultaEstadisticaHelperTest {
 
             // Assert
             assertNotNull(result);
-            assertTrue(result instanceof InformeWidgetTaulaItem);
+            assertInstanceOf(InformeWidgetTaulaItem.class, result);
             InformeWidgetTaulaItem taulaItem = (InformeWidgetTaulaItem) result;
             assertNotNull(taulaItem.getColumnes());
             assertNotNull(taulaItem.getFiles());

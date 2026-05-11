@@ -142,7 +142,7 @@ public class EstadisticaSchedulerServiceTest {
         LocalDateTime now = LocalDateTime.now();
         String cronNow = String.format("0 %d %d * * *", now.getMinute(), now.getHour());
         when(parametresHelper.getParametreBoolean(BaseConfig.PROP_STATS_COMPACTAR_ACTIU, false)).thenReturn(true);
-        when(parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 3 * * *")).thenReturn(cronNow);
+        when(parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 5 * * *")).thenReturn(cronNow);
 
         service.scheduledEstadisticaTasks();
 
@@ -166,7 +166,7 @@ public class EstadisticaSchedulerServiceTest {
         when(parametresHelper.getParametreBoolean(BaseConfig.PROP_STATS_COMPACTAR_ACTIU, false)).thenReturn(true);
         LocalDateTime now = LocalDateTime.now();
         String cronOther = String.format("0 %d %d * * *", (now.getMinute() + 5) % 60, now.getHour());
-        when(parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 3 * * *")).thenReturn(cronOther);
+        when(parametresHelper.getParametreText(BaseConfig.PROP_STATS_COMPACTAR_CRON, "0 0 5 * * *")).thenReturn(cronOther);
 
         service.scheduledEstadisticaTasks();
         verifyNoInteractions(compactacioHelper);

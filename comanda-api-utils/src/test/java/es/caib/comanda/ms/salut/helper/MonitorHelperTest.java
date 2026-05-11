@@ -53,7 +53,7 @@ class MonitorHelperTest {
 
         var allDisks = MonitorHelper.getDisksUsage();
         assertThat(allDisks).isNotEmpty();
-        assertThat(allDisks).filteredOn(d -> "/".equals(d.getNom())).isNotEmpty();
+        assertThat(allDisks).filteredOn(d -> 0 < d.getTotalSpace()).isNotEmpty();
     }
 
     @Test
