@@ -272,6 +272,10 @@ vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
   default: () => false,
 }));
 
+vi.mock('../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => true,
+}));
+
 describe('AppForm', () => {
     afterEach(() => {
         vi.clearAllMocks();
