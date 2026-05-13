@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeSequentialStringArrays } from './stringUtils';
+import { mergeSequentialStringArrays, camelToSnakeCase } from './stringUtils';
 
 describe('mergeSequentialStringArrays (strict log merge)', () => {
     it('merges when overlap is perfectly sequential', () => {
@@ -110,5 +110,39 @@ describe('mergeSequentialStringArrays (strict log merge)', () => {
         const result = mergeSequentialStringArrays(baseline, incoming);
 
         expect(result).toEqual(['a', 'b', 'c', 'd']);
+    });
+});
+
+describe('camelToSnakeCase', () => {
+    it('converts a simple camelCase word', () => {
+        expect(camelToSnakeCase('camelCase')).toBe('camel_case');
+    });
+
+    it('converts multiple humps', () => {
+        expect(camelToSnakeCase('myVariableName')).toBe('my_variable_name');
+    });
+
+    it('lowercases an initial uppercase letter without adding a leading underscore', () => {
+        expect(camelToSnakeCase('MyVariable')).toBe('my_variable');
+    });
+
+    it('returns the same string when already lowercase', () => {
+        expect(camelToSnakeCase('lowercase')).toBe('lowercase');
+    });
+
+    it('returns undefined when input is undefined', () => {
+        expect(camelToSnakeCase(undefined)).toBeUndefined();
+    });
+
+    it('returns undefined when input is an empty string', () => {
+        expect(camelToSnakeCase('')).toBeUndefined();
+    });
+
+    it('handles a single uppercase letter', () => {
+        expect(camelToSnakeCase('A')).toBe('a');
+    });
+
+    it('handles consecutive uppercase letters', () => {
+        expect(camelToSnakeCase('parseJSON')).toBe('parse_j_s_o_n');
     });
 });

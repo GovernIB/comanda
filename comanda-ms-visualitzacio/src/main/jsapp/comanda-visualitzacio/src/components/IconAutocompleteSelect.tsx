@@ -7,15 +7,14 @@ import {
     MenuItem,
     Box,
     Typography,
+    Icon,
 } from "@mui/material";
-// eslint-disable-next-line no-restricted-imports
-import * as Icons from "@mui/icons-material"; // S'ha fet un mock d'aquest import als tests, per lo evitam els errors "too many open files"
 import { FixedSizeList } from "react-window";
 import { useFormContext } from '../../lib/components/form/FormContext';
+import muiIconAliases from '../util/muiIconAliases';
+import { camelToSnakeCase } from '../util/stringUtils';
 
-const allIconNames = Object.keys(Icons).filter(
-    (name) => !name.match(/(Outlined|Rounded|Sharp|TwoTone)$/)
-);
+const allIconNames = Object.keys(muiIconAliases);
 
 const ITEM_HEIGHT = 48;
 const MAX_ITEMS_VISIBLE = 8;
@@ -27,10 +26,11 @@ interface IconAutocompleteSelectProps {
 }
 
 const getIconOrNull = (iconKey?: string | null) => {
-    if (iconKey && iconKey in Icons)
-        return Icons[iconKey as keyof typeof Icons];
+    if (iconKey && allIconNames.includes(iconKey)) {
+        return <Icon>{camelToSnakeCase(iconKey)}</Icon>;
+    }
     return null;
-}
+};
 
 const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
         name = "icona",
@@ -46,14 +46,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
     const [inputWidth, setInputWidth] = useState<number>(300);
     const inputRef = useRef<HTMLInputElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
-    const [iconAliases, setIconAliases] = useState<Record<string, string[]>>({});
-
-    useEffect(() => {
-        fetch("mui_icon_aliases_complete.json")
-            .then((res) => res.json())
-            .then((data) => setIconAliases(data))
-            .catch((err) => console.error("Error carregant àlies d'icones:", err));
-    }, []);
+    const iconAliases: Record<string, string[]> = muiIconAliases;
 
     // Update selectedIcon when form context value changes
     useEffect(() => {
@@ -119,7 +112,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
 
     const renderRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
         const name = matchingIcons[index];
-        const Icon = getIconOrNull(name);
+        const iconElement = getIconOrNull(name);
 
         return (
             <MenuItem
@@ -127,9 +120,9 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
                 style={style}
                 onClick={() => handleSelect(name)}
             >
-                {Icon ? (
+                {iconElement ? (
                     <>
-                        <ListItemIcon><Icon /></ListItemIcon>
+                        <ListItemIcon>{iconElement}</ListItemIcon>
                         <ListItemText primary={name} />
                     </>
                 ) : (
@@ -140,7 +133,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
     };
 
     const displayValue = selectedIcon || "";
-    const selectedIconComponentType = getIconOrNull(selectedIcon);
+    const selectedIconElement = getIconOrNull(selectedIcon);
 
     return (
         <>
@@ -153,7 +146,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
                     readOnly: true,
                     startAdornment: selectedIcon ? (
                         <Box display="flex" alignItems="center" mr={1}>
-                            {selectedIconComponentType != null ? React.createElement(selectedIconComponentType) : null}
+                            {selectedIconElement}
                         </Box>
                     ) : null,
                 }}

@@ -14,6 +14,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { camelToSnakeCase } from '../../util/stringUtils';
 
 // Define the props for the SimpleWidgetVisualization component
 export interface SimpleWidgetVisualizationProps {
@@ -223,14 +224,6 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
         color: contrastTextColor,
         backgroundColor: isWhiteBackground ? theme.palette.grey[200] : createTransparentColor(backgroundColor, 0.35),
         border: `1px solid ${voraColor}`,
-    };
-
-    const camelToSnakeCase = (str: string | undefined) => {
-        if (!str) return undefined;
-        return str
-            .replace(/([A-Z])/g, (letter, index) =>
-                index === 0 ? letter.toLowerCase() : `_${letter.toLowerCase()}`)
-            .replace(/^_/, ''); // Eliminar _ inicial por si acaso
     };
 
     const snakeCaseIcona = camelToSnakeCase(icona);

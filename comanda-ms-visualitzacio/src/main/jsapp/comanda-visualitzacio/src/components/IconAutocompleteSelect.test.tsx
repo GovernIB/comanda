@@ -87,7 +87,7 @@ describe('IconAutocompleteSelect', () => {
 
         fireEvent.click(screen.getByLabelText('Icona'));
         fireEvent.change(await screen.findByPlaceholderText('Cerca icona...'), {
-            target: { value: 'esborrar' },
+            target: { value: 'borrar' },
         });
 
         await waitFor(() => {

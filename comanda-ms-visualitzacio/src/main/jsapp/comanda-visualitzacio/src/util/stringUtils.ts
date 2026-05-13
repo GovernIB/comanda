@@ -40,3 +40,18 @@ export function mergeSequentialStringArrays(baseline: string[], incoming: string
     // If no match found at all, also return 'incoming'.
     return [...incoming];
 }
+
+/**
+ * Converts a camelCase string to snake_case.
+ *
+ * @param string - The camelCase string to convert. If undefined or empty, returns undefined.
+ * @returns The snake_case version of the string, or undefined if input is falsy.
+ */
+export function camelToSnakeCase(string?: string) {
+    if (!string) return;
+    return string
+        .replace(/([A-Z])/g, (letter, index) =>
+            index === 0 ? letter.toLowerCase() : `_${letter.toLowerCase()}`
+        )
+        .replace(/^_/, ''); // Eliminar _ inicial por si acaso
+}

@@ -1,4 +1,4 @@
-{
+const dictionary: Record<string, string[]> = {
   "Abc": [
     "abc"
   ],
@@ -4302,6 +4302,10 @@
   ],
   "InsertChartOutlinedOutlined": [
     "chart",
+    "estadistica",
+    "estadístiques",
+    "grafica",
+    "gràfica",
     "insert",
     "outlined"
   ],
@@ -9914,7 +9918,370 @@
     "plànol",
     "zoom"
   ],
-  "index": [
-    "index"
-  ]
+  "AddCall": [
+    "add",
+    "call",
+    "llamada",
+    "telefon",
+    "teléfono",
+    "trucada"
+  ],
+  "AreaChart": [
+    "area",
+    "chart",
+    "estadistica",
+    "estadístiques",
+    "grafica",
+    "gràfica"
+  ],
+  "AssignmentAdd": [
+    "add",
+    "assignment",
+    "asignacion",
+    "assignació",
+    "tarea"
+  ],
+  "AssistantNavigation": [
+    "assistant",
+    "navigation",
+    "navegacion",
+    "navegació"
+  ],
+  "BarcodeReader": [
+    "barcode",
+    "codigo",
+    "codi",
+    "lector",
+    "reader"
+  ],
+  "BlockFlipped": [
+    "block",
+    "flipped",
+    "girado",
+    "girat"
+  ],
+  "CloudySnowing": [
+    "cloudy",
+    "nevada",
+    "neu",
+    "snowing"
+  ],
+  "Compost": [
+    "compost",
+    "ecologia",
+    "organic",
+    "orgánico",
+    "orgànic"
+  ],
+  "ConveyorBelt": [
+    "belt",
+    "cinta",
+    "conveyor",
+    "transportadora"
+  ],
+  "CrueltyFree": [
+    "animal",
+    "cruelty",
+    "free",
+    "vegano",
+    "vegan"
+  ],
+  "DataExploration": [
+    "data",
+    "datos",
+    "dades",
+    "exploration",
+    "exploracion",
+    "exploració"
+  ],
+  "DewPoint": [
+    "clima",
+    "dew",
+    "humedad",
+    "humitat",
+    "point"
+  ],
+  "DisabledVisible": [
+    "disabled",
+    "hidden",
+    "oculto",
+    "visible"
+  ],
+  "DriveFileMoveOutline": [
+    "drive",
+    "file",
+    "move",
+    "outline",
+    "archivo",
+    "fitxer",
+    "mover"
+  ],
+  "DriveFileMoveRtl": [
+    "drive",
+    "file",
+    "move",
+    "rtl",
+    "archivo",
+    "fitxer",
+    "mover"
+  ],
+  "EditDocument": [
+    "document",
+    "documento",
+    "document",
+    "edit",
+    "editar"
+  ],
+  "EditSquare": [
+    "cuadrado",
+    "edit",
+    "editar",
+    "square"
+  ],
+  "FileUploadOff": [
+    "archivo",
+    "desactivado",
+    "file",
+    "off",
+    "pujar",
+    "subir",
+    "upload"
+  ],
+  "FilterListAlt": [
+    "alt",
+    "filter",
+    "filtro",
+    "filtre",
+    "list"
+  ],
+  "Foggy": [
+    "boira",
+    "fog",
+    "foggy",
+    "niebla"
+  ],
+  "Forklift": [
+    "elevadora",
+    "forklift",
+    "montacargas"
+  ],
+  "FormatListBulletedAdd": [
+    "add",
+    "bulleted",
+    "format",
+    "list",
+    "lista"
+  ],
+  "FreeCancellation": [
+    "cancellation",
+    "cancelacion",
+    "cancelación",
+    "cancel·lació",
+    "free",
+    "gratis"
+  ],
+  "FrontHand": [
+    "front",
+    "hand",
+    "mano",
+    "mà"
+  ],
+  "FrontLoader": [
+    "cargadora",
+    "front",
+    "loader"
+  ],
+  "GeneratingTokens": [
+    "ai",
+    "generating",
+    "ia",
+    "token",
+    "tokens"
+  ],
+  "GroupOff": [
+    "group",
+    "grupo",
+    "grup",
+    "off"
+  ],
+  "HomeFilled": [
+    "casa",
+    "filled",
+    "hogar",
+    "home"
+  ],
+  "HotelClass": [
+    "class",
+    "hotel",
+    "stars",
+    "turismo"
+  ],
+  "IncompleteCircle": [
+    "circle",
+    "circulo",
+    "cercle",
+    "incomplete"
+  ],
+  "InfoOutline": [
+    "info",
+    "informacion",
+    "informació",
+    "outline"
+  ],
+  "LabelImportantOutline": [
+    "important",
+    "label",
+    "outline",
+    "tag",
+    "etiqueta"
+  ],
+  "LightbulbOutline": [
+    "bombilla",
+    "idea",
+    "light",
+    "lightbulb",
+    "outline"
+  ],
+  "LocationPin": [
+    "location",
+    "mapa",
+    "pin",
+    "ubicacion",
+    "ubicació"
+  ],
+  "LockOutline": [
+    "candado",
+    "lock",
+    "outline",
+    "seguridad"
+  ],
+  "MovieEdit": [
+    "cine",
+    "edit",
+    "editar",
+    "movie",
+    "pelicula",
+    "pel·lícula"
+  ],
+  "NewLabel": [
+    "etiqueta",
+    "label",
+    "new",
+    "nuevo",
+    "nou"
+  ],
+  "NoMealsOuline": [
+    "food",
+    "meals",
+    "no",
+    "outline",
+    "sin comida",
+    "sense menjar"
+  ],
+  "OutgoingMail": [
+    "correo",
+    "mail",
+    "outgoing",
+    "saliente"
+  ],
+  "Pallet": [
+    "almacen",
+    "magatzem",
+    "pallet",
+    "palet"
+  ],
+  "PersonalInjury": [
+    "accidente",
+    "injury",
+    "lesion",
+    "lesió",
+    "personal"
+  ],
+  "PinEnd": [
+    "end",
+    "fin",
+    "pin"
+  ],
+  "PinInvoke": [
+    "invoke",
+    "pin"
+  ],
+  "PrivateConnectivity": [
+    "connectivity",
+    "conexion",
+    "connexió",
+    "private",
+    "privado",
+    "privat"
+  ],
+  "RealEstateAgent": [
+    "agent",
+    "casa",
+    "estate",
+    "immobiliaria",
+    "inmobiliaria",
+    "real"
+  ],
+  "RebaseEdit": [
+    "edit",
+    "editar",
+    "git",
+    "rebase"
+  ],
+  "Shelves": [
+    "estanteria",
+    "estantería",
+    "prestatges",
+    "shelves"
+  ],
+  "Snowing": [
+    "nevada",
+    "nevando",
+    "neu",
+    "snow",
+    "snowing"
+  ],
+  "Sunny": [
+    "sol",
+    "soleado",
+    "sun",
+    "sunny"
+  ],
+  "SunnySnowing": [
+    "snow",
+    "snowing",
+    "sol",
+    "sunny"
+  ],
+  "Trolley": [
+    "carrito",
+    "carro",
+    "trolley"
+  ],
+  "VolumeDownAlt": [
+    "alt",
+    "audio",
+    "down",
+    "sound",
+    "volume",
+    "volumen"
+  ],
+  "WbTwighlight": [
+    "atardecer",
+    "crepuscle",
+    "twilight",
+    "wb"
+  ],
+  "WorkspacesFilled": [
+    "filled",
+    "workspace",
+    "workspaces"
+  ],
+  "WorkspacesOutline": [
+    "outline",
+    "workspace",
+    "workspaces"
+  ],
 }
+
+export default dictionary;
