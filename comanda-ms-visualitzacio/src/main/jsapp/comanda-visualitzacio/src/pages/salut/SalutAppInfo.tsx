@@ -53,13 +53,35 @@ import LogsViewer from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
 
-const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel }> = props => {
-    const { salutCurrentApp: app, entornApp: entornApp } = props;
+const AppInfo: React.FC<{
+    salutCurrentApp: SalutModel;
+    entornApp: EntornAppModel;
+    onRefreshInfoClick?: () => void;
+    refreshInfoLoading?: boolean;
+}> = props => {
+    const { salutCurrentApp: app, entornApp, onRefreshInfoClick, refreshInfoLoading } = props;
     const { t } = useTranslation();
     const versio = entornApp && <Typography>{entornApp.versio}</Typography>;
     const revisio = entornApp && <Typography>{entornApp.revisioSimplificat}</Typography>;
     const jdk = entornApp && <Typography>{entornApp.jdkVersion}</Typography>;
-    const data = app && <Typography>{dateFormatLocale(app.data, true)}</Typography>;
+    const data = app && (
+        <Typography>{dateFormatLocale(entornApp.infoData ?? app.data, true)}</Typography>
+    );
+    const refreshAction = onRefreshInfoClick ? (
+        <Tooltip title={t($ => $.page.salut.info.refresh)}>
+            <span>
+                <IconButton
+                    aria-label={t($ => $.page.salut.info.refresh)}
+                    size="small"
+                    onClick={onRefreshInfoClick}
+                    disabled={!entornApp.infoUrl}
+                    loading={refreshInfoLoading}
+                >
+                    <Icon>sync</Icon>
+                </IconButton>
+            </span>
+        </Tooltip>
+    ) : null;
 
     const tableSections = [
         {
@@ -89,6 +111,7 @@ const AppInfo: React.FC<{ salutCurrentApp: SalutModel; entornApp: EntornAppModel
             title={t($ => $.page.salut.info.title)}
             tableSections={tableSections}
             breakpoint="lg"
+            actions={refreshAction}
         />
     );
 };
@@ -745,6 +768,8 @@ interface SalutAppInfoTabProps {
     salutCurrentApp: SalutModel;
     entornApp: EntornAppModel;
     dataLoaded: boolean;
+    refreshInfo?: () => void;
+    refreshInfoLoading?: boolean;
 }
 
 const WarningNoInfo = () => {
@@ -756,11 +781,21 @@ const DownAlert = () => {
     return <Alert severity="error">{t($ => $.page.salut.info.downAlert)}</Alert>;
 };
 
-const TabEntorn: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp, entornApp }) => {
+const TabEntorn: React.FC<SalutAppInfoTabProps> = ({
+    salutCurrentApp,
+    entornApp,
+    refreshInfo,
+    refreshInfoLoading,
+}) => {
     return (
         <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid size={{ sm: 12, lg: 12 }}>
-                <AppInfo salutCurrentApp={salutCurrentApp} entornApp={entornApp} />
+                <AppInfo
+                    salutCurrentApp={salutCurrentApp}
+                    entornApp={entornApp}
+                    onRefreshInfoClick={refreshInfo}
+                    refreshInfoLoading={refreshInfoLoading}
+                />
             </Grid>
             {salutCurrentApp.peticioError ? (
                 <Grid size={{ sm: 12, lg: 12 }}>
@@ -941,12 +976,16 @@ function TabSalutCurrentApp<T>({
     salutCurrentApp,
     entornApp,
     dataLoaded,
+    refreshInfo,
+    refreshInfoLoading,
     childrenTabComponent: ChildrenTabComponent,
     childrenTabOtherProps,
 }: {
     salutCurrentApp: SalutModel | null;
     entornApp: EntornAppModel | null;
     dataLoaded: boolean;
+    refreshInfo?: () => void;
+    refreshInfoLoading?: boolean;
     childrenTabComponent: React.FC<SalutAppInfoTabProps & { otherProps: T }>;
     childrenTabOtherProps: T;
 }) {
@@ -970,13 +1009,19 @@ function TabSalutCurrentApp<T>({
             salutCurrentApp={salutCurrentApp}
             entornApp={entornApp}
             dataLoaded={dataLoaded}
+            refreshInfo={refreshInfo}
+            refreshInfoLoading={refreshInfoLoading}
             otherProps={childrenTabOtherProps}
         />
     );
 }
 
+type SalutAppInfoData = AppDataState & {
+    refreshInfo?: () => void;
+};
+
 const SalutAppInfo: React.FC<{
-    appInfoData: AppDataState;
+    appInfoData: SalutAppInfoData;
     ready: boolean;
     grupsDates?: string[];
 }> = ({ appInfoData, grupsDates, ready }) => {
@@ -984,7 +1029,15 @@ const SalutAppInfo: React.FC<{
     const isUserAdmin = useIsUserAdmin();
     const getColorBySubsistema = useGetColorBySubsistema();
     const getColorByIntegracio = useGetColorByIntegracio();
-    const { salutCurrentApp, entornApp, loading, agrupacio, estats, latencies } = appInfoData;
+    const {
+        salutCurrentApp,
+        entornApp,
+        loading,
+        refreshInfoLoading,
+        agrupacio,
+        estats,
+        latencies,
+    } = appInfoData;
     const [integracionsExpandState, setIntegracionsExpandState] = React.useState<string[]>([]);
     const toggleIntegracioExpand = (id: string) => {
         if (integracionsExpandState.includes(id))
@@ -1093,6 +1146,8 @@ const SalutAppInfo: React.FC<{
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
                         dataLoaded={dataLoaded}
+                        refreshInfo={isUserAdmin ? appInfoData.refreshInfo : undefined}
+                        refreshInfoLoading={refreshInfoLoading}
                         childrenTabComponent={TabEntorn}
                         childrenTabOtherProps={{}}
                     />

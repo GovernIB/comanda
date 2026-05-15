@@ -104,6 +104,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository));
         register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
+        register(EntornApp.ENTORN_APP_REFRESH_INFO, new EntornAppServiceImpl.RefreshInfo(resourceEntityMappingHelper));
     }
 
 	@Override
@@ -337,6 +338,21 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
             entity.setActiva(!entity.isActiva());
+            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+            return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
+        }
+    }
+
+    @RequiredArgsConstructor
+    private class RefreshInfo implements ActionExecutor<EntornAppEntity, String, EntornApp> {
+        private final ResourceEntityMappingHelper resourceEntityMappingHelper;
+
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
+
+        @Override
+        public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
+            appInfoHelper.refreshAppInfo(entity.getId());
             cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }

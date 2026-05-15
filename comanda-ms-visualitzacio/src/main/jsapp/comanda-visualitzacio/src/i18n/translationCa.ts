@@ -197,6 +197,7 @@ const translationCa = {
                     versio: "Versió JDK",
                 },
                 data: "Darrera actualització",
+                refresh: "Refrescar informació de l'aplicació",
                 bdEstat: "Base de dades",
                 appLatencia: "Latència",
                 integracions: "Integracions",
