@@ -20,7 +20,7 @@ public interface UsuariServiceClient {
 	@GetMapping(value = "/{id}")
 	EntityModel<Usuari> getOne(
 			@PathVariable("id") final Long id,
-			@RequestParam("perspectives") final String[] perspectives,
+			@RequestParam("perspective") final String[] perspectives,
 			@RequestHeader("Authorization") final String authorizationHeader);
 
 	@GetMapping(value = "/internal/by-codi/{codi}")
@@ -32,8 +32,8 @@ public interface UsuariServiceClient {
 	PagedModel<EntityModel<Usuari>> find(
 			@RequestParam("quickFilter") final String quickFilter,
 			@RequestParam("filter") final String filter,
-			@RequestParam("namedQueries") final String[] namedQueries,
-			@RequestParam("perspectives") final String[] perspectives,
+			@RequestParam("namedQuery") final String[] namedQueries,
+			@RequestParam("perspective") final String[] perspectives,
 			@RequestParam("page") final String page,
 			@RequestParam("size") final Integer size,
 			@RequestHeader("Authorization") final String authorizationHeader);

@@ -18,8 +18,8 @@ public interface SalutServiceClient {
 	PagedModel<EntityModel<Salut>> find(
 			@RequestParam("quickFilter") final String quickFilter,
 			@RequestParam("filter") final String filter,
-			@RequestParam("namedQueries") final String[] namedQueries,
-			@RequestParam("perspectives") final String[] perspectives,
+			@RequestParam("namedQuery") final String[] namedQueries,
+			@RequestParam("perspective") final String[] perspectives,
 			@RequestParam("page") final String page,
 			@RequestParam("size") final Integer size,
 			@RequestParam("sort") final String[] sort,
