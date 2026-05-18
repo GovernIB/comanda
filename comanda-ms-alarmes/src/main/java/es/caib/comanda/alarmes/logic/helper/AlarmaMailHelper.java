@@ -1,5 +1,6 @@
 package es.caib.comanda.alarmes.logic.helper;
 
+import es.caib.comanda.alarmes.logic.event.AlarmaMailEventType;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
@@ -44,9 +45,9 @@ public class AlarmaMailHelper {
 	private final ParametresHelper parametresHelper;
 
 
-	private String generateIndividualAlarmaSubject(AlarmaEntity alarma) {
-		boolean alarmaFinalitzada = Objects.nonNull(alarma.getDataFinalitzacio());
-		return "[COMANDA] Alarma "+ (alarmaFinalitzada ? "finalitzada" : "activada") + (Strings.isNotBlank(alarma.getAlarmaConfig().getNom()) ? ": " + alarma.getAlarmaConfig().getNom() : "");
+	private String generateIndividualAlarmaSubject(AlarmaEntity alarma, AlarmaMailEventType tipusEvent) {
+		String prefix = tipusEvent == AlarmaMailEventType.RECUPERACIO ? "[COMANDA] Alarma finalitzada" : "[COMANDA] Alarma activada";
+		return prefix + (Strings.isNotBlank(alarma.getAlarmaConfig().getNom()) ? ": " + alarma.getAlarmaConfig().getNom() : "");
 	}
 
 	private String generateAlarmaBodyMessage(AlarmaEntity alarma) {
@@ -65,7 +66,7 @@ public class AlarmaMailHelper {
 				message + missatgeFinalitzacio;
 	}
 
-	public void sendAlarmaGeneric(AlarmaEntity alarma) {
+	public void sendAlarmaGeneric(AlarmaEntity alarma, AlarmaMailEventType tipusEvent) {
         EntornApp alarmaEntornApp = alarmaClientHelper.entornAppFindById(alarma.getEntornAppId());
 		if (alarmaEntornApp == null || Strings.isEmpty(alarmaEntornApp.getAlarmesEmail())) {
 			return;
@@ -83,7 +84,7 @@ public class AlarmaMailHelper {
 			boolean sent = sendAlarmaMail(
 					alarmaEntornApp.getAlarmesEmail(),
 					"Correu genèric (" + alarmaEntornApp.getApp().getNom() + " - " + alarmaEntornApp.getEntorn().getNom() + ")",
-					generateIndividualAlarmaSubject(alarma),
+					generateIndividualAlarmaSubject(alarma, tipusEvent),
 					generateAlarmaBodyMessage(alarma)
 			);
 			if (sent) {
@@ -98,13 +99,13 @@ public class AlarmaMailHelper {
 		}
 	}
 
-	public void sendAlarmaUser(AlarmaEntity alarma) {
+	public void sendAlarmaUser(AlarmaEntity alarma, AlarmaMailEventType tipusEvent) {
 		if (alarma.getAlarmaConfig().isAdmin()) {
 			log.debug("Enviat correu d'alarma per administrador.");
 			String[] adminUsers = userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN);
 			Arrays.stream(adminUsers).forEach(adminUser -> {
 				if (isUserProfileAlarmaActivaAndUngrouped(adminUser)) {
-					sendAlarmaMailForUser(alarma, adminUser);
+					sendAlarmaMailForUser(alarma, adminUser, tipusEvent);
 				} else {
 					log.debug("[EML] No s'ha enviat el correu a l'administrador {} degut a que no té actiu l'enviament de correu, o el té configurat com a agrupat.");
 				}
@@ -113,7 +114,7 @@ public class AlarmaMailHelper {
 			log.debug("Enviat correu d'alarma per usuari.");
 			String username = alarma.getAlarmaConfig().getCreatedBy();
 			if (isUserProfileAlarmaActivaAndUngrouped(username)) {
-				sendAlarmaMailForUser(alarma, username);
+				sendAlarmaMailForUser(alarma, username, tipusEvent);
 			} else {
 				log.debug("[EML] No s'ha enviat el correu a l'usuari {} degut a que no té actiu l'enviament de correu, o el té configurat com a agrupat.");
 			}
@@ -163,7 +164,8 @@ public class AlarmaMailHelper {
 
 	private void sendAlarmaMailForUser(
 			AlarmaEntity alarma,
-			String username) {
+			String username,
+			AlarmaMailEventType tipusEvent) {
 		MonitorAlarmes monitor = new MonitorAlarmes(
 				alarma.getEntornAppId(),
 				MonitorAlarmes.ENVIAMENT_CORREU_USUARI,
@@ -180,7 +182,7 @@ public class AlarmaMailHelper {
 			boolean sent = sendAlarmaMail(
 					email,
 					usuari.getNom(),
-					generateIndividualAlarmaSubject(alarma),
+					generateIndividualAlarmaSubject(alarma, tipusEvent),
 					generateAlarmaBodyMessage(alarma)
 			);
 			if (sent) {

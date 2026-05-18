@@ -8,4 +8,5 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AlarmaMailPublishRequest {
     private final AlarmaEntity alarma;
+    private final AlarmaMailEventType tipusEvent;
 }

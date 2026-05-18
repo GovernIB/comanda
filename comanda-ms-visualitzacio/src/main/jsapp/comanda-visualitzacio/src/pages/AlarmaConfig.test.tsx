@@ -250,16 +250,16 @@ describe('AlarmaConfigForm', () => {
         vi.clearAllMocks();
     });
 
-    it('AlarmaConfigForm_quanRepDadesDeLatencia_mostraElsBlocsCondicionals', async () => {
-        // Verifica que el formulari mostra la condició habilitada i el bloc de període quan hi ha dades associades.
+    it('AlarmaConfigForm_quanRepDadesDeLatencia_mostraLEditorDeReglesIAvisos', async () => {
+        // Verifica que el formulari mostra el nou editor de regles, els avisos i el bloc de període quan hi ha dades associades.
         render(<AlarmaConfigForm />);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
             expect(screen.getByText('Condició')).toBeInTheDocument();
             expect(screen.getByText('Període')).toBeInTheDocument();
-            expect(screen.getByTestId('field-condicio')).toHaveTextContent('condicio:false');
-            expect(screen.getByTestId('field-valor')).toBeInTheDocument();
+            expect(screen.getByRole('combobox', { name: "Lògica entre condicions" })).toBeInTheDocument();
+            expect(screen.getByText('Afegir condició')).toBeInTheDocument();
             expect(screen.getByTestId('field-periodeValor')).toBeInTheDocument();
             expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:false');
         });

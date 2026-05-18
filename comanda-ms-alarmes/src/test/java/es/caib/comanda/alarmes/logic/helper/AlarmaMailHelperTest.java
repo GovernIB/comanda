@@ -1,5 +1,6 @@
 package es.caib.comanda.alarmes.logic.helper;
 
+import es.caib.comanda.alarmes.logic.event.AlarmaMailEventType;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
@@ -96,7 +97,7 @@ class AlarmaMailHelperTest {
                 .thenReturn(true);
 
         // Act
-        alarmaMailHelper.sendAlarmaGeneric(alarma);
+        alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
 
         // Assert
         verify(mailHelper).sendSimple(
@@ -118,7 +119,7 @@ class AlarmaMailHelperTest {
                 .thenReturn(true);
 
         // Act
-        alarmaMailHelper.sendAlarmaGeneric(alarma);
+        alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
 
         // Assert
         verify(mailHelper).sendSimple(
@@ -148,7 +149,7 @@ class AlarmaMailHelperTest {
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
 
         // Act
-        alarmaMailHelper.sendAlarmaUser(alarma);
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
         // Assert
         verify(mailHelper).sendSimple(
@@ -179,7 +180,7 @@ class AlarmaMailHelperTest {
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
 
         // Act
-        alarmaMailHelper.sendAlarmaUser(alarma);
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
         // Assert
         verify(mailHelper).sendSimple(
@@ -207,7 +208,7 @@ class AlarmaMailHelperTest {
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
 
         // Act
-        alarmaMailHelper.sendAlarmaUser(alarma);
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
         // Assert
         verify(mailHelper, times(2)).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
@@ -222,7 +223,7 @@ class AlarmaMailHelperTest {
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
 
         // Act
-        alarmaMailHelper.sendAlarmaGeneric(alarma);
+        alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
 
         // Assert
         verifyNoInteractions(mailHelper);
@@ -248,7 +249,7 @@ class AlarmaMailHelperTest {
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
 
         // Act
-        alarmaMailHelper.sendAlarmaUser(alarma);
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
         // Assert
         verify(mailHelper).sendSimple(anyString(), anyString(), eq("alternatiu@caib.es"), anyString(), anyString(), anyString());
@@ -269,7 +270,7 @@ class AlarmaMailHelperTest {
                 .thenReturn(alarmesAdmin);
         when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
                 .thenReturn(Collections.emptyList());
-        
+
         when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any()))
                 .thenReturn(Collections.singletonList("user1"));
         when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
@@ -338,7 +339,7 @@ class AlarmaMailHelperTest {
                 .thenReturn(true);
 
         // Act
-        alarmaMailHelper.sendAlarmaGeneric(alarma);
+        alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.RECUPERACIO);
 
         // Assert
         verify(mailHelper).sendSimple(
@@ -404,7 +405,7 @@ class AlarmaMailHelperTest {
                 .thenThrow(new MessagingException("Error test"));
 
         // Act & Assert (no hauria de llançar excepció cap a fora)
-        alarmaMailHelper.sendAlarmaGeneric(alarma);
+        alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
         
         verify(mailHelper).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     }

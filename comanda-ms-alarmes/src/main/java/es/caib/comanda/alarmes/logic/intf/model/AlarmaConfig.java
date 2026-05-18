@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @ResourceConfig(
         descriptionField = "nom",
+        mappingIgnoredFields = { "regla", "resumRegla" },
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
@@ -60,10 +61,14 @@ public class AlarmaConfig extends BaseResource<Long> {
 	@Size(max = 1024)
 	private String missatge;
 	@NotNull
+	@Deprecated
 	private AlarmaConfigTipus tipus;
+	@Deprecated
 	private AlarmaConfigCondicio condicio;
+	@Deprecated
     @Digits(integer = 15, fraction = 4)
 	private BigDecimal valor;
+    private AlarmaConfigRegla regla;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
     @Digits(integer = 15, fraction = 4)
 	private BigDecimal periodeValor;
@@ -72,6 +77,8 @@ public class AlarmaConfig extends BaseResource<Long> {
     @ValidAdminValue
 	private boolean correuGeneric;
     private boolean notificacioFinalitzada = true;
+    @Transient
+    private String resumRegla;
     @Transient
     private AlarmaTipusUsuari tipusUsuariAlarma;
 

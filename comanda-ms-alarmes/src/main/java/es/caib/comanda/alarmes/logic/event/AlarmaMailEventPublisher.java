@@ -11,7 +11,7 @@ public class AlarmaMailEventPublisher {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public void publish(AlarmaEntity alarma) {
-        applicationEventPublisher.publishEvent(new AlarmaMailPublishRequest(alarma));
+    public void publish(AlarmaEntity alarma, AlarmaMailEventType tipusEvent) {
+        applicationEventPublisher.publishEvent(new AlarmaMailPublishRequest(alarma, tipusEvent));
     }
 }

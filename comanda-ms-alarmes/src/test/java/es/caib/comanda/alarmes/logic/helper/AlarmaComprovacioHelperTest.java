@@ -2,6 +2,7 @@ package es.caib.comanda.alarmes.logic.helper;
 
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.event.AlarmaMailEventPublisher;
+import es.caib.comanda.alarmes.logic.event.AlarmaMailEventType;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigCondicio;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
@@ -379,7 +380,7 @@ class AlarmaComprovacioHelperTest {
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
         assertThat(alarmaEsborrany.getDataActivacio()).isNotNull();
-        verify(alarmaMailEventPublisher).publish(alarmaEsborrany);
+        verify(alarmaMailEventPublisher).publish(alarmaEsborrany, AlarmaMailEventType.ACTIVACIO);
     }
 
     @Test
@@ -406,7 +407,7 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
-        verify(alarmaMailEventPublisher, never()).publish(any()); // No s'assigna a alarmaActivada a la línia 157, només es canvia l'estat
+        verify(alarmaMailEventPublisher, never()).publish(any(), any()); // No s'assigna a alarmaActivada, només es canvia l'estat
     }
 
     @Test
@@ -434,7 +435,7 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         verify(alarmaRepository).save(argThat(entity -> entity.getEstat() == AlarmaEstat.ACTIVA));
-        verify(alarmaMailEventPublisher).publish(novaAlarma);
+        verify(alarmaMailEventPublisher).publish(novaAlarma, AlarmaMailEventType.ACTIVACIO);
     }
 
     @Test

@@ -19,13 +19,13 @@ public class AlarmaMailEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPublishRequest(AlarmaMailPublishRequest request) {
         try {
-            alarmaMailHelper.sendAlarmaUser(request.getAlarma());
+            alarmaMailHelper.sendAlarmaUser(request.getAlarma(), request.getTipusEvent());
         } catch (Exception ex) {
             log.error("Error enviant correus d'alarma d'usuari de forma asíncrona", ex);
         }
         try {
             if (request.getAlarma().getAlarmaConfig().isCorreuGeneric()) {
-                alarmaMailHelper.sendAlarmaGeneric(request.getAlarma());
+                alarmaMailHelper.sendAlarmaGeneric(request.getAlarma(), request.getTipusEvent());
             }
         } catch (Exception ex) {
             log.error("Error enviant correu d'alarma genèric de forma asíncrona", ex);

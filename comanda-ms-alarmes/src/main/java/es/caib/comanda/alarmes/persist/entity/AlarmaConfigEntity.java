@@ -41,6 +41,11 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	private AlarmaConfigCondicio condicio;
 	@Column(name = "valor")
 	private BigDecimal valor;
+	@Column(name = "rule_version")
+	private Integer ruleVersion;
+	@Lob
+	@Column(name = "rule_json")
+	private String ruleJson;
 	@Column(name = "admin", nullable = false)
 	private boolean admin;
 	@Column(name = "correu_generic", nullable = false)

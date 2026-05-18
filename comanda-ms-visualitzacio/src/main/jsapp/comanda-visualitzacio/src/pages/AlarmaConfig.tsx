@@ -8,6 +8,9 @@ import CardContent from '@mui/material/CardContent';
 import Checkbox from '@mui/material/Checkbox';
 import Skeleton from '@mui/material/Skeleton';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import Divider from '@mui/material/Divider';
 import {
     GridPage,
     MuiDataGrid,
@@ -32,6 +35,77 @@ import { useIsUserAdmin, useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import notNull from '../util/arrayUtils';
 import { toToolbarIcon } from '../../lib/components/mui/ToolbarIcon';
+
+type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
+type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
+type RuleComparator = 'MAJOR' | 'MAJOR_IGUAL' | 'MENOR' | 'MENOR_IGUAL' | 'IGUAL' | 'DIFERENT' | 'EN';
+type RuleOperator = 'AND' | 'OR';
+
+type RuleCondition = {
+    ambit: RuleScope;
+    codiObjecte?: string;
+    metrica: RuleMetric;
+    comparador: RuleComparator;
+    valorNumeric?: string;
+    valorsText?: string[];
+};
+
+const STATUS_OPTIONS = ['UP', 'WARN', 'DEGRADED', 'DOWN', 'MAINTENANCE', 'UNKNOWN', 'ERROR'];
+
+const defaultCondition = (): RuleCondition => ({
+    ambit: 'APLICACIO',
+    metrica: 'ESTAT',
+    comparador: 'EN',
+    valorsText: ['DOWN'],
+});
+
+const scopeMetricOptions = (scope: RuleScope): RuleMetric[] => {
+    switch (scope) {
+        case 'SISTEMA':
+            return ['LATENCIA', 'CARREGA_SISTEMA', 'MEMORIA_DISPONIBLE', 'ESPAI_DISC_LLIURE'];
+        case 'SUBSISTEMA':
+        case 'INTEGRACIO':
+        case 'APLICACIO':
+        default:
+            return ['ESTAT'];
+    }
+};
+
+const comparatorOptions = (metric: RuleMetric): RuleComparator[] =>
+    metric === 'ESTAT'
+        ? ['EN', 'IGUAL', 'DIFERENT']
+        : ['MAJOR', 'MAJOR_IGUAL', 'MENOR', 'MENOR_IGUAL', 'IGUAL', 'DIFERENT'];
+
+const buildRulePayload = (operator: RuleOperator, conditions: RuleCondition[]) => ({
+    tipusNode: 'GRUP',
+    operador: operator,
+    fills: conditions.map(condition => ({
+        tipusNode: 'CONDICIO',
+        ambit: condition.ambit,
+        codiObjecte: condition.codiObjecte || undefined,
+        metrica: condition.metrica,
+        comparador: condition.comparador,
+        valorNumeric: condition.metrica === 'ESTAT' || !condition.valorNumeric ? undefined : Number(condition.valorNumeric),
+        valorsText: condition.metrica === 'ESTAT' ? (condition.valorsText ?? []) : [],
+    })),
+});
+
+const parseRulePayload = (regla: any): { operator: RuleOperator; conditions: RuleCondition[] } => {
+    if (!regla?.fills?.length) {
+        return { operator: 'AND', conditions: [defaultCondition()] };
+    }
+    return {
+        operator: regla.operador === 'OR' ? 'OR' : 'AND',
+        conditions: regla.fills.map((fill: any) => ({
+            ambit: fill.ambit ?? 'APLICACIO',
+            codiObjecte: fill.codiObjecte,
+            metrica: fill.metrica ?? 'ESTAT',
+            comparador: fill.comparador ?? (fill.metrica === 'ESTAT' ? 'EN' : 'MAJOR'),
+            valorNumeric: fill.valorNumeric != null ? String(fill.valorNumeric) : '',
+            valorsText: Array.isArray(fill.valorsText) && fill.valorsText.length > 0 ? fill.valorsText : ['DOWN'],
+        })),
+    };
+};
 
 export const EntornAppSelector : React.FC<any> = (props) => {
     const { id, onEntornAppChange, validationErrors } = props;
@@ -81,18 +155,26 @@ export const AlarmaConfigForm: React.FC<{
     const { id: idFromPath } = useParams();
     const id = idProp ?? idFromPath;
     const formApiRef = useFormApiRef();
+    const { isReady: entornAppApiReady, getOne: getEntornApp } = useResourceApiService('entornApp');
     const [entornAppId, setEntornAppId] = React.useState<any>();
     const [validationErrors, setValidationErrors] = React.useState<any>();
-    const [condicioValorDisabled, setCondicioValorDisabled] = React.useState<boolean>(true);
     const [periodeShow, setPeriodeShow] = React.useState<boolean>();
+    const [ruleOperator, setRuleOperator] = React.useState<RuleOperator>('AND');
+    const [conditions, setConditions] = React.useState<RuleCondition[]>([defaultCondition()]);
+    const [ruleEditorInitialized, setRuleEditorInitialized] = React.useState(false);
+    const [entornAppDetail, setEntornAppDetail] = React.useState<any>();
     const isCurrentUserAdmin = useIsUserAdmin();
     const handleDataChange = (data: any) => {
         setEntornAppId(data?.entornAppId);
-        const condicioValorDisabled = data?.tipus !== 'APP_LATENCIA';
-        setCondicioValorDisabled(condicioValorDisabled);
         if (periodeShow === undefined) {
             const ps = data?.periodeValor != null || data?.periodeUnitat != null;
             setPeriodeShow(ps);
+        }
+        if (!ruleEditorInitialized) {
+            const parsed = parseRulePayload(data?.regla);
+            setRuleOperator(parsed.operator);
+            setConditions(parsed.conditions);
+            setRuleEditorInitialized(true);
         }
     }
     const handleValidationErrorsChange = (_id: any, validationErrors?: any[]) => {
@@ -114,6 +196,65 @@ export const AlarmaConfigForm: React.FC<{
             formApiRef.current?.setFieldValue('periodeUnitat', null);
         }
     }
+    const syncRuleToForm = React.useCallback((nextOperator: RuleOperator, nextConditions: RuleCondition[]) => {
+        formApiRef.current?.setFieldValue('regla', buildRulePayload(nextOperator, nextConditions));
+        // formApiRef.current?.setFieldValue('tipus', null);
+        formApiRef.current?.setFieldValue('condicio', null);
+        formApiRef.current?.setFieldValue('valor', null);
+    }, []);
+
+    React.useEffect(() => {
+        syncRuleToForm(ruleOperator, conditions);
+    }, [conditions, ruleOperator, syncRuleToForm]);
+
+    React.useEffect(() => {
+        if (!entornAppApiReady || !entornAppId) {
+            setEntornAppDetail(undefined);
+            return;
+        }
+        getEntornApp(entornAppId).then(setEntornAppDetail);
+    }, [entornAppApiReady, entornAppId, getEntornApp]);
+
+    const subsystemOptions = React.useMemo(
+        () => (entornAppDetail?.subsistemes ?? []).map((item: any) => item?.subsistema?.codi ?? item?.codi).filter(Boolean),
+        [entornAppDetail]
+    );
+    const integrationOptions = React.useMemo(
+        () => (entornAppDetail?.integracions ?? []).map((item: any) => item?.integracio?.codi ?? item?.codi).filter(Boolean),
+        [entornAppDetail]
+    );
+
+    const updateCondition = (index: number, patch: Partial<RuleCondition>) => {
+        setConditions(prev => prev.map((condition, currentIndex) => {
+            if (currentIndex !== index) return condition;
+            const next = { ...condition, ...patch };
+            if (patch.ambit && patch.ambit !== condition.ambit) {
+                const nextMetric = scopeMetricOptions(patch.ambit)[0];
+                next.metrica = nextMetric;
+                next.comparador = comparatorOptions(nextMetric)[0];
+                next.codiObjecte = undefined;
+                if (nextMetric === 'ESTAT') {
+                    next.valorsText = next.valorsText?.length ? next.valorsText : ['DOWN'];
+                    next.valorNumeric = '';
+                } else {
+                    next.valorsText = [];
+                }
+            }
+            if (patch.metrica && patch.metrica !== condition.metrica) {
+                next.comparador = comparatorOptions(patch.metrica)[0];
+                if (patch.metrica === 'ESTAT') {
+                    next.valorsText = next.valorsText?.length ? next.valorsText : ['DOWN'];
+                    next.valorNumeric = '';
+                } else {
+                    next.valorsText = [];
+                }
+            }
+            return next;
+        }));
+    };
+
+    const addCondition = () => setConditions(prev => [...prev, defaultCondition()]);
+    const removeCondition = (index: number) => setConditions(prev => prev.filter((_, currentIndex) => currentIndex !== index));
 
     // const {goBack} = useBaseAppContext();
     // const afterDelete = () => {
@@ -216,14 +357,136 @@ export const AlarmaConfigForm: React.FC<{
                                 sx={{ mb: -2 }} />
                             <CardContent>
                                 <Grid container spacing={1}>
-                                    <Grid size={3}>
-                                        <FormField name="tipus" />
+                                    <Grid size={12}>
+                                        <TextField
+                                            select
+                                            fullWidth
+                                            size="small"
+                                            label="Lògica entre condicions"
+                                            value={ruleOperator}
+                                            onChange={event => setRuleOperator(event.target.value as RuleOperator)}
+                                        >
+                                            <MenuItem value="AND">AND</MenuItem>
+                                            <MenuItem value="OR">OR</MenuItem>
+                                        </TextField>
                                     </Grid>
-                                    <Grid size={6}>
-                                        <FormField name="condicio" disabled={condicioValorDisabled} />
-                                    </Grid>
-                                    <Grid size={3}>
-                                        <FormField name="valor" disabled={condicioValorDisabled} decimalScale={4} />
+                                    {conditions.map((condition, index) => {
+                                        const metrics = scopeMetricOptions(condition.ambit);
+                                        const comparators = comparatorOptions(condition.metrica);
+                                        const codeOptions = condition.ambit === 'SUBSISTEMA' ? subsystemOptions : integrationOptions;
+                                        const useCodeSelect = (condition.ambit === 'SUBSISTEMA' || condition.ambit === 'INTEGRACIO') && codeOptions.length > 0;
+                                        return (
+                                            <React.Fragment key={index}>
+                                                {index > 0 && <Grid size={12}><Divider /></Grid>}
+                                                <Grid size={{ xs: 12, md: 3 }}>
+                                                    <TextField
+                                                        select
+                                                        fullWidth
+                                                        size="small"
+                                                        label="Tipus"
+                                                        value={condition.ambit}
+                                                        onChange={event => updateCondition(index, { ambit: event.target.value as RuleScope })}
+                                                    >
+                                                        <MenuItem value="APLICACIO">Aplicació</MenuItem>
+                                                        <MenuItem value="SUBSISTEMA">Subsistema</MenuItem>
+                                                        <MenuItem value="INTEGRACIO">Integració</MenuItem>
+                                                        <MenuItem value="SISTEMA">Sistema</MenuItem>
+                                                    </TextField>
+                                                </Grid>
+                                                {(condition.ambit === 'SUBSISTEMA' || condition.ambit === 'INTEGRACIO') && (
+                                                    <Grid size={{ xs: 12, md: 3 }}>
+                                                        <TextField
+                                                            select={useCodeSelect}
+                                                            fullWidth
+                                                            size="small"
+                                                            label="Codi"
+                                                            value={condition.codiObjecte ?? ''}
+                                                            onChange={event => updateCondition(index, { codiObjecte: event.target.value })}
+                                                        >
+                                                            {useCodeSelect && codeOptions.map((option: string) => (
+                                                                <MenuItem key={option} value={option}>{option}</MenuItem>
+                                                            ))}
+                                                        </TextField>
+                                                    </Grid>
+                                                )}
+                                                <Grid size={{ xs: 12, md: 3 }}>
+                                                    <TextField
+                                                        select
+                                                        fullWidth
+                                                        size="small"
+                                                        label="Mètrica"
+                                                        value={condition.metrica}
+                                                        onChange={event => updateCondition(index, { metrica: event.target.value as RuleMetric })}
+                                                    >
+                                                        {metrics.map(metric => (
+                                                            <MenuItem key={metric} value={metric}>
+                                                                {metric === 'ESTAT' ? 'Estat' :
+                                                                    metric === 'LATENCIA' ? 'Latència' :
+                                                                    metric === 'CARREGA_SISTEMA' ? 'Càrrega del sistema' :
+                                                                    metric === 'MEMORIA_DISPONIBLE' ? 'Memòria disponible (MB)' :
+                                                                    'Espai de disc lliure (MB)'}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </TextField>
+                                                </Grid>
+                                                <Grid size={{ xs: 12, md: 3 }}>
+                                                    <TextField
+                                                        select
+                                                        fullWidth
+                                                        size="small"
+                                                        label="Comparador"
+                                                        value={condition.comparador}
+                                                        onChange={event => updateCondition(index, { comparador: event.target.value as RuleComparator })}
+                                                    >
+                                                        {comparators.map(comparator => (
+                                                            <MenuItem key={comparator} value={comparator}>{comparator}</MenuItem>
+                                                        ))}
+                                                    </TextField>
+                                                </Grid>
+                                                <Grid size={{ xs: 12, md: condition.metrica === 'ESTAT' ? 10 : 11 }}>
+                                                    {condition.metrica === 'ESTAT' ? (
+                                                        <TextField
+                                                            select
+                                                            fullWidth
+                                                            size="small"
+                                                            SelectProps={{ multiple: true }}
+                                                            label="Estat"
+                                                            value={condition.valorsText ?? []}
+                                                            onChange={event => updateCondition(index, { valorsText: event.target.value as unknown as string[] })}
+                                                        >
+                                                            {STATUS_OPTIONS.map(status => (
+                                                                <MenuItem key={status} value={status}>{status}</MenuItem>
+                                                            ))}
+                                                        </TextField>
+                                                    ) : (
+                                                        <TextField
+                                                            fullWidth
+                                                            size="small"
+                                                            type="number"
+                                                            label={condition.metrica === 'LATENCIA' ? 'Valor (ms)' : 'Valor'}
+                                                            value={condition.valorNumeric ?? ''}
+                                                            onChange={event => updateCondition(index, { valorNumeric: event.target.value })}
+                                                        />
+                                                    )}
+                                                </Grid>
+                                                <Grid size={{ xs: 12, md: 1 }}>
+                                                    <Button
+                                                        color="error"
+                                                        onClick={() => removeCondition(index)}
+                                                        disabled={conditions.length === 1}
+                                                        fullWidth
+                                                        sx={{ height: '100%' }}
+                                                    >
+                                                        <Icon>delete</Icon>
+                                                    </Button>
+                                                </Grid>
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                    <Grid size={12}>
+                                        <Button startIcon={<Icon>add</Icon>} onClick={addCondition}>
+                                            Afegir condició
+                                        </Button>
                                     </Grid>
                                 </Grid>
                             </CardContent>
@@ -356,7 +619,6 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                 return springFilterBuilder.and(
                     data?.entornApp && springFilterBuilder.eq('entornAppId', data?.entornApp?.id ?? data?.entornApp),
                     data?.nom && springFilterBuilder.like('nom', data?.nom),
-                    data?.tipus && springFilterBuilder.like('tipus', data?.tipus),
                     moreFields && data?.admin && springFilterBuilder.eq('admin', data?.admin),
                     moreFields && data?.correuGeneric && springFilterBuilder.eq('correuGeneric', data?.correuGeneric),
                     isCurrentUserAdmin && user.codi && data?.showOnlyOwn && springFilterBuilder.eq('createdBy', `'${user.codi}'`),
@@ -389,7 +651,6 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                     )}
                     <Grid size={{xs: 12, sm: hideEntornAppField ? 12 : 6}}><FormField name={'nom'} /></Grid>
                     {moreFields && <>
-                        <Grid size={{xs: 12, sm:6}}><FormField name={'tipus'} /></Grid>
                         {isCurrentUserAdmin &&
                             (<><Grid size={{xs: 6, sm:3}}><FormField name={'admin'} /></Grid>
                                 <Grid size={{xs: 6, sm:3}}><FormField name={'correuGeneric'} /></Grid></>)}
@@ -526,8 +787,8 @@ const AlarmaConfig: React.FC<{
             field: 'nom',
             flex: 3,
         }, {
-            field: 'tipus',
-            width: 150,
+            field: 'resumRegla',
+            flex: 4,
         }];
 
         if (!showOnlyOwn && isCurrentUserAdmin) {

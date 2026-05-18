@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: alarmes-0.1.2-001
+      author: limit
+      comment: Añadir las columnas rule_version y rule_json para la configuración de condiciones múltiples en las alarmas
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}alarma_config
+            columns:
+              - column:
+                  name: rule_version
+                  type: INTEGER
+              - column:
+                  name: rule_json
+                  type: CLOB

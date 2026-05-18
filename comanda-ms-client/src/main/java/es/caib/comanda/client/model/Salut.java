@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Getter
@@ -23,5 +24,8 @@ public class Salut implements Serializable {
 	private String bdEstat;
 	private Integer bdLatencia;
 	private boolean peticioError;
+    private List<SalutIntegracio> integracions;
+    private List<SalutSubsistema> subsistemes;
+    private List<SalutDetall> detalls;
 
 }
