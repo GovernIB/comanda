@@ -288,7 +288,7 @@ const useTimeUntilNextRefreshFormatted = (nextRefresh?: Date | null) => {
 const SalutEntornAppFilterForm: React.FC = () => {
     const { data } = useFormContext();
 
-    return <Grid container spacing={1}>
+    return <Grid container spacing={1} sx={{ mt: 1 }}>
         <Grid size={12}>
             <FormField name="app" componentProps={{ size: 'small', }} multiple optionsUnpaged
                         advancedSearchColumns={[{

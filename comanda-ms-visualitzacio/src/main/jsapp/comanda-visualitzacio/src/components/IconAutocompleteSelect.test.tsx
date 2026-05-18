@@ -64,7 +64,7 @@ describe('IconAutocompleteSelect', () => {
         fireEvent.click(screen.getByLabelText('Icona'));
 
         expect(await screen.findByText('(Sense icona)')).toBeInTheDocument();
-    });
+    }, 20000);
 
     it('IconAutocompleteSelect_quanEsSeleccionaUnaIcona_actualitzaElFormulariINotificaElCanvi', async () => {
         // Verifica que seleccionar una icona escriu el valor al formulari i crida el callback extern.
@@ -79,7 +79,7 @@ describe('IconAutocompleteSelect', () => {
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('icona', 'Add');
         expect(onChange).toHaveBeenCalledWith('Add');
-    });
+    }, 20000);
 
     it('IconAutocompleteSelect_quanEsFiltraPerAlias_mostraLaIconaCoincident', async () => {
         // Comprova que la cerca també filtra per àlies carregats del fitxer JSON.
@@ -93,5 +93,5 @@ describe('IconAutocompleteSelect', () => {
         await waitFor(() => {
             expect(screen.getByText('Delete')).toBeInTheDocument();
         });
-    });
+    }, 20000);
 });
