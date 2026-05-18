@@ -194,9 +194,12 @@ public class SalutInfoHelper {
 			salut.setDataApp(info.getData() != null ? info.getData().toLocalDateTime() : null);
 			salut.setTipusRegistre(TipusRegistreSalut.MINUT);
 			SalutEstat appEstat = toSalutEstat(info.getEstatGlobal().getEstat());
-			salut.setAppEstat(appEstat);
-			salut.updateAppCountByEstat(appEstat);
 			SalutEstat bdEstat = toSalutEstat(info.getEstatBaseDeDades().getEstat());
+            if (bdEstat == SalutEstat.ERROR || bdEstat == SalutEstat.DOWN) {
+                appEstat = SalutEstat.ERROR;
+            }
+            salut.setAppEstat(appEstat);
+            salut.updateAppCountByEstat(appEstat);
 			salut.setBdEstat(bdEstat);
 			salut.updateBdCountByEstat(bdEstat);
 			salut.setAppLatencia(info.getEstatGlobal().getLatencia());
