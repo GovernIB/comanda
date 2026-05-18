@@ -4,17 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.alarmes.logic.event.AlarmaMailEventPublisher;
 import es.caib.comanda.alarmes.logic.event.AlarmaMailEventType;
-import es.caib.comanda.alarmes.logic.intf.model.Alarma;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigCondicio;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigPeriodeUnitat;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigRegla;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaAmbit;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaComparador;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaMetrica;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaOperador;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaTipusNode;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
+import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
@@ -37,15 +27,11 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Comprovacions i creació d'alarmes.
@@ -93,7 +79,7 @@ public class AlarmaComprovacioHelper {
 		if (regla != null) {
 			return evaluateRule(regla, salut);
 		}
-		return evaluateLegacyCondition(alarmaConfig, salut);
+		return false;
 	}
 
 	private boolean evaluateRule(AlarmaConfigRegla regla, Salut salut) {
@@ -202,32 +188,6 @@ public class AlarmaComprovacioHelper {
 			default:
 				return false;
 		}
-	}
-
-	private boolean evaluateLegacyCondition(AlarmaConfigEntity alarmaConfig, Salut salut) {
-		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_CAIGUDA) {
-			return "DOWN".equalsIgnoreCase(salut.getAppEstat());
-		}
-		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_LATENCIA) {
-			Integer latencia = salut.getAppLatencia();
-			if (latencia == null || alarmaConfig.getCondicio() == null || alarmaConfig.getValor() == null) {
-				return false;
-			}
-			switch (alarmaConfig.getCondicio()) {
-				case MAJOR:
-					return latencia > alarmaConfig.getValor().intValue();
-				case MAJOR_IGUAL:
-					return latencia >= alarmaConfig.getValor().intValue();
-				case MENOR:
-					return latencia < alarmaConfig.getValor().intValue();
-				case MENOR_IGUAL:
-					return latencia <= alarmaConfig.getValor().intValue();
-				default:
-					return false;
-			}
-		}
-		log.error("Tipus d'alarma no suportat: {}", alarmaConfig.getTipus());
-		return false;
 	}
 
 	/**
@@ -434,57 +394,7 @@ public class AlarmaComprovacioHelper {
 				log.error("No s'ha pogut llegir la regla de l'alarma {}", alarmaConfig.getId(), ex);
 			}
 		}
-		return legacyRule(alarmaConfig);
-	}
-
-	private AlarmaConfigRegla legacyRule(AlarmaConfigEntity alarmaConfig) {
-		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_CAIGUDA) {
-			return AlarmaConfigRegla.builder()
-					.tipusNode(AlarmaConfigReglaTipusNode.GRUP)
-					.operador(AlarmaConfigReglaOperador.AND)
-					.fills(List.of(
-							AlarmaConfigRegla.builder()
-									.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
-									.ambit(AlarmaConfigReglaAmbit.APLICACIO)
-									.metrica(AlarmaConfigReglaMetrica.ESTAT)
-									.comparador(AlarmaConfigReglaComparador.EN)
-									.valorsText(List.of("DOWN"))
-									.build()))
-					.build();
-		}
-		if (alarmaConfig.getTipus() == AlarmaConfigTipus.APP_LATENCIA) {
-			return AlarmaConfigRegla.builder()
-					.tipusNode(AlarmaConfigReglaTipusNode.GRUP)
-					.operador(AlarmaConfigReglaOperador.AND)
-					.fills(List.of(
-							AlarmaConfigRegla.builder()
-									.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
-									.ambit(AlarmaConfigReglaAmbit.SISTEMA)
-									.metrica(AlarmaConfigReglaMetrica.LATENCIA)
-									.comparador(mapLegacyComparador(alarmaConfig.getCondicio()))
-									.valorNumeric(alarmaConfig.getValor())
-									.build()))
-					.build();
-		}
 		return null;
-	}
-
-	private AlarmaConfigReglaComparador mapLegacyComparador(AlarmaConfigCondicio condicio) {
-		if (condicio == null) {
-			return AlarmaConfigReglaComparador.MAJOR;
-		}
-		switch (condicio) {
-			case MAJOR:
-				return AlarmaConfigReglaComparador.MAJOR;
-			case MAJOR_IGUAL:
-				return AlarmaConfigReglaComparador.MAJOR_IGUAL;
-			case MENOR:
-				return AlarmaConfigReglaComparador.MENOR;
-			case MENOR_IGUAL:
-				return AlarmaConfigReglaComparador.MENOR_IGUAL;
-			default:
-				return AlarmaConfigReglaComparador.MAJOR;
-		}
 	}
 
 	private String findDetallValor(Salut salut, String codi) {

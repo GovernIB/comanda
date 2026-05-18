@@ -13,3 +13,79 @@ databaseChangeLog:
               - column:
                   name: rule_json
                   type: CLOB
+  - changeSet:
+      id: alarmes-0.1.2-002
+      author: limit
+      comment: Migrar las reglas existentes a la nueva columna rule_json y eliminar las columnas antiguas
+      changes:
+        - sql:
+            sql: |
+              UPDATE ${db_prefix}ALARMA_CONFIG
+              SET
+               RULE_VERSION = 1,              
+               RULE_JSON =
+                   CASE
+              
+                      WHEN TIPUS = 'APP_LATENCIA' THEN
+                          '{' ||
+                          '"tipusNode":"GRUP",' ||
+                          '"operador":"AND",' ||
+                          '"valorsText":[],' ||
+                          '"fills":[' ||
+                              '{' ||
+                              '"tipusNode":"CONDICIO",' ||
+                              '"fills":[],' ||
+                              '"valorsText":[],' ||
+                              '"ambit":"SISTEMA",' ||
+                              '"metrica":"LATENCIA",' ||
+                              '"comparador":' ||
+                              CASE
+                                  WHEN CONDICIO IS NULL
+                                  THEN 'null'
+                                  ELSE '"' || CONDICIO || '"'
+                              END ||
+                              ',' ||
+              
+                              '"valorNumeric":' ||
+                              CASE
+                                  WHEN VALOR IS NULL
+                                  THEN 'null'
+                                  ELSE RTRIM(
+                                    RTRIM(
+                                    REPLACE(TO_CHAR(VALOR), ',', '.'),
+                                    '0'
+                                    ),
+                                    '.'
+                                  )
+                              END ||
+              
+                              '}' ||
+                          ']' ||
+                          '}'
+                      WHEN TIPUS = 'APP_CAIGUDA' THEN
+                          '{' ||
+                          '"tipusNode":"GRUP",' ||
+                          '"operador":"AND",' ||
+                          '"valorsText":[],' ||
+                          '"fills":[' ||
+                              '{' ||
+                              '"tipusNode":"CONDICIO",' ||
+                              '"fills":[],' ||
+                              '"valorsText":["DOWN"],' ||
+                              '"ambit":"APLICACIO",' ||
+                              '"metrica":"ESTAT",' ||
+                              '"comparador":"EN"' ||
+                              '}' ||
+                          ']' ||
+                          '}'
+              
+                 END
+        - dropColumn:
+            tableName: ${db_prefix}ALARMA_CONFIG
+            columnName: TIPUS
+        - dropColumn:
+            tableName: ${db_prefix}ALARMA_CONFIG
+            columnName: CONDICIO
+        - dropColumn:
+            tableName: ${db_prefix}ALARMA_CONFIG
+            columnName: VALOR

@@ -60,14 +60,6 @@ public class AlarmaConfig extends BaseResource<Long> {
 	@NotNull
 	@Size(max = 1024)
 	private String missatge;
-	@NotNull
-	@Deprecated
-	private AlarmaConfigTipus tipus;
-	@Deprecated
-	private AlarmaConfigCondicio condicio;
-	@Deprecated
-    @Digits(integer = 15, fraction = 4)
-	private BigDecimal valor;
     private AlarmaConfigRegla regla;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
     @Digits(integer = 15, fraction = 4)

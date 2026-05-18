@@ -33,14 +33,6 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	private String nom;
 	@Column(name = "missatge", length = 1024, nullable = false)
 	private String missatge;
-	@Enumerated(EnumType.STRING)
-	@Column(name = "tipus", length = 15, nullable = false)
-	private AlarmaConfigTipus tipus;
-	@Enumerated(EnumType.STRING)
-	@Column(name = "condicio", length = 15)
-	private AlarmaConfigCondicio condicio;
-	@Column(name = "valor")
-	private BigDecimal valor;
 	@Column(name = "rule_version")
 	private Integer ruleVersion;
 	@Lob
@@ -63,9 +55,6 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 		this.entornAppId = alarmaConfig.getEntornAppId();
 		this.nom = alarmaConfig.getNom();
 		this.missatge = alarmaConfig.getMissatge();
-		this.tipus = alarmaConfig.getTipus();
-		this.condicio = alarmaConfig.getCondicio();
-		this.valor = alarmaConfig.getValor();
 		this.periodeUnitat = alarmaConfig.getPeriodeUnitat();
 		this.periodeValor = alarmaConfig.getPeriodeValor();
 		this.admin = alarmaConfig.isAdmin();

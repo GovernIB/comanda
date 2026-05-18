@@ -2,19 +2,10 @@ package es.caib.comanda.alarmes.logic.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.alarmes.logic.intf.model.*;
+import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigCondicio;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigRegla;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaAmbit;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaComparador;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaMetrica;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaOperador;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigReglaTipusNode;
-import es.caib.comanda.alarmes.logic.intf.model.AlarmaConfigTipus;
-import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
@@ -108,7 +99,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
                 log.error("No s'ha pogut deserialitzar la regla de l'alarma {}", entity.getId(), ex);
             }
         }
-        return legacyRule(entity);
+        return null;
     }
 
     private String writeRule(AlarmaConfigRegla regla) {
@@ -125,7 +116,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     private AlarmaConfigRegla normalizeRule(AlarmaConfig resource) {
         AlarmaConfigRegla regla = resource.getRegla();
         if (regla == null) {
-            return legacyRule(resource);
+            return null;
         }
         if (regla.getTipusNode() == null) {
             regla.setTipusNode(AlarmaConfigReglaTipusNode.GRUP);
@@ -143,68 +134,6 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
                     : regla.getValorsText().stream().filter(Objects::nonNull).collect(Collectors.toList()));
         }
         return regla;
-    }
-
-    private AlarmaConfigRegla legacyRule(AlarmaConfigEntity entity) {
-        if (entity.getTipus() == null) {
-            return null;
-        }
-        if (entity.getTipus() == AlarmaConfigTipus.APP_CAIGUDA) {
-            return AlarmaConfigRegla.builder()
-                    .tipusNode(AlarmaConfigReglaTipusNode.GRUP)
-                    .operador(AlarmaConfigReglaOperador.AND)
-                    .fills(Collections.singletonList(
-                            AlarmaConfigRegla.builder()
-                                    .tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
-                                    .ambit(AlarmaConfigReglaAmbit.APLICACIO)
-                                    .metrica(AlarmaConfigReglaMetrica.ESTAT)
-                                    .comparador(AlarmaConfigReglaComparador.EN)
-                                    .valorsText(Collections.singletonList("DOWN"))
-                                    .build()))
-                    .build();
-        }
-        if (entity.getTipus() == AlarmaConfigTipus.APP_LATENCIA) {
-            return AlarmaConfigRegla.builder()
-                    .tipusNode(AlarmaConfigReglaTipusNode.GRUP)
-                    .operador(AlarmaConfigReglaOperador.AND)
-                    .fills(Collections.singletonList(
-                            AlarmaConfigRegla.builder()
-                                    .tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
-                                    .ambit(AlarmaConfigReglaAmbit.SISTEMA)
-                                    .metrica(AlarmaConfigReglaMetrica.LATENCIA)
-                                    .comparador(mapLegacyComparador(entity.getCondicio()))
-                                    .valorNumeric(entity.getValor())
-                                    .build()))
-                    .build();
-        }
-        return null;
-    }
-
-    private AlarmaConfigRegla legacyRule(AlarmaConfig resource) {
-        if (resource.getTipus() == null) {
-            return null;
-        }
-        AlarmaConfigEntity legacyEntity = new AlarmaConfigEntity();
-        legacyEntity.setTipus(resource.getTipus());
-        legacyEntity.setCondicio(resource.getCondicio());
-        legacyEntity.setValor(resource.getValor());
-        return legacyRule(legacyEntity);
-    }
-
-    private AlarmaConfigReglaComparador mapLegacyComparador(AlarmaConfigCondicio condicio) {
-        if (condicio == null) {
-            return AlarmaConfigReglaComparador.MAJOR;
-        }
-        if (condicio == AlarmaConfigCondicio.MAJOR) {
-            return AlarmaConfigReglaComparador.MAJOR;
-        }
-        if (condicio == AlarmaConfigCondicio.MAJOR_IGUAL) {
-            return AlarmaConfigReglaComparador.MAJOR_IGUAL;
-        }
-        if (condicio == AlarmaConfigCondicio.MENOR) {
-            return AlarmaConfigReglaComparador.MENOR;
-        }
-        return AlarmaConfigReglaComparador.MENOR_IGUAL;
     }
 
     private String buildRuleSummary(AlarmaConfigRegla regla) {
