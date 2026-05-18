@@ -165,11 +165,11 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESTAT) {
             metric = "estat";
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.LATENCIA) {
-            metric = "latencia";
-        } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.CARREGA_SISTEMA) {
-            metric = "carrega";
+            metric = "latència";
+        } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.CARREGA_MITJANA_SISTEMA) {
+            metric = "càrrega mitjana";
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE) {
-            metric = "memoria lliure";
+            metric = "memòria lliure";
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE) {
             metric = "disc lliure";
         }

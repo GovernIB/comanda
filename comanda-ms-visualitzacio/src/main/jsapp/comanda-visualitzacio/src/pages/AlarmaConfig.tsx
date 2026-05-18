@@ -37,7 +37,7 @@ import notNull from '../util/arrayUtils';
 import { toToolbarIcon } from '../../lib/components/mui/ToolbarIcon';
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
-type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
+type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_MITJANA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
 type RuleComparator = 'MAJOR' | 'MAJOR_IGUAL' | 'MENOR' | 'MENOR_IGUAL' | 'IGUAL' | 'DIFERENT' | 'EN';
 type RuleOperator = 'AND' | 'OR';
 
@@ -62,7 +62,7 @@ const defaultCondition = (): RuleCondition => ({
 const scopeMetricOptions = (scope: RuleScope): RuleMetric[] => {
     switch (scope) {
         case 'SISTEMA':
-            return ['LATENCIA', 'CARREGA_SISTEMA', 'MEMORIA_DISPONIBLE', 'ESPAI_DISC_LLIURE'];
+            return ['LATENCIA', 'CARREGA_MITJANA_SISTEMA', 'MEMORIA_DISPONIBLE', 'ESPAI_DISC_LLIURE'];
         case 'SUBSISTEMA':
         case 'INTEGRACIO':
         case 'APLICACIO':
@@ -422,7 +422,7 @@ export const AlarmaConfigForm: React.FC<{
                                                             <MenuItem key={metric} value={metric}>
                                                                 {metric === 'ESTAT' ? 'Estat' :
                                                                     metric === 'LATENCIA' ? 'Latència' :
-                                                                    metric === 'CARREGA_SISTEMA' ? 'Càrrega del sistema' :
+                                                                    metric === 'CARREGA_MITJANA_SISTEMA' ? 'Càrrega mitjana del sistema' :
                                                                     metric === 'MEMORIA_DISPONIBLE' ? 'Memòria disponible (MB)' :
                                                                     'Espai de disc lliure (MB)'}
                                                             </MenuItem>

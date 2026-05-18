@@ -719,20 +719,20 @@ class AlarmaComprovacioHelperTest {
     }
 
     @Test
-    @DisplayName("Comprova CARREGA_SISTEMA (SCPU) MAJOR que el llindar")
+    @DisplayName("Comprova CARREGA_MITJANA_SISTEMA (LAVG) MAJOR que el llindar")
     void comprovar_quanCarregaSistemaMajor_retornaTrue() {
         // Arrange
         mockRule(AlarmaConfigRegla.builder()
                 .tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
                 .ambit(AlarmaConfigReglaAmbit.SISTEMA)
-                .metrica(AlarmaConfigReglaMetrica.CARREGA_SISTEMA)
+                .metrica(AlarmaConfigReglaMetrica.CARREGA_MITJANA_SISTEMA)
                 .comparador(AlarmaConfigReglaComparador.MAJOR)
-                .valorNumeric(new BigDecimal(80))
+                .valorNumeric(new BigDecimal(1))
                 .build());
 
         Salut salut = freshSalut()
                 .detalls(Collections.singletonList(
-                        SalutDetall.builder().codi("SCPU").valor("85.5%").build()
+                        SalutDetall.builder().codi("LAVG").valor("1.5").build()
                 ))
                 .build();
         PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(salut);
@@ -911,13 +911,13 @@ class AlarmaComprovacioHelperTest {
         mockRule(AlarmaConfigRegla.builder()
                 .tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
                 .ambit(AlarmaConfigReglaAmbit.SISTEMA)
-                .metrica(AlarmaConfigReglaMetrica.CARREGA_SISTEMA)
+                .metrica(AlarmaConfigReglaMetrica.CARREGA_MITJANA_SISTEMA)
                 .comparador(AlarmaConfigReglaComparador.MAJOR)
                 .valorNumeric(new BigDecimal("80.5"))
                 .build());
 
         Salut salut = freshSalut().detalls(Collections.singletonList(
-                SalutDetall.builder().codi("SCPU").valor("80,6 %").build()
+                SalutDetall.builder().codi("LAVG").valor("80,6").build()
         )).build();
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);

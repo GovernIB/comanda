@@ -134,8 +134,8 @@ public class AlarmaComprovacioHelper {
 		if (regla.getMetrica() == AlarmaConfigReglaMetrica.LATENCIA) {
 			return salut.getAppLatencia() == null ? null : BigDecimal.valueOf(salut.getAppLatencia());
 		}
-		if (regla.getMetrica() == AlarmaConfigReglaMetrica.CARREGA_SISTEMA) {
-			return parsePlainNumber(findDetallValor(salut, "SCPU"));
+		if (regla.getMetrica() == AlarmaConfigReglaMetrica.CARREGA_MITJANA_SISTEMA) {
+			return parsePlainNumber(findDetallValor(salut, "LAVG"));
 		}
 		if (regla.getMetrica() == AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE) {
 			return parseStorageInMegabytes(findDetallValor(salut, "MED"));
