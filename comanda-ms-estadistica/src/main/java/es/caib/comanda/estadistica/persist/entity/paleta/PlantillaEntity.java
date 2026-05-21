@@ -84,11 +84,11 @@ public class PlantillaEntity extends BaseAuditableEntity<Plantilla> {
     @Column(name = "ample_separador_vertical")
     private Integer ampleSeparadorVertical;
 
-    @OneToMany(mappedBy = "plantilla", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "plantilla", cascade = CascadeType.ALL)
     @OrderBy("ordre ASC")
     private List<PlantillaGrupPaletesEntity> paletteGroups;
 
-    @OneToMany(mappedBy = "plantilla", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "plantilla", cascade = CascadeType.ALL)
     @OrderBy("ordre ASC")
     private List<WidgetStylePropertyEntity> styleProperties;
 }

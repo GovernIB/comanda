@@ -6,5 +6,6 @@ import es.caib.comanda.ms.persist.repository.BaseRepository;
 import java.util.List;
 
 public interface PaletaColorRepository extends BaseRepository<PaletaColorEntity, Long> {
+    List<PaletaColorEntity> findByPaletaId(Long paletaId);
     List<PaletaColorEntity> findByPaletaIdOrderByPosicioAsc(Long paletaId);
 }

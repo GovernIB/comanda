@@ -21,8 +21,25 @@ const mocks = vi.hoisted(() => ({
         },
     } as any,
     createPaletteMock: vi.fn(),
-    patchPaletteMock: vi.fn(),
+    updatePaletteMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
+    tGroupMock: vi.fn((group: string) => {
+        const map: Record<string, string> = {
+            LIGHT: 'Tema clar',
+            DARK: 'Tema fosc',
+            LIGHT_HIGHLIGHTED: 'Tema clar destacat',
+            DARK_HIGHLIGHTED: 'Tema fosc destacat',
+        };
+        return map[group] || group;
+    }),
+    tTitleScopeMock: vi.fn((scope: string) => {
+        const map: Record<string, string> = {
+            TITOL_1: 'Títol 1',
+            TITOL_2: 'Títol 2',
+            TITOL_3: 'Títol 3',
+        };
+        return map[scope] || scope;
+    }),
 }));
 
 vi.mock('reactlib', () => ({
@@ -33,7 +50,7 @@ vi.mock('reactlib', () => ({
     useResourceApiService: () => ({
         isReady: true,
         create: mocks.createPaletteMock,
-        patch: mocks.patchPaletteMock,
+        update: mocks.updatePaletteMock,
     }),
     FormField: ({ name, label, value, onChange, type, required, ...props }: any) => {
         if (type === 'checkbox') {
@@ -79,6 +96,25 @@ vi.mock('../components/estadistiques/GraficWidgetVisualization.tsx', () => ({
 vi.mock('../components/IconAutocompleteSelect.tsx', () => ({
     default: ({ name, label }: any) => <select data-testid={`icon-select-${name}`}><option>{label}</option></select>,
 }));
+vi.mock('../components/PaletteFormContent.tsx', () => ({
+    PaletteFormContent: ({ palette, onChange, mode, paletteTheme }: any) => (
+        <div data-testid="palette-form-content" data-mode={mode}>
+            <input data-testid="palette-nom" value={palette?.nom || ''} onChange={(e) => onChange?.({ ...palette, nom: e.target.value })} />
+            <input data-testid="palette-descripcio" value={palette?.descripcio || ''} onChange={(e) => onChange?.({ ...palette, descripcio: e.target.value })} />
+            <button data-testid="palette-add-color">Afegir color</button>
+            {paletteTheme && <div data-testid="palette-theme-applied">Theme applied</div>}
+        </div>
+    ),
+    useGetPaletteDialogTitle: () => (mode: string, nom?: string) => {
+        const titles: Record<string, string> = {
+            create: 'Nova paleta',
+            edit: 'Editar paleta',
+            duplicate: 'Duplicar paleta',
+        };
+        return `${titles[mode] || mode}${nom ? ` (${nom})` : ''}`;
+    },
+    normalizeColors: (colors: any[]) => colors || [],
+}));
 
 describe('Plantilla', () => {
     const mockSetFieldValue = vi.fn();
@@ -90,12 +126,11 @@ describe('Plantilla', () => {
             id: 100,
             clientId: '100',
         }));
-        mocks.patchPaletteMock.mockImplementation((id: any, { data }: any) => Promise.resolve({
+        mocks.updatePaletteMock.mockImplementation((id: any, { data }: any) => Promise.resolve({
             ...data,
             id,
             clientId: String(id),
         }));
-        // ✅ CORRECCIÓN: Añadir "data:" como clave del objeto
         mocks.useFormContextValue = {
             data: {
                 paleta: 'clar',
@@ -121,18 +156,20 @@ describe('Plantilla', () => {
             expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
         });
 
-        expect(screen.getByText('Tema clar')).toBeInTheDocument();
-        expect(screen.getByText('Tema fosc')).toBeInTheDocument();
+        expect(screen.getByTestId('palette-group-LIGHT')).toBeInTheDocument();
+        expect(screen.getByTestId('palette-group-DARK')).toBeInTheDocument();
     });
 
     it('mostra els grups de plantilles en lordre esperat', () => {
         render(<Plantilla />);
 
-        const labels = ['Tema clar', 'Tema clar destacat', 'Tema fosc', 'Tema fosc destacat']
-            .map((label) => screen.getByText(label));
+        const groupIds = ['LIGHT', 'LIGHT_HIGHLIGHTED', 'DARK', 'DARK_HIGHLIGHTED'];
+        const groups = groupIds.map(id => screen.getByTestId(`palette-group-${id}`));
 
-        labels.slice(0, -1).forEach((label, index) => {
-            expect(label.compareDocumentPosition(labels[index + 1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        groups.forEach((group, index) => {
+            if (index < groups.length - 1) {
+                expect(group.compareDocumentPosition(groups[index + 1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+            }
         });
     });
 

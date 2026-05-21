@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.helper.PaletaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.DashboardTemplatePaletteGroup;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Paleta;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletaColor;
@@ -11,11 +12,12 @@ import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleValueType;
 import es.caib.comanda.estadistica.logic.intf.service.PlantillaService;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
-import es.caib.comanda.estadistica.persist.entity.paleta.PaletaColorEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.WidgetStylePropertyEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardTemplatePaletteGroupRepository;
 import es.caib.comanda.estadistica.persist.repository.PaletaRepository;
+import es.caib.comanda.estadistica.persist.repository.WidgetStylePropertyRepository;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
@@ -43,6 +45,9 @@ import java.util.stream.Collectors;
 public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, Long, PlantillaEntity> implements PlantillaService {
 
     private final PaletaRepository paletaRepository;
+    private final PaletaHelper paletaHelper;
+    private final DashboardTemplatePaletteGroupRepository DashboardTemplatePaletteGroupRepository;
+    private final WidgetStylePropertyRepository widgetStylePropertyRepository;
 
     @Override
     protected void beforeCreateSave(PlantillaEntity entity, Plantilla resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
@@ -111,7 +116,7 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
             PaletaEntity entity = resolvePaletteEntityForSave(palette);
             entity.setNom(palette.getNom());
             entity.setDescripcio(palette.getDescripcio());
-            syncColors(entity, palette);
+            paletaHelper.syncColors(entity, palette);
             PaletaEntity saved = paletaRepository.saveAndFlush(entity);
             String clientId = paletteClientId(palette);
             result.put(clientId, saved);
@@ -154,44 +159,25 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
         }
     }
 
-    private void syncColors(PaletaEntity entity, Paleta resource) {
-        List<PaletaColorEntity> colors = entity.getColors();
-        if (colors == null) {
-            colors = new ArrayList<>();
-            entity.setColors(colors);
-        } else {
-            colors.clear();
-        }
-        if (resource.getColors() == null) {
-            return;
-        }
-        List<PaletaColorEntity> targetColors = colors;
-        resource.getColors().stream()
-                .filter(color -> color != null && color.getValor() != null)
-                .sorted(Comparator.comparing(color -> color.getPosicio() == null ? Integer.MAX_VALUE : color.getPosicio()))
-                .forEachOrdered(color -> {
-                    PaletaColorEntity colorEntity = new PaletaColorEntity();
-                    colorEntity.setPaleta(entity);
-                    colorEntity.setPosicio(targetColors.size());
-                    colorEntity.setValor(color.getValor());
-                    targetColors.add(colorEntity);
-                });
-    }
-
+    /**
+     * Sincronitza els grups de paletes d'una plantilla:<p>
+     * <ul>
+     *   <li>Carrega explícitament els grups existents des del repositori</li>
+     *   <li>Actualitza els grups existents que coincideixen per {@code groupType}</li>
+     *   <li>Elimina els grups que ja no apareixen al recurs</li>
+     *   <li>Crea nous grups per als tipus que no existien</li>
+     * </ul>
+     **/
     private void syncGroups(
             PlantillaEntity entity,
             List<DashboardTemplatePaletteGroup> groups,
             Map<String, PaletaEntity> palettesByClientId,
             Map<Long, PaletaEntity> palettesById) {
-
-        List<PlantillaGrupPaletesEntity> groupEntities = entity.getPaletteGroups();
-        if (groupEntities == null) {
-            groupEntities = new ArrayList<>();
-            entity.setPaletteGroups(groupEntities);
-        } else {
-            groupEntities.clear();
-        }
-
+        List<PlantillaGrupPaletesEntity> existingGroups = DashboardTemplatePaletteGroupRepository.findByPlantillaId(entity.getId());
+        Map<PaletteGroupType, PlantillaGrupPaletesEntity> existingByType = existingGroups.stream()
+                .filter(g -> g.getGroupType() != null)
+                .collect(Collectors.toMap(PlantillaGrupPaletesEntity::getGroupType, g -> g));
+        List<PlantillaGrupPaletesEntity> toKeep = new ArrayList<>();
         Map<PaletteGroupType, DashboardTemplatePaletteGroup> uniqueGroups = new EnumMap<>(PaletteGroupType.class);
         for (DashboardTemplatePaletteGroup group : groups) {
             if (group.getGroupType() == null) {
@@ -201,20 +187,38 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
                 throw new IllegalArgumentException("La plantilla no pot tenir grups de paletes duplicats: " + group.getGroupType());
             }
         }
-
         for (PaletteGroupType groupType : PaletteGroupType.values()) {
             DashboardTemplatePaletteGroup group = uniqueGroups.get(groupType);
             if (group == null) {
                 throw new IllegalArgumentException("Falta el grup de paletes " + groupType);
             }
-            PlantillaGrupPaletesEntity groupEntity = new PlantillaGrupPaletesEntity();
-            groupEntity.setPlantilla(entity);
-            groupEntity.setGroupType(groupType);
+            PlantillaGrupPaletesEntity groupEntity;
+            if (existingByType.containsKey(groupType)) {
+                groupEntity = existingByType.get(groupType);
+                existingByType.remove(groupType);
+                log.debug("Actualitzant grup {} de plantilla {}", groupType, entity.getId());
+            } else {
+                groupEntity = new PlantillaGrupPaletesEntity();
+                groupEntity.setPlantilla(entity);
+                groupEntity.setGroupType(groupType);
+                log.debug("Creant grup nou {} de plantilla {}", groupType, entity.getId());
+            }
             groupEntity.setWidgetPalette(resolvePalette(group.getWidgetPalette(), group.getWidgetPaletteClientId(), palettesByClientId, palettesById));
             groupEntity.setChartPalette(resolvePalette(group.getChartPalette(), group.getChartPaletteClientId(), palettesByClientId, palettesById));
-            groupEntity.setOrdre(group.getOrdre() != null ? group.getOrdre() : groupEntities.size());
-            groupEntities.add(groupEntity);
+            groupEntity.setOrdre(group.getOrdre() != null ? group.getOrdre() : groupEntity.getOrdre() != null ? groupEntity.getOrdre() : toKeep.size());
+            toKeep.add(groupEntity);
         }
+        if (!existingByType.isEmpty()) {
+            log.debug("Eliminant {} grups de paletes que ja no estan al resource: {}",
+                    existingByType.size(),
+                    existingByType.keySet());
+            DashboardTemplatePaletteGroupRepository.deleteAll(existingByType.values());
+        }
+        if (!toKeep.isEmpty()) {
+            log.debug("Guardant {} grups de paletes (actualitzats + nous)", toKeep.size());
+            DashboardTemplatePaletteGroupRepository.saveAll(toKeep);
+        }
+        entity.setPaletteGroups(toKeep);
     }
 
     private PaletaEntity resolvePalette(
@@ -237,21 +241,42 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
         throw new IllegalArgumentException("Cada grup ha de tenir paleta de widget i paleta de grafic");
     }
 
+    /**
+     * Sincronitza les propietats d'estil d'una plantilla:<p>
+     * <ul>
+     *   <li>Carrega explícitament les propietats existents des del repositori</li>
+     *   <li>Actualitza les propietats existents que coincideixen per {@code scope:propertyName}</li>
+     *   <li>Elimina les propietats que ja no apareixen al recurs</li>
+     *   <li>Crea noves propietats per als elements que no existien</li>
+     * </ul>
+     **/
     private void syncStyleProperties(PlantillaEntity entity, List<WidgetStyleProperty> properties) {
-        List<WidgetStylePropertyEntity> propertyEntities = entity.getStyleProperties();
-        if (propertyEntities == null) {
-            propertyEntities = new ArrayList<>();
-            entity.setStyleProperties(propertyEntities);
-        } else {
-            propertyEntities.clear();
+        if (properties == null) {
+            properties = Collections.emptyList();
         }
-
+        List<WidgetStylePropertyEntity> existingProperties = widgetStylePropertyRepository.findByPlantillaId(entity.getId());
+        Map<String, WidgetStylePropertyEntity> existingByKey = existingProperties.stream()
+                .filter(p -> p.getScope() != null && p.getPropertyName() != null)
+                .collect(Collectors.toMap(p -> p.getScope() + ":" + p.getPropertyName(), p -> p));
+        List<WidgetStylePropertyEntity> toKeep = new ArrayList<>();
         for (int index = 0; index < properties.size(); index++) {
             WidgetStyleProperty property = properties.get(index);
-            WidgetStylePropertyEntity propertyEntity = new WidgetStylePropertyEntity();
-            propertyEntity.setPlantilla(entity);
-            propertyEntity.setScope(property.getScope());
-            propertyEntity.setPropertyName(property.getPropertyName());
+            if (property == null || property.getScope() == null || property.getPropertyName() == null) {
+                continue;
+            }
+            String key = property.getScope() + ":" + property.getPropertyName();
+            WidgetStylePropertyEntity propertyEntity;
+            if (existingByKey.containsKey(key)) {
+                propertyEntity = existingByKey.get(key);
+                existingByKey.remove(key);
+                log.debug("Actualitzant propietat {} de plantilla {}", key, entity.getId());
+            } else {
+                propertyEntity = new WidgetStylePropertyEntity();
+                propertyEntity.setPlantilla(entity);
+                propertyEntity.setScope(property.getScope());
+                propertyEntity.setPropertyName(property.getPropertyName());
+                log.debug("Creant propietat nova {} de plantilla {}", key, entity.getId());
+            }
             propertyEntity.setLabel(property.getLabel());
             propertyEntity.setValueType(property.getValueType());
             propertyEntity.setPaletteRole(property.getPaletteRole());
@@ -259,8 +284,19 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
             propertyEntity.setScalarValue(property.getScalarValue());
             propertyEntity.setDefaultProperty(Boolean.TRUE.equals(property.getDefaultProperty()));
             propertyEntity.setOrdre(property.getOrdre() != null ? property.getOrdre() : index);
-            propertyEntities.add(propertyEntity);
+            toKeep.add(propertyEntity);
         }
+        if (!existingByKey.isEmpty()) {
+            log.debug("Eliminant {} propietats d'estil que ja no estan al resource: {}",
+                    existingByKey.size(),
+                    existingByKey.keySet());
+            widgetStylePropertyRepository.deleteAll(existingByKey.values());
+        }
+        if (!toKeep.isEmpty()) {
+            log.debug("Guardant {} propietats d'estil (actualitzades + noves)", toKeep.size());
+            widgetStylePropertyRepository.saveAll(toKeep);
+        }
+        entity.setStyleProperties(toKeep);
     }
 
     private void validateTemplate(PlantillaEntity entity) {

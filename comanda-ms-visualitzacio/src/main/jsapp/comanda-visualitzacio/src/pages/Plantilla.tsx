@@ -27,10 +27,6 @@ import {
     Typography,
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import {FormField, MuiDataGrid, useBaseAppContext, useFormContext, useResourceApiService} from "reactlib";
 import SimpleWidgetVisualization from "../components/estadistiques/SimpleWidgetVisualization.tsx";
@@ -42,17 +38,12 @@ import * as React from "react";
 import {useTranslation} from "react-i18next";
 import {Theme, useTheme} from "@mui/material/styles";
 import {darkTheme, lightTheme} from "../theme.ts";
+import { useGetPaletteDialogTitle, normalizeColors, PaletteColor, PaletteData, PaletteFormContent, PaletteTheme } from "../components/PaletteFormContent.tsx";
 
 type PaletteGroupType = "LIGHT" | "LIGHT_HIGHLIGHTED" | "DARK" | "DARK_HIGHLIGHTED";
 type PaletteRole = "WIDGET" | "CHART";
 type WidgetStyleScope = "COMMON" | "SIMPLE" | "GRAFIC" | "TAULA" | "TITOL_1" | "TITOL_2" | "TITOL_3";
 type WidgetStyleValueType = "COLOR" | "BOOLEAN" | "NUMBER" | "TEXT" | "ICON";
-
-interface PaletteColor {
-    id?: number;
-    posicio: number;
-    valor: string;
-}
 
 interface Palette {
     id?: number;
@@ -95,11 +86,21 @@ interface TemplateData {
     [key: string]: any;
 }
 
-const groupLabels: Record<PaletteGroupType, string> = {
-    LIGHT: "Tema clar",
-    DARK: "Tema fosc",
-    LIGHT_HIGHLIGHTED: "Tema clar destacat",
-    DARK_HIGHLIGHTED: "Tema fosc destacat",
+export const usePaletteGroupTranslation = () => {
+    const { t } = useTranslation();
+    const tGroup = (group: PaletteGroupType) => {
+        switch (group) {
+            case "LIGHT":
+                return t($ => $.page.plantilla.groups.light);
+            case "DARK":
+                return t($ => $.page.plantilla.groups.dark);
+            case "LIGHT_HIGHLIGHTED":
+                return t($ => $.page.plantilla.groups.lightHighlighted);
+            case "DARK_HIGHLIGHTED":
+                return t($ => $.page.plantilla.groups.darkHighlighted);
+        }
+    };
+    return { tGroup };
 };
 
 const groupOrder: PaletteGroupType[] = ["LIGHT", "LIGHT_HIGHLIGHTED", "DARK", "DARK_HIGHLIGHTED"];
@@ -329,20 +330,8 @@ const paletteForGroup = (data: TemplateData, groupType: PaletteGroupType, role: 
 
 const paletteColor = (palette?: Palette, index?: number) => {
     if (!palette || index == null || index < 0) return undefined;
-    return [...palette.colors].sort((a, b) => a.posicio - b.posicio)[index]?.valor;
+    return normalizeColors(palette?.colors || [])[index]?.valor;
 };
-
-interface PaletteTheme {
-    background: string;
-    text: string;
-    surface: string;
-    surfaceText: string;
-    fieldBackground: string;
-    fieldText: string;
-    border: string;
-    accent: string;
-    accentText: string;
-}
 
 const normalizeHexColor = (value?: string) => {
     if (!value || !/^#[0-9a-f]{6}$/i.test(value.trim())) return undefined;
@@ -433,57 +422,55 @@ const paletteThemeVars = (paletteTheme: PaletteTheme) => ({
     "--plantilla-accent-text": paletteTheme.accentText,
 } as React.CSSProperties);
 
-const themedTextFieldSx = (paletteTheme: PaletteTheme) => ({
-    "& .MuiInputBase-root": {
-        bgcolor: paletteTheme.fieldBackground,
-        color: paletteTheme.fieldText,
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-        borderColor: paletteTheme.border,
-    },
-    "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: paletteTheme.accent,
-    },
-    "& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: paletteTheme.accent,
-    },
-    "& .MuiInputLabel-root": {
-        color: paletteTheme.surfaceText,
-    },
-    "& .MuiInputLabel-root.Mui-focused": {
-        color: paletteTheme.accent,
-    },
-    "& .MuiSvgIcon-root": {
-        color: paletteTheme.fieldText,
-    },
+const themedTextFieldSx = ({
+  "& .MuiInputBase-root": {
+    bgcolor: "var(--plantilla-field-bg) !important",
+    color: "var(--plantilla-field-text) !important",
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--plantilla-border) !important",
+  },
+  "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--plantilla-accent)",
+  },
+  "& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--plantilla-accent)",
+  },
+  "& .MuiInputLabel-root": {
+    color: "var(--plantilla-surface-text) !important",
+  },
+  "& .MuiInputLabel-root.Mui-focused": {
+    color: "var(--plantilla-accent)",
+  },
+  "& .MuiSvgIcon-root": {
+    color: "var(--plantilla-field-text)",
+  },
 });
 
-const themedFormControlSx = (paletteTheme: PaletteTheme) => ({
-    "& .MuiInputLabel-root": {
-        color: paletteTheme.surfaceText,
-    },
-    "& .MuiInputLabel-root.Mui-focused": {
-        color: paletteTheme.accent,
-    },
-    "& .MuiInputBase-root": {
-        bgcolor: paletteTheme.fieldBackground,
-        color: paletteTheme.fieldText,
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-        borderColor: paletteTheme.border,
-    },
-    "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: paletteTheme.accent,
-    },
-    "& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: paletteTheme.accent,
-    },
-    "& .MuiSvgIcon-root": {
-        color: paletteTheme.fieldText,
-    },
+const themedFormControlSx = ({
+  "& .MuiInputLabel-root": {
+    color: "var(--plantilla-surface-text)",
+  },
+  "& .MuiInputLabel-root.Mui-focused": {
+    color: "var(--plantilla-accent)",
+  },
+  "& .MuiInputBase-root": {
+    bgcolor: "var(--plantilla-field-bg)",
+    color: "var(--plantilla-field-text)",
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--plantilla-border)",
+  },
+  "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--plantilla-accent)",
+  },
+  "& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--plantilla-accent)",
+  },
+  "& .MuiSvgIcon-root": {
+    color: "var(--plantilla-field-text)",
+  },
 });
-
-const colorInputValue = (value: string) => /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000";
 
 const scalarValue = (property: StyleProperty) => {
     if (property.valueType === "BOOLEAN") return property.scalarValue === "true";
@@ -511,8 +498,7 @@ const propertiesForPreview = (data: TemplateData, groupType: PaletteGroupType, s
 
     if (scope === "GRAFIC") {
         const chartPalette = paletteForGroup(normalized, groupType, "CHART");
-        props.colorsPaleta = (chartPalette?.colors || [])
-            .sort((a, b) => a.posicio - b.posicio)
+        props.colorsPaleta = normalizeColors(chartPalette?.colors || [])
             .map((color) => color.valor)
             .join(",");
         props.tipusGrafic = data.tipusGrafic || "BAR_CHART";
@@ -562,7 +548,7 @@ const PaletteBar = ({
             },
         }}
     >
-        {(palette?.colors || []).sort((a, b) => a.posicio - b.posicio).map((color, index) => (
+        {normalizeColors(palette?.colors || []).map((color, index) => (
             <Tooltip key={`${paletteKey(palette)}-${index}-${color.valor}`} title={`${index}: ${color.valor}`}>
                 <Button
                     aria-label={`${palette?.nom || "Paleta"} ${index}`}
@@ -579,7 +565,7 @@ const PaletteBar = ({
 );
 
 const PaletteMiniature = ({palette, compact}: { palette?: Palette; compact?: boolean }) => {
-    const colors = [...(palette?.colors || [])].sort((a, b) => a.posicio - b.posicio);
+    const colors = normalizeColors(palette?.colors || []);
 
     return (
         <Box
@@ -641,17 +627,8 @@ const PaletteSelect = ({
                 const {key, ...optionProps} = props as typeof props & {key: React.Key};
 
                 return (
-                    <Box
-                        component="li"
-                        key={key}
-                        {...optionProps}
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            minWidth: 0,
-                        }}
-                    >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0, }}
+                        component="li" key={key} {...optionProps} >
                         <PaletteMiniature palette={palette} />
                         <Typography component="span" variant="body2" noWrap>
                             {palette.nom}
@@ -663,7 +640,7 @@ const PaletteSelect = ({
                 <TextField
                     {...params}
                     label={label}
-                    sx={paletteTheme ? themedTextFieldSx(paletteTheme) : undefined}
+                    sx={paletteTheme ? themedTextFieldSx : undefined}
                     InputProps={{
                         ...params.InputProps,
                         startAdornment: selectedPalette ? (
@@ -689,8 +666,7 @@ interface PaletteDialogState {
 
 const clonePalette = (palette: Palette): Palette => ({
     ...palette,
-    colors: [...(palette.colors || [])]
-        .sort((a, b) => a.posicio - b.posicio)
+    colors: [...normalizeColors(palette?.colors || [])]
         .map((color, posicio) => ({...color, posicio})),
 });
 
@@ -706,13 +682,13 @@ const paletteNameExists = (palettes: Palette[], name?: string, excludeKey?: stri
     return !!normalizedName && paletteNames(palettes, excludeKey).has(normalizedName);
 };
 
-const uniquePaletteName = (baseName: string, palettes: Palette[]) => {
+const uniquePaletteName = (baseName: string, palettes: Palette[], copySuffix: string = 'copia') => {
     const names = paletteNames(palettes);
     let index = 1;
-    let candidate = `${baseName} copia`;
+    let candidate = `${baseName} ${copySuffix}`;
     while (names.has(candidate.trim().toLocaleLowerCase())) {
         index += 1;
-        candidate = `${baseName} copia ${index}`;
+        candidate = `${baseName} ${copySuffix} ${index}`;
     }
     return candidate;
 };
@@ -722,8 +698,7 @@ const paletteSavePayload = (palette: Palette) => ({
     clientId: undefined,
     key: undefined,
     value: undefined,
-    colors: [...(palette.colors || [])]
-        .sort((a, b) => a.posicio - b.posicio)
+    colors: normalizeColors(palette?.colors || [])
         .map((color, posicio) => ({...color, posicio})),
 });
 
@@ -747,8 +722,10 @@ const PaletteEditorDialog = ({
     nameExists?: (name?: string) => boolean;
     saving?: boolean;
 }) => {
+    const { t } = useTranslation();
     const [draft, setDraft] = useState<Palette | undefined>(state?.palette);
     const currentTheme = useTheme();
+    const getPaletteDialogTitle = useGetPaletteDialogTitle();
 
     React.useEffect(() => {
         setDraft(state?.palette ? clonePalette(state.palette) : undefined);
@@ -758,40 +735,17 @@ const PaletteEditorDialog = ({
         return null;
     }
 
-    const orderedColors = [...draft.colors].sort((a, b) => a.posicio - b.posicio);
+    const orderedColors = normalizeColors(draft?.colors || []);
     const duplicatedName = nameExists?.(draft.nom) === true;
     const saveDisabled = saving || !draft.nom?.trim() || orderedColors.length === 0 || duplicatedName;
 
-    const setColors = (colors: PaletteColor[]) => {
-        setDraft({
-            ...draft,
-            colors: colors.map((color, posicio) => ({...color, posicio})),
-        });
-    };
-
-    const moveColor = (index: number, direction: -1 | 1) => {
-        const target = index + direction;
-        if (target < 0 || target >= orderedColors.length) return;
-        const colors = [...orderedColors];
-        [colors[index], colors[target]] = [colors[target], colors[index]];
-        setColors(colors);
-    };
-
-    const updateColor = (index: number, valor: string) => {
-        const colors = [...orderedColors];
-        colors[index] = {...colors[index], valor};
-        setColors(colors);
-    };
-
-    const addColor = () => {
-        setColors([...orderedColors, {posicio: orderedColors.length, valor: "#000000"}]);
-    };
-
-    const deleteColor = (index: number) => {
-        setColors(orderedColors.filter((_, posicio) => posicio !== index));
-    };
-
     const paletteTheme = paletteThemeFor(state.groupType, currentTheme);
+
+    const handlePaletteChange = (updated: PaletteData) => {
+        setDraft(updated as Palette);
+    };
+
+    const mode = state?.mode || 'create';
 
     return (
         <Dialog
@@ -809,7 +763,7 @@ const PaletteEditorDialog = ({
             }}
         >
             <DialogTitle sx={{color: paletteTheme.text, borderBottom: "1px solid", borderColor: paletteTheme.border}}>
-                {state.mode === "create" ? "Nova paleta" : state.mode === "duplicate" ? "Duplicar paleta" : "Editar paleta"} · {groupLabels[state.groupType]} · {paletteRoleLabel(state.role)}
+                {getPaletteDialogTitle(mode, draft?.nom)}
             </DialogTitle>
             <DialogContent
                 dividers
@@ -822,75 +776,17 @@ const PaletteEditorDialog = ({
                     borderColor: paletteTheme.border,
                 }}
             >
-                <Stack spacing={1.25} sx={{pt: 0.5}}>
-                    <TextField
-                        size="small"
-                        label="Nom"
-                        value={draft.nom || ""}
-                        onChange={(event) => setDraft({...draft, nom: event.target.value})}
-                        fullWidth
-                        error={duplicatedName}
-                        helperText={duplicatedName ? "Ja existeix una paleta amb aquest nom" : undefined}
-                        sx={themedTextFieldSx(paletteTheme)}
-                    />
-                    <PaletteBar palette={draft} selected borderColor={paletteTheme.accent} />
-                    <Stack spacing={0.75}>
-                        {orderedColors.map((color, index) => (
-                            <Stack key={`${paletteKey(draft)}-${index}`} direction="row" spacing={1} alignItems="center">
-                                <Typography sx={{width: 24, color: paletteTheme.text}} variant="body2">{index}</Typography>
-                                <TextField
-                                    type="color"
-                                    size="small"
-                                    value={colorInputValue(color.valor)}
-                                    onChange={(event) => updateColor(index, event.target.value)}
-                                    sx={{...themedTextFieldSx(paletteTheme), width: 56}}
-                                />
-                                <TextField
-                                    size="small"
-                                    value={color.valor}
-                                    onChange={(event) => updateColor(index, event.target.value)}
-                                    sx={{...themedTextFieldSx(paletteTheme), flex: 1}}
-                                />
-                                <IconButton size="small" sx={{color: paletteTheme.text}} onClick={() => moveColor(index, -1)} disabled={index === 0}>
-                                    <ArrowUpwardIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton size="small" sx={{color: paletteTheme.text}} onClick={() => moveColor(index, 1)} disabled={index === orderedColors.length - 1}>
-                                    <ArrowDownwardIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton size="small" sx={{color: paletteTheme.text}} onClick={() => deleteColor(index)} disabled={orderedColors.length <= 1}>
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                            </Stack>
-                        ))}
-                    </Stack>
-                    <Button
-                        variant="outlined"
-                        startIcon={<AddCircleOutlineIcon />}
-                        onClick={addColor}
-                        sx={{
-                            borderColor: paletteTheme.accent,
-                            color: paletteTheme.accent,
-                            "&:hover": {
-                                borderColor: paletteTheme.accent,
-                                bgcolor: paletteTheme.surface,
-                            },
-                        }}
-                    >
-                        Afegir color
-                    </Button>
-                </Stack>
+                <PaletteFormContent
+                    palette={draft || { colors: [] }}
+                    onChange={handlePaletteChange}
+                    mode={mode}
+                    showDuplicateButton={true}
+                    onDuplicate={() => onDuplicate?.(draft)}
+                    paletteTheme={paletteTheme}
+                />
             </DialogContent>
             <DialogActions sx={{bgcolor: paletteTheme.background, borderTop: "1px solid", borderColor: paletteTheme.border}}>
-                {state.mode === "edit" && (
-                    <Button
-                        onClick={() => onDuplicate?.(clonePalette(draft))}
-                        startIcon={<ContentCopyIcon />}
-                        sx={{mr: "auto", color: paletteTheme.accent}}
-                    >
-                        Duplicar
-                    </Button>
-                )}
-                <Button onClick={onClose} sx={{color: paletteTheme.text}}>Cancel·lar</Button>
+                <Button onClick={onClose} sx={{color: paletteTheme.text}}>{t($ => $.common.cancel)}</Button>
                 <Button
                     variant="contained"
                     onClick={() => onSave(clonePalette(draft))}
@@ -901,7 +797,7 @@ const PaletteEditorDialog = ({
                         "&:hover": {bgcolor: paletteTheme.accent},
                     }}
                 >
-                    Desar
+                    {t($ => $.common.save)}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -910,10 +806,12 @@ const PaletteEditorDialog = ({
 
 const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: { selectedGroup: PaletteGroupType; onSelectGroup: (group: PaletteGroupType) => void }) => {
     const {data, apiRef} = useFormContext();
-    const {create: createPaletteResource, patch: patchPaletteResource, isReady: paletteApiReady} = useResourceApiService("paleta");
+    const { t } = useTranslation();
+    const {create: createPaletteResource, update: updatePaletteResource, isReady: paletteApiReady} = useResourceApiService("paleta");
     const {temporalMessageShow} = useBaseAppContext();
     const currentTheme = useTheme();
     const template = normalizedTemplate(data);
+    const { tGroup } = usePaletteGroupTranslation();
     const [paletteDialog, setPaletteDialog] = useState<PaletteDialogState>();
     const [savingPalette, setSavingPalette] = useState(false);
 
@@ -948,8 +846,8 @@ const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: { selectedGroup: Pa
     const openCreatePalette = (event: React.MouseEvent, groupType: PaletteGroupType, role: PaletteRole) => {
         event.stopPropagation();
         const clientId = `palette-${Date.now()}-${groupType.toLowerCase()}-${role.toLowerCase()}`;
-        const baseName = `${groupLabels[groupType]} - ${paletteRoleLabel(role)}`;
-        const palette = createPalette(clientId, uniquePaletteName(baseName, template.paletes), defaultColorsForGroupRole(groupType, role), template.paletes.length);
+        const baseName = `${tGroup(groupType)} - ${paletteRoleLabel(role)}`;
+        const palette = createPalette(clientId, uniquePaletteName(baseName, template.paletes, t($ => $.page.plantilla.detail.copySuffix)), defaultColorsForGroupRole(groupType, role), template.paletes.length);
         setPaletteDialog({
             mode: "create",
             groupType,
@@ -981,7 +879,7 @@ const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: { selectedGroup: Pa
                 ...clonePalette(palette),
                 id: undefined,
                 clientId,
-                nom: uniquePaletteName(palette.nom || `${groupLabels[paletteDialog.groupType]} - ${paletteRoleLabel(paletteDialog.role)}`, template.paletes),
+                nom: uniquePaletteName(palette.nom || `${tGroup(paletteDialog.groupType)} - ${paletteRoleLabel(paletteDialog.role)}`, template.paletes, t($ => $.page.plantilla.detail.copySuffix)),
                 ordre: template.paletes.length,
                 colors: palette.colors.map((color) => ({...color, id: undefined})),
             },
@@ -996,19 +894,19 @@ const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: { selectedGroup: Pa
         });
         const id = payload.id ?? parseLongId(palette.clientId);
         return mode === "edit" && id != null
-            ? patchPaletteResource(id, {data: {...payload, id}})
+            ? updatePaletteResource(id, {data: {...payload, id}})
             : createPaletteResource({data: {...payload, id: undefined}});
     };
 
     const savePaletteDialog = (palette: Palette) => {
         if (!paletteDialog) return;
         if (!paletteApiReady) {
-            temporalMessageShow?.(null, "El servei de paletes encara no esta preparat", "error");
+            temporalMessageShow?.(null, t($ => $.page.plantilla.detail.msgServiceNotReady), "error");
             return;
         }
         const key = paletteDialog.paletteKey || paletteKey(palette);
         if (paletteNameExists(template.paletes, palette.nom, paletteDialog.mode === "edit" ? key : undefined)) {
-            temporalMessageShow?.(null, "Ja existeix una paleta amb aquest nom", "error");
+            temporalMessageShow?.(null, t($ => $.page.plantilla.detail.msgNameExists), "error");
             return;
         }
         const paletteToSave: Palette = {
@@ -1034,11 +932,11 @@ const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: { selectedGroup: Pa
                     setPalettes(template.paletes.map((item) => paletteKey(item) === key ? saved : item));
                     applyTemplateField(apiRef, "paletteGroups", replacePaletteInGroups(paletteDialog.groupType, paletteDialog.role, key, savedKey));
                 }
-                temporalMessageShow?.(null, "Paleta desada", "success");
+                temporalMessageShow?.(null, t($ => $.page.plantilla.detail.msgSaved), "success");
                 setPaletteDialog(undefined);
             })
             .catch((error: any) => {
-                temporalMessageShow?.(null, error?.message || "No s'ha pogut desar la paleta", "error");
+                temporalMessageShow?.(null, error?.message || t($ => $.page.plantilla.detail.msgSaveError), "error");
             })
             .finally(() => setSavingPalette(false));
     };
@@ -1079,10 +977,10 @@ const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: { selectedGroup: Pa
                     >
                         <Stack spacing={1}>
                             <Stack direction="row" alignItems="center" justifyContent="space-between">
-                                <Typography variant="subtitle2" sx={{color: groupTheme.text}}>{groupLabels[groupType]}</Typography>
+                                <Typography variant="subtitle2" sx={{color: groupTheme.text}}>{tGroup(groupType)}</Typography>
                                 <Chip
                                     size="small"
-                                    label={groupType.includes("DARK") ? "Fosc" : "Clar"}
+                                    label={groupType.includes("DARK") ? t($ => $.page.plantilla.detail.dark) : t($ => $.page.plantilla.detail.light)}
                                     sx={{
                                         bgcolor: groupTheme.surface,
                                         color: groupTheme.surfaceText,
@@ -1106,29 +1004,36 @@ const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: { selectedGroup: Pa
                                                 />
                                             </Box>
                                             <Stack direction="row" spacing={0.25} sx={{pt: 0.25}}>
-                                                <Tooltip title={`Crear paleta ${paletteRoleLabel(role).toLowerCase()}`}>
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={{color: groupTheme.accent}}
-                                                        aria-label={`Crear paleta ${paletteRoleLabel(role).toLowerCase()} ${groupLabels[groupType]}`}
-                                                        onClick={(event) => openCreatePalette(event, groupType, role)}
-                                                    >
-                                                        <AddCircleOutlineIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title={`Editar paleta ${paletteRoleLabel(role).toLowerCase()}`}>
-                                                    <span>
-                                                        <IconButton
-                                                            size="small"
-                                                            sx={{color: groupTheme.text}}
-                                                            aria-label={`Editar paleta ${paletteRoleLabel(role).toLowerCase()} ${groupLabels[groupType]}`}
-                                                            onClick={(event) => openEditPalette(event, groupType, role, palette)}
-                                                            disabled={!palette}
-                                                        >
-                                                            <EditIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
+                                                {(() => {
+                                                    const roleLabel = role === "WIDGET" ? t($ => $.page.plantilla.detail.roleWidget).toLowerCase() : t($ => $.page.plantilla.detail.roleChart).toLowerCase();
+                                                    return (
+                                                        <>
+                                                            <Tooltip title={`${t($ => $.page.plantilla.action.createPalette)} ${roleLabel}`}>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    sx={{color: groupTheme.accent}}
+                                                                    aria-label={`${t($ => $.page.plantilla.action.createPalette)} ${roleLabel} ${tGroup(groupType)}`}
+                                                                    onClick={(event) => openCreatePalette(event, groupType, role)}
+                                                                >
+                                                                    <AddCircleOutlineIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title={`${t($ => $.page.plantilla.action.editPalette)} ${roleLabel}`}>
+                                                                <span>
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        sx={{color: groupTheme.text}}
+                                                                        aria-label={`${t($ => $.page.plantilla.action.editPalette)} ${roleLabel} ${tGroup(groupType)}`}
+                                                                        onClick={(event) => openEditPalette(event, groupType, role, palette)}
+                                                                        disabled={!palette}
+                                                                    >
+                                                                        <EditIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </span>
+                                                            </Tooltip>
+                                                        </>
+                                                    );
+                                                })()}
                                             </Stack>
                                         </Stack>
                                         <PaletteBar palette={palette} selected={selected} borderColor={selected ? groupTheme.accent : groupTheme.border} />
@@ -1162,9 +1067,10 @@ const PalettePositionSelect = ({
     paletteTheme: PaletteTheme;
 }) => {
     const {data, apiRef} = useFormContext();
+    const { t } = useTranslation();
     const template = normalizedTemplate(data);
     const palette = paletteForGroup(template, selectedGroup, property.paletteRole || "WIDGET");
-    const colors = [...(palette?.colors || [])].sort((a, b) => a.posicio - b.posicio);
+    const colors = normalizeColors(palette?.colors || []);
 
     const updateProperty = (patch: Partial<StyleProperty>) => {
         const next = template.styleProperties.map((item) => propertyKey(item) === propertyKey(property) ? {...item, ...patch} : item);
@@ -1175,10 +1081,10 @@ const PalettePositionSelect = ({
         <Stack direction="row" spacing={1} alignItems="center">
             <Chip
                 size="small"
-                label={property.paletteRole === "CHART" ? "Grafic" : "Widget"}
+                label={property.paletteRole === "CHART" ? t($ => $.page.plantilla.detail.roleChart) : t($ => $.page.plantilla.detail.roleWidget)}
                 sx={{bgcolor: paletteTheme.background, color: paletteTheme.text, border: "1px solid", borderColor: paletteTheme.border}}
             />
-            <FormControl fullWidth size="small" sx={themedFormControlSx(paletteTheme)}>
+            <FormControl fullWidth size="small" sx={themedFormControlSx}>
                 <InputLabel>{property.label || property.propertyName}</InputLabel>
                 <Select
                     label={property.label || property.propertyName}
@@ -1228,7 +1134,7 @@ const ScalarPropertyField = ({property, paletteTheme}: { property: StyleProperty
             label={property.label || property.propertyName}
             value={property.scalarValue || ""}
             onChange={(event) => updateProperty({scalarValue: event.target.value})}
-            sx={themedTextFieldSx(paletteTheme)}
+            sx={themedTextFieldSx}
         />
     );
 };
@@ -1268,24 +1174,35 @@ const StylePropertiesTab = ({scope, selectedGroup, paletteTheme}: { scope: Widge
 };
 
 const titleScopes: WidgetStyleScope[] = ["TITOL_1", "TITOL_2", "TITOL_3"];
-const titleScopeLabels: Record<string, string> = {
-    TITOL_1: "Titol 1",
-    TITOL_2: "Titol 2",
-    TITOL_3: "Titol 3",
+
+export const useTitleScopeTranslation = () => {
+    const { t } = useTranslation();
+    const tTitleScope = (scope: WidgetStyleScope) => {
+        switch (scope) {
+            case "TITOL_1": return t($ => $.page.plantilla.detail.title1);
+            case "TITOL_2": return t($ => $.page.plantilla.detail.title2);
+            case "TITOL_3": return t($ => $.page.plantilla.detail.title3);
+            default: return scope;
+        }
+    };
+    return { tTitleScope };
 };
 
-const TitleStylePropertiesTab = ({selectedGroup, paletteTheme}: { selectedGroup: PaletteGroupType; paletteTheme: PaletteTheme }) => (
-    <Stack spacing={1}>
-        {titleScopes.map((scope) => (
-            <Box key={scope}>
-                <Typography variant="subtitle2" sx={{mb: 0.75, color: paletteTheme.surfaceText}}>
-                    {titleScopeLabels[scope]}
-                </Typography>
-                <StylePropertiesTab scope={scope} selectedGroup={selectedGroup} paletteTheme={paletteTheme} />
-            </Box>
-        ))}
-    </Stack>
-);
+const TitleStylePropertiesTab = ({selectedGroup, paletteTheme}: { selectedGroup: PaletteGroupType; paletteTheme: PaletteTheme }) => {
+    const { tTitleScope } = useTitleScopeTranslation();
+    return (
+        <Stack spacing={1}>
+            {titleScopes.map((scope) => (
+                <Box key={scope}>
+                    <Typography variant="subtitle2" sx={{mb: 0.75, color: paletteTheme.surfaceText}}>
+                        {tTitleScope(scope)}
+                    </Typography>
+                    <StylePropertiesTab scope={scope} selectedGroup={selectedGroup} paletteTheme={paletteTheme} />
+                </Box>
+            ))}
+        </Stack>
+    );
+};
 
 const titlePreviewProps = (data: TemplateData, selectedGroup: PaletteGroupType, scope: WidgetStyleScope) => {
     const props = propertiesForPreview(data, selectedGroup, scope);
@@ -1293,8 +1210,8 @@ const titlePreviewProps = (data: TemplateData, selectedGroup: PaletteGroupType, 
         ...props,
         midaFontSubtitol: Number(props.midaFontSubtitol ?? props.midaFontDescripcio) || undefined,
         colorSubtitol: props.colorSubtitol || props.colorTextDestacat || props.colorText,
-        titol: titleScopeLabels[scope],
-        subtitol: "Subtitol del dashboard",
+        titol: scope,
+        subtitol: "",
         mostrarVora: Boolean(props.mostrarVora),
         mostrarVoraBottom: true,
         ampleVora: Number(props.ampleVora) || 1,
@@ -1303,6 +1220,10 @@ const titlePreviewProps = (data: TemplateData, selectedGroup: PaletteGroupType, 
 
 const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGroup: PaletteGroupType; paletteTheme: PaletteTheme }) => {
     const {data} = useFormContext();
+    const { t } = useTranslation();
+    const { tGroup } = usePaletteGroupTranslation();
+    const { tTitleScope } = useTitleScopeTranslation();
+    
     const isTitleTab = tab === 4;
     const scope: WidgetStyleScope = tab === 2 ? "GRAFIC" : tab === 3 ? "TAULA" : tab === 1 ? "SIMPLE" : "COMMON";
     const previewScope = scope === "COMMON" ? "SIMPLE" : scope;
@@ -1317,21 +1238,16 @@ const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGrou
         <Paper
             variant="outlined"
             sx={{
-                p: 1,
-                minHeight: 320,
-                bgcolor: paletteTheme.background,
-                color: paletteTheme.text,
-                borderColor: paletteTheme.border,
-                position: "sticky",
-                top: 8,
+                p: 1, minHeight: 320, bgcolor: paletteTheme.background, color: paletteTheme.text, 
+                borderColor: paletteTheme.border, position: "sticky", top: 8,
             }}
         >
             <Stack spacing={1}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="subtitle2" sx={{color: paletteTheme.text}}>Previsualitzacio</Typography>
+                    <Typography variant="subtitle2" sx={{color: paletteTheme.text}}>{t($ => $.page.plantilla.detail.preview)}</Typography>
                     <Chip
                         size="small"
-                        label={selectedGroup}
+                        label={tGroup(selectedGroup)}
                         sx={{bgcolor: paletteTheme.surface, color: paletteTheme.surfaceText, border: "1px solid", borderColor: paletteTheme.border}}
                     />
                 </Stack>
@@ -1339,7 +1255,11 @@ const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGrou
                     <Stack spacing={1}>
                         {titleScopes.map((titleScope) => (
                             <Box key={titleScope} sx={{height: 76}}>
-                                <TitolWidgetVisualization {...titlePreviewProps(data, selectedGroup, titleScope)} />
+                                <TitolWidgetVisualization 
+                                    {...titlePreviewProps(data, selectedGroup, titleScope)}
+                                    titol={tTitleScope(titleScope)}
+                                    subtitol={t($ => $.page.plantilla.detail.previewSubtitle)}
+                                />
                             </Box>
                         ))}
                     </Stack>
@@ -1407,6 +1327,18 @@ const PlantillaForm = () => {
                 "& .MuiSvgIcon-root": {
                     color: "inherit",
                 },
+                "& .MuiCheckbox-root.Mui-checked": {
+                    color: `${selectedTheme.accent} !important`,
+                },
+                "& .MuiCheckbox-root.Mui-checked:hover": {
+                    backgroundColor: `${selectedTheme.accent}1A !important`,
+                },
+                "& .MuiTab-root.Mui-selected": {
+                    color: `${selectedTheme.accent} !important`,
+                },
+                "& .MuiTabs-indicator": {
+                    backgroundColor: `${selectedTheme.accent} !important`,
+                },
             }}
         >
             <Grid container spacing={1}>
@@ -1434,11 +1366,11 @@ const PlantillaForm = () => {
                                 "& .MuiTabs-indicator": {bgcolor: selectedTheme.accent},
                             }}
                         >
-                            <Tab label="Comunes" />
+                            <Tab label={t($ => $.page.plantilla.detail.common)} />
                             <Tab label={t($ => $.page.widget.simple.tab.title)} />
                             <Tab label={t($ => $.page.widget.grafic.tab.title)} />
                             <Tab label={t($ => $.page.widget.taula.tab.title)} />
-                            <Tab label="Titols" />
+                            <Tab label={t($ => $.page.plantilla.detail.title)} />
                         </Tabs>
                         <Divider sx={{mb: 1, borderColor: selectedTheme.border}} />
                         {tab === 2 && (

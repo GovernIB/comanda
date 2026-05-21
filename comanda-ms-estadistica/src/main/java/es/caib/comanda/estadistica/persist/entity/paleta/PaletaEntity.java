@@ -21,7 +21,7 @@ public class PaletaEntity extends BaseAuditableEntity<Paleta> {
     @Column(name = "descripcio", length = 1024)
     private String descripcio;
 
-    @OneToMany(mappedBy = "paleta", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "paleta", cascade = CascadeType.ALL)
     @OrderBy("posicio ASC")
     private List<PaletaColorEntity> colors;
 }

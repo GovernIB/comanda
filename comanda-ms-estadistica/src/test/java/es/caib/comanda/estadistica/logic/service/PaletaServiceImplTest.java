@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests per a PlantillaServiceImpl")
-class PlantillaServiceImplTest {
+class PaletaServiceImplTest {
 
     @Mock private PaletaRepository paletaRepository;
     @Mock private PaletaHelper paletaHelper;
