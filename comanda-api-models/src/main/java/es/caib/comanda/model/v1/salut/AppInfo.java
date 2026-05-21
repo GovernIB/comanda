@@ -14,9 +14,11 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.Validator;
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,7 +51,7 @@ public class AppInfo {
     private String revisio;
 
     @Schema(description = "Versió de JDK amb la qual s'executa l'aplicació", example = "Temurin-17.0.9")
-    @Size(max = 10)
+    @Size(max = 32)
     private String jdkVersion;
 
     @Schema(description = "Versió de JBoss/WildFly amb la qual s'executa l'aplicació", example = "JBoss EAP 7.2")
@@ -66,6 +68,48 @@ public class AppInfo {
     @Schema(description = "Contextos o endpoints base exposats per l'aplicació")
     @Valid
     private List<ContextInfo> contexts;
+
+    @AssertTrue(message = "No poden existir integracions amb codis duplicats")
+    private boolean isIntegracionsCodiUnique() {
+        if (integracions == null) {
+            return true;
+        }
+        Set<String> uniqueValues = new HashSet<String>();
+        for (IntegracioInfo integracio : integracions) {
+            if (integracio.getCodi() != null && !uniqueValues.add(integracio.getCodi())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @AssertTrue(message = "No poden existir subsistemes amb codis duplicats")
+    private boolean isSubsistemesCodiUnique() {
+        if (subsistemes == null) {
+            return true;
+        }
+        Set<String> uniqueValues = new HashSet<String>();
+        for (SubsistemaInfo subsistema : subsistemes) {
+            if (subsistema.getCodi() != null && !uniqueValues.add(subsistema.getCodi())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @AssertTrue(message = "No poden existir contextos amb codis duplicats")
+    private boolean isContextsCodiUnique() {
+        if (contexts == null) {
+            return true;
+        }
+        Set<String> uniqueValues = new HashSet<String>();
+        for (ContextInfo context : contexts) {
+            if (context.getCodi() != null && !uniqueValues.add(context.getCodi())) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     // Custom builder to validate bean constraints on build()
     public static class AppInfoBuilder {

@@ -1,7 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import SalutAppInfo from './SalutAppInfo';
+
+const mocks = vi.hoisted(() => ({
+    useIsUserAdminMock: vi.fn(),
+}));
 
 const translations = {
     page: {
@@ -21,6 +25,7 @@ const translations = {
                 versio: 'Versió',
                 revisio: 'Revisió',
                 data: 'Data',
+                refresh: 'Refrescar informació',
                 noInfo: 'No hi ha informació de salut',
                 downAlert: 'La petició de salut ha fallat',
                 bdEstat: 'Estat BD',
@@ -180,12 +185,15 @@ vi.mock('../../components/salut/ResponsiveCardTable', () => ({
     default: ({
         title,
         tableSections,
+        actions,
     }: {
         title: string;
         tableSections: Array<{ id: string; headerName: string; cellContent: React.ReactNode }>;
+        actions?: React.ReactNode;
     }) => (
         <section>
             <h2>{title}</h2>
+            {actions}
             {tableSections.map((section) => (
                 <div key={section.id}>
                     <span>{section.headerName}</span>
@@ -220,7 +228,7 @@ vi.mock('../../components/PageTitle.tsx', () => ({
 }));
 
 vi.mock('../../components/UserContext.ts', () => ({
-    useIsUserAdmin: () => true,
+    useIsUserAdmin: () => mocks.useIsUserAdminMock(),
 }));
 
 vi.mock('../../types/salut.model.tsx', () => ({
@@ -262,6 +270,8 @@ const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
     loading: false,
     entornApp: {
         id: 7,
+        infoUrl: 'http://app/info',
+        infoData: '2026-03-13T09:55:00',
         versio: '1.0.0',
         revisioSimplificat: 'abc123',
         jdkVersion: '17',
@@ -363,6 +373,8 @@ const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
             },
         ],
     },
+    refreshInfo: vi.fn(),
+    refreshInfoLoading: false,
     ...overrides,
 });
 
@@ -375,6 +387,10 @@ const getOptionByValue = (value: string) => {
 };
 
 describe('SalutAppInfo', () => {
+    beforeEach(() => {
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+    });
+
     afterEach(() => {
         vi.clearAllMocks();
     });
@@ -438,6 +454,34 @@ describe('SalutAppInfo', () => {
         expect(screen.getByRole('link', { name: 'http://app/api' })).toBeInTheDocument();
         expect(screen.getByText('Tot correcte')).toBeInTheDocument();
         expect(screen.getByText('Manual')).toBeInTheDocument();
+    });
+
+    it('SalutAppInfo_quanEsPitjaRefrescarInformacio_executaElRefrescManual', () => {
+        // Comprova que el botó de refresc manual llança l'acció de consulta de la informació de l'aplicació.
+        const refreshInfo = vi.fn();
+
+        render(
+            <SalutAppInfo
+                ready
+                appInfoData={createAppInfoData({
+                    refreshInfo,
+                }) as any}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refrescar informació' }));
+
+        expect(refreshInfo).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('format:2026-03-13T09:55:00')).toBeInTheDocument();
+    });
+
+    it('SalutAppInfo_quanLusuariNoEsAdmin_noMostraElBotoDeRefrescManual', () => {
+        // Verifica que el refresc manual de la informació només és visible per administradors.
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+
+        expect(screen.queryByRole('button', { name: 'Refrescar informació' })).not.toBeInTheDocument();
     });
 
     it('SalutAppInfo_quanLaPeticioFalla_mostraLAlertaDeCaigudaAlsTabsFuncionals', () => {

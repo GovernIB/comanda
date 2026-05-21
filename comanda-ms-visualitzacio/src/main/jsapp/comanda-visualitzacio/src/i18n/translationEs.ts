@@ -206,6 +206,7 @@ const translationEs: translationResourcesType = {
                     versio: "Versión JDK",
                 },
                 data: "Última actualización",
+                refresh: "Refrescar información de la aplicación",
                 bdEstat: "Base de datos",
                 appLatencia: "Latencia",
                 integracions: "Integraciones",

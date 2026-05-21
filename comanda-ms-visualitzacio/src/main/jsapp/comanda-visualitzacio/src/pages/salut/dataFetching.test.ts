@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
     useResourceApiServiceMock: vi.fn(),
     useIsUserAdminMock: vi.fn(),
     entornAppGetOneMock: vi.fn(),
+    entornAppActionMock: vi.fn(),
     salutFindMock: vi.fn(),
     salutReportMock: vi.fn(),
     agrupacioFromMinutesMock: vi.fn(),
@@ -38,6 +39,7 @@ describe('useAppInfoData', () => {
         mocks.useIsUserAdminMock.mockReturnValue(false);
         mocks.agrupacioFromMinutesMock.mockReturnValue('HORA');
         mocks.entornAppGetOneMock.mockResolvedValue({ id: 77, nom: 'App prova' });
+        mocks.entornAppActionMock.mockResolvedValue({ id: 77 });
         mocks.salutReportMock.mockImplementation((_unused: unknown, request: { code: string }) => {
             if (request.code === 'grups_dates') {
                 return Promise.resolve([{ data: '2026-03-12' }, { data: '2026-03-13' }]);
@@ -58,6 +60,7 @@ describe('useAppInfoData', () => {
                 return {
                     isReady: true,
                     getOne: mocks.entornAppGetOneMock,
+                    artifactAction: mocks.entornAppActionMock,
                 };
             }
             return {
@@ -168,5 +171,24 @@ describe('useAppInfoData', () => {
         });
 
         expect(mocks.entornAppGetOneMock.mock.calls.length).toBeGreaterThan(initialCalls);
+    });
+
+    it('useAppInfoData_quanEsRefrescaLaInformacio_cridaLaccioIRecarregaElDetall', async () => {
+        // Verifica que el refresc manual de la informació executa l'acció del backend i actualitza les dades mostrades.
+        const { result } = renderHook(() => useAppInfoData(77, 60));
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        const initialCalls = mocks.entornAppGetOneMock.mock.calls.length;
+
+        await act(async () => {
+            await result.current.refreshInfo();
+        });
+
+        expect(mocks.entornAppActionMock).toHaveBeenCalledWith(77, { code: 'refresh_info' });
+        expect(mocks.entornAppGetOneMock.mock.calls.length).toBeGreaterThan(initialCalls);
+        expect(result.current.refreshInfoLoading).toBe(false);
     });
 });

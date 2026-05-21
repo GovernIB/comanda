@@ -5,6 +5,7 @@ import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
@@ -34,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -276,6 +278,25 @@ public class EntornAppServiceImplTest {
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
 
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+    }
+
+    @Test
+    void refreshInfoAction_quanSexecuta_refrescaInformacioIEvictaCache() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        when(entornAppRepository.findOne(any(Specification.class))).thenReturn(Optional.of(entornAppEntity));
+        when(resourceEntityMappingHelper.entityToResource(entornAppEntity, EntornApp.class))
+                .thenReturn(entornAppResource);
+        ReflectionTestUtils.setField(entornAppService, "entityRepository", entornAppRepository);
+        entornAppService.init();
+
+        Object result = entornAppService.artifactActionExec(
+                1L,
+                EntornApp.ENTORN_APP_REFRESH_INFO,
+                null);
+
+        verify(appInfoHelper).refreshAppInfo(1L);
+        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, "1");
+        assertSame(entornAppResource, result);
     }
 
     @Test

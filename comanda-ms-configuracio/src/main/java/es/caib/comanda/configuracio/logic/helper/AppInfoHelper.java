@@ -4,35 +4,19 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
-import es.caib.comanda.client.model.AppRef;
-import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
-import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
-import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.AppManualEntity;
-import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
-import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.ContextRepository;
-import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
-import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.ManualRepository;
-import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.configuracio.persist.repository.*;
+import es.caib.comanda.model.v1.salut.*;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
-import es.caib.comanda.model.v1.salut.AppInfo;
-import es.caib.comanda.model.v1.salut.ContextInfo;
-import es.caib.comanda.model.v1.salut.IntegracioInfo;
-import es.caib.comanda.model.v1.salut.Manual;
-import es.caib.comanda.model.v1.salut.SubsistemaInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -45,10 +29,10 @@ import javax.validation.ValidatorFactory;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 
 /**
  * Lògica comuna per a consultar la informació de les apps.
@@ -79,6 +63,7 @@ public class AppInfoHelper {
 
 	@Lazy
 	private final RestTemplate restTemplate;
+	private final CacheHelper cacheHelper;
 
 	@Transactional
 	public void refreshAppInfo(Long entornAppId) {
@@ -152,6 +137,7 @@ public class AppInfoHelper {
 				refreshSubsistemes(entornApp, appInfo.getSubsistemes());
 				refreshContexts(entornApp, appInfo.getContexts());
 			}
+			cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entornApp.getId().toString());
             monitorApp.endAction();
 		} catch (RestClientException | MalformedURLException ex) {
 			log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
@@ -186,6 +172,22 @@ public class AppInfoHelper {
         }
     }
 
+	private void autoCorrectContextInfo(ContextInfo contextInfo) {
+		if (contextInfo.getManuals() == null) {
+			return;
+		}
+		Set<String> uniqueManualNames = new HashSet<>();
+		List<Manual> correctedManuals = new ArrayList<>();
+		for (Manual manual : contextInfo.getManuals()) {
+			String nom = manual.getNom();
+			// Ignoram duplicats
+			if (uniqueManualNames.add(nom)) {
+				correctedManuals.add(manual);
+			}
+		}
+		contextInfo.setManuals(correctedManuals);
+	}
+
     private Set<ConstraintViolation<Object>> validateObject(Object object) {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             Validator validator = factory.getValidator();
@@ -197,9 +199,14 @@ public class AppInfoHelper {
 		List<AppIntegracioEntity> appIntegracionsDb = appIntegracioRepository.findByEntornApp(entornApp);
 		List<IntegracioEntity> integracionsDb = integracioRepository.findAll();
 
-        // Filtram les integracions invalides
+        // Filtram les integracions invalides i duplicades
+		Set<String> uniqueIntegracioCodis = new HashSet<>();
         List<IntegracioInfo> filteredIntegracioInfos = integracioInfos != null ? integracioInfos.stream()
                 .filter(iin -> {
+                    if (!uniqueIntegracioCodis.add(iin.getCodi())) {
+                        log.warn("Codi d'integració duplicat: {} (entornApp: {})", iin.getCodi(), entornApp.getId());
+                        return false;
+                    }
                     var violations = validateObject(iin);
                     if (!violations.isEmpty()) {
                         log.warn("Integració {} (entornApp: {}) no validada: {}", iin.getCodi(), entornApp.getId(), violations);
@@ -257,9 +264,14 @@ public class AppInfoHelper {
 	private void refreshSubsistemes(EntornAppEntity entornApp, List<SubsistemaInfo> subsistemaInfos) {
 		List<AppSubsistemaEntity> subsistemesDb = subsistemaRepository.findByEntornApp(entornApp);
 
-        // Filtram els subsistemes invalids
+        // Filtram els subsistemes invalids i duplicats
+		Set<String> uniqueSubsistemaCodis = new HashSet<>();
         var filteredSubsistemaInfos = subsistemaInfos != null ? subsistemaInfos.stream()
                 .filter(sin -> {
+                    if (!uniqueSubsistemaCodis.add(sin.getCodi())) {
+                        log.warn("Codi de subsistema duplicat: {} (entornApp: {})", sin.getCodi(), entornApp.getId());
+                        return false;
+                    }
                     var violations = validateObject(sin);
                     if (!violations.isEmpty()) {
                         log.warn("Subsistema {} (entornApp: {}) no validat: {}", sin.getCodi(), entornApp.getId(), violations);
@@ -307,15 +319,24 @@ public class AppInfoHelper {
 	private void refreshContexts(EntornAppEntity entornApp, List<ContextInfo> contextInfos) {
 		List<AppContextEntity> contextsDb = contextRepository.findByEntornApp(entornApp);
 
-        // Filtram els contexts invalids
+        // Filtram els contexts invalids i duplicats
+		Set<String> uniqueContextCodis = new HashSet<>();
         var filteredContextInfos = contextInfos != null ? contextInfos.stream()
                 .filter(cin -> {
+	                if (!uniqueContextCodis.add(cin.getCodi())) {
+	                    log.warn("Codi de context duplicat: {} (entornApp: {})", cin.getCodi(), entornApp.getId());
+	                    return false;
+	                }
                     var violations = validateObject(cin);
+                    // Intentam corregir errors comuns
                     if (!violations.isEmpty()) {
                         log.warn("Context {} (entornApp: {}) no validat: {}", cin.getCodi(), entornApp.getId(), violations);
-                        return false;
+                        autoCorrectContextInfo(cin);
+                        // Revalidam després de corregir
+                        violations = validateObject(cin);
+                        log.warn(violations.isEmpty() ? "Context {} (entornApp: {}) s'ha corregit automàticament" : "Context {} (entornApp: {}) no s'ha pogut corregir automàticament: {}", cin.getCodi(), entornApp.getId(), violations);
                     }
-                    return true;
+                    return violations.isEmpty();
                 })
                 .collect(Collectors.toList()) : null;
 

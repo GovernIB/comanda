@@ -21,6 +21,7 @@ export type SalutInformeLatenciaItem = {
 };
 export interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
+    refreshInfoLoading: boolean;
     entornApp: (EntornAppModel & DefaultLogsPerspective) | null;
     estats: Record<string, any> | null;
     latencies: SalutInformeLatenciaItem[] | null;
@@ -32,6 +33,7 @@ export interface AppDataState {
 
 const appDataStateInitialValue: AppDataState = {
     loading: null,
+    refreshInfoLoading: false,
     entornApp: null,
     estats: null,
     latencies: null,
@@ -41,8 +43,11 @@ const appDataStateInitialValue: AppDataState = {
 
 export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
     const isUserAdmin = useIsUserAdmin();
-    const { isReady: entornAppApiIsReady, getOne: entornAppGetOne } =
-        useResourceApiService('entornApp');
+    const {
+        isReady: entornAppApiIsReady,
+        getOne: entornAppGetOne,
+        artifactAction: entornAppApiAction,
+    } = useResourceApiService('entornApp');
     const {
         isReady: salutApiIsReady,
         find: salutApiFind,
@@ -131,6 +136,33 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
         }
     }, [dataRangeMinutes, ready, entornAppGetOne, id, isUserAdmin, salutApiReport, salutApiFind]);
 
+    const refreshInfo = useCallback(async () => {
+        if (id == null || !ready) {
+            return;
+        }
+
+        setAppDataState(prevState => ({
+            ...prevState,
+            refreshInfoLoading: true,
+            error: undefined,
+        }));
+        try {
+            await entornAppApiAction(id, { code: 'refresh_info' });
+            await refresh();
+        } catch (e) {
+            setAppDataState(prevState => ({
+                ...prevState,
+                loading: false,
+                error: e,
+            }));
+        } finally {
+            setAppDataState(prevState => ({
+                ...prevState,
+                refreshInfoLoading: false,
+            }));
+        }
+    }, [entornAppApiAction, id, ready, refresh]);
+
     useEffect(() => {
         if (!ready) {
             return;
@@ -141,6 +173,7 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
     return {
         ready,
         refresh,
+        refreshInfo,
         ...appDataState,
     };
 };

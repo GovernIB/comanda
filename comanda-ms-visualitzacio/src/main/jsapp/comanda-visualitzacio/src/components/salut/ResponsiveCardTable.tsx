@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Breakpoint } from '@mui/material';
+import { Box, Breakpoint } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Card from '@mui/material/Card';
@@ -21,15 +21,25 @@ const ResponsiveCardTable: React.FC<{
     noInfoMessage?: string;
     tableSections: TableSection[];
     breakpoint?: Breakpoint;
-}> = ({ title, tableSections, noInfoMessage, breakpoint = 'xl' }) => {
+    actions?: React.ReactNode;
+}> = ({ title, tableSections, noInfoMessage, breakpoint = 'xl', actions }) => {
     const theme = useTheme();
     const isBreakpointUp = useMediaQuery(theme.breakpoints.up(breakpoint));
     return (
         <Card variant="outlined">
             <CardContent>
-                <Typography gutterBottom variant="h5">
-                    {title}
-                </Typography>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                        mb: 1,
+                    }}
+                >
+                    <Typography variant="h5">{title}</Typography>
+                    {actions}
+                </Box>
                 {!tableSections.length && (
                     <Typography sx={{ display: 'flex', justifyContent: 'center' }}>
                         {noInfoMessage}

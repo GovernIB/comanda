@@ -8,9 +8,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.Valid;
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Getter
@@ -34,4 +37,19 @@ public class ContextInfo {
     @Schema(description = "URL o especificació OpenAPI del context, si està disponible", example = "https://dev.caib.es/app/internaapi/swagger/index.html")
     @Size(max = 255)
     private String api;
+
+    @AssertTrue(message = "No poden existir entrades de manuals amb noms duplicats")
+    private boolean isManualsNomUnique() {
+        if (manuals == null) {
+            return true;
+        }
+        Set<String> uniqueValues = new HashSet<>();
+        for (Manual manual : manuals) {
+            String manualNom = manual.getNom();
+            if (manualNom != null && !uniqueValues.add(manualNom)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
