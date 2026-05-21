@@ -56,6 +56,7 @@ import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import { PreselectLogsViewer } from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
 import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
+import { useIsUserAdmin } from '../../components/UserContext.ts';
 
 const AppInfo: React.FC<{
     salutCurrentApp: SalutModel;
@@ -1281,6 +1282,7 @@ const SalutAppInfo: React.FC<{
     grupsDates?: string[];
 }> = ({ appInfoData, grupsDates, ready }) => {
     const { t } = useTranslation();
+    const isUserAdmin = useIsUserAdmin();
     const getColorBySubsistema = useGetColorBySubsistema();
     const getColorByIntegracio = useGetColorByIntegracio();
     const {
