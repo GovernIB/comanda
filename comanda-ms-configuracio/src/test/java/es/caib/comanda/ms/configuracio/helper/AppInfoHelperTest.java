@@ -3,24 +3,13 @@ package es.caib.comanda.ms.configuracio.helper;
 import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.SalutServiceClient;
-import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
-import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornEntity;
-import es.caib.comanda.configuracio.persist.entity.IntegracioEntity;
-import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.ContextRepository;
-import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
-import es.caib.comanda.configuracio.persist.repository.IntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.ManualRepository;
-import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.model.v1.salut.AppInfo;
-import es.caib.comanda.model.v1.salut.ContextInfo;
 import es.caib.comanda.model.v1.salut.IntegracioInfo;
 import es.caib.comanda.model.v1.salut.SubsistemaInfo;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,12 +27,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,6 +71,9 @@ public class AppInfoHelperTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private CacheHelper cacheHelper;
+
     @Captor
     private ArgumentCaptor<IntegracioEntity> integracioEntityCaptor;
 
@@ -113,7 +105,8 @@ public class AppInfoHelperTest {
                 salutServiceClient,
                 estadisticaServiceClient,
                 monitorServiceClient,
-                restTemplate);
+                restTemplate,
+                cacheHelper);
 
         // Setup test data
         AppEntity appEntity = new AppEntity();

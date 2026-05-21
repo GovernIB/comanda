@@ -576,6 +576,7 @@ const Contexts: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }
                         <Box sx={{
                             mt: 2,
                             display: 'flex',
+                            flexWrap: 'wrap',
                         }}>
                             {contexts.map((s, key: number) =>
                                 s.manuals?.map((manual, index: number) => (
