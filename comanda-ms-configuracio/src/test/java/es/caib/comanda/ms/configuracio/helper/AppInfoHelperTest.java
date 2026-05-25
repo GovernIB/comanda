@@ -1,9 +1,7 @@
 package es.caib.comanda.ms.configuracio.helper;
 
-import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
-import es.caib.comanda.client.SalutServiceClient;
-import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.*;
 import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.model.v1.salut.AppInfo;
@@ -11,7 +9,6 @@ import es.caib.comanda.model.v1.salut.IntegracioInfo;
 import es.caib.comanda.model.v1.salut.SubsistemaInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -60,12 +58,6 @@ public class AppInfoHelperTest {
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @Mock
-    private SalutServiceClient salutServiceClient;
-
-    @Mock
-    private EstadisticaServiceClient estadisticaServiceClient;
-
-    @Mock
     private MonitorServiceClient monitorServiceClient;
 
     @Mock
@@ -84,8 +76,13 @@ public class AppInfoHelperTest {
     private ArgumentCaptor<AppContextEntity> contextEntityCaptor;
 
     private AppInfoHelper appInfoHelper;
+    private AppInfoEntornAppHelper appInfoEntornAppHelper;
+    private AppInfoIntegracionsHelper appInfoIntegracionsHelper;
+    private AppInfoSubsistemesHelper appInfoSubsistemesHelper;
+    private AppInfoContextsHelper appInfoContextsHelper;
 
     private EntornAppEntity entornAppEntity;
+    private AppInfoHelper.AppInfoEntornAppProjection entornAppProjection;
     private List<EntornAppEntity> activeEntornApps;
     private AppInfo appInfo;
     private List<IntegracioInfo> integracions;
@@ -93,20 +90,22 @@ public class AppInfoHelperTest {
 
     @BeforeEach
     void setUp() {
+        // Instantiate real helpers with mocked repositories
+	    appInfoEntornAppHelper = spy(new AppInfoEntornAppHelper(entornAppRepository));
+	    appInfoIntegracionsHelper = spy(new AppInfoIntegracionsHelper(entornAppRepository, appIntegracioRepository, integracioRepository));
+	    appInfoSubsistemesHelper = spy(new AppInfoSubsistemesHelper(entornAppRepository, subsistemaRepository));
+	    appInfoContextsHelper = spy(new AppInfoContextsHelper(entornAppRepository, contextRepository, manualRepository));
+
         // Create the helper with mocked dependencies
         appInfoHelper = new AppInfoHelper(
-                entornAppRepository,
-                appIntegracioRepository,
-                integracioRepository,
-                subsistemaRepository,
-                contextRepository,
-                manualRepository,
                 httpAuthorizationHeaderHelper,
-                salutServiceClient,
-                estadisticaServiceClient,
                 monitorServiceClient,
                 restTemplate,
-                cacheHelper);
+                cacheHelper,
+		        appInfoEntornAppHelper,
+		        appInfoIntegracionsHelper,
+		        appInfoSubsistemesHelper,
+		        appInfoContextsHelper);
 
         // Setup test data
         AppEntity appEntity = new AppEntity();
@@ -130,6 +129,13 @@ public class AppInfoHelperTest {
 
         activeEntornApps = new ArrayList<>();
         activeEntornApps.add(entornAppEntity);
+        entornAppProjection = new AppInfoHelper.AppInfoEntornAppProjection(
+                entornAppEntity.getId(),
+                entornAppEntity.getInfoUrl(),
+                entornAppEntity.isSalutAuth(),
+                appEntity.getNom(),
+                entornEntity.getNom()
+        );
 
         // Setup integracions
         IntegracioInfo integracio = IntegracioInfo.builder()
@@ -154,6 +160,8 @@ public class AppInfoHelperTest {
                 .codi("APP1")
                 .nom("Test App")
                 .versio("1.0.0")
+                .revisio("rev123")
+                .jdkVersion("17")
                 .versioJboss("7.4")
                 .data(OffsetDateTime.now())
                 .integracions(integracions)
@@ -166,79 +174,67 @@ public class AppInfoHelperTest {
 
     @Test
     void testRefreshAppInfoById() {
-        // Mock repository call
+        // Mock repositories
         when(entornAppRepository.findById(1L)).thenReturn(Optional.of(entornAppEntity));
+        when(appIntegracioRepository.findByEntornApp(entornAppEntity)).thenReturn(new ArrayList<>());
+        when(subsistemaRepository.findByEntornApp(entornAppEntity)).thenReturn(new ArrayList<>());
+        when(contextRepository.findByEntornApp(entornAppEntity)).thenReturn(new ArrayList<>());
 
         // Mock RestTemplate
-//        mockRestTemplate();
         when(restTemplate.exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class)))
                 .thenReturn(new ResponseEntity<>(appInfo, HttpStatus.OK));
 
         // Call the method to test
-        appInfoHelper.refreshAppInfo(1L);
-
-        // Verify that the repository was called
-        verify(entornAppRepository).findById(1L);
+        appInfoHelper.refreshAppInfo(entornAppProjection);
 
         // Verify that the RestTemplate was called
         verifyRestTemplateCall();
 
         // Verify that the entity was updated
         assertEquals(appInfo.getVersio(), entornAppEntity.getVersio());
+        assertEquals(appInfo.getRevisio(), entornAppEntity.getRevisio());
+        assertEquals(appInfo.getJdkVersion(), entornAppEntity.getJdkVersion());
         assertNotNull(entornAppEntity.getInfoData());
 
-        // Verify that integracions and subsistemes were refreshed
-        verify(appIntegracioRepository).findByEntornApp(entornAppEntity);
-        verify(subsistemaRepository).findByEntornApp(entornAppEntity);
-    }
-
-    @Test
-    void testRefreshAppInfoByIdNotFound() {
-        // Mock repository call
-        when(entornAppRepository.findById(1L)).thenReturn(Optional.empty());
-
-        // Call the method to test and verify that it throws an exception
-        assertThrows(ResourceNotFoundException.class, () -> {
-            appInfoHelper.refreshAppInfo(1L);
-        });
-
-        // Verify that the repository was called
-        verify(entornAppRepository).findById(1L);
+        // Verify that integracions, subsistemes and contexts were refreshed
+        verify(appInfoIntegracionsHelper).refreshIntegracions(eq(entornAppEntity.getId()), any());
+        verify(appInfoSubsistemesHelper).refreshSubsistemes(eq(entornAppEntity.getId()), any());
+        verify(appInfoContextsHelper).refreshContexts(eq(entornAppEntity.getId()), any());
     }
 
     @Test
     void testRefreshAppInfoWithRestClientException() {
-        // Mock repository call
-        when(entornAppRepository.findById(1L)).thenReturn(Optional.of(entornAppEntity));
-
         // Mock RestTemplate to throw an exception
-//        mockRestTemplate();
         when(restTemplate.exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class)))
                 .thenThrow(new RestClientException("Connection refused"));
 
         // Call the method to test
-        appInfoHelper.refreshAppInfo(1L);
-
-        // Verify that the repository was called
-        verify(entornAppRepository).findById(1L);
+        appInfoHelper.refreshAppInfo(entornAppProjection);
 
         // Verify that the RestTemplate was called
         verifyRestTemplateCall();
 
-        // Verify that integracions and subsistemes were not refreshed
-        verify(appIntegracioRepository, never()).findByEntornApp(entornAppEntity);
-        verify(subsistemaRepository, never()).findByEntornApp(entornAppEntity);
+        // Verify that the entity was not updated
+        verify(appInfoEntornAppHelper, never()).storeAppInfo(any(), any());
+        // Verify that integracions, subsistemes and contexts were not refreshed
+        verify(appInfoIntegracionsHelper, never()).refreshIntegracions(any(), any());
+        verify(appInfoSubsistemesHelper, never()).refreshSubsistemes(any(), any());
+        verify(appInfoContextsHelper, never()).refreshContexts(any(), any());
     }
 
     @Test
     void testRefreshAppInfoWithEmptySalutUrlStillUsesInfoUrl() {
         when(entornAppRepository.findById(1L)).thenReturn(Optional.of(entornAppEntity));
+        when(appIntegracioRepository.findByEntornApp(entornAppEntity)).thenReturn(new ArrayList<>());
+        when(subsistemaRepository.findByEntornApp(entornAppEntity)).thenReturn(new ArrayList<>());
+        when(contextRepository.findByEntornApp(entornAppEntity)).thenReturn(new ArrayList<>());
+
         when(restTemplate.exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class)))
                 .thenReturn(new ResponseEntity<>(appInfo, HttpStatus.OK));
 
         entornAppEntity.setSalutUrl("   ");
 
-        appInfoHelper.refreshAppInfo(1L);
+        appInfoHelper.refreshAppInfo(entornAppProjection);
 
         verify(restTemplate).exchange(eq("http://test.com/info"), eq(HttpMethod.GET), any(), eq(AppInfo.class));
         assertEquals(appInfo.getVersio(), entornAppEntity.getVersio());

@@ -49,18 +49,22 @@ public class ConfiguracioSchedulerService {
             log.debug("No hi ha cap entorn-app activa per a les tasques de configuració");
             return;
         }
-        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
+        var entornAppProjections = entornAppsActives.stream()
+                .map(ea -> new AppInfoHelper.AppInfoEntornAppProjection(ea.getId(), ea.getInfoUrl(), ea.isSalutAuth(), ea.getApp().getNom(), ea.getEntorn().getNom()))
+                .collect(Collectors.toList());
+        var entornAppIds = entornAppProjections.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
         log.debug("Es van a executar les tasques de configuració per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
-        entornAppsActives.forEach(entornApp -> executarProces(entornApp.getId()));
+        entornAppProjections.forEach(this::executarProces);
     }
 
-    private void executarProces(Long entornAppId) {
+    private void executarProces(AppInfoHelper.AppInfoEntornAppProjection entornApp) {
+        Long entornAppId = entornApp.getId();
         try {
             configuracioWorkerExecutor.execute(() -> {
                 try {
                     log.debug("Executant procés de refresc de la informació per l'entornApp {}", entornAppId);
                     // Refrescar informació de entorn-app
-                    appInfoHelper.refreshAppInfo(entornAppId);
+                    appInfoHelper.refreshAppInfo(entornApp);
                 } catch (Exception e) {
                     log.error("Error en l'execució del procés de refresc de la informació per l'entornApp {}", entornAppId, e);
                 }

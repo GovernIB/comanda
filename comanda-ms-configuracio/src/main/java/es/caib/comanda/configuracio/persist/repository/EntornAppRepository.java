@@ -16,7 +16,7 @@ import java.util.Optional;
  */
 public interface EntornAppRepository extends BaseRepository<EntornAppEntity, Long> {
 
-	@EntityGraph(attributePaths = {"app.codi", "entorn.codi"}, type = EntityGraph.EntityGraphType.LOAD)
+	@EntityGraph(attributePaths = {"app.codi", "entorn.codi", "app.nom", "entorn.nom"}, type = EntityGraph.EntityGraphType.LOAD)
 	List<EntornAppEntity> findByActivaTrueAndAppActivaTrue();
 
 	Optional<EntornAppEntity> findByEntornIdAndAppId(Long entornId, Long appId);

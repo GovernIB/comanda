@@ -355,7 +355,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
-            appInfoHelper.refreshAppInfo(entity.getId());
+            var appInfoProjection = new AppInfoHelper.AppInfoEntornAppProjection(entity.getId(), entity.getInfoUrl(), entity.isSalutAuth(), entity.getApp().getNom(), entity.getEntorn().getNom());
+            appInfoHelper.refreshAppInfo(appInfoProjection);
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }

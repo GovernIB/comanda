@@ -52,7 +52,7 @@ import java.util.*;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -294,7 +294,7 @@ public class EntornAppServiceImplTest {
                 EntornApp.ENTORN_APP_REFRESH_INFO,
                 null);
 
-        verify(appInfoHelper).refreshAppInfo(1L);
+        verify(appInfoHelper).refreshAppInfo(argThat(p -> p.getId().equals(1L)));
         assertSame(entornAppResource, result);
     }
 

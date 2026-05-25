@@ -19,8 +19,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -110,9 +109,9 @@ public class ConfiguracioSchedulerServiceTest {
 
         service.scheduledConfiguracioTasks();
 
-        verify(appInfoHelper).refreshAppInfo(eq(10L));
-        verify(appInfoHelper).refreshAppInfo(eq(20L));
-        verify(appInfoHelper, times(2)).refreshAppInfo(any(Long.class));
+        verify(appInfoHelper).refreshAppInfo(argThat(p -> p.getId().equals(10L)));
+        verify(appInfoHelper).refreshAppInfo(argThat(p -> p.getId().equals(20L)));
+        verify(appInfoHelper, times(2)).refreshAppInfo(any(AppInfoHelper.AppInfoEntornAppProjection.class));
     }
 
     @Test
@@ -121,12 +120,13 @@ public class ConfiguracioSchedulerServiceTest {
         doAnswer(invocation -> { Runnable r = invocation.getArgument(0); r.run(); return null; })
                 .when(configuracioWorkerExecutor).execute(any(Runnable.class));
 
-        doThrow(new RuntimeException("boom")).when(appInfoHelper).refreshAppInfo(eq(10L));
+        doThrow(new RuntimeException("boom")).when(appInfoHelper).refreshAppInfo(argThat(p -> p.getId().equals(10L)));
 
         assertDoesNotThrow(() -> service.scheduledConfiguracioTasks());
 
-        verify(appInfoHelper).refreshAppInfo(eq(10L));
-        verify(appInfoHelper).refreshAppInfo(eq(20L));
+        verify(appInfoHelper).refreshAppInfo(argThat(p -> p.getId().equals(10L)));
+        verify(appInfoHelper).refreshAppInfo(argThat(p -> p.getId().equals(20L)));
+        verify(appInfoHelper, times(2)).refreshAppInfo(any(AppInfoHelper.AppInfoEntornAppProjection.class));
     }
 
     @Test
@@ -146,7 +146,7 @@ public class ConfiguracioSchedulerServiceTest {
         service.scheduledConfiguracioTasks();
 
         // First rejected -> no helper call for ea1; second runs
-        verify(appInfoHelper, never()).refreshAppInfo(eq(10L));
-        verify(appInfoHelper).refreshAppInfo(eq(20L));
+        verify(appInfoHelper, never()).refreshAppInfo(argThat(p -> p.getId().equals(10L)));
+        verify(appInfoHelper).refreshAppInfo(argThat(p -> p.getId().equals(20L)));
     }
 }
