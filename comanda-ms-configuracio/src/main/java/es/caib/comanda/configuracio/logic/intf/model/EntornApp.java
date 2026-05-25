@@ -110,7 +110,7 @@ public class EntornApp extends BaseResource<Long> {
 	@Size(max = 64)
 	@Setter(AccessLevel.NONE)
 	private String revisio;
-	@Size(max = 10)
+	@Size(max = 32)
 	@Setter(AccessLevel.NONE)
 	private String jdkVersion;
 	@InputType("checkbox")
