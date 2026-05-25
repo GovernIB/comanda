@@ -75,6 +75,7 @@ interface StyleProperty {
     scalarValue?: string;
     defaultProperty?: boolean;
     ordre?: number;
+    optional?: boolean;
 }
 
 interface TemplateData {
@@ -149,7 +150,7 @@ const defaultGroups = (): PaletteGroup[] => [
     {groupType: "DARK_HIGHLIGHTED", widgetPaletteClientId: "dark-highlighted-widget", chartPaletteClientId: "dark-highlighted-chart", ordre: 3},
 ];
 
-const addColorProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, label: string, paletteRole: PaletteRole, paletteIndex: number) => {
+const addColorProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, label: string, paletteRole: PaletteRole, paletteIndex?: number, optional = false) => {
     properties.push({
         scope,
         propertyName,
@@ -157,12 +158,13 @@ const addColorProperty = (properties: StyleProperty[], scope: WidgetStyleScope, 
         valueType: "COLOR",
         paletteRole,
         paletteIndex,
+        optional,
         defaultProperty: true,
         ordre: properties.length,
     });
 };
 
-const addScalarProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, label: string, valueType: WidgetStyleValueType, scalarValue: string) => {
+const addScalarProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, label: string, valueType: WidgetStyleValueType, scalarValue?: string) => {
     properties.push({
         scope,
         propertyName,
@@ -181,6 +183,8 @@ const addTitleStyleProperties = (properties: StyleProperty[], scope: WidgetStyle
     addScalarProperty(properties, scope, "mostrarVora", `${prefix} subratllat`, "BOOLEAN", "true");
     addColorProperty(properties, scope, "colorVora", `${prefix} color subratllat`, "WIDGET", 2);
     addScalarProperty(properties, scope, "ampleVora", `${prefix} gruix subratllat`, "NUMBER", String(underlineWidth));
+    addColorProperty(properties, scope, "colorSubtitol", `${prefix} text subtitol`, "WIDGET", undefined, true);
+    addScalarProperty(properties, scope, "midaFontSubtitol", `${prefix} mida font subtitol`, "NUMBER", undefined);
 };
 
 const defaultStyleProperties = (): StyleProperty[] => {
@@ -1061,10 +1065,12 @@ const PalettePositionSelect = ({
     property,
     selectedGroup,
     paletteTheme,
+    optional = false,
 }: {
     property: StyleProperty;
     selectedGroup: PaletteGroupType;
     paletteTheme: PaletteTheme;
+    optional?: boolean;
 }) => {
     const {data, apiRef} = useFormContext();
     const { t } = useTranslation();
@@ -1089,8 +1095,14 @@ const PalettePositionSelect = ({
                 <Select
                     label={property.label || property.propertyName}
                     value={property.paletteIndex != null ? String(property.paletteIndex) : ""}
-                    onChange={(event: SelectChangeEvent) => updateProperty({paletteIndex: Number(event.target.value)})}
+                    onChange={(event: SelectChangeEvent) => {
+                        const value = event.target.value;
+                        updateProperty({paletteIndex: value === "" ? undefined : Number(value)})
+                    }}
                 >
+                    {optional && (<MenuItem value="">
+                        <em>{t($ => $.page.plantilla.detail.defaultValue)}</em>
+                    </MenuItem>)}
                     {colors.map((color, index) => (
                         <MenuItem key={`${property.propertyName}-${index}`} value={String(index)}>
                             <Stack direction="row" spacing={1} alignItems="center">
@@ -1164,7 +1176,7 @@ const StylePropertiesTab = ({scope, selectedGroup, paletteTheme}: { scope: Widge
                 {properties.map((property) => (
                     <Grid key={propertyKey(property)} size={{xs: 12, md: property.valueType === "COLOR" ? 6 : 4}}>
                         {property.valueType === "COLOR"
-                            ? <PalettePositionSelect property={property} selectedGroup={selectedGroup} paletteTheme={paletteTheme} />
+                            ? <PalettePositionSelect property={property} selectedGroup={selectedGroup} paletteTheme={paletteTheme} optional={property.optional}/>
                             : <ScalarPropertyField property={property} paletteTheme={paletteTheme} />}
                     </Grid>
                 ))}

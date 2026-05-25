@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Plantilla } from './Plantilla';
 import userEvent from '@testing-library/user-event';
@@ -222,60 +222,5 @@ describe('Plantilla', () => {
     it('inicializa los colores por defecto al crear una nueva plantilla', () => {
         render(<Plantilla />);
         expect(mockSetFieldValue).toBeDefined();
-    });
-
-    // TODO: Revisar el test
-    it.skip('obre la modal per editar una paleta des del grup', async () => {
-        render(<Plantilla />);
-
-        fireEvent.click(screen.getByRole('button', { name: 'Editar paleta widget Tema clar' }));
-
-        expect(await screen.findByRole('heading', { name: /Editar paleta · Tema clar · Widget/ })).toBeInTheDocument();
-        const dialogContent = screen.getByTestId('palette-dialog-theme');
-        const dialog = screen.getByRole('dialog');
-        expect(dialogContent).toHaveStyle({ '--plantilla-bg': '#fff' });
-
-        fireEvent.change(within(dialog).getByRole('textbox', { name: 'Nom' }), { target: { value: 'Paleta editada' } });
-        fireEvent.click(within(dialog).getByRole('button', { name: 'Desar' }));
-
-        await waitFor(() => {
-            expect(mockSetFieldValue).toHaveBeenCalledWith(
-                'paletes',
-                expect.arrayContaining([
-                    expect.objectContaining({ nom: 'Paleta editada' }),
-                ])
-            );
-        });
-    }, 10000);
-
-    // TODO: Revisar el test
-    it.skip('obre la modal per crear una paleta i lassigna al grup', async () => {
-        const user = userEvent.setup();
-        render(<Plantilla />);
-
-        await user.click(screen.getByRole('button', { name: 'Crear paleta grafic Tema clar' }));
-
-        expect(screen.getByRole('heading', { name: /Nova paleta · Tema clar · Grafic/ })).toBeInTheDocument();
-
-        await user.click(screen.getByRole('button', { name: 'Desar' }));
-
-        await waitFor(() => {
-            expect(mockSetFieldValue).toHaveBeenCalledWith(
-                'paletes',
-                expect.arrayContaining([
-                    expect.objectContaining({ nom: 'Tema clar - Grafic copia' }),
-                ])
-            );
-            expect(mockSetFieldValue).toHaveBeenCalledWith(
-                'paletteGroups',
-                expect.arrayContaining([
-                    expect.objectContaining({
-                        groupType: 'LIGHT',
-                        chartPalette: undefined,
-                        chartPaletteClientId: '100',
-                    }),
-                ])
-            );
-        });
     });
 });

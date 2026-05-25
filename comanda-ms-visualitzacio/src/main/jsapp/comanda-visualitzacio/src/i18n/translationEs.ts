@@ -967,6 +967,7 @@ const translationEs: translationResourcesType = {
                 msgSaved: "Paleta guardada",
                 msgSaveError: "No se ha podido guardar la paleta",
                 previewSubtitle: "Subtítulo del dashboard",
+                defaultValue: "Valor por defecto",
             },
             action: {
                 createPalette: "Crear paleta",

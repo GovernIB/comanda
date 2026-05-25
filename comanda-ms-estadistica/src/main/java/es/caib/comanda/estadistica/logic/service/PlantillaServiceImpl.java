@@ -27,22 +27,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, Long, PlantillaEntity> implements PlantillaService {
+
+    /** Llista de propietats de tipus COLOR que poden deixar-se buides. */
+    private static final Set<String> OPTIONAL_COLOR_PROPERTIES = Set.of("colorSubtitol");
 
     private final PaletaRepository paletaRepository;
     private final PaletaHelper paletaHelper;
@@ -320,6 +314,9 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
                 continue;
             }
             if (property.getPaletteRole() == null || property.getPaletteIndex() == null || property.getPaletteIndex() < 0) {
+                if (OPTIONAL_COLOR_PROPERTIES.contains(property.getPropertyName())) {
+                    continue;
+                }
                 throw new IllegalArgumentException("La propietat de color " + property.getPropertyName() + " ha d'apuntar a una posicio de paleta");
             }
             for (PlantillaGrupPaletesEntity group : entity.getPaletteGroups()) {

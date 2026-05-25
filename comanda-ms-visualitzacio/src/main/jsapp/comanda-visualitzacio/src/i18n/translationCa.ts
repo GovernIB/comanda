@@ -967,6 +967,7 @@ const translationCa = {
                 msgSaved: "Paleta desada",
                 msgSaveError: "No s'ha pogut desar la paleta",
                 previewSubtitle: "Subtítol del dashboard",
+                defaultValue: "Valor per defecte",
             },
             action: {
                 createPalette: "Crear paleta",

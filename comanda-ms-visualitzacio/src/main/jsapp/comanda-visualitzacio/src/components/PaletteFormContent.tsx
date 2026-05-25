@@ -134,7 +134,7 @@ export const PaletteFormContent: React.FC<PaletteFormContentProps> = ({
         <Typography variant="subtitle2">{t($ => $.page.palette.colors)}</Typography>
         <PaletteBar colors={colors} />
         {colors.map((color, index) => (
-          <Stack key={`${index}-${color.valor}`} direction="row" spacing={1} alignItems="center">
+          <Stack key={`${index}-${color.id}`} direction="row" spacing={1} alignItems="center">
             <Typography variant="body2" sx={{ width: 28 }}>{index}</Typography>
             <TextField type="color" size="small" value={colorInputValue(color.valor)}
               onChange={(e) => updateColor(index, e.target.value)} sx={{ width: 64 }} disabled={disabled} />

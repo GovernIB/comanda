@@ -967,6 +967,7 @@ const translationEn: translationResourcesType = {
                 msgSaved: "Palette saved",
                 msgSaveError: "Could not save the palette",
                 previewSubtitle: "Dashboard subtitle",
+                defaultValue: "Default value",
             },
             action: {
                 createPalette: "Create palette",
