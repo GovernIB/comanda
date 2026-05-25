@@ -73,13 +73,7 @@ public abstract class BaseUtilsController {
 		Map<String, Object> systemEnv = getAllProperties(env); // System.getenv();
 		MediaType contentType = MediaType.TEXT_PLAIN;
 		String envJson;
-		if ("jsall".equalsIgnoreCase(format)) {
-			String json = systemEnv.entrySet().stream().
-					map(e -> "\"" + e.getKey() + "\":\"" + e.getValue() + "\",").
-					collect(Collectors.joining("\n"));
-			envJson = "window.__RUNTIME_CONFIG__ = {" + json + "}";
-			contentType = MediaType.valueOf("text/javascript");
-		} else if ("reactapp".equalsIgnoreCase(format)) {
+		if ("reactapp".equalsIgnoreCase(format)) {
 			String json = systemEnv.entrySet().stream().
 					filter(e -> e.getKey().startsWith("REACT_APP") || isReactAppMappedFrontProperty(e.getKey())).
 					map(e -> {
@@ -105,10 +99,6 @@ public abstract class BaseUtilsController {
 					collect(Collectors.joining("\n"));
 			envJson = "window.__RUNTIME_CONFIG__ = {" + json + "}";
 			contentType = MediaType.valueOf("text/javascript");
-		} else if ("showall".equalsIgnoreCase(format)) {
-			envJson = systemEnv.entrySet().stream().
-					map(e -> e.getKey() + "=" + e.getValue()).
-					collect(Collectors.joining("\n"));
 		} else {
 			envJson = "";
 		}
