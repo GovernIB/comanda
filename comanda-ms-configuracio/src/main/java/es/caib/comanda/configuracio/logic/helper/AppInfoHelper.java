@@ -99,7 +99,7 @@ public class AppInfoHelper {
 
             monitorApp.endAction();
         } catch (RestClientException | MalformedURLException ex) {
-            log.warn("No s'ha pogut obtenir informació de salut de l'app {}, entorn {}: {}",
+            log.warn("No s'ha pogut obtenir informació de l'app {}, entorn {}: {}",
                     appNom,
                     entornNom,
                     ex.getLocalizedMessage());
@@ -107,7 +107,7 @@ public class AppInfoHelper {
                 monitorApp.endAction(ex, null);
             }
         } catch (Exception ex) {
-            log.error("Error al recuperar i guardar la informació de salut de l'app {}, entorn {}: {}",
+            log.error("Error al recuperar i guardar la informació de l'app {}, entorn {}: {}",
                     appNom,
                     entornNom,
                     ex.getLocalizedMessage());
