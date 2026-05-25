@@ -356,7 +356,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
             appInfoHelper.refreshAppInfo(entity.getId());
-            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }

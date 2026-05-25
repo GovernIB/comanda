@@ -295,7 +295,6 @@ public class EntornAppServiceImplTest {
                 null);
 
         verify(appInfoHelper).refreshAppInfo(1L);
-        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, "1");
         assertSame(entornAppResource, result);
     }
 
