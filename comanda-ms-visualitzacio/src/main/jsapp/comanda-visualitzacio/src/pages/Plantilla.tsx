@@ -68,7 +68,6 @@ interface StyleProperty {
     id?: number;
     scope: WidgetStyleScope;
     propertyName: string;
-    label?: string;
     valueType: WidgetStyleValueType;
     paletteRole?: PaletteRole;
     paletteIndex?: number;
@@ -86,6 +85,68 @@ interface TemplateData {
     tipusGrafic?: string;
     [key: string]: any;
 }
+
+const LABEL_TRANSLATIONS: Record<string, (t: ReturnType<typeof useTranslation>['t']) => string> = {
+    colorFons: (t) => t($ => $.page.plantilla.form.colorFons),
+    colorText: (t) => t($ => $.page.plantilla.form.colorText),
+    colorVora: (t) => t($ => $.page.plantilla.form.colorVora),
+    colorTitol: (t) => t($ => $.page.plantilla.form.colorTitol),
+    mostrarVora: (t) => t($ => $.page.plantilla.form.mostrarVora),
+    ampleVora: (t) => t($ => $.page.plantilla.form.ampleVora),
+    midaFontTitol: (t) => t($ => $.page.plantilla.form.midaFontTitol),
+    midaFontDescripcio: (t) => t($ => $.page.plantilla.form.midaFontDescripcio),
+    colorIcona: (t) => t($ => $.page.plantilla.form.colorIcona),
+    colorFonsIcona: (t) => t($ => $.page.plantilla.form.colorFonsIcona),
+    colorTextDestacat: (t) => t($ => $.page.plantilla.form.colorTextDestacat),
+    midaFontValor: (t) => t($ => $.page.plantilla.form.midaFontValor),
+    midaFontUnitats: (t) => t($ => $.page.plantilla.form.midaFontUnitats),
+    midaFontCanviPercentual: (t) => t($ => $.page.plantilla.form.midaFontCanviPercentual),
+    colorSubtitol: (t) => t($ => $.page.plantilla.form.colorSubtitol),
+    midaFontSubtitol: (t) => t($ => $.page.plantilla.form.midaFontSubtitol),
+    mostrarReticula: (t) => t($ => $.page.plantilla.form.mostrarReticula),
+    barStacked: (t) => t($ => $.page.plantilla.form.barStacked),
+    barHorizontal: (t) => t($ => $.page.plantilla.form.barHorizontal),
+    lineShowPoints: (t) => t($ => $.page.plantilla.form.lineShowPoints),
+    area: (t) => t($ => $.page.plantilla.form.area),
+    lineSmooth: (t) => t($ => $.page.plantilla.form.lineSmooth),
+    lineWidth: (t) => t($ => $.page.plantilla.form.lineWidth),
+    outerRadius: (t) => t($ => $.page.plantilla.form.outerRadius),
+    pieDonut: (t) => t($ => $.page.plantilla.form.pieDonut),
+    innerRadius: (t) => t($ => $.page.plantilla.form.innerRadius),
+    pieShowLabels: (t) => t($ => $.page.plantilla.form.pieShowLabels),
+    labelSize: (t) => t($ => $.page.plantilla.form.labelSize),
+    gaugeMin: (t) => t($ => $.page.plantilla.form.gaugeMin),
+    gaugeMax: (t) => t($ => $.page.plantilla.form.gaugeMax),
+    gaugeRangs: (t) => t($ => $.page.plantilla.form.gaugeRangs),
+    heatmapMinValue: (t) => t($ => $.page.plantilla.form.heatmapMinValue),
+    heatmapMaxValue: (t) => t($ => $.page.plantilla.form.heatmapMaxValue),
+    colorTextTaula: (t) => t($ => $.page.plantilla.form.colorTextTaula),
+    colorFonsTaula: (t) => t($ => $.page.plantilla.form.colorFonsTaula),
+    mostrarCapcalera: (t) => t($ => $.page.plantilla.form.mostrarCapcalera),
+    colorCapcalera: (t) => t($ => $.page.plantilla.form.colorCapcalera),
+    colorFonsCapcalera: (t) => t($ => $.page.plantilla.form.colorFonsCapcalera),
+    mostrarAlternancia: (t) => t($ => $.page.plantilla.form.mostrarAlternancia),
+    colorAlternancia: (t) => t($ => $.page.plantilla.form.colorAlternancia),
+    mostrarVoraTaula: (t) => t($ => $.page.plantilla.form.mostrarVoraTaula),
+    colorVoraTaula: (t) => t($ => $.page.plantilla.form.colorVoraTaula),
+    ampleVoraTaula: (t) => t($ => $.page.plantilla.form.ampleVoraTaula),
+    mostrarSeparadorHoritzontal: (t) => t($ => $.page.plantilla.form.mostrarSeparadorHoritzontal),
+    colorSeparadorHoritzontal: (t) => t($ => $.page.plantilla.form.colorSeparadorHoritzontal),
+    ampleSeparadorHoritzontal: (t) => t($ => $.page.plantilla.form.ampleSeparadorHoritzontal),
+    mostrarSeparadorVertical: (t) => t($ => $.page.plantilla.form.mostrarSeparadorVertical),
+    colorSeparadorVertical: (t) => t($ => $.page.plantilla.form.colorSeparadorVertical),
+    ampleSeparadorVertical: (t) => t($ => $.page.plantilla.form.ampleSeparadorVertical),
+    chartSerieColor1: (t) => t($ => $.page.plantilla.form.serie1),
+    chartSerieColor2: (t) => t($ => $.page.plantilla.form.serie2),
+    chartSerieColor3: (t) => t($ => $.page.plantilla.form.serie3),
+    chartSerieColor4: (t) => t($ => $.page.plantilla.form.serie4),
+    chartSerieColor5: (t) => t($ => $.page.plantilla.form.serie5),
+    chartSerieColor6: (t) => t($ => $.page.plantilla.form.serie6),
+};
+
+export const getPropertyLabel = (property: StyleProperty, t: ReturnType<typeof useTranslation>['t']): string => {
+    return LABEL_TRANSLATIONS[property.propertyName]?.(t) ?? property.propertyName;
+};
 
 export const usePaletteGroupTranslation = () => {
     const { t } = useTranslation();
@@ -150,11 +211,10 @@ const defaultGroups = (): PaletteGroup[] => [
     {groupType: "DARK_HIGHLIGHTED", widgetPaletteClientId: "dark-highlighted-widget", chartPaletteClientId: "dark-highlighted-chart", ordre: 3},
 ];
 
-const addColorProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, label: string, paletteRole: PaletteRole, paletteIndex?: number, optional = false) => {
+const addColorProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, paletteRole: PaletteRole, paletteIndex?: number, optional = false) => {
     properties.push({
         scope,
         propertyName,
-        label,
         valueType: "COLOR",
         paletteRole,
         paletteIndex,
@@ -164,11 +224,10 @@ const addColorProperty = (properties: StyleProperty[], scope: WidgetStyleScope, 
     });
 };
 
-const addScalarProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, label: string, valueType: WidgetStyleValueType, scalarValue?: string) => {
+const addScalarProperty = (properties: StyleProperty[], scope: WidgetStyleScope, propertyName: string, valueType: WidgetStyleValueType, scalarValue?: string) => {
     properties.push({
         scope,
         propertyName,
-        label,
         valueType,
         scalarValue,
         defaultProperty: true,
@@ -176,75 +235,75 @@ const addScalarProperty = (properties: StyleProperty[], scope: WidgetStyleScope,
     });
 };
 
-const addTitleStyleProperties = (properties: StyleProperty[], scope: WidgetStyleScope, prefix: string, fontSize: number, underlineWidth: number) => {
-    addColorProperty(properties, scope, "colorFons", `${prefix} fons`, "WIDGET", 0);
-    addColorProperty(properties, scope, "colorTitol", `${prefix} text`, "WIDGET", 1);
-    addScalarProperty(properties, scope, "midaFontTitol", `${prefix} mida font`, "NUMBER", String(fontSize));
-    addScalarProperty(properties, scope, "mostrarVora", `${prefix} subratllat`, "BOOLEAN", "true");
-    addColorProperty(properties, scope, "colorVora", `${prefix} color subratllat`, "WIDGET", 2);
-    addScalarProperty(properties, scope, "ampleVora", `${prefix} gruix subratllat`, "NUMBER", String(underlineWidth));
-    addColorProperty(properties, scope, "colorSubtitol", `${prefix} text subtitol`, "WIDGET", undefined, true);
-    addScalarProperty(properties, scope, "midaFontSubtitol", `${prefix} mida font subtitol`, "NUMBER", undefined);
+const addTitleStyleProperties = (properties: StyleProperty[], scope: WidgetStyleScope, fontSize: number, underlineWidth: number) => {
+    addColorProperty(properties, scope, "colorFons", "WIDGET", 0);
+    addColorProperty(properties, scope, "colorTitol", "WIDGET", 1);
+    addScalarProperty(properties, scope, "midaFontTitol", "NUMBER", String(fontSize));
+    addScalarProperty(properties, scope, "mostrarVora",  "BOOLEAN", "true");
+    addColorProperty(properties, scope, "colorVora", "WIDGET", 2);
+    addScalarProperty(properties, scope, "ampleVora", "NUMBER", String(underlineWidth));
+    addColorProperty(properties, scope, "colorSubtitol", "WIDGET", undefined, true);
+    addScalarProperty(properties, scope, "midaFontSubtitol", "NUMBER", undefined);
 };
 
 const defaultStyleProperties = (): StyleProperty[] => {
     const properties: StyleProperty[] = [];
-    addColorProperty(properties, "COMMON", "colorFons", "Fons", "WIDGET", 0);
-    addColorProperty(properties, "COMMON", "colorText", "Text", "WIDGET", 1);
-    addColorProperty(properties, "COMMON", "colorVora", "Vora", "WIDGET", 2);
-    addScalarProperty(properties, "COMMON", "mostrarVora", "Mostrar vora", "BOOLEAN", "false");
-    addScalarProperty(properties, "COMMON", "ampleVora", "Amplada vora", "NUMBER", "1");
-    addScalarProperty(properties, "COMMON", "midaFontTitol", "Mida titol", "NUMBER", "22");
-    addScalarProperty(properties, "COMMON", "midaFontDescripcio", "Mida descripcio", "NUMBER", "14");
+    addColorProperty(properties, "COMMON", "colorFons", "WIDGET", 0);
+    addColorProperty(properties, "COMMON", "colorText", "WIDGET", 1);
+    addColorProperty(properties, "COMMON", "colorVora", "WIDGET", 2);
+    addScalarProperty(properties, "COMMON", "mostrarVora", "BOOLEAN", "false");
+    addScalarProperty(properties, "COMMON", "ampleVora", "NUMBER", "1");
+    addScalarProperty(properties, "COMMON", "midaFontTitol", "NUMBER", "22");
+    addScalarProperty(properties, "COMMON", "midaFontDescripcio", "NUMBER", "14");
 
-    addColorProperty(properties, "SIMPLE", "colorIcona", "Color icona", "WIDGET", 3);
-    addColorProperty(properties, "SIMPLE", "colorFonsIcona", "Fons icona", "WIDGET", 5);
-    addColorProperty(properties, "SIMPLE", "colorTextDestacat", "Text destacat", "WIDGET", 4);
-    addScalarProperty(properties, "SIMPLE", "midaFontValor", "Mida valor", "NUMBER", "48");
-    addScalarProperty(properties, "SIMPLE", "midaFontUnitats", "Mida unitats", "NUMBER", "16");
-    addScalarProperty(properties, "SIMPLE", "midaFontCanviPercentual", "Mida canvi", "NUMBER", "18");
+    addColorProperty(properties, "SIMPLE", "colorIcona", "WIDGET", 3);
+    addColorProperty(properties, "SIMPLE", "colorFonsIcona", "WIDGET", 5);
+    addColorProperty(properties, "SIMPLE", "colorTextDestacat", "WIDGET", 4);
+    addScalarProperty(properties, "SIMPLE", "midaFontValor", "NUMBER", "48");
+    addScalarProperty(properties, "SIMPLE", "midaFontUnitats", "NUMBER", "16");
+    addScalarProperty(properties, "SIMPLE", "midaFontCanviPercentual", "NUMBER", "18");
 
     Array.from({length: 6}).forEach((_, index) => {
-        addColorProperty(properties, "GRAFIC", `chartSerieColor${index + 1}`, `Serie ${index + 1}`, "CHART", index);
+        addColorProperty(properties, "GRAFIC", `chartSerieColor${index + 1}`, "CHART", index);
     });
-    addScalarProperty(properties, "GRAFIC", "mostrarReticula", "Mostrar reticula", "BOOLEAN", "false");
-    addScalarProperty(properties, "GRAFIC", "barStacked", "Barres apilades", "BOOLEAN", "false");
-    addScalarProperty(properties, "GRAFIC", "barHorizontal", "Barres horitzontals", "BOOLEAN", "false");
-    addScalarProperty(properties, "GRAFIC", "lineShowPoints", "Mostrar punts", "BOOLEAN", "true");
-    addScalarProperty(properties, "GRAFIC", "area", "Area", "BOOLEAN", "false");
-    addScalarProperty(properties, "GRAFIC", "lineSmooth", "Linia suau", "BOOLEAN", "false");
-    addScalarProperty(properties, "GRAFIC", "lineWidth", "Amplada linia", "NUMBER", "2");
-    addScalarProperty(properties, "GRAFIC", "outerRadius", "Radi exterior", "NUMBER", "100");
-    addScalarProperty(properties, "GRAFIC", "pieDonut", "Donut", "BOOLEAN", "false");
-    addScalarProperty(properties, "GRAFIC", "innerRadius", "Radi interior", "NUMBER", "40");
-    addScalarProperty(properties, "GRAFIC", "pieShowLabels", "Mostrar etiquetes", "BOOLEAN", "true");
-    addScalarProperty(properties, "GRAFIC", "labelSize", "Mida etiqueta", "NUMBER", "12");
-    addScalarProperty(properties, "GRAFIC", "gaugeMin", "Gauge minim", "NUMBER", "0");
-    addScalarProperty(properties, "GRAFIC", "gaugeMax", "Gauge maxim", "NUMBER", "100");
-    addScalarProperty(properties, "GRAFIC", "gaugeRangs", "Rangs gauge", "TEXT", "50,75,100");
-    addScalarProperty(properties, "GRAFIC", "heatmapMinValue", "Heatmap minim", "NUMBER", "0");
-    addScalarProperty(properties, "GRAFIC", "heatmapMaxValue", "Heatmap maxim", "NUMBER", "100");
+    addScalarProperty(properties, "GRAFIC", "mostrarReticula", "BOOLEAN", "false");
+    addScalarProperty(properties, "GRAFIC", "barStacked", "BOOLEAN", "false");
+    addScalarProperty(properties, "GRAFIC", "barHorizontal", "BOOLEAN", "false");
+    addScalarProperty(properties, "GRAFIC", "lineShowPoints", "BOOLEAN", "true");
+    addScalarProperty(properties, "GRAFIC", "area", "BOOLEAN", "false");
+    addScalarProperty(properties, "GRAFIC", "lineSmooth", "BOOLEAN", "false");
+    addScalarProperty(properties, "GRAFIC", "lineWidth", "NUMBER", "2");
+    addScalarProperty(properties, "GRAFIC", "outerRadius", "NUMBER", "100");
+    addScalarProperty(properties, "GRAFIC", "pieDonut", "BOOLEAN", "false");
+    addScalarProperty(properties, "GRAFIC", "innerRadius", "NUMBER", "40");
+    addScalarProperty(properties, "GRAFIC", "pieShowLabels", "BOOLEAN", "true");
+    addScalarProperty(properties, "GRAFIC", "labelSize", "NUMBER", "12");
+    addScalarProperty(properties, "GRAFIC", "gaugeMin", "NUMBER", "0");
+    addScalarProperty(properties, "GRAFIC", "gaugeMax", "NUMBER", "100");
+    addScalarProperty(properties, "GRAFIC", "gaugeRangs", "TEXT", "50,75,100");
+    addScalarProperty(properties, "GRAFIC", "heatmapMinValue", "NUMBER", "0");
+    addScalarProperty(properties, "GRAFIC", "heatmapMaxValue", "NUMBER", "100");
 
-    addColorProperty(properties, "TAULA", "colorTextTaula", "Text taula", "WIDGET", 1);
-    addColorProperty(properties, "TAULA", "colorFonsTaula", "Fons taula", "WIDGET", 0);
-    addScalarProperty(properties, "TAULA", "mostrarCapcalera", "Mostrar capcalera", "BOOLEAN", "true");
-    addColorProperty(properties, "TAULA", "colorCapcalera", "Text capcalera", "WIDGET", 1);
-    addColorProperty(properties, "TAULA", "colorFonsCapcalera", "Fons capcalera", "WIDGET", 5);
-    addScalarProperty(properties, "TAULA", "mostrarAlternancia", "Alternancia", "BOOLEAN", "true");
-    addColorProperty(properties, "TAULA", "colorAlternancia", "Color altern", "WIDGET", 6);
-    addScalarProperty(properties, "TAULA", "mostrarVoraTaula", "Mostrar vora taula", "BOOLEAN", "false");
-    addColorProperty(properties, "TAULA", "colorVoraTaula", "Vora taula", "WIDGET", 2);
-    addScalarProperty(properties, "TAULA", "ampleVoraTaula", "Amplada vora taula", "NUMBER", "1");
-    addScalarProperty(properties, "TAULA", "mostrarSeparadorHoritzontal", "Separador horitzontal", "BOOLEAN", "true");
-    addColorProperty(properties, "TAULA", "colorSeparadorHoritzontal", "Color separador horitzontal", "WIDGET", 2);
-    addScalarProperty(properties, "TAULA", "ampleSeparadorHoritzontal", "Amplada separador horitzontal", "NUMBER", "1");
-    addScalarProperty(properties, "TAULA", "mostrarSeparadorVertical", "Separador vertical", "BOOLEAN", "false");
-    addColorProperty(properties, "TAULA", "colorSeparadorVertical", "Color separador vertical", "WIDGET", 2);
-    addScalarProperty(properties, "TAULA", "ampleSeparadorVertical", "Amplada separador vertical", "NUMBER", "1");
+    addColorProperty(properties, "TAULA", "colorTextTaula", "WIDGET", 1);
+    addColorProperty(properties, "TAULA", "colorFonsTaula", "WIDGET", 0);
+    addScalarProperty(properties, "TAULA", "mostrarCapcalera", "BOOLEAN", "true");
+    addColorProperty(properties, "TAULA", "colorCapcalera", "WIDGET", 1);
+    addColorProperty(properties, "TAULA", "colorFonsCapcalera", "WIDGET", 5);
+    addScalarProperty(properties, "TAULA", "mostrarAlternancia", "BOOLEAN", "true");
+    addColorProperty(properties, "TAULA", "colorAlternancia", "WIDGET", 6);
+    addScalarProperty(properties, "TAULA", "mostrarVoraTaula", "BOOLEAN", "false");
+    addColorProperty(properties, "TAULA", "colorVoraTaula", "WIDGET", 2);
+    addScalarProperty(properties, "TAULA", "ampleVoraTaula", "NUMBER", "1");
+    addScalarProperty(properties, "TAULA", "mostrarSeparadorHoritzontal", "BOOLEAN", "true");
+    addColorProperty(properties, "TAULA", "colorSeparadorHoritzontal", "WIDGET", 2);
+    addScalarProperty(properties, "TAULA", "ampleSeparadorHoritzontal", "NUMBER", "1");
+    addScalarProperty(properties, "TAULA", "mostrarSeparadorVertical", "BOOLEAN", "false");
+    addColorProperty(properties, "TAULA", "colorSeparadorVertical", "WIDGET", 2);
+    addScalarProperty(properties, "TAULA", "ampleSeparadorVertical", "NUMBER", "1");
 
-    addTitleStyleProperties(properties, "TITOL_1", "Titol 1", 28, 3);
-    addTitleStyleProperties(properties, "TITOL_2", "Titol 2", 22, 2);
-    addTitleStyleProperties(properties, "TITOL_3", "Titol 3", 18, 1);
+    addTitleStyleProperties(properties, "TITOL_1", 28, 3);
+    addTitleStyleProperties(properties, "TITOL_2", 22, 2);
+    addTitleStyleProperties(properties, "TITOL_3", 18, 1);
     return properties;
 };
 
@@ -612,7 +671,7 @@ const PaletteSelect = ({
     value?: string;
     palettes: Palette[];
     onChange: (value: string) => void;
-    paletteTheme?: PaletteTheme;
+    paletteTheme: PaletteTheme;
 }) => {
     const selectedPalette = paletteByKey(palettes, value);
 
@@ -656,6 +715,28 @@ const PaletteSelect = ({
                     }}
                 />
             )}
+            slotProps={{
+                paper: {
+                    sx: {
+                        bgcolor: paletteTheme.fieldBackground,
+                        color: paletteTheme.fieldText,
+                        border: `1px solid ${paletteTheme.border}`,
+                    },
+                },
+                listbox: {
+                    sx: {
+                        "& .MuiAutocomplete-option": {
+                            color: paletteTheme.fieldText,
+                            "&[aria-selected='true']": {
+                                bgcolor: `${paletteTheme.accent}33`,
+                            },
+                            "&:hover": {
+                                bgcolor: `${paletteTheme.accent}1A`,
+                            },
+                        },
+                    },
+                },
+            }}
         />
     );
 };
@@ -1078,6 +1159,8 @@ const PalettePositionSelect = ({
     const palette = paletteForGroup(template, selectedGroup, property.paletteRole || "WIDGET");
     const colors = normalizeColors(palette?.colors || []);
 
+    const labelText = getPropertyLabel(property, t);
+
     const updateProperty = (patch: Partial<StyleProperty>) => {
         const next = template.styleProperties.map((item) => propertyKey(item) === propertyKey(property) ? {...item, ...patch} : item);
         applyTemplateField(apiRef, "styleProperties", next);
@@ -1091,13 +1174,31 @@ const PalettePositionSelect = ({
                 sx={{bgcolor: paletteTheme.background, color: paletteTheme.text, border: "1px solid", borderColor: paletteTheme.border}}
             />
             <FormControl fullWidth size="small" sx={themedFormControlSx}>
-                <InputLabel>{property.label || property.propertyName}</InputLabel>
+                <InputLabel>{labelText}</InputLabel>
                 <Select
-                    label={property.label || property.propertyName}
+                    label={labelText}
                     value={property.paletteIndex != null ? String(property.paletteIndex) : ""}
                     onChange={(event: SelectChangeEvent) => {
                         const value = event.target.value;
                         updateProperty({paletteIndex: value === "" ? undefined : Number(value)})
+                    }}
+                     MenuProps={{
+                        PaperProps: {
+                            sx: {
+                                bgcolor: paletteTheme.fieldBackground,
+                                color: paletteTheme.fieldText,
+                                border: `1px solid ${paletteTheme.border}`,
+                                "& .MuiMenuItem-root": {
+                                    color: paletteTheme.fieldText,
+                                    "&:hover": {
+                                        bgcolor: `${paletteTheme.accent}1A`, // Hover suave
+                                    },
+                                    "&.Mui-selected": {
+                                        bgcolor: `${paletteTheme.accent}33`, // Selección activa
+                                    },
+                                },
+                            },
+                        },
                     }}
                 >
                     {optional && (<MenuItem value="">
@@ -1119,7 +1220,9 @@ const PalettePositionSelect = ({
 
 const ScalarPropertyField = ({property, paletteTheme}: { property: StyleProperty; paletteTheme: PaletteTheme }) => {
     const {data, apiRef} = useFormContext();
+    const { t } = useTranslation();
     const template = normalizedTemplate(data);
+    const labelText = getPropertyLabel(property, t);
     const updateProperty = (patch: Partial<StyleProperty>) => {
         const next = template.styleProperties.map((item) => propertyKey(item) === propertyKey(property) ? {...item, ...patch} : item);
         applyTemplateField(apiRef, "styleProperties", next);
@@ -1129,7 +1232,7 @@ const ScalarPropertyField = ({property, paletteTheme}: { property: StyleProperty
         return (
             <FormControlLabel
                 control={<Checkbox checked={property.scalarValue === "true"} onChange={(event) => updateProperty({scalarValue: event.target.checked ? "true" : "false"})} />}
-                label={property.label || property.propertyName}
+                label={labelText}
                 sx={{
                     color: paletteTheme.surfaceText,
                     "& .MuiCheckbox-root": {color: paletteTheme.accent},
@@ -1143,7 +1246,7 @@ const ScalarPropertyField = ({property, paletteTheme}: { property: StyleProperty
             fullWidth
             size="small"
             type={property.valueType === "NUMBER" ? "number" : "text"}
-            label={property.label || property.propertyName}
+            label={labelText}
             value={property.scalarValue || ""}
             onChange={(event) => updateProperty({scalarValue: event.target.value})}
             sx={themedTextFieldSx}

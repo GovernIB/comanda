@@ -45,9 +45,6 @@ public class WidgetStylePropertyEntity extends BaseAuditableEntity<WidgetStylePr
     @Column(name = "property_name", nullable = false, length = 64)
     private String propertyName;
 
-    @Column(name = "label", length = 128)
-    private String label;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "value_type", nullable = false, length = 32)
     private WidgetStyleValueType valueType;

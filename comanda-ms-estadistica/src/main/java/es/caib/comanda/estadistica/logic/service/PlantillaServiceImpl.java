@@ -271,7 +271,6 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
                 propertyEntity.setPropertyName(property.getPropertyName());
                 log.debug("Creant propietat nova {} de plantilla {}", key, entity.getId());
             }
-            propertyEntity.setLabel(property.getLabel());
             propertyEntity.setValueType(property.getValueType());
             propertyEntity.setPaletteRole(property.getPaletteRole());
             propertyEntity.setPaletteIndex(property.getPaletteIndex());
@@ -461,7 +460,6 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
         property.setId(override.getId());
         property.setScope(override.getScope());
         property.setPropertyName(override.getPropertyName());
-        property.setLabel(override.getLabel() != null ? override.getLabel() : base.getLabel());
         property.setValueType(override.getValueType() != null ? override.getValueType() : base.getValueType());
         property.setPaletteRole(override.getPaletteRole() != null ? override.getPaletteRole() : base.getPaletteRole());
         property.setPaletteIndex(override.getPaletteIndex() != null ? override.getPaletteIndex() : base.getPaletteIndex());
@@ -477,58 +475,58 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
 
     private List<WidgetStyleProperty> defaultStyleProperties() {
         List<WidgetStyleProperty> properties = new ArrayList<>();
-        addColor(properties, WidgetStyleScope.COMMON, "colorFons", "Fons", PaletteRole.WIDGET, 0);
-        addColor(properties, WidgetStyleScope.COMMON, "colorText", "Text", PaletteRole.WIDGET, 1);
-        addColor(properties, WidgetStyleScope.COMMON, "colorVora", "Vora", PaletteRole.WIDGET, 2);
-        addScalar(properties, WidgetStyleScope.COMMON, "mostrarVora", "Mostrar vora", WidgetStyleValueType.BOOLEAN, "false");
-        addScalar(properties, WidgetStyleScope.COMMON, "ampleVora", "Amplada vora", WidgetStyleValueType.NUMBER, "1");
-        addScalar(properties, WidgetStyleScope.COMMON, "midaFontTitol", "Mida titol", WidgetStyleValueType.NUMBER, "22");
-        addScalar(properties, WidgetStyleScope.COMMON, "midaFontDescripcio", "Mida descripcio", WidgetStyleValueType.NUMBER, "14");
+        addColor(properties, WidgetStyleScope.COMMON, "colorFons", PaletteRole.WIDGET, 0);
+        addColor(properties, WidgetStyleScope.COMMON, "colorText", PaletteRole.WIDGET, 1);
+        addColor(properties, WidgetStyleScope.COMMON, "colorVora", PaletteRole.WIDGET, 2);
+        addScalar(properties, WidgetStyleScope.COMMON, "mostrarVora", WidgetStyleValueType.BOOLEAN, "false");
+        addScalar(properties, WidgetStyleScope.COMMON, "ampleVora", WidgetStyleValueType.NUMBER, "1");
+        addScalar(properties, WidgetStyleScope.COMMON, "midaFontTitol", WidgetStyleValueType.NUMBER, "22");
+        addScalar(properties, WidgetStyleScope.COMMON, "midaFontDescripcio", WidgetStyleValueType.NUMBER, "14");
 
-        addColor(properties, WidgetStyleScope.SIMPLE, "colorIcona", "Color icona", PaletteRole.WIDGET, 3);
-        addColor(properties, WidgetStyleScope.SIMPLE, "colorFonsIcona", "Fons icona", PaletteRole.WIDGET, 5);
-        addColor(properties, WidgetStyleScope.SIMPLE, "colorTextDestacat", "Text destacat", PaletteRole.WIDGET, 4);
-        addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontValor", "Mida valor", WidgetStyleValueType.NUMBER, "48");
-        addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontUnitats", "Mida unitats", WidgetStyleValueType.NUMBER, "16");
-        addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontCanviPercentual", "Mida canvi", WidgetStyleValueType.NUMBER, "18");
+        addColor(properties, WidgetStyleScope.SIMPLE, "colorIcona", PaletteRole.WIDGET, 3);
+        addColor(properties, WidgetStyleScope.SIMPLE, "colorFonsIcona", PaletteRole.WIDGET, 5);
+        addColor(properties, WidgetStyleScope.SIMPLE, "colorTextDestacat", PaletteRole.WIDGET, 4);
+        addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontValor", WidgetStyleValueType.NUMBER, "48");
+        addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontUnitats", WidgetStyleValueType.NUMBER, "16");
+        addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontCanviPercentual", WidgetStyleValueType.NUMBER, "18");
 
         for (int i = 0; i < 6; i++) {
-            addColor(properties, WidgetStyleScope.GRAFIC, "chartSerieColor" + (i + 1), "Serie " + (i + 1), PaletteRole.CHART, i);
+            addColor(properties, WidgetStyleScope.GRAFIC, "chartSerieColor" + (i + 1), PaletteRole.CHART, i);
         }
-        addScalar(properties, WidgetStyleScope.GRAFIC, "mostrarReticula", "Mostrar reticula", WidgetStyleValueType.BOOLEAN, "false");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "barStacked", "Barres apilades", WidgetStyleValueType.BOOLEAN, "false");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "barHorizontal", "Barres horitzontals", WidgetStyleValueType.BOOLEAN, "false");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "lineShowPoints", "Mostrar punts", WidgetStyleValueType.BOOLEAN, "true");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "area", "Area", WidgetStyleValueType.BOOLEAN, "false");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "lineSmooth", "Linia suau", WidgetStyleValueType.BOOLEAN, "false");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "lineWidth", "Amplada linia", WidgetStyleValueType.NUMBER, "2");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "outerRadius", "Radi exterior", WidgetStyleValueType.NUMBER, "100");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "pieDonut", "Donut", WidgetStyleValueType.BOOLEAN, "false");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "innerRadius", "Radi interior", WidgetStyleValueType.NUMBER, "40");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "pieShowLabels", "Mostrar etiquetes", WidgetStyleValueType.BOOLEAN, "true");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "labelSize", "Mida etiqueta", WidgetStyleValueType.NUMBER, "12");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "gaugeMin", "Gauge minim", WidgetStyleValueType.NUMBER, "0");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "gaugeMax", "Gauge maxim", WidgetStyleValueType.NUMBER, "100");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "gaugeRangs", "Rangs gauge", WidgetStyleValueType.TEXT, "50,75,100");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "heatmapMinValue", "Heatmap minim", WidgetStyleValueType.NUMBER, "0");
-        addScalar(properties, WidgetStyleScope.GRAFIC, "heatmapMaxValue", "Heatmap maxim", WidgetStyleValueType.NUMBER, "100");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "mostrarReticula", WidgetStyleValueType.BOOLEAN, "false");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "barStacked", WidgetStyleValueType.BOOLEAN, "false");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "barHorizontal", WidgetStyleValueType.BOOLEAN, "false");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "lineShowPoints", WidgetStyleValueType.BOOLEAN, "true");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "area", WidgetStyleValueType.BOOLEAN, "false");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "lineSmooth", WidgetStyleValueType.BOOLEAN, "false");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "lineWidth", WidgetStyleValueType.NUMBER, "2");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "outerRadius", WidgetStyleValueType.NUMBER, "100");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "pieDonut", WidgetStyleValueType.BOOLEAN, "false");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "innerRadius", WidgetStyleValueType.NUMBER, "40");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "pieShowLabels", WidgetStyleValueType.BOOLEAN, "true");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "labelSize", WidgetStyleValueType.NUMBER, "12");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "gaugeMin", WidgetStyleValueType.NUMBER, "0");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "gaugeMax", WidgetStyleValueType.NUMBER, "100");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "gaugeRangs", WidgetStyleValueType.TEXT, "50,75,100");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "heatmapMinValue", WidgetStyleValueType.NUMBER, "0");
+        addScalar(properties, WidgetStyleScope.GRAFIC, "heatmapMaxValue", WidgetStyleValueType.NUMBER, "100");
 
-        addColor(properties, WidgetStyleScope.TAULA, "colorTextTaula", "Text taula", PaletteRole.WIDGET, 1);
-        addColor(properties, WidgetStyleScope.TAULA, "colorFonsTaula", "Fons taula", PaletteRole.WIDGET, 0);
-        addScalar(properties, WidgetStyleScope.TAULA, "mostrarCapcalera", "Mostrar capcalera", WidgetStyleValueType.BOOLEAN, "true");
-        addColor(properties, WidgetStyleScope.TAULA, "colorCapcalera", "Text capcalera", PaletteRole.WIDGET, 1);
-        addColor(properties, WidgetStyleScope.TAULA, "colorFonsCapcalera", "Fons capcalera", PaletteRole.WIDGET, 5);
-        addScalar(properties, WidgetStyleScope.TAULA, "mostrarAlternancia", "Alternancia", WidgetStyleValueType.BOOLEAN, "true");
-        addColor(properties, WidgetStyleScope.TAULA, "colorAlternancia", "Color altern", PaletteRole.WIDGET, 6);
-        addScalar(properties, WidgetStyleScope.TAULA, "mostrarVoraTaula", "Mostrar vora taula", WidgetStyleValueType.BOOLEAN, "false");
-        addColor(properties, WidgetStyleScope.TAULA, "colorVoraTaula", "Vora taula", PaletteRole.WIDGET, 2);
-        addScalar(properties, WidgetStyleScope.TAULA, "ampleVoraTaula", "Amplada vora taula", WidgetStyleValueType.NUMBER, "1");
-        addScalar(properties, WidgetStyleScope.TAULA, "mostrarSeparadorHoritzontal", "Separador horitzontal", WidgetStyleValueType.BOOLEAN, "true");
-        addColor(properties, WidgetStyleScope.TAULA, "colorSeparadorHoritzontal", "Color separador horitzontal", PaletteRole.WIDGET, 2);
-        addScalar(properties, WidgetStyleScope.TAULA, "ampleSeparadorHoritzontal", "Amplada separador horitzontal", WidgetStyleValueType.NUMBER, "1");
-        addScalar(properties, WidgetStyleScope.TAULA, "mostrarSeparadorVertical", "Separador vertical", WidgetStyleValueType.BOOLEAN, "false");
-        addColor(properties, WidgetStyleScope.TAULA, "colorSeparadorVertical", "Color separador vertical", PaletteRole.WIDGET, 2);
-        addScalar(properties, WidgetStyleScope.TAULA, "ampleSeparadorVertical", "Amplada separador vertical", WidgetStyleValueType.NUMBER, "1");
+        addColor(properties, WidgetStyleScope.TAULA, "colorTextTaula", PaletteRole.WIDGET, 1);
+        addColor(properties, WidgetStyleScope.TAULA, "colorFonsTaula", PaletteRole.WIDGET, 0);
+        addScalar(properties, WidgetStyleScope.TAULA, "mostrarCapcalera", WidgetStyleValueType.BOOLEAN, "true");
+        addColor(properties, WidgetStyleScope.TAULA, "colorCapcalera", PaletteRole.WIDGET, 1);
+        addColor(properties, WidgetStyleScope.TAULA, "colorFonsCapcalera", PaletteRole.WIDGET, 5);
+        addScalar(properties, WidgetStyleScope.TAULA, "mostrarAlternancia", WidgetStyleValueType.BOOLEAN, "true");
+        addColor(properties, WidgetStyleScope.TAULA, "colorAlternancia", PaletteRole.WIDGET, 6);
+        addScalar(properties, WidgetStyleScope.TAULA, "mostrarVoraTaula", WidgetStyleValueType.BOOLEAN, "false");
+        addColor(properties, WidgetStyleScope.TAULA, "colorVoraTaula", PaletteRole.WIDGET, 2);
+        addScalar(properties, WidgetStyleScope.TAULA, "ampleVoraTaula", WidgetStyleValueType.NUMBER, "1");
+        addScalar(properties, WidgetStyleScope.TAULA, "mostrarSeparadorHoritzontal", WidgetStyleValueType.BOOLEAN, "true");
+        addColor(properties, WidgetStyleScope.TAULA, "colorSeparadorHoritzontal", PaletteRole.WIDGET, 2);
+        addScalar(properties, WidgetStyleScope.TAULA, "ampleSeparadorHoritzontal", WidgetStyleValueType.NUMBER, "1");
+        addScalar(properties, WidgetStyleScope.TAULA, "mostrarSeparadorVertical", WidgetStyleValueType.BOOLEAN, "false");
+        addColor(properties, WidgetStyleScope.TAULA, "colorSeparadorVertical", PaletteRole.WIDGET, 2);
+        addScalar(properties, WidgetStyleScope.TAULA, "ampleSeparadorVertical", WidgetStyleValueType.NUMBER, "1");
 
         addTitleStyleProperties(properties, WidgetStyleScope.TITOL_1, "Titol 1", 28, 3);
         addTitleStyleProperties(properties, WidgetStyleScope.TITOL_2, "Titol 2", 22, 2);
@@ -537,30 +535,29 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
     }
 
     private void addTitleStyleProperties(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String prefix, int fontSize, int underlineWidth) {
-        addColor(properties, scope, "colorFons", prefix + " fons", PaletteRole.WIDGET, 0);
-        addColor(properties, scope, "colorTitol", prefix + " text", PaletteRole.WIDGET, 1);
-        addScalar(properties, scope, "midaFontTitol", prefix + " mida font", WidgetStyleValueType.NUMBER, String.valueOf(fontSize));
-        addScalar(properties, scope, "mostrarVora", prefix + " subratllat", WidgetStyleValueType.BOOLEAN, "true");
-        addColor(properties, scope, "colorVora", prefix + " color subratllat", PaletteRole.WIDGET, 2);
-        addScalar(properties, scope, "ampleVora", prefix + " gruix subratllat", WidgetStyleValueType.NUMBER, String.valueOf(underlineWidth));
+        addColor(properties, scope, "colorFons", PaletteRole.WIDGET, 0);
+        addColor(properties, scope, "colorTitol", PaletteRole.WIDGET, 1);
+        addScalar(properties, scope, "midaFontTitol", WidgetStyleValueType.NUMBER, String.valueOf(fontSize));
+        addScalar(properties, scope, "mostrarVora", WidgetStyleValueType.BOOLEAN, "true");
+        addColor(properties, scope, "colorVora", PaletteRole.WIDGET, 2);
+        addScalar(properties, scope, "ampleVora", WidgetStyleValueType.NUMBER, String.valueOf(underlineWidth));
     }
 
-    private void addColor(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String name, String label, PaletteRole role, int index) {
-        WidgetStyleProperty property = baseProperty(properties, scope, name, label, WidgetStyleValueType.COLOR);
+    private void addColor(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String name, PaletteRole role, int index) {
+        WidgetStyleProperty property = baseProperty(properties, scope, name, WidgetStyleValueType.COLOR);
         property.setPaletteRole(role);
         property.setPaletteIndex(index);
     }
 
-    private void addScalar(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String name, String label, WidgetStyleValueType type, String value) {
-        WidgetStyleProperty property = baseProperty(properties, scope, name, label, type);
+    private void addScalar(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String name, WidgetStyleValueType type, String value) {
+        WidgetStyleProperty property = baseProperty(properties, scope, name, type);
         property.setScalarValue(value);
     }
 
-    private WidgetStyleProperty baseProperty(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String name, String label, WidgetStyleValueType type) {
+    private WidgetStyleProperty baseProperty(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String name, WidgetStyleValueType type) {
         WidgetStyleProperty property = new WidgetStyleProperty();
         property.setScope(scope);
         property.setPropertyName(name);
-        property.setLabel(label);
         property.setValueType(type);
         property.setDefaultProperty(true);
         property.setOrdre(properties.size());
@@ -628,7 +625,6 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
                     resource.setId(property.getId());
                     resource.setScope(property.getScope());
                     resource.setPropertyName(property.getPropertyName());
-                    resource.setLabel(property.getLabel());
                     resource.setValueType(property.getValueType());
                     resource.setPaletteRole(property.getPaletteRole());
                     resource.setPaletteIndex(property.getPaletteIndex());

@@ -20,8 +20,6 @@ public class WidgetStyleProperty extends BaseResource<Long> {
     @NotNull
     @Size(max = 64)
     private String propertyName;
-    @Size(max = 128)
-    private String label;
     @NotNull
     private WidgetStyleValueType valueType;
     private PaletteRole paletteRole;
