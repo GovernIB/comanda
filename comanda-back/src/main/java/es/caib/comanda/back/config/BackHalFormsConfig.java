@@ -23,20 +23,20 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableAspectJAutoProxy(proxyTargetClass = false)
 public class BackHalFormsConfig extends BaseHalFormsConfig {
 
-	@Override
-	protected String[] getControllerPackages() {
-		return new String[] {
-				AppController.class.getPackageName(),
-				SalutController.class.getPackageName(),
-				FetController.class.getPackageName(),
-				MonitorController.class.getPackageName(),
-				AvisController.class.getPackageName(),
-				AlarmaConfigController.class.getPackageName(),
-				PermisController.class.getPackageName(),
-				TascaController.class.getPackageName(),
-				UsuariController.class.getPackageName(),
-				AclEntryController.class.getPackageName()
-		};
-	}
+//	@Override
+//	protected String[] getControllerPackages() {
+//		return new String[] {
+//				AppController.class.getPackageName(),
+//				SalutController.class.getPackageName(),
+//				FetController.class.getPackageName(),
+//				MonitorController.class.getPackageName(),
+//				AvisController.class.getPackageName(),
+//				AlarmaConfigController.class.getPackageName(),
+//				PermisController.class.getPackageName(),
+//				TascaController.class.getPackageName(),
+//				UsuariController.class.getPackageName(),
+//				AclEntryController.class.getPackageName()
+//		};
+//	}
 
 }

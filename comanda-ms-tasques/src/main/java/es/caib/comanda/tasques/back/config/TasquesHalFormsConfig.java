@@ -14,11 +14,11 @@ import org.springframework.context.annotation.Profile;
 @Profile("!back")
 public class TasquesHalFormsConfig extends BaseHalFormsConfig {
 
-	@Override
-	protected String[] getControllerPackages() {
-		return new String[] {
-				TascaController.class.getPackageName()
-		};
-	}
+//	@Override
+//	protected String[] getControllerPackages() {
+//		return new String[] {
+//				TascaController.class.getPackageName()
+//		};
+//	}
 
 }

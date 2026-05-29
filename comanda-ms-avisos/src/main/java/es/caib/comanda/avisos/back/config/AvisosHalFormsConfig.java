@@ -14,11 +14,11 @@ import org.springframework.context.annotation.Profile;
 @Profile("!back")
 public class AvisosHalFormsConfig extends BaseHalFormsConfig {
 
-	@Override
-	protected String[] getControllerPackages() {
-		return new String[] {
-				AvisController.class.getPackageName()
-		};
-	}
+//	@Override
+//	protected String[] getControllerPackages() {
+//		return new String[] {
+//				AvisController.class.getPackageName()
+//		};
+//	}
 
 }
